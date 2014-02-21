@@ -20,11 +20,11 @@ endif(GPTL_FOUND AND PAPI_FOUND)
 
 #Collect all header filenames in this project 
 #and glob them in HEADERS
-file(GLOB HEADERS *.h )
+file(GLOB HEADERS *.h dummy/*.h standard/*.h)
 
 #Collect all of the cpp files in this folder 
 #and glob them in SRC
-file(GLOB SRC *.cpp)
+file(GLOB SRC *.cpp dummy/*.cpp standard/*.cpp)
 
 #Include headers in order to build
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
