@@ -7,7 +7,6 @@
 #include "Timer.h"
 #include "GPTLTimer.h"
 
-
 using namespace xolotlPerf;
 
 GPTLTimer::GPTLTimer(std::string aname) : Timer(aname) {

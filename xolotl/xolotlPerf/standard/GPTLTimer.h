@@ -2,7 +2,6 @@
 #define GPTLTIMER_H
 
 #include "Timer.h"
-#include "/home/cxj/Libraries/GPTL/GPTL/gptl-5.0/include/gptl.h"
 #include <string>
 
 namespace xolotlPerf {

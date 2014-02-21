@@ -6,18 +6,10 @@ using namespace xolotlPerf;
 DummyEventCounter::DummyEventCounter(std::string aname) : EventCounter(aname) {
 }
 
-//DummyEventCounter::DummyEventCounter(const DummyEventCounter &other) :
-//		name(other.name), value(other.value) {
-//}
 
 DummyEventCounter::~DummyEventCounter() {
 
 }
-
-//std::shared_ptr<EventCounter> DummyEventCounter::clone() {
-//	std::shared_ptr<EventCounter> eventCounter(new DummyEventCounter(*this));
-//	return eventCounter;
-//}
 
 int DummyEventCounter::getValue() {
 	return 0;

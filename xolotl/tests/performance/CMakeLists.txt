@@ -13,11 +13,11 @@ include_directories(${GPTL_INCLUDE_DIRS})
 include_directories(${PAPI_INCLUDE_DIRS})
 
 #Include directories from 
-if(GPTL_FOUND AND PAPI_FOUND)
-    include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf/standard)
-    include_directories(${GPTL_INCLUDE_DIRS})
-    include_directories(${PAPI_INCLUDE_DIRS})
-endif(GPTL_FOUND AND PAPI_FOUND)
+#if(GPTL_FOUND AND PAPI_FOUND)
+#    include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf/standard)
+#    include_directories(${GPTL_INCLUDE_DIRS})
+#    include_directories(${PAPI_INCLUDE_DIRS})
+#endif(GPTL_FOUND AND PAPI_FOUND)
 
 #Link the directories
 link_directories(${CMAKE_SOURCE_DIR}/src/xolotlPerf)

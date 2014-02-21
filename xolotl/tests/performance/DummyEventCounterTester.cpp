@@ -20,9 +20,9 @@ BOOST_AUTO_TEST_SUITE (DummyEventCounter_testSuite)
 BOOST_AUTO_TEST_CASE(checkName) {
 
 	DummyEventCounter tester("test");
-	EventCounter * testme = &tester;
+//	EventCounter * testme = &tester;
 
-	BOOST_REQUIRE_EQUAL("", testme->getName());
+	BOOST_REQUIRE_EQUAL("", tester.getName());
 //}
 //
 //BOOST_AUTO_TEST_CASE(checkInitialValue) {
