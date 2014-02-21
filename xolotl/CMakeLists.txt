@@ -23,6 +23,9 @@ FIND_PACKAGE(PETSc REQUIRED)
 add_subdirectory(xolotlCore)
 add_subdirectory(xolotlSolver)
 
+# Add the performance directory
+add_subdirectory(xolotlPerf)
+
 # Enable testing.
 enable_testing()
 # Add the tests is Boost is available
@@ -52,11 +55,12 @@ include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants/psiclusters)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlSolver)
 include_directories(${PETSC_INCLUDES})
+include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
 
 configure_file ("${CMAKE_SOURCE_DIR}/XolotlConfig.h.in" "${CMAKE_SOURCE_DIR}/XolotlConfig.h")
 
 # Setup the library list
-set(XOLOTL_LIBS xolotlReactants xolotlSolver xolotlIO ${PETSC_LIBRARIES})
+set(XOLOTL_LIBS xolotlReactants xolotlSolver xolotlIO xolotlPerf ${PETSC_LIBRARIES})
 
 # Add an executable for the main program
 ADD_EXECUTABLE (xolotl main.cpp)

@@ -23,7 +23,7 @@ private:
 	 * always be initialized with a name and a vector of quantities to
 	 * be monitored.
 	 */
-//	HardwareCounter();
+	HardwareCounter();
 
 protected:
 
@@ -55,8 +55,6 @@ public:
 	 * @param hquantities The HardwareCounter's list of quantities
 	 */
 	HardwareCounter(std::string aname, const std::vector<HardwareQuantities> &hquantities);
-//    HardwareCounter(std::string name, std::vector<HardwareQuantities> hquantities ) :
-//    	name(aname), quantities(hquantities) {}
 
 	/**
 	 * The copy constructor.
@@ -69,23 +67,11 @@ public:
 	 */
 	virtual ~HardwareCounter();
 
-	/**
-	 * This operation returns a HardwareCounter that is created using the copy
-	 * constructor. If this HardwareCounter is actually a subclass of HardwareCounter, the
-	 * clone will be of the same type and therefore carry all of the members
-	 * and virtual functions of the subclass in addition to those of the
-	 * HardwareCounter.
-	 * @return A copy of this HardwareCounter.
-	 */
-//	virtual std::shared_ptr<HardwareCounter> clone();
-
     // This operation returns a list of values of the, initially specified, PAPI preset quantities monitored by the HardwareCounter.
-//    virtual std::vector<long long> getValues() const = 0;
-    virtual std::vector<long long> getValues() const;
+    virtual std::vector<long long> getValues() const = 0;
 
     // This operation returns the name of the HardwareCounter.
-    virtual const std::string getName() const;
-//    const std::string getName() const {return aname;}
+    virtual const std::string getName() const = 0;
 
     // This operation increments the HardwareCounter.
     virtual void increment() = 0;

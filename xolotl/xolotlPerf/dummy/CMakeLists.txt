@@ -7,3 +7,5 @@ file(GLOB HEADERS *.h)
 #Collect all of the cpp files in this folder 
 #and glob them in SRC
 file(GLOB SRC *.cpp)
+
+list(APPEND HEADERS "dummy/ *.h"}

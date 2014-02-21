@@ -10,10 +10,6 @@
 
 using namespace xolotlPerf;
 
-//GPTLTimer::GPTLTimer():Timer("") {
-//	GPTLinitialize();
-//}
-
 GPTLTimer::GPTLTimer(std::string aname) : Timer(aname) {
 
 	value = 0.0;
@@ -24,11 +20,6 @@ GPTLTimer::GPTLTimer(std::string aname) : Timer(aname) {
 //	GPTLinitialize();
 //	GPTLinit_handle(name.c_str(), &handle);
 }
-
-//GPTLTimer::GPTLTimer(const std::string &name) : Timer(name) {
-//	GPTLinitialize();
-//	GPTLinit_handle(name.c_str(), &handle);
-//}
 
 GPTLTimer::~GPTLTimer() {
 }

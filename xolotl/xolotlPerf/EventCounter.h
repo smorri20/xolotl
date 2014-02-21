@@ -15,7 +15,7 @@ class EventCounter {
 private:
 
 	/**
-	 * The default constructor is declared private since all timers
+	 * The default constructor is declared private since all event counters
 	 * must be initialized with a name.
 	 */
 	EventCounter();
@@ -26,13 +26,6 @@ protected:
 	 * The name of this EventCounter.
 	 */
 	std::string name;
-
-	/**
-	 * The value of this EventCounter.
-	 */
-//	long long value;
-//	long value;
-//	int value;
 
 public:
 
@@ -75,8 +68,7 @@ public:
 	 *
 	 * @return The name of this EventCounter
 	 */
-	virtual const std::string getName() const;
-//	const std::string getName() const {return name;}
+	virtual const std::string getName() const = 0;
 
 	/**
 	 * This operation sets the name of the EventCounter to the

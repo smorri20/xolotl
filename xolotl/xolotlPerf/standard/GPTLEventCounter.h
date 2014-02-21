@@ -18,8 +18,6 @@ private:
 	/**
 	 * The value of this EventCounter.
 	 */
-//	long long value;
-//	long value;
 	int value;
 
 	/**

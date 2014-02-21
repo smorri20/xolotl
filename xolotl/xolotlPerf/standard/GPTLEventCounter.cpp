@@ -63,7 +63,5 @@ const std::string GPTLEventCounter::getName() const {
 }
 
 void GPTLEventCounter::increment(){
-
 	++value;
-
 }

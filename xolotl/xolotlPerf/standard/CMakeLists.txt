@@ -1,5 +1,14 @@
-#Set the package name
-SET(PACKAGE_NAME "xolotl.performance.standard")
+# Find GPTL
+FIND_PACKAGE(GPTL)
+
+# Find PAPI
+FIND_PACKAGE(PAPI)
+
+if(GPTL_FOUND AND PAPI_FOUND)
+    message(STATUS "PAPI includes = ${PAPI_INCLUDE_DIRS}")
+    message(STATUS "PAPI libraries = ${PAPI_LIBRARIES}")
+    message(STATUS "GPTL includes = ${GPTL_INCLUDE_DIRS}")
+    message(STATUS "GPTL libraries = ${GPTL_LIBRARIES}")
 
 #Collect all header filenames in this project 
 #and glob them in HEADERS
@@ -8,6 +17,9 @@ file(GLOB HEADERS *.h)
 #Collect all of the cpp files in this folder 
 #and glob them in SRC
 file(GLOB SRC *.cpp)
+
+
+endif(GPTL_FOUND AND PAPI_FOUND)
 
 #Include headers in order to build
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)

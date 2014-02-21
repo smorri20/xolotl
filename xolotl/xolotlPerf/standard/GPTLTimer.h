@@ -35,7 +35,6 @@ public:
 	 * @param aname The GPTLEventCounter's name
 	 */
 	GPTLTimer(std::string aname);
-//	GPTLTimer(const std::string &name);
 
 	/**
 	 * The destructor

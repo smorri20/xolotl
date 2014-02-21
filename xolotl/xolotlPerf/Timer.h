@@ -26,11 +26,6 @@ protected:
 	 */
 	std::string name;
 
-//	/**
-//	 * The value of this Timer.
-//	 */
-//	double value;
-
 public:
 
 	/**
@@ -72,7 +67,7 @@ public:
 	 *
 	 * @return The name of this Timer
 	 */
-	virtual const std::string getName() const;
+	virtual const std::string getName() const = 0;
 
     // This operation returns the value of the Timer.
     virtual double getValue() = 0;
