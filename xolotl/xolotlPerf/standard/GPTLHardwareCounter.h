@@ -1,7 +1,7 @@
 #ifndef GPTLHARDWARECOUNTER_H
 #define GPTLHARDWARECOUNTER_H
-//#include "/home/cxj/Libraries/GPTL/include/gptl.h"
 #include "gptl.h"
+#include "papi.h"
 #include "HardwareCounter.h"
 
 namespace xolotlPerf{

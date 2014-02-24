@@ -12,20 +12,20 @@ namespace xolotlPerf {
 //of event performance counter data.
 class EventCounter {
 
-private:
+//private:
 
 	/**
 	 * The default constructor is declared private since all event counters
 	 * must be initialized with a name.
 	 */
-	EventCounter();
+//	EventCounter();
 
-protected:
+//protected:
 
 	/**
 	 * The name of this EventCounter.
 	 */
-	std::string name;
+//	std::string name;
 
 public:
 
@@ -34,18 +34,18 @@ public:
 	 *
 	 * @param aname The EventCounter's name
 	 */
-	EventCounter(std::string aname);
+	EventCounter(std::string aname) {}
 
 	/**
 	 * The copy constructor.
 	 * @param other The EventCounter to copy
 	 */
-	EventCounter(const EventCounter &other);
+//	EventCounter(const EventCounter &other);
 
 	/**
 	 * The destructor
 	 */
-	virtual ~EventCounter();
+	virtual ~EventCounter(){}
 
 	/**
 	 * This operation returns a EventCounter that is created using the copy

@@ -30,7 +30,7 @@ public:
 	IHandlerRegistry(const IHandlerRegistry &other);
 
 	// The destructor
-	virtual ~IHandlerRegistry();
+	virtual ~IHandlerRegistry(){}
 
 	// This operation returns the Timer specified by the parameter.
 	virtual std::shared_ptr<Timer> getTimer(std::string name) const = 0;

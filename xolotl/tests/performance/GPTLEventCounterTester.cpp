@@ -23,31 +23,40 @@ BOOST_AUTO_TEST_CASE(checkName) {
 	GPTLinitialize();
 
 	GPTLEventCounter tester("test");
-//	EventCounter * testme = &tester;
 
+	std::cout << "\n" << "GPTLTimer Message: \n" << "tester.getName() " << tester.getName() << "\n"
+					  << std::endl;
+
+	// Require that the name of this GPTLEventCounter is "test"
 	BOOST_REQUIRE_EQUAL("test", tester.getName());
 }
 
 BOOST_AUTO_TEST_CASE(checkInitialValue) {
 
-	GPTLinitialize();
+//	GPTLinitialize();
 	GPTLEventCounter tester("test");
-//	EventCounter * testme = &tester;
 
+	std::cout << "\n" << "GPTLTimer Message: \n" << "tester.getValue() " << tester.getValue() << "\n" << std::endl;
+
+	// Require that the value of this GPTLEventCounter is 0
 	BOOST_REQUIRE_EQUAL(0, tester.getValue());
 
 }
 
 BOOST_AUTO_TEST_CASE(checkCounting) {
 
-	GPTLinitialize();
+//	GPTLinitialize();
 	GPTLEventCounter tester("test");
-//	EventCounter * testme = &tester;
 
 	for(int i = 0; i < 3; i++){
+
+		//increment the GPTLEventCounter
 		tester.increment();
 	}
 
+	std::cout << "\n" << "GPTLTimer Message: \n" << "tester.getValue() " << tester.getValue() << "\n" << std::endl;
+
+	// Require that the value of this GPTLEventCounter is 3
 	BOOST_REQUIRE_EQUAL(3, tester.getValue());
 
 }

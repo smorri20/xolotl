@@ -1,6 +1,5 @@
 #ifndef GPTLTIMER_H
 #define GPTLTIMER_H
-//#include "/home/cxj/Libraries/GPTL/include/gptl.h"
 #include "gptl.h"
 #include "papi.h"
 
@@ -19,6 +18,11 @@ class GPTLTimer: public Timer {
 private:
 
 	/**
+	 * The name of this Timer.
+	 */
+	std::string name;
+
+	/**
 	 * The value of this Timer.
 	 */
 	double value;
@@ -27,7 +31,8 @@ private:
 	 * The default constructor is declared private since all EventCounters
 	 *  must be initialized with a name.
 	 */
-	GPTLTimer():Timer("") { }
+//	GPTLTimer():Timer("") { }
+//	GPTLTimer();
 
 public:
 
@@ -63,8 +68,6 @@ public:
 	// This operation returns the units of the Timer.
 	long getUnits() const;
 
-	// This operation returns the name of the Timer.
-//	const std::string getName() const;
 
 };
 //end class GPTLTimer

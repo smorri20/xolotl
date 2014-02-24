@@ -9,8 +9,14 @@
 
 using namespace xolotlPerf;
 
+//GPTLTimer::GPTLTimer() : Timer("") {
+//
+//	value = 0.0;
+//}
+
 GPTLTimer::GPTLTimer(std::string aname) : Timer(aname) {
 
+	name = aname;
 	value = 0.0;
 
 //~~~~~~~~~~~~~~~~~MOVE SOME WHERE

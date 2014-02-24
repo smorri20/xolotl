@@ -1,5 +1,8 @@
 #dummy
 
+#Include headers in order to build
+include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
+
 #Collect all header filenames in this project 
 #and glob them in HEADERS
 file(GLOB HEADERS *.h)
@@ -8,4 +11,6 @@ file(GLOB HEADERS *.h)
 #and glob them in SRC
 file(GLOB SRC *.cpp)
 
-list(APPEND HEADERS "dummy/ *.h"}
+
+
+#install(FILES ${HEADERS} DESTINATION include)

@@ -60,12 +60,12 @@ public:
 	 * The copy constructor.
 	 * @param other The HardwareCounter to copy
 	 */
-	HardwareCounter(const HardwareCounter &other);
+//	HardwareCounter(const HardwareCounter &other);
 
 	/**
 	 * The destructor
 	 */
-	virtual ~HardwareCounter();
+	virtual ~HardwareCounter() {}
 
     // This operation returns a list of values of the, initially specified, PAPI preset quantities monitored by the HardwareCounter.
     virtual std::vector<long long> getValues() const = 0;

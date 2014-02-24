@@ -1,6 +1,5 @@
 #ifndef GPTLEVENTCOUNTER_H
 #define GPTLEVENTCOUNTER_H
-//#include "/home/cxj/Libraries/GPTL/include/gptl.h"
 #include "gptl.h"
 #include "papi.h"
 #include "EventCounter.h"
@@ -18,6 +17,11 @@ class GPTLEventCounter : public EventCounter
 private:
 
 	/**
+	 * The name of this EventCounter.
+	 */
+	std::string name;
+
+	/**
 	 * The value of this EventCounter.
 	 */
 	int value;
@@ -26,7 +30,8 @@ private:
 	 * The default constructor is declared private since all EventCounters
 	 *  must be initialized with a name.
 	 */
-	GPTLEventCounter():EventCounter("") { }
+//	GPTLEventCounter():EventCounter("") { }
+//	GPTLEventCounter();
 
 
 public:

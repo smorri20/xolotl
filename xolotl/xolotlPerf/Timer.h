@@ -12,19 +12,19 @@ namespace xolotlPerf {
 //Realizations of this interface are responsible for the collection of performance timing statistics.
 class Timer {
 
-private:
+//private:
 
 	/** The default constructor is declared private since all timers
 	 *  must be initialized with a name.
 	 */
-	Timer();
+//	Timer();
 
-protected:
+//protected:
 
 	/**
 	 * The name of this Timer.
 	 */
-	std::string name;
+//	std::string name;
 
 public:
 
@@ -34,17 +34,17 @@ public:
 	 *
 	 * @param aname The Timer's name
 	 */
-	Timer(std::string aname);
+	Timer(std::string aname) {}
 
 	/**
 	 * The copy constructor.
 	 * @param other The Timer to copy
 	 */
-	Timer(const Timer &other);
+//	Timer(const Timer &other);
 
 	/** The destructor
 	 */
-	virtual ~Timer();
+	virtual ~Timer(){}
 
 	/**
 	 * This operation returns a Timer that is created using the copy
