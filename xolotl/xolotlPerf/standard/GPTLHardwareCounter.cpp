@@ -3,7 +3,6 @@
 #include <unistd.h>
 #include <assert.h>
 #include <math.h>
-#include "/home/cxj/Libraries/GPTL/GPTL/gptl-5.0/include/gptl.h"
 #include "GPTLHardwareCounter.h"
 
 using namespace xolotlPerf;

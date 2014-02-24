@@ -51,14 +51,14 @@ BOOST_AUTO_TEST_CASE(checkTiming) {
 			  << "testme.getValue() " << testme.getValue() << "\n"
 			  << "\n");
 
-	std::cout << "GPTLTimer Message: \n" << "testme.getName() " << testme.getName() << "\n"
+	std::cout << "\n" << "GPTLTimer Message: \n" << "testme.getName() " << testme.getName() << "\n"
 			  << "testme.getValue() " << testme.getValue() << "\n" << std::endl;
 
 	testme.start();
 	sleep(1);
 	testme.stop();
 
-	std::cout << "GPTLTimer Message: \n" << "testme.getName() " << testme.getName() << "\n"
+	std::cout << "\n" << "GPTLTimer Message: \n" << "testme.getName() " << testme.getName() << "\n"
 			  << "testme.getValue() " << testme.getValue() << "\n" << std::endl;
 
 	BOOST_REQUIRE_EQUAL("test", testme.getName());

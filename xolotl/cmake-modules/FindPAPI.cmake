@@ -1,3 +1,7 @@
+# This CMake file was taken from:
+#
+# http://git.icir.org/binpacpp.git/blob_plain/feae71bbc70f46a614f293f9db88d276a6c94379:/cmake/FindPAPI.cmake
+#
 # Try to find PAPI headers and libraries.
 #
 # Usage of this module as follows:
@@ -17,13 +21,12 @@
 #  PAPI_LIBRARIES          The PAPI library
 #  PAPI_INCLUDE_DIRS       The location of PAPI headers
 
-find_path(PAPI_PREFIX
+find_path(PAPI_PREFIX 
     NAMES include/papi.h
 )
 
 find_library(PAPI_LIBRARIES
-    # Pick the static library first for easier run-time linking.
-    NAMES libpapi.a papi
+    NAMES libpapi.so papi
     HINTS ${PAPI_PREFIX}/lib ${HILTIDEPS}/lib
 )
 

@@ -7,6 +7,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include <EventCounter.h>
 #include <GPTLEventCounter.h>
+#include "papi.h"
 #include <string>
 
 using namespace std;
