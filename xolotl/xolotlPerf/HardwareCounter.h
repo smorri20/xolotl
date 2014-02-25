@@ -25,26 +25,6 @@ class HardwareCounter {
 	 */
 //	HardwareCounter();
 
-//protected:
-//
-//	/**
-//	 * The name of this HardwareCounter.
-//	 */
-//	std::string name;
-//
-//	/**
-//	 * The vector of quantities the HardwareCounter will monitor
-//	 */
-//	std::vector<HardwareQuantities> quantities;
-//	// add MAX_QUANTITIES to enum to initialize the quantities vector to contain
-//	// MAX_QUANTITIES elements
-//
-//	/**
-//	 * The values of this HardwareCounter.
-//	 */
-//	std::vector<long long> values;
-//	// size of values = quantities.size()
-
 public:
 
 	/**
@@ -52,27 +32,25 @@ public:
 	 * list of the different quantities it should monitor.
 	 *
 	 * @param aname The HardwareCounter's name
-	 * @param hquantities The HardwareCounter's list of quantities
+	 * @param hquantities The vector of quantities the HardwareCounter will monitor
 	 */
-//	HardwareCounter(std::string aname, const std::vector<HardwareQuantities> &hquantities);
-//	HardwareCounter(std::string aname, std::vector<HardwareQuantities> hquantities);
-	HardwareCounter(std::string aname);
-
-	/**
-	 * The copy constructor.
-	 * @param other The HardwareCounter to copy
-	 */
-//	HardwareCounter(const HardwareCounter &other);
+	HardwareCounter(std::string aname, const std::vector<HardwareQuantities> &hquantities) {}
 
 	/**
 	 * The destructor
 	 */
 	virtual ~HardwareCounter() {}
 
-//    // This operation returns a list of values of the, initially specified, PAPI preset quantities monitored by the HardwareCounter.
-//    virtual std::vector<long long> getValues() const = 0;
-//
-    // This operation returns the name of the HardwareCounter.
+    /**
+     * This operation returns a list of values of the, initially specified,
+     * PAPI preset quantities monitored by the HardwareCounter.
+     */
+    virtual std::vector<int> getValues() const = 0;
+
+    /**
+     * This operation returns the name.
+     * @return the name
+     */
     virtual const std::string getName() const = 0;
 
     // This operation increments the HardwareCounter.

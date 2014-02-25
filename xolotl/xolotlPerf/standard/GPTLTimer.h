@@ -64,7 +64,14 @@ public:
 //	long long getValue() const;
 	double getValue();
 
-	// This operation returns the units of the Timer.
+	/**
+	 * This operation returns the units of the GPTLTimer.
+	 *
+	 * NOTE:  wall -- wallclock time (seconds)
+	 * 		  usr -- user CPU time (seconds)
+	 * 		  sys -- system CPU time (seconds)
+	 *
+	 */
 	long getUnits() const;
 
 

@@ -22,6 +22,12 @@ private:
 		std::string name;
 
 		/**
+		 * The vector of hardware counter values corresponding to the PAPI
+		 * quantities being monitored by the GPTLHardwareCounter
+		 */
+		std::vector<int> values;
+
+		/**
 		 * The vector of quantities the HardwareCounter will monitor
 		 */
 //		std::vector<HardwareQuantities> quantities;
@@ -33,19 +39,26 @@ public:
 	 * list of the different quantities it should monitor.
 	 *
 	 * @param aname The HardwareCounter's name
-	 * @param hquantities The HardwareCounter's list of quantities
+	 * @param hquantities The vector of quantities the GPTLHardwareCounter will monitor
 	 */
-//	GPTLHardwareCounter(std::string aname, std::vector<HardwareQuantities> hquantities);
-	GPTLHardwareCounter(std::string aname);
+	GPTLHardwareCounter(std::string aname, const std::vector<HardwareQuantities> &hquantities);
 
 	/**
 	 * The copy constructor.
 	 * @param other The GPTLHardwareCounter to copy
 	 */
-	GPTLHardwareCounter(const GPTLHardwareCounter &other);
+//	GPTLHardwareCounter(const GPTLHardwareCounter &other);
 
-
+	/**
+	 * The destructor
+	 */
     ~GPTLHardwareCounter();
+
+    /**
+     * This operation returns a list of values of the, initially specified,
+     * PAPI preset quantities monitored by the GPTLHardwareCounter.
+     */
+    std::vector<int> getValues() const;
 
     /**
      * This operation returns the name of the GPTLHardwareCounter.

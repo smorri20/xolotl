@@ -5,7 +5,7 @@
 #include <vector>
 #include <memory>
 #include "HardwareCounter.h"
-#include "HardwareQuantities.h"
+//#include "HardwareQuantities.h"
 
 
 namespace xolotlPerf{
@@ -25,6 +25,12 @@ private:
 	std::string name;
 
 	/**
+	 * The vector of hardware counter values corresponding to the PAPI
+	 * quantities being monitored by the DummyHardwareCounter
+	 */
+	std::vector<int> values;
+
+	/**
 	 * The vector of quantities the HardwareCounter will monitor
 	 */
 //	std::vector<HardwareQuantities> quantities;
@@ -42,16 +48,15 @@ public:
 	 * list of the different quantities it should monitor.
 	 *
 	 * @param aname The DummyHardwareCounter's name
-	 * @param hquantities The DummyHardwareCounter's list of quantities
+	 * @param hquantities The vector of quantities the DummyHardwareCounter will monitor
 	 */
-//	DummyHardwareCounter(std::string aname, std::vector<HardwareQuantities> hquantities);
-	DummyHardwareCounter(std::string aname);
+	DummyHardwareCounter(std::string aname, const std::vector<HardwareQuantities> &hquantities);
 
 	/**
 	 * The copy constructor.
 	 * @param other The DummyHardwareCounter to copy
 	 */
-	DummyHardwareCounter(const DummyHardwareCounter &other);
+//	DummyHardwareCounter(const DummyHardwareCounter &other);
 
 	/**
 	 * The destructor
@@ -72,7 +77,7 @@ public:
      * This operation returns a list of values of the, initially specified,
      * PAPI preset quantities monitored by the DummyHardwareCounter.
      */
-//    std::vector<long long> getValues() const;
+    std::vector<int> getValues() const;
 
     // This operation returns the name of the DummyHardwareCounter.
     const std::string getName() const;

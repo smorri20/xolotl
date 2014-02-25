@@ -7,17 +7,14 @@
 
 using namespace xolotlPerf;
 
-//GPTLHardwareCounter::GPTLHardwareCounter(std::string aname, std::vector<HardwareQuantities> hquantities) :
-//		HardwareCounter(aname, hquantities) {
-//
-//		name = aname;
-//		quantities = hquantities;
-//
-//}
+GPTLHardwareCounter::GPTLHardwareCounter(std::string aname,
+		const std::vector<HardwareQuantities> &hquantities) :
+		HardwareCounter(aname, hquantities) {
 
-GPTLHardwareCounter::GPTLHardwareCounter(std::string aname) : HardwareCounter(aname) {
+	name = aname;
+//	values = std::vector<int>(hquantities.size(), 0);
 
-		name = aname;
+	values.assign((hquantities.size()),0);
 
 }
 
@@ -25,37 +22,43 @@ GPTLHardwareCounter::~GPTLHardwareCounter() {
 
 }
 
+std::vector<int> GPTLHardwareCounter::getValues() const {
+
+	// The following documentation was taken directly from gptl.c
+	/*
+	 ** GPTLget_eventvalue: return PAPI-based event value for a timer. All values will be
+	 ** returned as doubles, even if the event is not derived.
+	 **
+	 ** Input args:
+	 ** const char *timername: timer name
+	 ** const char *eventname: event name (must be currently enabled)
+	 ** int t: thread number (if < 0, the request is for the current thread)
+	 **
+	 ** Output args:
+	 ** double *value: current value of the event for this timer
+	 */
+	//	int gret = GPTLget_eventvalue( name.c_str(), -1, &papival );
+
+	return values;
+}
 
 const std::string GPTLHardwareCounter::getName() const {
 
 	return name;
 }
 
-void GPTLHardwareCounter::increment(){
+void GPTLHardwareCounter::increment() {
+
+		for(std::vector<int>::iterator it = values.begin(); it !=values.end(); it++)
+			(*it)++;
+
+	//		++values.at(FLPT_INSTRUC);
 
 }
 
-//long long GPTLHardwareCounter::getValue() const {
-//
-//	double papival = 0.0;
-//
-//	// The following documentation was taken directly from gptl.c
-//	/*
-//	** GPTLget_eventvalue: return PAPI-based event value for a timer. All values will be
-//	** returned as doubles, even if the event is not derived.
-//	**
-//	** Input args:
-//	** const char *timername: timer name
-//	** const char *eventname: event name (must be currently enabled)
-//	** int t: thread number (if < 0, the request is for the current thread)
-//	**
-//	** Output args:
-//	** double *value: current value of the event for this timer
-//	*/
-////	int gret = GPTLget_eventvalue( name.c_str(), -1, &papival );
-//
-//	return (long long)papival;
-//}
+
+
+
 
 
 //----------------------------
@@ -72,8 +75,6 @@ void GPTLHardwareCounter::increment(){
 //		name(other.name), quantities(other.quantities), values(other.values) {
 //}
 
-
-
 //std::shared_ptr<HardwareCounter> HardwareCounter::clone() {
 //	std::shared_ptr<HardwareCounter> HardwareCounter(new HardwareCounter(*this));
 //	return HardwareCounter;
@@ -88,5 +89,4 @@ void GPTLHardwareCounter::increment(){
 //
 //	return values;
 //}
-
 

@@ -47,7 +47,7 @@ public:
 	 * The copy constructor.
 	 * @param other The GPTLEventCounter to copy
 	 */
-	GPTLEventCounter(const GPTLEventCounter &other);
+//	GPTLEventCounter(const GPTLEventCounter &other);
 
 	/**
 	 * The destructor

@@ -26,9 +26,7 @@ link_directories(${CMAKE_SOURCE_DIR}/src/xolotlPerf/dummy)
 link_directories(${CMAKE_SOURCE_DIR}/src/xolotlPerf/standard)
     
     #Get the test files
-#    file(GLOB tests *Tester.cpp)
-#    file(GLOB tests GPTLTimerTester.cpp GPTLEventCounterTester.cpp)
-    file(GLOB tests GPTLTimerTester.cpp GPTLEventCounterTester.cpp DummyEventCounterTester.cpp DummyTimerTester.cpp)
+    file(GLOB tests *Tester.cpp)
     
 #If boost was found, create tests
 if(Boost_FOUND)
@@ -57,7 +55,7 @@ link_directories(${CMAKE_SOURCE_DIR}/src/xolotlPerf/dummy)
     
     #Get the test files
  #   file(GLOB tests *Tester.cpp dummy/*Tester.cpp standard/*Tester.cpp) 
-    file(GLOB tests DummyTimerTester.cpp DummyEventCounterTester.cpp)
+    file(GLOB tests DummyTimerTester.cpp DummyEventCounterTester.cpp DummyHardwareCounterTester.cpp)
     
 #If boost was found, create tests
 if(Boost_FOUND)
