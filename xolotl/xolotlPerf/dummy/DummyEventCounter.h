@@ -16,10 +16,21 @@ class DummyEventCounter : public EventCounter
 
 private:
 
-	/** The default constructor is declared private since all EventCounters
+	/**
+	 * The name of this EventCounter.
+	 */
+	std::string name;
+
+	/**
+	 * The value of this EventCounter.
+	 */
+	int value;
+
+	/**
+	 * The default constructor is declared private since all EventCounters
 	 *  must be initialized with a name.
 	 */
-	DummyEventCounter():EventCounter("") {}
+//	DummyEventCounter():EventCounter("") {}
 
 
 public:
@@ -35,7 +46,7 @@ public:
 	 * The copy constructor.
 	 * @param other The DummyEventCounter to copy
 	 */
-	DummyEventCounter(const DummyEventCounter &other);
+//	DummyEventCounter(const DummyEventCounter &other);
 
 	/** The destructor
 	 */

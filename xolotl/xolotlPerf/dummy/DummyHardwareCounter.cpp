@@ -1,10 +1,21 @@
-#include "HardwareQuantities.h"
+#include <iostream>
+#include <stdlib.h>
+#include <unistd.h>
 #include "DummyHardwareCounter.h"
 
 using namespace xolotlPerf;
 
-DummyHardwareCounter::DummyHardwareCounter(std::string aname, const std::vector<HardwareQuantities> &hquantities) :
-		HardwareCounter(aname, hquantities) {
+//DummyHardwareCounter::DummyHardwareCounter(std::string aname, std::vector<HardwareQuantities> hquantities) :
+//		HardwareCounter(aname, hquantities) {
+//
+//	name = aname;
+//	quantities = hquantities;
+//}
+
+DummyHardwareCounter::DummyHardwareCounter(std::string aname) :
+		HardwareCounter(aname) {
+
+	name = aname;
 }
 
 DummyHardwareCounter::~DummyHardwareCounter() {
@@ -16,9 +27,9 @@ DummyHardwareCounter::~DummyHardwareCounter() {
 //	return eventCounter;
 //}
 
-std::vector<long long> DummyHardwareCounter::getValues() const {
-	return values;
-}
+//std::vector<long long> DummyHardwareCounter::getValues() const {
+//	return values;
+//}
 
 /**
  * This operation returns the name.

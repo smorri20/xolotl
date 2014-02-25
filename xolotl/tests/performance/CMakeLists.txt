@@ -14,6 +14,7 @@ if(GPTL_FOUND AND PAPI_FOUND)
 
 #Include directories from the source and boost binaries
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf/dummy)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf/standard)
 include_directories(${Boost_BINARY_DIRS}) 
 include_directories(${GPTL_INCLUDE_DIRS})
@@ -21,11 +22,13 @@ include_directories(${PAPI_INCLUDE_DIRS})
 
 #Link the directories
 link_directories(${CMAKE_SOURCE_DIR}/src/xolotlPerf)
-#link_directories(${CMAKE_SOURCE_DIR}/src/xolotlPerf/dummy)
+link_directories(${CMAKE_SOURCE_DIR}/src/xolotlPerf/dummy)
 link_directories(${CMAKE_SOURCE_DIR}/src/xolotlPerf/standard)
     
     #Get the test files
-    file(GLOB tests GPTLTimerTester.cpp GPTLEventCounterTester.cpp)
+#    file(GLOB tests *Tester.cpp)
+#    file(GLOB tests GPTLTimerTester.cpp GPTLEventCounterTester.cpp)
+    file(GLOB tests GPTLTimerTester.cpp GPTLEventCounterTester.cpp DummyEventCounterTester.cpp DummyTimerTester.cpp)
     
 #If boost was found, create tests
 if(Boost_FOUND)

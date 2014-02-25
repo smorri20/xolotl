@@ -7,9 +7,32 @@
 
 using namespace xolotlPerf;
 
-GPTLHardwareCounter::~GPTLHardwareCounter() 
-{
-    //TODO Auto-generated method stub
+//GPTLHardwareCounter::GPTLHardwareCounter(std::string aname, std::vector<HardwareQuantities> hquantities) :
+//		HardwareCounter(aname, hquantities) {
+//
+//		name = aname;
+//		quantities = hquantities;
+//
+//}
+
+GPTLHardwareCounter::GPTLHardwareCounter(std::string aname) : HardwareCounter(aname) {
+
+		name = aname;
+
+}
+
+GPTLHardwareCounter::~GPTLHardwareCounter() {
+
+}
+
+
+const std::string GPTLHardwareCounter::getName() const {
+
+	return name;
+}
+
+void GPTLHardwareCounter::increment(){
+
 }
 
 //long long GPTLHardwareCounter::getValue() const {
@@ -33,3 +56,37 @@ GPTLHardwareCounter::~GPTLHardwareCounter()
 //
 //	return (long long)papival;
 //}
+
+
+//----------------------------
+//HardwareCounter::HardwareCounter() {
+//	name = "";
+//	values = std::vector<long long>(quantities.size(), 0);
+//}
+
+//HardwareCounter::HardwareCounter(std::string aname, const std::vector<HardwareQuantities> &hquantities) :
+//		name(aname), quantities(hquantities), values(std::vector<long long>(quantities.size(), 0)) {
+//}
+
+//HardwareCounter::HardwareCounter(const HardwareCounter &other) :
+//		name(other.name), quantities(other.quantities), values(other.values) {
+//}
+
+
+
+//std::shared_ptr<HardwareCounter> HardwareCounter::clone() {
+//	std::shared_ptr<HardwareCounter> HardwareCounter(new HardwareCounter(*this));
+//	return HardwareCounter;
+//}
+
+//std::vector<long long> HardwareCounter::getValues() const {
+//	// By default the values are set to zero.
+////	int valuesLength = quantities.size();
+////	std::vector<long long> values = std::vector<long long>(valuesLength, 0);
+//
+//	//GPTLget_value to get PAPI counters
+//
+//	return values;
+//}
+
+

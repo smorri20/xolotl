@@ -1,8 +1,10 @@
+#include <iostream>
+#include <stdlib.h>
+#include <unistd.h>
 #include "DummyTimer.h"
 #include <time.h>
 
 using namespace xolotlPerf;
-
 
 DummyTimer::DummyTimer(std::string aname) : Timer(aname) {
 

@@ -16,34 +16,34 @@ namespace xolotlPerf{
  */
 class HardwareCounter {
 
-private:
+//private:
 
 	/**
 	 * The default constructor is private because HardwareCounters must
 	 * always be initialized with a name and a vector of quantities to
 	 * be monitored.
 	 */
-	HardwareCounter();
+//	HardwareCounter();
 
-protected:
-
-	/**
-	 * The name of this HardwareCounter.
-	 */
-	std::string name;
-
-	/**
-	 * The vector of quantities the HardwareCounter will monitor
-	 */
-	std::vector<HardwareQuantities> quantities;
-	// add MAX_QUANTITIES to enum to initialize the quantities vector to contain
-	// MAX_QUANTITIES elements
-
-	/**
-	 * The values of this HardwareCounter.
-	 */
-	std::vector<long long> values;
-	// size of values = quantities.size()
+//protected:
+//
+//	/**
+//	 * The name of this HardwareCounter.
+//	 */
+//	std::string name;
+//
+//	/**
+//	 * The vector of quantities the HardwareCounter will monitor
+//	 */
+//	std::vector<HardwareQuantities> quantities;
+//	// add MAX_QUANTITIES to enum to initialize the quantities vector to contain
+//	// MAX_QUANTITIES elements
+//
+//	/**
+//	 * The values of this HardwareCounter.
+//	 */
+//	std::vector<long long> values;
+//	// size of values = quantities.size()
 
 public:
 
@@ -54,7 +54,9 @@ public:
 	 * @param aname The HardwareCounter's name
 	 * @param hquantities The HardwareCounter's list of quantities
 	 */
-	HardwareCounter(std::string aname, const std::vector<HardwareQuantities> &hquantities);
+//	HardwareCounter(std::string aname, const std::vector<HardwareQuantities> &hquantities);
+//	HardwareCounter(std::string aname, std::vector<HardwareQuantities> hquantities);
+	HardwareCounter(std::string aname);
 
 	/**
 	 * The copy constructor.
@@ -67,9 +69,9 @@ public:
 	 */
 	virtual ~HardwareCounter() {}
 
-    // This operation returns a list of values of the, initially specified, PAPI preset quantities monitored by the HardwareCounter.
-    virtual std::vector<long long> getValues() const = 0;
-
+//    // This operation returns a list of values of the, initially specified, PAPI preset quantities monitored by the HardwareCounter.
+//    virtual std::vector<long long> getValues() const = 0;
+//
     // This operation returns the name of the HardwareCounter.
     virtual const std::string getName() const = 0;
 

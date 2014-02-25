@@ -63,6 +63,7 @@ BOOST_AUTO_TEST_CASE(checkTiming) {
 			  << "tester.getValue() = " << tester.getValue() << "\n"
 			  << "tester.getValue() - " << sleepSeconds << " = " << tester.getValue()-sleepSeconds << "\n"<< std::endl;
 
+	//Require that the value of this GPTLTimer is within 3% of the value of sleepSeconds
 	BOOST_REQUIRE_CLOSE(sleepSeconds, tester.getValue(),0.03);
 //	BOOST_REQUIRE_EQUAL(0, testme->getUnits());
 

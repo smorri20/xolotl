@@ -31,11 +31,13 @@ if(GPTL_FOUND AND PAPI_FOUND)
 
 #Collect all header filenames in this project 
 #and glob them in HEADERS
-file(GLOB HEADERS *.h standard/*.h)
+#file(GLOB HEADERS *.h standard/*.h dummy/*.h)
+file(GLOB HEADERS EventCounter.h Timer.h standard/GPTLEventCounter.h standard/GPTLTimer.h dummy/DummyEventCounter.h dummy/DummyTimer.h)
 
 #Collect all of the cpp files in this folder 
 #and glob them in SRC
-file(GLOB SRC standard/*.cpp)
+#file(GLOB SRC standard/*.cpp dummy/*.cpp)
+file(GLOB SRC standard/GPTLEventCounter.cpp standard/GPTLTimer.cpp dummy/DummyEventCounter.cpp dummy/DummyTimer.cpp)
 
 #Add the library
 add_library(${LIBRARY_NAME} SHARED ${SRC})

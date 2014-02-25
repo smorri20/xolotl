@@ -1,7 +1,7 @@
 #ifndef DUMMYTIMER_H
 #define DUMMYTIMER_H
 
-// Include
+// Includes
 #include <string>
 #include <memory>
 #include "Timer.h"
@@ -18,10 +18,16 @@ class DummyTimer : public Timer
 {
 private:
 
-	/** The defaule constructor is declared as private since Timers
+	/**
+	 * The name of this Timer.
+	 */
+	std::string name;
+
+	/**
+	 * The default constructor is declared as private since Timers
 	 *  must be initialized with a name.
 	 */
-	DummyTimer():Timer("") {}
+//	DummyTimer():Timer("") {}
 
 public:
 
@@ -32,9 +38,9 @@ public:
 	 * @param aname The DummyTimer's name
 	 */
 	DummyTimer(std::string aname);
-//	DummyTimer(std::string aname) : name(aname) {}
 
-	/** The constructor.
+	/**
+	 * The destructor.
 	 */
 	~DummyTimer();
 

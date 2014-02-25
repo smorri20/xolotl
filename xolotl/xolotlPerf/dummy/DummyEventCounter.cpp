@@ -4,6 +4,9 @@ using namespace xolotlPerf;
 
 
 DummyEventCounter::DummyEventCounter(std::string aname) : EventCounter(aname) {
+
+	name = aname;
+	value = 0;
 }
 
 

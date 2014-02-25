@@ -3,6 +3,7 @@
 #include "gptl.h"
 #include "papi.h"
 #include "HardwareCounter.h"
+#include "HardwareQuantities.h"
 
 namespace xolotlPerf{
 
@@ -13,9 +14,48 @@ namespace xolotlPerf{
 class GPTLHardwareCounter : public HardwareCounter
 {
 
-    public:
+private:
 
-        ~GPTLHardwareCounter(); 
+		/**
+		 * The name of this HardwareCounter.
+		 */
+		std::string name;
+
+		/**
+		 * The vector of quantities the HardwareCounter will monitor
+		 */
+//		std::vector<HardwareQuantities> quantities;
+
+public:
+
+	/**
+	 * HardwareCounter constructor that takes the name and a
+	 * list of the different quantities it should monitor.
+	 *
+	 * @param aname The HardwareCounter's name
+	 * @param hquantities The HardwareCounter's list of quantities
+	 */
+//	GPTLHardwareCounter(std::string aname, std::vector<HardwareQuantities> hquantities);
+	GPTLHardwareCounter(std::string aname);
+
+	/**
+	 * The copy constructor.
+	 * @param other The GPTLHardwareCounter to copy
+	 */
+	GPTLHardwareCounter(const GPTLHardwareCounter &other);
+
+
+    ~GPTLHardwareCounter();
+
+    /**
+     * This operation returns the name of the GPTLHardwareCounter.
+     * @return the name
+     */
+    const std::string getName() const;
+
+    // This operation increments the GPTLHardwareCounter.
+    void increment();
+
 
 };  //end class GPTLHardwareCounter
 
