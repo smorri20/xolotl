@@ -1,8 +1,7 @@
 #ifndef GPTLTIMER_H
 #define GPTLTIMER_H
 #include "gptl.h"
-#include "papi.h"
-
+#include <stdio.h>
 #include "Timer.h"
 #include <string>
 

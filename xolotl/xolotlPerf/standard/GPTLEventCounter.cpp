@@ -60,7 +60,8 @@ int GPTLEventCounter::getValue() {
 	** Output args:
 	** int *count: current number of start/stop calls for the timer
 	*/
-	int gret = GPTLget_count( name.c_str(), -1, &value );
+//	int gret = GPTLget_count( name.c_str(), -1, &value );
+	GPTLget_count( name.c_str(), -1, &value );
 
 	return value;
 }

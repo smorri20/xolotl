@@ -1,4 +1,4 @@
-# This CMake file was taken from:
+# This CMake file was taken, then modified, from:
 #
 # http://git.icir.org/binpacpp.git/blob_plain/feae71bbc70f46a614f293f9db88d276a6c94379:/cmake/FindPAPI.cmake
 #
@@ -24,6 +24,10 @@
 find_path(PAPI_PREFIX 
     NAMES include/papi.h
 )
+
+#find_path(PAPI_PREFIX include/papi.h
+#    NAMES HINTS ENV PAPI_PREFIX
+#)
 
 find_library(PAPI_LIBRARIES
     NAMES libpapi.so papi

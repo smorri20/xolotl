@@ -19,11 +19,6 @@ GPTLTimer::GPTLTimer(std::string aname) : Timer(aname) {
 	name = aname;
 	value = 0.0;
 
-//~~~~~~~~~~~~~~~~~MOVE SOME WHERE
-//	GPTLsetoption (GPTLcpu, 1);
-//	GPTLsetoption (GPTLwall, 1);
-//	GPTLinitialize();
-//	GPTLinit_handle(name.c_str(), &handle);
 }
 
 GPTLTimer::~GPTLTimer() {
@@ -58,7 +53,8 @@ double GPTLTimer::getValue() {
 	** Output args:
 	** double *value: current wallclock accumulation for the timer
 	*/
-    int gret = GPTLget_wallclock( name.c_str(), -1, &value );
+//    int gret = GPTLget_wallclock( name.c_str(), -1, &value );
+    GPTLget_wallclock( name.c_str(), -1, &value );
 
     return value;
 }

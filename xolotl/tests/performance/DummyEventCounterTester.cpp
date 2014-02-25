@@ -1,9 +1,6 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE Regression
 
-#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Regression
-
 #include <boost/test/included/unit_test.hpp>
 #include <DummyEventCounter.h>
 #include <string>
