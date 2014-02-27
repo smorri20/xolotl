@@ -3,8 +3,7 @@
 
 // Includes
 #include <string>
-#include <memory>
-#include "Timer.h"
+#include "ITimer.h"
 
 using namespace std;
 
@@ -14,12 +13,12 @@ namespace xolotlPerf{
  * The DummyTimer class is instantiated by the DummerHandlerRegistry class
  * and realizes the DummyTimer interface.
  */
-class DummyTimer : public Timer
+class DummyTimer : public ITimer
 {
 private:
 
 	/**
-	 * The name of this Timer.
+	 * The name of this ITimer.
 	 */
 	std::string name;
 
@@ -27,50 +26,48 @@ private:
 	 * The default constructor is declared as private since Timers
 	 *  must be initialized with a name.
 	 */
-//	DummyTimer():Timer("") {}
+	DummyTimer():ITimer("") { }
 
 public:
 
 	/**
-	 * DummyTimer constructor that takes the argument name
+	 * DummyTimer constructor that takes the argument timerName
 	 * to distinguish specific DummyTimer.
 	 *
-	 * @param aname The DummyTimer's name
+	 * @param timerName The DummyTimer's name
 	 */
-	DummyTimer(std::string aname);
+	DummyTimer(std::string timerName);
 
 	/**
 	 * The destructor.
 	 */
 	~DummyTimer();
 
-	/**
-	 * This operation returns a DummyTimer that is created using the copy
-	 * constructor. If this DummyTimer is actually a subclass of DummyTimer, the
-	 * clone will be of the same type and therefore carry all of the members
-	 * and virtual functions of the subclass in addition to those of the
-	 * DummyTimer.
-	 * @return A copy of this DummyTimer.
-	 */
-//	virtual std::shared_ptr<Timer> clone();
+    /**
+     * This operations starts the ITimer.
+     */
+	void start();
 
-    // This operations starts the DummyTimer.
-    void start();
-
-    // This operation stops the DummyTimer.
-    void stop();
+    /**
+     * This operation stops the ITimer.
+     */
+	void stop();
 
 	/**
-	 * This operation returns the name of the Timer.
+	 * This operation returns the name of the ITimer.
 	 *
-	 * @return The name of this Timer
+	 * @return The name of this ITimer
 	 */
 	const std::string getName() const;
 
-    // This operation returns the value of the Timer.
+    /**
+     * This operation returns the value of the DummyTimer.
+     */
     double getValue();
 
-    // This operation returns the units of the DummyTimer.
+	/**
+	 * This operation returns the units of the GPTLTimer.
+	 */
     long getUnits() const;
 
 };  //end class DummyTimer

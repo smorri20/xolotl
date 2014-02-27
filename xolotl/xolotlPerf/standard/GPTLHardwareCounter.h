@@ -1,53 +1,60 @@
 #ifndef GPTLHARDWARECOUNTER_H
 #define GPTLHARDWARECOUNTER_H
+
 #include "gptl.h"
-#include "papi.h"
-#include "HardwareCounter.h"
+#include "IHardwareCounter.h"
 #include "HardwareQuantities.h"
+#include <unordered_map>
 
 namespace xolotlPerf{
 
-// The GPTLHardwareCounter class is instantiated by the StandardHandlerRegistry class
-// and realizes the HardwareCounter interface to gather hardware performance counter data
-// found by utilizing the PAPI (Performance Application Programming Interface) library via the
-// General Purpose Timing Library (GPTL).
-class GPTLHardwareCounter : public HardwareCounter
+/**
+ * The GPTLHardwareCounter class is instantiated by the StandardHandlerRegistry class
+ * and realizes the IHardwareCounter interface to gather hardware performance counter data
+ * found by utilizing the PAPI (Performance Application Programming Interface) library via the
+ * General Purpose Timing Library (GPTL).
+ */
+
+class GPTLHardwareCounter : public IHardwareCounter
 {
 
 private:
 
 		/**
-		 * The name of this HardwareCounter.
+		 * The name of this IHardwareCounter.
 		 */
 		std::string name;
 
 		/**
-		 * The vector of hardware counter values corresponding to the PAPI
-		 * quantities being monitored by the GPTLHardwareCounter
+		 * The hardware quantities this GPTLHardwareCounter monitors.
 		 */
-		std::vector<int> values;
+		std::vector<HardwareQuantities> quantities;
 
 		/**
-		 * The vector of quantities the HardwareCounter will monitor
+		 * The default constructor is private because HardwareCounters must
+		 * always be given a name and a vector of quantities to
+		 * be monitored.
 		 */
-//		std::vector<HardwareQuantities> quantities;
+		GPTLHardwareCounter():IHardwareCounter("", std::vector<HardwareQuantities>(0)) { }
+
+protected:
+
+		/**
+		 * A map that is used to map the hardware quantities to their
+		 * corresponding PAPI counterparts
+		 */
+//		static std::unordered_map<HardwareQuantities, int> hardwareQuantitiesMap;
 
 public:
 
 	/**
-	 * HardwareCounter constructor that takes the name and a
+	 * IHardwareCounter constructor that takes the name and a
 	 * list of the different quantities it should monitor.
 	 *
-	 * @param aname The HardwareCounter's name
-	 * @param hquantities The vector of quantities the GPTLHardwareCounter will monitor
+	 * @param counterName The IHardwareCounter's name
+	 * @param counterQuantities The vector of quantities the GPTLHardwareCounter will monitor
 	 */
-	GPTLHardwareCounter(std::string aname, const std::vector<HardwareQuantities> &hquantities);
-
-	/**
-	 * The copy constructor.
-	 * @param other The GPTLHardwareCounter to copy
-	 */
-//	GPTLHardwareCounter(const GPTLHardwareCounter &other);
+	GPTLHardwareCounter(std::string counterName, const std::vector<HardwareQuantities> &counterQuantities);
 
 	/**
 	 * The destructor
@@ -56,18 +63,22 @@ public:
 
     /**
      * This operation returns a list of values of the, initially specified,
-     * PAPI preset quantities monitored by the GPTLHardwareCounter.
+     * hardware quantities monitored by the GPTLHardwareCounter.
      */
-    std::vector<int> getValues() const;
+//    std::vector<int> getValues() const;
 
     /**
      * This operation returns the name of the GPTLHardwareCounter.
+     *
      * @return the name
      */
     const std::string getName() const;
 
-    // This operation increments the GPTLHardwareCounter.
-    void increment();
+	/**
+	 * This operation returns the list of hardware
+	 * quantities monitored by the GPTLHardwareCounter.
+	 */
+	std::vector<HardwareQuantities> getHardwareQuantities() const;
 
 
 };  //end class GPTLHardwareCounter

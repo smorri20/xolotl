@@ -1,22 +1,12 @@
-#include <iostream>
-#include <stdlib.h>
-#include <unistd.h>
-#include <assert.h>
-#include <math.h>
 #include <time.h>
-#include "Timer.h"
+#include "ITimer.h"
 #include "GPTLTimer.h"
 
 using namespace xolotlPerf;
 
-//GPTLTimer::GPTLTimer() : Timer("") {
-//
-//	value = 0.0;
-//}
+GPTLTimer::GPTLTimer(std::string timerName) : ITimer(timerName) {
 
-GPTLTimer::GPTLTimer(std::string aname) : Timer(aname) {
-
-	name = aname;
+	name = timerName;
 	value = 0.0;
 
 }
@@ -24,13 +14,13 @@ GPTLTimer::GPTLTimer(std::string aname) : Timer(aname) {
 GPTLTimer::~GPTLTimer() {
 }
 
-// This operations starts the Timer.
+// This operations starts the ITimer.
 void GPTLTimer::start(){
-//	GPTLstart_handle(aname.c_str(), &handle);
+//	GPTLstart_handle(timerName.c_str(), &handle);
 	GPTLstart(name.c_str());
 }
 
-// This operation stops the Timer.
+// This operation stops the ITimer.
 void GPTLTimer::stop(){
 //	GPTLstop_handle(name.c_str(), &handle);
 	GPTLstop(name.c_str());
@@ -40,7 +30,7 @@ const std::string GPTLTimer::getName() const {
 	return name;
 }
 
-// This operation returns the value of the Timer.
+// This operation returns the value of the ITimer.
 double GPTLTimer::getValue() {
 
 	/*
@@ -59,7 +49,7 @@ double GPTLTimer::getValue() {
     return value;
 }
 
-// This operation returns the units of the Timer.
+// This operation returns the units of the ITimer.
 long GPTLTimer::getUnits() const {
 //	return this->units;
 }

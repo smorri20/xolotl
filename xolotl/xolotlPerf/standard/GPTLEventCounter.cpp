@@ -3,20 +3,13 @@
 #include <unistd.h>
 #include <assert.h>
 #include <math.h>
-#include "EventCounter.h"
 #include "GPTLEventCounter.h"
 
 using namespace xolotlPerf;
 
-//GPTLEventCounter::GPTLEventCounter() : EventCounter("") {
-//
-//	value = 0;
-//
-//}
+GPTLEventCounter::GPTLEventCounter(std::string eventCounterName) : IEventCounter(eventCounterName) {
 
-GPTLEventCounter::GPTLEventCounter(std::string aname) : EventCounter(aname) {
-
-	name = aname;
+	name = eventCounterName;
 	value = 0;
 
 }
@@ -24,10 +17,6 @@ GPTLEventCounter::GPTLEventCounter(std::string aname) : EventCounter(aname) {
 GPTLEventCounter::~GPTLEventCounter() {
 
 }
-
-//GPTLEventCounter::GPTLEventCounter(const GPTLEventCounter &other) :
-//		name(other.name), value(other.value) {
-//}
 
 
 int GPTLEventCounter::getValue() {

@@ -2,7 +2,7 @@
 #define BOOST_TEST_MODULE Regression
 
 #include <boost/test/included/unit_test.hpp>
-#include <EventCounter.h>
+#include <IEventCounter.h>
 #include <GPTLEventCounter.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -23,8 +23,8 @@ BOOST_AUTO_TEST_SUITE (GPTLEventCounter_testSuite)
 //
 //	GPTLEventCounter tester("test");
 //
-//	std::cout << "\n" << "GPTLEventCounter Message: \n" << "tester.getName() " << tester.getName() << "\n"
-//					  << std::endl;
+//	BOOST_TEST_MESSAGE( "\n" << "GPTLEventCounter Message: \n" << "tester.getName() " << tester.getName() << "\n"
+//					  );
 //
 //	// Require that the name of this GPTLEventCounter is "test"
 //	BOOST_REQUIRE_EQUAL("test", tester.getName());
@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_SUITE (GPTLEventCounter_testSuite)
 ////	GPTLinitialize();
 //	GPTLEventCounter tester("test");
 //
-//	std::cout << "\n" << "GPTLEventCounter Message: \n" << "tester.getValue() " << tester.getValue() << "\n" << std::endl;
+//	BOOST_TEST_MESSAGE( "\n" << "GPTLEventCounter Message: \n" << "tester.getValue() " << tester.getValue() << "\n" );
 //
 //	// Require that the value of this GPTLEventCounter is 0
 //	BOOST_REQUIRE_EQUAL(0, tester.getValue());
@@ -47,16 +47,14 @@ BOOST_AUTO_TEST_CASE(checkCounting) {
 	GPTLinitialize();
 	GPTLEventCounter tester("test");
 
-	std::cout << "\n" << "PAPI_VERSION = " << PAPI_VERSION_MAJOR(PAPI_VERSION) << "."
-			  << PAPI_VERSION_MINOR(PAPI_VERSION) << "." << PAPI_VERSION_REVISION(PAPI_VERSION) << std::endl;
-
-	std::cout << "\n" << "GPTLEventCounter Message: \n" << "tester.getName() = " << tester.getName() << "\n"
-					  << std::endl;
+	//Output the version of PAPI that is being used
+	BOOST_TEST_MESSAGE("\n" << "PAPI_VERSION = " << PAPI_VERSION_MAJOR(PAPI_VERSION) << "."
+			  << PAPI_VERSION_MINOR(PAPI_VERSION) << "." << PAPI_VERSION_REVISION(PAPI_VERSION) << "\n");
 
 	// Require that the name of this GPTLEventCounter is "test"
 	BOOST_REQUIRE_EQUAL("test", tester.getName());
 
-	std::cout << "\n" << "GPTLEventCounter Message: \n" << "tester.getValue() = " << tester.getValue() << "\n" << std::endl;
+	BOOST_TEST_MESSAGE( "\n" << "GPTLEventCounter Message: \n" << "tester.getValue() = " << tester.getValue() << "\n" );
 
 	// Require that the value of this GPTLEventCounter is 0
 	BOOST_REQUIRE_EQUAL(0, tester.getValue());
@@ -67,7 +65,7 @@ BOOST_AUTO_TEST_CASE(checkCounting) {
 		tester.increment();
 	}
 
-	std::cout << "\n" << "GPTLEventCounter Message: \n" << "tester.getValue() = " << tester.getValue() << "\n" << std::endl;
+	BOOST_TEST_MESSAGE( "\n" << "GPTLEventCounter Message: \n" << "tester.getValue() = " << tester.getValue() << "\n" );
 
 	// Require that the value of this GPTLEventCounter is 3
 	BOOST_REQUIRE_EQUAL(3, tester.getValue());

@@ -3,9 +3,9 @@
 using namespace xolotlPerf;
 
 
-DummyEventCounter::DummyEventCounter(std::string aname) : EventCounter(aname) {
+DummyEventCounter::DummyEventCounter(std::string eventCounterName) : IEventCounter(eventCounterName) {
 
-	name = aname;
+	name = eventCounterName;
 	value = 0;
 }
 
@@ -18,10 +18,6 @@ int DummyEventCounter::getValue() {
 	return 0;
 }
 
-/**
- * This operation returns the name.
- * @return the name
- */
 const std::string DummyEventCounter::getName() const {
 	return "";
 }

@@ -2,7 +2,7 @@
 #define BOOST_TEST_MODULE Regression
 
 #include <boost/test/included/unit_test.hpp>
-#include <Timer.h>
+#include <ITimer.h>
 #include <GPTLTimer.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -23,8 +23,8 @@ BOOST_AUTO_TEST_SUITE (GPTLTimer_testSuite)
 //
 //	GPTLTimer tester("test");
 //
-//	std::cout << "\n" << "GPTLTimer Message: \n" << "tester.getName() = " << tester.getName() << "\n"
-//				  << std::endl;
+//	BOOST_TEST_MESSAGE( "\n" << "GPTLTimer Message: \n" << "tester.getName() = " << tester.getName() << "\n"
+//				  );
 //
 //	//Require that the name of this GPTLTimer is "test"
 //	BOOST_REQUIRE_EQUAL("test", tester.getName());
@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_SUITE (GPTLTimer_testSuite)
 //
 //	GPTLTimer tester("test");
 //
-//	std::cout << "\n" << "GPTLTimer Message: \n" << "tester.getValue() = " << tester.getValue() << "\n" << std::endl;
+//	BOOST_TEST_MESSAGE( "\n" << "GPTLTimer Message: \n" << "tester.getValue() = " << tester.getValue() << "\n" );
 //
 //	//Require that the value of this GPTLTimer is 0.0 (here value is of type double)
 //	BOOST_REQUIRE_EQUAL(0.0, tester.getValue());
@@ -50,12 +50,15 @@ BOOST_AUTO_TEST_CASE(checkTiming) {
 	double sleepSeconds = 2.0;
 
 	//Output the version of PAPI that is being used
-	std::cout << "\n" << "PAPI_VERSION = " << PAPI_VERSION_MAJOR(PAPI_VERSION) << "."
-			  << PAPI_VERSION_MINOR(PAPI_VERSION) << "." << PAPI_VERSION_REVISION(PAPI_VERSION) << std::endl;
+	BOOST_TEST_MESSAGE("\n" << "PAPI_VERSION = " << PAPI_VERSION_MAJOR(PAPI_VERSION) << "."
+			  << PAPI_VERSION_MINOR(PAPI_VERSION) << "." << PAPI_VERSION_REVISION(PAPI_VERSION) << "\n");
+
+//	std::cout << "\n" << "PAPI_VERSION = " << PAPI_VERSION_MAJOR(PAPI_VERSION) << "."
+//			  << PAPI_VERSION_MINOR(PAPI_VERSION) << "." << PAPI_VERSION_REVISION(PAPI_VERSION) << std::endl;
 
 	//Output the name of the GPTLTimer
-	std::cout << "\n" << "GPTLTimer Message: \n" << "tester.getName() = " << tester.getName() << "\n"
-			  << "tester.getValue() = " << tester.getValue() << "\n" << std::endl;
+	BOOST_TEST_MESSAGE("\n" << "GPTLTimer Message: \n" << "tester.getName() = " << tester.getName() << "\n"
+			  << "tester.getValue() = " << tester.getValue() << "s");
 
 	//Require that the name of this GPTLTimer is "test"
 	BOOST_REQUIRE_EQUAL("test", tester.getName());
@@ -72,8 +75,7 @@ BOOST_AUTO_TEST_CASE(checkTiming) {
 
 	// GPTLstamp is used here to get the wallclock timestamp when the timer is started
 	GPTLstamp(&wall, &usr, &sys);
-	std::cout << "Started timer at:"  << std::endl;
-	std::cout << "wall = " << wall << std::endl << std::endl;
+	BOOST_TEST_MESSAGE("\n" << "Started timer at: " << "wallclock = " << wall << "s");
 	wallStart = wall;
 
 	sleep(sleepSeconds);
@@ -83,17 +85,16 @@ BOOST_AUTO_TEST_CASE(checkTiming) {
 
 	// GPTLstamp is used here to get the wallclock timestamp when the timer is stopped
 	GPTLstamp(&wall, &usr, &sys);
-	std::cout << "Stopped timer at:" << std::endl;
-	std::cout << "wall = " << wall << std::endl << std::endl;
+	BOOST_TEST_MESSAGE("\n" << "Stopped timer at: " << "wallclock = " << wall << "s");
 	wallStop = wall;
 
 	//Output the difference between the wallclock timestamps when the timer was started and stopped
-	std::cout << "Difference between wall at stop and start: " << wallStop << " - " << wallStart
-			<< " = " << wallStop - wallStart << std::endl;
+	BOOST_TEST_MESSAGE("\n" << "Difference between wallclock at stop and start: " << wallStop << "s - " << wallStart
+			<< "s = " << wallStop - wallStart << "s");
 
-	std::cout << "\n" << "GPTLTimer Message: \n" << "tester.getName() = " << tester.getName() << "\n"
-			  << "tester.getValue() = " << tester.getValue() << "\n"
-			  << "tester.getValue() - " << sleepSeconds << " = " << tester.getValue()-sleepSeconds << std::endl;
+	BOOST_TEST_MESSAGE( "\n" << "GPTLTimer Message: \n" << "tester.getName() = " << tester.getName() << "\n"
+			  << "tester.getValue() = " << tester.getValue() << "s" << "\n"
+			  << "tester.getValue() - " << sleepSeconds << "s = " << tester.getValue()-sleepSeconds << "s");
 
 	//Require that the value of this GPTLTimer is within 3% of the value of sleepSeconds
 	BOOST_REQUIRE_CLOSE(sleepSeconds, tester.getValue(),0.03);

@@ -5,11 +5,10 @@
 
 using namespace xolotlPerf;
 
-DummyHardwareCounter::DummyHardwareCounter(std::string aname, const std::vector<HardwareQuantities> &hquantities) :
-		HardwareCounter(aname, hquantities) {
+DummyHardwareCounter::DummyHardwareCounter(std::string counterName, const std::vector<HardwareQuantities> &counterQuantities) :
+		IHardwareCounter(counterName, counterQuantities) {
 
-	name = aname;
-	values = std::vector<int>(hquantities.size(), 0);
+//	name = counterName;
 
 }
 
@@ -18,21 +17,17 @@ DummyHardwareCounter::~DummyHardwareCounter() {
 
 }
 
-//std::shared_ptr<HardwareCounter> DummyHardwareCounter::clone() {
-//	std::shared_ptr<HardwareCounter> eventCounter(new DummyHardwareCounter(*this));
-//	return eventCounter;
+//std::vector<int> DummyHardwareCounter::getValues() const {
+//
+//	return values;
 //}
-
-std::vector<int> DummyHardwareCounter::getValues() const {
-
-	return values;
-}
 
 const std::string DummyHardwareCounter::getName() const {
 
 	return "";
 }
 
-void DummyHardwareCounter::increment(){
+std::vector<HardwareQuantities> DummyHardwareCounter::getHardwareQuantities() const {
 
+	return quantities;
 }

@@ -2,27 +2,27 @@
 #define GPTLEVENTCOUNTER_H
 #include "gptl.h"
 #include "papi.h"
-#include "EventCounter.h"
+#include "IEventCounter.h"
 
 namespace xolotlPerf{
 
 /**
  * The GPTLEventCounter class is instantiated by the StandardHandlerRegistry
- * class and realizes the EventCounter interface to access event performance
+ * class and realizes the IEventCounter interface to access event performance
  * counter data found via the General Purpose Timing Library (GPTL).
  */
-class GPTLEventCounter : public EventCounter
+class GPTLEventCounter : public IEventCounter
 {
 
 private:
 
 	/**
-	 * The name of this EventCounter.
+	 * The name of this IEventCounter.
 	 */
 	std::string name;
 
 	/**
-	 * The value of this EventCounter.
+	 * The value of this IEventCounter.
 	 */
 	int value;
 
@@ -30,8 +30,7 @@ private:
 	 * The default constructor is declared private since all EventCounters
 	 *  must be initialized with a name.
 	 */
-//	GPTLEventCounter():EventCounter("") { }
-//	GPTLEventCounter();
+	GPTLEventCounter():IEventCounter(""), name("private"), value(0) { }
 
 
 public:
@@ -39,30 +38,14 @@ public:
 	/**
 	 * GPTLEventCounter constructor that takes the argument name
 	 *
-	 * @param aname The GPTLEventCounter's name
+	 * @param eventCounterName The GPTLEventCounter's name
 	 */
-	GPTLEventCounter(std::string aname);
-
-	/**
-	 * The copy constructor.
-	 * @param other The GPTLEventCounter to copy
-	 */
-//	GPTLEventCounter(const GPTLEventCounter &other);
+	GPTLEventCounter(std::string eventCounterName);
 
 	/**
 	 * The destructor
 	 */
 	~GPTLEventCounter();
-
-	/**
-	 * This operation returns a GPTLEventCounter that is created using the copy
-	 * constructor. If this GPTLEventCounter is actually a subclass of GPTLEventCounter, the
-	 * clone will be of the same type and therefore carry all of the members
-	 * and virtual functions of the subclass in addition to those of the
-	 * GPTLEventCounter.
-	 * @return A copy of this GPTLEventCounter.
-	 */
-//	virtual std::shared_ptr<EventCounter> clone();
 
 	/**
 	 * This operation returns the value of the GPTLEventCounter,
@@ -78,14 +61,8 @@ public:
 	const std::string getName() const;
 
 	/**
-	 * This operation sets the name of the GPTLEventCounter to the
-	 * specified name.
-	 *
-	 * @param name The new name
+	 * This operation increments the GPTLEventCounter.
 	 */
-//	void setName(std::string aname);
-
-	//This operation increments the GPTLEventCounter.
 	void increment();
 
 };  //end class GPTLEventCounter

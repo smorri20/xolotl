@@ -1,23 +1,14 @@
-#include <iostream>
-#include <stdlib.h>
-#include <unistd.h>
 #include "DummyTimer.h"
-#include <time.h>
 
 using namespace xolotlPerf;
 
-DummyTimer::DummyTimer(std::string aname) : Timer(aname) {
+DummyTimer::DummyTimer(std::string timerName) : ITimer(timerName) {
 
 }
 
 DummyTimer::~DummyTimer() {
 
 }
-
-//std::shared_ptr<Timer> DummyTimer::clone() {
-//	std::shared_ptr<Timer> timer(new DummyTimer(*this));
-//	return timer;
-//}
 
 void DummyTimer::start() {
 

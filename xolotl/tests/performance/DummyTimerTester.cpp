@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_SUITE (DummyTimer_testSuite)
 
 BOOST_AUTO_TEST_CASE(checkName) {
 
-	DummyTimer tester("test");;
+	DummyTimer tester("test");
 
 	BOOST_REQUIRE_EQUAL("", tester.getName());
 }
