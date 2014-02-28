@@ -2,14 +2,6 @@
 
 using namespace xolotlPerf;
 
-DummyTimer::DummyTimer(std::string timerName) : ITimer(timerName) {
-
-}
-
-DummyTimer::~DummyTimer() {
-
-}
-
 void DummyTimer::start() {
 
 }
@@ -18,11 +10,7 @@ void DummyTimer::stop() {
 
 }
 
-const std::string DummyTimer::getName() const {
-	return "";
-}
-
-double DummyTimer::getValue() {
+double DummyTimer::getValue() const {
 	return 0;
 }
 

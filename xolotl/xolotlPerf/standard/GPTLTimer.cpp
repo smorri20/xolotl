@@ -1,37 +1,26 @@
 #include <time.h>
-#include "ITimer.h"
+#include "gptl.h"
 #include "GPTLTimer.h"
+
 
 using namespace xolotlPerf;
 
-GPTLTimer::GPTLTimer(std::string timerName) : ITimer(timerName) {
-
-	name = timerName;
-	value = 0.0;
-
-}
-
-GPTLTimer::~GPTLTimer() {
-}
 
 // This operations starts the ITimer.
 void GPTLTimer::start(){
 //	GPTLstart_handle(timerName.c_str(), &handle);
-	GPTLstart(name.c_str());
+	GPTLstart(this->getName().c_str());
 }
 
 // This operation stops the ITimer.
 void GPTLTimer::stop(){
 //	GPTLstop_handle(name.c_str(), &handle);
-	GPTLstop(name.c_str());
+	GPTLstop(this->getName().c_str());
 }
 
-const std::string GPTLTimer::getName() const {
-	return name;
-}
 
 // This operation returns the value of the ITimer.
-double GPTLTimer::getValue() {
+double GPTLTimer::getValue() const {
 
 	/*
 	** GPTLget_wallclock: return wallclock accumulation for a timer.
@@ -44,7 +33,8 @@ double GPTLTimer::getValue() {
 	** double *value: current wallclock accumulation for the timer
 	*/
 //    int gret = GPTLget_wallclock( name.c_str(), -1, &value );
-    GPTLget_wallclock( name.c_str(), -1, &value );
+    double value = -1.0;
+    GPTLget_wallclock( this->getName().c_str(), -1, &value );
 
     return value;
 }

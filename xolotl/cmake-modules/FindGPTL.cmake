@@ -21,7 +21,7 @@
 #  GPTL_LIBRARIES          The GPTL library
 #  GPTL_INCLUDE_DIRS       The location of GPTL headers
 
-find_path(GPTL_PREFIX gptl.h
+find_path(GPTL_PREFIX include/gptl.h
     NAMES HINTS ENV GPTL_PREFIX
 )
 

@@ -1,9 +1,8 @@
 #ifndef DUMMYTIMER_H
 #define DUMMYTIMER_H
 
-// Includes
-#include <string>
 #include "ITimer.h"
+#include "Identifiable.h"
 
 using namespace std;
 
@@ -13,20 +12,17 @@ namespace xolotlPerf{
  * The DummyTimer class is instantiated by the DummerHandlerRegistry class
  * and realizes the DummyTimer interface.
  */
-class DummyTimer : public ITimer
+class DummyTimer : public ITimer, public xolotlCore::Identifiable
 {
 private:
-
-	/**
-	 * The name of this ITimer.
-	 */
-	std::string name;
 
 	/**
 	 * The default constructor is declared as private since Timers
 	 *  must be initialized with a name.
 	 */
-	DummyTimer():ITimer("") { }
+    DummyTimer()
+      : xolotlCore::Identifiable("unused")
+    { }
 
 public:
 
@@ -36,39 +32,34 @@ public:
 	 *
 	 * @param timerName The DummyTimer's name
 	 */
-	DummyTimer(std::string timerName);
+	DummyTimer(std::string timerName)
+      : xolotlCore::Identifiable("unused")
+    { }
 
 	/**
 	 * The destructor.
 	 */
-	~DummyTimer();
+	virtual ~DummyTimer() { }
 
     /**
      * This operations starts the ITimer.
      */
-	void start();
+	virtual void start();
 
     /**
      * This operation stops the ITimer.
      */
-	void stop();
-
-	/**
-	 * This operation returns the name of the ITimer.
-	 *
-	 * @return The name of this ITimer
-	 */
-	const std::string getName() const;
+	virtual void stop();
 
     /**
      * This operation returns the value of the DummyTimer.
      */
-    double getValue();
+    virtual double getValue() const;
 
 	/**
 	 * This operation returns the units of the GPTLTimer.
 	 */
-    long getUnits() const;
+    virtual long getUnits() const;
 
 };  //end class DummyTimer
 

@@ -13,6 +13,7 @@ FIND_PACKAGE(PAPI)
 if(GPTL_FOUND AND PAPI_FOUND)
 
 #Include directories from the source and boost binaries
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf/dummy)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf/standard)
@@ -45,6 +46,7 @@ endif(Boost_FOUND)
 else(GPTL_FOUND AND PAPI_FOUND)
 
 #Include directories from the source and boost binaries
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf/dummy)
 include_directories(${Boost_BINARY_DIRS}) 

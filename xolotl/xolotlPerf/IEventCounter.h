@@ -1,15 +1,13 @@
 #ifndef IEVENTCOUNTER_H
 #define IEVENTCOUNTER_H
 
-#include <string>
-
-using namespace std;
+#include "IIdentifiable.h"
 
 namespace xolotlPerf {
 
 //Realizations of this interface are responsible for the collection
 //of event performance counter data.
-class IEventCounter {
+class IEventCounter : public virtual xolotlCore::IIdentifiable {
 
 //private:
 
@@ -22,13 +20,6 @@ class IEventCounter {
 public:
 
 	/**
-	 * IEventCounter constructor that takes the argument name
-	 *
-	 * @param eventCounterName The IEventCounter's name
-	 */
-	IEventCounter(std::string eventCounterName) {}
-
-	/**
 	 * The destructor
 	 */
 	virtual ~IEventCounter(){}
@@ -37,14 +28,7 @@ public:
 	 * This operation returns the value of the IEventCounter, the frequency
 	 * of the specified event.
 	 */
-	virtual int getValue() = 0;
-
-	/**
-	 * This operation returns the name of the IEventCounter.
-	 *
-	 * @return The name of this IEventCounter
-	 */
-	virtual const std::string getName() const = 0;
+	virtual unsigned long getValue() const = 0;
 
 	/**
 	 * This operation increments the IEventCounter.

@@ -1,50 +1,57 @@
 #ifndef STANDARDHANDLERREGISTRY_H
 #define STANDARDHANDLERREGISTRY_H
 
-#include <string>
-#include <vector>
-#include <memory>
+#include <iostream>
 #include "IHandlerRegistry.h"
+#include "Identifiable.h"
 #include "GPTLTimer.h" //Dependency Generated Source:StandardHandlerRegistry Target:GPTLTimer
-#include "GPTLEventCounter.h" //Dependency Generated Source:StandardHandlerRegistry Target:GPTLEventCounter
 #include "GPTLHardwareCounter.h" //Dependency Generated Source:StandardHandlerRegistry Target:GPTLHardwareCounter
+#include "EventCounter.h"
+
 
 namespace xolotlPerf {
 
-/*The StandardHandlerRegistry class realizes the interface IHandlerRegistry
- * to acquire the performance data found by implementing the performance interfaces
- * ITimer, IEventCounter, and IHardwareCounter.
- */
-class StandardHandlerRegistry : public IHandlerRegistry
-{
 
-//    public:
+// Factory for creating timers and hardware counter objects
+// objects that use GPTL for collecting performance data,
+// and event counters that interoperate with the timers and hardware counter
+// objects.
 //
-//        StandardHandlerRegistry(StandardHandlerRegistry & arg);
-////        StandardHandlerRegistry();
-//
-//        ~StandardHandlerRegistry();
-//
-//        // This operation returns the ITimer specified by the parameter.
-//        std::shared_ptr<ITimer> getTimer(const std::string name) const;
-//
-//        // This operation returns the IEventCounter specified by the parameter.
-//        std::shared_ptr<IEventCounter> getEventCounter(const std::string name) const;
-//
-//        // This operation returns the specified IHardwareCounter.
-//        std::shared_ptr<IHardwareCounter> getHardwareCounter(const std::string name,
-//        		const std::shared_ptr<std::vector<HardwareQuantities> > quantities) const;
-////        std::shared_ptr<IHardwareCounter> getHardwareCounter(const std::string name,
-////        			const std::vector<HardwareQuantities> quantities) const;
-//
-//        // This operation returns a list of values of the, initially specified, PAPI
-//        // preset quantities monitored by the IHardwareCounter.
-//        const std::shared_ptr<std::vector<HardwareQuantities> > getHardwareQuantities() const;
-//
-//        //        const std::vector<HardwareQuantities> & getHardwareQuantities() const;
-//
-//        // This operation outputs the information gathered.
-//        virtual void dump(std::ostream out) const;
+// This is named "Standard" because it is expected to be the standard
+// performance data collection mechanism used by XOLOTL.
+// TODO Perhaps "Default" would be a better name?
+class StandardHandlerRegistry : 
+    public IHandlerRegistry, public xolotlCore::Identifiable
+{
+private:
+    static std::shared_ptr<StandardHandlerRegistry> theRegistry;
+
+    // Construct a StandardHandlerRegistry.
+    StandardHandlerRegistry( void );
+
+public:
+    // StandardHandlerRegistry is a Singleton.  (I.e., there is
+    // only one instance in the process.)
+    static std::shared_ptr<StandardHandlerRegistry> getRegistry( void );
+
+    // Clean up a StandardHandlerRegistry.
+    virtual ~StandardHandlerRegistry( void );
+
+    // Obtain a Timer by name.
+    virtual std::shared_ptr<ITimer> getTimer(std::string name);
+
+    // Obtain an EventCounter by name.
+    virtual std::shared_ptr<IEventCounter> getEventCounter(std::string name);
+
+    // Obtain a HardwareCounter object by name and by the 
+    // counter data it collects.
+	virtual std::shared_ptr<IHardwareCounter> getHardwareCounter(
+			std::string name,
+			std::vector<HardwareQuantities> quantities);
+
+	// This operation outputs the information gathered to the given 
+    // output stream.
+	virtual void dump(std::ostream& os) const;
 
 };  //end class StandardHandlerRegistry
 

@@ -1,8 +1,7 @@
 #ifndef ITIMER_H
 #define ITIMER_H
 
-// Include
-#include <string>
+#include "IIdentifiable.h"
 
 using namespace std;
 
@@ -12,17 +11,9 @@ namespace xolotlPerf {
  * Realizations of this interface are responsible for the collection
  * of performance timing statistics.
  */
-class ITimer {
+class ITimer : public virtual xolotlCore::IIdentifiable {
 
 public:
-
-	/**
-	 * ITimer constructor that takes the argument timerName
-	 * to distinguish specific timer.
-	 *
-	 * @param timerName The ITimer's name
-	 */
-	ITimer(std::string timerName) { }
 
 	/**
 	 * The destructor
@@ -40,17 +31,10 @@ public:
      */
     virtual void stop() = 0;
 
-	/**
-	 * This operation returns the name of the ITimer.
-	 *
-	 * @return The name of this ITimer
-	 */
-	virtual const std::string getName() const = 0;
-
     /**
      * This operation returns the value of the ITimer.
      */
-    virtual double getValue() = 0;
+    virtual double getValue() const = 0;
 
     /**
      * This operation returns the units of the ITimer.

@@ -6,6 +6,7 @@ SET(PACKAGE_DESCRIPTION "Xolotl Perf")
 SET(LIBRARY_NAME "xolotlPerf")
 
 #Include headers in order to build
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf/dummy)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf/standard)
