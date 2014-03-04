@@ -1,36 +1,63 @@
 #include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
-#include <assert.h>
-#include <math.h>
+//#include <assert.h>
+//#include <math.h>
+#include "gptl.h"
 #include <papi.h>
+//#include "Identifiable.h"
 #include "GPTLHardwareCounter.h"
 
 using namespace xolotlPerf;
 
 // Create the static map of hardware quantities
-//std::unordered_map<HardwareQuantities, int> GPTLHardwareCounter::hardwareQuantitiesMap;
+std::unordered_map<int,hardwareQuantity> GPTLHardwareCounter::AllHardwareQuantitiesMap;
 
-GPTLHardwareCounter::GPTLHardwareCounter(std::string counterName,
-		const std::vector<HardwareQuantities> &counterQuantities) :
-		IHardwareCounter(counterName, counterQuantities) {
+GPTLHardwareCounter::GPTLHardwareCounter(std::string name,
+		const std::vector<HardwareQuantities> &counterQuantities)
+		: xolotlCore::Identifiable(name), quantities(counterQuantities) {
 
-	name = counterName;
-	quantities = counterQuantities;
 
-	// Set up the hardware quantities map
-//	hardwareQuantitiesMap = { {L1_CACHE_MISS, PAPI_L1_TCM},
-//			{L2_CACHE_MISS, PAPI_L2_TCM}, {L3_CACHE_MISS, PAPI_L3_TCM},
-//			{BRANCH_MISPRED, PAPI_BR_MSP}, {TOTAL_CYCLES, PAPI_TOT_CYC},
-//			{TOTAL_INSTRUC, PAPI_TOT_INS}, {FLPT_INSTRUC, PAPI_FP_INS} };
+	static hardwareQuantity l1_cache_miss = {"L1_CACHE_MISS",PAPI_L1_TCM, "PAPI_L1_TCM"};
+	static hardwareQuantity l2_cache_miss = {"L2_CACHE_MISS",PAPI_L2_TCM, "PAPI_L2_TCM"};
+	static hardwareQuantity l3_cache_miss = {"L3_CACHE_MISS",PAPI_L3_TCM, "PAPI_L3_TCM"};
+	static hardwareQuantity branch_mispredictions = {"BRANCH_MISPREDICTIONS",PAPI_BR_MSP, "PAPI_BR_MSP"};
+	static hardwareQuantity total_cycles = {"TOTAL_CYCLES",PAPI_TOT_CYC, "PAPI_TOT_CYC"};
+	static hardwareQuantity total_instructions = {"TOTAL_INSTRUCTIONS",PAPI_TOT_INS, "PAPI_TOT_INS"};
+	static hardwareQuantity flpt_instructions = {"FLPT_INSTRUCTIONS",PAPI_FP_INS, "PAPI_FP_INS"};
+
+	//Set up the map of all hardware quantities
+	 AllHardwareQuantitiesMap = {
+			{L1_CACHE_MISS,l1_cache_miss},
+			{L2_CACHE_MISS,l2_cache_miss},
+			{L3_CACHE_MISS,l3_cache_miss},
+			{BRANCH_MISPREDICTIONS,branch_mispredictions},
+			{TOTAL_CYCLES,total_cycles},
+			{TOTAL_INSTRUCTIONS,total_instructions},
+			{FLPT_INSTRUCTIONS,flpt_instructions}
+	};
+
+	for (unsigned i = 0; i < counterQuantities.size(); i++)
+	{
+		//std::unordered_map<HardwareQuantities,hardwareQuantity>::const_iterator search =
+		std::unordered_map<int,hardwareQuantity>::const_iterator search =
+				AllHardwareQuantitiesMap.find(counterQuantities.at(i));
+		hardwareQuantitiesMap.insert( {search->first, search->second} );
+	}
+
+	for (unsigned i = 0; i < quantities.size(); i++)
+	{
+		std::unordered_map<int,hardwareQuantity>::const_iterator search =
+				AllHardwareQuantitiesMap.find(quantities.at(i));
+		hardwareQuantitiesMap.insert( {search->first, search->second} );
+	}
+
 
 }
 
-GPTLHardwareCounter::~GPTLHardwareCounter() {
+std::vector<double> GPTLHardwareCounter::getValues() const {
 
-}
-
-//std::vector<int> GPTLHardwareCounter::getValues() const {
+	std::vector<double> papiValues;
 
 	// The following documentation was taken directly from gptl.c
 	/*
@@ -45,21 +72,45 @@ GPTLHardwareCounter::~GPTLHardwareCounter() {
 	 ** Output args:
 	 ** double *value: current value of the event for this timer
 	 */
-	//	int gret = GPTLget_eventvalue( name.c_str(), -1, &papival );
+	for (auto it = hardwareQuantitiesMap.begin(); it != hardwareQuantitiesMap.end(); ++it)
+	{
+		double papiVal = 0.0;
+		std::cout << "papistring = " << it->second.papiQuantityString.c_str() << std::endl;
+		GPTLget_eventvalue(this->getName().c_str(), (it->second.papiQuantityString).c_str(), -1, &papiVal);
+		papiValues.push_back (papiVal);
+	}
 
-//	return values;
+	return papiValues;
+}
+
+
+std::vector<std::string> GPTLHardwareCounter::getHardwareQuantities() const {
+
+	std::vector<std::string> namesOfQuantities;
+
+	for (auto it = hardwareQuantitiesMap.begin(); it != hardwareQuantitiesMap.end(); ++it)
+	{
+		namesOfQuantities.push_back (it->second.hardwareQuantityString);
+	}
+
+	return namesOfQuantities;
+}
+
+//std::vector<HardwareQuantities> GPTLHardwareCounter::getHardwareQuantitiesAsEnum() const {
+//
+//	return quantities;
 //}
 
-const std::string GPTLHardwareCounter::getName() const {
-
-	return name;
-}
-
-std::vector<HardwareQuantities> GPTLHardwareCounter::getHardwareQuantities() const {
-
-	// TO DO:  return the quantities as vector of strings
-
-	return quantities;
-}
+//std::vector<std::string> GPTLHardwareCounter::getPAPInames() const {
+//
+//	std::vector<std::string> papiNames;
+//
+//	for (auto it = hardwareQuantitiesMap.begin(); it != hardwareQuantitiesMap.end(); ++it)
+//	{
+//		papiNames.push_back (it->second.papiQuantityString);
+//	}
+//
+//	return papiNames;
+//}
 
 

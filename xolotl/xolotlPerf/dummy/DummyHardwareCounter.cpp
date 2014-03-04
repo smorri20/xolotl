@@ -1,33 +1,30 @@
-#include <iostream>
-#include <stdlib.h>
-#include <unistd.h>
 #include "DummyHardwareCounter.h"
 
 using namespace xolotlPerf;
 
-DummyHardwareCounter::DummyHardwareCounter(std::string counterName, const std::vector<HardwareQuantities> &counterQuantities) :
-		IHardwareCounter(counterName, counterQuantities) {
+//DummyHardwareCounter::DummyHardwareCounter(std::string counterName,
+//		const std::vector<HardwareQuantities> &counterQuantities) :
+//		IHardwareCounter(counterName, counterQuantities),
+//		quantities(0), values(0) {
+//
+//}
 
-//	name = counterName;
 
-}
-
-
-DummyHardwareCounter::~DummyHardwareCounter() {
-
-}
+//DummyHardwareCounter::~DummyHardwareCounter() {
+//
+//}
 
 //std::vector<int> DummyHardwareCounter::getValues() const {
 //
 //	return values;
 //}
 
-const std::string DummyHardwareCounter::getName() const {
+//const std::string DummyHardwareCounter::getName() const {
+//
+//	return "";
+//}
 
-	return "";
-}
+std::vector<std::string> DummyHardwareCounter::getHardwareQuantities() const {
 
-std::vector<HardwareQuantities> DummyHardwareCounter::getHardwareQuantities() const {
-
-	return quantities;
+	return std::vector<std::string>(0);
 }
