@@ -63,7 +63,7 @@ public:
      * This operation returns a list of values of the, initially specified,
      * hardware quantities monitored by the DummyHardwareCounter.
      */
-//    std::vector<int> getValues() const;
+    std::vector<double> getValues(void) const;
 
 
 	/**

@@ -18,6 +18,9 @@ using namespace xolotlPerf;
 //
 //	return values;
 //}
+std::vector<double> DummyHardwareCounter::getValues(void) const {
+    return std::vector<double>();
+}
 
 //const std::string DummyHardwareCounter::getName() const {
 //
@@ -26,5 +29,5 @@ using namespace xolotlPerf;
 
 std::vector<std::string> DummyHardwareCounter::getHardwareQuantities() const {
 
-	return std::vector<std::string>(0);
+	return std::vector<std::string>();
 }
