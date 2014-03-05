@@ -31,10 +31,10 @@ GPTLHardwareCounter::GPTLHardwareCounter(std::string name,
 			{L1_CACHE_MISS,l1_cache_miss},
 			{L2_CACHE_MISS,l2_cache_miss},
 			{L3_CACHE_MISS,l3_cache_miss},
-			{BRANCH_MISPREDICTIONS,branch_mispredictions},
+			{BRANCH_MISPRED,branch_mispredictions},
 			{TOTAL_CYCLES,total_cycles},
-			{TOTAL_INSTRUCTIONS,total_instructions},
-			{FLPT_INSTRUCTIONS,flpt_instructions}
+			{TOTAL_INSTRUC,total_instructions},
+			{FLPT_INSTRUC,flpt_instructions}
 	};
 
 	for (unsigned i = 0; i < counterQuantities.size(); i++)
