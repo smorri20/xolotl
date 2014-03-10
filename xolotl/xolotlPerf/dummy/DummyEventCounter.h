@@ -9,25 +9,21 @@ using namespace std;
 
 namespace xolotlPerf{
 
-// The DummyEventCounter class is instantiated by the DummyHandlerRegistry
-// class and realizes the DummyEventCounter interface.
+/**
+ * The DummyEventCounter class is instantiated by the DummyHandlerRegistry
+ * class and realizes the DummyEventCounter interface.
+ */
 class DummyEventCounter : public IEventCounter, public xolotlCore::Identifiable
 {
 
 private:
 
 	/**
-	 * The value of this IEventCounter.
-	 */
-	unsigned long value;
-
-	/**
 	 * The default constructor is declared private since all EventCounters
 	 *  must be initialized with a name.
 	 */
     DummyEventCounter(void)
-      : xolotlCore::Identifiable("unused"),
-        value( 0 )
+      : xolotlCore::Identifiable("unused")
     { }
 
 
@@ -39,9 +35,9 @@ public:
 	 * @param name The DummyEventCounter's name
 	 */
 	DummyEventCounter(std::string name)
-      : xolotlCore::Identifiable( name ),
-        value( 0 )
+      : xolotlCore::Identifiable( name )
     { }
+
 
 	/**
 	 * The destructor
@@ -52,13 +48,13 @@ public:
 	 * This operation returns the value of the DummyEventCounter,
 	 * the frequency of the specified event.
 	 */
-	virtual unsigned long getValue() const  { return value; }
+	virtual unsigned long getValue() const  { return 0; }
 
 
 	/**
 	 * This operation increments the DummyEventCounter.
 	 */
-	virtual void increment()    { ++value; }
+	virtual void increment()    {  }
 
 
 };  //end class DummyEventCounter

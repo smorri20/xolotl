@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(checkName) {
 
 	DummyEventCounter tester("test");
 
-	BOOST_REQUIRE_EQUAL("", tester.getName());
+	BOOST_REQUIRE_EQUAL("test", tester.getName());
 }
 
 BOOST_AUTO_TEST_CASE(checkInitialValue) {
