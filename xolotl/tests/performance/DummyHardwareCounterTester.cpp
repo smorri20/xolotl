@@ -8,7 +8,7 @@
 using namespace std;
 using namespace xolotlPerf;
 
-const std::vector<HardwareQuantities> test_hquan = {L1_CACHE_MISS,L2_CACHE_MISS,L3_CACHE_MISS,
+const std::vector<HardwareQuantities> test_hardwareQuantities = {L1_CACHE_MISS,L2_CACHE_MISS,L3_CACHE_MISS,
 			BRANCH_MISPRED,TOTAL_CYCLES,TOTAL_INSTRUC,FLPT_INSTRUC};
 
 /**
