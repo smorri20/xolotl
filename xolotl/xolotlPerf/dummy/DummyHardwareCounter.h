@@ -21,21 +21,10 @@ class DummyHardwareCounter : public IHardwareCounter, public xolotlCore::Identif
 private:
 
 	/**
-	 * The hardware quantities this DummyHardwareCounter monitors.
-	 */
-//	std::vector<HardwareQuantities> quantities;
-
-	/**
-	 * The hardware quantities this DummyHardwareCounter monitors.
-	 */
-//	std::vector<int> values;
-
-	/**
 	 * The default constructor is private because HardwareCounters
 	 * must always be given a name and a vector of quantities to
 	 * be monitored.
 	 */
-//	DummyHardwareCounter():IHardwareCounter("", std::vector<HardwareQuantities>(0)) { }
 	DummyHardwareCounter()
 		: xolotlCore::Identifiable("unused")
 	{ }

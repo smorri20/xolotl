@@ -14,6 +14,7 @@ double DummyTimer::getValue() const {
 	return 0;
 }
 
-long DummyTimer::getUnits() const {
-	return 0;
+std::string DummyTimer::getUnits() const {
+	return "";
 }
+

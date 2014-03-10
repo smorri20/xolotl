@@ -8,20 +8,41 @@
 using namespace std;
 using namespace xolotlPerf;
 
-const std::vector<HardwareQuantities> test_hquan = {L1_CACHE_MISS,L2_CACHE_MISS,L3_CACHE_MISS,BRANCH_MISPRED,TOTAL_CYCLES,TOTAL_INSTRUC,FLPT_INSTRUC};
+const std::vector<HardwareQuantities> test_hquan = {L1_CACHE_MISS,L2_CACHE_MISS,L3_CACHE_MISS,
+			BRANCH_MISPRED,TOTAL_CYCLES,TOTAL_INSTRUC,FLPT_INSTRUC};
 
 /**
  * This suite is responsible for testing the DummyHardwareCounter.
  */
 BOOST_AUTO_TEST_SUITE (DummyHardwareCounter_testSuite)
 
-//const std::vector<HardwareQuantities> test_hquan = {L1_CACHE_MISS,L2_CACHE_MISS,L3_CACHE_MISS,BRANCH_MISPRED,TOTAL_CYCLES,TOTAL_INSTRUC,FLPT_INSTRUC};
-
 BOOST_AUTO_TEST_CASE(checkName) {
 
-	DummyHardwareCounter tester("test",test_hquan);
+	DummyHardwareCounter tester("test",test_hardwareQuantities);
 
-	BOOST_REQUIRE_EQUAL("test", tester.getName());
+	BOOST_REQUIRE_EQUAL("unused", tester.getName());
+}
+
+BOOST_AUTO_TEST_CASE(check_getValues) {
+
+	DummyHardwareCounter tester("test",test_hardwareQuantities);
+
+	BOOST_TEST_MESSAGE("\n" << "DummyHardwareCounter Message: \n"
+							<< "tester.getValues().size() = " << tester.getValues().size());
+
+	BOOST_REQUIRE_EQUAL(0, tester.getValues().size());
+
+}
+
+BOOST_AUTO_TEST_CASE(check_getHardwareQuantities) {
+
+	DummyHardwareCounter tester("test",test_hardwareQuantities);
+
+	BOOST_TEST_MESSAGE("\n" << "DummyHardwareCounter Message: \n"
+							<< "tester.getHardwareQuantities().size() = " << tester.getHardwareQuantities().size());
+
+	BOOST_REQUIRE_EQUAL(0, tester.getHardwareQuantities().size());
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

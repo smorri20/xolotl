@@ -17,7 +17,8 @@ BOOST_AUTO_TEST_CASE(checkName) {
 
 	DummyTimer tester("test");
 
-	BOOST_REQUIRE_EQUAL("test", tester.getName());
+	BOOST_REQUIRE_EQUAL("unused", tester.getName());
+
 }
 
 BOOST_AUTO_TEST_CASE(checkInitialValue) {
@@ -37,7 +38,7 @@ BOOST_AUTO_TEST_CASE(checkTiming) {
 	tester.stop();
 
 	BOOST_REQUIRE_EQUAL(0, tester.getValue());
-//	BOOST_REQUIRE_EQUAL(0, tester.getUnits());
+	BOOST_REQUIRE_EQUAL("", tester.getUnits());
 
 }
 

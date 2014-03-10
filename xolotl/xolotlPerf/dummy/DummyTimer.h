@@ -32,7 +32,7 @@ public:
 	 *
 	 * @param timerName The DummyTimer's name
 	 */
-	DummyTimer(std::string timerName)
+	DummyTimer(std::string name)
       : xolotlCore::Identifiable("unused")
     { }
 
@@ -59,7 +59,7 @@ public:
 	/**
 	 * This operation returns the units of the GPTLTimer.
 	 */
-    virtual long getUnits() const;
+    virtual std::string getUnits() const;
 
 };  //end class DummyTimer
 

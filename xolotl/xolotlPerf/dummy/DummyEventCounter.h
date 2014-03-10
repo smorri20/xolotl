@@ -35,7 +35,7 @@ public:
 	 * @param name The DummyEventCounter's name
 	 */
 	DummyEventCounter(std::string name)
-      : xolotlCore::Identifiable( name )
+      : xolotlCore::Identifiable("unused")
     { }
 
 
