@@ -5,6 +5,7 @@
 #include <GPTLHardwareCounter.h>
 #include <iostream>
 #include <math.h>
+#include <gptl.h>
 #include <papi.h>
 #include <vector>
 #include <string>
@@ -16,7 +17,7 @@ using namespace xolotlPerf;
 //		L3_CACHE_MISS,BRANCH_MISPREDICTIONS,TOTAL_CYCLES,TOTAL_INSTRUCTIONS,FLPT_INSTRUCTIONS};
 
 const std::vector<HardwareQuantities> test_hardwareQuantities ={L1_CACHE_MISS,
-		TOTAL_CYCLES,TOTAL_INSTRUCTIONS,FLPT_INSTRUCTIONS};
+		TOTAL_CYCLES,TOTAL_INSTRUC,FLPT_INSTRUC};
 
 /**
  * This suite is responsible for testing the HardwareCounter.
@@ -52,11 +53,76 @@ BOOST_AUTO_TEST_CASE(check_getHardwareQuantities) {
 		BOOST_REQUIRE_EQUAL(test_hardwareQuantities[i], tester.getHardwareQuantities()[i]);
 	}
 #endif // READY
-}	
 }
 
+BOOST_AUTO_TEST_CASE(check_getSingleValue) {
+
+    // initialize GPTL counters
+    // TODO this should be done in the Registry, not within the HardwareCounter itself.
+    // But this is a unit test for the HardwareCounter class, so
+    // we do it explicitly here.
+	GPTLsetoption(PAPI_FP_INS, 1);
+	GPTLsetoption(PAPI_FP_OPS, 1);
+#if READY
+	GPTLsetoption(PAPI_L1_TCM, 1);
+#endif // READY
+    GPTLinitialize();
+
+
+    // TODO this only works because we have specified the same set
+    // of hardware counters here as we did in the GPTLsetoption calls
+    // before GPTLinitialize().
+#if READY
+    std::vector<HardwareQuantities> hwctrs = {FLPT_INSTRUC, FP_OPS, L1_CACHE_MISS};
+#else
+    std::vector<HardwareQuantities> hwctrs = {FLPT_INSTRUC, FP_OPS};
+#endif // READY
+    GPTLHardwareCounter tester( "test", hwctrs );
+    std::string testName = tester.getName();
+
+    GPTLstart("test");
+	double a = 2;
+	for(unsigned i = 0; i < 1000; i++)
+    {
+		a *= ((double)(i+1));
+    }
+    GPTLstop("test");
+
+    // Use variable 'a' so that compiler can't optimize the above loop away
+    BOOST_TEST_MESSAGE( "\nGPTLHardwareCounter test:\n"
+                        << "produced value: " << a << '\n');
+
+    // Verify we got what we expected for number of floating
+    // point operations.
+    auto testVals = tester.getValues();
+    BOOST_TEST_MESSAGE( "produced " << testVals.size() << " values" );
+#if READY
+    BOOST_REQUIRE_EQUAL(testVals.size(), 3);
+#else
+    BOOST_REQUIRE_EQUAL(testVals.size(), 2);
+#endif // READY
+    
+    BOOST_TEST_MESSAGE( "GPTLHardwareCounter measured:\n" 
+                            << testVals[0] << " FP instructions\n"
+                            << testVals[1] << " FP ops\n" );
+
+    for( unsigned int i = 0; i < testVals.size(); i++ )
+    {
+        BOOST_TEST_MESSAGE( "val[" << i << "]=" << testVals[i] << '\n');
+    }
+
+    BOOST_REQUIRE_CLOSE( testVals[0], 1000, 5.0 );
+    BOOST_REQUIRE_CLOSE( testVals[1], 1000, 5.0 );
+
+    GPTLfinalize();
+}
+
+
+
+#if READY
 BOOST_AUTO_TEST_CASE(check_getValues) {
 
+    GPTLsetoption(GPTLmultiplex, 1);    // allow GPTL to collect data for more than one counter simultaneously
 	GPTLsetoption(PAPI_L1_TCM, 1);
 //	GPTLsetoption(PAPI_L2_TCM, 1);
 //	GPTLsetoption(PAPI_L3_TCM, 1);
@@ -68,8 +134,9 @@ BOOST_AUTO_TEST_CASE(check_getValues) {
 	GPTLinitialize();
 
 	GPTLHardwareCounter tester("test",test_hardwareQuantities);
-	GPTLstart("test");
 	std::string testName = tester.getName();
+
+	GPTLstart("test");
 
 	double a;
 	for(unsigned i = 0; i < 4; i++)
@@ -87,7 +154,9 @@ BOOST_AUTO_TEST_CASE(check_getValues) {
 		BOOST_TEST_MESSAGE("\n" << "GPTLget_eventvalue failed: " << gret);
 	}
 	else
+    {
 		BOOST_TEST_MESSAGE("\n" << "PAPI_FP_OPS = " << val);
+    }
 
 	for(unsigned i = 0; i < tester.getValues().size(); i++){
 
@@ -99,5 +168,6 @@ BOOST_AUTO_TEST_CASE(check_getValues) {
 
 	GPTLfinalize();
 }
+#endif // READY
 
 BOOST_AUTO_TEST_SUITE_END()

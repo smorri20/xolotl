@@ -56,10 +56,16 @@ enum HardwareQuantities
 
         /**
          * The number of floating point instructions executed.
-         * This quantity is used to compute the number of floating
-         * point operations.
+         * This quantity approximates the number of floating point
+         * operations executed.
          */
-        FLPT_INSTRUC
+        FLPT_INSTRUC,
+
+
+        /**
+         * The number of floating point operations executed.
+         */
+        FP_OPS
 
 
 }; //end enum HardwareQuantities

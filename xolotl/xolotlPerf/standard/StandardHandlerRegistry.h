@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include "IHandlerRegistry.h"
-#include "Identifiable.h"
 #include "GPTLTimer.h" //Dependency Generated Source:StandardHandlerRegistry Target:GPTLTimer
 #include "GPTLHardwareCounter.h" //Dependency Generated Source:StandardHandlerRegistry Target:GPTLHardwareCounter
 #include "EventCounter.h"
@@ -20,16 +19,15 @@ namespace xolotlPerf {
 // This is named "Standard" because it is expected to be the standard
 // performance data collection mechanism used by XOLOTL.
 // TODO Perhaps "Default" would be a better name?
-class StandardHandlerRegistry : 
-    public IHandlerRegistry, public xolotlCore::Identifiable
+class StandardHandlerRegistry : public IHandlerRegistry
 {
 private:
     static std::shared_ptr<StandardHandlerRegistry> theRegistry;
 
+public:
     // Construct a StandardHandlerRegistry.
     StandardHandlerRegistry( void );
 
-public:
     // StandardHandlerRegistry is a Singleton.  (I.e., there is
     // only one instance in the process.)
     static std::shared_ptr<StandardHandlerRegistry> getRegistry( void );

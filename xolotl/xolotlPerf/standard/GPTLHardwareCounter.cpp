@@ -25,6 +25,7 @@ GPTLHardwareCounter::GPTLHardwareCounter(std::string name,
 	static hardwareQuantity total_cycles = {"TOTAL_CYCLES",PAPI_TOT_CYC, "PAPI_TOT_CYC"};
 	static hardwareQuantity total_instructions = {"TOTAL_INSTRUCTIONS",PAPI_TOT_INS, "PAPI_TOT_INS"};
 	static hardwareQuantity flpt_instructions = {"FLPT_INSTRUCTIONS",PAPI_FP_INS, "PAPI_FP_INS"};
+    static hardwareQuantity fp_ops = {"FP_OPS", PAPI_FP_OPS, "PAPI_FP_OPS"};
 
 	//Set up the map of all hardware quantities
 	 AllHardwareQuantitiesMap = {
@@ -34,7 +35,8 @@ GPTLHardwareCounter::GPTLHardwareCounter(std::string name,
 			{BRANCH_MISPRED,branch_mispredictions},
 			{TOTAL_CYCLES,total_cycles},
 			{TOTAL_INSTRUC,total_instructions},
-			{FLPT_INSTRUC,flpt_instructions}
+			{FLPT_INSTRUC,flpt_instructions},
+            {FP_OPS,fp_ops}
 	};
 
 	for (unsigned i = 0; i < counterQuantities.size(); i++)

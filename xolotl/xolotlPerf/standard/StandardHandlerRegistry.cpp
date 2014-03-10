@@ -5,11 +5,10 @@
 namespace xolotlPerf
 {
 
-#if RREADY
 // currently commented out so that other recent modifications can be
 // committed to the Subversion repository.
 
-std::shared_ptr<StandardHandlerRegistry> theRegistry;
+std::shared_ptr<StandardHandlerRegistry> StandardHandlerRegistry::theRegistry;
 
 
 std::shared_ptr<StandardHandlerRegistry>
@@ -17,14 +16,13 @@ StandardHandlerRegistry::getRegistry( void )
 {
     if( !theRegistry )
     {
-        theRegistry = std::make_shared<StandardHandlerRegistry>;
+        theRegistry = std::make_shared<StandardHandlerRegistry>();
     }
     return theRegistry;
 }
 
 
 StandardHandlerRegistry::StandardHandlerRegistry( void )
-  : Identifiable( "theStandardHandlerRegistry" )
 {
     // We use GPTL for data collection, so we must make sure 
     // that library has been initialized.
@@ -72,11 +70,10 @@ std::shared_ptr<IHardwareCounter>
 StandardHandlerRegistry::getHardwareCounter( std::string name,
                                             std::vector<HardwareQuantities> quantities)
 {
-#if READY
-#else
-    std::cerr << "StandardHandlerRegistry::getHardwareCounter NIY" << std::endl;
-#endif // READY
-    return std::make_shared<GPTLHardwareCounter>;
+    // TODO is there need for us to retain access to this object?
+    // TODO do we need to check whether this client has already
+    // created an object with this name and return that object?
+    return std::make_shared<GPTLHardwareCounter>( name, quantities );
 }
 
 
@@ -88,8 +85,6 @@ StandardHandlerRegistry::dump(std::ostream& os) const
     os << "StandardHandlerRegistry::dump NIY" << std::endl;
 #endif // READY
 }
-
-#endif // RREADY
 
 
 }//end namespace xolotlPerf

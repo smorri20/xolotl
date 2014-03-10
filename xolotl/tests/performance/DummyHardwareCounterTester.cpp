@@ -21,10 +21,8 @@ BOOST_AUTO_TEST_CASE(checkName) {
 
 	DummyHardwareCounter tester("test",test_hquan);
 
-	BOOST_REQUIRE_EQUAL("", tester.getName());
-
+	BOOST_REQUIRE_EQUAL("test", tester.getName());
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 
