@@ -9,6 +9,8 @@
 #include <PetscSolver.h>
 #include <mpi.h>
 #include "xolotlCore/io/MPIUtils.h"
+#include "xolotlPerf/HandlerRegistryFactory.h"
+
 
 using namespace std;
 using std::shared_ptr;
@@ -45,10 +47,22 @@ int main(int argc, char **argv) {
 	const char *networkFilename = argv[1];
 
 	try {
+        // Set up our performance data infrastructure
+        xolotlPerf::initialize( argc, argv );
+        std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry = xolotlPerf::getHandlerRegistry();
+        std::shared_ptr<xolotlPerf::ITimer> totalTimer = handlerRegistry->getTimer( "total" );
+        totalTimer->start();
+
 		// Setup the solver
+        std::shared_ptr<xolotlPerf::ITimer> solverInitTimer = handlerRegistry->getTimer( "initSolver" );
+        solverInitTimer->start();
 		xolotlSolver::PetscSolver solver;
 		solver.setCommandLineOptions(argc, argv);
 		solver.initialize();
+        solverInitTimer->stop();
+
+        std::shared_ptr<xolotlPerf::ITimer> networkLoadTimer =  handlerRegistry->getTimer( "loadNetwork" );
+        networkLoadTimer->start();
 
 		// Get the MPI rank
 		MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -70,10 +84,20 @@ int main(int argc, char **argv) {
 		networkLoader->setInputstream(networkStream);
 		// Give the network loader to PETSc as input
 		solver.setNetworkLoader(networkLoader);
+        networkLoadTimer->stop();
 
 		// Launch the PetscSolver
+        std::shared_ptr<xolotlPerf::ITimer> solverTimer = handlerRegistry->getTimer( "solve" );
+        solverTimer->start();
 		solver.solve();
 		solver.finalize();
+        solverTimer->stop();
+
+        totalTimer->stop();
+
+        // Report the performance data about the run we just completed
+        // TODO implement our own performance data output mechanism
+        // rather than relying on GPTL's output.
 	} catch (std::string & error) {
 		std::cout << error << std::endl;
 		std::cout << "Aborting." << std::endl;
