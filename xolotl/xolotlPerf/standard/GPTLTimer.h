@@ -28,10 +28,10 @@ private:
 public:
 
 	/**
-	 * GPTLEventCounter constructor that takes the argument
+	 * GPTLTimer constructor that takes the argument
 	 * timerName
 	 *
-	 * @param name The GPTLEventCounter's name
+	 * @param name The GPTLTimer's name
 	 */
 	GPTLTimer(std::string name)
       : xolotlCore::Identifiable(name)
@@ -65,7 +65,7 @@ public:
 	 * 		  sys -- system CPU time (seconds)
 	 *
 	 */
-	virtual long getUnits() const;
+	virtual std::string getUnits() const;
 };
 //end class GPTLTimer
 

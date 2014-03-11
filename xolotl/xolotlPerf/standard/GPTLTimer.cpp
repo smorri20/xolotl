@@ -40,7 +40,7 @@ double GPTLTimer::getValue() const {
 }
 
 // This operation returns the units of the ITimer.
-long GPTLTimer::getUnits() const {
-//	return this->units;
+std::string GPTLTimer::getUnits() const {
+    return "s";
 }
 

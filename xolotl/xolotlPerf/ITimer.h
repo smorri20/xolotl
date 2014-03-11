@@ -1,6 +1,7 @@
 #ifndef ITIMER_H
 #define ITIMER_H
 
+#include <string>
 #include "IIdentifiable.h"
 
 using namespace std;
@@ -39,7 +40,7 @@ public:
     /**
      * This operation returns the units of the ITimer.
      */
-    virtual long getUnits() const = 0;
+    virtual std::string getUnits() const = 0;
 
 };
 //end class ITimer
