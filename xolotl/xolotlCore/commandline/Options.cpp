@@ -56,7 +56,7 @@ Options::parseCommandLine( int argc, char* argv[] )
     unsigned int i = 0;
     while( i < argc )
     {
-        std::string currArg = argv[i];
+        std::string currArg = argv[i++];
 
         auto iter = optionsMap.find( currArg );
         if( iter != optionsMap.end() )
@@ -69,9 +69,9 @@ Options::parseCommandLine( int argc, char* argv[] )
             std::string optArg;
             if( currOptInfo->argRequired )
             {
-                if( i < (argc - 1) )
+                if( i < argc )
                 {
-                    optArg = argv[++i];            
+                    optArg = argv[i++];
                 }
                 else
                 {
@@ -95,13 +95,9 @@ Options::parseCommandLine( int argc, char* argv[] )
             exitCode = EXIT_FAILURE;
             break;
         }
-
-        ++i;
     }
 
-    // i is an index, but the return value is the number of arguments
-    // we processed.  So we return i+1.
-    return i + 1;
+    return i;
 }
 
 

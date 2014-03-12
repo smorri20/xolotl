@@ -39,9 +39,14 @@ public:
 
 
     // Parse the given command line for user-configurable settings.
+    // We assume that the executable file/path has been skipped before
+    // calling this method.  (E.g., the program's main() function
+    // called this with something like 
+    //   xopts.parseCommandLine( argc - 1, argv + 1 );
+    //
     // @param argc The number of arguments in the argv vector.
     // @param argv Vector of argument strings.
-    // @return Number of arguments used from the beginning of the command line.
+    // @return Number of command line arguments used.
     virtual int parseCommandLine( int argc, char* argv[] );
 
 

@@ -34,6 +34,9 @@ int main(int argc, char **argv) {
 	int rank;
 
 	// Check the command line arguments.
+    // Skip the executable name before parsing.
+    argc -= 1;  // one for the executable name
+    argv += 1;  // one for the executable name
     XolotlOptions xopts;
     int nOptsUsed = xopts.parseCommandLine( argc, argv );
     if( !xopts.shouldRun() )

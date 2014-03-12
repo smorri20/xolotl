@@ -5,6 +5,7 @@ namespace xolotlCore {
 
 
 XolotlOptions::XolotlOptions( void )
+  : useStdHandlers( true )              // by default, use "standard" handlers
 {
     // Add our notion of which options we support.
     optionsMap["--handlers"] = new OptInfo( true,
@@ -22,7 +23,7 @@ XolotlOptions::parseCommandLine( int argc, char* argv[] )
     int nArgsUsed = 0;
 
     // Check if we were given at least our positional arguments.
-    if( argc < 2 )
+    if( argc < 1 )
     {
         std::cerr << "Insufficient input provided! Aborting!" << std::endl;
         showHelp( std::cerr );
@@ -31,12 +32,33 @@ XolotlOptions::parseCommandLine( int argc, char* argv[] )
     }
     else
     {
-        // Interpret the first argument as the network file name
-        netFileName = argv[1];
-        nArgsUsed = 2;  // one for executable name, one for file name
+        // Try to interpret first argument as the network file name.
+        // If it starts with a dash, it's probably not.
+        // But it is a common thing to try to get help by passing
+        // only a help flag, so we check for that special case.
+        std::string currArg = argv[0];
+        if( currArg == "--help" )
+        {
+            // let the base class handle it
+            nArgsUsed = Options::parseCommandLine( argc, argv );
+        }
+        else if( currArg[0] == '-' )
+        {
+            // this looks like an option, not the required filename.
+            std::cerr << "No network file provided.  Aborting!" << std::endl;
+            showHelp( std::cerr );
+            shouldRunFlag = false;
+            exitCode = EXIT_FAILURE;
+        }
+        else
+        {
+            // Use the first argument as the network file name
+            netFileName = argv[0];
+            nArgsUsed = 1;  // one for network file name
 
-        // Let the base Options class handle our options.
-        nArgsUsed += Options::parseCommandLine( argc - nArgsUsed, argv + nArgsUsed );
+            // Let the base Options class handle our options.
+            nArgsUsed += Options::parseCommandLine( argc - nArgsUsed, argv + nArgsUsed );
+        }
     }
 
     return nArgsUsed;
@@ -75,6 +97,8 @@ XolotlOptions::handleHandlersOption( std::string arg )
     {
         std::cerr << "Options: unrecognized argument " << arg << std::endl;
         showHelp( std::cerr );
+        shouldRunFlag = false;
+        exitCode = EXIT_FAILURE;
         ret = false;
     }
 
