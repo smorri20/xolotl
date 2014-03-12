@@ -1,5 +1,5 @@
-#ifndef PERFFACTORY_H
-#define PERFFACTORY_H
+#ifndef HANDLERREGISTRYFACTORY_H
+#define HANDLERREGISTRYFACTORY_H
 
 #include <memory>
 #include "IHandlerRegistry.h"
@@ -7,12 +7,20 @@
 namespace xolotlPerf
 {
 
-// Based on command line arguments, build the desired type of handler registry.
-void initialize( int argc, char* argv[] );
+// Build the desired type of handler registry.
+// 'useStdRegistry' indicates whether to build a registry
+//      that returns the standard performance objects or the dummy (stub) 
+//      objects.
+// 
+// TODO determine if we need to take an enum instead of a bool,
+// if we need to support more than these two types of registries.
+//
+// Returns true if the handler registry was created successfully.
+bool initialize( bool useStdRegistry );
 
 // Access the handler registry.
 std::shared_ptr<IHandlerRegistry> getHandlerRegistry( void );
 
 }; // end namespace xolotlPerf
 
-#endif // PERFFACTORY_H
+#endif // HANDLERREGISTRYFACTORY_H

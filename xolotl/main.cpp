@@ -4,12 +4,14 @@
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
+#include <cassert>
 #include <Reactant.h>
 #include <PSIClusterNetworkLoader.h>
 #include <PetscSolver.h>
 #include <mpi.h>
 #include "xolotlCore/io/MPIUtils.h"
 #include "xolotlPerf/HandlerRegistryFactory.h"
+#include "xolotlCore/commandline/XolotlOptions.h"
 
 
 using namespace std;
@@ -22,11 +24,6 @@ void printStartMessage() {
 	// TODO! Print date and time
 }
 
-//! This operation prints proper usage instructions for Xolotl
-void printUsage() {
-	cout << "Usage:" << endl;
-	cout << "\txolotl <network file name>" << endl;
-}
 
 //! Main program
 int main(int argc, char **argv) {
@@ -36,19 +33,27 @@ int main(int argc, char **argv) {
 	std::shared_ptr<PSIClusterNetworkLoader> networkLoader;
 	int rank;
 
-	// Check the arguments
-	if (argc < 2) {
-		cout << "Insufficient input provided! Aborting!" << std::endl;
-		printUsage();
-		return EXIT_FAILURE;
-	}
+	// Check the command line arguments.
+    XolotlOptions xopts;
+    int nOptsUsed = xopts.parseCommandLine( argc, argv );
+    if( !xopts.shouldRun() )
+    {
+        return xopts.getExitCode();
+    }
+    argc -= nOptsUsed;
+    argv += nOptsUsed;
 
 	// Extract the argument for the file name
-	const char *networkFilename = argv[1];
+    std::string networkFilename = xopts.getNetworkFilename();
+    assert( !networkFilename.empty() );
 
 	try {
         // Set up our performance data infrastructure
-        xolotlPerf::initialize( argc, argv );
+        if( !xolotlPerf::initialize( xopts.useStandardHandlers() ) )
+        {
+            std::cerr << "Unable to initialize requested performance data infrastructure.  Aborting" << std::endl;
+            return EXIT_FAILURE;
+        }
         std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry = xolotlPerf::getHandlerRegistry();
         std::shared_ptr<xolotlPerf::ITimer> totalTimer = handlerRegistry->getTimer( "total" );
         totalTimer->start();
@@ -90,14 +95,15 @@ int main(int argc, char **argv) {
         std::shared_ptr<xolotlPerf::ITimer> solverTimer = handlerRegistry->getTimer( "solve" );
         solverTimer->start();
 		solver.solve();
-		solver.finalize();
         solverTimer->stop();
 
+		solver.finalize();
         totalTimer->stop();
 
         // Report the performance data about the run we just completed
         // TODO implement our own performance data output mechanism
         // rather than relying on GPTL's output.
+
 	} catch (std::string & error) {
 		std::cout << error << std::endl;
 		std::cout << "Aborting." << std::endl;

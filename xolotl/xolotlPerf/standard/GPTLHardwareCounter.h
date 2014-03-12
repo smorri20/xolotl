@@ -54,6 +54,12 @@ private:
 			  quantities(std::vector<HardwareQuantities>(0))
 		{ }
 
+
+        /**
+         * Initialize the map of hardware quantities information.
+         */
+        static void InitHardwareQuantitiesMap(void);
+
 public:
 
 	/**
