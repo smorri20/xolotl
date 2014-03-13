@@ -63,19 +63,28 @@ int main(int argc, char **argv) {
             std::cerr << "Unable to initialize requested performance data infrastructure.  Aborting" << std::endl;
             return EXIT_FAILURE;
         }
-        std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry = xolotlPerf::getHandlerRegistry();
-        std::shared_ptr<xolotlPerf::ITimer> totalTimer = handlerRegistry->getTimer( "total" );
+
+        // Initialize MPI.  We do this instead of leaving it to some 
+        // other package (e.g., PETSc), because we want to avoid problems 
+        // with overlapping Timer scopes.
+        MPI_Init( &argc, &argv );
+
+        // Access our handler registry to obtain a Timer 
+        // measuring the runtime of the entire program.
+        // NOTE: these long template types could be replaced with 'auto'
+        auto handlerRegistry = xolotlPerf::getHandlerRegistry();
+        auto totalTimer = handlerRegistry->getTimer( "total" );
         totalTimer->start();
 
 		// Setup the solver
-        std::shared_ptr<xolotlPerf::ITimer> solverInitTimer = handlerRegistry->getTimer( "initSolver" );
+        auto solverInitTimer = handlerRegistry->getTimer( "initSolver" );
         solverInitTimer->start();
 		xolotlSolver::PetscSolver solver;
 		solver.setCommandLineOptions(argc, argv);
 		solver.initialize();
         solverInitTimer->stop();
 
-        std::shared_ptr<xolotlPerf::ITimer> networkLoadTimer =  handlerRegistry->getTimer( "loadNetwork" );
+        auto networkLoadTimer =  handlerRegistry->getTimer( "loadNetwork" );
         networkLoadTimer->start();
 
 		// Get the MPI rank
@@ -101,23 +110,31 @@ int main(int argc, char **argv) {
         networkLoadTimer->stop();
 
 		// Launch the PetscSolver
-        std::shared_ptr<xolotlPerf::ITimer> solverTimer = handlerRegistry->getTimer( "solve" );
+        auto solverTimer = handlerRegistry->getTimer( "solve" );
         solverTimer->start();
 		solver.solve();
         solverTimer->stop();
 
+        // Finalize our use of the solver.
 		solver.finalize();
         totalTimer->stop();
 
         // Report the performance data about the run we just completed
-        // TODO implement our own performance data output mechanism
-        // rather than relying on GPTL's output.
+        // TODO Currently, this call writes EventCounter data to the
+        // given stream, but Timer and any hardware counter data is
+        // written by the underlying timing library to files, one per process.
+        if( rank == 0 ) {
+            handlerRegistry->dump( std::cout );
+        }
 
 	} catch (std::string & error) {
 		std::cout << error << std::endl;
 		std::cout << "Aborting." << std::endl;
 		return EXIT_FAILURE;
 	}
+
+    // finalize our use of MPI
+    MPI_Finalize();
 
 	return EXIT_SUCCESS;
 }
