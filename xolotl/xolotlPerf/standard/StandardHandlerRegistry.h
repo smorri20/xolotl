@@ -6,6 +6,7 @@
 #include "GPTLTimer.h" //Dependency Generated Source:StandardHandlerRegistry Target:GPTLTimer
 #include "GPTLHardwareCounter.h" //Dependency Generated Source:StandardHandlerRegistry Target:GPTLHardwareCounter
 #include "EventCounter.h"
+#include "HardwareQuantityInfoMap.h"
 
 
 namespace xolotlPerf {
@@ -22,15 +23,14 @@ namespace xolotlPerf {
 class StandardHandlerRegistry : public IHandlerRegistry
 {
 private:
-    static std::shared_ptr<StandardHandlerRegistry> theRegistry;
+    // Map of our hardware quantity values to 
+    // human readable names and PAPI counter IDs.
+    HardwareQuantityInfoMap hwqInfoMap;
+
 
 public:
     // Construct a StandardHandlerRegistry.
-    StandardHandlerRegistry( void );
-
-    // StandardHandlerRegistry is a Singleton.  (I.e., there is
-    // only one instance in the process.)
-    static std::shared_ptr<StandardHandlerRegistry> getRegistry( void );
+    StandardHandlerRegistry( std::vector<HardwareQuantities> hwq );
 
     // Clean up a StandardHandlerRegistry.
     virtual ~StandardHandlerRegistry( void );

@@ -12,9 +12,11 @@ namespace xolotlPerf
 
 static std::shared_ptr<IHandlerRegistry> theHandlerRegistry;
 
+
 // Create the desired type of handler registry.
 bool
-initialize( bool useStdRegistry )
+initialize( bool useStdRegistry,
+                std::vector<HardwareQuantities> hwQuantities )
 {
     bool ret = true;
 
@@ -23,7 +25,7 @@ initialize( bool useStdRegistry )
 #if defined(HAVE_PERFLIB_STD)
         // we are to use a standard handler registry
         // (one that collects timings)
-        theHandlerRegistry = std::make_shared<StandardHandlerRegistry>();
+        theHandlerRegistry = std::make_shared<StandardHandlerRegistry>( hwQuantities );
 #else
         // TODO is there another mechanism for writing errors
         // e.g., one that logs error messages?
@@ -34,6 +36,9 @@ initialize( bool useStdRegistry )
     else
     {
         // use a dummy HandlerRegistry for this run
+        // Note that the dummy (stub) handlers don't take the 
+        // collection of hardware quantities to monitor, since
+        // they don't monitor anything.
         theHandlerRegistry = std::make_shared<DummyHandlerRegistry>();
     }
 

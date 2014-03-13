@@ -10,8 +10,9 @@
 #include <PetscSolver.h>
 #include <mpi.h>
 #include "xolotlCore/io/MPIUtils.h"
-#include "xolotlPerf/HandlerRegistryFactory.h"
 #include "xolotlCore/commandline/XolotlOptions.h"
+#include "xolotlPerf/HandlerRegistryFactory.h"
+#include "xolotlPerf/HardwareQuantities.h"
 
 
 using namespace std;
@@ -51,8 +52,13 @@ int main(int argc, char **argv) {
     assert( !networkFilename.empty() );
 
 	try {
-        // Set up our performance data infrastructure
-        if( !xolotlPerf::initialize( xopts.useStandardHandlers() ) )
+        // Set up our performance data infrastructure.
+        // Indicate we want to monitor some important hardware counters.
+        std::vector<xolotlPerf::HardwareQuantities> hwq;
+        hwq.push_back( xolotlPerf::FP_OPS );
+        hwq.push_back( xolotlPerf::L3_CACHE_MISS );
+        bool perfInitOK = xolotlPerf::initialize( xopts.useStandardHandlers(), hwq );
+        if( !perfInitOK )
         {
             std::cerr << "Unable to initialize requested performance data infrastructure.  Aborting" << std::endl;
             return EXIT_FAILURE;

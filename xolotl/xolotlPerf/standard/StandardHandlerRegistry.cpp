@@ -1,3 +1,4 @@
+#include <cassert>
 #include "StandardHandlerRegistry.h"
 #include "gptl.h"
 
@@ -5,24 +6,8 @@
 namespace xolotlPerf
 {
 
-// currently commented out so that other recent modifications can be
-// committed to the Subversion repository.
 
-std::shared_ptr<StandardHandlerRegistry> StandardHandlerRegistry::theRegistry;
-
-
-std::shared_ptr<StandardHandlerRegistry>
-StandardHandlerRegistry::getRegistry( void )
-{
-    if( !theRegistry )
-    {
-        theRegistry = std::make_shared<StandardHandlerRegistry>();
-    }
-    return theRegistry;
-}
-
-
-StandardHandlerRegistry::StandardHandlerRegistry( void )
+StandardHandlerRegistry::StandardHandlerRegistry( std::vector<HardwareQuantities> hwq )
 {
     // We use GPTL for data collection, so we must make sure 
     // that library has been initialized.
@@ -30,10 +15,36 @@ StandardHandlerRegistry::StandardHandlerRegistry( void )
     // Note: We assume that no other part of the code is using GPTL.
     // This assumption includes the assumption that there are no
     // other instances of StandardHandlerRegistry.
-    // TODO make StandardHandlerRegistry a singleton.
     //
+
+    // Indicate to GPTL any hardware counters it should be monitoring.
+    for( auto iter = hwq.begin(); iter != hwq.end(); iter++ )
+    {
+        HardwareQuantities currHwq = *iter;
+
+        // Convert the current HardwareQuantity into PAPI notation,
+        // since GPTL doesn't understand our enum values.
+        // The value should be found in the map.
+        HardwareQuantityInfoMap::const_iterator mapiter = hwqInfoMap.find( currHwq );
+        assert( mapiter != hwqInfoMap.end() );
+        const HardwareQuantityInfo& currHwqInfo = mapiter->second;
+
+        int gret = GPTLsetoption( currHwqInfo.papiID, 1 );
+        if( gret < 0 )
+        {
+            std::cerr << "Warning: unable to monitor requested hardware counter " 
+                << currHwqInfo.name
+                << " (PAPI name: " << currHwqInfo.papiName
+                << ')'
+                << std::endl;
+        }
+    }
+
+    // Initialize the GPTL library.
+    // GPTLsetoption(GPTLverbose, 1);   // useful for debugging
     GPTLinitialize();
 }
+
 
 
 
