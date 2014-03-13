@@ -70,10 +70,25 @@ StandardHandlerRegistry::getTimer(std::string name)
 std::shared_ptr<IEventCounter> 
 StandardHandlerRegistry::getEventCounter(std::string name)
 {
-    // TODO is there need for us to retain access to this object?
-    // TODO do we need to check whether client has already created
-    // an object with this name and return that object?
-    return std::make_shared<EventCounter>( name );
+    std::shared_ptr<IEventCounter> ret;
+
+    // Check if we have already created an event counter
+    // with this name.
+    auto iter = allEventCounters.find( name );
+    if( iter != allEventCounters.end() )
+    {
+        // We have already created an event counter with this name.
+        // Return it.
+        ret = iter->second;
+    }
+    else
+    {
+        // We have not yet created an event counter with this name.
+        // Build one, and keep track of it.
+        ret = std::make_shared<EventCounter>( name );
+        allEventCounters[name] = ret;
+    }
+    return ret;
 }
 
 
@@ -91,10 +106,20 @@ StandardHandlerRegistry::getHardwareCounter( std::string name,
 void
 StandardHandlerRegistry::dump(std::ostream& os) const
 {
-#if READY
-#else
-    os << "StandardHandlerRegistry::dump NIY" << std::endl;
-#endif // READY
+    // TODO - aggregation when run with more than one process?
+
+    // TODO is there a way to get nesting based on call site of event counters?
+    os << "EventCounters:\n";
+    for( auto iter = allEventCounters.begin(); 
+            iter != allEventCounters.end(); 
+            iter++ )
+    {
+        std::shared_ptr<IEventCounter> currCounter = iter->second;
+        os << "  " << currCounter->getName() 
+            << ": " << currCounter->getValue() 
+            << '\n';
+    }
+    os << std::endl;
 }
 
 
