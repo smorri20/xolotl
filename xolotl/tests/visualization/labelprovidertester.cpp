@@ -1,22 +1,22 @@
-#include "hardwarecountertester.h"
-//Begin section for file hardwarecountertester.cpp
+#include "labelprovidertester.h"
+//Begin section for file labelprovidertester.cpp
 //TODO: Add definitions that you want preserved
-//End section for file hardwarecountertester.cpp
+//End section for file labelprovidertester.cpp
 
 
 //@generated "UML to C++ (com.ibm.xtools.transform.uml2.cpp.CPPTransformation)"
-HardwareCounterTester::HardwareCounterTester(HardwareCounterTester & arg) 
+LabelProviderTester::LabelProviderTester(LabelProviderTester & arg) 
 {
     //TODO Auto-generated method stub
 }
 //@generated "UML to C++ (com.ibm.xtools.transform.uml2.cpp.CPPTransformation)"
-HardwareCounterTester::~HardwareCounterTester() 
+LabelProviderTester::~LabelProviderTester() 
 {
     //TODO Auto-generated method stub
 }
 //@generated "UML to C++ (com.ibm.xtools.transform.uml2.cpp.CPPTransformation)"
-void HardwareCounterTester::checkCounting() 
+int LabelProviderTester::checkLabels() 
 {
     //TODO Auto-generated method stub
-    return;
+    return 0;
 }

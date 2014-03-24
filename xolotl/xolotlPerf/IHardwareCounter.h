@@ -1,7 +1,7 @@
 #ifndef IHARDWARECOUNTER_H
 #define IHARDWARECOUNTER_H
 
-#include "IIdentifiable.h"
+#include "../xolotlCore/IIdentifiable.h"
 
 using namespace std;
 
@@ -24,7 +24,6 @@ public:
      * This operation returns a list of values of the, initially specified,
      * hardware quantities monitored by the IHardwareCounter.
      */
-//    virtual std::vector<int> getValues() const = 0;
     virtual std::vector<double> getValues() const = 0;
 
 	/**

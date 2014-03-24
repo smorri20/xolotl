@@ -1,6 +1,7 @@
 #include "XolotlConfigPerf.h"
 #include "HandlerRegistryFactory.h"
 #include "dummy/DummyHandlerRegistry.h"
+#include <iostream>
 
 #if defined(HAVE_PERFLIB_STD)
 #include "standard/StandardHandlerRegistry.h"
@@ -49,8 +50,7 @@ initialize( bool useStdRegistry,
 
 
 // Provide access to our handler registry.
-std::shared_ptr<IHandlerRegistry>
-getHandlerRegistry( void )
+std::shared_ptr<IHandlerRegistry> getHandlerRegistry( void )
 {
     if( !theHandlerRegistry )
     {
@@ -64,5 +64,5 @@ getHandlerRegistry( void )
 }
 
 
-} // end namedpsace xolotlPerf
+} // end namespace xolotlPerf
 
