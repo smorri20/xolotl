@@ -20,10 +20,14 @@
 #include <VCluster.h>
 #include <InterstitialCluster.h>
 #include <HeInterstitialCluster.h>
+#include "../../xolotlPerf/HandlerRegistryFactory.h"
 
 using namespace std;
 using namespace xolotlCore;
 using namespace testUtils;
+
+//#define registry xolotlPerf::getHandlerRegistry()
+static std::shared_ptr<xolotlPerf::IHandlerRegistry> registry = std::make_shared<xolotlPerf::DummyHandlerRegistry>();
 
 /**
  * This suite is responsible for testing the ReactionNetwork
@@ -32,7 +36,7 @@ using namespace testUtils;
 BOOST_AUTO_TEST_CASE(checkCompositionCreation) {
 
 	// Create the network
-	auto psiNetwork = make_shared<PSIClusterReactionNetwork>();
+	auto psiNetwork = make_shared<PSIClusterReactionNetwork>(registry);
 
 	// Get an HeV cluster with sizes 5,10
 	auto heVComp = psiNetwork->getCompositionVector(5, 10, 0);
@@ -61,12 +65,12 @@ BOOST_AUTO_TEST_CASE(checkCompositionCreation) {
 BOOST_AUTO_TEST_CASE(checkReactants) {
 
 	// Create the network
-	auto psiNetwork = make_shared<PSIClusterReactionNetwork>();
+	auto psiNetwork = make_shared<PSIClusterReactionNetwork>(registry);
 
 	// Add a few He, V and I PSIClusters
-	auto heCluster = make_shared<HeCluster>(10);
-	auto vCluster = make_shared<VCluster>(4);
-	auto interstitialCluster = make_shared<InterstitialCluster>(48);
+	auto heCluster = make_shared<HeCluster>(10, registry);
+	auto vCluster = make_shared<VCluster>(4, registry);
+	auto interstitialCluster = make_shared<InterstitialCluster>(48, registry);
 	psiNetwork->add(heCluster);
 	psiNetwork->add(vCluster);
 	psiNetwork->add(interstitialCluster);
@@ -114,7 +118,7 @@ BOOST_AUTO_TEST_CASE(checkReactants) {
 	for (int numV = 1; numV <= maxClusterSize; numV++) {
 		for (int numHe = 1; numHe + numV <= maxClusterSize; numHe++) {
 			shared_ptr<HeVCluster> cluster = std::make_shared<HeVCluster>(numHe,
-					numV);
+					numV, registry);
 			psiNetwork->add(cluster);
 			counter++;
 		}
@@ -129,7 +133,7 @@ BOOST_AUTO_TEST_CASE(checkReactants) {
 	for (int numI = 1; numI <= maxClusterSize; numI++) {
 		for (int numHe = 1; numHe + numI <= maxClusterSize; numHe++) {
 			shared_ptr<HeInterstitialCluster> cluster(
-					new HeInterstitialCluster(numHe, numI));
+					new HeInterstitialCluster(numHe, numI, registry));
 			psiNetwork->add(cluster);
 			counter++;
 		}
@@ -138,7 +142,7 @@ BOOST_AUTO_TEST_CASE(checkReactants) {
 
 	// Try adding a duplicate HeV and catch the exception
 	shared_ptr<HeVCluster> duplicateCluster = std::make_shared<HeVCluster>(5,
-			3);
+			3, registry);
 	try {
 		psiNetwork->add(duplicateCluster);
 		BOOST_FAIL(
@@ -180,7 +184,7 @@ BOOST_AUTO_TEST_CASE(checkReactants) {
 BOOST_AUTO_TEST_CASE(checkProperties) {
 
 	// Create the network
-	auto psiNetwork = make_shared<PSIClusterReactionNetwork>();
+	auto psiNetwork = make_shared<PSIClusterReactionNetwork>(registry);
 
 	// Grab the map of properties from the network
 	auto props = psiNetwork->getProperties();
@@ -222,9 +226,9 @@ BOOST_AUTO_TEST_CASE(checkProperties) {
 	BOOST_REQUIRE_EQUAL("d8", agility);
 
 	// Add a couple of clusters
-	auto heCluster = make_shared<HeCluster>(5);
+	auto heCluster = make_shared<HeCluster>(5, registry);
 	psiNetwork->add(heCluster);
-	auto heVCluster = make_shared<HeVCluster>(5, 3);
+	auto heVCluster = make_shared<HeVCluster>(5, 3, registry);
 	psiNetwork->add(heVCluster);
 
 	// Grab the properties afresh
@@ -244,7 +248,7 @@ BOOST_AUTO_TEST_CASE(checkProperties) {
 BOOST_AUTO_TEST_CASE(checkNames) {
 
 	// Create the network
-	auto psiNetwork = make_shared<PSIClusterReactionNetwork>();
+	auto psiNetwork = make_shared<PSIClusterReactionNetwork>(registry);
 
 	// Check the names of the regular cluster types. Use a simple counting
 	// system to look over the list since there is no way to check exact
@@ -280,10 +284,11 @@ BOOST_AUTO_TEST_CASE(checkNames) {
  * This operation tests the copy constructor.
  */BOOST_AUTO_TEST_CASE(checkCopying) {
 
-	PSIClusterReactionNetwork network;
+	//PSIClusterReactionNetwork network;
+	PSIClusterReactionNetwork network(registry);
 
 	// Add a reactant
-	shared_ptr<Reactant> heCluster(new HeCluster(1));
+	shared_ptr<Reactant> heCluster(new HeCluster(1, registry));
 	heCluster->setConcentration(50.0);
 	network.add(heCluster);
 

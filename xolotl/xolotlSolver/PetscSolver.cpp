@@ -41,6 +41,11 @@ namespace xolotlSolver {
  */
 std::shared_ptr<xolotlPerf::IEventCounter> RHSFunctionCounter;
 
+/**
+ * Counter for the number of times RHSJacobian is called.
+ */
+std::shared_ptr<xolotlPerf::IEventCounter> RHSJacobianCounter;
+
 
 
 //! Help message
@@ -322,6 +327,7 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 /* ------------------------------------------------------------------- */
 PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 
+	// increment the event counter monitoring this function
 	RHSFunctionCounter->increment();
 
 	// Important petsc stuff (related to the grid mostly)
@@ -534,6 +540,9 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
  */
 PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat *A, Mat *J,
 		MatStructure *str, void *ptr) {
+
+	// increment the event counter monitoring this function
+	RHSJacobianCounter->increment();
 
 	DM da;
 	PetscErrorCode ierr;
@@ -856,9 +865,16 @@ PetscErrorCode PetscSolver::getDiagonalFill(PetscInt *diagFill,
 PetscSolver::PetscSolver() {
 	numCLIArgs = 0;
 	CLIArgs = NULL;
+}
 
-	RHSFunctionCounter =
-			xolotlPerf::getHandlerRegistry()->getEventCounter("RHSFunction_Counter");
+PetscSolver::PetscSolver(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
+	handlerRegistry(registry){
+
+	numCLIArgs = 0;
+	CLIArgs = NULL;
+
+	RHSFunctionCounter = handlerRegistry->getEventCounter("Petsc_RHSFunction_Counter");
+	RHSJacobianCounter = handlerRegistry->getEventCounter("Petsc_RHSJacobian_Counter");
 }
 
 //! The Destructor

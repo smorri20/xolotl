@@ -8,6 +8,11 @@
 #include <petscsys.h>
 #include <petscdmda.h>
 
+namespace xolotlPerf {
+	class IHandlerRegistry;
+    class IEventCounter;
+};
+
 namespace xolotlSolver {
 
 /**
@@ -50,10 +55,13 @@ private:
 	 */
 	PetscErrorCode setupInitialConditions(DM data, Vec solutionVector);
 
+	//! The Constructor
+	PetscSolver();
+
 public:
 
 	//! The Constructor
-	PetscSolver();
+	PetscSolver(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	//! The Destructor
 	~PetscSolver();
@@ -127,8 +135,15 @@ public:
 		return network;
 	}
 
-};
-//end class PetscSolver
+protected:
+
+    /**
+     * The performance handler registry that will be used
+     * for this class.
+     */
+    std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry;
+
+}; //end class PetscSolver
 
 } /* end namespace xolotlSolver */
 #endif

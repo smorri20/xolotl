@@ -19,6 +19,11 @@ class ISolver {
 public:
 
 	/**
+	 * The destructor
+	 */
+	virtual ~ISolver(){}
+
+	/**
 	 * This operation transfers the input arguments passed to the program on
 	 * startup to the solver. These options are static options specified at
 	 * the start of the program whereas the options passed to setOptions() may

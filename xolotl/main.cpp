@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
 		// Setup the solver
         auto solverInitTimer = handlerRegistry->getTimer( "initSolver" );
         solverInitTimer->start();
-		xolotlSolver::PetscSolver solver;
+		xolotlSolver::PetscSolver solver(handlerRegistry);
 		solver.setCommandLineOptions(argc, argv);
 		solver.initialize();
         solverInitTimer->stop();
