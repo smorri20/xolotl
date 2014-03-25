@@ -9,7 +9,7 @@ SurfacePlot::SurfacePlot() {
 SurfacePlot::~SurfacePlot() {
 }
 
-void SurfacePlot::render(bool isCumulative) {
+void SurfacePlot::render() {
 }
 
 Point SurfacePlot::getPoints() {

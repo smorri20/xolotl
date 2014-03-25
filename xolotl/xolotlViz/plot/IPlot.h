@@ -23,7 +23,7 @@ public:
 	/**
 	 * Method managing everything that is related to the rendering of a plot.
 	 */
-	virtual void render(bool isCumulative = false) = 0;
+	virtual void render() = 0;
 
 	/**
 	 * Method that will save the plotted plot in a file.
@@ -53,7 +53,7 @@ public:
 	/**
 	 * Gets the data provider used.
 	 */
-	virtual DataProvider getDataProvider() = 0;
+	virtual DataProvider getDataProvider() const = 0;
 
 	/**
 	 * Sets the label provider used for the plots.
@@ -63,23 +63,23 @@ public:
 	/**
 	 * Gets the label provider used.
 	 */
-	virtual LabelProvider getLabelProvider() = 0;
+	virtual LabelProvider getLabelProvider() const = 0;
 
 	/**
 	 * Method getting the unit from the data provider and setting the attribute unit with this value.
 	 */
-	virtual std::string getUnit() = 0;
+	virtual std::string getUnit() const = 0;
 
 	/**
 	 * Method getting the title with the help of the data provider and the label provider and
 	 * setting the title attribute.
 	 */
-	virtual std::string getTitle() = 0;
+	virtual std::string getTitle() const = 0;
 
 	/**
 	 * Method defining the legend with the help of the data provider and the label provider.
 	 */
-	virtual std::string getLegend() = 0;
+	virtual std::string getLegend() const = 0;
 
 };
 

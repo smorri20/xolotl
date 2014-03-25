@@ -20,7 +20,7 @@ private:
 	 * Vector containing two fields: one for the value and one for the direction as a function
 	 * of which the value is plotted.
 	 */
-	Vector data;
+	std::vector< std::vector<double> > data;
 
 public:
 
@@ -37,22 +37,22 @@ public:
 	/**
 	 * Method managing everything that is related to the rendering of a plot.
 	 */
-	void render(bool isCumulative = false);
+	void render();
 
 	/**
 	 * Method returning the data points that are stored in the data vector.
 	 */
-	Point getPoints();
+	std::vector< std::vector<double> > getPoints() const;
 
 	/**
 	 * Method getting the X axis label with the help of the label provider.
 	 */
-	std::string getAxis1Label();
+	std::string getAxis1Label() const;
 
 	/**
 	 * Method getting the Y axis label with the help of the label provider.
 	 */
-	std::string getAxis2Label();
+	std::string getAxis2Label() const;
 
 };
 

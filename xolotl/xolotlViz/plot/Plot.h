@@ -22,32 +22,17 @@ private:
 	/**
 	 * Unit of the data that is being plotted.
 	 */
-	std::string unit;
+	std::string plotUnit;
 
 	/**
 	 * Choice of PlottingStyle.
 	 */
-	PlottingStyle style;
-
-	/**
-	 * Label that will appear of the X axis of the plot.
-	 */
-	std::string axis1Label;
-
-	/**
-	 * Label that will appear of the Y axis of the plot.
-	 */
-	std::string axis2Label;
-
-	/**
-	 * Label that will appear of the Z axis of the plot.
-	 */
-	std::string axis3Label;
+	PlottingStyle plotStyle;
 
 	/**
 	 * Title of the plot. Can be set by the user by using setTitle().
 	 */
-	std::string title;
+	std::string plotTitle;
 
 	/**
 	 * If it is equal to True, the legend will be displayed.
@@ -57,12 +42,12 @@ private:
 	/**
 	 * Data provider used for the plot.
 	 */
-	DataProvider dataProvider;
+	DataProvider plotDataProvider;
 
 	/**
 	 * LabelProvider used for the Plot.
 	 */
-	LabelProvider labelProvider;
+	LabelProvider plotLabelProvider;
 
 public:
 
@@ -79,12 +64,12 @@ public:
 	/**
 	 * Method getting the unit.
 	 */
-	std::string getUnit();
+	std::string getUnit() const ;
 
 	/**
 	 * Method getting the title.
 	 */
-	std::string getTitle();
+	std::string getTitle() const ;
 
 	/**
 	 * Method that enables the rendering of the legend.
@@ -94,7 +79,7 @@ public:
 	/**
 	 * Method getting the legend.
 	 */
-	std::string getLegend();
+	std::string getLegend() const ;
 
 	/**
 	 * Method that will save the plotted plot in a file.
@@ -124,7 +109,7 @@ public:
 	/**
 	 * Gets the data provider used.
 	 */
-	DataProvider getDataProvider();
+	DataProvider getDataProvider() const ;
 
 	/**
 	 * Sets the label provider used for the plots.
@@ -134,7 +119,7 @@ public:
 	/**
 	 * Gets the label provider used.
 	 */
-	LabelProvider getLabelProvider();
+	LabelProvider getLabelProvider() const ;
 
 };
 

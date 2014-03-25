@@ -21,7 +21,7 @@ private:
 	 * Vector containing three fields: one for the value and two for the directions as a function
 	 * of which the value is plotted.
 	 */
-	Vector data;
+	std::vector< std::vector<double> > data;
 
 public:
 
@@ -38,7 +38,7 @@ public:
 	/**
 	 * Method managing everything that is related to the rendering of a plot.
 	 */
-	void render(bool isCumulative = false);
+	void render();
 
 	/**
 	 * Method returning the data points that are stored in the data vector.

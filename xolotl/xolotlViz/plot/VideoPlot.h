@@ -44,7 +44,7 @@ public:
 	/**
 	 * Method managing everything that is related to the rendering of a plot.
 	 */
-	void render(bool isCumulative = false);
+	void render();
 
 	/**
 	 * Sets the frame rate for VideoPlot.

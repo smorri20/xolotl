@@ -9,7 +9,7 @@ VideoPlot::VideoPlot() {
 VideoPlot::~VideoPlot() {
 }
 
-void VideoPlot::render(bool isCumulative) {
+void VideoPlot::render() {
 }
 
 void VideoPlot::setFrameRate(double frameRate) {
