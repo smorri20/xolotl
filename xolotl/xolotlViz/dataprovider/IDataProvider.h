@@ -5,6 +5,7 @@
 #include "Point.h"
 #include <vector>
 #include <string>
+#include <memory>
 
 namespace xolotlViz {
 
@@ -18,39 +19,46 @@ public:
 
 	/**
 	 * Returns a collection of the data points.
+	 * @return The collection of Point.
 	 */
-	virtual std::vector<Point> getDataPoints() const = 0;
+	virtual std::shared_ptr< std::vector<Point> > getDataPoints() const = 0;
 
 	/**
 	 * Returns the value of the mean of all the data points.
+	 * @return The mean of all the values of the data.
 	 */
 	virtual double getDataMean() const = 0;
 
 	/**
 	 * Method filling the data collection.
+	 * @param points A collection of Point.
 	 */
-	virtual void setPoints(std::vector<Point> Points) = 0;
+	virtual void setPoints(std::shared_ptr< std::vector<Point> > points) = 0;
 
 	/**
 	 * Method returning the vector of quantity that will be plotted on the X axis.
 	 * Quantity being x, y, z, t, or value.
+	 * @return The vector of quantity.
 	 */
 	virtual std::vector<double> getAxis1Vector() const = 0;
 
 	/**
 	 * Method returning the vector of quantity that will be plotted on the Y axis.
 	 * Quantity being x, y, z, t, or value.
+	 * @return The vector of quantity.
 	 */
 	virtual std::vector<double> getAxis2Vector() const = 0;
 
 	/**
 	 * Method returning the vector of quantity that will be plotted on the Z axis.
 	 * Quantity being x, y, z, t, or value.
+	 * @return The vector of quantity.
 	 */
 	virtual std::vector<double> getAxis3Vector() const = 0;
 
 	/**
 	 * Method returning the vector of time steps that will be used for the VideoPlots.
+	 * @return The vector of time steps.
 	 */
 	virtual std::vector<double> getAxis4Vector() const = 0;
 

@@ -2,7 +2,11 @@
 #define IPLOT_H
 
 // Includes
+#include "PlottingStyle.h"
+#include "../dataprovider/DataProvider.h"
+#include "../labelprovider/LabelProvider.h"
 #include <string>
+#include <memory>
 
 namespace xolotlViz {
 
@@ -16,68 +20,62 @@ class IPlot {
 public:
 
 	/**
-	 * Method that enables the rendering of the legend.
-	 */
-	virtual void showLegend(bool legendShow = false) = 0;
-
-	/**
 	 * Method managing everything that is related to the rendering of a plot.
 	 */
 	virtual void render() = 0;
 
 	/**
 	 * Method that will save the plotted plot in a file.
+	 * @param fileName The name of the file where the plot
+	 * will be saved.
 	 */
 	virtual void write(std::string fileName) = 0;
 
 	/**
-	 * Method that allows the user to set his own title.
-	 */
-	virtual void setTitle(std::string title) = 0;
-
-	/**
 	 * Method allowing the user to set the PlottingStyle.
+	 * @param style The PlottingStyle that will be used.
 	 */
 	virtual void setPlottingStyle(PlottingStyle style) = 0;
 
 	/**
-	 * Method allowing the user to set the unit of the value plotted.
+	 * Method getting the PlottingStyle.
+	 * @return The PlottingStyle attribute.
 	 */
-	virtual void setUnit(std::string unit) = 0;
+	virtual PlottingStyle getPlottingStyle() = 0;
 
 	/**
 	 * Sets the data provider used for the plots.
+	 * @param dataProvider The DataProvider to set.
 	 */
-	virtual void setDataProvider(DataProvider dataProvider) = 0;
+	virtual void setDataProvider(std::shared_ptr<DataProvider> dataProvider) = 0;
 
 	/**
 	 * Gets the data provider used.
+	 * @return the DataProvider attribute.
 	 */
-	virtual DataProvider getDataProvider() const = 0;
+	virtual std::shared_ptr<DataProvider> getDataProvider() const = 0;
 
 	/**
 	 * Sets the label provider used for the plots.
+	 * @param dataProvider The LabelProvider to set.
 	 */
-	virtual void setLabelProvider(LabelProvider labelProvider) = 0;
+	virtual void setLabelProvider(std::shared_ptr<LabelProvider> labelProvider) = 0;
 
 	/**
 	 * Gets the label provider used.
+	 * @return the LabelProvider attribute.
 	 */
-	virtual LabelProvider getLabelProvider() const = 0;
+	virtual std::shared_ptr<LabelProvider> getLabelProvider() const = 0;
 
 	/**
-	 * Method getting the unit from the data provider and setting the attribute unit with this value.
+	 * Method that enables the rendering of the legend.
+	 * @param legendShow A boolean set to true by default
 	 */
-	virtual std::string getUnit() const = 0;
-
-	/**
-	 * Method getting the title with the help of the data provider and the label provider and
-	 * setting the title attribute.
-	 */
-	virtual std::string getTitle() const = 0;
+	virtual void showLegend(bool legendShow = true) = 0;
 
 	/**
 	 * Method defining the legend with the help of the data provider and the label provider.
+	 * @return The legend.
 	 */
 	virtual std::string getLegend() const = 0;
 

@@ -27,11 +27,13 @@ public:
 
 	/**
 	 * Method returning a vector containing the 'x' field of the collection of Point of the DataProvider.
+	 * @return The vector of Point x value.
 	 */
 	virtual std::vector<double> getAxis1Vector() const;
 
 	/**
 	 * Method returning a vector containing the 'value' field of the collection of Point of the DataProvider.
+	 * @return The vector of Point value.
 	 */
 	virtual std::vector<double> getAxis2Vector() const;
 

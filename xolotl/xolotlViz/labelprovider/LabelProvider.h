@@ -2,7 +2,6 @@
 #define LABELPROVIDER_H
 
 // Includes
-#include "ILabelProvider.h"
 #include <string>
 
 namespace xolotlViz {
@@ -12,7 +11,7 @@ namespace xolotlViz {
  * for the plots. LabelProvider is a class attached to a single Plot at its creation.
  * One can simply access to the fields by doing myLabelProvider.axis1Label = "theLabel"; .
  */
-class LabelProvider: public ILabelProvider {
+class LabelProvider {
 
 public:
 
@@ -42,14 +41,19 @@ public:
 	std::string titleLabel;
 
 	/**
+	 * Unit label for the plot.
+	 */
+	std::string unitLabel;
+
+	/**
 	 * The default constructor
 	 */
-	LabelProvider();
+	LabelProvider() {};
 
 	/**
 	 * The destructor
 	 */
-	~LabelProvider();
+	~LabelProvider() {};
 
 };
 

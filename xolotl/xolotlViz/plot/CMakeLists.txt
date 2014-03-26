@@ -1,9 +1,9 @@
 #Set the package name
-SET(PACKAGE_NAME "xolotl.data")
+SET(PACKAGE_NAME "xolotl.plot")
 #Set the description
-SET(PACKAGE_DESCRIPTION "Xolotl Data Provider")
+SET(PACKAGE_DESCRIPTION "Xolotl Plot")
 #Set the library name
-SET(LIBRARY_NAME "xolotlData")
+SET(LIBRARY_NAME "xolotlPlot")
 
 #Collect all header filenames in this project 
 #and glob them in HEADERS

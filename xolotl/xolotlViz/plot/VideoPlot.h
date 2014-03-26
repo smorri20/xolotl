@@ -3,7 +3,6 @@
 
 // Includes
 #include "Plot.h"
-#include "Point.h"
 #include <vector>
 
 namespace xolotlViz {
@@ -17,12 +16,6 @@ namespace xolotlViz {
 class VideoPlot: public Plot {
 
 private:
-
-	/**
-	 * Vector containing four fields: one for the value, two for the spatial directions
-	 * as a function of which the value is plotted, and the last one for the time step.
-	 */
-	Vector data;
 
 	/**
 	 * Number of frames shown per second.
@@ -54,32 +47,7 @@ public:
 	/**
 	 * Get the frame rate from VideoPlot.
 	 */
-	double getFrameRate();
-
-	/**
-	 * Method returning the data points that are stored in the data vector.
-	 */
-	Point getPoints();
-
-	/**
-	 * Method getting the X axis label with the help of the label provider.
-	 */
-	std::string getAxis1Label();
-
-	/**
-	 * Method getting the Y axis label with the help of the label provider.
-	 */
-	std::string getAxis2Label();
-
-	/**
-	 * Method getting the Z axis label with the help of the label provider.
-	 */
-	std::string getAxis3Label();
-
-	/**
-	 * Method getting the time axis label with the help of the label provider.
-	 */
-	std::string getAxis4Label();
+	double getFrameRate() const;
 
 };
 

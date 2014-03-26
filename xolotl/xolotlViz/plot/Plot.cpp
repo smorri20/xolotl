@@ -9,12 +9,34 @@ Plot::Plot() {
 Plot::~Plot() {
 }
 
-std::string Plot::getUnit() const {
-	return plotUnit;
+void Plot::write(std::string fileName) {
 }
 
-std::string Plot::getTitle() const {
-	return plotTitle;
+void Plot::setPlottingStyle(PlottingStyle style) {
+	plotStyle = style;
+	return;
+}
+
+PlottingStyle Plot::getPlottingStyle() {
+	return plotStyle;
+}
+
+void Plot::setDataProvider(std::shared_ptr<DataProvider> dataProvider) {
+	plotDataProvider = dataProvider;
+	return;
+}
+
+std::shared_ptr<DataProvider> Plot::getDataProvider() const {
+	return plotDataProvider;
+}
+
+void Plot::setLabelProvider(std::shared_ptr<LabelProvider> labelProvider) {
+	plotLabelProvider = labelProvider;
+	return;
+}
+
+std::shared_ptr<LabelProvider> Plot::getLabelProvider() const {
+	return plotLabelProvider;
 }
 
 void Plot::showLegend(bool legendShow) {
@@ -24,36 +46,4 @@ void Plot::showLegend(bool legendShow) {
 
 std::string Plot::getLegend() const {
 	return " ";
-}
-
-void Plot::write(std::string fileName) {
-}
-
-void Plot::setTitle(std::string title) {
-	plotTitle = title;
-	return;
-}
-
-void Plot::setPlottingStyle(PlottingStyle style) {
-	plotStyle = style;
-	return;
-}
-
-void Plot::setUnit(std::string unit) {
-	plotUnit = unit;
-	return;
-}
-
-void Plot::setDataProvider(DataProvider dataProvider) {
-}
-
-DataProvider Plot::getDataProvider() const {
-	//TODO Auto-generated method stub
-}
-
-void Plot::setLabelProvider(LabelProvider labelProvider) {
-}
-
-LabelProvider Plot::getLabelProvider() const {
-	//TODO Auto-generated method stub
 }

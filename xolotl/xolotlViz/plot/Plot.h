@@ -4,9 +4,8 @@
 // Includes
 #include "IPlot.h"
 #include "PlottingStyle.h"
-#include "DataProvider.h"
-#include "LabelProvider.h"
-#include <string>
+#include "../dataprovider/DataProvider.h"
+#include "../labelprovider/LabelProvider.h"
 
 namespace xolotlViz {
 
@@ -17,12 +16,7 @@ namespace xolotlViz {
  */
 class Plot: public IPlot {
 
-private:
-
-	/**
-	 * Unit of the data that is being plotted.
-	 */
-	std::string plotUnit;
+protected:
 
 	/**
 	 * Choice of PlottingStyle.
@@ -30,26 +24,21 @@ private:
 	PlottingStyle plotStyle;
 
 	/**
-	 * Title of the plot. Can be set by the user by using setTitle().
-	 */
-	std::string plotTitle;
-
-	/**
 	 * If it is equal to True, the legend will be displayed.
 	 */
-	bool enableLegend;
+	bool enableLegend = false;
 
 	/**
 	 * Data provider used for the plot.
 	 */
-	DataProvider plotDataProvider;
+	std::shared_ptr<DataProvider> plotDataProvider;
+
+public:
 
 	/**
 	 * LabelProvider used for the Plot.
 	 */
-	LabelProvider plotLabelProvider;
-
-public:
+	std::shared_ptr<LabelProvider> plotLabelProvider;
 
 	/**
 	 * The default constructor
@@ -62,64 +51,58 @@ public:
 	~Plot();
 
 	/**
-	 * Method getting the unit.
-	 */
-	std::string getUnit() const ;
-
-	/**
-	 * Method getting the title.
-	 */
-	std::string getTitle() const ;
-
-	/**
-	 * Method that enables the rendering of the legend.
-	 */
-	void showLegend(bool legendShow = false);
-
-	/**
-	 * Method getting the legend.
-	 */
-	std::string getLegend() const ;
-
-	/**
 	 * Method that will save the plotted plot in a file.
+	 * \see IPlot.h
 	 */
 	void write(std::string fileName);
 
 	/**
-	 * Method that allows the user to set his own title.
-	 */
-	void setTitle(std::string title);
-
-	/**
 	 * Method allowing the user to set the PlottingStyle.
+	 * \see IPlot.h
 	 */
 	void setPlottingStyle(PlottingStyle style);
 
 	/**
-	 * Sets the unit of the data.
+	 * Method getting the PlottingStyle.
+	 * \see IPlot.h
 	 */
-	void setUnit(std::string unit);
+	PlottingStyle getPlottingStyle();
 
 	/**
 	 * Sets the data provider used for the plots.
+	 * \see IPlot.h
 	 */
-	void setDataProvider(DataProvider dataProvider);
+	void setDataProvider(std::shared_ptr<DataProvider> dataProvider);
 
 	/**
 	 * Gets the data provider used.
+	 * \see IPlot.h
 	 */
-	DataProvider getDataProvider() const ;
+	std::shared_ptr<DataProvider> getDataProvider() const ;
 
 	/**
 	 * Sets the label provider used for the plots.
+	 * \see IPlot.h
 	 */
-	void setLabelProvider(LabelProvider labelProvider);
+	void setLabelProvider(std::shared_ptr<LabelProvider> labelProvider);
 
 	/**
 	 * Gets the label provider used.
+	 * \see IPlot.h
 	 */
-	LabelProvider getLabelProvider() const ;
+	std::shared_ptr<LabelProvider> getLabelProvider() const ;
+
+	/**
+	 * Method that enables the rendering of the legend.
+	 * \see IPlot.h
+	 */
+	void showLegend(bool legendShow = true);
+
+	/**
+	 * Method getting the legend.
+	 * \see IPlot.h
+	 */
+	std::string getLegend() const ;
 
 };
 

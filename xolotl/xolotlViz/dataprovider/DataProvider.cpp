@@ -9,32 +9,25 @@ DataProvider::DataProvider() {
 DataProvider::~DataProvider() {
 }
 
-std::vector<Point> DataProvider::getDataPoints() const {
-	return data;
+std::shared_ptr< std::vector<Point> > DataProvider::getDataPoints() const {
+	return dataPoints;
 }
 
-void DataProvider::setPoints(std::vector<Point> points) {
-
-	// Loop on all the points in the points vector
-	for (auto it = points.begin();
-			it != points.end(); it++) {
-
-		// Add the current Point to the data vector
-		data.push_back(*it);
-	}
+void DataProvider::setPoints(std::shared_ptr< std::vector<Point> > points) {
+	dataPoints = points;
 	return;
 }
 
 double DataProvider::getDataMean() const {
 	// The size of the data vector
-	int size = data.size();
+	int size = dataPoints->size();
 
 	// Use to add the value of each Point
 	double valueSum = 0.;
 
 	// Loop on all the points in the data vector
-	for (auto it = data.begin();
-			it != data.end(); it++) {
+	for (auto it = dataPoints->begin();
+			it != dataPoints->end(); it++) {
 
 		// Add the current value to the sum
 		valueSum += (*it).value;

@@ -9,13 +9,5 @@ SET(LIBRARY_NAME "xolotlLabel")
 #and glob them in HEADERS
 file(GLOB HEADERS *.h)
 
-#Collect all of the cpp files in this folder 
-#and glob them in SRC
-file(GLOB SRC *.cpp)
-
-#Add the library
-add_library(${LIBRARY_NAME} SHARED ${SRC})
-
 #Install the xolotl header files
 install(FILES ${HEADERS} DESTINATION include)
-install(TARGETS ${LIBRARY_NAME} DESTINATION lib)

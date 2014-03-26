@@ -19,47 +19,37 @@ public:
 	/**
 	 * The time step.
 	 */
-	double t;
+	double t = 0.;
 
 	/**
 	 * The X position on the grid.
 	 */
-	double x;
+	double x = 0.;
 
 	/**
 	 * The Y position on the grid.
 	 */
-	double y;
+	double y = 0.;
 
 	/**
 	 * The Z position on the grid.
 	 */
-	double z;
+	double z = 0.;
 
 	/**
 	 * Value of the quantity of interest at the time step t and position on the grid x,y,z.
 	 */
-	double value;
+	double value = 0.;
 
 	/**
 	 * The default constructor
 	 */
-	Point();
-
-	/**
-	 * Constructor initializing the values of the point.
-	 * @param v will fill the value attribute of the Point.
-	 * @param tData will fill the t attribute of the Point.
-	 * @param xData will fill the x attribute of the Point.
-	 * @param yData will fill the y attribute of the Point.
-	 * @param zData will fill the z attribute of the Point.
-	 */
-	Point(double v, double tData, double xData, double yData = 0., double zData = 0.);
+	Point() {}
 
 	/**
 	 * The destructor
 	 */
-	~Point();
+	~Point() {}
 
 };
 

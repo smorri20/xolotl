@@ -16,18 +16,27 @@ BOOST_AUTO_TEST_SUITE(DataProvider_testSuite)
  * Method checking you can get the axis vectors.
  */
 BOOST_AUTO_TEST_CASE(checkGetVector) {
-	// Create myDataProvider
+
+	// Create myCvsXDataProvider
 	shared_ptr<CvsXDataProvider> myCvsXDataProvider(
 			new CvsXDataProvider());
 
 	// Create a Point vector
-	vector<xolotlViz::Point> myPoints;
+	shared_ptr< vector<xolotlViz::Point> > myPoints(
+			new (vector<xolotlViz::Point>));
 
-	myPoints.push_back(Point(3., 1., 2.));
-	myPoints.push_back(Point(2., 3., 2., 4.));
-	myPoints.push_back(Point(5., 6., -2., 7., -1.));
-	myPoints.push_back(Point(-8., 8., 5.));
-	myPoints.push_back(Point(7., 7., 7.));
+	// And fill it with some Point
+	Point aPoint;
+	aPoint.value = 3.; aPoint.t = 1.; aPoint.x = 2.;
+	myPoints->push_back(aPoint);
+	aPoint.value = 2.; aPoint.t = 3.; aPoint.x = 2.;
+	myPoints->push_back(aPoint);
+	aPoint.value = 5.; aPoint.t = 6.; aPoint.x = -2.;
+	myPoints->push_back(aPoint);
+	aPoint.value = -8.; aPoint.t = 8.; aPoint.x = 5.;
+	myPoints->push_back(aPoint);
+	aPoint.value = -7.; aPoint.t = 7.; aPoint.x = 7.;
+	myPoints->push_back(aPoint);
 
 	// Set these points in the myDataProvider
 	myCvsXDataProvider->setPoints(myPoints);
@@ -37,13 +46,13 @@ BOOST_AUTO_TEST_CASE(checkGetVector) {
 	auto axis2Vector = myCvsXDataProvider->getAxis2Vector();
 
 	// First check the size of the vectors
-	BOOST_REQUIRE_EQUAL(axis1Vector.size(), myPoints.size());
-	BOOST_REQUIRE_EQUAL(axis2Vector.size(), myPoints.size());
+	BOOST_REQUIRE_EQUAL(axis1Vector.size(), myPoints->size());
+	BOOST_REQUIRE_EQUAL(axis2Vector.size(), myPoints->size());
 
 	// Loop on all the points in myPoints
-	for (int i = 0; i < myPoints.size(); i++) {
-		BOOST_REQUIRE_EQUAL(axis1Vector.at(i), myPoints.at(i).x);
-		BOOST_REQUIRE_EQUAL(axis2Vector.at(i), myPoints.at(i).value);
+	for (int i = 0; i < myPoints->size(); i++) {
+		BOOST_REQUIRE_EQUAL(axis1Vector.at(i), myPoints->at(i).x);
+		BOOST_REQUIRE_EQUAL(axis2Vector.at(i), myPoints->at(i).value);
 	}
 }
 
