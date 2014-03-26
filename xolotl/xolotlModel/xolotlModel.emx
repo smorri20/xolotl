@@ -3520,7 +3520,7 @@ Check the reactants - He first
             <children xmi:type="notation:SemanticListCompartment" xmi:id="_zZJLLLT5EeOgv49v9u1mlw" type="AttributeCompartment"/>
             <children xmi:type="notation:SemanticListCompartment" xmi:id="_zZJLLbT5EeOgv49v9u1mlw" type="OperationCompartment"/>
             <children xmi:type="notation:SemanticListCompartment" xmi:id="_zZJLLrT5EeOgv49v9u1mlw" visible="false" type="SignalCompartment"/>
-            <layoutConstraint xmi:type="notation:Bounds" xmi:id="_zZJLL7T5EeOgv49v9u1mlw" x="5706" y="4121"/>
+            <layoutConstraint xmi:type="notation:Bounds" xmi:id="_zZJLL7T5EeOgv49v9u1mlw" x="6340" y="4121"/>
           </children>
           <children xmi:type="umlnotation:UMLShape" xmi:id="_zZJLMLT5EeOgv49v9u1mlw" element="_zZHV8LT5EeOgv49v9u1mlw" fontName="Sans" fontHeight="10" transparency="0" lineColor="0" lineWidth="2" showStereotype="Label">
             <children xmi:type="notation:DecorationNode" xmi:id="_zZJLMbT5EeOgv49v9u1mlw" type="ImageCompartment">
@@ -3533,7 +3533,7 @@ Check the reactants - He first
             <children xmi:type="notation:SemanticListCompartment" xmi:id="_zZJLN7T5EeOgv49v9u1mlw" type="OperationCompartment"/>
             <children xmi:type="notation:SemanticListCompartment" xmi:id="_zZJLOLT5EeOgv49v9u1mlw" visible="false" type="SignalCompartment"/>
             <children xmi:type="umlnotation:UMLShapeCompartment" xmi:id="_zZJLObT5EeOgv49v9u1mlw" visible="false" type="StructureCompartment"/>
-            <layoutConstraint xmi:type="notation:Bounds" xmi:id="_zZJLOrT5EeOgv49v9u1mlw" x="12680" y="10461"/>
+            <layoutConstraint xmi:type="notation:Bounds" xmi:id="_zZJLOrT5EeOgv49v9u1mlw" x="12680" y="9193"/>
           </children>
           <element xsi:nil="true"/>
           <edges xmi:type="umlnotation:UMLConnector" xmi:id="_zZJLO7T5EeOgv49v9u1mlw" element="_zZHV8rT5EeOgv49v9u1mlw" source="_zZJLMLT5EeOgv49v9u1mlw" target="_zZJLJbT5EeOgv49v9u1mlw" fontName="Sans" fontHeight="10" lineColor="0" lineWidth="2" showStereotype="Text">
@@ -3640,7 +3640,7 @@ Check the reactants - He first
             <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
           </ownedParameter>
           <ownedParameter xmi:id="_zZH9BbT5EeOgv49v9u1mlw" name="composition">
-            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPt6bXEdqm1P7n_cTT_g?C++%20Types/int?"/>
             <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_zZH9BrT5EeOgv49v9u1mlw" value="*"/>
             <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_zZH9B7T5EeOgv49v9u1mlw"/>
           </ownedParameter>
@@ -3658,7 +3658,7 @@ Check the reactants - He first
             <body>&lt;p>Given a specific concentration, position, and time, this operation sets the incident flux to the specified amount.&lt;/p></body>
           </ownedComment>
           <ownedParameter xmi:id="_zZH9DrT5EeOgv49v9u1mlw" name="composition">
-            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPt6bXEdqm1P7n_cTT_g?C++%20Types/int?"/>
             <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_zZH9D7T5EeOgv49v9u1mlw" value="*"/>
             <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_zZH9ELT5EeOgv49v9u1mlw"/>
           </ownedParameter>
@@ -3682,7 +3682,7 @@ Check the reactants - He first
             <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
           </ownedParameter>
           <ownedParameter xmi:id="_zZH9GbT5EeOgv49v9u1mlw" name="composition">
-            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPt6bXEdqm1P7n_cTT_g?C++%20Types/int?"/>
             <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_zZH9GrT5EeOgv49v9u1mlw" value="*"/>
             <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_zZH9G7T5EeOgv49v9u1mlw"/>
           </ownedParameter>
@@ -3700,7 +3700,7 @@ Check the reactants - He first
             <body>&lt;p>Given a specific concentration, position, and time, this operation sets the outgoing flux to the specified amount.&lt;/p></body>
           </ownedComment>
           <ownedParameter xmi:id="_zZH9IrT5EeOgv49v9u1mlw" name="composition">
-            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPt6bXEdqm1P7n_cTT_g?C++%20Types/int?"/>
             <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_zZH9I7T5EeOgv49v9u1mlw" value="*"/>
             <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_zZH9JLT5EeOgv49v9u1mlw"/>
           </ownedParameter>
