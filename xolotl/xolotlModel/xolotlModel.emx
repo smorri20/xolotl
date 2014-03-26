@@ -3498,6 +3498,53 @@ Check the reactants - He first
             <bendpoints xmi:type="notation:RelativeBendpoints" xmi:id="_NPsQ88FbEeKdoYp0Rmlq6Q" points="[-129, -84, 185, 120]$[-314, -204, 0, 0]"/>
           </edges>
         </contents>
+        <contents xmi:type="umlnotation:UMLDiagram" xmi:id="_zZJLILT5EeOgv49v9u1mlw" type="Class" name="IFluxHandler">
+          <children xmi:type="notation:Shape" xmi:id="_zZJLIbT5EeOgv49v9u1mlw" type="Text" fontName="Sans" fontHeight="24" description="IFluxHandler Class Diagram" transparency="0" lineColor="12632258" lineWidth="1">
+            <children xmi:type="notation:BasicDecorationNode" xmi:id="_zZJLIrT5EeOgv49v9u1mlw" type="DiagramName">
+              <element xsi:nil="true"/>
+            </children>
+            <children xmi:type="notation:BasicDecorationNode" xmi:id="_zZJLI7T5EeOgv49v9u1mlw" type="Description">
+              <element xsi:nil="true"/>
+            </children>
+            <element xsi:nil="true"/>
+            <layoutConstraint xmi:type="notation:Bounds" xmi:id="_zZJLJLT5EeOgv49v9u1mlw" x="6666" y="1507" width="16853" height="899"/>
+          </children>
+          <children xmi:type="umlnotation:UMLClassifierShape" xmi:id="_zZJLJbT5EeOgv49v9u1mlw" element="_zZH9ALT5EeOgv49v9u1mlw" fontName="Sans" fontHeight="10" showListSignature="true" transparency="0" lineColor="0" lineWidth="2" showStereotype="Label" useClassifierShape="true">
+            <children xmi:type="notation:DecorationNode" xmi:id="_zZJLJrT5EeOgv49v9u1mlw" type="ImageCompartment">
+              <layoutConstraint xmi:type="notation:Size" xmi:id="_zZJLJ7T5EeOgv49v9u1mlw" width="530" height="530"/>
+            </children>
+            <children xmi:type="notation:BasicDecorationNode" xmi:id="_zZJLKLT5EeOgv49v9u1mlw" type="Stereotype"/>
+            <children xmi:type="notation:BasicDecorationNode" xmi:id="_zZJLKbT5EeOgv49v9u1mlw" type="Kind"/>
+            <children xmi:type="notation:BasicDecorationNode" xmi:id="_zZJLKrT5EeOgv49v9u1mlw" type="Name"/>
+            <children xmi:type="notation:BasicDecorationNode" xmi:id="_zZJLK7T5EeOgv49v9u1mlw" type="Parent"/>
+            <children xmi:type="notation:SemanticListCompartment" xmi:id="_zZJLLLT5EeOgv49v9u1mlw" type="AttributeCompartment"/>
+            <children xmi:type="notation:SemanticListCompartment" xmi:id="_zZJLLbT5EeOgv49v9u1mlw" type="OperationCompartment"/>
+            <children xmi:type="notation:SemanticListCompartment" xmi:id="_zZJLLrT5EeOgv49v9u1mlw" visible="false" type="SignalCompartment"/>
+            <layoutConstraint xmi:type="notation:Bounds" xmi:id="_zZJLL7T5EeOgv49v9u1mlw" x="5706" y="4121"/>
+          </children>
+          <children xmi:type="umlnotation:UMLShape" xmi:id="_zZJLMLT5EeOgv49v9u1mlw" element="_zZHV8LT5EeOgv49v9u1mlw" fontName="Sans" fontHeight="10" transparency="0" lineColor="0" lineWidth="2" showStereotype="Label">
+            <children xmi:type="notation:DecorationNode" xmi:id="_zZJLMbT5EeOgv49v9u1mlw" type="ImageCompartment">
+              <layoutConstraint xmi:type="notation:Size" xmi:id="_zZJLMrT5EeOgv49v9u1mlw" width="1320" height="1320"/>
+            </children>
+            <children xmi:type="notation:BasicDecorationNode" xmi:id="_zZJLM7T5EeOgv49v9u1mlw" type="Stereotype"/>
+            <children xmi:type="notation:BasicDecorationNode" xmi:id="_zZJLNLT5EeOgv49v9u1mlw" type="Name"/>
+            <children xmi:type="notation:BasicDecorationNode" xmi:id="_zZJLNbT5EeOgv49v9u1mlw" type="Parent"/>
+            <children xmi:type="notation:SemanticListCompartment" xmi:id="_zZJLNrT5EeOgv49v9u1mlw" type="AttributeCompartment"/>
+            <children xmi:type="notation:SemanticListCompartment" xmi:id="_zZJLN7T5EeOgv49v9u1mlw" type="OperationCompartment"/>
+            <children xmi:type="notation:SemanticListCompartment" xmi:id="_zZJLOLT5EeOgv49v9u1mlw" visible="false" type="SignalCompartment"/>
+            <children xmi:type="umlnotation:UMLShapeCompartment" xmi:id="_zZJLObT5EeOgv49v9u1mlw" visible="false" type="StructureCompartment"/>
+            <layoutConstraint xmi:type="notation:Bounds" xmi:id="_zZJLOrT5EeOgv49v9u1mlw" x="12680" y="10461"/>
+          </children>
+          <element xsi:nil="true"/>
+          <edges xmi:type="umlnotation:UMLConnector" xmi:id="_zZJLO7T5EeOgv49v9u1mlw" element="_zZHV8rT5EeOgv49v9u1mlw" source="_zZJLMLT5EeOgv49v9u1mlw" target="_zZJLJbT5EeOgv49v9u1mlw" fontName="Sans" fontHeight="10" lineColor="0" lineWidth="2" showStereotype="Text">
+            <children xmi:type="notation:DecorationNode" xmi:id="_zZJLPLT5EeOgv49v9u1mlw" type="NameLabel">
+              <children xmi:type="notation:BasicDecorationNode" xmi:id="_zZJLPbT5EeOgv49v9u1mlw" type="Stereotype"/>
+              <children xmi:type="notation:BasicDecorationNode" xmi:id="_zZJLPrT5EeOgv49v9u1mlw" type="Name"/>
+              <layoutConstraint xmi:type="notation:Bounds" xmi:id="_zZJLP7T5EeOgv49v9u1mlw" y="-186"/>
+            </children>
+            <bendpoints xmi:type="notation:RelativeBendpoints" xmi:id="_zZJLQLT5EeOgv49v9u1mlw" points="[-2, -26, -29, 176]$[-16, -139, -43, 63]"/>
+          </edges>
+        </contents>
       </eAnnotations>
       <ownedComment xmi:id="_ztMiMLdWEeKdoYp0Rmlq6Q" annotatedElement="_aIxXoLdUEeKdoYp0Rmlq6Q">
         <body>&lt;p>This package contains the classes used by Xolotl for solving the Advection-Diffusion-Reaction equations.&lt;/p></body>
@@ -3575,6 +3622,101 @@ Check the reactants - He first
       </packagedElement>
       <packagedElement xmi:type="uml:Dependency" xmi:id="_xyQkEMFdEeKNUrlkrq0IuQ" supplier="_mnX-cHVKEeKM6_T6gw_pCg" client="_aIxXoLdUEeKdoYp0Rmlq6Q"/>
       <packagedElement xmi:type="uml:Dependency" xmi:id="_qkAKsO8dEeKTwuoQU2LHEg" supplier="_0OEywHVMEeKM6_T6gw_pCg" client="_VMf6kLgHEeKdoYp0Rmlq6Q"/>
+      <packagedElement xmi:type="uml:Class" xmi:id="_zZHV8LT5EeOgv49v9u1mlw" name="FitFluxHandler" clientDependency="_zZHV8rT5EeOgv49v9u1mlw">
+        <ownedComment xmi:id="_zZHV8bT5EeOgv49v9u1mlw" annotatedElement="_zZHV8LT5EeOgv49v9u1mlw">
+          <body>&lt;p>This class realizes the IFluxHandler interface to calculate the incident and outgoing fluxes.&lt;/p></body>
+        </ownedComment>
+        <interfaceRealization xmi:id="_zZHV8rT5EeOgv49v9u1mlw" supplier="_zZH9ALT5EeOgv49v9u1mlw" client="_zZHV8LT5EeOgv49v9u1mlw" contract="_zZH9ALT5EeOgv49v9u1mlw"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Interface" xmi:id="_zZH9ALT5EeOgv49v9u1mlw" name="IFluxHandler">
+        <ownedComment xmi:id="_zZH9AbT5EeOgv49v9u1mlw" annotatedElement="_zZH9ALT5EeOgv49v9u1mlw">
+          <body>&lt;p>Realizations of this interface are responsible for handling the incident (incoming) and outgoing flux calculations.&lt;/p></body>
+        </ownedComment>
+        <ownedOperation xmi:id="_zZH9ArT5EeOgv49v9u1mlw" name="getIncidentFlux">
+          <ownedComment xmi:id="_zZH9A7T5EeOgv49v9u1mlw" annotatedElement="_zZH9ArT5EeOgv49v9u1mlw">
+            <body>&lt;p>This operation returns the incident flux for a specific concentration, position, and time.&lt;/p></body>
+          </ownedComment>
+          <ownedParameter xmi:id="_zZH9BLT5EeOgv49v9u1mlw" name="incomingFlux" direction="return">
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
+          </ownedParameter>
+          <ownedParameter xmi:id="_zZH9BbT5EeOgv49v9u1mlw" name="composition">
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
+            <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_zZH9BrT5EeOgv49v9u1mlw" value="*"/>
+            <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_zZH9B7T5EeOgv49v9u1mlw"/>
+          </ownedParameter>
+          <ownedParameter xmi:id="_zZH9CLT5EeOgv49v9u1mlw" name="position">
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPt6bXEdqm1P7n_cTT_g?C++%20Types/int?"/>
+            <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_zZH9CbT5EeOgv49v9u1mlw" value="*"/>
+            <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_zZH9CrT5EeOgv49v9u1mlw"/>
+          </ownedParameter>
+          <ownedParameter xmi:id="_zZH9C7T5EeOgv49v9u1mlw" name="time">
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
+          </ownedParameter>
+        </ownedOperation>
+        <ownedOperation xmi:id="_zZH9DLT5EeOgv49v9u1mlw" name="setIncidentFlux">
+          <ownedComment xmi:id="_zZH9DbT5EeOgv49v9u1mlw" annotatedElement="_zZH9DLT5EeOgv49v9u1mlw">
+            <body>&lt;p>Given a specific concentration, position, and time, this operation sets the incident flux to the specified amount.&lt;/p></body>
+          </ownedComment>
+          <ownedParameter xmi:id="_zZH9DrT5EeOgv49v9u1mlw" name="composition">
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
+            <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_zZH9D7T5EeOgv49v9u1mlw" value="*"/>
+            <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_zZH9ELT5EeOgv49v9u1mlw"/>
+          </ownedParameter>
+          <ownedParameter xmi:id="_zZH9EbT5EeOgv49v9u1mlw" name="position">
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPt6bXEdqm1P7n_cTT_g?C++%20Types/int?"/>
+            <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_zZH9ErT5EeOgv49v9u1mlw" value="*"/>
+            <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_zZH9E7T5EeOgv49v9u1mlw"/>
+          </ownedParameter>
+          <ownedParameter xmi:id="_zZH9FLT5EeOgv49v9u1mlw" name="time">
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
+          </ownedParameter>
+          <ownedParameter xmi:id="_zZH9FbT5EeOgv49v9u1mlw" name="incomingFlux">
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
+          </ownedParameter>
+        </ownedOperation>
+        <ownedOperation xmi:id="_zZH9FrT5EeOgv49v9u1mlw" name="getOutgoingFlux">
+          <ownedComment xmi:id="_zZH9F7T5EeOgv49v9u1mlw" annotatedElement="_zZH9FrT5EeOgv49v9u1mlw">
+            <body>&lt;p>This operation returns the outgoing flux for a specific concentration, position, and time.&lt;/p></body>
+          </ownedComment>
+          <ownedParameter xmi:id="_zZH9GLT5EeOgv49v9u1mlw" name="incomingFlux" direction="return">
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
+          </ownedParameter>
+          <ownedParameter xmi:id="_zZH9GbT5EeOgv49v9u1mlw" name="composition">
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
+            <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_zZH9GrT5EeOgv49v9u1mlw" value="*"/>
+            <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_zZH9G7T5EeOgv49v9u1mlw"/>
+          </ownedParameter>
+          <ownedParameter xmi:id="_zZH9HLT5EeOgv49v9u1mlw" name="position">
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPt6bXEdqm1P7n_cTT_g?C++%20Types/int?"/>
+            <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_zZH9HbT5EeOgv49v9u1mlw" value="*"/>
+            <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_zZH9HrT5EeOgv49v9u1mlw"/>
+          </ownedParameter>
+          <ownedParameter xmi:id="_zZH9H7T5EeOgv49v9u1mlw" name="time">
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
+          </ownedParameter>
+        </ownedOperation>
+        <ownedOperation xmi:id="_zZH9ILT5EeOgv49v9u1mlw" name="setOutgoingFlux">
+          <ownedComment xmi:id="_zZH9IbT5EeOgv49v9u1mlw" annotatedElement="_zZH9ILT5EeOgv49v9u1mlw">
+            <body>&lt;p>Given a specific concentration, position, and time, this operation sets the outgoing flux to the specified amount.&lt;/p></body>
+          </ownedComment>
+          <ownedParameter xmi:id="_zZH9IrT5EeOgv49v9u1mlw" name="composition">
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
+            <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_zZH9I7T5EeOgv49v9u1mlw" value="*"/>
+            <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_zZH9JLT5EeOgv49v9u1mlw"/>
+          </ownedParameter>
+          <ownedParameter xmi:id="_zZH9JbT5EeOgv49v9u1mlw" name="position">
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPt6bXEdqm1P7n_cTT_g?C++%20Types/int?"/>
+            <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_zZH9JrT5EeOgv49v9u1mlw" value="*"/>
+            <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_zZH9J7T5EeOgv49v9u1mlw"/>
+          </ownedParameter>
+          <ownedParameter xmi:id="_zZH9KLT5EeOgv49v9u1mlw" name="time">
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
+          </ownedParameter>
+          <ownedParameter xmi:id="_zZH9KbT5EeOgv49v9u1mlw" name="incomingFlux">
+            <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
+          </ownedParameter>
+        </ownedOperation>
+      </packagedElement>
     </packagedElement>
     <packagedElement xmi:type="uml:Package" xmi:id="_bpOrEEL8EeOTkpIp2VY3Rg" name="performance">
       <eAnnotations xmi:id="_bpWm4EL8EeOTkpIp2VY3Rg" source="uml2.diagrams" references="_bpWm4UL8EeOTkpIp2VY3Rg">
@@ -6212,7 +6354,7 @@ Check the reactants - He first
     </profileApplication>
     <profileApplication xmi:id="_Hld-sJ76EeOxfKKbPJ98Rg">
       <eAnnotations xmi:id="_HlfM0J76EeOxfKKbPJ98Rg" source="http://www.eclipse.org/uml2/2.0.0/UML">
-        <references xmi:type="ecore:EPackage" href="pathmap://XSD_PROFILES/XSDProfile.epx#_vvGR0PDPEdq5wKwOrH0SmA?XSDProfile/XSDProfile?"/>
+        <references xmi:type="ecore:EPackage" href="pathmap://XSD_PROFILES/XSDProfile.epx#_0S7XILmyEeCPE-4cAROvtA?XSDProfile/XSDProfile?"/>
       </eAnnotations>
       <appliedProfile href="pathmap://XSD_PROFILES/XSDProfile.epx#_w1-ykSkOEdmj4ajjgbmSxQ?XSDProfile?"/>
     </profileApplication>
@@ -6775,4 +6917,10 @@ Check the reactants - He first
   <Default:Documentation xmi:id="_vKM5Eq6kEeOK1JEl0e3Y4w" base_Comment="_vKKc0a6kEeOK1JEl0e3Y4w"/>
   <Default:Documentation xmi:id="_vKNgIK6kEeOK1JEl0e3Y4w" base_Comment="_vKLD4a6kEeOK1JEl0e3Y4w"/>
   <Default:Documentation xmi:id="_DLFRsK3aEeO2yvTvEyDBEw" base_Comment="_DLDcgK3aEeO2yvTvEyDBEw"/>
+  <Default:Documentation xmi:id="_zZa38LT5EeOgv49v9u1mlw" base_Comment="_zZHV8bT5EeOgv49v9u1mlw"/>
+  <Default:Documentation xmi:id="_zZa38bT5EeOgv49v9u1mlw" base_Comment="_zZH9AbT5EeOgv49v9u1mlw"/>
+  <Default:Documentation xmi:id="_zZa38rT5EeOgv49v9u1mlw" base_Comment="_zZH9A7T5EeOgv49v9u1mlw"/>
+  <Default:Documentation xmi:id="_zZa387T5EeOgv49v9u1mlw" base_Comment="_zZH9DbT5EeOgv49v9u1mlw"/>
+  <Default:Documentation xmi:id="_zZa39LT5EeOgv49v9u1mlw" base_Comment="_zZH9F7T5EeOgv49v9u1mlw"/>
+  <Default:Documentation xmi:id="_zZa39bT5EeOgv49v9u1mlw" base_Comment="_zZH9IbT5EeOgv49v9u1mlw"/>
 </xmi:XMI>
