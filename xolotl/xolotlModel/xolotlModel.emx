@@ -3670,7 +3670,7 @@ Check the reactants - He first
           <ownedParameter xmi:id="_zZH9KLT5EeOgv49v9u1mlw" name="time">
             <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
           </ownedParameter>
-          <ownedParameter xmi:id="_zZH9KbT5EeOgv49v9u1mlw" name="incomingFlux">
+          <ownedParameter xmi:id="_zZH9KbT5EeOgv49v9u1mlw" name="outgoingFlux">
             <type xmi:type="uml:PrimitiveType" href="pathmap://TRANSFORM_CPP_LIBRARIES/CPPPrimitiveTypes.emx#_phDPvqbXEdqm1P7n_cTT_g?C++%20Types/double?"/>
           </ownedParameter>
         </ownedOperation>
