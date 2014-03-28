@@ -1,6 +1,11 @@
 // Includes
 #include "PetscSolver.h"
 #include "../xolotlPerf/HandlerRegistryFactory.h"
+#include "../xolotlViz/dataprovider/Point.h"
+#include "../xolotlViz/plot/ScatterPlot.h"
+#include "../xolotlViz/plot/Plot.h"
+#include "../xolotlViz/dataprovider/CvsXDataProvider.h"
+#include "../xolotlViz/labelprovider/LabelProvider.h"
 #include <petscts.h>
 #include <petscsys.h>
 #include <sstream>
@@ -40,6 +45,9 @@ namespace xolotlSolver {
  * Counter for the number of times RHSFunction is called.
  */
 std::shared_ptr<xolotlPerf::IEventCounter> RHSFunctionCounter;
+
+//! The pointer to the plot that will be used to visualize the data.
+std::shared_ptr<xolotlViz::Plot> plot;
 
 
 
@@ -165,6 +173,12 @@ static PetscErrorCode monitorSolve(TS ts, PetscInt timestep, PetscReal time,
 	// Setup some step size variables
 	hx = 8.0 / (PetscReal) (Mx - 1);
 	checkPetscError(ierr);
+
+	// Create a Point vector to store the data to give to the data provider
+	// for the visualization
+	shared_ptr< vector<xolotlViz::Point> > myPoints(
+			new (vector<xolotlViz::Point>));
+
 	// Print the solution data
 	for (xi = xs; xi < xs + xm; xi++) {
 		// Dump x
@@ -183,9 +197,32 @@ static PetscErrorCode monitorSolve(TS ts, PetscInt timestep, PetscReal time,
 		for (i = 0; i < size; i++) {
 			outputData << concentration[i] << " ";
 		}
+
+		// Create a Point and add it to myPoints
+		xolotlViz::Point aPoint;
+		aPoint.value = concentration[2];
+		aPoint.t = time; aPoint.x = x;
+		myPoints->push_back(aPoint);
+
 		// End the line
 		outputData << "\n";
 	}
+
+	// Get the data provider
+	auto dataProvider = plot->getDataProvider();
+
+	// Give it the points
+	dataProvider->setPoints(myPoints);
+//	plot->setDataProvider(dataProvider);
+
+	// Change the title of the plot
+	std::stringstream title;
+	title << "Concentration at t = " << time;
+	plot->plotLabelProvider->titleLabel = title.str();
+
+	// Render
+	plot->render();
+
 	// Dump the data to file
 	PetscViewerASCIIPrintf(viewer, outputData.str().c_str());
 	// Restore the array and kill the viewer
@@ -214,6 +251,27 @@ static PetscErrorCode setupPetscMonitor(TS ts) {
 	if (!flg)
 		PetscFunctionReturn(0);
 
+	// Create a ScatterPlot
+	plot = shared_ptr<xolotlViz::ScatterPlot> (
+			new xolotlViz::ScatterPlot());
+
+	// Create and set the label provider
+	shared_ptr<xolotlViz::LabelProvider> labelProvider(
+			new xolotlViz::LabelProvider());
+	labelProvider->axis1Label = "x Position on the Grid";
+	labelProvider->axis2Label = "Concentration";
+
+	// Give it to the plot
+	plot->setLabelProvider(labelProvider);
+
+	// Create the data provider
+	shared_ptr<xolotlViz::CvsXDataProvider> dataProvider(
+			new xolotlViz::CvsXDataProvider());
+
+	// Give it to the plot
+	plot->setDataProvider(dataProvider);
+
+	// monitorSolve will be called at each timestep
 	ierr = TSMonitorSet(ts, monitorSolve, NULL, NULL);
 	checkPetscError(ierr);
 	PetscFunctionReturn(0);
@@ -351,23 +409,6 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	// Some required properties
 	auto props = network->getProperties();
 	int numHeClusters = std::stoi(props["numHeClusters"]);
-
-
-
-
-
-
-	PetscReal time = 0.;
-
-	ierr = TSGetTime(ts, &time);
-	checkPetscError(ierr);
-
-	std::cout << "Time in RHSFuntion: " << time
-			<< " and ftime: " << ftime
-			<< std::endl;
-
-
-
 
 	// Get the local data vector from petsc
 	PetscFunctionBeginUser;

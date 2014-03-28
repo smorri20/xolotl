@@ -18,32 +18,32 @@ public:
 	/**
 	 * The label of the X axis of the plot.
 	 */
-	std::string axis1Label;
+	std::string axis1Label = " ";
 
 	/**
 	 * The label of the Y axis of the plot.
 	 */
-	std::string axis2Label;
+	std::string axis2Label = " ";
 
 	/**
 	 * The label of the Z axis of the plot.
 	 */
-	std::string axis3Label;
+	std::string axis3Label = " ";
 
 	/**
 	 * The label for the time steps.
 	 */
-	std::string axis4Label;
+	std::string axis4Label = " ";
 
 	/**
 	 * Title label for the plot.
 	 */
-	std::string titleLabel;
+	std::string titleLabel = " ";
 
 	/**
 	 * Unit label for the plot.
 	 */
-	std::string unitLabel;
+	std::string unitLabel = " ";
 
 	/**
 	 * The default constructor
