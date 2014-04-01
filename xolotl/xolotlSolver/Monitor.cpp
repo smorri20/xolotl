@@ -44,6 +44,26 @@ static PetscErrorCode monitorSolve(TS ts, PetscInt timestep, PetscReal time,
 
 	PetscFunctionBeginUser;
 
+	// Fill the array of clusters name because the Id is not the same as
+	// reactants->at(i)
+	auto reactants = PetscSolver::getNetwork()->getAll();
+	std::shared_ptr<PSICluster> cluster;
+	for (int i = 0; i < size; i++) {
+
+		// Get the cluster from the list, its id and composition
+		cluster = std::dynamic_pointer_cast<PSICluster>(reactants->at(i));
+		int id = cluster->getId() - 1;
+		auto composition = cluster->getComposition();
+
+		// Create the name
+		std::stringstream name;
+		name << (cluster->getName()).c_str() << "(" << composition["He"] << ","
+				<< composition["V"] << "," << composition["I"] << ") ";
+
+		// Push the header entry on the array
+		name >> names[id];
+	}
+
 	// Get the data
 	VecGetArray(solution, &solutionArray);
 
@@ -68,6 +88,9 @@ static PetscErrorCode monitorSolve(TS ts, PetscInt timestep, PetscReal time,
 	std::shared_ptr< std::vector<xolotlViz::Point> > myPoints(
 			new (std::vector<xolotlViz::Point>));
 
+	// Choice of the cluster to be plotted
+	int iCluster = 2;
+
 	// Print the solution data
 	for (xi = xs; xi < xs + xm; xi++) {
 		// Dump x
@@ -82,9 +105,10 @@ static PetscErrorCode monitorSolve(TS ts, PetscInt timestep, PetscReal time,
 		double * concentration = &concentrations[0];
 		PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
 
-		// Create a Point with the concentration[2] as the value and add it to myPoints
+		// Create a Point with the concentration[iCluster] as the value
+		// and add it to myPoints
 		xolotlViz::Point aPoint;
-		aPoint.value = concentration[2];
+		aPoint.value = concentration[iCluster];
 		aPoint.t = time; aPoint.x = x;
 		myPoints->push_back(aPoint);
 	}
@@ -94,11 +118,10 @@ static PetscErrorCode monitorSolve(TS ts, PetscInt timestep, PetscReal time,
 
 	// Give it the points
 	dataProvider->setPoints(myPoints);
-//	plot->setDataProvider(dataProvider);
 
 	// Change the title of the plot
 	std::stringstream title;
-	title << "Concentration at t = " << time;
+	title << names[iCluster] << "TS" << timestep << ".pnm";
 	plot->plotLabelProvider->titleLabel = title.str();
 
 	// Render
