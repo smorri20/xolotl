@@ -3,6 +3,8 @@
 
 #include <vector>
 
+namespace xolotlSolver{
+
 /**
  * Realizations of this interface are responsible for handling the incident (incoming)
  * and outgoing flux calculations.
@@ -38,5 +40,7 @@ public:
 			std::vector<int> position, double time, double outgoingFlux) = 0;
 
 }; //end class IFluxHandler
+
+}
 
 #endif

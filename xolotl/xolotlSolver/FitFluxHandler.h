@@ -2,10 +2,12 @@
 #define FITFLUXHANDLER_H
 #include "IFluxHandler.h"
 
+namespace xolotlSolver{
+
 /**
  * This class realizes the IFluxHandler interface to calculate the incident and outgoing fluxes.
  */
-class FitFluxHandler: IFluxHandler {
+class FitFluxHandler: public IFluxHandler {
 
 public:
 
@@ -44,5 +46,7 @@ public:
 			std::vector<int> position, double time, double outgoingFlux);
 
 }; //end class FitFluxHandler
+
+}
 
 #endif
