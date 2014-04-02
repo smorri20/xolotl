@@ -2,21 +2,25 @@
 
 using namespace xolotlSolver;
 
-FitFluxHandler::FitFluxHandler() {
-	//TODO Auto-generated method stub
+FitFluxHandler::FitFluxHandler(){
+
 }
 
 FitFluxHandler::~FitFluxHandler() {
-	//TODO Auto-generated method stub
+
 }
 
-double FitFluxHandler::getIncidentFlux(std::vector<int> composition,
-			std::vector<int> position, double time){
+double FitFluxHandler::getIncidentFlux(std::vector<int> compositionVec,
+				std::vector<double> position, double currentTime){
 
-	return 0;
+	double incidentFlux = 0.0e-16;
+
+	incidentFlux = 0.0006 * position[1] * position[1] * position[1] - 0.0087 * position[1] * position[1] + 0.0300 * position[1];
+
+	return incidentFlux;
 }
 
-void FitFluxHandler::setOutgoingFlux(std::vector<int> composition,
+void FitFluxHandler::setOutgoingFlux(std::vector<int> compositionVec,
 			std::vector<int> position, double time, double outgoingFlux){
 
 }
