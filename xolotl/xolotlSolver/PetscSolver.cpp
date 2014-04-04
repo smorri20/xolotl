@@ -1,6 +1,7 @@
 // Includes
 #include "PetscSolver.h"
 #include "../xolotlPerf/HandlerRegistryFactory.h"
+#include "FitFluxHandler.h"
 #include <petscts.h>
 #include <petscsys.h>
 #include <sstream>
@@ -396,10 +397,22 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
 	checkPetscError(ierr);
 
+	// Variable to represent the real, or current, time
+	PetscReal realTime;
+	// Get the current time
+	ierr = TSGetTime(ts, &realTime);
+
+	// Object to handle incident flux calculations
+	FitFluxHandler incidentFitFlux;
+
 	// Loop over grid points computing ODE terms for each grid point
 	size = network->size();
 	for (xi = xs; xi < xs + xm; xi++) {
 		x = xi * hx;
+
+		// Vector representing the position at which the flux will be calculated
+		// Currently we are only in 1D
+		std::vector<double> gridPosition = {0,x,0};
 
 		//xi = 4; ///FIXME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -425,12 +438,18 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 		// Crude cubic approximation of graph from Tibo's notes
 		heCluster = std::dynamic_pointer_cast<PSICluster>(
 				network->get("He", 1));
+		// Get the composition of the cluster
+		auto thisComp = heCluster->getComposition();
+		// Create the composition vector for the cluster
+		std::vector<int> compVec = {thisComp["He"], thisComp["V"], thisComp["I"]};
 		if (heCluster) {
 			reactantIndex = heCluster->getId() - 1;
+			// Calculate the incident flux
+			auto incidentFlux = incidentFitFlux.getIncidentFlux(compVec, gridPosition, realTime);
 			// Update the concentration of the cluster
-			updatedConcOffset[reactantIndex] += 1.0E4
-					* PetscMax(0.0,
-							0.0006 * x * x * x - 0.0087 * x * x + 0.0300 * x);
+			updatedConcOffset[reactantIndex] += 1.0E4 * PetscMax(0.0, incidentFlux);
+			// where incidentFlux = 0.0006 * x * x * x - 0.0087 * x * x + 0.0300 * x);
+
 		}
 
 		// ---- Compute diffusion over the locally owned part of the grid -----
@@ -880,8 +899,8 @@ PetscSolver::PetscSolver(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry)
 //! The Destructor
 PetscSolver::~PetscSolver() {
 
-//    std::cout << "PetscSolver: Called RHSFunction "
-//        << RHSFunctionCounter->getValue() << " times"
+//    std::cout << "\n PetscSolver: Called RHSFunction "
+//        << RHSFunctionCounter->getValue() << " times \n"
 //        << std::endl;
 
 }
