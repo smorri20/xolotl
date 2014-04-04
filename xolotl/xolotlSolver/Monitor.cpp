@@ -85,11 +85,10 @@ static PetscErrorCode monitorSolve(TS ts, PetscInt timestep, PetscReal time,
 
 	// Create a Point vector to store the data to give to the data provider
 	// for the visualization
-	std::shared_ptr< std::vector<xolotlViz::Point> > myPoints(
-			new (std::vector<xolotlViz::Point>));
+	auto myPoints = std::make_shared< std::vector<xolotlViz::Point> >();
 
 	// Choice of the cluster to be plotted
-	int iCluster = 2;
+	int iCluster = 3;
 
 	// Print the solution data
 	for (xi = xs; xi < xs + xm; xi++) {
@@ -113,11 +112,8 @@ static PetscErrorCode monitorSolve(TS ts, PetscInt timestep, PetscReal time,
 		myPoints->push_back(aPoint);
 	}
 
-	// Get the data provider
-	auto dataProvider = plot->getDataProvider();
-
-	// Give it the points
-	dataProvider->setPoints(myPoints);
+	// Get the data provider and give it the points
+	plot->getDataProvider()->setPoints(myPoints);
 
 	// Change the title of the plot
 	std::stringstream title;
@@ -148,12 +144,10 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 		PetscFunctionReturn(0);
 
 	// Create a ScatterPlot
-	plot = std::shared_ptr<xolotlViz::ScatterPlot> (
-			new xolotlViz::ScatterPlot());
+	plot = std::make_shared<xolotlViz::ScatterPlot> ();
 
 	// Create and set the label provider
-	std::shared_ptr<xolotlViz::LabelProvider> labelProvider(
-			new xolotlViz::LabelProvider());
+	auto labelProvider = std::make_shared<xolotlViz::LabelProvider>();
 	labelProvider->axis1Label = "x Position on the Grid";
 	labelProvider->axis2Label = "Concentration";
 
@@ -161,8 +155,7 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 	plot->setLabelProvider(labelProvider);
 
 	// Create the data provider
-	std::shared_ptr<xolotlViz::CvsXDataProvider> dataProvider(
-			new xolotlViz::CvsXDataProvider());
+	auto dataProvider = std::make_shared<xolotlViz::CvsXDataProvider>();
 
 	// Give it to the plot
 	plot->setDataProvider(dataProvider);
