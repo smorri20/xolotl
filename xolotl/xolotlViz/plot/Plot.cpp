@@ -10,6 +10,8 @@ Plot::~Plot() {
 }
 
 void Plot::write(std::string fileName) {
+	render();
+	return;
 }
 
 void Plot::setPlottingStyle(PlottingStyle style) {

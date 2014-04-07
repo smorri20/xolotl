@@ -56,6 +56,14 @@ BOOST_AUTO_TEST_CASE(checkCompositionCreation) {
 	BOOST_REQUIRE_EQUAL(0, badComp[1]);
 	BOOST_REQUIRE_EQUAL(0, badComp[2]);
 
+	// Try to get something else bad
+	badComp = psiNetwork->getCompositionVector(1, 3, -3);
+	// Make sure that it gives you single species helium back
+	BOOST_REQUIRE_EQUAL(3, badComp.size());
+	BOOST_REQUIRE_EQUAL(0, badComp[0]);
+	BOOST_REQUIRE_EQUAL(0, badComp[1]);
+	BOOST_REQUIRE_EQUAL(0, badComp[2]);
+
 }
 
 BOOST_AUTO_TEST_CASE(checkReactants) {
