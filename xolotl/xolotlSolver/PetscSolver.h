@@ -7,6 +7,7 @@
 #include <PSIClusterReactionNetwork.h>
 #include <petscsys.h>
 #include <petscdmda.h>
+#include <memory>
 
 namespace xolotlPerf {
 	class IHandlerRegistry;
@@ -35,6 +36,9 @@ private:
 
 	//! The original network created from the network loader.
 	static std::shared_ptr<PSIClusterReactionNetwork> network;
+
+	//! The original flux handler created.
+	static std::shared_ptr<IFluxHandler> fluxHandler;
 
 	/**
 	 * This operation fills the diagonal block of the matrix. The diagonal
@@ -114,8 +118,10 @@ public:
 	/**
 	 * This operation directs the Solver to perform the solve. If the solve
 	 * fails, it will throw an exception of type std::string.
+	 * @param fluxHandler The flux handler that will be used when performing
+	 * the solve
 	 */
-	void solve();
+	void solve(std::shared_ptr<IFluxHandler> fluxHandler);
 
 	/**
 	 * This operation performs all necessary finalization for the solver
@@ -135,6 +141,16 @@ public:
 		return network;
 	}
 
+	/**
+	 * This operation returns the flux handler for this solver. This
+	 * operation is only for use by PETSc code and is not part of the
+	 * ISolver interface.
+	 * @return The flux handler for this solver
+	 */
+	static std::shared_ptr<IFluxHandler> getFluxHandler() {
+		return fluxHandler;
+	}
+
 protected:
 
     /**
@@ -142,6 +158,8 @@ protected:
      * for this class.
      */
     std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry;
+
+
 
 }; //end class PetscSolver
 

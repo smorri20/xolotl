@@ -123,8 +123,7 @@ std::vector<xolotlPerf::HardwareQuantities> declareHWcounters(){
     std::vector<xolotlPerf::HardwareQuantities> hwq;
 
     hwq.push_back( xolotlPerf::FP_OPS );
-    hwq.push_back( xolotlPerf::L2_CACHE_MISS );
-    hwq.push_back( xolotlPerf::L3_CACHE_MISS );
+    hwq.push_back( xolotlPerf::L1_CACHE_MISS );
 
     return hwq;
 }
@@ -159,7 +158,9 @@ void launchPetscSolver(xolotlSolver::PetscSolver solver, std::shared_ptr<xolotlP
 	// Launch the PetscSolver
     auto solverTimer = handlerRegistry->getTimer( "solve" );
     solverTimer->start();
-	solver.solve();
+    // Create object to handle incident flux calculations
+    auto fitFluxHandler = std::make_shared<xolotlSolver::FitFluxHandler>();
+	solver.solve(fitFluxHandler);
     solverTimer->stop();
 
 }
@@ -178,8 +179,7 @@ std::shared_ptr<PSIClusterNetworkLoader> setUpNetworkLoader(int rank, MPI_Comm c
 	}
 
 	// Broadcast the stream to all worker tasks
-	networkLoader = std::make_shared<
-				PSIClusterNetworkLoader>();
+	networkLoader = std::make_shared<PSIClusterNetworkLoader>();
 	networkStream = xolotlCore::MPIUtils::broadcastStream(networkStream, 0,
 			comm );
 

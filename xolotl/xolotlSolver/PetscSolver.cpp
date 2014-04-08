@@ -47,8 +47,6 @@ std::shared_ptr<xolotlPerf::IEventCounter> RHSFunctionCounter;
  */
 std::shared_ptr<xolotlPerf::IEventCounter> RHSJacobianCounter;
 
-
-
 //! Help message
 static char help[] =
 		"Solves C_t =  -D*C_xx + F(C) + R(C) + D(C) from Brian Wirth's SciDAC project.\n";
@@ -57,6 +55,8 @@ static char help[] =
 
 // Allocate the static network
 std::shared_ptr<PSIClusterReactionNetwork> PetscSolver::network;
+// Allocate the static flux handler
+std::shared_ptr<IFluxHandler> PetscSolver::fluxHandler;
 
 extern PetscErrorCode RHSFunction(TS, PetscReal, Vec, Vec, void*);
 extern PetscErrorCode RHSJacobian(TS, PetscReal, Vec, Mat*, Mat*, MatStructure*,
@@ -358,6 +358,8 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	// Some required properties
 	auto props = network->getProperties();
 	int numHeClusters = std::stoi(props["numHeClusters"]);
+	// Get the flux handler that will be used to compute fluxes.
+	auto fluxHandler = PetscSolver::getFluxHandler();
 
 	// Get the local data vector from petsc
 	PetscFunctionBeginUser;
@@ -402,9 +404,6 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	// Get the current time
 	ierr = TSGetTime(ts, &realTime);
 
-	// Object to handle incident flux calculations
-	FitFluxHandler incidentFitFlux;
-
 	// Loop over grid points computing ODE terms for each grid point
 	size = network->size();
 	for (xi = xs; xi < xs + xm; xi++) {
@@ -445,11 +444,10 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 		if (heCluster) {
 			reactantIndex = heCluster->getId() - 1;
 			// Calculate the incident flux
-			auto incidentFlux = incidentFitFlux.getIncidentFlux(compVec, gridPosition, realTime);
+			auto incidentFlux = fluxHandler->getIncidentFlux(compVec, gridPosition, realTime);
 			// Update the concentration of the cluster
 			updatedConcOffset[reactantIndex] += 1.0E4 * PetscMax(0.0, incidentFlux);
 			// where incidentFlux = 0.0006 * x * x * x - 0.0087 * x * x + 0.0300 * x);
-
 		}
 
 		// ---- Compute diffusion over the locally owned part of the grid -----
@@ -989,7 +987,10 @@ void PetscSolver::initialize() {
  * This operation directs the Solver to perform the solve. If the solve
  * fails, it will throw an exception of type std::string.
  */
-void PetscSolver::solve() {
+void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler) {
+
+	// Set the flux handler
+	PetscSolver::fluxHandler = fluxHandler;
 
 	// Get the properties
 	auto props = network->getProperties();
