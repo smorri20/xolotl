@@ -55,9 +55,6 @@ int main(int argc, char **argv) {
     std::string networkFilename = xopts.getNetworkFilename();
     assert( !networkFilename.empty() );
 
-    // Vector to store the MPI ranks (used to output performance data)
-    std::vector<int> mpirank;
-
 	try {
         // Set up our performance data infrastructure.
         // Indicate we want to monitor some important hardware counters.
@@ -99,7 +96,7 @@ int main(int argc, char **argv) {
         // Finalize our use of the solver.
 		solver.finalize();
         totalTimer->stop();
-        mpirank.push_back(rank);
+        //mpirank.push_back(rank);
 
         // Report the performance data about the run we just completed
         // TODO Currently, this call writes EventCounter data to the
@@ -120,9 +117,7 @@ int main(int argc, char **argv) {
 
     // Access the handler registry to output performance data
 	auto handlerRegistry = xolotlPerf::getHandlerRegistry();
-    for( auto iter = mpirank.begin(); iter != mpirank.end(); iter++ ){
-    	handlerRegistry->dump(*iter);
-    }
+	handlerRegistry->dump(rank);
 
 	return EXIT_SUCCESS;
 }

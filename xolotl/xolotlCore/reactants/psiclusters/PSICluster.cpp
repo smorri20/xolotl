@@ -477,12 +477,6 @@ double PSICluster::calculateDissociationConstant(
 	return k_minus;
 }
 
-bool PSICluster::isProductReactant(const Reactant & reactantI,
-		const Reactant & reactantJ) {
-	// Base class should just return false
-	return false;
-}
-
 double PSICluster::getReactionRadius() const {
 	return reactionRadius; // Computed by subclasses in constructors.
 }
@@ -579,10 +573,12 @@ void PSICluster::dissociateClusters(
 		// their lists of dissociating clusters. Handle the first one.
 		index = firstDissociatedCluster->getId() - 1;
 		dissociationConnectivity[index] = 1;
+		dissociatingClusters.push_back(castedFirstCluster);
 		castedFirstCluster->dissociatingClusters.push_back(thisCluster);
 		// Handle the second one.
 		index = secondDissociatedCluster->getId() - 1;
 		dissociationConnectivity[index] = 1;
+		dissociatingClusters.push_back(castedSecondCluster);
 		castedSecondCluster->dissociatingClusters.push_back(thisCluster);
 		// Connect this cluster to itself since any reaction will affect it
 		dissociationConnectivity[thisNetworkIndex] = 1;
