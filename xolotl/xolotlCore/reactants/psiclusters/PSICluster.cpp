@@ -555,7 +555,7 @@ void PSICluster::dissociateClusters(
 			castedFirstCluster, castedSecondCluster;
 
 	if (firstDissociatedCluster && secondDissociatedCluster) {
-
+		
 		// Cast to PSICluster so that we can get the information we need
 		castedFirstCluster = std::dynamic_pointer_cast < PSICluster
 				> (firstDissociatedCluster);

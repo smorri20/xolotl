@@ -12,7 +12,7 @@ namespace xolotlCore {
 /**
  *  A cluster composed of helium and vacancies
  */
-class HeVCluster : public PSICluster {
+class HeVCluster: public PSICluster {
 
 private:
 
@@ -69,7 +69,7 @@ protected:
 	 */
 	virtual void getDissociationPartialDerivatives(std::vector<double> & partials,
 			double temperature) const;
-	
+
 public:
 
 	/**
@@ -110,7 +110,7 @@ public:
 	 */
 	double getAnnByEm();
 
-    /**
+	/**
 	 * This operation returns the total change in this cluster due to
 	 * dissociation.
 	 * @return The flux due to dissociation.
@@ -136,7 +136,7 @@ protected:
 	 * of the second reactant is 1, otherwise 0.
 	 */
 	void createReactionConnectivity();
-	
+
 	/**
 	 * Computes a row of the dissociation connectivity matrix corresponding to
 	 * this reactant.

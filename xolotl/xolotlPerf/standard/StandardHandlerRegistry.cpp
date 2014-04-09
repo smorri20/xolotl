@@ -18,8 +18,9 @@ StandardHandlerRegistry::StandardHandlerRegistry( std::vector<HardwareQuantities
     // other instances of StandardHandlerRegistry.
     //
 
-	// This option allows the use of multiple hardware counters
-	GPTLsetoption(GPTLmultiplex, 1);
+	// This option allows for the use of multiple hardware counters
+	// NOTE: multiplexing events reduces the accuracy of the reported results
+	//GPTLsetoption(GPTLmultiplex, 1);
 
     // Indicate to GPTL any hardware counters it should be monitoring.
     for( auto iter = hwq.begin(); iter != hwq.end(); iter++ )
@@ -45,7 +46,7 @@ StandardHandlerRegistry::StandardHandlerRegistry( std::vector<HardwareQuantities
     }
 
     // Initialize the GPTL library.
-    GPTLsetoption(GPTLverbose, 1);   // useful for debugging
+    //GPTLsetoption(GPTLverbose, 1);   // useful for debugging
     GPTLsetoption(GPTLpercent, 1);   // lists the percentage of wallclock time each region took compared to the first region timed
     GPTLinitialize();
 }

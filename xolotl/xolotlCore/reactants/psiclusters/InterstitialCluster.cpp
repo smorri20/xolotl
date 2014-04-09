@@ -4,8 +4,8 @@
 
 using namespace xolotlCore;
 
-InterstitialCluster::InterstitialCluster(int nI, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(nI, registry) {
+InterstitialCluster::InterstitialCluster(int nI) :
+		PSICluster(nI) {
 	// Set the reactant name appropriately
 	name = "I";
 	// Update the composition map
@@ -51,7 +51,7 @@ void InterstitialCluster::createReactionConnectivity() {
 	 * Total size starts with a value of one so that clusters of size one are
 	 * not considered in this loop.
 	 */
-	 for (firstSize = 1; firstSize <= (int) size/2; firstSize++) {
+	for (firstSize = 1; firstSize <= (int) size/2; firstSize++) {
 		secondSize = size - firstSize;
 		// Get the first and second reactants for the reaction
 		// first + second = this.
@@ -65,7 +65,6 @@ void InterstitialCluster::createReactionConnectivity() {
 			// Add the pair to the list
 			reactingPairs.push_back(pair);
 		}
-
 	}
 
 	/* ----- I_a + I_b --> I_(a+b) -----
