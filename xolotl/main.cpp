@@ -14,7 +14,6 @@
 #include "xolotlPerf/HandlerRegistryFactory.h"
 #include "xolotlPerf/HardwareQuantities.h"
 
-
 using namespace std;
 using std::shared_ptr;
 
@@ -96,7 +95,6 @@ int main(int argc, char **argv) {
         // Finalize our use of the solver.
 		solver.finalize();
         totalTimer->stop();
-        //mpirank.push_back(rank);
 
         // Report the performance data about the run we just completed
         // TODO Currently, this call writes EventCounter data to the
@@ -115,10 +113,6 @@ int main(int argc, char **argv) {
     // finalize our use of MPI
     MPI_Finalize();
 
-    // Access the handler registry to output performance data
-	auto handlerRegistry = xolotlPerf::getHandlerRegistry();
-	handlerRegistry->dump(rank);
-
 	return EXIT_SUCCESS;
 }
 
@@ -129,10 +123,6 @@ std::vector<xolotlPerf::HardwareQuantities> declareHWcounters(){
 
     hwq.push_back( xolotlPerf::FP_OPS );
     hwq.push_back( xolotlPerf::L1_CACHE_MISS );
-//    hwq.push_back( xolotlPerf::L2_CACHE_MISS );
-//    hwq.push_back( xolotlPerf::L3_CACHE_MISS );
-//    hwq.push_back( xolotlPerf::TOTAL_INSTRUC );
-//    hwq.push_back( xolotlPerf::BRANCH_MISPRED );
 
     return hwq;
 }
@@ -171,6 +161,7 @@ void launchPetscSolver(xolotlSolver::PetscSolver solver, std::shared_ptr<xolotlP
     auto fitFluxHandler = std::make_shared<xolotlSolver::FitFluxHandler>();
 	solver.solve(fitFluxHandler);
     solverTimer->stop();
+
 
 }
 
