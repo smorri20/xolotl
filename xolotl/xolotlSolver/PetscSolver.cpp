@@ -364,7 +364,6 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 				network->get("He", 1));
 		incomingHeFlux(heCluster, gridPosition, realTime, updatedConcOffset);
 
-//********************************************************************************************
 		// ---- Compute diffusion over the locally owned part of the grid -----
 
 		// He clusters larger than 5 do not diffuse -- they are immobile
@@ -394,7 +393,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 //						<< heCluster->getConcentration() << " " << heCluster->getSize() << std::endl;
 			}
 		}
-//****************************************************************************************************
+
 		// ----- Vacancy Diffusion -----
 		// Only vacancy clusters of size 1 diffuse, so grab 1V.
 		vCluster = std::dynamic_pointer_cast<PSICluster>(network->get("V", 1));
@@ -409,7 +408,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 //					<< oldRightConc << " " << conc << " "
 //					<< vCluster->getConcentration() << std::endl;
 		}
-//********************************************************************************************************
+
 		// ----- Interstitial Diffusion -----
 		// Get 1I from the new network and gets its position in the array
 		iCluster = std::dynamic_pointer_cast<PSICluster>(network->get("I", 1));
