@@ -82,7 +82,7 @@ double temperature = 1000.0;
  * vectors of the column ids that are marked as connected for that cluster in
  * the dfill array.
  */
-static std::unordered_map<int,std::vector<int> > dFillMap;
+static std::unordered_map<int, std::vector<int> > dFillMap;
 
 /* ----- Error Handling Code ----- */
 
@@ -251,7 +251,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 			PETSC_IGNORE);
 	checkPetscError(ierr);
 	// Setup some step size variables
-	hx = 8.0 / (PetscReal) (Mx - 1);
+	hx = 8.0 / (PetscReal)(Mx - 1);
 	sx = 1.0 / (hx * hx);
 
 	// Scatter ghost points to local vector, using the 2-step process
@@ -289,7 +289,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 
 		// Vector representing the position at which the flux will be calculated
 		// Currently we are only in 1D
-		std::vector<double> gridPosition = {0,x,0};
+		std::vector<double> gridPosition = { 0, x, 0 };
 
 		//xi = 4; ///FIXME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -310,6 +310,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 //			std::cout << "c[" << i << "] = " << concOffset[i] << std::endl;
 //		}
 
+//*****************************************************************************************
 		// ----- Account for flux of incoming He by computing forcing that
 		// produces He of cluster size 1 -----
 		// Crude cubic approximation of graph from Tibo's notes
@@ -318,16 +319,19 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 		// Get the composition of the cluster
 		auto thisComp = heCluster->getComposition();
 		// Create the composition vector for the cluster
-		std::vector<int> compVec = {thisComp["He"], thisComp["V"], thisComp["I"]};
+		std::vector<int> compVec = { thisComp["He"], thisComp["V"],
+				thisComp["I"] };
 		if (heCluster) {
 			reactantIndex = heCluster->getId() - 1;
 			// Calculate the incident flux
-			auto incidentFlux = fluxHandler->getIncidentFlux(compVec, gridPosition, realTime);
+			auto incidentFlux = fluxHandler->getIncidentFlux(compVec,
+					gridPosition, realTime);
 			// Update the concentration of the cluster
-			updatedConcOffset[reactantIndex] += 1.0E4 * PetscMax(0.0, incidentFlux);
+			updatedConcOffset[reactantIndex] += 1.0E4
+					* PetscMax(0.0, incidentFlux);
 			// where incidentFlux = 0.0006 * x * x * x - 0.0087 * x * x + 0.0300 * x);
 		}
-
+//************************************************************************************************
 		// ---- Compute diffusion over the locally owned part of the grid -----
 
 		// He clusters larger than 5 do not diffuse -- they are immobile
@@ -354,7 +358,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 //						<< heCluster->getConcentration() << " " << heCluster->getSize() << std::endl;
 			}
 		}
-
+//***********************************************************************************************
 		// ----- Vacancy Diffusion -----
 		// Only vacancy clusters of size 1 diffuse, so grab 1V.
 		vCluster = std::dynamic_pointer_cast<PSICluster>(network->get("V", 1));
@@ -376,7 +380,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 //					<< oldRightConc << " " << conc << " "
 //					<< vCluster->getConcentration() << std::endl;
 		}
-
+//******************************************************************************************************
 		// ----- Interstitial Diffusion -----
 		// Get 1I from the new network and gets its position in the array
 		iCluster = std::dynamic_pointer_cast<PSICluster>(network->get("I", 1));
@@ -394,7 +398,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 			// Update the concentration of the cluster
 			updatedConcOffset[reactantIndex] += conc;
 		}
-
+//********************************************************************************************************
 		// ----- Compute all of the new fluxes -----
 		auto reactants = network->getAll();
 		for (int i = 0; i < size; i++) {
@@ -407,7 +411,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 //			std::cout << "New flux = " << flux << " "
 //					<< cluster->getConcentration() << std::endl;
 		}
-
+//**********************************************************************************************************
 //		for (int i = 0; i < size; i++) {
 //			std::cout << updatedConcOffset[i] << std::endl;
 //		}
@@ -473,7 +477,7 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat *A, Mat *J,
 			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 			PETSC_IGNORE);
 	checkPetscError(ierr);
-	hx = 8.0 / (PetscReal) (Mx - 1);
+	hx = 8.0 / (PetscReal)(Mx - 1);
 	sx = 1.0 / (hx * hx);
 
 	// Get the complete data array
@@ -621,7 +625,7 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat *A, Mat *J,
 	PetscInt localPDColIds[size];
 	PetscInt rowId = 0;
 	// Create arrays for storing the partial derivatives
-	std::vector<double> reactingPartialsForCluster(size,0.0);
+	std::vector<double> reactingPartialsForCluster(size, 0.0);
 	std::vector<double> allPartialsForCluster;
 	int pdColIdsVectorSize = 0;
 	// Loop over the grid points
@@ -645,7 +649,8 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat *A, Mat *J,
 			// Get the column id
 			rowId = (xi - xs + 1) * size + reactantIndex;
 			// Get the partial derivatives
-			allPartialsForCluster = reactant->getPartialDerivatives(temperature);
+			allPartialsForCluster = reactant->getPartialDerivatives(
+					temperature);
 			// Set the row indices
 			psiCluster = std::dynamic_pointer_cast<PSICluster>(reactant);
 //			std::cout << xi << " " << xs << " " << size << " " << (xi - xs + 1)*size << std::endl;
@@ -662,12 +667,14 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat *A, Mat *J,
 				// Calculate the appropriate index to match the dfill array configuration
 				localPDColIds[j] = (xi - xs + 1) * size + pdColIdsVector[j];
 				// Get the partial derivative from the array of all of the partials
-				reactingPartialsForCluster[j] = allPartialsForCluster[pdColIdsVector[j]];
+				reactingPartialsForCluster[j] =
+						allPartialsForCluster[pdColIdsVector[j]];
 //				std::cout << "dp[" << j << "] = " << pdColIdsVector[j] << " , [r,c] = "<< "[" << rowId << "," << localPDColIds[j] << "] = " << reactingPartialsForCluster[j]<< std::endl;
 			}
 			// Update the matrix
-			ierr = MatSetValuesLocal(*J, 1, &rowId, pdColIdsVectorSize, localPDColIds,
-					reactingPartialsForCluster.data(), ADD_VALUES);
+			ierr = MatSetValuesLocal(*J, 1, &rowId, pdColIdsVectorSize,
+					localPDColIds, reactingPartialsForCluster.data(),
+					ADD_VALUES);
 			checkPetscError(ierr);
 		}
 		// Uncomment this line for debugging in a single cell.
@@ -765,13 +772,15 @@ PetscSolver::PetscSolver() {
 }
 
 PetscSolver::PetscSolver(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-	handlerRegistry(registry){
+		handlerRegistry(registry) {
 
 	numCLIArgs = 0;
 	CLIArgs = NULL;
 
-	RHSFunctionCounter = handlerRegistry->getEventCounter("Petsc_RHSFunction_Counter");
-	RHSJacobianCounter = handlerRegistry->getEventCounter("Petsc_RHSJacobian_Counter");
+	RHSFunctionCounter = handlerRegistry->getEventCounter(
+			"Petsc_RHSFunction_Counter");
+	RHSJacobianCounter = handlerRegistry->getEventCounter(
+			"Petsc_RHSJacobian_Counter");
 	solveODEsystem = handlerRegistry->getTimer("solveODEsystem");
 
 }
@@ -780,7 +789,6 @@ PetscSolver::PetscSolver(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry)
 PetscSolver::~PetscSolver() {
 
 }
-
 
 /**
  * This operation transfers the input arguments passed to the program on
@@ -889,7 +897,7 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler) {
 	 Create distributed array (DMDA) to manage parallel grid and vectors
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	ierr = DMDACreate1d(PETSC_COMM_WORLD, DMDA_BOUNDARY_MIRROR, -8, dof, 1,
-			NULL, &da);
+	NULL, &da);
 	checkPetscError(ierr);
 
 	/* The only spatial coupling in the Jacobian (diffusion) is for the first 5 He, the first V, and the first I.
