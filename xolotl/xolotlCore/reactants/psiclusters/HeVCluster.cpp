@@ -125,8 +125,10 @@ void HeVCluster::createReactionConnectivity() {
 	// Create a ReactingPair with the two reactants
 	if (firstReactant && secondReactant) {
 		ReactingPair pair;
-		pair.first = std::dynamic_pointer_cast <PSICluster> (firstReactant);
-		pair.second = std::dynamic_pointer_cast <PSICluster> (secondReactant);
+		pair.first = std::dynamic_pointer_cast < PSICluster
+				> (firstReactant);
+		pair.second = std::dynamic_pointer_cast < PSICluster
+				> (secondReactant);
 		// Add the pair to the list
 		reactingPairs.push_back(pair);
 	}

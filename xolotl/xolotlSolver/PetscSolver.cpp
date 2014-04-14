@@ -187,6 +187,53 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 	PetscFunctionReturn(0);
 }
 
+void incomingHeFlux(std::shared_ptr<PSICluster> cluster,
+		std::vector<double> gridPos, PetscReal curTime,
+		PetscScalar *updatedConcOffset) {
+
+	int reactantIndex = 0;
+	// Get the flux handler that will be used to compute fluxes.
+	auto fluxHandler = PetscSolver::getFluxHandler();
+
+	// Get the composition of the cluster
+	auto thisComp = cluster->getComposition();
+	// Create the composition vector for the cluster
+	std::vector<int> compVec = { thisComp["He"], thisComp["V"], thisComp["I"] };
+	// Only update the concentration if the cluster exists
+	if (cluster) {
+		reactantIndex = cluster->getId() - 1;
+		// Calculate the incident flux
+		auto incidentFlux = fluxHandler->getIncidentFlux(compVec, gridPos,
+				curTime);
+		// Update the concentration of the cluster
+		updatedConcOffset[reactantIndex] += 1.0E4 * PetscMax(0.0, incidentFlux);
+		// where incidentFlux = 0.0006 * x * x * x - 0.0087 * x * x + 0.0300 * x
+	}
+}
+
+void computeDiffusion(std::shared_ptr<PSICluster> cluster, double temp,
+		PetscScalar *concOffset, PetscScalar *leftConcOffset,
+		PetscScalar *rightConcOffset, PetscScalar *updatedConcOffset) {
+
+	int reactantIndex = 0;
+	// Dummy variables to keep the code clean
+	double oldConc = 0.0, oldLeftConc = 0.0, oldRightConc = 0.0, conc = 0.0,
+			flux = 0.0;
+	PetscReal sx;
+
+	reactantIndex = cluster->getId() - 1;
+	// Get the concentrations
+	oldConc = concOffset[reactantIndex];
+	oldLeftConc = leftConcOffset[reactantIndex];
+	oldRightConc = rightConcOffset[reactantIndex];
+	// Use a simple midpoint stencil to compute the concentration
+	conc = cluster->getDiffusionCoefficient(temp)
+			* (-2.0 * oldConc + oldLeftConc + oldRightConc) * sx;
+	// Update the concentration of the cluster
+	updatedConcOffset[reactantIndex] += conc;
+
+}
+
 /* ------------------------------------------------------------------- */
 
 #undef __FUNCT__
@@ -237,7 +284,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	auto props = network->getProperties();
 	int numHeClusters = std::stoi(props["numHeClusters"]);
 	// Get the flux handler that will be used to compute fluxes.
-	auto fluxHandler = PetscSolver::getFluxHandler();
+	//auto fluxHandler = PetscSolver::getFluxHandler();
 
 	// Get the local data vector from petsc
 	PetscFunctionBeginUser;
@@ -291,7 +338,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 		// Currently we are only in 1D
 		std::vector<double> gridPosition = { 0, x, 0 };
 
-		//xi = 4; ///FIXME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		//xi = 4; // Debugging
 
 		// Compute the middle, left, right and new array offsets
 		concOffset = concs + size * xi;
@@ -310,37 +357,26 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 //			std::cout << "c[" << i << "] = " << concOffset[i] << std::endl;
 //		}
 
-//*****************************************************************************************
 		// ----- Account for flux of incoming He by computing forcing that
 		// produces He of cluster size 1 -----
 		// Crude cubic approximation of graph from Tibo's notes
 		heCluster = std::dynamic_pointer_cast<PSICluster>(
 				network->get("He", 1));
-		// Get the composition of the cluster
-		auto thisComp = heCluster->getComposition();
-		// Create the composition vector for the cluster
-		std::vector<int> compVec = { thisComp["He"], thisComp["V"],
-				thisComp["I"] };
-		if (heCluster) {
-			reactantIndex = heCluster->getId() - 1;
-			// Calculate the incident flux
-			auto incidentFlux = fluxHandler->getIncidentFlux(compVec,
-					gridPosition, realTime);
-			// Update the concentration of the cluster
-			updatedConcOffset[reactantIndex] += 1.0E4
-					* PetscMax(0.0, incidentFlux);
-			// where incidentFlux = 0.0006 * x * x * x - 0.0087 * x * x + 0.0300 * x);
-		}
-//************************************************************************************************
+		incomingHeFlux(heCluster, gridPosition, realTime, updatedConcOffset);
+
+//********************************************************************************************
 		// ---- Compute diffusion over the locally owned part of the grid -----
 
 		// He clusters larger than 5 do not diffuse -- they are immobile
 		for (int i = 1; i < PetscMin(numHeClusters + 1, 6); i++) {
 			// Get the reactant index
-			clusterDummy = network->get("He", i);
-			heCluster = std::dynamic_pointer_cast<PSICluster>(clusterDummy);
+			heCluster = std::dynamic_pointer_cast<PSICluster>(
+					network->get("He", i));
 			// Only update the concentration if the cluster exists
 			if (heCluster) {
+				// FIXME
+//				computeDiffusion(heCluster, temperature, concOffset, leftConcOffset,
+//						rightConcOffset, updatedConcOffset);
 				reactantIndex = heCluster->getId() - 1;
 				// Get the concentrations
 				oldConc = concOffset[reactantIndex];
@@ -358,47 +394,31 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 //						<< heCluster->getConcentration() << " " << heCluster->getSize() << std::endl;
 			}
 		}
-//***********************************************************************************************
+//****************************************************************************************************
 		// ----- Vacancy Diffusion -----
 		// Only vacancy clusters of size 1 diffuse, so grab 1V.
 		vCluster = std::dynamic_pointer_cast<PSICluster>(network->get("V", 1));
 		// Only update the concentration if the cluster exists
 		if (vCluster) {
-			// Get the concentrations for the first vacancy cluster in the network.
-			reactantIndex = vCluster->getId() - 1;
-			oldConc = concOffset[reactantIndex];
-			oldLeftConc = leftConcOffset[reactantIndex];
-			oldRightConc = rightConcOffset[reactantIndex];
-			// Use a simple midpoint stencil to compute the concentration
-			conc = vCluster->getDiffusionCoefficient(temperature)
-					* (-2.0 * oldConc + oldLeftConc + oldRightConc) * sx;
-			// Update the concentration of the cluster
-			updatedConcOffset[reactantIndex] += conc;
+			computeDiffusion(vCluster, temperature, concOffset, leftConcOffset,
+					rightConcOffset, updatedConcOffset);
+
 //			std::cout << "RHS-F: " << xi << " "
 //					<< vCluster->getDiffusionCoefficient(temperature) << " "
 //					<< oldLeftConc << " " << -2.0 * oldConc << " "
 //					<< oldRightConc << " " << conc << " "
 //					<< vCluster->getConcentration() << std::endl;
 		}
-//******************************************************************************************************
+//********************************************************************************************************
 		// ----- Interstitial Diffusion -----
 		// Get 1I from the new network and gets its position in the array
 		iCluster = std::dynamic_pointer_cast<PSICluster>(network->get("I", 1));
 		// Only update the concentration if the clusters exist
 		if (iCluster) {
-			reactantIndex = iCluster->getId() - 1;
-			// Only interstitial clusters of size 1 diffuse. Get the
-			// concentrations.
-			oldConc = concOffset[reactantIndex];
-			oldLeftConc = leftConcOffset[reactantIndex];
-			oldRightConc = rightConcOffset[reactantIndex];
-			// Use a simple midpoint stencil to compute the concentration
-			conc = iCluster->getDiffusionCoefficient(temperature)
-					* (-2.0 * oldConc + oldLeftConc + oldRightConc) * sx;
-			// Update the concentration of the cluster
-			updatedConcOffset[reactantIndex] += conc;
+			computeDiffusion(iCluster, temperature, concOffset, leftConcOffset,
+					rightConcOffset, updatedConcOffset);
 		}
-//********************************************************************************************************
+//**********************************************************************************************
 		// ----- Compute all of the new fluxes -----
 		auto reactants = network->getAll();
 		for (int i = 0; i < size; i++) {
@@ -411,7 +431,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 //			std::cout << "New flux = " << flux << " "
 //					<< cluster->getConcentration() << std::endl;
 		}
-//**********************************************************************************************************
+
 //		for (int i = 0; i < size; i++) {
 //			std::cout << updatedConcOffset[i] << std::endl;
 //		}
