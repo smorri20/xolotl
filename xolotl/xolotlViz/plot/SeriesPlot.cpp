@@ -49,8 +49,11 @@ void SeriesPlot::render() {
     eavl1DWindow *window = new eavl1DWindow(bg, surface, scene);
     window->Initialize();
     window->Resize(W_WIDTH,W_HEIGHT);
+
+    // Set the log scale
     window->view.view2d.logy = true;
 
+    // Loop on all the data providers to plot the different series
     for (int i = 0; i < getDataProviderNumber(); i++){
 
     	// Get the value that will be plotted on X and Y
@@ -86,6 +89,7 @@ void SeriesPlot::render() {
     			"",
     			"coords");
 
+    	// Add the plot to the scene
     	scene->plots.push_back(plot);
     }
 
@@ -118,8 +122,12 @@ int SeriesPlot::getDataProviderNumber(){
 
 double SeriesPlot::getMaxValue(){
 	double maxValue = 0.;
+
+	// Loop on all the data providers
 	for (int i = 0; i < getDataProviderNumber(); i++){
     	auto yVector = plotDataProviders->at(i)->getAxis2Vector();
+
+    	// Loop on all the value in the data provider
     	for (auto it = yVector.begin(); it != yVector.end(); it++){
     		if ((*it) > maxValue) maxValue = (*it);
     	}

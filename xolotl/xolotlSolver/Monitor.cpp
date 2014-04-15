@@ -1,9 +1,8 @@
 // Includes
 #include "../xolotlViz/plot/Plot.h"
 #include "../xolotlViz/dataprovider/Point.h"
-#include "../xolotlViz/plot/ScatterPlot.h"
-#include "../xolotlViz/plot/SeriesPlot.h"
-#include "../xolotlViz/dataprovider/CvsXDataProvider.h"
+#include "../xolotlViz/plot/SurfacePlot.h"
+#include "../xolotlViz/dataprovider/CvsXYDataProvider.h"
 #include "../xolotlViz/labelprovider/LabelProvider.h"
 #include "PetscSolver.h"
 #include <petscts.h>
@@ -27,7 +26,7 @@ static inline bool checkPetscError(PetscErrorCode errorCode) {
 }
 
 //! The pointer to the plot that will be used to visualize the data.
-std::shared_ptr<xolotlViz::SeriesPlot> plot;
+std::shared_ptr<xolotlViz::Plot> plot;
 
 /**
  * This is a monitoring method that the user has to change to plot the data he/she
@@ -70,19 +69,22 @@ static PetscErrorCode monitorSolve(TS ts, PetscInt timestep, PetscReal time,
 		name >> names[id];
 	}
 
+	// Get the data
+	VecGetArray(solution, &solutionArray);
+
 	// Get the da from ts
 	DM da;
 	ierr = TSGetDM(ts, &da);
 	checkPetscError(ierr);
 
+	// Get the local vector, which is capital when running in parallel,
+	// and put it into solutionArray
 	ierr = DMGetLocalVector(da, &localSolution);
 	checkPetscError(ierr);
-
 	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);
 	checkPetscError(ierr);
 	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);
 	checkPetscError(ierr);
-
 	ierr = DMDAVecGetArray(da, localSolution, &solutionArray);
 	checkPetscError(ierr);
 
@@ -100,13 +102,9 @@ static PetscErrorCode monitorSolve(TS ts, PetscInt timestep, PetscReal time,
 	// Create a Point vector to store the data to give to the data provider
 	// for the visualization
 	auto myPoints = std::make_shared< std::vector<xolotlViz::Point> >();
-	auto myPointsBis = std::make_shared< std::vector<xolotlViz::Point> >();
-	auto myPointsTer = std::make_shared< std::vector<xolotlViz::Point> >();
-	auto myPointsQua = std::make_shared< std::vector<xolotlViz::Point> >();
-	auto myPointsCin = std::make_shared< std::vector<xolotlViz::Point> >();
 
 	// Choice of the cluster to be plotted
-	int iCluster = 7;
+	int iCluster = 2;
 
 	// Print the solution data
 	for (xi = xs; xi < xs + xm; xi++) {
@@ -122,32 +120,22 @@ static PetscErrorCode monitorSolve(TS ts, PetscInt timestep, PetscReal time,
 		double * concentration = &concentrations[0];
 		PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
 
-		// Create a Point with the concentration[iCluster] as the value
-		// and add it to myPoints
-		xolotlViz::Point aPoint;
-		aPoint.value = concentration[2];
-		aPoint.t = time; aPoint.x = x;
-		myPoints->push_back(aPoint);
-		aPoint.value = concentration[11];
-		myPointsBis->push_back(aPoint);
-		aPoint.value = concentration[12];
-		myPointsTer->push_back(aPoint);
-		aPoint.value = concentration[13];
-		myPointsQua->push_back(aPoint);
-		aPoint.value = concentration[29];
-		myPointsCin->push_back(aPoint);
+		for (int i = 0; i < (int) xm; i++) {
+			// Create a Point with the concentration[iCluster] as the value
+			// and add it to myPoints
+			xolotlViz::Point aPoint;
+			aPoint.value = concentration[2];
+			aPoint.t = time; aPoint.x = x; aPoint.y = (double) i;
+			myPoints->push_back(aPoint);
+		}
 	}
 
 	// Get the data provider and give it the points
-	plot->getDataProvider(0)->setPoints(myPoints);
-	plot->getDataProvider(1)->setPoints(myPointsBis);
-	plot->getDataProvider(2)->setPoints(myPointsTer);
-	plot->getDataProvider(3)->setPoints(myPointsQua);
-	plot->getDataProvider(4)->setPoints(myPointsCin);
+	plot->getDataProvider()->setPoints(myPoints);
 
 	// Change the title of the plot
 	std::stringstream title;
-	title << "logTS" << timestep << "_" << procId << ".pnm";
+	title << "blaTS" << timestep << "_" << procId << ".pnm";
 	plot->plotLabelProvider->titleLabel = title.str();
 
 	// Render
@@ -174,29 +162,22 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 		PetscFunctionReturn(0);
 
 	// Create a ScatterPlot
-	plot = std::make_shared<xolotlViz::SeriesPlot> ();
+	plot = std::make_shared<xolotlViz::SurfacePlot> ();
 
 	// Create and set the label provider
 	auto labelProvider = std::make_shared<xolotlViz::LabelProvider>();
 	labelProvider->axis1Label = "x Position on the Grid";
-	labelProvider->axis2Label = "Concentration";
+	labelProvider->axis2Label = "y Position on the Grid";
+	labelProvider->axis3Label = "Concentration";
 
 	// Give it to the plot
 	plot->setLabelProvider(labelProvider);
 
 	// Create the data provider
-	auto dataProvider = std::make_shared<xolotlViz::CvsXDataProvider>();
-	auto dataProviderBis = std::make_shared<xolotlViz::CvsXDataProvider>();
-	auto dataProviderTer = std::make_shared<xolotlViz::CvsXDataProvider>();
-	auto dataProviderQua = std::make_shared<xolotlViz::CvsXDataProvider>();
-	auto dataProviderCin = std::make_shared<xolotlViz::CvsXDataProvider>();
+	auto dataProvider = std::make_shared<xolotlViz::CvsXYDataProvider>();
 
 	// Give it to the plot
-	plot->addDataProvider(dataProvider);
-	plot->addDataProvider(dataProviderBis);
-	plot->addDataProvider(dataProviderTer);
-	plot->addDataProvider(dataProviderQua);
-	plot->addDataProvider(dataProviderCin);
+	plot->setDataProvider(dataProvider);
 
 	// monitorSolve will be called at each timestep
 	ierr = TSMonitorSet(ts, monitorSolve, NULL, NULL);

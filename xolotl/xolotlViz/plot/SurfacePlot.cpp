@@ -51,7 +51,7 @@ void SurfacePlot::render() {
 	coordNames.push_back("ycoord");
 	AddRectilinearMesh(data, coords, coordNames, true, "RectilinearGridCells");
 
-	// Give the yVector to the axisValues
+	// Give the zVector to the axisValues
 	eavlArray *axisValues = new eavlFloatArray("coords", 1);
 	axisValues->SetNumberOfTuples(data->GetNumPoints());
 	for (int i = 0; i < zVector.size(); i++){
@@ -62,21 +62,21 @@ void SurfacePlot::render() {
 	eavlField *field = new eavlField(1, axisValues, eavlField::ASSOC_POINTS);
 	data->AddField(field);
 
-	data->PrintSummary(std::cout);
-
     // Create an offscreen render surface
     eavlRenderSurface *surface = new eavlRenderSurfaceOSMesa;
 
     // Pick a background color
     eavlColor bg(0.15, 0.05, 0.1, 1.0);
 
+    // Create a 2D scene
     eavlScene *scene = new eavl2DGLScene();
 
+    // Create the window
     eavl2DWindow *window = new eavl2DWindow(bg, surface, scene);
     window->Initialize();
     window->Resize(W_WIDTH,W_HEIGHT);
 
-    // set up a plot for the data set
+    // Set up a plot for the data set
     eavlRenderer *plot;
     plot = new eavlPseudocolorRenderer(data, NULL,
                                        "temperature",
