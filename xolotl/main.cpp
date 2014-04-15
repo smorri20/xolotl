@@ -93,7 +93,10 @@ int main(int argc, char **argv) {
         launchPetscSolver(solver, handlerRegistry);
 
         // Finalize our use of the solver.
+        auto solverFinalizeTimer = handlerRegistry->getTimer( "solverFinalize" );
+        solverFinalizeTimer->start();
 		solver.finalize();
+		solverFinalizeTimer->stop();
         totalTimer->stop();
 
         // Report the performance data about the run we just completed
@@ -159,7 +162,9 @@ void launchPetscSolver(xolotlSolver::PetscSolver solver, std::shared_ptr<xolotlP
     solverTimer->start();
     // Create object to handle incident flux calculations
     auto fitFluxHandler = std::make_shared<xolotlSolver::FitFluxHandler>();
-	solver.solve(fitFluxHandler);
+    // Create object to handle temperature
+    auto tempHandler = std::make_shared<xolotlSolver::TemperatureHandler>();
+	solver.solve(fitFluxHandler, tempHandler);
     solverTimer->stop();
 
 
