@@ -4,6 +4,7 @@
 // Includes
 #include <PSIClusterNetworkLoader.h>
 #include <map>
+#include "FitFluxHandler.h"
 
 using namespace xolotlCore;
 
@@ -69,8 +70,10 @@ public:
 	/**
 	 * This operation directs the Solver to perform the solve. If the solve
 	 * fails, it will throw an exception of type std::string.
+	 * @param fluxHandler The flux handler that will be used when performing
+	 * the solve
 	 */
-	virtual void solve() = 0;
+	virtual void solve(std::shared_ptr<IFluxHandler> fluxHandler) = 0;
 
 	/**
 	 * This operation performs all necessary finalization for the solver
