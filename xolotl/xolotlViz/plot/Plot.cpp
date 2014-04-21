@@ -49,3 +49,8 @@ void Plot::showLegend(bool legendShow) {
 std::string Plot::getLegend() const {
 	return " ";
 }
+
+void Plot::setLogScale(bool logScale) {
+	enableLogScale = logScale;
+	return;
+}

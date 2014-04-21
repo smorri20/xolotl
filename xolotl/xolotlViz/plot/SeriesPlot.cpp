@@ -51,7 +51,7 @@ void SeriesPlot::render() {
     window->Resize(W_WIDTH,W_HEIGHT);
 
     // Set the log scale
-    window->view.view2d.logy = true;
+    if (enableLogScale) window->view.view2d.logy = true;
 
     // Loop on all the data providers to plot the different series
     for (int i = 0; i < getDataProviderNumber(); i++){

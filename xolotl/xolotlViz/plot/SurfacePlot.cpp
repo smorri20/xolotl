@@ -66,7 +66,8 @@ void SurfacePlot::render() {
     eavlRenderSurface *surface = new eavlRenderSurfaceOSMesa;
 
     // Pick a background color
-    eavlColor bg(0.15, 0.05, 0.1, 1.0);
+//    eavlColor bg(0.15, 0.05, 0.1, 1.0);
+    eavlColor bg(1, 1, 1, 1);
 
     // Create a 2D scene
     eavlScene *scene = new eavl2DGLScene();

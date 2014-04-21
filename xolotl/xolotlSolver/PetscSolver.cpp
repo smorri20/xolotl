@@ -69,9 +69,6 @@ extern PetscErrorCode RHSJacobian(TS, PetscReal, Vec, Mat*, Mat*, MatStructure*,
 extern PetscErrorCode setupPetscMonitor(TS);
 extern void computeRetention(TS, Vec);
 
-//! The double that will store the accumulation of helium flux.
-extern double heliumFluence;
-
 TS ts; /* nonlinear solver */
 Vec C; /* solution */
 PetscErrorCode ierr;

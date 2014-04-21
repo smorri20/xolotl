@@ -71,6 +71,9 @@ void ScatterPlot::render() {
     window->Initialize();
     window->Resize(W_WIDTH,W_HEIGHT);
 
+    // Set the log scale
+    if (enableLogScale) window->view.view2d.logy = true;
+
     // Set up a plot for the data set
     eavlRenderer *plot;
     plot = new eavlCurveRenderer(data, NULL,

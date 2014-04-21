@@ -29,6 +29,11 @@ protected:
 	bool enableLegend = false;
 
 	/**
+	 * If it is equal to True, a log scale will be used (for 1D plot for now).
+	 */
+	bool enableLogScale = false;
+
+	/**
 	 * Data provider used for the plot.
 	 */
 	std::shared_ptr<DataProvider> plotDataProvider;
@@ -103,6 +108,12 @@ public:
 	 * \see IPlot.h
 	 */
 	std::string getLegend() const ;
+
+	/**
+	 * Method that enables the log scale.
+	 * \see IPlot.h
+	 */
+	void setLogScale(bool logScale = true);
 
 };
 

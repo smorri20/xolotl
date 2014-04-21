@@ -79,6 +79,12 @@ public:
 	 */
 	virtual std::string getLegend() const = 0;
 
+	/**
+	 * Method that enables the log scale.
+	 * @param logScale A boolean set to true by default
+	 */
+	virtual void setLogScale(bool logScale = true) = 0;
+
 };
 
 //end class IPlot
