@@ -125,9 +125,7 @@ static PetscErrorCode heliumRetention(TS ts, PetscInt timestep, PetscReal time,
 static PetscErrorCode monitorScatter(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	// Network size
-	const int size = PetscSolver::getNetwork()->size();
-	// The array of cluster names
-	std::vector<std::string> names(size);
+	const int networkSize = PetscSolver::getNetwork()->size();
 	PetscErrorCode ierr;
 	PetscReal *solutionArray, *gridPointSolution, x, hx;
 	Vec localSolution;
@@ -136,29 +134,13 @@ static PetscErrorCode monitorScatter(TS ts, PetscInt timestep, PetscReal time,
 
 	PetscFunctionBeginUser;
 
+	// Get the number of processes
+	int worldSize;
+	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
+
 	// Gets the process ID (important when it is running in parallel)
 	int procId;
 	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
-
-	// Fill the array of clusters name because the Id is not the same as
-	// reactants->at(i)
-	auto reactants = PetscSolver::getNetwork()->getAll();
-	std::shared_ptr<PSICluster> cluster;
-	for (int i = 0; i < size; i++) {
-
-		// Get the cluster from the list, its id and composition
-		cluster = std::dynamic_pointer_cast<PSICluster>(reactants->at(i));
-		int id = cluster->getId() - 1;
-		auto composition = cluster->getComposition();
-
-		// Create the name
-		std::stringstream name;
-		name << (cluster->getName()).c_str() << "(" << composition["He"] << ","
-				<< composition["V"] << "," << composition["I"] << ") ";
-
-		// Push the header entry on the array
-		name >> names[id];
-	}
 
 	// Get the da from ts
 	DM da;
@@ -187,48 +169,132 @@ static PetscErrorCode monitorScatter(TS ts, PetscInt timestep, PetscReal time,
 	// Setup some step size variables
 	hx = 8.0 / (PetscReal) (Mx - 1);
 
-	// Create a Point vector to store the data to give to the data provider
-	// for the visualization
-	auto myPoints = std::make_shared<std::vector<xolotlViz::Point> >();
-
 	// Choice of the cluster to be plotted
 	int iCluster = 7;
 
-	// Print the solution data
-	for (xi = xs; xi < xs + xm; xi++) {
-		// Dump x
-		x = xi * hx;
-		// Get the pointer to the beginning of the solution data for this grid point
-		gridPointSolution = solutionArray + size * xi;
-		// Update the concentrations in the network to have physics results
-		// (non negative)
-		PetscSolver::getNetwork()->updateConcentrationsFromArray(
-				gridPointSolution);
-		// Get the concentrations from the network
-		double concentrations[size];
-		double * concentration = &concentrations[0];
-		PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
+	if (procId == 0) {
+		// The array of cluster names
+		std::vector<std::string> names(networkSize);
 
-		// Create a Point with the concentration[iCluster] as the value
-		// and add it to myPoints
-		xolotlViz::Point aPoint;
-		aPoint.value = concentration[iCluster]; // He
-		aPoint.t = time;
-		aPoint.x = x;
-		myPoints->push_back(aPoint);
+		// Fill the array of clusters name because the Id is not the same as
+		// reactants->at(i)
+		auto reactants = PetscSolver::getNetwork()->getAll();
+		std::shared_ptr<PSICluster> cluster;
+
+		// Loop on the reactants
+		for (int i = 0; i < networkSize; i++) {
+
+			// Get the cluster from the list, its id and composition
+			cluster = std::dynamic_pointer_cast<PSICluster>(reactants->at(i));
+			int id = cluster->getId() - 1;
+			auto composition = cluster->getComposition();
+
+			// Create the name
+			std::stringstream name;
+			name << (cluster->getName()).c_str() << "(" << composition["He"]
+					<< "," << composition["V"] << "," << composition["I"]
+					<< ") ";
+
+			// Push the header entry on the array
+			name >> names[id];
+		}
+
+		// Create a Point vector to store the data to give to the data provider
+		// for the visualization
+		auto myPoints = std::make_shared<std::vector<xolotlViz::Point> >();
+
+		// Loop on the grid
+		for (xi = xs; xi < xs + xm; xi++) {
+			// Dump x
+			x = xi * hx;
+			// Get the pointer to the beginning of the solution data for this grid point
+			gridPointSolution = solutionArray + networkSize * xi;
+			// Update the concentrations in the network to have physics results
+			// (non negative)
+			PetscSolver::getNetwork()->updateConcentrationsFromArray(
+					gridPointSolution);
+			// Get the concentrations from the network
+			double concentrations[networkSize];
+			double * concentration = &concentrations[0];
+			PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
+
+			// Create a Point with the concentration[iCluster] as the value
+			// and add it to myPoints
+			xolotlViz::Point aPoint;
+			aPoint.value = concentration[iCluster];
+			aPoint.t = time;
+			aPoint.x = x;
+			myPoints->push_back(aPoint);
+		}
+
+		// Loop on the other processes
+		for (int i = 1; i < worldSize; i++) {
+			// Get the size of the local grid of that process
+			int localSize = 0;
+			MPI_Recv(&localSize, 1, MPI_INT, i, 0, MPI_COMM_WORLD,
+					MPI_STATUS_IGNORE);
+
+			// Loop on their grid
+			for (int k = 0; k < localSize; k++) {
+				// Get the position
+				MPI_Recv(&x, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
+						MPI_STATUS_IGNORE);
+
+				// and the concentration
+				double conc = 0.;
+				MPI_Recv(&conc, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
+						MPI_STATUS_IGNORE);
+
+				// Create a Point with the concentration[iCluster] as the value
+				// and add it to myPoints
+				xolotlViz::Point aPoint;
+				aPoint.value = conc;
+				aPoint.t = time;
+				aPoint.x = x;
+				myPoints->push_back(aPoint);
+			}
+		}
+
+		// Get the data provider and give it the points
+		plot->getDataProvider()->setPoints(myPoints);
+
+		// Change the title of the plot
+		std::stringstream title;
+		title << names[iCluster] << "_scatter_TS" << timestep << ".pnm";
+		plot->plotLabelProvider->titleLabel = title.str();
+
+		// Render
+		plot->render();
 	}
 
-	// Get the data provider and give it the points
-	plot->getDataProvider()->setPoints(myPoints);
+	else {
+		// Send the value of the local grid size to the master process
+		MPI_Send(&xm, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
 
-	// Change the title of the plot
-	std::stringstream title;
-	title << names[iCluster] << "_scatter_TS" << timestep << "_" << procId
-			<< ".pnm";
-	plot->plotLabelProvider->titleLabel = title.str();
+		// Loop on the grid
+		for (xi = xs; xi < xs + xm; xi++) {
+			// Dump x
+			x = xi * hx;
 
-	// Render
-	plot->render();
+			// Get the pointer to the beginning of the solution data for this grid point
+			gridPointSolution = solutionArray + networkSize * xi;
+			// Update the concentrations in the network to have physics results
+			// (non negative)
+			PetscSolver::getNetwork()->updateConcentrationsFromArray(
+					gridPointSolution);
+			// Get the concentrations from the network
+			double concentrations[networkSize];
+			double * concentration = &concentrations[0];
+			PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
+
+			// Send the value of the local position to the master process
+			MPI_Send(&x, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+
+			// Send the value of the concentration to the master process
+			MPI_Send(&concentration[iCluster], 1, MPI_DOUBLE, 0, 0,
+					MPI_COMM_WORLD);
+		}
+	}
 
 	PetscFunctionReturn(0);
 }
@@ -239,7 +305,7 @@ static PetscErrorCode monitorScatter(TS ts, PetscInt timestep, PetscReal time,
 static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	// Network size
-	const int size = PetscSolver::getNetwork()->size();
+	const int networkSize = PetscSolver::getNetwork()->size();
 	PetscErrorCode ierr;
 	PetscReal *solutionArray, *gridPointSolution, x, hx;
 	Vec localSolution;
@@ -247,6 +313,10 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 	int xi, i;
 
 	PetscFunctionBeginUser;
+
+	// Get the number of processes
+	int worldSize;
+	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
 
 	// Gets the process ID (important when it is running in parallel)
 	int procId;
@@ -279,63 +349,147 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 	// Setup some step size variables
 	hx = 8.0 / (PetscReal) (Mx - 1);
 
-	// Create a Point vector to store the data to give to the data provider
-	// for the visualization
-	auto myPoints = std::make_shared<std::vector<xolotlViz::Point> >();
-	auto myPointsBis = std::make_shared<std::vector<xolotlViz::Point> >();
-	auto myPointsTer = std::make_shared<std::vector<xolotlViz::Point> >();
-	auto myPointsQua = std::make_shared<std::vector<xolotlViz::Point> >();
-	auto myPointsCin = std::make_shared<std::vector<xolotlViz::Point> >();
+	if (procId == 0) {
 
-	// Choice of the cluster to be plotted
-	int iCluster = 7;
+		// Create a Point vector to store the data to give to the data provider
+		// for the visualization
+		auto myPoints = std::make_shared<std::vector<xolotlViz::Point> >();
+		auto myPointsBis = std::make_shared<std::vector<xolotlViz::Point> >();
+		auto myPointsTer = std::make_shared<std::vector<xolotlViz::Point> >();
+		auto myPointsQua = std::make_shared<std::vector<xolotlViz::Point> >();
+		auto myPointsCin = std::make_shared<std::vector<xolotlViz::Point> >();
 
-	// Print the solution data
-	for (xi = xs; xi < xs + xm; xi++) {
-		// Dump x
-		x = xi * hx;
-		// Get the pointer to the beginning of the solution data for this grid point
-		gridPointSolution = solutionArray + size * xi;
-		// Update the concentrations in the network to have physics results
-		// (non negative)
-		PetscSolver::getNetwork()->updateConcentrationsFromArray(
-				gridPointSolution);
-		// Get the concentrations from the network
-		double concentrations[size];
-		double * concentration = &concentrations[0];
-		PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
+		// Loop on the grid
+		for (xi = xs; xi < xs + xm; xi++) {
+			// Dump x
+			x = xi * hx;
+			// Get the pointer to the beginning of the solution data for this grid point
+			gridPointSolution = solutionArray + networkSize * xi;
+			// Update the concentrations in the network to have physics results
+			// (non negative)
+			PetscSolver::getNetwork()->updateConcentrationsFromArray(
+					gridPointSolution);
+			// Get the concentrations from the network
+			double concentrations[networkSize];
+			double * concentration = &concentrations[0];
+			PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
 
-		// Create a Point with the concentration[iCluster] as the value
-		// and add it to myPoints
-		xolotlViz::Point aPoint;
-		aPoint.value = concentration[2]; // He
-		aPoint.t = time;
-		aPoint.x = x;
-		myPoints->push_back(aPoint);
-		aPoint.value = concentration[11]; // V
-		myPointsBis->push_back(aPoint);
-		aPoint.value = concentration[12]; // He1V1
-		myPointsTer->push_back(aPoint);
-		aPoint.value = concentration[13]; // He2V1
-		myPointsQua->push_back(aPoint);
-		aPoint.value = concentration[29]; // He1V2
-		myPointsCin->push_back(aPoint);
+			// Create a Point with the concentration[iCluster] as the value
+			// and add it to myPoints
+			xolotlViz::Point aPoint;
+			aPoint.value = concentration[2]; // He
+			aPoint.t = time;
+			aPoint.x = x;
+			myPoints->push_back(aPoint);
+			aPoint.value = concentration[11]; // V
+			myPointsBis->push_back(aPoint);
+			aPoint.value = concentration[12]; // He1V1
+			myPointsTer->push_back(aPoint);
+			aPoint.value = concentration[13]; // He2V1
+			myPointsQua->push_back(aPoint);
+			aPoint.value = concentration[29]; // He1V2
+			myPointsCin->push_back(aPoint);
+		}
+
+		// Loop on the other processes
+		for (int i = 1; i < worldSize; i++) {
+			// Get the size of the local grid of that process
+			int localSize = 0;
+			MPI_Recv(&localSize, 1, MPI_INT, i, 0, MPI_COMM_WORLD,
+					MPI_STATUS_IGNORE);
+
+			// Loop on their grid
+			for (int k = 0; k < localSize; k++) {
+				// Get the position
+				MPI_Recv(&x, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
+						MPI_STATUS_IGNORE);
+
+				// and the concentrations
+				double conc = 0.;
+				MPI_Recv(&conc, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
+						MPI_STATUS_IGNORE);
+
+				// Create a Point with the concentration[iCluster] as the value
+				// and add it to myPoints
+				xolotlViz::Point aPoint;
+				aPoint.value = conc; // He
+				aPoint.t = time;
+				aPoint.x = x;
+				myPoints->push_back(aPoint);
+
+				MPI_Recv(&conc, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
+						MPI_STATUS_IGNORE);
+
+				aPoint.value = conc; // V
+				myPointsBis->push_back(aPoint);
+
+				MPI_Recv(&conc, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
+						MPI_STATUS_IGNORE);
+
+				aPoint.value = conc; // He1V1
+				myPointsTer->push_back(aPoint);
+
+				MPI_Recv(&conc, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
+						MPI_STATUS_IGNORE);
+
+				aPoint.value = conc; // He2V1
+				myPointsQua->push_back(aPoint);
+
+				MPI_Recv(&conc, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
+						MPI_STATUS_IGNORE);
+
+				aPoint.value = conc; // He1V2
+				myPointsCin->push_back(aPoint);
+			}
+		}
+
+		// Get the data provider and give it the points
+		seriesPlot->getDataProvider(0)->setPoints(myPoints);
+		seriesPlot->getDataProvider(1)->setPoints(myPointsBis);
+		seriesPlot->getDataProvider(2)->setPoints(myPointsTer);
+		seriesPlot->getDataProvider(3)->setPoints(myPointsQua);
+		seriesPlot->getDataProvider(4)->setPoints(myPointsCin);
+
+		// Change the title of the plot
+		std::stringstream title;
+		title << "log_series_TS" << timestep << ".pnm";
+		seriesPlot->plotLabelProvider->titleLabel = title.str();
+
+		// Render
+		seriesPlot->render();
 	}
 
-	// Get the data provider and give it the points
-	seriesPlot->getDataProvider(0)->setPoints(myPoints);
-	seriesPlot->getDataProvider(1)->setPoints(myPointsBis);
-	seriesPlot->getDataProvider(2)->setPoints(myPointsTer);
-	seriesPlot->getDataProvider(3)->setPoints(myPointsQua);
-	seriesPlot->getDataProvider(4)->setPoints(myPointsCin);
+	else {
+		// Send the value of the local grid size to the master process
+		MPI_Send(&xm, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
 
-	// Change the title of the plot
-	std::stringstream title;
-	title << "log_series_TS" << timestep << "_" << procId << ".pnm";
-	seriesPlot->plotLabelProvider->titleLabel = title.str();
+		// Loop on the grid
+		for (xi = xs; xi < xs + xm; xi++) {
+			// Dump x
+			x = xi * hx;
 
-	// Render
-	seriesPlot->render();
+			// Get the pointer to the beginning of the solution data for this grid point
+			gridPointSolution = solutionArray + networkSize * xi;
+			// Update the concentrations in the network to have physics results
+			// (non negative)
+			PetscSolver::getNetwork()->updateConcentrationsFromArray(
+					gridPointSolution);
+			// Get the concentrations from the network
+			double concentrations[networkSize];
+			double * concentration = &concentrations[0];
+			PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
+
+			// Send the value of the local position to the master process
+			MPI_Send(&x, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+
+			// Send the value of the concentrations to the master process
+			MPI_Send(&concentration[2], 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+			MPI_Send(&concentration[11], 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+			MPI_Send(&concentration[12], 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+			MPI_Send(&concentration[13], 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+			MPI_Send(&concentration[29], 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+		}
+	}
 
 	PetscFunctionReturn(0);
 }
@@ -346,9 +500,7 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 static PetscErrorCode monitorSurface(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	// Network size
-	const int size = PetscSolver::getNetwork()->size();
-	// The array of cluster names
-	std::vector<std::string> names(size);
+	const int networkSize = PetscSolver::getNetwork()->size();
 	PetscErrorCode ierr;
 	PetscReal *solutionArray, *gridPointSolution, x, hx;
 	Vec localSolution;
@@ -357,31 +509,13 @@ static PetscErrorCode monitorSurface(TS ts, PetscInt timestep, PetscReal time,
 
 	PetscFunctionBeginUser;
 
+	// Get the number of processes
+	int worldSize;
+	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
+
+	// Gets the process ID
 	int procId;
 	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
-
-	// Fill the array of clusters name because the Id is not the same as
-	// reactants->at(i)
-	auto reactants = PetscSolver::getNetwork()->getAll();
-	std::shared_ptr<PSICluster> cluster;
-	for (int i = 0; i < size; i++) {
-
-		// Get the cluster from the list, its id and composition
-		cluster = std::dynamic_pointer_cast<PSICluster>(reactants->at(i));
-		int id = cluster->getId() - 1;
-		auto composition = cluster->getComposition();
-
-		// Create the name
-		std::stringstream name;
-		name << (cluster->getName()).c_str() << "(" << composition["He"] << ","
-				<< composition["V"] << "," << composition["I"] << ") ";
-
-		// Push the header entry on the array
-		name >> names[id];
-	}
-
-	// Get the data
-	VecGetArray(solution, &solutionArray);
 
 	// Get the da from ts
 	DM da;
@@ -410,52 +544,146 @@ static PetscErrorCode monitorSurface(TS ts, PetscInt timestep, PetscReal time,
 	// Setup some step size variables
 	hx = 8.0 / (PetscReal) (Mx - 1);
 
+	// Choice of the cluster to be plotted
+	int iCluster = 2;
+
 	// Create a Point vector to store the data to give to the data provider
 	// for the visualization
 	auto myPoints = std::make_shared<std::vector<xolotlViz::Point> >();
 
-	// Choice of the cluster to be plotted
-	int iCluster = 2;
+	// The array of cluster names
+	std::vector<std::string> names(networkSize);
 
 	// Loop on Y
-	for (int i = 0; i < (int) xm; i++) {
-		// Loop on X
-		for (xi = xs; xi < xs + xm; xi++) {
-			// Dump x
-			x = xi * hx;
-			// Get the pointer to the beginning of the solution data for this grid point
-			gridPointSolution = solutionArray + size * xi;
-			// Update the concentrations in the network to have physics results
-			// (non negative)
-			PetscSolver::getNetwork()->updateConcentrationsFromArray(
-					gridPointSolution);
-			// Get the concentrations from the network
-			double concentrations[size];
-			double * concentration = &concentrations[0];
-			PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
+	for (int i = 0; i < (int) Mx; i++) {
 
-			// Create a Point with the concentration[iCluster] as the value
-			// and add it to myPoints
-			xolotlViz::Point aPoint;
-			aPoint.value = concentration[2];
-			aPoint.t = time;
-			aPoint.x = x;
-			aPoint.y = (double) i;
-			myPoints->push_back(aPoint);
+		if (procId == 0) {
+
+			// Fill the array of clusters name because the Id is not the same as
+			// reactants->at(i)
+			auto reactants = PetscSolver::getNetwork()->getAll();
+			std::shared_ptr<PSICluster> cluster;
+
+			// Loop on the reactants
+			for (int i = 0; i < networkSize; i++) {
+
+				// Get the cluster from the list, its id and composition
+				cluster = std::dynamic_pointer_cast<PSICluster>(
+						reactants->at(i));
+				int id = cluster->getId() - 1;
+				auto composition = cluster->getComposition();
+
+				// Create the name
+				std::stringstream name;
+				name << (cluster->getName()).c_str() << "(" << composition["He"]
+						<< "," << composition["V"] << "," << composition["I"]
+						<< ") ";
+
+				// Push the header entry on the array
+				name >> names[id];
+			}
+
+			// Loop on X
+			for (xi = xs; xi < xs + xm; xi++) {
+				// Dump x
+				x = xi * hx;
+				// Get the pointer to the beginning of the solution data for this grid point
+				gridPointSolution = solutionArray + networkSize * xi;
+				// Update the concentrations in the network to have physics results
+				// (non negative)
+				PetscSolver::getNetwork()->updateConcentrationsFromArray(
+						gridPointSolution);
+				// Get the concentrations from the network
+				double concentrations[networkSize];
+				double * concentration = &concentrations[0];
+				PetscSolver::getNetwork()->fillConcentrationsArray(
+						concentration);
+
+				// Create a Point with the concentration[iCluster] as the value
+				// and add it to myPoints
+				xolotlViz::Point aPoint;
+				aPoint.value = concentration[2];
+				aPoint.t = time;
+				aPoint.x = x;
+				aPoint.y = (double) i;
+				myPoints->push_back(aPoint);
+			}
+
+			// Loop on the other processes
+			for (int i = 1; i < worldSize; i++) {
+				// Get the size of the local grid of that process
+				int localSize = 0;
+				MPI_Recv(&localSize, 1, MPI_INT, i, 0, MPI_COMM_WORLD,
+						MPI_STATUS_IGNORE);
+				// Loop on their grid X
+				for (int l = 0; l < localSize; l++) {
+					// Get the position
+					MPI_Recv(&x, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
+							MPI_STATUS_IGNORE);
+					double y = 0.;
+					MPI_Recv(&y, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
+							MPI_STATUS_IGNORE);
+
+					// and the concentration
+					double conc = 0.;
+					MPI_Recv(&conc, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
+							MPI_STATUS_IGNORE);
+
+					// Create a Point with the concentration[iCluster] as the value
+					// and add it to myPoints
+					xolotlViz::Point aPoint;
+					aPoint.value = conc;
+					aPoint.t = time;
+					aPoint.x = x;
+					aPoint.y = y;
+					myPoints->push_back(aPoint);
+				}
+			}
+		}
+
+		else {
+			// Send the value of the local grid size to the master process
+			MPI_Send(&xm, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+			// Loop on X
+			for (xi = xs; xi < xs + xm; xi++) {
+				// Dump x
+				x = xi * hx;
+				// Get the pointer to the beginning of the solution data for this grid point
+				gridPointSolution = solutionArray + networkSize * xi;
+				// Update the concentrations in the network to have physics results
+				// (non negative)
+				PetscSolver::getNetwork()->updateConcentrationsFromArray(
+						gridPointSolution);
+				// Get the concentrations from the network
+				double concentrations[networkSize];
+				double * concentration = &concentrations[0];
+				PetscSolver::getNetwork()->fillConcentrationsArray(
+						concentration);
+
+				// Send the value of the local position to the master process
+				MPI_Send(&x, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+				double y = (double) i;
+				MPI_Send(&y, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+
+				// Send the value of the concentration to the master process
+				MPI_Send(&concentration[iCluster], 1, MPI_DOUBLE, 0, 0,
+						MPI_COMM_WORLD);
+			}
 		}
 	}
 
-	// Get the data provider and give it the points
-	surfacePlot->getDataProvider()->setPoints(myPoints);
+	if (procId == 0) {
+		// Get the data provider and give it the points
+		surfacePlot->getDataProvider()->setPoints(myPoints);
 
-	// Change the title of the plot
-	std::stringstream title;
-	title << names[iCluster] << "_surface_TS" << timestep << "_" << procId
-			<< ".pnm";
-	surfacePlot->plotLabelProvider->titleLabel = title.str();
+		// Change the title of the plot
+		std::stringstream title;
+		title << names[iCluster] << "_surface_TS" << timestep << ".pnm";
+		surfacePlot->plotLabelProvider->titleLabel = title.str();
 
-	// Render
-	surfacePlot->render();
+		// Render
+		surfacePlot->render();
+	}
 
 	PetscFunctionReturn(0);
 }
