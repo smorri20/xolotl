@@ -59,6 +59,7 @@ include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/commandline)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants/psiclusters)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlSolver)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlSolver/temperature)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
 include_directories(${PETSC_INCLUDES})
 

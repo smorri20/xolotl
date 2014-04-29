@@ -27,13 +27,13 @@ bool initializeTemperature( bool useConstTempRegistry, bool useTempProfileRegist
     {
     	auto temp = options.getConstTemperature();
         // we are to use a constant temperature handler
-    	std::cout << "\nHandler Temp = " << temp << std::endl;
+    	//std::cout << "\nHandler Temp = " << temp << std::endl;
         theTemperatureHandler = std::make_shared<TemperatureHandler>( temp );
     }
     else if( useTempProfileRegistry )
     {
     	auto tempFileName = options.getTempProfileFilename();
-    	std::cout << "\nHandler Temperature file = " << tempFileName << std::endl;
+    	//std::cout << "\nHandler Temperature file = " << tempFileName << std::endl;
         theTemperatureHandler = std::make_shared<TemperatureProfileHandler>( tempFileName );
         auto theTempHand = std::dynamic_pointer_cast<TemperatureProfileHandler>(theTemperatureHandler);
         theTempHand->initializeTempData(tempFileName.c_str());
