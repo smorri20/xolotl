@@ -1,13 +1,25 @@
 #include <cassert>
-#include "xolotlCore/commandline/XolotlOptions.h"
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
+#include "XolotlOptions.h"
 
 namespace xolotlCore {
 
-
 XolotlOptions::XolotlOptions( void )
-  : useStdHandlers( true )              // by default, use "standard" handlers
+  : useWHandlers( true ), useConstTempHandlers ( false ), useTempProfileHandlers ( false ), useStdHandlers( true ),   // by default, use const temp, tungsten and "standard" handlers
+    constTemp(1000)
 {
     // Add our notion of which options we support.
+    optionsMap["--temp"] = new OptInfo( true,
+        "--temp <const_temp>        The temperature (in Kelvin) will be the constant floating point value specified.",
+        handleConstTemperatureOptionCB );
+    optionsMap["--tempFile"] = new OptInfo( true,
+        "--tempFile <filename>      A temperature profile is given by the specified file.",
+        handleTemperatureFileOptionCB );
+    optionsMap["--material"] = new OptInfo( true,
+        "--material {W,Fe}	     Which material will used.",
+        handleMaterialOptionCB );
     optionsMap["--handlers"] = new OptInfo( true,
         "--handlers {std,dummy}     Which set of handlers to use.",
         handleHandlersOptionCB );
@@ -73,6 +85,104 @@ XolotlOptions::showHelp( std::ostream& os ) const
         << std::endl;
     Options::showHelp( os );
 }
+
+bool
+XolotlOptions::handleConstTemperatureOption( std::string arg )
+{
+	bool ret = true;
+
+    // The base class should check for situations where
+    // we expect an argument but don't get one.
+    assert( !arg.empty() );
+
+    useConstTempHandlers = true;
+    constTemp = strtod(arg.c_str(), NULL);
+    tempProfileFileName = "";
+
+    return ret;
+}
+
+bool
+XolotlOptions::handleConstTemperatureOptionCB( Options* opts, std::string arg )
+{
+    return static_cast<XolotlOptions*>( opts )->handleConstTemperatureOption( arg );
+}
+
+bool
+XolotlOptions::handleTemperatureFileOption( std::string arg )
+{
+    bool ret = true;
+
+    // The base class should check for situations where
+    // we expect an argument but don't get one.
+    assert( !arg.empty() );
+
+    // Check to make sure the temperature file exists
+    std::ifstream inFile(arg.c_str());
+    if (!inFile)
+    {
+    	std::cerr << "\nCould not open file containing temperature profile data.  "
+    			"Aborting!" << std::endl;
+    	showHelp( std::cerr );
+    	shouldRunFlag = false;
+    	exitCode = EXIT_FAILURE;
+    	ret = false;
+    }
+    else
+    {
+        useTempProfileHandlers = true;
+        tempProfileFileName = arg;
+        constTemp = 0;
+    }
+
+    return ret;
+}
+
+bool
+XolotlOptions::handleTemperatureFileOptionCB( Options* opts, std::string arg )
+{
+    return static_cast<XolotlOptions*>( opts )->handleTemperatureFileOption( arg );
+}
+
+
+bool
+XolotlOptions::handleMaterialOption( std::string arg )
+{
+    bool ret = true;
+
+    // The base class should check for situations where
+    // we expect an argument but don't get one.
+    assert( !arg.empty() );
+
+    // Determine the type of handlers we are being asked to use
+    if( arg == "W" )
+    {
+        useWHandlers = true;
+        std::cout << "\nMaterial to be used = " << arg << std::endl;
+    }
+    else if( arg == "Fe" )
+    {
+        useWHandlers = false;
+        std::cout << "\nMaterial to be used = " << arg << std::endl;
+    }
+    else
+    {
+        std::cerr << "Options: unrecognized argument " << arg << std::endl;
+        showHelp( std::cerr );
+        shouldRunFlag = false;
+        exitCode = EXIT_FAILURE;
+        ret = false;
+    }
+
+    return ret;
+}
+
+bool
+XolotlOptions::handleMaterialOptionCB( Options* opts, std::string arg )
+{
+    return static_cast<XolotlOptions*>( opts )->handleMaterialOption( arg );
+}
+
 
 
 bool

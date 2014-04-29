@@ -7,9 +7,8 @@ using namespace xolotlCore;
 
 
 ReactionNetwork::ReactionNetwork( void )
-  : properties(new std::map<std::string, std::string>())
-{
-//    concUpdateCounter = xolotlPerf::getHandlerRegistry()->getEventCounter("net_conc_updates");
+  : properties(new std::map<std::string, std::string>()) {
+
 }
 
 
@@ -30,8 +29,6 @@ ReactionNetwork::ReactionNetwork(const ReactionNetwork &other) {
 
     // TODO - do we copy the source ReactionNetwork's counter also?
     // Or should we have our own counter?  How to distinguish them by name?
-//    concUpdateCounter = xolotlPerf::getHandlerRegistry()->getEventCounter("net_conc_updates");
-
 	// Counter for the number of times the network concentration is updated.
     concUpdateCounter = handlerRegistry->getEventCounter("net_conc_updates");
 }

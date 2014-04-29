@@ -2,6 +2,7 @@
 #define ITEMPERATUREHANDLER_H
 
 #include <vector>
+#include <memory>
 
 namespace xolotlSolver{
 

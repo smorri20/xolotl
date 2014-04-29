@@ -4,8 +4,8 @@
 // Includes
 #include <PSIClusterNetworkLoader.h>
 #include <map>
-#include "FitFluxHandler.h"
-#include "TemperatureHandler.h"
+#include "IFluxHandler.h"
+#include "ITemperatureHandler.h"
 
 using namespace xolotlCore;
 

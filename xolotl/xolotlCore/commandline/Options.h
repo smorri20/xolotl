@@ -25,8 +25,8 @@ protected:
         bool (*optHandler)( Options* opts, std::string optArg );
 
         OptInfo( bool _argRequired,
-                    std::string _helpMessage,
-                    bool (*_handler)( Options* opts, std::string optArg ) )
+                 std::string _helpMessage,
+                bool (*_handler)( Options* opts, std::string optArg ) )
           : argRequired( _argRequired ),
             helpMessage( _helpMessage ),
             optHandler( _handler )

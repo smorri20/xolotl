@@ -57,7 +57,7 @@ Options::parseCommandLine( int argc, char* argv[] )
     while( i < argc )
     {
         std::string currArg = argv[i++];
-
+        //std::cout << "\ncurrArg = argv[" << i << "++]" << currArg << std::endl;
         auto iter = optionsMap.find( currArg );
         if( iter != optionsMap.end() )
         {
@@ -71,7 +71,7 @@ Options::parseCommandLine( int argc, char* argv[] )
             {
                 if( i < argc )
                 {
-                    optArg = argv[i++];
+                	optArg = argv[i++];
                 }
                 else
                 {

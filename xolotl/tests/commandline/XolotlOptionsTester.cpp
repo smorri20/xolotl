@@ -4,8 +4,6 @@
 #include <boost/test/included/unit_test.hpp>
 #include "xolotlCore/commandline/XolotlOptions.h"
 
-
-
 /**
  * Test suite for the Options class.
  */
@@ -78,7 +76,7 @@ BOOST_AUTO_TEST_CASE(helpOption)
     fargv += 1;
     int nOptsUsed = xopts.parseCommandLine( fargc, fargv );
 
-    // If the help option is given, 
+    // If the help option is given,
     // the program shouldn't run
     // but it isn't a failure (so a success exit code).
     BOOST_REQUIRE_EQUAL( nOptsUsed, 1 );
@@ -195,7 +193,7 @@ BOOST_AUTO_TEST_CASE(handlersStdArg)
     xolotlCore::XolotlOptions xopts;
     const char* fname = "/home/joeuser/xolotl/tungsten_tiny.txt";
 
-    // cons a command line 
+    // cons a command line
     int fargc = 4;
     char* args[5];
     args[0] = const_cast<char*>("./xolotl");
@@ -244,6 +242,245 @@ BOOST_AUTO_TEST_CASE(handlersBadArg)
     BOOST_REQUIRE_EQUAL( xopts.getExitCode(), EXIT_FAILURE );
 }
 
+BOOST_AUTO_TEST_CASE(materialNoArg)
+{
+    xolotlCore::XolotlOptions xopts;
+    const char* fname = "/home/joeuser/xolotl/tungsten_tiny.txt";
+
+    // cons a command line with a bad option.
+    int fargc = 3;
+    char* args[4];
+    args[0] = const_cast<char*>("./xolotl");
+    args[1] = const_cast<char*>(fname);
+    args[2] = const_cast<char*>("--material");
+    args[3] = NULL;
+    char** fargv = args;
+
+    // attempt to parse the command line
+    fargc -= 1;
+    fargv += 1;
+    int nOptsUsed = xopts.parseCommandLine( fargc, fargv );
+
+    // An unrecognized option should result in indicating
+    // the program shouldn't run, and an error exit code.
+    BOOST_REQUIRE_EQUAL( nOptsUsed, 2 );
+    BOOST_REQUIRE_EQUAL( xopts.shouldRun(), false );
+    BOOST_REQUIRE_EQUAL( xopts.getExitCode(), EXIT_FAILURE );
+}
+
+
+BOOST_AUTO_TEST_CASE(materialWArg)
+{
+    xolotlCore::XolotlOptions xopts;
+    const char* fname = "/home/joeuser/xolotl/tungsten_tiny.txt";
+
+    // cons a command line
+    int fargc = 4;
+    char* args[5];
+    args[0] = const_cast<char*>("./xolotl");
+    args[1] = const_cast<char*>(fname);
+    args[2] = const_cast<char*>("--material");
+    args[3] = const_cast<char*>("W");
+    args[4] = NULL;
+    char** fargv = args;
+
+    // attempt to parse the command line
+    fargc -= 1;
+    fargv += 1;
+    int nOptsUsed = xopts.parseCommandLine( fargc, fargv );
+
+    BOOST_REQUIRE_EQUAL( nOptsUsed, 3 );
+    BOOST_REQUIRE_EQUAL( xopts.shouldRun(), true );
+    BOOST_REQUIRE_EQUAL( xopts.getExitCode(), EXIT_SUCCESS );
+    BOOST_REQUIRE_EQUAL( xopts.useTungstenHandlers(), true );
+    //BOOST_REQUIRE_EQUAL( xopts.useStandardHandlers(), false );
+}
+
+BOOST_AUTO_TEST_CASE(materialFeArg)
+{
+    xolotlCore::XolotlOptions xopts;
+    const char* fname = "/home/joeuser/xolotl/tungsten_tiny.txt";
+
+    // cons a command line
+    int fargc = 4;
+    char* args[5];
+    args[0] = const_cast<char*>("./xolotl");
+    args[1] = const_cast<char*>(fname);
+    args[2] = const_cast<char*>("--material");
+    args[3] = const_cast<char*>("Fe");
+    args[4] = NULL;
+    char** fargv = args;
+
+    // attempt to parse the command line
+    fargc -= 1;
+    fargv += 1;
+    int nOptsUsed = xopts.parseCommandLine( fargc, fargv );
+
+    BOOST_REQUIRE_EQUAL( nOptsUsed, 3 );
+    BOOST_REQUIRE_EQUAL( xopts.shouldRun(), true );
+    BOOST_REQUIRE_EQUAL( xopts.getExitCode(), EXIT_SUCCESS );
+    BOOST_REQUIRE_EQUAL( xopts.useTungstenHandlers(), false );
+    //BOOST_REQUIRE_EQUAL( xopts.useStandardHandlers(), false );
+}
+
+
+BOOST_AUTO_TEST_CASE(materialBadArg)
+{
+    xolotlCore::XolotlOptions xopts;
+    const char* fname = "/home/joeuser/xolotl/tungsten_tiny.txt";
+
+    // cons a command line with a bad option.
+    int fargc = 4;
+    char* args[5];
+    args[0] = const_cast<char*>("./xolotl");
+    args[1] = const_cast<char*>(fname);
+    args[2] = const_cast<char*>("--material");
+    args[3] = const_cast<char*>("bogus");
+    args[4] = NULL;
+    char** fargv = args;
+
+    // attempt to parse the command line
+    fargc -= 1;
+    fargv += 1;
+    int nOptsUsed = xopts.parseCommandLine( fargc, fargv );
+
+    // An unrecognized option should result in indicating
+    // the program shouldn't run, and an error exit code.
+    BOOST_REQUIRE_EQUAL( nOptsUsed, 3 );
+    BOOST_REQUIRE_EQUAL( xopts.shouldRun(), false );
+    BOOST_REQUIRE_EQUAL( xopts.getExitCode(), EXIT_FAILURE );
+}
+
+BOOST_AUTO_TEST_CASE(tempNoArg)
+{
+    xolotlCore::XolotlOptions xopts;
+    const char* fname = "/home/joeuser/xolotl/tungsten_tiny.txt";
+
+    // cons a command line with a bad option.
+    int fargc = 3;
+    char* args[4];
+    args[0] = const_cast<char*>("./xolotl");
+    args[1] = const_cast<char*>(fname);
+    args[2] = const_cast<char*>("--temp");
+    args[3] = NULL;
+    char** fargv = args;
+
+    // attempt to parse the command line
+    fargc -= 1;
+    fargv += 1;
+    int nOptsUsed = xopts.parseCommandLine( fargc, fargv );
+
+    // An unrecognized option should result in indicating
+    // the program shouldn't run, and an error exit code.
+    BOOST_REQUIRE_EQUAL( nOptsUsed, 2 );
+    BOOST_REQUIRE_EQUAL( xopts.shouldRun(), false );
+    BOOST_REQUIRE_EQUAL( xopts.getExitCode(), EXIT_FAILURE );
+}
+
+
+BOOST_AUTO_TEST_CASE(tempConstArg)
+{
+    xolotlCore::XolotlOptions xopts;
+    const char* fname = "/home/joeuser/xolotl/tungsten_tiny.txt";
+
+    // cons a command line
+    int fargc = 4;
+    char* args[5];
+    args[0] = const_cast<char*>("./xolotl");
+    args[1] = const_cast<char*>(fname);
+    args[2] = const_cast<char*>("--temp");
+    args[3] = const_cast<char*>("1000");
+    args[4] = NULL;
+    char** fargv = args;
+
+    // attempt to parse the command line
+    fargc -= 1;
+    fargv += 1;
+    int nOptsUsed = xopts.parseCommandLine( fargc, fargv );
+
+    BOOST_REQUIRE_EQUAL( nOptsUsed, 3 );
+    BOOST_REQUIRE_EQUAL( xopts.shouldRun(), true );
+    BOOST_REQUIRE_EQUAL( xopts.getExitCode(), EXIT_SUCCESS );
+    BOOST_REQUIRE_EQUAL( xopts.useConstTemperatureHandlers(), true );
+}
+
+BOOST_AUTO_TEST_CASE(tempFileNoArg)
+{
+    xolotlCore::XolotlOptions xopts;
+    const char* fname = "/home/joeuser/xolotl/tungsten_tiny.txt";
+
+    // cons a command line with a bad option.
+    int fargc = 3;
+    char* args[4];
+    args[0] = const_cast<char*>("./xolotl");
+    args[1] = const_cast<char*>(fname);
+    args[2] = const_cast<char*>("--tempFile");
+    args[3] = NULL;
+    char** fargv = args;
+
+    // attempt to parse the command line
+    fargc -= 1;
+    fargv += 1;
+    int nOptsUsed = xopts.parseCommandLine( fargc, fargv );
+
+    // An unrecognized option should result in indicating
+    // the program shouldn't run, and an error exit code.
+    BOOST_REQUIRE_EQUAL( nOptsUsed, 2 );
+    BOOST_REQUIRE_EQUAL( xopts.shouldRun(), false );
+    BOOST_REQUIRE_EQUAL( xopts.getExitCode(), EXIT_FAILURE );
+}
+
+BOOST_AUTO_TEST_CASE(tempFileArg)
+{
+    xolotlCore::XolotlOptions xopts;
+    const char* fname = "/home/joeuser/xolotl/tungsten_tiny.txt";
+
+    // cons a command line
+    int fargc = 4;
+    char* args[5];
+    args[0] = const_cast<char*>("./xolotl");
+    args[1] = const_cast<char*>(fname);
+    args[2] = const_cast<char*>("--tempFile");
+    args[3] = const_cast<char*>("bogus");
+    args[4] = NULL;
+    char** fargv = args;
+
+    // attempt to parse the command line
+    fargc -= 1;
+    fargv += 1;
+    int nOptsUsed = xopts.parseCommandLine( fargc, fargv );
+
+    BOOST_REQUIRE_EQUAL( nOptsUsed, 3 );
+    BOOST_REQUIRE_EQUAL( xopts.shouldRun(), false );
+    BOOST_REQUIRE_EQUAL( xopts.getExitCode(), EXIT_FAILURE );
+}
+
+BOOST_AUTO_TEST_CASE(tempAndtempFileArg)
+{
+    xolotlCore::XolotlOptions xopts;
+    const char* fname = "/home/joeuser/xolotl/tungsten_tiny.txt";
+
+    // cons a command line
+    int fargc = 6;
+    char* args[7];
+    args[0] = const_cast<char*>("./xolotl");
+    args[1] = const_cast<char*>(fname);
+    args[2] = const_cast<char*>("--temp");
+    args[3] = const_cast<char*>("2000");
+    args[4] = const_cast<char*>("--tempFile");
+    args[5] = const_cast<char*>("bogus");
+    args[6] = NULL;
+    char** fargv = args;
+
+    // attempt to parse the command line
+    fargc -= 1;
+    fargv += 1;
+    int nOptsUsed = xopts.parseCommandLine( fargc, fargv );
+
+    BOOST_REQUIRE_EQUAL( nOptsUsed, 5 );
+    BOOST_REQUIRE_EQUAL( xopts.shouldRun(), false );
+    BOOST_REQUIRE_EQUAL( xopts.getExitCode(), EXIT_FAILURE );
+}
 
 BOOST_AUTO_TEST_CASE(petscArg)
 {
@@ -271,9 +508,9 @@ BOOST_AUTO_TEST_CASE(petscArg)
     BOOST_REQUIRE_EQUAL( xopts.shouldRun(), true );
     BOOST_REQUIRE_EQUAL( xopts.getExitCode(), EXIT_SUCCESS );
     BOOST_REQUIRE_EQUAL( xopts.useStandardHandlers(), true );
+    BOOST_REQUIRE_EQUAL( xopts.useTungstenHandlers(), true );
+    BOOST_REQUIRE_EQUAL( xopts.useConstTemperatureHandlers(), false );
+    BOOST_REQUIRE_EQUAL( xopts.useTemperatureProfileHandlers(), false );
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-
-

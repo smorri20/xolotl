@@ -162,7 +162,7 @@ public:
 	 * ISolver interface.
 	 * @return The temperature handler for this solver
 	 */
-	static std::shared_ptr<ITemperatureHandler> getTemperatureHandler() {
+	static std::shared_ptr<ITemperatureHandler> getTempHandler() {
 		return temperatureHandler;
 	}
 

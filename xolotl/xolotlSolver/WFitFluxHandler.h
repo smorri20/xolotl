@@ -1,5 +1,5 @@
-#ifndef FITFLUXHANDLER_H
-#define FITFLUXHANDLER_H
+#ifndef WFITFLUXHANDLER_H
+#define WFITFLUXHANDLER_H
 
 #include "IFluxHandler.h"
 
@@ -8,19 +8,19 @@ namespace xolotlSolver{
 /**
  * This class realizes the IFluxHandler interface to calculate the incident and outgoing fluxes.
  */
-class FitFluxHandler: public IFluxHandler {
+class WFitFluxHandler: public IFluxHandler {
 
 public:
 
 	/**
 	 * The constructor
 	 */
-	FitFluxHandler();
+	WFitFluxHandler();
 
 	/**
 	 * The Destructor
 	 */
-	~FitFluxHandler();
+	~WFitFluxHandler();
 
 	/**
 	 * This operation returns the incident flux for a specific cluster composition,
@@ -46,7 +46,7 @@ public:
 	virtual void setOutgoingFlux(std::vector<int> compositionVec,
 			std::vector<int> position, double time, double outgoingFlux);
 
-}; //end class FitFluxHandler
+}; //end class WFitFluxHandler
 
 }
 
