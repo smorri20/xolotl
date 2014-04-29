@@ -121,7 +121,7 @@ int SeriesPlot::getDataProviderNumber(){
 }
 
 double SeriesPlot::getMaxValue(){
-	double maxValue = 0.;
+	double maxValue = 0.0;
 
 	// Loop on all the data providers
 	for (int i = 0; i < getDataProviderNumber(); i++){

@@ -23,7 +23,7 @@ double DataProvider::getDataMean() const {
 	int size = dataPoints->size();
 
 	// Use to add the value of each Point
-	double valueSum = 0.;
+	double valueSum = 0.0;
 
 	// Loop on all the points in the data vector
 	for (auto it = dataPoints->begin();

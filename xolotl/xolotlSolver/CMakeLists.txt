@@ -14,6 +14,11 @@ file(GLOB HEADERS *.h)
 file(GLOB SRC *.cpp)
 
 #Include headers so that the solvers can be built
+include_directories(${CMAKE_SOURCE_DIR}/xolotlViz/plot)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlViz/dataprovider)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlViz/labelprovider)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/io)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants/psiclusters)
 include_directories(${PETSC_INCLUDES})
