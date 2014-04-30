@@ -36,8 +36,8 @@ std::shared_ptr<IFluxHandler> getMaterialHandler( void )
         // We have not yet been initialized.
         // Issue a warning and use the default tungsten registry.
         std::cerr << "Warning: xolotlSolver material handler requested, but "
-        		"library has not been initialized.  Defaulting to using "
-        		"tungsten (W) handlers" << std::endl;
+        		"library has not been initialized.  Defaulting to tungsten "
+        		"(W) handlers" << std::endl;
 
         xolotlSolver::initializeMaterial( true );
     }

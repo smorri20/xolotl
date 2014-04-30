@@ -16,6 +16,8 @@ public:
 
 	virtual ~ITemperatureHandler() { }
 
+	virtual void initializeTemperature() = 0;
+
 	/**
 	 * This operation returns the temperature at the given position
 	 * and time.

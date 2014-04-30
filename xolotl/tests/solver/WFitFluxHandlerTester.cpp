@@ -14,15 +14,23 @@ BOOST_AUTO_TEST_SUITE (FitFluxHandlerTester_testSuite)
 
 BOOST_AUTO_TEST_CASE(checkgetIncidentFlux) {
 
+	// Specify the number of grid points that will be used
+	int nGridpts = 8;
+	// Specify the step size between grid points
+	double step = 1.142857142857143;
+
     auto testFitFlux = std::make_shared<xolotlSolver::WFitFluxHandler>();
+    // Initialize the flux handler
+    testFitFlux->initializeFluxHandler(nGridpts, step);
 
 	// Create a composition vector
 	std::vector<int> compVec = {1, 0, 0};
 	// Create a time
 	double currTime = 1.0;
 
+	// Create a vector representing the position of the cluster
 	std::vector<double> x = {1.142857142857143, 0.0, 0.0};
-	// x is a gridpoint in PetscSolver, RHSFunction
+	// x is a gridpoint (position) in PetscSolver, RHSFunction
 	//x=1.142857142857143=8/7 where x = xi * hx with xi=1, hx=1.142857142857143
 	double fitFunction = 0.0006 * x[0] * x[0] * x[0] - 0.0087 * x[0] * x[0] + 0.0300 * x[0];
 	//fitFunction = 0.02381807580174927

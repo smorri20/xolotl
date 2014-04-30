@@ -140,6 +140,16 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 			PETSC_IGNORE);
 	checkPetscError(ierr);
 
+	// Setup some step size variables
+	PetscReal hx;
+	hx = 8.0 / (PetscReal)(Mx - 1);
+	// Display the number of grid points that will be used
+	std::cout << "\nNumber of grid points = " << Mx << std::endl;
+	std::cout << "Step size hx = " << hx << std::endl;
+	// Get the flux handler that will be used to compute fluxes.
+	auto fluxHandler = PetscSolver::getFluxHandler();
+	fluxHandler->initializeFluxHandler(Mx, hx);
+
 	/* Name each of the concentrations */
 	for (i = 0; i < size; i++) {
 		composition = reactants->at(i)->getComposition();
@@ -220,7 +230,7 @@ void incomingHeFlux(std::shared_ptr<PSICluster> cluster,
 		// Calculate the incident flux
 		auto incidentFlux = fluxHandler->getIncidentFlux(compVec, gridPos,
 				curTime);
-		//std::cout << "\nincidentFlux = " << incidentFlux << std::endl;
+		//std::cout << "\nincidentFlux = " << incidentFlux;
 		// Update the concentration of the cluster
 		updatedConcOffset[reactantIndex] += 1.0E4 * PetscMax(0.0, incidentFlux);
 		// where incidentFlux = 0.0006 * x * x * x - 0.0087 * x * x + 0.0300 * x
@@ -354,7 +364,6 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 		// Get the temperature handler that will be used to compute fluxes.
 		auto temperatureHandler = PetscSolver::getTempHandler();
 		auto temperature = temperatureHandler->getTemperature(gridPosition, realTime);
-		//std::cout << "\nRHSF temperature = " << temperature;
 
 		//xi = 4; // Debugging
 

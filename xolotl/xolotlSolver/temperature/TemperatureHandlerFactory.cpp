@@ -11,7 +11,7 @@ namespace xolotlSolver
 static std::shared_ptr<ITemperatureHandler> theTemperatureHandler;
 
 // Create the desired type of handler registry.
-bool initializeTemperature( bool useConstTempRegistry, bool useTempProfileRegistry,
+bool initializeTempHandler( bool useConstTempRegistry, bool useTempProfileRegistry,
 		xolotlCore::XolotlOptions &options)
 {
     bool ret = true;
@@ -29,14 +29,14 @@ bool initializeTemperature( bool useConstTempRegistry, bool useTempProfileRegist
         // we are to use a constant temperature handler
     	//std::cout << "\nHandler Temp = " << temp << std::endl;
         theTemperatureHandler = std::make_shared<TemperatureHandler>( temp );
+        //theTemperatureHandler->initializeTemperature();
     }
     else if( useTempProfileRegistry )
     {
     	auto tempFileName = options.getTempProfileFilename();
     	//std::cout << "\nHandler Temperature file = " << tempFileName << std::endl;
         theTemperatureHandler = std::make_shared<TemperatureProfileHandler>( tempFileName );
-        auto theTempHand = std::dynamic_pointer_cast<TemperatureProfileHandler>(theTemperatureHandler);
-        theTempHand->initializeTempData(tempFileName.c_str());
+        theTemperatureHandler->initializeTemperature();
     }
     else
     {
@@ -45,6 +45,7 @@ bool initializeTemperature( bool useConstTempRegistry, bool useTempProfileRegist
     	auto temp = options.getConstTemperature();
         // we are to use a constant temperature handler
         theTemperatureHandler = std::make_shared<TemperatureHandler>( temp );
+        //theTemperatureHandler->initializeTemperature();
     }
 
     return ret;
@@ -59,7 +60,7 @@ std::shared_ptr<ITemperatureHandler> getTemperatureHandler( xolotlCore::XolotlOp
         std::cerr << "Warning: xolotlSolver temperature handler requested, but "
         		"library has not been initialized" << std::endl;
 
-        xolotlSolver::initializeTemperature( false, false, options );
+        xolotlSolver::initializeTempHandler( false, false, options );
     }
     return theTemperatureHandler;
 }

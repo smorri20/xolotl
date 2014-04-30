@@ -18,7 +18,7 @@ namespace xolotlSolver
  * @param options Options for the program
  * @return True iff the handler registry was created successfully.
  */
-bool initializeTemperature( bool useConstTempRegistry, bool useTempProfileRegistry,
+bool initializeTempHandler( bool useConstTempRegistry, bool useTempProfileRegistry,
 		xolotlCore::XolotlOptions &options);
 
 /**

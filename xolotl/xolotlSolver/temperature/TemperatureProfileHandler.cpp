@@ -7,10 +7,10 @@
 
 using namespace xolotlSolver;
 
-void TemperatureProfileHandler::initializeTempData(const char* filename) {
+void TemperatureProfileHandler::initializeTemperature() {
 
 	// Open file dataFile.dat containing the time and temperature
-	std::ifstream inputFile(filename);
+	std::ifstream inputFile(tempFile.c_str());
 	std::string line;
 
 	if (!inputFile){
@@ -26,6 +26,12 @@ void TemperatureProfileHandler::initializeTempData(const char* filename) {
 		time.push_back(xtemp);
 		temp.push_back(ytemp);
 	}
+
+//	std::cout << "\n\ntime    temp" << std::endl;
+//	for(int i=0;i<time.size();i++)
+//	{
+//		std::cout << time[i] << "    " << temp[i] << std::endl;
+//	}
 
 }
 

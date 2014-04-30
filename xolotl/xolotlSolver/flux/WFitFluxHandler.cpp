@@ -1,23 +1,35 @@
 #include "WFitFluxHandler.h"
+#include <iostream>
 
 using namespace xolotlSolver;
 
-WFitFluxHandler::WFitFluxHandler(){
+WFitFluxHandler::WFitFluxHandler() : stepSize(0.0e-16) {
 
 }
 
-WFitFluxHandler::~WFitFluxHandler() {
+void WFitFluxHandler::initializeFluxHandler(int numGridpoints, double step){
+
+	// Set the step size
+	stepSize = step;
+
+	for(int i = 0; i < numGridpoints; i++)
+	{
+		auto x = i * stepSize;
+		auto incidentFlux = 0.0006 * x * x * x - 0.0087 * x * x + 0.0300 * x;
+		incidentFluxVec.push_back(incidentFlux);
+	}
+//	std::cout << "\n\nincidentFluxVec: " << std::endl;
+//	for(int i = 0; i < numGridpoints; i++)
+//		std::cout << incidentFluxVec[i] << std::endl;
 
 }
 
 double WFitFluxHandler::getIncidentFlux(std::vector<int> compositionVec,
 				std::vector<double> position, double currentTime){
 
-	double incidentFlux = 0.0e-16;
+	auto i = position[0] / stepSize;
 
-	incidentFlux = 0.0006 * position[0] * position[0] * position[0] - 0.0087 * position[0] * position[0] + 0.0300 * position[0];
-
-	return incidentFlux;
+	return incidentFluxVec[i];
 }
 
 void WFitFluxHandler::setOutgoingFlux(std::vector<int> compositionVec,

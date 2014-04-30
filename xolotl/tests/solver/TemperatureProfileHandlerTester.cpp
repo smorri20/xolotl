@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(check_getTemperature) {
 
 	std::string tempFile = "tempFile.dat";
 	auto testTemp = std::make_shared<xolotlSolver::TemperatureProfileHandler>(tempFile);
-	testTemp->initializeTempData(tempFile.c_str());
+	testTemp->initializeTemperature();
 	std::vector<double> pos = {1.142857142857143, 0.0, 0.0};
 
 	// Vector to hold the user defined t values

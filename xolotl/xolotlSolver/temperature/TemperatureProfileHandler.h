@@ -43,7 +43,7 @@ public:
 	 */
 	virtual ~TemperatureProfileHandler() { }
 
-	void initializeTempData(const char* filename);
+	virtual void initializeTemperature();
 
 	/**
 	 * This operation returns the temperature at the given position

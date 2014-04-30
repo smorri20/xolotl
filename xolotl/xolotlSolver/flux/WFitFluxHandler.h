@@ -10,6 +10,19 @@ namespace xolotlSolver{
  */
 class WFitFluxHandler: public IFluxHandler {
 
+protected:
+
+	/**
+	 * Vector to hold the incident flux values at each grid
+	 * point (x position)
+	 */
+	std::vector<double> incidentFluxVec;
+
+	/**
+	 * Step size between each grid point
+	 */
+	double stepSize;
+
 public:
 
 	/**
@@ -20,7 +33,14 @@ public:
 	/**
 	 * The Destructor
 	 */
-	~WFitFluxHandler();
+	virtual ~WFitFluxHandler() { }
+
+	/**
+	 * Function to calculate and store the incident flux values at each grid point
+	 * @param numGridpoints The total number of grid points that will be used
+	 * @param step The step size between grid points
+	 */
+	virtual void initializeFluxHandler(int numGridpoints, double step);
 
 	/**
 	 * This operation returns the incident flux for a specific cluster composition,

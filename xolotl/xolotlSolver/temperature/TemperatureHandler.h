@@ -41,6 +41,8 @@ public:
 	 */
 	virtual ~TemperatureHandler() { }
 
+	virtual void initializeTemperature() { }
+
 	/**
 	 * This operation returns the temperature at the given position
 	 * and time.

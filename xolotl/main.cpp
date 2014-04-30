@@ -52,7 +52,7 @@ bool initMaterial(bool opts){
 
 bool initTemp(bool opts, bool opts1, XolotlOptions &options){
 
-    bool tempInitOK = xolotlSolver::initializeTemperature( opts, opts1, options );
+    bool tempInitOK = xolotlSolver::initializeTempHandler( opts, opts1, options );
     if( !tempInitOK )
     {
         std::cerr << "Unable to initialize requested temperature.  Aborting" << std::endl;

@@ -16,6 +16,13 @@ public:
 	virtual ~IFluxHandler() { }
 
 	/**
+	 * Function to calculate and store the incident flux values at each grid point
+	 * @param numGridpoints The total number of grid points that will be used
+	 * @param step The step size between grid points
+	 */
+	virtual void initializeFluxHandler(int numGridpoints, double step) = 0;
+
+	/**
 	 * This operation returns the incident flux for a specific cluster composition,
 	 * position, and time.
 	 * @param compositionVec  The composition of the cluster
