@@ -107,25 +107,11 @@ public:
 
     // Should we use const temperature handlers?
     // @return true if program should use const temp handlers
-    bool useConstTemperatureHandlers( void ) const  {
-    	if ( useConstTempHandlers ){
-    		std::cout << "\nConstant temperature = "
-    		<< constTemp << " Kelvin" << std::endl;
-    	}
-
-    	return useConstTempHandlers;
-    }
+    bool useConstTemperatureHandlers( void ) const  { return useConstTempHandlers; }
 
     // Should we use temperature profile handlers?
     // @return true if program should use temperature profile handlers
-    bool useTemperatureProfileHandlers( void ) const  {
-    	if ( useTempProfileHandlers ){
-    		std::cout << "\nTemperature file = "
-    		<< tempProfileFileName << " " << std::endl;
-    	}
-
-    	return useTempProfileHandlers;
-    }
+    bool useTemperatureProfileHandlers( void ) const  { return useTempProfileHandlers; }
 
     // Obtain the name of the file containing the temperature profile data.
     // @return Name of the temperature file.

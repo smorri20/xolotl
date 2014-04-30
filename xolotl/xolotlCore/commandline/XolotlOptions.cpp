@@ -158,12 +158,10 @@ XolotlOptions::handleMaterialOption( std::string arg )
     if( arg == "W" )
     {
         useWHandlers = true;
-        std::cout << "\nMaterial to be used = " << arg << std::endl;
     }
     else if( arg == "Fe" )
     {
         useWHandlers = false;
-        std::cout << "\nMaterial to be used = " << arg << std::endl;
     }
     else
     {
