@@ -2,6 +2,7 @@
 #define LABELPROVIDER_H
 
 // Includes
+#include <Identifiable.h>
 #include <string>
 
 namespace xolotlViz {
@@ -11,7 +12,14 @@ namespace xolotlViz {
  * for the plots. LabelProvider is a class attached to a single Plot at its creation.
  * One can simply access to the fields by doing myLabelProvider.axis1Label = "theLabel"; .
  */
-class LabelProvider {
+class LabelProvider: public xolotlCore::Identifiable {
+
+private:
+
+	/**
+     * Declare the constructor as private to force the use of a name
+	 */
+    LabelProvider() : xolotlCore::Identifiable("unused") {};
 
 public:
 
@@ -48,7 +56,7 @@ public:
 	/**
 	 * The default constructor
 	 */
-	LabelProvider() {};
+	LabelProvider(std::string name) : xolotlCore::Identifiable(name) {};
 
 	/**
 	 * The destructor

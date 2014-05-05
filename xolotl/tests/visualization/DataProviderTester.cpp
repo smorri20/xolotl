@@ -13,17 +13,26 @@ using namespace xolotlViz;
 BOOST_AUTO_TEST_SUITE(DataProvider_testSuite)
 
 /**
+ * Method checking the ability to use a name.
+ */
+BOOST_AUTO_TEST_CASE(checkName) {
+
+	// Create myDataProvider
+	auto myDataProvider = make_shared<DataProvider>("myDataProvider");
+
+	BOOST_REQUIRE_EQUAL("myDataProvider", myDataProvider->getName());
+}
+
+/**
  * Method checking you can add points to the data, get the data, and getDataMean().
  */
 BOOST_AUTO_TEST_CASE(checkData) {
 
 	// Create myDataProvider
-	shared_ptr<DataProvider> myDataProvider(
-			new DataProvider());
+	auto myDataProvider = make_shared<DataProvider>("myDataProvider");
 
 	// Create a Point vector
-	shared_ptr< vector<xolotlViz::Point> > myPoints(
-			new (vector<xolotlViz::Point>));
+	auto myPoints = make_shared< vector <Point> >();
 
 	// And fill it with some Point
 	Point aPoint;

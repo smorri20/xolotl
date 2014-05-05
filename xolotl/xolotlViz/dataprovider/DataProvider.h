@@ -3,6 +3,7 @@
 
 // Includes
 #include "IDataProvider.h"
+#include <Identifiable.h>
 
 namespace xolotlViz {
 
@@ -10,9 +11,14 @@ namespace xolotlViz {
  *  Realization of the IDataProvider interface. This is a general class with general methods,
  *  to actually get data from the data provider, one needs to use the subclasses.
  */
-class DataProvider: public IDataProvider {
+class DataProvider: public IDataProvider, public xolotlCore::Identifiable {
 
 protected:
+
+	/**
+     * Declare the constructor as private to force the use of a name
+	 */
+    DataProvider() : xolotlCore::Identifiable("unused") {}
 
 	/**
 	 * Collection of data points.
@@ -29,7 +35,7 @@ public:
 	/**
 	 * The default constructor.
 	 */
-	DataProvider();
+	DataProvider(std::string name);
 
 	/**
 	 * The destructor.

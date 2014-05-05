@@ -3,7 +3,7 @@
 
 using namespace xolotlViz;
 
-DataProvider::DataProvider() {
+DataProvider::DataProvider(std::string name) : xolotlCore::Identifiable(name) {
 }
 
 DataProvider::~DataProvider() {

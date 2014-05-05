@@ -4,6 +4,7 @@
 // Includes
 #include "Plot.h"
 #include <vector>
+#include <Identifiable.h>
 
 namespace xolotlViz {
 
@@ -12,6 +13,13 @@ namespace xolotlViz {
  * It can be associated to CvsXDataProvider.
  */
 class SeriesPlot: public Plot {
+
+private:
+
+	/**
+     * Declare the constructor as private to force the use of a name
+	 */
+    SeriesPlot() : Plot() {}
 
 private:
 
@@ -25,7 +33,7 @@ public:
 	/**
 	 * The default constructor
 	 */
-	SeriesPlot();
+	SeriesPlot(std::string name);
 
 	/**
 	 * The destructor
@@ -48,19 +56,13 @@ public:
 	 * @ param i The number of the data provider to be returned.
 	 * @ return The ith data provider.
 	 */
-	std::shared_ptr<DataProvider> getDataProvider(int i);
+	std::shared_ptr<DataProvider> getDataProvider(int i) const;
 
 	/**
 	 * Method getting the total number of data providers
 	 * @ return The total number of data providers.
 	 */
-	int getDataProviderNumber();
-
-	/**
-	 * Method getting the maximum value taken by the data
-	 * @ return The maximum value reached in all the data providers.
-	 */
-	double getMaxValue();
+	int getDataProviderNumber() const;
 
 };
 

@@ -3,10 +3,14 @@
 
 using namespace xolotlViz;
 
-Plot::Plot() {
+Plot::Plot(std::string name) : xolotlCore::Identifiable(name) {
 }
 
 Plot::~Plot() {
+}
+
+void Plot::render() {
+	return;
 }
 
 void Plot::write(std::string fileName) {
@@ -53,4 +57,16 @@ std::string Plot::getLegend() const {
 void Plot::setLogScale(bool logScale) {
 	enableLogScale = logScale;
 	return;
+}
+
+void Plot::addDataProvider(std::shared_ptr<DataProvider> dataProvider) {
+	return;
+}
+
+std::shared_ptr<DataProvider> Plot::getDataProvider(int i) const {
+	return plotDataProvider;
+}
+
+int Plot::getDataProviderNumber() const {
+	return 0;
 }

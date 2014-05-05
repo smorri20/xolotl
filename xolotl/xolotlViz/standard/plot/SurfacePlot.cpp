@@ -13,7 +13,7 @@ using namespace xolotlViz;
 #define W_WIDTH 1024
 #define W_HEIGHT 1024
 
-SurfacePlot::SurfacePlot() {
+SurfacePlot::SurfacePlot(std::string name) : Plot(name) {
 }
 
 SurfacePlot::~SurfacePlot() {

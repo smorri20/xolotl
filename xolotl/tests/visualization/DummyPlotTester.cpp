@@ -2,46 +2,44 @@
 #define BOOST_TEST_MODULE Regression
 
 #include <boost/test/included/unit_test.hpp>
-#include <Plot.h>
-#include <ScatterPlot.h>
+#include <DummyPlot.h>
 #include <PlottingStyle.h>
 #include <DataProvider.h>
-#include <LabelProvider.h>
 
 using namespace std;
 using namespace xolotlViz;
 
 /**
- * This suite is responsible for testing the Plot class.
+ * This suite is responsible for testing the DummyPlot class.
  */
-BOOST_AUTO_TEST_SUITE(Plot_testSuite)
+BOOST_AUTO_TEST_SUITE(DummyPlot_testSuite)
 
 /**
- * Method checking the ability to use a name.
+ * Method checking the non-ability to use a name.
  */
 BOOST_AUTO_TEST_CASE(checkName) {
 
-	// Create myScatterPlot
-	auto myScatterPlot = make_shared<ScatterPlot>("myScatterPlot");
+	// Create myDummyPlot
+	auto myDummyPlot = make_shared<DummyPlot>("myDummyPlot");
 
-	BOOST_REQUIRE_EQUAL("myScatterPlot", myScatterPlot->getName());
+	BOOST_REQUIRE_EQUAL("unused", myDummyPlot->getName());
 }
 
 /**
- * Method checking the ability to choose a PlottingStyle.
+ * Method checking the non-ability to choose a PlottingStyle.
  */
 BOOST_AUTO_TEST_CASE(checkPlottingStyle) {
 
-	// Create myScatterPlot
-	auto myScatterPlot = make_shared<ScatterPlot>("myScatterPlot");
+	// Create myDummyPlot
+	auto myDummyPlot = make_shared<DummyPlot>("myDummyPlot");
 
 	PlottingStyle thePlottingStyle = LINE;
 
-	// Set the PlottingStyle of myScatterPlot
-	myScatterPlot->setPlottingStyle(thePlottingStyle);
+	// Set the PlottingStyle of myDummyPlot
+	myDummyPlot->setPlottingStyle(thePlottingStyle);
 
 	// Check it is the right one
-	BOOST_REQUIRE_EQUAL(myScatterPlot->getPlottingStyle(), thePlottingStyle);
+	BOOST_REQUIRE_EQUAL(myDummyPlot->getPlottingStyle(), PlottingStyle());
 }
 
 /**
@@ -49,8 +47,8 @@ BOOST_AUTO_TEST_CASE(checkPlottingStyle) {
  */
 BOOST_AUTO_TEST_CASE(checkDataProvider) {
 
-	// Create myScatterPlot
-	auto myScatterPlot = make_shared<ScatterPlot>("myScatterPlot");
+	// Create myDummyPlot
+	auto myDummyPlot = make_shared<DummyPlot>("myDummyPlot");
 
 	// Create myDataProvider
 	auto myDataProvider = make_shared<DataProvider>("myDataProvider");
@@ -74,8 +72,8 @@ BOOST_AUTO_TEST_CASE(checkDataProvider) {
 	// Set these points in the myDataProvider
 	myDataProvider->setPoints(myPoints);
 
-	// Set myDataProvider in myScatterPlot
-	myScatterPlot->setDataProvider(myDataProvider);
+	// Set myDataProvider in myDummyPlot
+	myDummyPlot->setDataProvider(myDataProvider);
 
 	// Methods are missing
     BOOST_FAIL("Methods are missing for checkDataProvider");

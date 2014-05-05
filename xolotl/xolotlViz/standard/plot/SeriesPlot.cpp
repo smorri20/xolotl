@@ -13,7 +13,7 @@ using namespace xolotlViz;
 #define W_WIDTH 1024
 #define W_HEIGHT 1024
 
-SeriesPlot::SeriesPlot() {
+SeriesPlot::SeriesPlot(std::string name) : Plot(name) {
 	plotDataProviders = std::make_shared< std::vector< std::shared_ptr<DataProvider> > > ();
 }
 
@@ -112,26 +112,10 @@ void SeriesPlot::addDataProvider(std::shared_ptr<DataProvider> dataProvider){
 	return;
 }
 
-std::shared_ptr<DataProvider> SeriesPlot::getDataProvider(int i){
+std::shared_ptr<DataProvider> SeriesPlot::getDataProvider(int i) const {
 	return plotDataProviders->at(i);
 }
 
-int SeriesPlot::getDataProviderNumber(){
+int SeriesPlot::getDataProviderNumber() const {
 	return plotDataProviders->size();
-}
-
-double SeriesPlot::getMaxValue(){
-	double maxValue = 0.0;
-
-	// Loop on all the data providers
-	for (int i = 0; i < getDataProviderNumber(); i++){
-    	auto yVector = plotDataProviders->at(i)->getAxis2Vector();
-
-    	// Loop on all the value in the data provider
-    	for (auto it = yVector.begin(); it != yVector.end(); it++){
-    		if ((*it) > maxValue) maxValue = (*it);
-    	}
-	}
-
-	return maxValue;
 }

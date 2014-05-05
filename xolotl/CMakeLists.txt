@@ -22,12 +22,12 @@ FIND_PACKAGE(PETSc REQUIRED)
 # Build the performance library first, so it can be used by other libraries.
 add_subdirectory(xolotlPerf)
 
+# Add the visualization directory
+add_subdirectory(xolotlViz)
+
 # Add the I/O, data structures and reactor directories
 add_subdirectory(xolotlCore)
 add_subdirectory(xolotlSolver)
-
-# Add the visualization directory
-add_subdirectory(xolotlViz)
 
 
 # Enable testing.

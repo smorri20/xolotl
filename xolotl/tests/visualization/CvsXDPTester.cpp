@@ -8,9 +8,20 @@ using namespace std;
 using namespace xolotlViz;
 
 /**
- * This suite is responsible for testing the DataProvider.
+ * This suite is responsible for testing the CvsXDataProvider.
  */
-BOOST_AUTO_TEST_SUITE(DataProvider_testSuite)
+BOOST_AUTO_TEST_SUITE(CvsXDataProvider_testSuite)
+
+/**
+ * Method checking the ability to use a name.
+ */
+BOOST_AUTO_TEST_CASE(checkName) {
+
+	// Create myCvsXDataProvider
+	auto myCvsXDataProvider = make_shared<CvsXDataProvider>("myCvsXDataProvider");
+
+	BOOST_REQUIRE_EQUAL("myCvsXDataProvider", myCvsXDataProvider->getName());
+}
 
 /**
  * Method checking you can get the axis vectors.
@@ -18,12 +29,10 @@ BOOST_AUTO_TEST_SUITE(DataProvider_testSuite)
 BOOST_AUTO_TEST_CASE(checkGetVector) {
 
 	// Create myCvsXDataProvider
-	shared_ptr<CvsXDataProvider> myCvsXDataProvider(
-			new CvsXDataProvider());
+	auto myCvsXDataProvider = make_shared<CvsXDataProvider>("myCvsXDataProvider");
 
 	// Create a Point vector
-	shared_ptr< vector<xolotlViz::Point> > myPoints(
-			new (vector<xolotlViz::Point>));
+	auto myPoints = make_shared< vector <Point> >();
 
 	// And fill it with some Point
 	Point aPoint;

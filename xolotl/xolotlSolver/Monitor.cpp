@@ -1,10 +1,8 @@
 // Includes
 #include "PetscSolver.h"
-#include <Plot.h>
-#include <Point.h>
-#include <SurfacePlot.h>
-#include <SeriesPlot.h>
-#include <ScatterPlot.h>
+#include "../xolotlPerf/HandlerRegistryFactory.h"
+#include "../xolotlViz/VizHandlerRegistryFactory.h"
+#include <PlotType.h>
 #include <CvsXDataProvider.h>
 #include <CvsXYDataProvider.h>
 #include <LabelProvider.h>
@@ -13,7 +11,6 @@
 #include <sstream>
 #include <vector>
 #include <memory>
-#include <HandlerRegistryFactory.h>
 #include <HDF5Utils.h>
 
 namespace xolotlSolver {
@@ -29,17 +26,20 @@ static inline bool checkPetscError(PetscErrorCode errorCode) {
 	CHKERRQ(errorCode);
 }
 
+//! The xolotlViz handler registry
+auto vizHandlerRegistry = xolotlViz::getVizHandlerRegistry();
+
 //! The pointer to the plot that will be used to visualize the data.
-std::shared_ptr<xolotlViz::Plot> plot;
+std::shared_ptr<xolotlViz::IPlot> plot;
 
 //! The pointer to the series plot that will be used to visualize the data.
-std::shared_ptr<xolotlViz::SeriesPlot> seriesPlot;
+std::shared_ptr<xolotlViz::IPlot> seriesPlot;
 
 //! The pointer to the 2D plot that will be used to visualize the data.
-std::shared_ptr<xolotlViz::Plot> surfacePlot;
+std::shared_ptr<xolotlViz::IPlot> surfacePlot;
 
 //! The pointer to the plot that will be used to visualize performance data.
-std::shared_ptr<xolotlViz::Plot> perfPlot;
+std::shared_ptr<xolotlViz::IPlot> perfPlot;
 
 //! The double that will store the accumulation of helium flux.
 double heliumFluence = 0.0;
@@ -863,8 +863,8 @@ static PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
 
 	// Print a warning if only one process
 	if (size == 1) {
-		cout << "You are trying to plot things that don't have any sense!! "
-				<< "\nRemove -plot_perf or run in parallel." << endl;
+		std::cout << "You are trying to plot things that don't have any sense!! "
+				<< "\nRemove -plot_perf or run in parallel." << std::endl;
 		PetscFunctionReturn(0);
 	}
 
@@ -979,10 +979,10 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 	// Set the monitor to save 1D plot of one concentration
 	if (flag1DPlot) {
 		// Create a ScatterPlot
-		plot = std::make_shared<xolotlViz::ScatterPlot>();
+		plot = vizHandlerRegistry->getPlot("scatterPlot", xolotlViz::PlotType::SCATTER);
 
 		// Create and set the label provider
-		auto labelProvider = std::make_shared<xolotlViz::LabelProvider>();
+		auto labelProvider = std::make_shared<xolotlViz::LabelProvider>("labelProvider");
 		labelProvider->axis1Label = "x Position on the Grid";
 		labelProvider->axis2Label = "Concentration";
 
@@ -990,7 +990,7 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 		plot->setLabelProvider(labelProvider);
 
 		// Create the data provider
-		auto dataProvider = std::make_shared<xolotlViz::CvsXDataProvider>();
+		auto dataProvider = std::make_shared<xolotlViz::CvsXDataProvider>("dataProvider");
 
 		// Give it to the plot
 		plot->setDataProvider(dataProvider);
@@ -1003,13 +1003,13 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 	// Set the monitor to save 1D plot of many concentrations
 	if (flagSeries) {
 		// Create a ScatterPlot
-		seriesPlot = std::make_shared<xolotlViz::SeriesPlot>();
+		seriesPlot = vizHandlerRegistry->getPlot("seriesPlot", xolotlViz::PlotType::SERIES);
 
 		// set the log scale
 		seriesPlot->setLogScale();
 
 		// Create and set the label provider
-		auto labelProvider = std::make_shared<xolotlViz::LabelProvider>();
+		auto labelProvider = std::make_shared<xolotlViz::LabelProvider>("labelProvider");
 		labelProvider->axis1Label = "x Position on the Grid";
 		labelProvider->axis2Label = "Concentration";
 
@@ -1017,11 +1017,11 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 		seriesPlot->setLabelProvider(labelProvider);
 
 		// Create the data provider
-		auto dataProvider = std::make_shared<xolotlViz::CvsXDataProvider>();
-		auto dataProviderBis = std::make_shared<xolotlViz::CvsXDataProvider>();
-		auto dataProviderTer = std::make_shared<xolotlViz::CvsXDataProvider>();
-		auto dataProviderQua = std::make_shared<xolotlViz::CvsXDataProvider>();
-		auto dataProviderCin = std::make_shared<xolotlViz::CvsXDataProvider>();
+		auto dataProvider = std::make_shared<xolotlViz::CvsXDataProvider>("dataProvider");
+		auto dataProviderBis = std::make_shared<xolotlViz::CvsXDataProvider>("dataProviderBis");
+		auto dataProviderTer = std::make_shared<xolotlViz::CvsXDataProvider>("dataProviderTer");
+		auto dataProviderQua = std::make_shared<xolotlViz::CvsXDataProvider>("dataProviderQua");
+		auto dataProviderCin = std::make_shared<xolotlViz::CvsXDataProvider>("dataProviderCin");
 
 		// Give it to the plot
 		seriesPlot->addDataProvider(dataProvider);
@@ -1038,10 +1038,10 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 	// Set the monitor to save surface plots of one concentration
 	if (flag2DPlot) {
 		// Create a SurfacePlot
-		surfacePlot = std::make_shared<xolotlViz::SurfacePlot>();
+		surfacePlot = vizHandlerRegistry->getPlot("surfacePlot", xolotlViz::PlotType::SURFACE);
 
 		// Create and set the label provider
-		auto labelProvider = std::make_shared<xolotlViz::LabelProvider>();
+		auto labelProvider = std::make_shared<xolotlViz::LabelProvider>("labelProvider");
 		labelProvider->axis1Label = "x Position on the Grid";
 		labelProvider->axis2Label = "y Position on the Grid";
 		labelProvider->axis3Label = "Concentration";
@@ -1050,7 +1050,7 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 		surfacePlot->setLabelProvider(labelProvider);
 
 		// Create the data provider
-		auto dataProvider = std::make_shared<xolotlViz::CvsXYDataProvider>();
+		auto dataProvider = std::make_shared<xolotlViz::CvsXYDataProvider>("dataProvider");
 
 		// Give it to the plot
 		surfacePlot->setDataProvider(dataProvider);
@@ -1063,10 +1063,10 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 	// Set the monitor to save performance plots (has to be in parallel)
 	if (flagPerf) {
 		// Create a ScatterPlot
-		perfPlot = std::make_shared<xolotlViz::ScatterPlot>();
+		perfPlot = vizHandlerRegistry->getPlot("perfPlot", xolotlViz::PlotType::SCATTER);
 
 		// Create and set the label provider
-		auto labelProvider = std::make_shared<xolotlViz::LabelProvider>();
+		auto labelProvider = std::make_shared<xolotlViz::LabelProvider>("labelProvider");
 		labelProvider->axis1Label = "Process ID";
 		labelProvider->axis2Label = "Solver Time";
 
@@ -1074,7 +1074,7 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 		perfPlot->setLabelProvider(labelProvider);
 
 		// Create the data provider
-		auto dataProvider = std::make_shared<xolotlViz::CvsXDataProvider>();
+		auto dataProvider = std::make_shared<xolotlViz::CvsXDataProvider>("dataProvider");
 
 		// Give it to the plot
 		perfPlot->setDataProvider(dataProvider);

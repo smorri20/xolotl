@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <IIdentifiable.h>
 
 namespace xolotlViz {
 
@@ -13,9 +14,14 @@ namespace xolotlViz {
  * IDataProvider describes the structure needed as a link between Xololt outputs
  * and quantities that the user wants to plot.
  */
-class IDataProvider {
+class IDataProvider : public virtual xolotlCore::IIdentifiable {
 
 public:
+
+	/**
+	 * The destructor
+	 */
+	virtual ~IDataProvider() { }
 
 	/**
 	 * Returns a collection of the data points.

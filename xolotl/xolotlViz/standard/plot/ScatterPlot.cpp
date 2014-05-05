@@ -13,7 +13,7 @@ using namespace xolotlViz;
 #define W_WIDTH 1024
 #define W_HEIGHT 1024
 
-ScatterPlot::ScatterPlot() {
+ScatterPlot::ScatterPlot(std::string name) : Plot(name) {
 }
 
 ScatterPlot::~ScatterPlot() {

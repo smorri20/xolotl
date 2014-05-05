@@ -4,6 +4,7 @@
 // Includes
 #include "Plot.h"
 #include <vector>
+#include <Identifiable.h>
 
 namespace xolotlViz {
 
@@ -14,12 +15,19 @@ namespace xolotlViz {
  */
 class SurfacePlot: public Plot {
 
+private:
+
+	/**
+     * Declare the constructor as private to force the use of a name
+	 */
+    SurfacePlot() : Plot() {}
+
 public:
 
 	/**
 	 * The default constructor
 	 */
-	SurfacePlot();
+	SurfacePlot(std::string name);
 
 	/**
 	 * The destructor

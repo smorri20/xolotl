@@ -28,7 +28,7 @@ enum PlottingStyle {
 	/**
 	 * Only available for SurfacePlot and VideoPlot. The rendering will be a 3D surface as well as colors.
 	 */
-	SURFACE
+	GRID
 
 };
 

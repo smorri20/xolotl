@@ -13,12 +13,19 @@ namespace xolotlViz {
  */
 class CvsXDataProvider: public DataProvider {
 
+private:
+
+	/**
+     * Declare the constructor as private to force the use of a name
+	 */
+    CvsXDataProvider() : DataProvider() {}
+
 public:
 
 	/**
 	 * The default constructor
 	 */
-	CvsXDataProvider();
+	CvsXDataProvider(std::string name);
 
 	/**
 	 * The destructor

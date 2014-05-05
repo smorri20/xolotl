@@ -1,59 +1,49 @@
-#ifndef PLOT_H
-#define PLOT_H
+#ifndef DUMMYPLOT_H
+#define DUMMYPLOT_H
 
-// Includes
-#include "IPlot.h"
-#include "PlottingStyle.h"
-#include "../dataprovider/DataProvider.h"
-#include "../labelprovider/LabelProvider.h"
+#include <string>
+#include <Identifiable.h>
+#include <IPlot.h>
 
 namespace xolotlViz {
 
 /**
- * Plot is the class that realizes the interface IPlot.
- * It is a general class that provides general methods, but to actual plot anything,
- * the user needs to use one of its subclasses.
+ * The DummyPlot class is instantiated by the DummyHandlerRegistry
+ * class and realizes the IPlot interface.
  */
-class Plot: public IPlot {
+class DummyPlot : public IPlot, public xolotlCore::Identifiable
+{
 
-protected:
-
-	/**
-	 * Choice of PlottingStyle.
-	 */
-	PlottingStyle plotStyle;
+private:
 
 	/**
-	 * If it is equal to True, the legend will be displayed.
+	 * Declare the constructor as private to force the use of a name.
 	 */
-	bool enableLegend = false;
-
-	/**
-	 * If it is equal to True, a log scale will be used (for 1D plot for now).
-	 */
-	bool enableLogScale = false;
+    DummyPlot() : xolotlCore::Identifiable("unused") {}
 
 	/**
 	 * Data provider used for the plot.
 	 */
 	std::shared_ptr<DataProvider> plotDataProvider;
 
-public:
 
-	/**
-	 * LabelProvider used for the Plot.
-	 */
-	std::shared_ptr<LabelProvider> plotLabelProvider;
+public:
 
 	/**
 	 * The default constructor
 	 */
-	Plot();
+	DummyPlot(std::string name);
 
 	/**
 	 * The destructor.
 	 */
-	~Plot();
+	~DummyPlot();
+
+	/**
+	 * Method managing everything that is related to the rendering of a plot.
+	 * \see IPlot.h
+	 */
+	void render();
 
 	/**
 	 * Method that will save the plotted plot in a file.
@@ -80,10 +70,28 @@ public:
 	void setDataProvider(std::shared_ptr<DataProvider> dataProvider);
 
 	/**
+	 * Method adding one data provider to the vector plotDataProviders
+	 * \see IPlot.h
+	 */
+	void addDataProvider(std::shared_ptr<DataProvider> dataProvider);
+
+	/**
 	 * Gets the data provider used.
 	 * \see IPlot.h
 	 */
 	std::shared_ptr<DataProvider> getDataProvider() const ;
+
+	/**
+	 * Method getting the i-th data provider for SeriesPlot
+	 * \see IPlot.h
+	 */
+	std::shared_ptr<DataProvider> getDataProvider(int i) const ;
+
+	/**
+	 * Method getting the total number of data providers
+	 * \see IPlot.h
+	 */
+	int getDataProviderNumber() const ;
 
 	/**
 	 * Sets the label provider used for the plots.
@@ -115,10 +123,9 @@ public:
 	 */
 	void setLogScale(bool logScale = true);
 
-};
 
-//end class Plot
+};  //end class DummyPlot
 
-} /* namespace xolotlViz */
+}  //end namespace xolotlViz
 
 #endif

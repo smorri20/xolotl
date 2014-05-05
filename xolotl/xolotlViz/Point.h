@@ -19,27 +19,27 @@ public:
 	/**
 	 * The time step.
 	 */
-	double t = 0.;
+	double t = 0.0;
 
 	/**
 	 * The X position on the grid.
 	 */
-	double x = 0.;
+	double x = 0.0;
 
 	/**
 	 * The Y position on the grid.
 	 */
-	double y = 0.;
+	double y = 0.0;
 
 	/**
 	 * The Z position on the grid.
 	 */
-	double z = 0.;
+	double z = 0.0;
 
 	/**
 	 * Value of the quantity of interest at the time step t and position on the grid x,y,z.
 	 */
-	double value = 0.;
+	double value = 0.0;
 
 	/**
 	 * The default constructor

@@ -3,21 +3,32 @@
 
 // Includes
 #include "PlottingStyle.h"
-#include "../dataprovider/DataProvider.h"
-#include "../labelprovider/LabelProvider.h"
+#include <LabelProvider.h>
+#include <DataProvider.h>
 #include <string>
 #include <memory>
+#include <IIdentifiable.h>
 
 namespace xolotlViz {
 
 /**
- * IPlot describe the structure needed to be able to plot data provided by IDataProvider.
+ * IPlot describe the structure needed to be able to plot data provided by DataProvider.
  * The user interacts with it through different method where he/she could set the data to plot,
  * title, legend, plotting style, etc.
  */
-class IPlot {
+class IPlot : public virtual xolotlCore::IIdentifiable {
 
 public:
+
+	/**
+	 * LabelProvider used for the Plot.
+	 */
+	std::shared_ptr<LabelProvider> plotLabelProvider;
+
+	/**
+	 * The destructor
+	 */
+	virtual ~IPlot() { }
 
 	/**
 	 * Method managing everything that is related to the rendering of a plot.
@@ -50,10 +61,29 @@ public:
 	virtual void setDataProvider(std::shared_ptr<DataProvider> dataProvider) = 0;
 
 	/**
+	 * Method adding one data provider to the vector plotDataProviders
+	 * @ param dataProvider The data provider to add.
+	 */
+	virtual void addDataProvider(std::shared_ptr<DataProvider> dataProvider) = 0;
+
+	/**
 	 * Gets the data provider used.
 	 * @return the DataProvider attribute.
 	 */
 	virtual std::shared_ptr<DataProvider> getDataProvider() const = 0;
+
+	/**
+	 * Method getting the i-th data provider for SeriesPlot
+	 * @ param i The number of the data provider to be returned.
+	 * @ return The ith data provider.
+	 */
+	virtual std::shared_ptr<DataProvider> getDataProvider(int i) const = 0;
+
+	/**
+	 * Method getting the total number of data providers
+	 * @ return The total number of data providers.
+	 */
+	virtual int getDataProviderNumber() const = 0;
 
 	/**
 	 * Sets the label provider used for the plots.

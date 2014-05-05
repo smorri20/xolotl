@@ -4,6 +4,7 @@
 // Includes
 #include "Plot.h"
 #include <vector>
+#include <Identifiable.h>
 
 namespace xolotlViz {
 
@@ -18,6 +19,13 @@ class VideoPlot: public Plot {
 private:
 
 	/**
+     * Declare the constructor as private to force the use of a name
+	 */
+    VideoPlot() : Plot() {}
+
+private:
+
+	/**
 	 * Number of frames shown per second.
 	 */
 	double frameRate;
@@ -27,7 +35,7 @@ public:
 	/**
 	 * The default constructor
 	 */
-	VideoPlot();
+	VideoPlot(std::string name);
 
 	/**
 	 * The destructor
