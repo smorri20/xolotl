@@ -20,7 +20,7 @@ SeriesPlot::SeriesPlot(std::string name) : Plot(name) {
 SeriesPlot::~SeriesPlot() {
 }
 
-void SeriesPlot::render() {
+void SeriesPlot::render(std::string fileName) {
 
 	// Check if the label provider is set
 	if (!plotLabelProvider){
@@ -50,6 +50,13 @@ void SeriesPlot::render() {
     window->Initialize();
     window->Resize(W_WIDTH,W_HEIGHT);
 
+    // Print the title
+    window->AddWindowAnnotation(plotLabelProvider->titleLabel, 0,1, .5,1, 0.08);
+
+    // Print the axis
+    window->AddViewportAnnotation(plotLabelProvider->axis1Label, 0,-1, 0,-.1, .5,1, 0.05);
+    window->AddViewportAnnotation(plotLabelProvider->axis2Label, -1,0, -.1,0, .5,0, 0.05, 90);
+
     // Set the log scale
     if (enableLogScale) window->view.view2d.logy = true;
 
@@ -72,7 +79,7 @@ void SeriesPlot::render() {
     	AddRectilinearMesh(data, coords, coordNames, true, "RectilinearGridCells");
 
     	// Give the yVector to the axisValues
-    	eavlArray *axisValues = new eavlFloatArray("coords", 1);
+    	eavlArray *axisValues = new eavlFloatArray(plotDataProviders->at(i)->dataName, 1);
     	axisValues->SetNumberOfTuples(data->GetNumPoints());
     	for (int i = 0; i < yVector.size(); i++){
     		axisValues->SetComponentFromDouble(i, 0, yVector.at(i));
@@ -87,7 +94,7 @@ void SeriesPlot::render() {
     	plot = new eavlCurveRenderer(data, NULL,
     			lineColor[i%6],
     			"",
-    			"coords");
+    			plotDataProviders->at(i)->dataName);
 
     	// Add the plot to the scene
     	scene->plots.push_back(plot);
@@ -101,7 +108,7 @@ void SeriesPlot::render() {
 
     // Save the final buffer as an image
     char fn[25];
-    sprintf(fn, (plotLabelProvider->titleLabel).c_str());
+    sprintf(fn, (fileName).c_str());
     window->SaveWindowAsPNM(fn);
 
 	return;

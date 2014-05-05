@@ -43,7 +43,7 @@ public:
 	 * Method managing everything that is related to the rendering of a plot.
 	 * \see IPlot.h
 	 */
-	void render();
+	void render(std::string fileName = "fileName");
 
 	/**
 	 * Method that will save the plotted plot in a file.

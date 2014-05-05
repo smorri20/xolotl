@@ -19,7 +19,7 @@ SurfacePlot::SurfacePlot(std::string name) : Plot(name) {
 SurfacePlot::~SurfacePlot() {
 }
 
-void SurfacePlot::render() {
+void SurfacePlot::render(std::string fileName) {
 
 	// Check if the label provider is set
 	if (!plotLabelProvider){
@@ -52,7 +52,7 @@ void SurfacePlot::render() {
 	AddRectilinearMesh(data, coords, coordNames, true, "RectilinearGridCells");
 
 	// Give the zVector to the axisValues
-	eavlArray *axisValues = new eavlFloatArray("coords", 1);
+	eavlArray *axisValues = new eavlFloatArray(plotDataProvider->dataName, 1);
 	axisValues->SetNumberOfTuples(data->GetNumPoints());
 	for (int i = 0; i < zVector.size(); i++){
 		axisValues->SetComponentFromDouble(i, 0, zVector.at(i));
@@ -67,7 +67,7 @@ void SurfacePlot::render() {
 
     // Pick a background color
 //    eavlColor bg(0.15, 0.05, 0.1, 1.0);
-    eavlColor bg(1, 1, 1, 1);
+    eavlColor bg(0.5, 0.5, 0.5, 0.5);
 
     // Create a 2D scene
     eavlScene *scene = new eavl2DGLScene();
@@ -77,13 +77,21 @@ void SurfacePlot::render() {
     window->Initialize();
     window->Resize(W_WIDTH,W_HEIGHT);
 
+    // Print the title
+    window->AddWindowAnnotation(plotLabelProvider->titleLabel, 0,1, .5,1, 0.08);
+
+    // Print the axis
+    window->AddViewportAnnotation(plotLabelProvider->axis1Label, 0,-1, 0,-.1, .5,1, 0.05);
+    window->AddViewportAnnotation(plotLabelProvider->axis2Label, -1,0, -.1,0, .5,0, 0.05, 90);
+    window->AddWindowAnnotation(plotLabelProvider->axis3Label, 0,1, .5,5, 0.05);
+
     // Set up a plot for the data set
     eavlRenderer *plot;
     plot = new eavlPseudocolorRenderer(data, NULL,
                                        "temperature",
                                        false,
                                        data->GetCellSet(0)->GetName(),
-                                       "coords");
+                                       plotDataProvider->dataName);
     scene->plots.push_back(plot);
 
     // Set the view
@@ -94,7 +102,7 @@ void SurfacePlot::render() {
 
     // Save the final buffer as an image
     char fn[25];
-    sprintf(fn, (plotLabelProvider->titleLabel).c_str());
+    sprintf(fn, (fileName).c_str());
     window->SaveWindowAsPNM(fn);
 
 	return;

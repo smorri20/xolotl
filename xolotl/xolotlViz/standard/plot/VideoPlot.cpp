@@ -9,7 +9,7 @@ VideoPlot::VideoPlot(std::string name) : Plot(name) {
 VideoPlot::~VideoPlot() {
 }
 
-void VideoPlot::render() {
+void VideoPlot::render(std::string fileName) {
 }
 
 void VideoPlot::setFrameRate(double fRate) {

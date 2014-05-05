@@ -43,7 +43,7 @@ public:
 	/**
 	 * Method managing everything that is related to the rendering of a plot.
 	 */
-	void render();
+	void render(std::string fileName = "fileName");
 
 	/**
 	 * Method adding one data provider to the vector plotDataProviders

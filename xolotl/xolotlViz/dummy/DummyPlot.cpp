@@ -9,7 +9,7 @@ DummyPlot::DummyPlot(std::string name) : xolotlCore::Identifiable("unused") {
 DummyPlot::~DummyPlot() {
 }
 
-void DummyPlot::render() {
+void DummyPlot::render(std::string fileName) {
 	return;
 }
 

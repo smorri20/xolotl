@@ -33,7 +33,7 @@ public:
 	/**
 	 * Method managing everything that is related to the rendering of a plot.
 	 */
-	virtual void render() = 0;
+	virtual void render(std::string fileName = "fileName") = 0;
 
 	/**
 	 * Method that will save the plotted plot in a file.

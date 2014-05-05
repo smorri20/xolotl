@@ -421,11 +421,16 @@ static PetscErrorCode monitorScatter(TS ts, PetscInt timestep, PetscReal time,
 
 		// Change the title of the plot
 		std::stringstream title;
-		title << names[iCluster] << "_scatter_TS" << timestep << ".pnm";
+		title << names[iCluster];
+
+		plot->getDataProvider()->dataName = title.str();
+		title << " concentration";
 		plot->plotLabelProvider->titleLabel = title.str();
 
-		// Render
-		plot->render();
+		// Render and save in file
+		std::stringstream fileName;
+		fileName << names[iCluster] << "_scatter_TS" << timestep << ".pnm";
+		plot->write(fileName.str());
 	}
 
 	else {
@@ -511,6 +516,32 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 	hx = 8.0 / (PetscReal) (Mx - 1);
 
 	if (procId == 0) {
+		// The array of cluster names
+		std::vector<std::string> names(networkSize);
+
+		// Fill the array of clusters name because the Id is not the same as
+		// reactants->at(i)
+		auto reactants = PetscSolver::getNetwork()->getAll();
+		std::shared_ptr<PSICluster> cluster;
+
+		// Loop on the reactants
+		for (int i = 0; i < networkSize; i++) {
+
+			// Get the cluster from the list, its id and composition
+			cluster = std::dynamic_pointer_cast < PSICluster
+					> (reactants->at(i));
+			int id = cluster->getId() - 1;
+			auto composition = cluster->getComposition();
+
+			// Create the name
+			std::stringstream name;
+			name << (cluster->getName()).c_str() << "(" << composition["He"]
+					<< "," << composition["V"] << "," << composition["I"]
+					<< ") ";
+
+			// Push the header entry on the array
+			name >> names[id];
+		}
 
 		// Create a Point vector to store the data to give to the data provider
 		// for the visualization
@@ -606,18 +637,25 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 
 		// Get the data provider and give it the points
 		seriesPlot->getDataProvider(0)->setPoints(myPoints);
+		seriesPlot->getDataProvider(0)->dataName = names[2];
 		seriesPlot->getDataProvider(1)->setPoints(myPointsBis);
+		seriesPlot->getDataProvider(1)->dataName = names[11];
 		seriesPlot->getDataProvider(2)->setPoints(myPointsTer);
+		seriesPlot->getDataProvider(2)->dataName = names[12];
 		seriesPlot->getDataProvider(3)->setPoints(myPointsQua);
+		seriesPlot->getDataProvider(3)->dataName = names[13];
 		seriesPlot->getDataProvider(4)->setPoints(myPointsCin);
+		seriesPlot->getDataProvider(4)->dataName = names[29];
 
 		// Change the title of the plot
 		std::stringstream title;
-		title << "log_series_TS" << timestep << ".pnm";
+		title << "Concentrations";
 		seriesPlot->plotLabelProvider->titleLabel = title.str();
 
-		// Render
-		seriesPlot->render();
+		// Render and save in file
+		std::stringstream fileName;
+		fileName << "log_series_TS" << timestep << ".pnm";
+		seriesPlot->write(fileName.str());
 	}
 
 	else {
@@ -837,13 +875,17 @@ static PetscErrorCode monitorSurface(TS ts, PetscInt timestep, PetscReal time,
 		// Get the data provider and give it the points
 		surfacePlot->getDataProvider()->setPoints(myPoints);
 
+		surfacePlot->getDataProvider()->dataName = names[iCluster];
+
 		// Change the title of the plot
 		std::stringstream title;
-		title << names[iCluster] << "_surface_TS" << timestep << ".pnm";
+		title << names[iCluster] << " concentration";
 		surfacePlot->plotLabelProvider->titleLabel = title.str();
 
-		// Render
-		surfacePlot->render();
+		// Render and save in file
+		std::stringstream fileName;
+		fileName << names[iCluster] << "_surface_TS" << timestep << ".pnm";
+		surfacePlot->write(fileName.str());
 	}
 
 	PetscFunctionReturn(0);
@@ -910,13 +952,17 @@ static PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
 		// Get the data provider and give it the points
 		perfPlot->getDataProvider()->setPoints(myPoints);
 
+		perfPlot->getDataProvider()->dataName = "SolverTimer";
+
 		// Change the title of the plot
 		std::stringstream title;
-		title << "timer_TS" << timestep << ".pnm";
+		title << "Solver timer (s)";
 		perfPlot->plotLabelProvider->titleLabel = title.str();
 
-		// Render
-		perfPlot->render();
+		// Render and save in file
+		std::stringstream fileName;
+		fileName << "timer_TS" << timestep << ".pnm";
+		perfPlot->write(fileName.str());
 	}
 
 	else {

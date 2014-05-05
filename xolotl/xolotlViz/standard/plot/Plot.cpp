@@ -9,12 +9,12 @@ Plot::Plot(std::string name) : xolotlCore::Identifiable(name) {
 Plot::~Plot() {
 }
 
-void Plot::render() {
+void Plot::render(std::string fileName) {
 	return;
 }
 
 void Plot::write(std::string fileName) {
-	render();
+	render(fileName);
 	return;
 }
 
