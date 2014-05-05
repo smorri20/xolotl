@@ -3,7 +3,7 @@
 
 using namespace xolotlSolver;
 
-WFitFluxHandler::WFitFluxHandler() : stepSize(0.0e-16) {
+WFitFluxHandler::WFitFluxHandler(){
 
 }
 
@@ -24,15 +24,3 @@ void WFitFluxHandler::initializeFluxHandler(int numGridpoints, double step){
 
 }
 
-double WFitFluxHandler::getIncidentFlux(std::vector<int> compositionVec,
-				std::vector<double> position, double currentTime){
-
-	auto i = position[0] / stepSize;
-
-	return incidentFluxVec[i];
-}
-
-void WFitFluxHandler::setOutgoingFlux(std::vector<int> compositionVec,
-			std::vector<int> position, double time, double outgoingFlux){
-
-}
