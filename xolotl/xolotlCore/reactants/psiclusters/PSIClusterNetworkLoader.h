@@ -31,7 +31,6 @@ namespace xolotlCore {
  * > The He binding energy
  * > The V binding energy
  * > The I binding energy
- * > The trap mutation binding energy
  *
  * Where appropriate, any binding energy may be specified as "Infinity" to
  * signify that the cluster does not undergo that type of dissociation.
@@ -74,7 +73,6 @@ private:
 	 */
 	std::shared_ptr<std::istream> networkStream;
 
-
 	/**
 	 * The list of clusters that will be added to the network.
 	 */
@@ -89,8 +87,8 @@ private:
 	/**
 	 * Private nullary constructor.
 	 */
-	  PSIClusterNetworkLoader() {
-	  };
+	PSIClusterNetworkLoader() {
+	};
 
 	/**
 	 * This operation creates a singles-species cluster of helium, vacancies or
