@@ -6,8 +6,8 @@
 
 using namespace xolotlCore;
 
-VCluster::VCluster(int nV) :
-		PSICluster(nV) {
+VCluster::VCluster(int nV, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
+		PSICluster(nV, registry) {
 	// Set the reactant name appropriately
 	name = "V";
 	// Update the composition map
@@ -40,7 +40,7 @@ void VCluster::createReactionConnectivity() {
 	std::shared_ptr<PSICluster> firstReactant, secondReactant;
 
 	// Connect this cluster to itself since any reaction will affect it
-	reactionConnectivity[thisNetworkIndex] = 1;
+	setReactionConnectivity(getId());
 
 	/*
 	 * This section fills the array of reacting pairs that combine to produce
@@ -108,8 +108,8 @@ void VCluster::createReactionConnectivity() {
 		secondReactant = std::dynamic_pointer_cast<PSICluster>(network->get(name,firstReactant->getSize() + size));
 		// Update the connectivity
 		if (secondReactant) {
-			reactionConnectivity[firstReactant->getId() - 1] = 1;
-			reactionConnectivity[secondReactant->getId() - 1] = 1;
+			setReactionConnectivity(firstReactant->getId());
+			setReactionConnectivity(secondReactant->getId());
 		}
 	}
 

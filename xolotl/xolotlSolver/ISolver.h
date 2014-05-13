@@ -5,6 +5,7 @@
 #include <PSIClusterNetworkLoader.h>
 #include <map>
 #include "FitFluxHandler.h"
+#include "TemperatureHandler.h"
 
 using namespace xolotlCore;
 
@@ -18,6 +19,11 @@ namespace xolotlSolver {
 class ISolver {
 
 public:
+
+	/**
+	 * The destructor
+	 */
+	virtual ~ISolver(){}
 
 	/**
 	 * This operation transfers the input arguments passed to the program on
@@ -73,7 +79,8 @@ public:
 	 * @param fluxHandler The flux handler that will be used when performing
 	 * the solve
 	 */
-	virtual void solve(std::shared_ptr<IFluxHandler> fluxHandler) = 0;
+	virtual void solve(std::shared_ptr<IFluxHandler> fluxHandler,
+			std::shared_ptr<ITemperatureHandler> temperatureHandler) = 0;
 
 	/**
 	 * This operation performs all necessary finalization for the solver

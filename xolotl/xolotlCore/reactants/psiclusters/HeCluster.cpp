@@ -6,8 +6,8 @@
 
 using namespace xolotlCore;
 
-HeCluster::HeCluster(int nHe) :
-		PSICluster(nHe) {
+HeCluster::HeCluster(int nHe, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
+		PSICluster(nHe, registry) {
 	// Set the reactant name appropriately
 	name = "He";
 	// Update the composition map
@@ -49,7 +49,7 @@ void HeCluster::createReactionConnectivity() {
 			productReactant;
 
 	// Connect this cluster to itself since any reaction will affect it
-	reactionConnectivity[thisNetworkIndex] = 1;
+	setReactionConnectivity(getId());
 
 	/*
 	 * This section fills the array of reacting pairs that combine to produce
