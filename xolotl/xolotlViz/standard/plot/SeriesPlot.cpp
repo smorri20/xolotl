@@ -58,7 +58,8 @@ void SeriesPlot::render(std::string fileName) {
     window->AddViewportAnnotation(plotLabelProvider->axis2Label, -1,0, -.1,0, .5,0, 0.05, 90);
 
     // Add the time information
-    window->AddWindowAnnotation(plotLabelProvider->timeLabel, 1,1, 1.2,5, 0.05);
+    window->AddWindowAnnotation(plotLabelProvider->timeLabel, 1,1, 1.2,4.5, 0.05);
+    window->AddWindowAnnotation(plotLabelProvider->timeStepLabel, 1,1, 1.2,5.5, 0.05);
 
     // Set the log scale
     if (enableLogScale) window->view.view2d.logy = true;

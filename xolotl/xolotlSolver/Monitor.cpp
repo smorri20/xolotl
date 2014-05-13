@@ -539,7 +539,6 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 
 		// Loop on the reactants
 		for (int i = 0; i < networkSize; i++) {
-
 			// Get the cluster from the list, its id and composition
 			cluster = std::dynamic_pointer_cast < PSICluster
 					> (reactants->at(i));
@@ -558,11 +557,7 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 
 		// Create a Point vector to store the data to give to the data provider
 		// for the visualization
-		auto myPoints = std::make_shared<std::vector<xolotlViz::Point> >();
-		auto myPointsBis = std::make_shared<std::vector<xolotlViz::Point> >();
-		auto myPointsTer = std::make_shared<std::vector<xolotlViz::Point> >();
-		auto myPointsQua = std::make_shared<std::vector<xolotlViz::Point> >();
-		auto myPointsCin = std::make_shared<std::vector<xolotlViz::Point> >();
+		std::vector<std::vector<xolotlViz::Point> > myPoints(networkSize);
 
 		// Loop on the grid
 		for (xi = xs; xi < xs + xm; xi++) {
@@ -579,21 +574,15 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 			double * concentration = &concentrations[0];
 			PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
 
-			// Create a Point with the concentration[iCluster] as the value
-			// and add it to myPoints
-			xolotlViz::Point aPoint;
-			aPoint.value = concentration[2]; // He
-			aPoint.t = time;
-			aPoint.x = x;
-			myPoints->push_back(aPoint);
-			aPoint.value = concentration[11]; // V
-			myPointsBis->push_back(aPoint);
-			aPoint.value = concentration[12]; // He1V1
-			myPointsTer->push_back(aPoint);
-			aPoint.value = concentration[13]; // He2V1
-			myPointsQua->push_back(aPoint);
-			aPoint.value = concentration[29]; // He1V2
-			myPointsCin->push_back(aPoint);
+			for (int i = 0; i < networkSize; i++) {
+				// Create a Point with the concentration[iCluster] as the value
+				// and add it to myPoints
+				xolotlViz::Point aPoint;
+				aPoint.value = concentration[i];
+				aPoint.t = time;
+				aPoint.x = x;
+				myPoints[i].push_back(aPoint);
+			}
 		}
 
 		// Loop on the other processes
@@ -609,56 +598,30 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 				MPI_Recv(&x, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
 						MPI_STATUS_IGNORE);
 
-				// and the concentrations
-				double conc = 0.0;
-				MPI_Recv(&conc, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
-						MPI_STATUS_IGNORE);
+				for (int j = 0; j < networkSize; j++) {
+					// and the concentrations
+					double conc;
+					MPI_Recv(&conc, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
+							MPI_STATUS_IGNORE);
 
-				// Create a Point with the concentration[iCluster] as the value
-				// and add it to myPoints
-				xolotlViz::Point aPoint;
-				aPoint.value = conc; // He
-				aPoint.t = time;
-				aPoint.x = x;
-				myPoints->push_back(aPoint);
-
-				MPI_Recv(&conc, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
-						MPI_STATUS_IGNORE);
-
-				aPoint.value = conc; // V
-				myPointsBis->push_back(aPoint);
-
-				MPI_Recv(&conc, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
-						MPI_STATUS_IGNORE);
-
-				aPoint.value = conc; // He1V1
-				myPointsTer->push_back(aPoint);
-
-				MPI_Recv(&conc, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
-						MPI_STATUS_IGNORE);
-
-				aPoint.value = conc; // He2V1
-				myPointsQua->push_back(aPoint);
-
-				MPI_Recv(&conc, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
-						MPI_STATUS_IGNORE);
-
-				aPoint.value = conc; // He1V2
-				myPointsCin->push_back(aPoint);
+					// Create a Point with the concentration[iCluster] as the value
+					// and add it to myPoints
+					xolotlViz::Point aPoint;
+					aPoint.value = conc; // He
+					aPoint.t = time;
+					aPoint.x = x;
+					myPoints[j].push_back(aPoint);
+				}
 			}
 		}
 
-		// Get the data provider and give it the points
-		seriesPlot->getDataProvider(0)->setPoints(myPoints);
-		seriesPlot->getDataProvider(0)->dataName = names[2];
-		seriesPlot->getDataProvider(1)->setPoints(myPointsBis);
-		seriesPlot->getDataProvider(1)->dataName = names[11];
-		seriesPlot->getDataProvider(2)->setPoints(myPointsTer);
-		seriesPlot->getDataProvider(2)->dataName = names[12];
-		seriesPlot->getDataProvider(3)->setPoints(myPointsQua);
-		seriesPlot->getDataProvider(3)->dataName = names[13];
-		seriesPlot->getDataProvider(4)->setPoints(myPointsCin);
-		seriesPlot->getDataProvider(4)->dataName = names[29];
+		for (int i = 0; i < networkSize; i++) {
+			// Get the data provider and give it the points
+			auto thePoints = std::make_shared < std::vector<xolotlViz::Point>
+					> (myPoints[i]);
+			seriesPlot->getDataProvider(i)->setPoints(thePoints);
+			seriesPlot->getDataProvider(i)->dataName = names[i];
+		}
 
 		// Change the title of the plot
 		std::stringstream title;
@@ -668,6 +631,15 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 		std::stringstream timeLabel;
 		timeLabel << "time: " << std::setprecision(4) << time << "s";
 		seriesPlot->plotLabelProvider->timeLabel = timeLabel.str();
+		// Get the current time step
+		PetscReal currentTimeStep;
+		ierr = TSGetTimeStep(ts, &currentTimeStep);
+		checkPetscError(ierr);
+		// Give the timestep to the label provider
+		std::stringstream timeStepLabel;
+		timeStepLabel << "dt: " << std::setprecision(4) << currentTimeStep
+				<< "s";
+		seriesPlot->plotLabelProvider->timeStepLabel = timeStepLabel.str();
 
 		// Render and save in file
 		std::stringstream fileName;
@@ -698,12 +670,11 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 			// Send the value of the local position to the master process
 			MPI_Send(&x, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
 
-			// Send the value of the concentrations to the master process
-			MPI_Send(&concentration[2], 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-			MPI_Send(&concentration[11], 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-			MPI_Send(&concentration[12], 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-			MPI_Send(&concentration[13], 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-			MPI_Send(&concentration[29], 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+			for (int i = 0; i < networkSize; i++) {
+				// Send the value of the concentrations to the master process
+				MPI_Send(&concentration[i], 1, MPI_DOUBLE, 0, 0,
+						MPI_COMM_WORLD);
+			}
 		}
 	}
 
@@ -777,7 +748,8 @@ static PetscErrorCode monitorSurface(TS ts, PetscInt timestep, PetscReal time,
 	for (xi = xs; xi < xs + xm; xi++) {
 		// Temporary: plot only one depth because it causes a malloc to do more and
 		// needs to be fixed
-		if (xi != 1) continue;
+		if (xi != 1)
+			continue;
 
 		// Get the pointer to the beginning of the solution data for this grid point
 		gridPointSolution = solutionArray + networkSize * xi;
@@ -821,8 +793,8 @@ static PetscErrorCode monitorSurface(TS ts, PetscInt timestep, PetscReal time,
 				// HeV clusters
 				else {
 					cluster = std::dynamic_pointer_cast < PSICluster
-							> (PetscSolver::getNetwork()->getCompound("HeV",
-									{j, i, 0 }));
+							> (PetscSolver::getNetwork()->getCompound("HeV", {
+									j, i, 0 }));
 					if (cluster) {
 						// Get the ID of the cluster
 						int id = cluster->getId() - 1;
@@ -1044,24 +1016,21 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 		// Give it to the plot
 		seriesPlot->setLabelProvider(labelProvider);
 
-		// Create the data provider
-		auto dataProvider = std::make_shared < xolotlViz::CvsXDataProvider
-				> ("dataProvider");
-		auto dataProviderBis = std::make_shared < xolotlViz::CvsXDataProvider
-				> ("dataProviderBis");
-		auto dataProviderTer = std::make_shared < xolotlViz::CvsXDataProvider
-				> ("dataProviderTer");
-		auto dataProviderQua = std::make_shared < xolotlViz::CvsXDataProvider
-				> ("dataProviderQua");
-		auto dataProviderCin = std::make_shared < xolotlViz::CvsXDataProvider
-				> ("dataProviderCin");
+		// Network size
+		const int networkSize = PetscSolver::getNetwork()->size();
 
-		// Give it to the plot
-		seriesPlot->addDataProvider(dataProvider);
-		seriesPlot->addDataProvider(dataProviderBis);
-		seriesPlot->addDataProvider(dataProviderTer);
-		seriesPlot->addDataProvider(dataProviderQua);
-		seriesPlot->addDataProvider(dataProviderCin);
+		// Create a data provider for each cluster in the network
+		for (int i = 0; i < networkSize; i++) {
+			// Set the name for Identifiable
+			std::stringstream dataProviderName;
+			dataProviderName << "dataprovider" << i;
+			// Create the data provider
+			auto dataProvider = std::make_shared < xolotlViz::CvsXDataProvider
+					> (dataProviderName.str());
+
+			// Give it to the plot
+			seriesPlot->addDataProvider(dataProvider);
+		}
 
 		// monitorSolve will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorSeries, NULL, NULL);
@@ -1133,7 +1102,7 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 
 	// Set the monitor to save the status of the simulation in hdf5 file
 	if (flagStatus) {
-		HDF5Utils::readNetwork("xolotlStop_10.h5");
+//		HDF5Utils::readNetwork("xolotlStop_10.h5");
 
 		// startStop will be called at each timestep
 		ierr = TSMonitorSet(ts, startStop, NULL, NULL);

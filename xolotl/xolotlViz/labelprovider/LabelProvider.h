@@ -59,6 +59,11 @@ public:
 	std::string timeLabel = " ";
 
 	/**
+	 * Time step label for the plot.
+	 */
+	std::string timeStepLabel = " ";
+
+	/**
 	 * The default constructor
 	 */
 	LabelProvider(std::string name) : xolotlCore::Identifiable(name) {};
