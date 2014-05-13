@@ -46,7 +46,7 @@ std::vector<double> CvsXYDataProvider::getAxis3Vector() const {
 			it != dataPoints->end(); it++) {
 
 		// Fill the concentrationVector
-		concentrationVector.push_back((*it).value);
+		concentrationVector.push_back(std::max((*it).value, 1.0e-16));
 	}
 
 	return concentrationVector;

@@ -43,30 +43,30 @@ void HDF5Utils::initializeFile(int timeStep, int networkSize) {
 void HDF5Utils::fillHeader(int physicalDim, int refinement, double time, double deltaTime) {
 	// Create, write, and close the physicalDim attribute
 	hid_t dimSId = H5Screate(H5S_SCALAR);
-	hid_t dimAId = H5Acreate2 (headerGroupId, "physicalDim", H5T_STD_I64BE, dimSId,
+	hid_t dimAId = H5Acreate2 (headerGroupId, "physicalDim", H5T_STD_I8LE, dimSId,
 	                             H5P_DEFAULT, H5P_DEFAULT);
-	status = H5Awrite(dimAId, H5T_STD_I64BE, &physicalDim);
+	status = H5Awrite(dimAId, H5T_STD_I8LE, &physicalDim);
 	status = H5Aclose(dimAId);
 
 	// Create, write, and close the refinement attribute
 	hid_t refineSId = H5Screate(H5S_SCALAR);
-	hid_t refineAId = H5Acreate2 (headerGroupId, "refinement", H5T_STD_I64BE, refineSId,
+	hid_t refineAId = H5Acreate2 (headerGroupId, "refinement", H5T_STD_I8LE, refineSId,
 	                             H5P_DEFAULT, H5P_DEFAULT);
-	status = H5Awrite(refineAId, H5T_STD_I64BE, &refinement);
+	status = H5Awrite(refineAId, H5T_STD_I8LE, &refinement);
 	status = H5Aclose(refineAId);
 
 	// Create, write, and close the absolute time attribute
 	hid_t timeSId = H5Screate(H5S_SCALAR);
-	hid_t timeAId = H5Acreate2 (headerGroupId, "absoluteTime", H5T_STD_B64BE, timeSId,
+	hid_t timeAId = H5Acreate2 (headerGroupId, "absoluteTime", H5T_IEEE_F64LE, timeSId,
 	                             H5P_DEFAULT, H5P_DEFAULT);
-	status = H5Awrite(timeAId, H5T_STD_B64BE, &time);
+	status = H5Awrite(timeAId, H5T_IEEE_F64LE, &time);
 	status = H5Aclose(timeAId);
 
 	// Create, write, and close the timestep time attribute
 	hid_t deltaSId = H5Screate(H5S_SCALAR);
-	hid_t deltaAId = H5Acreate2 (headerGroupId, "deltaTime", H5T_STD_B64BE, deltaSId,
+	hid_t deltaAId = H5Acreate2 (headerGroupId, "deltaTime", H5T_IEEE_F64LE, deltaSId,
 	                             H5P_DEFAULT, H5P_DEFAULT);
-	status = H5Awrite(deltaAId, H5T_STD_B64BE, &deltaTime);
+	status = H5Awrite(deltaAId, H5T_IEEE_F64LE, &deltaTime);
 	status = H5Aclose(deltaAId);
 
 	return;
@@ -108,20 +108,20 @@ void HDF5Utils::fillNetwork(std::shared_ptr<PSIClusterReactionNetwork> network) 
 	}
 
 	// Create the dataset for the network
-	hid_t datasetId = H5Dcreate2(networkGroupId, "network", H5T_STD_B64LE, networkSId,
+	hid_t datasetId = H5Dcreate2(networkGroupId, "network", H5T_IEEE_F64LE, networkSId,
 			H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
 	// Write networkArray in the dataset
-	status = H5Dwrite(datasetId, H5T_STD_B64LE, H5S_ALL, H5S_ALL,
-	H5P_DEFAULT, networkArray);
+	status = H5Dwrite(datasetId, H5T_IEEE_F64LE, H5S_ALL, H5S_ALL,
+	H5P_DEFAULT, &networkArray);
 
 	// Create the attribute for the network size
 	hid_t networkSizeSId = H5Screate(H5S_SCALAR);
-	hid_t networkSizeAId = H5Acreate2 (datasetId, "networkSize", H5T_STD_I64BE, networkSizeSId,
+	hid_t networkSizeAId = H5Acreate2 (datasetId, "networkSize", H5T_STD_I8LE, networkSizeSId,
 	                             H5P_DEFAULT, H5P_DEFAULT);
 
 	// Write it
-	status = H5Awrite(networkSizeAId, H5T_STD_I64BE, &networkSize);
+	status = H5Awrite(networkSizeAId, H5T_STD_I8LE, &networkSize);
 
 	// Close everything
 	status = H5Aclose(networkSizeAId);
@@ -130,26 +130,26 @@ void HDF5Utils::fillNetwork(std::shared_ptr<PSIClusterReactionNetwork> network) 
 	return;
 }
 
-void HDF5Utils::fillConcentrations(double * concArray, double position) {
+void HDF5Utils::fillConcentrations(double * concArray, int index, double position) {
 	// Set the dataset name
 	std::stringstream datasetName;
-	datasetName << "position_" << position;
+	datasetName << "position_" << index;
 
 	// Create the dataset of concentrations for this position
-	hid_t datasetId = H5Dcreate2(concGroupId, datasetName.str().c_str(), H5T_STD_B64LE, concSId,
+	hid_t datasetId = H5Dcreate2(concGroupId, datasetName.str().c_str(), H5T_IEEE_F64LE, concSId,
 			H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
 	// Write concArray in the dataset
-	status = H5Dwrite(datasetId, H5T_STD_B64LE, H5S_ALL, H5S_ALL,
+	status = H5Dwrite(datasetId, H5T_IEEE_F64LE, H5S_ALL, H5S_ALL,
 	H5P_DEFAULT, concArray);
 
-	// Create the attribute for the phisical position
+	// Create the attribute for the physical position
 	hid_t posSId = H5Screate(H5S_SCALAR);
-	hid_t posAId = H5Acreate2 (datasetId, "physicalPos", H5T_STD_B64BE, posSId,
+	hid_t posAId = H5Acreate2 (datasetId, "physicalPos", H5T_IEEE_F64LE, posSId,
 	                             H5P_DEFAULT, H5P_DEFAULT);
 
 	// Write it
-	status = H5Awrite(posAId, H5T_STD_B64BE, &position);
+	status = H5Awrite(posAId, H5T_IEEE_F64LE, &position);
 
 	// Close everything
 	status = H5Aclose(posAId);
@@ -159,11 +159,35 @@ void HDF5Utils::fillConcentrations(double * concArray, double position) {
 }
 
 void HDF5Utils::finalizeFile() {
-	//Close everything
+	// Close everything
 	status = H5Gclose(headerGroupId);
 	status = H5Gclose(networkGroupId);
 	status = H5Gclose(concGroupId);
 	status = H5Fclose(fileId);
 
 	return;
+}
+
+void HDF5Utils::readNetwork(std::string fileName) {
+	// Open the given HDF5 file with read only access
+	fileId = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+
+	// Open the dataset
+	hid_t datasetId = H5Dopen(fileId, "/networkGroup/network", H5P_DEFAULT);
+
+	// Open and read the networkSize attribute
+	hid_t networkSizeAId = H5Aopen(datasetId, "networkSize", H5P_DEFAULT);
+	int networkSize = 0;
+	status = H5Aread(networkSizeAId, H5T_STD_I8LE, &networkSize);
+	status = H5Aclose(networkSizeAId);
+
+	// Create the structure to receive the network data set
+	double networkArray [networkSize][8];
+
+	// Read the data set
+	 status = H5Dread(datasetId, H5T_IEEE_F64LE, H5S_ALL, H5S_ALL, H5P_DEFAULT, networkArray);
+
+	// Close everything
+	status = H5Dclose(datasetId);
+	status = H5Fclose(fileId);
 }

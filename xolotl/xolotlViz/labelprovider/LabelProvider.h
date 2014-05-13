@@ -54,6 +54,11 @@ public:
 	std::string unitLabel = " ";
 
 	/**
+	 * Time label for the plot.
+	 */
+	std::string timeLabel = " ";
+
+	/**
 	 * The default constructor
 	 */
 	LabelProvider(std::string name) : xolotlCore::Identifiable(name) {};
