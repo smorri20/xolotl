@@ -694,7 +694,8 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 }
 
 /**
- * This is a monitoring method that will save 2D plots of one concentration
+ * This is a monitoring method that will save 2D plots for each depths of
+ * the concentration as a function of the cluster composition.
  */
 static PetscErrorCode monitorSurface(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
@@ -743,10 +744,6 @@ static PetscErrorCode monitorSurface(TS ts, PetscInt timestep, PetscReal time,
 	// Setup some step size variables
 	hx = 8.0 / (PetscReal) (Mx - 1);
 
-	// Create a Point vector to store the data to give to the data provider
-	// for the visualization
-	auto myPoints = std::make_shared<std::vector<xolotlViz::Point> >();
-
 	// The array of cluster names
 	std::vector<std::string> names(networkSize);
 
@@ -758,10 +755,9 @@ static PetscErrorCode monitorSurface(TS ts, PetscInt timestep, PetscReal time,
 
 	// Loop on the grid points
 	for (xi = xs; xi < xs + xm; xi++) {
-		// Temporary: plot only one depth because it causes a malloc to do more and
-		// needs to be fixed
-		if (xi != 1)
-			continue;
+		// Create a Point vector to store the data to give to the data provider
+		// for the visualization
+		auto myPoints = std::make_shared<std::vector<xolotlViz::Point> >();
 
 		// Get the pointer to the beginning of the solution data for this grid point
 		gridPointSolution = solutionArray + networkSize * xi;
@@ -1070,7 +1066,8 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 		checkPetscError(ierr);
 	}
 
-	// Set the monitor to save surface plots of one concentration
+	// Set the monitor to save surface plots of clusters concentration
+	// for each depth
 	if (flag2DPlot) {
 		// Create a SurfacePlot
 		surfacePlot = vizHandlerRegistry->getPlot("surfacePlot",
