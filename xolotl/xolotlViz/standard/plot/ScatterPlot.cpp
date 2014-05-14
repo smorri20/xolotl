@@ -72,14 +72,25 @@ void ScatterPlot::render(std::string fileName) {
     window->Resize(W_WIDTH,W_HEIGHT);
 
     // Print the title
-    window->AddWindowAnnotation(plotLabelProvider->titleLabel, 0,1, .5,1, 0.08);
+    auto titleAnnotation = new eavlScreenTextAnnotation(window, plotLabelProvider->titleLabel,
+    		eavlColor::black, 0.065, 0.0, 0.9);
+    window->AddAnnotation(titleAnnotation);
 
-    // Print the axis
-    window->AddViewportAnnotation(plotLabelProvider->axis1Label, 0,-1, 0,-.1, .5,1, 0.05);
-    window->AddViewportAnnotation(plotLabelProvider->axis2Label, -1,0, -.1,0, .5,0, 0.05, 90);
+    // Print the axis labels
+    auto axis1Annotation = new eavlScreenTextAnnotation(window, plotLabelProvider->axis1Label,
+    		eavlColor::black, 0.05, 0.0, -0.9);
+    window->AddAnnotation(axis1Annotation);
+    auto axis2Annotation = new eavlScreenTextAnnotation(window, plotLabelProvider->axis2Label,
+    		eavlColor::black, 0.05, -0.9, 0.0, 90.0);
+    window->AddAnnotation(axis2Annotation);
 
     // Add the time information
-    window->AddWindowAnnotation(plotLabelProvider->timeLabel, 1,1, 1.2,5, 0.05);
+    auto timeAnnotation = new eavlScreenTextAnnotation(window, plotLabelProvider->timeLabel,
+    		eavlColor::black, 0.055, 0.8, -0.85);
+    window->AddAnnotation(timeAnnotation);
+    auto timeStepAnnotation = new eavlScreenTextAnnotation(window, plotLabelProvider->timeStepLabel,
+    		eavlColor::black, 0.055, 0.8, -0.91);
+    window->AddAnnotation(timeStepAnnotation);
 
     // Set the log scale
     if (enableLogScale) window->view.view2d.logy = true;

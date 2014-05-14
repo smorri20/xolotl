@@ -437,8 +437,17 @@ static PetscErrorCode monitorScatter(TS ts, PetscInt timestep, PetscReal time,
 		plot->plotLabelProvider->titleLabel = title.str();
 		// Give the time to the label provider
 		std::stringstream timeLabel;
-		timeLabel << std::setprecision(4) << time << "s";
+		timeLabel << "time: " << std::setprecision(4) << time << "s";
 		plot->plotLabelProvider->timeLabel = timeLabel.str();
+		// Get the current time step
+		PetscReal currentTimeStep;
+		ierr = TSGetTimeStep(ts, &currentTimeStep);
+		checkPetscError(ierr);
+		// Give the timestep to the label provider
+		std::stringstream timeStepLabel;
+		timeStepLabel << "dt: " << std::setprecision(4) << currentTimeStep
+				<< "s";
+		plot->plotLabelProvider->timeStepLabel = timeStepLabel.str();
 
 		// Render and save in file
 		std::stringstream fileName;
@@ -528,6 +537,9 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 	// Setup some step size variables
 	hx = 8.0 / (PetscReal) (Mx - 1);
 
+	// To know which one to plot
+	const int loopSize = 12;
+
 	if (procId == 0) {
 		// The array of cluster names
 		std::vector<std::string> names(networkSize);
@@ -557,7 +569,7 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 
 		// Create a Point vector to store the data to give to the data provider
 		// for the visualization
-		std::vector<std::vector<xolotlViz::Point> > myPoints(networkSize);
+		std::vector<std::vector<xolotlViz::Point> > myPoints(loopSize);
 
 		// Loop on the grid
 		for (xi = xs; xi < xs + xm; xi++) {
@@ -574,7 +586,7 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 			double * concentration = &concentrations[0];
 			PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
 
-			for (int i = 0; i < networkSize; i++) {
+			for (int i = 0; i < loopSize; i++) {
 				// Create a Point with the concentration[iCluster] as the value
 				// and add it to myPoints
 				xolotlViz::Point aPoint;
@@ -598,7 +610,7 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 				MPI_Recv(&x, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
 						MPI_STATUS_IGNORE);
 
-				for (int j = 0; j < networkSize; j++) {
+				for (int j = 0; j < loopSize; j++) {
 					// and the concentrations
 					double conc;
 					MPI_Recv(&conc, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
@@ -615,7 +627,7 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 			}
 		}
 
-		for (int i = 0; i < networkSize; i++) {
+		for (int i = 0; i < loopSize; i++) {
 			// Get the data provider and give it the points
 			auto thePoints = std::make_shared < std::vector<xolotlViz::Point>
 					> (myPoints[i]);
@@ -670,7 +682,7 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 			// Send the value of the local position to the master process
 			MPI_Send(&x, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
 
-			for (int i = 0; i < networkSize; i++) {
+			for (int i = 0; i < loopSize; i++) {
 				// Send the value of the concentrations to the master process
 				MPI_Send(&concentration[i], 1, MPI_DOUBLE, 0, 0,
 						MPI_COMM_WORLD);
@@ -823,8 +835,17 @@ static PetscErrorCode monitorSurface(TS ts, PetscInt timestep, PetscReal time,
 		surfacePlot->plotLabelProvider->titleLabel = title.str();
 		// Give the time to the label provider
 		std::stringstream timeLabel;
-		timeLabel << std::setprecision(4) << time << "s";
+		timeLabel << "time: " << std::setprecision(4) << time << "s";
 		surfacePlot->plotLabelProvider->timeLabel = timeLabel.str();
+		// Get the current time step
+		PetscReal currentTimeStep;
+		ierr = TSGetTimeStep(ts, &currentTimeStep);
+		checkPetscError(ierr);
+		// Give the timestep to the label provider
+		std::stringstream timeStepLabel;
+		timeStepLabel << "dt: " << std::setprecision(4) << currentTimeStep
+				<< "s";
+		surfacePlot->plotLabelProvider->timeStepLabel = timeStepLabel.str();
 
 		// Render and save in file
 		std::stringstream fileName;
@@ -840,6 +861,7 @@ static PetscErrorCode monitorSurface(TS ts, PetscInt timestep, PetscReal time,
  */
 static PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
+	PetscInt ierr;
 
 	PetscFunctionBeginUser;
 
@@ -905,8 +927,17 @@ static PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
 		perfPlot->plotLabelProvider->titleLabel = title.str();
 		// Give the time to the label provider
 		std::stringstream timeLabel;
-		timeLabel << std::setprecision(4) << time << "s";
+		timeLabel << "time: " << std::setprecision(4) << time << "s";
 		perfPlot->plotLabelProvider->timeLabel = timeLabel.str();
+		// Get the current time step
+		PetscReal currentTimeStep;
+		ierr = TSGetTimeStep(ts, &currentTimeStep);
+		checkPetscError(ierr);
+		// Give the timestep to the label provider
+		std::stringstream timeStepLabel;
+		timeStepLabel << "dt: " << std::setprecision(4) << currentTimeStep
+				<< "s";
+		perfPlot->plotLabelProvider->timeStepLabel = timeStepLabel.str();
 
 		// Render and save in file
 		std::stringstream fileName;
@@ -1019,8 +1050,10 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 		// Network size
 		const int networkSize = PetscSolver::getNetwork()->size();
 
+		const int loopSize = 12;
+
 		// Create a data provider for each cluster in the network
-		for (int i = 0; i < networkSize; i++) {
+		for (int i = 0; i < loopSize; i++) {
 			// Set the name for Identifiable
 			std::stringstream dataProviderName;
 			dataProviderName << "dataprovider" << i;
