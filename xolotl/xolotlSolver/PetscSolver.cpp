@@ -7,6 +7,8 @@
 #include <petscsys.h>
 #include <sstream>
 #include <iostream>
+#include <vector>
+#include <memory>
 #include <fstream>
 #include <string>
 #include <unordered_map>
@@ -78,8 +80,7 @@ std::shared_ptr<IFluxHandler> PetscSolver::fluxHandler;
 std::shared_ptr<ITemperatureHandler> PetscSolver::temperatureHandler;
 
 extern PetscErrorCode RHSFunction(TS, PetscReal, Vec, Vec, void*);
-extern PetscErrorCode RHSJacobian(TS, PetscReal, Vec, Mat*, Mat*, MatStructure*,
-		void*);
+extern PetscErrorCode RHSJacobian(TS, PetscReal, Vec, Mat, Mat);
 extern PetscErrorCode setupPetscMonitor(TS);
 extern void computeRetention(TS, Vec);
 
@@ -133,9 +134,9 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 
 	PetscFunctionBeginUser;
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
+			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+			PETSC_IGNORE);
 	checkPetscError(ierr);
 
 	/* Name each of the concentrations */
@@ -166,32 +167,16 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 	 Compute function over the locally owned part of the grid
 	 */
 	for (i = xs; i < xs + xm; i++) {
-		// Intitialiaze all concentration to 0 for each grid point
-		reactants = network->getAll();
-		size = reactants->size();
-		for (int j = 0; j < size; j++) {
-			reactants->at(j)->setConcentration(0.0);
-		}
 
 		// For boundary conditions all the concentrations are 0
-		// at i == 0
+		// at i == 0. Everywhere else, only I1 has a non-zero concentration.
 		if (i != 0) {
-			// Set the default vacancy concentrations
-			reactants = network->getAll("V");
-			size = reactants->size();
-			for (int j = 0; j < size; j++) {
-				reactants->at(j)->setConcentration(1.0);
-			}
 			// Set the default interstitial concentrations
-			reactants = network->getAll("I");
-			size = reactants->size();
-			for (int j = 0; j < size; j++) {
-				reactants->at(j)->setConcentration(1.0);
-			}
+			auto reactant = network->get("I",1);
+			reactant->setConcentration(0.0023);
 		}
 
 		// Update the PETSc concentrations array
-		size = network->size();
 		concOffset = concentrations + size * i;
 		network->fillConcentrationsArray(concOffset);
 	}
@@ -299,9 +284,6 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	auto props = network->getProperties();
 	int numHeClusters = std::stoi(props["numHeClusters"]);
 
-	// Get the flux handler that will be used to compute fluxes.
-	auto fluxHandler = PetscSolver::getFluxHandler();
-
 	// Get the local data vector from petsc
 	PetscFunctionBeginUser;
 	ierr = TSGetDM(ts, &da);
@@ -309,9 +291,9 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	ierr = DMGetLocalVector(da, &localC);
 	checkPetscError(ierr);
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
+			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+			PETSC_IGNORE);
 	checkPetscError(ierr);
 
 	// Get the total number of grid points specified by the command line option
@@ -362,7 +344,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	computeODEtermPerGP->start();
 	for (xi = xs; xi < xs + xm; xi++) {
 		x = xi * hx;
-		
+
 		// Vector representing the position at which the flux will be calculated
 		// Currently we are only in 1D
 		std::vector<double> gridPosition = { 0, x, 0 };
@@ -452,14 +434,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 		// Boundary conditions
 		if (xi == 0) {
 			for (int i = 0; i < size; i++) {
-				updatedConcOffset[i] = 1.0e12 * concs[i];
-			}
-		}
-
-		// Boundary conditions
-		if (x == 0.0) {
-			for (int i = 0; i < size; i++) {
-				updatedConcOffset[i] = 1e12 * concs[i];
+				updatedConcOffset[i] = 1.0 * concs[i];
 			}
 		}
 
@@ -531,8 +506,7 @@ void computePartialsForDiffusion(std::shared_ptr<PSICluster> cluster,
 /*
  Compute the Jacobian entries based on IFuction() and insert them into the matrix
  */
-PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat *A, Mat *J,
-		MatStructure *str, void *ptr) {
+PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,void *ptr) {
 
 	// increment the event counter monitoring this function
 	RHSJacobianCounter->increment();
@@ -559,16 +533,16 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat *A, Mat *J,
 
 	// Get the matrix from PETSc
 	PetscFunctionBeginUser;
-	ierr = MatZeroEntries(*J);
+	ierr = MatZeroEntries(J);
 	checkPetscError(ierr);
 	ierr = TSGetDM(ts, &da);
 	checkPetscError(ierr);
 	ierr = DMGetLocalVector(da, &localC);
 	checkPetscError(ierr);
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
+			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+			PETSC_IGNORE);
 	checkPetscError(ierr);
 
 	// Get the total number of grid points specified by the command line option
@@ -645,15 +619,7 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat *A, Mat *J,
 						> (network->get("He", i));
 				computePartialsForDiffusion(psiCluster, temperature, sx, val,
 						row, col, xi, xs, size);
-
-				// Boundary conditions
-				if (xi == 0) {
-					val[0] = 0.0;
-					val[1] = 0.0;
-					val[2] = 0.0;
-				}
-
-				ierr = MatSetValuesLocal(*J, 1, row, 3, col, val, ADD_VALUES);
+				ierr = MatSetValuesLocal(J, 1, row, 3, col, val, ADD_VALUES);
 				checkPetscError(ierr);
 			}
 
@@ -665,15 +631,7 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat *A, Mat *J,
 			if (psiCluster) {
 				computePartialsForDiffusion(psiCluster, temperature, sx, val,
 						row, col, xi, xs, size);
-
-				// Boundary conditions
-				if (xi == 0) {
-					val[0] = 0.0;
-					val[1] = 0.0;
-					val[2] = 0.0;
-				}
-
-				ierr = MatSetValuesLocal(*J, 1, row, 3, col, val, ADD_VALUES);
+				ierr = MatSetValuesLocal(J, 1, row, 3, col, val, ADD_VALUES);
 				checkPetscError(ierr);
 			}
 
@@ -683,27 +641,27 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat *A, Mat *J,
 			if (psiCluster) {
 				computePartialsForDiffusion(psiCluster, temperature, sx, val,
 						row, col, xi, xs, size);
-				ierr = MatSetValuesLocal(*J, 1, row, 3, col, val, ADD_VALUES);
+				ierr = MatSetValuesLocal(J, 1, row, 3, col, val, ADD_VALUES);
 				checkPetscError(ierr);
 			}
 			//break;   // Uncomment this line for debugging in a single cell.
 		}
 		computeJacobianDiffusionTerms->stop();
 
-		ierr = MatAssemblyBegin(*J, MAT_FINAL_ASSEMBLY);
+		ierr = MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);
 		checkPetscError(ierr);
-		ierr = MatAssemblyEnd(*J, MAT_FINAL_ASSEMBLY);
+		ierr = MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);
 		checkPetscError(ierr);
-//		ierr = MatSetOption(*J, MAT_NEW_NONZERO_LOCATIONS, PETSC_FALSE);
+//		ierr = MatSetOption(J, MAT_NEW_NONZERO_LOCATIONS, PETSC_FALSE);
 //		checkPetscError(ierr);
-		ierr = MatStoreValues(*J);
+		ierr = MatStoreValues(J);
 		checkPetscError(ierr);
-//		MatSetFromOptions(*J);
+//		MatSetFromOptions(J);
 		initialized = PETSC_TRUE;
 		// Debug line for viewing the matrix
-		//MatView(*J, PETSC_VIEWER_STDOUT_WORLD);
+		//MatView(J, PETSC_VIEWER_STDOUT_WORLD);
 	} else {
-		ierr = MatRetrieveValues(*J);
+		ierr = MatRetrieveValues(J);
 		checkPetscError(ierr);
 	}
 
@@ -769,7 +727,7 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat *A, Mat *J,
 //				std::cout << "dp[" << j << "] = " << pdColIdsVector[j] << " , [r,c] = "<< "[" << rowId << "," << localPDColIds[j] << "] = " << reactingPartialsForCluster[j]<< std::endl;
 			}
 			// Update the matrix
-			ierr = MatSetValuesLocal(*J, 1, &rowId, pdColIdsVectorSize,
+			ierr = MatSetValuesLocal(J, 1, &rowId, pdColIdsVectorSize,
 					localPDColIds, reactingPartialsForCluster.data(),
 					ADD_VALUES);
 			checkPetscError(ierr);
@@ -789,12 +747,11 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat *A, Mat *J,
 	checkPetscError(ierr);
 	ierr = DMRestoreLocalVector(da, &localC);
 	checkPetscError(ierr);
-	*str = SAME_NONZERO_PATTERN;
-	ierr = MatAssemblyBegin(*J, MAT_FINAL_ASSEMBLY);
+	ierr = MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);
 	checkPetscError(ierr);
-	ierr = MatAssemblyEnd(*J, MAT_FINAL_ASSEMBLY);
+	ierr = MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);
 	checkPetscError(ierr);
-	
+
 	// Boundary conditions
 	// Loop over the grid points
 	for (xi = xs; xi < xs + xm; xi++) {
@@ -818,13 +775,13 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat *A, Mat *J,
 					localPDColIds[j] = (xi - xs + 1) * size + pdColIdsVector[j];
 					// Get the partial derivative from the array of all of the partials
 					if (pdColIdsVector[j] == reactantIndex)
-						reactingPartialsForCluster[j] = 1.0e12;
+						reactingPartialsForCluster[j] = 1.0;
 					else
 						reactingPartialsForCluster[j] = 0.0;
 				}
 
 				// Update the matrix
-				ierr = MatSetValuesLocal(*J, 1, &rowId, pdColIdsVectorSize,
+				ierr = MatSetValuesLocal(J, 1, &rowId, pdColIdsVectorSize,
 						localPDColIds, reactingPartialsForCluster.data(),
 						INSERT_VALUES);
 				checkPetscError(ierr);
@@ -833,26 +790,25 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat *A, Mat *J,
 	}
 
 	// Assemble again
-	ierr = MatAssemblyBegin(*J, MAT_FINAL_ASSEMBLY);
+	ierr = MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);
 	checkPetscError(ierr);
-	ierr = MatAssemblyEnd(*J, MAT_FINAL_ASSEMBLY);
+	ierr = MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);
 	checkPetscError(ierr);
 
-	if (*A != *J) {
-		ierr = MatAssemblyBegin(*A, MAT_FINAL_ASSEMBLY);
+	if (A != J) {
+		ierr = MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY);
 		checkPetscError(ierr);
-		ierr = MatAssemblyEnd(*A, MAT_FINAL_ASSEMBLY);
+		ierr = MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY);
 		checkPetscError(ierr);
 	}
 	PetscFunctionReturn(0);
 
 }
 
-PetscErrorCode callRHSJacobian(TS ts, PetscReal ftime, Vec C, Mat *A, Mat *J,
-		MatStructure *str, void *ptr) {
+PetscErrorCode callRHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J, void *ptr) {
 	PetscErrorCode ierr;
 	RHSJacobianTimer->start();
-	ierr = RHSJacobian(ts, ftime, C, A, J, str, &ptr);
+	ierr = RHSJacobian(ts, ftime, C, A, J, &ptr);
 	RHSJacobianTimer->stop();
 
 	return ierr;
@@ -1065,8 +1021,8 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Create distributed array (DMDA) to manage parallel grid and vectors
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = DMDACreate1d(PETSC_COMM_WORLD, DMDA_BOUNDARY_MIRROR, -8, dof, 1,
-	NULL, &da);
+	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_MIRROR, -8, dof, 1,
+			NULL, &da);
 	checkPetscError(ierr);
 
 	/* The only spatial coupling in the Jacobian (diffusion) is for the first 5 He, the first V, and the first I.
@@ -1159,8 +1115,8 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	ierr = TSSetInitialTimeStep(ts, 0.0, 1.0e-8);
 	checkPetscError(ierr);
-	ierr = TSSetDuration(ts, 100, 50.0);
-	checkPetscError(ierr);
+//	ierr = TSSetDuration(ts, 100, 50.0);
+//	checkPetscError(ierr);
 	ierr = TSSetFromOptions(ts);
 	checkPetscError(ierr);
 	ierr = setupPetscMonitor(ts);
@@ -1178,7 +1134,6 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	// Time how long it takes to solve the ODE system
 	solveODEsystem->start();  // start the timer
 	if (ts != NULL && C != NULL) {
-		solveODEsystem->start();  // start the timer
 		ierr = TSSolve(ts, C);
 		checkPetscError(ierr);
 
