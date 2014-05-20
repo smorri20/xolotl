@@ -71,15 +71,15 @@ PSICluster::PSICluster(const PSICluster &other) :
 		Reactant(other), size(other.size), diffusionFactor(
 				other.diffusionFactor), thisSharedPtr(other.thisSharedPtr), thisNetworkIndex(
 				other.thisNetworkIndex), bindingEnergies(other.bindingEnergies), migrationEnergy(
-				other.migrationEnergy), reactionRadius(other.reactionRadius), reactingPairs(
+				other.migrationEnergy), lastMigrationEnergy(
+						other.lastMigrationEnergy), reactionRadius(other.reactionRadius), reactingPairs(
 				other.reactingPairs), combiningReactants(
 				other.combiningReactants), dissociatingClusters(
-				other.dissociatingClusters), reactionConnectivitySet(
-				other.reactionConnectivitySet), dissociationConnectivitySet(
-				other.dissociationConnectivitySet), lastMigrationEnergy(
-				other.lastMigrationEnergy), lastDiffusionTemperature(
+				other.dissociatingClusters), lastDiffusionTemperature(
 				other.lastDiffusionTemperature), lastDiffusionCoefficient(
-				other.lastDiffusionCoefficient) {
+				other.lastDiffusionCoefficient), reactionConnectivitySet(
+				other.reactionConnectivitySet), dissociationConnectivitySet(
+				other.dissociationConnectivitySet) {
 
 	// Set up an event counter to count the number of times getDissociationFlux is called
 	getDissociationFluxCounter = handlerRegistry->getEventCounter(
@@ -469,7 +469,8 @@ double PSICluster::getDiffusionCoefficient(double temperature) {
 	// Only compute the diffusion coefficient if the temperature or the
 	// migration energy is different than the last time this function was
 	// called.
-	if (!equal(temperature, lastDiffusionTemperature) || !equal(migrationEnergy,lastMigrationEnergy)) {
+	if (!equal(temperature, lastDiffusionTemperature)
+			|| !equal(migrationEnergy, lastMigrationEnergy)) {
 		// Use the Arrhenius equation to compute the diffusion coefficient
 		double k_b = xolotlCore::kBoltzmann;
 		double kernel = -1.0 * migrationEnergy / (k_b * temperature);
