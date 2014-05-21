@@ -1023,10 +1023,16 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	std::cout.precision(16);
 
 	PetscFunctionBeginUser;
+
+	// Get starting conditions from HDF5 file
+	int gridLength = 0;
+	double time = 0.0, deltaTime = 0.0;
+	HDF5Utils::readHeader("xolotlStart.h5", gridLength, time, deltaTime);
+
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Create distributed array (DMDA) to manage parallel grid and vectors
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_MIRROR, -8, dof, 1,
+	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_MIRROR, gridLength, dof, 1,
 			NULL, &da);
 	checkPetscError(ierr);
 
@@ -1118,7 +1124,7 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Set solver options
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = TSSetInitialTimeStep(ts, 0.0, 1.0e-8);
+	ierr = TSSetInitialTimeStep(ts, time, deltaTime);
 	checkPetscError(ierr);
 //	ierr = TSSetDuration(ts, 100, 50.0);
 //	checkPetscError(ierr);

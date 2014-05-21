@@ -92,6 +92,8 @@ std::shared_ptr<PSIClusterNetworkLoader> setUpNetworkLoader(int rank,
 	// Create a HDF5NetworkLoader
 	std::shared_ptr<HDF5NetworkLoader> networkLoader;
 	networkLoader = std::make_shared<HDF5NetworkLoader>(registry);
+	// Give the networkFilename to the network loader
+	networkLoader->setFilename(networkFilename);
 
 //	std::shared_ptr<PSIClusterNetworkLoader> networkLoader;
 //	shared_ptr<std::istream> networkStream;

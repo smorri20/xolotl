@@ -537,8 +537,8 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 	// Setup some step size variables
 	hx = 8.0 / (PetscReal) (Mx - 1);
 
-	// To plot a maximum of 15 clusters of the whole benchmark
-	const int loopSize = std::max(15, networkSize);
+	// To plot a minimum of 15 clusters of the whole benchmark
+	const int loopSize = std::min(15, networkSize);
 
 	if (procId == 0) {
 		// The array of cluster names
@@ -1047,8 +1047,8 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 		const int networkSize = PetscSolver::getNetwork()->size();
 
 
-		// To plot a maximum of 15 clusters of the whole benchmark
-		const int loopSize = std::max(15, networkSize);
+		// To plot a minimum of 15 clusters of the whole benchmark
+		const int loopSize = std::min(15, networkSize);
 
 		// Create a data provider for each cluster in the network
 		for (int i = 0; i < loopSize; i++) {

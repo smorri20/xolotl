@@ -17,7 +17,7 @@ namespace HDF5Utils {
 
 	/**
 	 * Fill the header.
-	 * @param physicalDim The physical lenght of the material on which one is solving the ADR equation.
+	 * @param physicalDim The physical length of the material on which one is solving the ADR equation.
 	 * @param refinement The refinement of the grid.
 	 * @param time The physical time at this time step.
 	 * @param deltaTime The physical length of the time step.
@@ -41,6 +41,15 @@ namespace HDF5Utils {
 	 * Add the data to the file and close it.
 	 */
 	void finalizeFile();
+
+	/**
+	 * Read the header of a HDF5 file.
+	 * @param fileName The name of the file to read from.
+	 * @param physicalDim The physical length of the material to be changed.
+	 * @param time The physical time to be changed.
+	 * @param deltaTime The time step length to be changed.
+	 */
+	void readHeader(std::string fileName, int & physicalDim, double & time, double & deltaTime);
 
 	/**
 	 * Read the network from a HDF5 file.

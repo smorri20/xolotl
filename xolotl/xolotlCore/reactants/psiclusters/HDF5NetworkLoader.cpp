@@ -16,7 +16,7 @@ using namespace xolotlCore;
 
 std::shared_ptr<PSIClusterReactionNetwork> HDF5NetworkLoader::load() {
 	// Get the dataset from the HDF5 files
-	auto networkVector = xolotlCore::HDF5Utils::readNetwork("xolotlStart.h5");
+	auto networkVector = xolotlCore::HDF5Utils::readNetwork(fileName);
 
 	// Initialization
 	int numHe = 0, numV = 0, numI = 0;
@@ -69,3 +69,13 @@ std::shared_ptr<PSIClusterReactionNetwork> HDF5NetworkLoader::load() {
 
 	return network;
 }
+
+void HDF5NetworkLoader::setFilename (std::string name) {
+	fileName = name;
+	return;
+}
+
+std::string HDF5NetworkLoader::getFilename () const {
+	return fileName;
+}
+

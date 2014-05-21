@@ -171,6 +171,35 @@ void HDF5Utils::finalizeFile() {
 	return;
 }
 
+void HDF5Utils::readHeader(std::string fileName, int & physicalDim, double & time, double & deltaTime) {
+	// Open the given HDF5 file with read only access
+	fileId = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+
+	// Open the header group
+	hid_t groupId = H5Gopen(fileId, "/headerGroup", H5P_DEFAULT);
+
+	// Open and read the physicalDim attribute
+	hid_t physicalDimAId = H5Aopen(groupId, "physicalDim", H5P_DEFAULT);
+	status = H5Aread(physicalDimAId, H5T_STD_I8LE, &physicalDim);
+	status = H5Aclose(physicalDimAId);
+
+	// Open and read the absoluteTime attribute
+	hid_t timeAId = H5Aopen(groupId, "absoluteTime", H5P_DEFAULT);
+	status = H5Aread(timeAId, H5T_IEEE_F64LE, &time);
+	status = H5Aclose(timeAId);
+
+	// Open and read the deltaTime attribute
+	hid_t deltaTimeAId = H5Aopen(groupId, "deltaTime", H5P_DEFAULT);
+	status = H5Aread(deltaTimeAId, H5T_IEEE_F64LE, &deltaTime);
+	status = H5Aclose(deltaTimeAId);
+
+	// Close everything
+	status = H5Gclose(groupId);
+	status = H5Fclose(fileId);
+
+	return;
+}
+
 std::vector< std::vector <double> > HDF5Utils::readNetwork(std::string fileName) {
 	// Open the given HDF5 file with read only access
 	fileId = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
