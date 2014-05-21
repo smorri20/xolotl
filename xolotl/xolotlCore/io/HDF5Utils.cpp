@@ -43,16 +43,16 @@ void HDF5Utils::initializeFile(int timeStep, int networkSize) {
 void HDF5Utils::fillHeader(int physicalDim, int refinement, double time, double deltaTime) {
 	// Create, write, and close the physicalDim attribute
 	hid_t dimSId = H5Screate(H5S_SCALAR);
-	hid_t dimAId = H5Acreate2 (headerGroupId, "physicalDim", H5T_STD_I8LE, dimSId,
+	hid_t dimAId = H5Acreate2 (headerGroupId, "physicalDim", H5T_STD_I32LE, dimSId,
 	                             H5P_DEFAULT, H5P_DEFAULT);
-	status = H5Awrite(dimAId, H5T_STD_I8LE, &physicalDim);
+	status = H5Awrite(dimAId, H5T_STD_I32LE, &physicalDim);
 	status = H5Aclose(dimAId);
 
 	// Create, write, and close the refinement attribute
 	hid_t refineSId = H5Screate(H5S_SCALAR);
-	hid_t refineAId = H5Acreate2 (headerGroupId, "refinement", H5T_STD_I8LE, refineSId,
+	hid_t refineAId = H5Acreate2 (headerGroupId, "refinement", H5T_STD_I32LE, refineSId,
 	                             H5P_DEFAULT, H5P_DEFAULT);
-	status = H5Awrite(refineAId, H5T_STD_I8LE, &refinement);
+	status = H5Awrite(refineAId, H5T_STD_I32LE, &refinement);
 	status = H5Aclose(refineAId);
 
 	// Create, write, and close the absolute time attribute
@@ -82,7 +82,7 @@ void HDF5Utils::fillNetwork(std::shared_ptr<PSIClusterReactionNetwork> network) 
 
 	// Loop on them
 	for (int i = 0; i < networkSize; i++) {
-		// Get the i-st reactant
+		// Get the i-th reactant
 		std::shared_ptr<PSICluster> reactant =
 				std::static_pointer_cast<PSICluster>(reactants->at(i));
 
@@ -120,11 +120,11 @@ void HDF5Utils::fillNetwork(std::shared_ptr<PSIClusterReactionNetwork> network) 
 
 	// Create the attribute for the network size
 	hid_t networkSizeSId = H5Screate(H5S_SCALAR);
-	hid_t networkSizeAId = H5Acreate2 (datasetId, "networkSize", H5T_STD_I8LE, networkSizeSId,
+	hid_t networkSizeAId = H5Acreate2 (datasetId, "networkSize", H5T_STD_I32LE, networkSizeSId,
 	                             H5P_DEFAULT, H5P_DEFAULT);
 
 	// Write it
-	status = H5Awrite(networkSizeAId, H5T_STD_I8LE, &networkSize);
+	status = H5Awrite(networkSizeAId, H5T_STD_I32LE, &networkSize);
 
 	// Close everything
 	status = H5Aclose(networkSizeAId);
@@ -180,7 +180,7 @@ void HDF5Utils::readHeader(std::string fileName, int & physicalDim, double & tim
 
 	// Open and read the physicalDim attribute
 	hid_t physicalDimAId = H5Aopen(groupId, "physicalDim", H5P_DEFAULT);
-	status = H5Aread(physicalDimAId, H5T_STD_I8LE, &physicalDim);
+	status = H5Aread(physicalDimAId, H5T_STD_I32LE, &physicalDim);
 	status = H5Aclose(physicalDimAId);
 
 	// Open and read the absoluteTime attribute
@@ -210,7 +210,7 @@ std::vector< std::vector <double> > HDF5Utils::readNetwork(std::string fileName)
 	// Open and read the networkSize attribute
 	hid_t networkSizeAId = H5Aopen(datasetId, "networkSize", H5P_DEFAULT);
 	int networkSize = 0;
-	status = H5Aread(networkSizeAId, H5T_STD_I8LE, &networkSize);
+	status = H5Aread(networkSizeAId, H5T_STD_I32LE, &networkSize);
 	status = H5Aclose(networkSizeAId);
 
 	// Create the array that will receive the network
