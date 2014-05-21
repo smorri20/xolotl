@@ -95,8 +95,6 @@ void launchPetscSolver(xolotlSolver::PetscSolver solver, std::shared_ptr<xolotlP
     solverTimer->start();
 	solver.solve(materialHandler, tempHandler);
     solverTimer->stop();
-
-
 }
 
 std::shared_ptr<PSIClusterNetworkLoader> setUpNetworkLoader(int rank, MPI_Comm comm, std::string networkFilename,
@@ -206,7 +204,7 @@ int main(int argc, char **argv) {
         // given stream, but Timer and any hardware counter data is
         // written by the underlying timing library to files, one per process.
         if( rank == 0 ) {
-            handlerRegistry->dump( std::cout);
+            handlerRegistry->dump( std::cout );
         }
 
 	} catch (std::string & error) {

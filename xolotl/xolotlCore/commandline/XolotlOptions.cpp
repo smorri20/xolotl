@@ -1,6 +1,6 @@
+#include <iostream>
 #include <cassert>
 #include <cstdlib>
-#include <iostream>
 #include <fstream>
 #include "XolotlOptions.h"
 
@@ -12,13 +12,15 @@ XolotlOptions::XolotlOptions( void )
 {
     // Add our notion of which options we support.
     optionsMap["--temp"] = new OptInfo( true,
-        "--temp <const_temp>        The temperature (in Kelvin) will be the constant floating point value specified.",
+        "--temp <const_temp>        The temperature (in Kelvin) will be the constant floating point value specified."
+        "\n			     (NOTE: Use only ONE temperature option)",
         handleConstTemperatureOptionCB );
     optionsMap["--tempFile"] = new OptInfo( true,
-        "--tempFile <filename>      A temperature profile is given by the specified file.",
+        "--tempFile <filename>      A temperature profile is given by the specified file, then linear interpolation is used to fit the data."
+        "\n			     (NOTE: If a temperature file is given, a constant temperature should NOT be given)",
         handleTemperatureFileOptionCB );
     optionsMap["--material"] = new OptInfo( true,
-        "--material {W,Fe}	     Which material will used.",
+        "--material {W,Fe}	     Which material will used.  (default = W)",
         handleMaterialOptionCB );
     optionsMap["--handlers"] = new OptInfo( true,
         "--handlers {std,dummy}     Which set of handlers to use.",

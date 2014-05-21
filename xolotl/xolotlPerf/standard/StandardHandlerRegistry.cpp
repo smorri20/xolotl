@@ -2,7 +2,9 @@
 #include "StandardHandlerRegistry.h"
 #include "gptl.h"
 #include <sstream>
-
+#include <papi.h>
+#include <stdio.h>
+#include <array>
 
 namespace xolotlPerf
 {

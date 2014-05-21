@@ -26,7 +26,16 @@ private:
 
 protected:
 
+	/**
+	 * Vector to hold the time read from the input
+	 * temperature file
+	 */
 	std::vector<double> time;
+
+	/**
+	 * Vector to hold the temperature read from the input
+	 * temperature file
+	 */
 	std::vector<double> temp;
 
 public:
@@ -43,10 +52,15 @@ public:
 	 */
 	virtual ~TemperatureProfileHandler() { }
 
+	/**
+	 * This operation reads in the time and temperature data from the input
+	 * temperature file that was specified by the command line
+	 */
 	virtual void initializeTemperature();
 
 	/**
-	 * This operation returns the temperature at the given position
+	 * This operation linearly interpolates the data read from the input
+	 * temperature file and returns the temperature at the given position
 	 * and time.
 	 * @param position        The position
 	 * @param currentTime     The time

@@ -19,9 +19,7 @@ bool initializeTempHandler( bool useConstTempRegistry, bool useTempProfileRegist
     if ( useConstTempRegistry && useTempProfileRegistry )
     {
         // A constant temperature value AND a temperature profile cannot both be given.
-    	std::cerr << "\nA constant temperature value AND a temperature file cannot both be given.  "
-    			"Aborting!" << std::endl;
-    	exit( EXIT_FAILURE );
+    	throw std::string("\nA constant temperature value AND a temperature file cannot both be given.");
     }
     else if( useConstTempRegistry )
     {
@@ -40,8 +38,8 @@ bool initializeTempHandler( bool useConstTempRegistry, bool useTempProfileRegist
     }
     else
     {
-    	std::cerr << "Warning: Temperature information has not been given.  Defaulting to constant"
-    			" temperature = 1000K " << std::endl;
+    	std::cerr << "\nWarning: Temperature information has not been given.  Defaulting to constant"
+    			" temperature = 1000K \n" << std::endl;
     	auto temp = options.getConstTemperature();
         // we are to use a constant temperature handler
         theTemperatureHandler = std::make_shared<TemperatureHandler>( temp );
@@ -57,10 +55,12 @@ std::shared_ptr<ITemperatureHandler> getTemperatureHandler( xolotlCore::XolotlOp
     if( !theTemperatureHandler )
     {
         // We have not yet been initialized.
-        std::cerr << "Warning: xolotlSolver temperature handler requested, but "
-        		"library has not been initialized" << std::endl;
+//        std::cerr << "\nWarning: xolotlSolver temperature handler requested, but "
+//        		"library has not been initialized" << std::endl;
+//        xolotlSolver::initializeTempHandler( false, false, options );
 
-        xolotlSolver::initializeTempHandler( false, false, options );
+        throw std::string("\nxolotlSolver temperature handler requested, but "
+        		"library has not been initialized");
     }
     return theTemperatureHandler;
 }
