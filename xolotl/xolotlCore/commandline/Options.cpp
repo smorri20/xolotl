@@ -57,17 +57,16 @@ Options::parseCommandLine( int argc, char* argv[] )
     while( i < argc )
     {
         std::string currArg = argv[i++];
-        //std::cout << "\ncurrArg = argv[" << i << "++]" << currArg << std::endl;
         auto iter = optionsMap.find( currArg );
-        if( iter != optionsMap.end() )
+        if( iter != optionsMap.end())
         {
-            // We recognized the option.
+        	            // We recognized the option.
             // Call the option's handler.
             OptInfo* currOptInfo = iter->second;
             assert( currOptInfo != NULL );
 
             std::string optArg;
-            if( currOptInfo->argRequired )
+            if( currOptInfo->argRequired)
             {
                 if( i < argc )
                 {
@@ -97,7 +96,7 @@ Options::parseCommandLine( int argc, char* argv[] )
         }
     }
 
-    return i;
+    return i-1;
 }
 
 
