@@ -5,6 +5,7 @@ SET(PACKAGE_NAME "xolotl.tests.io")
 SET(PACKAGE_DESCRIPTION "Xolotl I/O tests")
 
 #include directories from the source and boost binaries
+include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/io)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants)
