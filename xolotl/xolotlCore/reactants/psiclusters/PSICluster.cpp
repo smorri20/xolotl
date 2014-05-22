@@ -26,14 +26,14 @@ PSICluster::PSICluster() :
 	name = "PSICluster";
 	// No type name to set. Leave it empty.
 	// Setup the composition map.
-	compositionMap["He"] = 0;
-	compositionMap["V"] = 0;
-	compositionMap["I"] = 0;
+	compositionMap[heType] = 0;
+	compositionMap[vType] = 0;
+	compositionMap[iType] = 0;
 	// Set the default reaction radius to 0. (Doesn't react.)
 	reactionRadius = 0.0;
 	// Setup the binding energy index map
-	bindingEnergyIndexMap = { {"He", 0},
-		{	"V", 1}, {"I", 2}};
+	bindingEnergyIndexMap = { {heType, 0},
+		{	vType, 1}, {iType, 2}};
 
 }
 
@@ -56,9 +56,9 @@ PSICluster::PSICluster(const int clusterSize,
 	// Set the reactant name appropriately
 	name = "PSICluster";
 	// Setup the composition map.
-	compositionMap["He"] = 0;
-	compositionMap["V"] = 0;
-	compositionMap["I"] = 0;
+	compositionMap[heType] = 0;
+	compositionMap[vType] = 0;
+	compositionMap[iType] = 0;
 	// Set the default reaction radius to 0. (Doesn't react.)
 	reactionRadius = 0.0;
 
@@ -115,12 +115,12 @@ void PSICluster::printReaction(const Reactant & firstReactant,
 	auto secondComp = secondReactant.getComposition();
 	auto productComp = productReactant.getComposition();
 
-	std::cout << firstReactant.getName() << "(" << firstComp["He"] << ", "
-			<< firstComp["V"] << ", " << firstComp["I"] << ") + "
-			<< secondReactant.getName() << "(" << secondComp["He"] << ", "
-			<< secondComp["V"] << ", " << secondComp["I"] << ") -> "
-			<< productReactant.getName() << "(" << productComp["He"] << ", "
-			<< productComp["V"] << ", " << productComp["I"] << ")" << std::endl;
+	std::cout << firstReactant.getName() << "(" << firstComp[heType] << ", "
+			<< firstComp[vType] << ", " << firstComp[iType] << ") + "
+			<< secondReactant.getName() << "(" << secondComp[heType] << ", "
+			<< secondComp[vType] << ", " << secondComp[iType] << ") -> "
+			<< productReactant.getName() << "(" << productComp[heType] << ", "
+			<< productComp[vType] << ", " << productComp[iType] << ")" << std::endl;
 
 	return;
 }
@@ -140,12 +140,12 @@ void PSICluster::printDissociation(const Reactant & firstReactant,
 	auto secondComp = secondReactant.getComposition();
 	auto productComp = productReactant.getComposition();
 
-	std::cout << firstReactant.getName() << "(" << firstComp["He"] << ", "
-			<< firstComp["V"] << ", " << firstComp["I"] << ") -> "
-			<< secondReactant.getName() << "(" << secondComp["He"] << ", "
-			<< secondComp["V"] << ", " << secondComp["I"] << ") + "
-			<< productReactant.getName() << "(" << productComp["He"] << ", "
-			<< productComp["V"] << ", " << productComp["I"] << ")" << std::endl;
+	std::cout << firstReactant.getName() << "(" << firstComp[heType] << ", "
+			<< firstComp[vType] << ", " << firstComp[iType] << ") -> "
+			<< secondReactant.getName() << "(" << secondComp[heType] << ", "
+			<< secondComp[vType] << ", " << secondComp[iType] << ") + "
+			<< productReactant.getName() << "(" << productComp[heType] << ", "
+			<< productComp[vType] << ", " << productComp[iType] << ")" << std::endl;
 
 	return;
 }
@@ -210,8 +210,8 @@ std::vector<int> PSICluster::getDissociationConnectivity() const {
 			network->size());
 }
 
-std::set<int> PSICluster::getDissociationConnectivitySet() const {
-	return std::set<int>(dissociationConnectivitySet);
+const std::set<int> & PSICluster::getDissociationConnectivitySet() const {
+	return dissociationConnectivitySet;
 }
 
 int PSICluster::getSize() const {
@@ -299,7 +299,6 @@ double PSICluster::getDissociationFlux(double temperature) const {
 	double flux = 0.0, fluxMultiplier = 1.0;
 	std::shared_ptr<PSICluster> dissociatingCluster, smallerCluster,
 			singleSpeciesCluster;
-	std::map<std::string, int> oneHe, oneV, oneI;
 
 	// Only try this if the network is available
 	if (network != NULL) {
@@ -307,8 +306,8 @@ double PSICluster::getDissociationFlux(double temperature) const {
 		auto composition = getComposition();
 		// Get the number of species to determine if this
 		// cluster is mixed or single
-		int numSpecies = (composition["He"] > 0) + (composition["V"] > 0)
-				+ (composition["I"] > 0);
+		int numSpecies = (composition[heType] > 0) + (composition[vType] > 0)
+				+ (composition[iType] > 0);
 		// If no species, throw error
 		if (numSpecies == 0) {
 			// Bad if we have no species
@@ -353,8 +352,8 @@ double PSICluster::getDissociationFlux(double temperature) const {
 		} else if (numSpecies == 2) {
 			std::cout << "PSICluster Message: "
 					<< "Caught invalid single-species composition! "
-					<< composition["He"] << " " << composition["V"] << " "
-					<< composition["I"] << std::endl;
+					<< composition[heType] << " " << composition[vType] << " "
+					<< composition[iType] << std::endl;
 			throw std::string(
 					"Mixed Species dissociation flux must be implemented by subclass.");
 		}
@@ -863,18 +862,18 @@ void PSICluster::combineClusters(
 			std::vector<int> compositionSizes {0,0,0};
 			std::shared_ptr<PSICluster> secondCluster, productCluster;
 			// Setup the composition variables for this cluster
-			numHe = myComposition["He"];
-			numV = myComposition["V"];
-			numI = myComposition["I"];
+			numHe = myComposition[heType];
+			numV = myComposition[vType];
+			numI = myComposition[iType];
 
 			int reactantVecSize = reactants->size();
 			for (int i = 0; i < reactantVecSize; i++) {
 				// Get the second reactant, its composition and its index
 				secondCluster = std::dynamic_pointer_cast <PSICluster> (reactants->at(i));
 				secondComposition = secondCluster->getComposition();
-				secondNumHe = secondComposition["He"];
-				secondNumV = secondComposition["V"];
-				secondNumI = secondComposition["I"];
+				secondNumHe = secondComposition[heType];
+				secondNumV = secondComposition[vType];
+				secondNumI = secondComposition[iType];
 				otherId = secondCluster->getId();
 				int productSize = size + secondCluster->getSize();
 				// Get and handle product for compounds
@@ -936,9 +935,9 @@ void PSICluster::replaceInCompound(
 				productReactantComp[oldComponentName] =
 				secondReactantComp[oldComponentName] - myComponentNumber;
 				// Create the composition vector -- FIXME! This should be general!
-				productCompositionVector[0] = productReactantComp["He"];
-				productCompositionVector[1] = productReactantComp["V"];
-				productCompositionVector[2] = productReactantComp["I"];
+				productCompositionVector[0] = productReactantComp[heType];
+				productCompositionVector[1] = productReactantComp[vType];
+				productCompositionVector[2] = productReactantComp[iType];
 				// Get the product
 				productReactant = network->getCompound(secondReactant->getType(),
 						productCompositionVector);
@@ -988,25 +987,25 @@ void PSICluster::fillVWithI(std::string secondClusterName,
 		if (firstClusterSize != secondClusterSize) {
 			// We have to switch on cluster type to make sure that the annihilation
 			// is computed correctly.
-			if (firstClusterName == "V") {
+			if (firstClusterName == vType) {
 				// Compute the product size and set the product name for the case
 				// where I is the second cluster
 				if (secondClusterSize > firstClusterSize) {
 					productClusterSize = secondClusterSize - firstClusterSize;
-					productClusterName = "I";
+					productClusterName = iType;
 				} else if (secondClusterSize < firstClusterSize) {
 					productClusterSize = firstClusterSize - secondClusterSize;
-					productClusterName = "V";
+					productClusterName = vType;
 				}
-			} else if (firstClusterName == "I") {
+			} else if (firstClusterName == iType) {
 				// Compute the product size and set the product name for the case
 				// where V is the second cluster
 				if (firstClusterSize > secondClusterSize) {
 					productClusterSize = firstClusterSize - secondClusterSize;
-					productClusterName = "I";
+					productClusterName = iType;
 				} else if (firstClusterSize < secondClusterSize) {
 					productClusterSize = secondClusterSize - firstClusterSize;
-					productClusterName = "V";
+					productClusterName = vType;
 				}
 			}
 			// Get the product

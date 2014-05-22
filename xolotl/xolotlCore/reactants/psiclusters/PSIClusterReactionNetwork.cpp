@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <Constants.h>
 
 using namespace xolotlCore;
 using std::shared_ptr;
@@ -42,17 +43,17 @@ void PSIClusterReactionNetwork::setDefaultPropsAndNames() {
 			// Initialize the current and last size to 0
 			networkSize = 0;
 			// Set the reactant names
-			names.push_back("He");
-			names.push_back("V");
-			names.push_back("I");
+			names.push_back(heType);
+			names.push_back(vType);
+			names.push_back(iType);
 			// Set the compound reactant names
 			compoundNames.push_back("HeV");
 			compoundNames.push_back("HeI");
 
 			// Setup the cluster type map
-			clusterTypeMap["He"] = heVector;
-			clusterTypeMap["V"] = vVector;
-			clusterTypeMap["I"] = iVector;
+			clusterTypeMap[heType] = heVector;
+			clusterTypeMap[vType] = vVector;
+			clusterTypeMap[iType] = iVector;
 			clusterTypeMap["HeV"] = heVVector;
 			clusterTypeMap["HeI"] = heIVector;
 
@@ -141,16 +142,16 @@ std::shared_ptr<Reactant> PSIClusterReactionNetwork::get(
 		const std::string type, const int size) const {
 
 	// Local Declarations
-	static std::map<std::string,int> composition = {{"He",0},{"V",0},{"I",0}};
+	static std::map<std::string,int> composition = {{heType,0},{vType,0},{iType,0}};
 	std::shared_ptr<PSICluster> retReactant;
 
 	// Setup the composition map to default values
-	composition["He"] = 0;
-	composition["V"] = 0;
-	composition["I"] = 0;
+	composition[heType] = 0;
+	composition[vType] = 0;
+	composition[iType] = 0;
 
 	// Only pull the reactant if the name and size are valid
-	if ((type == "He" || type == "V" || type == "I") && size >= 1) {
+	if ((type == heType || type == vType || type == iType) && size >= 1) {
 		composition[type] = size;
 		//std::string encodedName = PSICluster::encodeCompositionAsName(composition);
 		// Make sure the reactant is in the map
@@ -173,20 +174,20 @@ std::shared_ptr<Reactant> PSIClusterReactionNetwork::getCompound(
 		const std::string type, const std::vector<int> sizes) const {
 
 	// Local Declarations
-	static std::map<std::string,int> composition = {{"He",0},{"V",0},{"I",0}};
+	static std::map<std::string,int> composition = {{heType,0},{vType,0},{iType,0}};
 	std::shared_ptr<PSICluster> retReactant;
 
 	// Setup the composition map to default values
-	composition["He"] = 0;
-	composition["V"] = 0;
-	composition["I"] = 0;
+	composition[heType] = 0;
+	composition[vType] = 0;
+	composition[iType] = 0;
 
 	// Only pull the reactant if the name is valid and there are enough sizes
 	// to fill the composition.
 	if ((type == "HeV" || type == "HeI") && sizes.size() == 3) {
-		composition["He"] = sizes[0];
-		composition["V"] = sizes[1];
-		composition["I"] = sizes[2];
+		composition[heType] = sizes[0];
+		composition[vType] = sizes[1];
+		composition[iType] = sizes[2];
 		// Make sure the reactant is in the map
 		if (mixedSpeciesMap.count(composition)) {
 			retReactant = mixedSpeciesMap.at(composition);
@@ -241,7 +242,7 @@ std::shared_ptr<std::vector<std::shared_ptr<Reactant> > > PSIClusterReactionNetw
 			> reactants(new std::vector<std::shared_ptr<Reactant>>());
 
 	// Only pull the reactants if the name is valid
-	if (name == "He" || name == "V" || name == "I" || name == "HeV"
+	if (name == heType || name == vType || name == iType || name == "HeV"
 			|| name == "HeI") {
 		std::shared_ptr < std::vector<std::shared_ptr<Reactant>>
 				> storedReactants = clusterTypeMap.at(name);
@@ -272,9 +273,9 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<Reactant> reactant) {
 		// Get the composition
 		auto composition = reactant->getComposition();
 		// Get the species sizes
-		numHe = composition.at("He");
-		numV = composition.at("V");
-		numI = composition.at("I");
+		numHe = composition.at(heType);
+		numV = composition.at(vType);
+		numI = composition.at(iType);
 		// Determine if the cluster is a compound. If there is more than one
 		// type, then the check below will sum to greater than one and we know
 		// that we have a mixed cluster.

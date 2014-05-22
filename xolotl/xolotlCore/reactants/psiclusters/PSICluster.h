@@ -399,7 +399,7 @@ protected:
 	 * @return The set of connected reactants. Each entry in the set is the id
 	 * of a connected cluster for dissociation reactions.
 	 */
-	std::set<int> getDissociationConnectivitySet() const;
+	const std::set<int> & getDissociationConnectivitySet() const;
 
 	/**
 	 * This operation recomputes the diffusion coefficient. It is called
@@ -613,33 +613,6 @@ public:
 	 * @param temp
 	 */
 	virtual void setTemperature(double temp);
-
-	/**
-	 * A utility operation to encode composition of a cluster as a unique name.
-	 *
-	 * This operation is used by all of the clusters to obtain their names and
-	 * and it can be used by client classes to encode a composition vector into
-	 * unique cluster name that will be semantically correct without making
-	 * assumptions.
-	 * @param composition The composition that should be encoded
-	 * @return The encoded composition
-	 */
-	static std::string encodeCompositionAsName(std::map<std::string,int> composition) {
-
-		// Get the component sizes
-		int numHe = composition["He"];
-		int numV = composition["V"];
-		int numI = composition["I"];
-
-		// Create the stream
-		std::stringstream nameStream;
-		if (numHe > 0) nameStream << "He_" << numHe;
-		if (numV > 0) nameStream << "V_" << numV;
-		if (numI > 0) nameStream << "I_" << numI;
-
-		// Return the name
-		return nameStream.str();
-	}
 
 };
 
