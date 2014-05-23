@@ -45,7 +45,8 @@ std::shared_ptr<xolotlViz::IPlot> perfPlot;
 double heliumFluence = 0.0;
 
 /**
- * This is a monitoring method that will save an hdf5 file at each time step
+ * This is a monitoring method that will save an hdf5 file at each time step.
+ * HDF5 is handling the parallel part, so no call to MPI here.
  */
 static PetscErrorCode startStop(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
@@ -57,14 +58,6 @@ static PetscErrorCode startStop(TS ts, PetscInt timestep, PetscReal time,
 	PetscInt xs, xm, Mx;
 
 	PetscFunctionBeginUser;
-
-	// Get the number of processes
-	int worldSize;
-	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
-
-	// Gets the process ID (important when it is running in parallel)
-	int procId;
-	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
 
 	// Get the da from ts
 	DM da;
@@ -95,120 +88,52 @@ static PetscErrorCode startStop(TS ts, PetscInt timestep, PetscReal time,
 	// Setup step size variable
 	double hx = 8.0 / (PetscReal) (Mx - 1);
 
-	if (procId == 0) {
-		// Initialize the HDF5 file
-		xolotlCore::HDF5Utils::initializeFile(timestep, networkSize);
+	// Initialize the HDF5 file for all the processes
+	xolotlCore::HDF5Utils::initializeFile(timestep, networkSize, Mx);
 
-		// Get the physical dimension of the grid
-		int dimension = (Mx - 1) * hx;
+	// Get the physical dimension of the grid
+	int dimension = (Mx - 1) * hx;
 
-		// Get the refinement of the grid
-		PetscInt refinement = 0;
-		PetscBool flag;
-		ierr = PetscOptionsGetInt(NULL, "-da_refine", &refinement, &flag);
-		checkPetscError(ierr);
-		if (!flag)
-			refinement = 0;
+	// Get the refinement of the grid
+	PetscInt refinement = 0;
+	PetscBool flag;
+	ierr = PetscOptionsGetInt(NULL, "-da_refine", &refinement, &flag);
+	checkPetscError(ierr);
+	if (!flag)
+		refinement = 0;
 
-		// Get the current time step
-		PetscReal currentTimeStep;
-		ierr = TSGetTimeStep(ts, &currentTimeStep);
-		checkPetscError(ierr);
+	// Get the current time step
+	PetscReal currentTimeStep;
+	ierr = TSGetTimeStep(ts, &currentTimeStep);
+	checkPetscError(ierr);
 
-		// Save the header in the HDF5 file
-		xolotlCore::HDF5Utils::fillHeader(dimension, refinement, time,
-				currentTimeStep);
+	// Save the header in the HDF5 file
+	xolotlCore::HDF5Utils::fillHeader(dimension, refinement, time,
+			currentTimeStep);
 
-		// Save the network in the HDF5 file
-		xolotlCore::HDF5Utils::fillNetwork(PetscSolver::getNetwork());
+	// Save the network in the HDF5 file
+	xolotlCore::HDF5Utils::fillNetwork(PetscSolver::getNetwork());
 
-		// Loop on the grid
-		for (int xi = xs; xi < xs + xm; xi++) {
-			// Get the pointer to the beginning of the solution data for this grid point
-			gridPointSolution = solutionArray + networkSize * xi;
-			// Update the concentrations in the network to have physics results
-			// (non negative)
-			PetscSolver::getNetwork()->updateConcentrationsFromArray(
-					gridPointSolution);
-			// Get the concentrations from the network
-			double concentrations[networkSize];
-			double * concentration = &concentrations[0];
-			PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
+	// Loop on the grid
+	for (int xi = xs; xi < xs + xm; xi++) {
+		// Get the pointer to the beginning of the solution data for this grid point
+		gridPointSolution = solutionArray + networkSize * xi;
+		// Update the concentrations in the network to have physics results
+		// (non negative)
+		PetscSolver::getNetwork()->updateConcentrationsFromArray(
+				gridPointSolution);
+		// Get the concentrations from the network
+		double concentrations[networkSize];
+		double * concentration = &concentrations[0];
+		PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
 
-			// Fill the concentrations dataset in the HDF5 file
-			xolotlCore::HDF5Utils::fillConcentrations(concentration, xi,
-					(double) xi * hx);
-		}
-
-		// Loop on the other processes
-		for (int i = 1; i < worldSize; i++) {
-			// Get the size of the local grid of that process
-			int localSize = 0;
-			MPI_Recv(&localSize, 1, MPI_INT, i, 0, MPI_COMM_WORLD,
-					MPI_STATUS_IGNORE);
-
-			// Loop on their grid
-			for (int k = 0; k < localSize; k++) {
-				// Get the position and index
-				double x = 0.0;
-				int index = 0;
-				MPI_Recv(&x, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
-						MPI_STATUS_IGNORE);
-				MPI_Recv(&index, 1, MPI_INT, i, 0, MPI_COMM_WORLD,
-						MPI_STATUS_IGNORE);
-
-				// Initialize the array that will receive the concentrations
-				double concentrations[networkSize];
-				// Loop on the network
-				for (int j = 0; j < networkSize; j++) {
-					// Get the concentration
-					double conc = 0.0;
-					MPI_Recv(&conc, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
-							MPI_STATUS_IGNORE);
-
-					// Give it to the array
-					concentrations[j] = conc;
-				}
-
-				// Fill the concentrations dataset in the HDF5 file
-				xolotlCore::HDF5Utils::fillConcentrations(concentrations, index,
-						x);
-			}
-		}
-		// Finalize the HDF5 file
-		xolotlCore::HDF5Utils::finalizeFile();
+		// Fill the concentrations dataset in the HDF5 file
+		xolotlCore::HDF5Utils::fillConcentrations(concentration, xi,
+				(double) xi * hx);
 	}
 
-	else {
-		// Send the value of the local grid size to the master process
-		MPI_Send(&xm, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-
-		// Loop on the grid
-		for (int xi = xs; xi < xs + xm; xi++) {
-			// Get the pointer to the beginning of the solution data for this grid point
-			gridPointSolution = solutionArray + networkSize * xi;
-			// Update the concentrations in the network to have physics results
-			// (non negative)
-			PetscSolver::getNetwork()->updateConcentrationsFromArray(
-					gridPointSolution);
-			// Get the concentrations from the network
-			double concentrations[networkSize];
-			double * concentration = &concentrations[0];
-			PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
-
-			// Send the value of the local position to the master process
-			double x = xi * hx;
-			MPI_Send(&x, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-			MPI_Send(&xi, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-
-			// Loop on the network
-			for (int j = 0; j < networkSize; j++) {
-				// Send the value of the concentration to the master process
-				MPI_Send(&concentration[j], 1, MPI_DOUBLE, 0, 0,
-						MPI_COMM_WORLD);
-			}
-		}
-	}
+	// Finalize the HDF5 file
+	xolotlCore::HDF5Utils::finalizeFile();
 
 	PetscFunctionReturn(0);
 }
@@ -1045,7 +970,6 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 
 		// Network size
 		const int networkSize = PetscSolver::getNetwork()->size();
-
 
 		// To plot a minimum of 15 clusters of the whole benchmark
 		const int loopSize = std::min(15, networkSize);

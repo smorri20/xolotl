@@ -7,6 +7,7 @@
 #include <DummyHandlerRegistry.h>
 #include <PSIClusterNetworkLoader.h>
 #include <XolotlConfig.h>
+#include <mpi.h>
 #include <memory>
 
 using namespace std;
@@ -21,6 +22,11 @@ BOOST_AUTO_TEST_SUITE(HDF5Utils_testSuite)
  * Method checking the writing and reading of the HDF5 file.
  */
 BOOST_AUTO_TEST_CASE(checkOI) {
+	// Initialize MPI for HDF5
+	int argc;
+	char **argv;
+	MPI_Init(&argc, &argv);
+
 	// Create the network loader
 	PSIClusterNetworkLoader loader =
 			PSIClusterNetworkLoader(make_shared<xolotlPerf::DummyHandlerRegistry>());
@@ -45,7 +51,7 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 	// Set the time step number
 	int timeStep = 0;
 	// Initialize the HDF5 file
-	HDF5Utils::initializeFile(timeStep, networkSize);
+	HDF5Utils::initializeFile(timeStep, networkSize, 1);
 
 	// Set the physical dimension of the grid and the refinement
 	int dimension = 5;
@@ -125,6 +131,9 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 	for (int i = 0; i < networkSize; i++) {
 		BOOST_REQUIRE_EQUAL(newConcentrations[i], concentrations[i]);
 	}
+
+	// Finalize MPI
+	MPI_Finalize();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

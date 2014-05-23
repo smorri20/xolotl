@@ -12,8 +12,9 @@ namespace HDF5Utils {
 	 * Create the HDF5 file with the needed structure.
 	 * @param timeStep The number of the time step.
 	 * @param networkSize The total number of cluster in the network.
+	 * @param gridSize The total number of grid points.
 	 */
-	void initializeFile(int timeStep, int networkSize);
+	void initializeFile(int timeStep, int networkSize, int gridSize);
 
 	/**
 	 * Fill the header.
