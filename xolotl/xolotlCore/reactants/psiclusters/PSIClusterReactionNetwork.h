@@ -140,7 +140,7 @@ public:
 	 * @param size the size of the reactant
 	 * @return A shared pointer to the reactant
 	 */
-	std::shared_ptr<Reactant> get(const std::string type,
+	Reactant * get(const std::string type,
 			const int size) const;
 
 	/**
@@ -153,7 +153,7 @@ public:
 	 * and I are contained in the mixed-species cluster.
 	 * @return A shared pointer to the compound reactant
 	 */
-	std::shared_ptr<Reactant> getCompound(const std::string type,
+	Reactant * getCompound(const std::string type,
 			const std::vector<int> sizes) const;
 
 	/**
@@ -172,7 +172,7 @@ public:
 	 * @return The list of all of the reactants in the network or null if the
 	 * name is invalid.
 	 */
-	std::shared_ptr<std::vector<std::shared_ptr<Reactant> > > getAll(std::string name) const;
+	std::vector<Reactant *> getAll(std::string name) const;
 
 	/**
 	 * This operation adds a reactant or a compound reactant to the network.

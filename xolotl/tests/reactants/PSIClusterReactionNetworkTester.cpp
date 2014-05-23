@@ -20,7 +20,7 @@
 #include <VCluster.h>
 #include <InterstitialCluster.h>
 #include <HeInterstitialCluster.h>
-#include "../../xolotlPerf/HandlerRegistryFactory.h"
+#include <xolotlPerf/HandlerRegistryFactory.h>
 
 using namespace std;
 using namespace xolotlCore;
@@ -83,20 +83,20 @@ BOOST_AUTO_TEST_CASE(checkReactants) {
 	psiNetwork->add(interstitialCluster);
 
 	// Check the network, He first
-	auto retHeCluster = dynamic_pointer_cast<PSICluster>(
-			psiNetwork->get("He", 10));
+	auto retHeCluster = (PSICluster *)
+			psiNetwork->get("He", 10);
 	BOOST_REQUIRE(retHeCluster);
 	BOOST_REQUIRE_EQUAL("He_10", retHeCluster->getName());
 	BOOST_REQUIRE_EQUAL(10, retHeCluster->getSize());
 	// V
-	auto retVCluster = dynamic_pointer_cast<PSICluster>(
-			psiNetwork->get("V", 4));
+	auto retVCluster = (PSICluster *)
+			psiNetwork->get("V", 4);
 	BOOST_REQUIRE(retVCluster);
 	BOOST_REQUIRE_EQUAL(4, retVCluster->getSize());
 	BOOST_REQUIRE_EQUAL("V_4", retVCluster->getName());
 	// I
-	auto retICluster = dynamic_pointer_cast<PSICluster>(
-			psiNetwork->get("I", 48));
+	auto retICluster = (PSICluster *)
+			psiNetwork->get("I", 48);
 	BOOST_REQUIRE(retICluster);
 	BOOST_REQUIRE_EQUAL(48, retICluster->getSize());
 	BOOST_REQUIRE_EQUAL("I_48", retICluster->getName());
@@ -163,24 +163,24 @@ BOOST_AUTO_TEST_CASE(checkReactants) {
 	auto reactants = psiNetwork->getAll();
 	BOOST_REQUIRE_EQUAL(84, reactants->size());
 	// Get the clusters by type and check them. Start with He.
-	reactants = psiNetwork->getAll("He");
-	BOOST_REQUIRE_EQUAL(1, reactants->size());
-	BOOST_REQUIRE_EQUAL("He_10", reactants->at(0)->getName());
+	auto heReactants = psiNetwork->getAll("He");
+	BOOST_REQUIRE_EQUAL(1, heReactants.size());
+	BOOST_REQUIRE_EQUAL("He_10", heReactants[0]->getName());
 	// V
-	reactants = psiNetwork->getAll("V");
-	BOOST_REQUIRE_EQUAL(1, reactants->size());
-	BOOST_REQUIRE_EQUAL("V_4", reactants->at(0)->getName());
+	auto vReactants = psiNetwork->getAll("V");
+	BOOST_REQUIRE_EQUAL(1, vReactants.size());
+	BOOST_REQUIRE_EQUAL("V_4", vReactants[0]->getName());
 	// I
-	reactants = psiNetwork->getAll("I");
-	BOOST_REQUIRE_EQUAL(1, reactants->size());
-	BOOST_REQUIRE_EQUAL("I_48", reactants->at(0)->getName());
+	auto iReactants = psiNetwork->getAll("I");
+	BOOST_REQUIRE_EQUAL(1, iReactants.size());
+	BOOST_REQUIRE_EQUAL("I_48", iReactants[0]->getName());
 	// HeV
-	reactants = psiNetwork->getAll("HeV");
-	BOOST_REQUIRE_EQUAL(45, reactants->size());
+	auto heVReactants = psiNetwork->getAll("HeV");
+	BOOST_REQUIRE_EQUAL(45, heVReactants.size());
 
 	// HeI
-	reactants = psiNetwork->getAll("HeI");
-	BOOST_REQUIRE_EQUAL(36, reactants->size());
+	auto heIReactants = psiNetwork->getAll("HeI");
+	BOOST_REQUIRE_EQUAL(36, heIReactants.size());
 
 	// Try changing the temperature and make sure it works
 	psiNetwork->setTemperature(1000.0);

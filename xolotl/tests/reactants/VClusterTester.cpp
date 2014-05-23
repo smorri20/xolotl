@@ -37,8 +37,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	props["dissociationsEnabled"] = "false";
 
 	// Get the connectivity array from the reactant for a vacancy cluster of size 2.
-	auto reactant = dynamic_pointer_cast < PSICluster
-			> (network->get("V", 2));
+	auto reactant = (PSICluster *) network->get("V", 2);
 	// Check the type name
 	BOOST_REQUIRE_EQUAL("V",reactant->getType());
 	auto reactionConnectivity = reactant->getConnectivity();
@@ -94,9 +93,9 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
  	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
 
  	// Get an V cluster with compostion 0,1,0.
- 	auto cluster = dynamic_pointer_cast<PSICluster>(network->get("V", 1));
+ 	auto cluster = (PSICluster *) network->get("V", 1);
  	// Get one that it combines with (V2)
- 	auto secondCluster = dynamic_pointer_cast<PSICluster>(network->get("V", 2));
+ 	auto secondCluster = (PSICluster *) network->get("V", 2);
  	// Set the diffusion factor, migration and binding energies based on the
  	// values from the tungsten benchmark for this problem.
  	cluster->setDiffusionFactor(2.41E+11);

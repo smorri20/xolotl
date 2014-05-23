@@ -23,31 +23,6 @@ private:
 	int numV;
 
 	/**
-	 * A pointer to He_1 that is used for the dissociation flux calculation
-	 */
-	std::shared_ptr<PSICluster> heCluster;
-
-	/**
-	 * A pointer to V_1 that is used for the dissociation flux calculation
-	 */
-	std::shared_ptr<PSICluster> vCluster;
-
-	/**
-	 * A pointer to I_1 that is used for the dissociation flux calculation
-	 */
-	std::shared_ptr<PSICluster> iCluster;
-
-	/**
-	 * A pointer to the HeV cluster with one less He than this cluster
-	 */
-	std::shared_ptr<PSICluster> heVClusterLessHe;
-
-	/**
-	 * A pointer to the HeV cluster with one less V than this cluster
-	 */
-	std::shared_ptr<PSICluster> heVClusterLessV;
-
-	/**
 	 * The default constructor is private because PSIClusters must always be
 	 * initialized with a size.
 	 */
@@ -126,7 +101,7 @@ protected:
 	 * @return The shared_ptr from the network or a null shared_ptr if the
 	 * network does not contain this reactant.
 	 */
-	std::shared_ptr<PSICluster> getThisSharedPtrFromNetwork() const;
+//	std::shared_ptr<PSICluster> getThisSharedPtrFromNetwork() const;
 
 	/**
 	 * Computes a row of the reaction connectivity matrix corresponding to

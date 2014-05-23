@@ -44,7 +44,6 @@ void InterstitialCluster::createReactionConnectivity() {
 	int numHeVClusters = std::stoi(props["numHeVClusters"]);
 	int numHeIClusters = std::stoi(props["numHeIClusters"]);
 	int firstSize = 0, secondSize = 0, reactantsSize = 0;
-	std::shared_ptr<PSICluster> firstReactant, secondReactant;
 
 	// Connect this cluster to itself since any reaction will affect it
 	setReactionConnectivity(getId());
@@ -61,13 +60,11 @@ void InterstitialCluster::createReactionConnectivity() {
 		secondSize = size - firstSize;
 		// Get the first and second reactants for the reaction
 		// first + second = this.
-		firstReactant = std::dynamic_pointer_cast<PSICluster>(network->get("I", firstSize));
-		secondReactant = std::dynamic_pointer_cast<PSICluster>(network->get("I", secondSize));
+		auto firstReactant = (PSICluster *) network->get("I", firstSize);
+		auto secondReactant = (PSICluster *) network->get("I", secondSize);
 		// Create a ReactingPair with the two reactants
 		if (firstReactant && secondReactant) {
-			ReactingPair pair;
-			pair.first = firstReactant;
-			pair.second = secondReactant;
+			ReactingPair pair(firstReactant,secondReactant);
 			// Add the pair to the list
 			reactingPairs.push_back(pair);
 		}
@@ -108,12 +105,12 @@ void InterstitialCluster::createReactionConnectivity() {
 	// Mark the reaction connectivity for the cases where this cluster is
 	// produced by the above reaction. This has to be checked for every
 	// vacancy.
-	reactantsSize = reactants->size();
+	reactantsSize = reactants.size();
 	for (int i = 0; i < reactantsSize; i++) {
-		firstReactant = std::dynamic_pointer_cast<PSICluster>(reactants->at(i));
+		auto firstReactant = (PSICluster *) reactants[i];
 		// Get the interstitial cluster that is bigger than the vacancy
 		// and can form this cluster. I only results when it is bigger than V.
-		secondReactant = std::dynamic_pointer_cast<PSICluster>(network->get("I",firstReactant->getSize() + size));
+		auto secondReactant = (PSICluster *) network->get("I",firstReactant->getSize() + size);
 		// Update the connectivity
 		if (secondReactant) {
 			setReactionConnectivity(firstReactant->getId());

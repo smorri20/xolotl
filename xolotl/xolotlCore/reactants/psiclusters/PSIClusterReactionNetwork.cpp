@@ -138,7 +138,7 @@ double PSIClusterReactionNetwork::getTemperature() const {
  * @param size the size of the reactant
  * @return A shared pointer to the reactant
  */
-std::shared_ptr<Reactant> PSIClusterReactionNetwork::get(
+Reactant * PSIClusterReactionNetwork::get(
 		const std::string type, const int size) const {
 
 	// Local Declarations
@@ -160,7 +160,7 @@ std::shared_ptr<Reactant> PSIClusterReactionNetwork::get(
 		}
 	}
 
-	return retReactant;
+	return (Reactant *) retReactant.get();
 }
 
 /**
@@ -170,7 +170,7 @@ std::shared_ptr<Reactant> PSIClusterReactionNetwork::get(
  * @param sizes an array containing the sizes of each piece of the reactant
  * @return A shared pointer to the compound reactant
  */
-std::shared_ptr<Reactant> PSIClusterReactionNetwork::getCompound(
+Reactant * PSIClusterReactionNetwork::getCompound(
 		const std::string type, const std::vector<int> sizes) const {
 
 	// Local Declarations
@@ -194,7 +194,7 @@ std::shared_ptr<Reactant> PSIClusterReactionNetwork::getCompound(
 		}
 	}
 
-	return retReactant;
+	return (Reactant *) retReactant.get();
 }
 
 /**
@@ -234,12 +234,11 @@ std::shared_ptr<std::vector<std::shared_ptr<Reactant>>>PSIClusterReactionNetwork
  * @return The list of all of the reactants in the network or null if the
  * name is invalid.
  */
-std::shared_ptr<std::vector<std::shared_ptr<Reactant> > > PSIClusterReactionNetwork::getAll(
+std::vector<Reactant *> PSIClusterReactionNetwork::getAll(
 		std::string name) const {
 
 	// Local Declarations
-	std::shared_ptr < std::vector<std::shared_ptr<Reactant>>
-			> reactants(new std::vector<std::shared_ptr<Reactant>>());
+	std::vector<Reactant *> reactants;
 
 	// Only pull the reactants if the name is valid
 	if (name == heType || name == vType || name == iType || name == "HeV"
@@ -248,7 +247,7 @@ std::shared_ptr<std::vector<std::shared_ptr<Reactant> > > PSIClusterReactionNetw
 				> storedReactants = clusterTypeMap.at(name);
 		int vecSize = storedReactants->size();
 		for (int i = 0; i < vecSize; i++) {
-			reactants->push_back(storedReactants->at(i));
+			reactants.push_back(storedReactants->at(i).get());
 		}
 	}
 

@@ -60,8 +60,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	{
 		// Get the connectivity array from the reactant
 		vector<int> composition = {5, 0, 3 };
-		auto reactant = dynamic_pointer_cast < PSICluster
-				> (network->getCompound("HeI", composition));
+		auto reactant = (PSICluster *) (network->getCompound("HeI", composition));
 		// Check the type name
 		BOOST_REQUIRE_EQUAL("HeI",reactant->getType());
 		auto reactionConnectivity = reactant->getConnectivity();
@@ -126,10 +125,10 @@ BOOST_AUTO_TEST_CASE(checkTotalFlux) {
 
 	// Get an HeI cluster with compostion 1,0,1.
 	vector<int> composition = {1, 0, 1};
-	auto cluster = dynamic_pointer_cast<PSICluster>(network->getCompound(
-			"HeI",composition));
+	auto cluster = (PSICluster *) network->getCompound(
+			"HeI",composition);
 	// Get one that it combines with (I2)
-	auto secondCluster = dynamic_pointer_cast<PSICluster>(network->get("I", 1));
+	auto secondCluster = (PSICluster *) network->get("I", 1);
 	// Set the diffusion factor, migration and binding energies to arbitrary
 	// values because HeI does not exist in benchmarks
 	cluster->setDiffusionFactor(1.5E+10);

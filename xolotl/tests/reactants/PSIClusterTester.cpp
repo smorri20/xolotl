@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(checkDefaultFluxes) {
 	PSICluster cluster(1, registry);
 //	shared_ptr<PSIClusterReactionNetwork> network(new PSIClusterReactionNetwork());
 
-	shared_ptr<PSIClusterReactionNetwork> network(new PSIClusterReactionNetwork(registry));
+	shared_ptr<PSIClusterReactionNetwork> network = std::make_shared<PSIClusterReactionNetwork>(registry);
 
 	// Check the default values of the fluxes
 	BOOST_REQUIRE_CLOSE(cluster.getProductionFlux(273.0), 0.0, 1e-5);

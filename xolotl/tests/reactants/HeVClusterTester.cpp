@@ -62,8 +62,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	{
 		// Get the connectivity array from the reactant
 		vector<int> composition = {3, 2, 0 };
-		auto reactant = dynamic_pointer_cast < PSICluster
-				> (network->getCompound("HeV", composition));
+		auto reactant = (PSICluster *) network->getCompound("HeV", composition);
 		// Check the type name
 		BOOST_REQUIRE_EQUAL("HeV",reactant->getType());
 		auto reactionConnectivity = reactant->getConnectivity();
@@ -123,10 +122,10 @@ BOOST_AUTO_TEST_CASE(checkTotalFlux) {
 
 	// Get an HeV cluster with compostion 2,1,0.
 	vector<int> composition = {2, 1, 0};
-	auto cluster = dynamic_pointer_cast<PSICluster>(network->getCompound(
-			"HeV",composition));
+	auto cluster = (PSICluster *) network->getCompound(
+			"HeV",composition);
 	// Get one that it combines with (He)
-	auto secondCluster = dynamic_pointer_cast<PSICluster>(network->get("He", 1));
+	auto secondCluster = (PSICluster *) network->get("He", 1);
 	// Set the diffusion factor, migration and binding energies based on the
 	// values from the tungsten benchmark for this problem.
 	cluster->setDiffusionFactor(0.0);

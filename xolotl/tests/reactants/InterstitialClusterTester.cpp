@@ -43,8 +43,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	
 	{
 		// Get the connectivity array from the reactant
-		auto reactant = dynamic_pointer_cast < PSICluster
-				> (network->get("I", 4));
+		auto reactant = (PSICluster *) network->get("I", 4);
 		// Check the type name
 		BOOST_REQUIRE_EQUAL("I",reactant->getType());
 		auto reactionConnectivity = reactant->getConnectivity();
@@ -99,9 +98,9 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
  	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
 
  	// Get an I cluster with compostion 0,0,1.
- 	auto cluster = dynamic_pointer_cast<PSICluster>(network->get("I", 1));
+ 	auto cluster = (PSICluster *) network->get("I", 1);
  	// Get one that it combines with (I2)
- 	auto secondCluster = dynamic_pointer_cast<PSICluster>(network->get("I", 2));
+ 	auto secondCluster = (PSICluster *) network->get("I", 2);
  	// Set the diffusion factor, migration and binding energies based on the
  	// values from the tungsten benchmark for this problem.
  	cluster->setDiffusionFactor(2.13E+10);

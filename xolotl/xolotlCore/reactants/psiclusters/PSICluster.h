@@ -34,14 +34,20 @@ protected:
 	 */
 	class ReactingPair {
 	public:
+
 		/**
 		 * The first reacting cluster in the pair
 		 */
-		std::shared_ptr<PSICluster> first;
+		PSICluster * first;
+
 		/**
 		 * The second reacting cluster in the pair
 		 */
-		std::shared_ptr<PSICluster> second;
+		PSICluster * second;
+
+		//! The constructor
+		ReactingPair(PSICluster * firstPtr, PSICluster * secondPtr)
+		: first(firstPtr), second(secondPtr) {}
 	};
 
 	/**
@@ -112,7 +118,7 @@ protected:
 	 * lifecycle by subclasses. In the standard Xolotl clusters, this vector is
 	 * filled in createReactionConnectivity.
 	 */
-	std::vector<std::shared_ptr<Reactant> > combiningReactants;
+	std::vector<Reactant *> combiningReactants;
 
 	/**
 	 * A vector of clusters that dissociate to form this cluster.
@@ -124,7 +130,7 @@ protected:
 	 * clusters that override dissociateClusters() or don't call it should
 	 * make sure that they fill this list.
 	 */
-	std::vector<std::shared_ptr<PSICluster>> dissociatingClusters;
+	std::vector<PSICluster *> dissociatingClusters;
 
 	/**
 	 * Counter for the number of times getDissociationFlux is called.
@@ -145,7 +151,7 @@ protected:
 	 * @return The shared_ptr from the network or a null shared_ptr if the
 	 * network does not contain this reactant.
 	 */
-	virtual std::shared_ptr<PSICluster> getThisSharedPtrFromNetwork() const;
+	//virtual std::shared_ptr<PSICluster> getThisSharedPtrFromNetwork() const;
 
 	/**
 	 * Calculate the reaction constant dependent on the
@@ -213,8 +219,8 @@ protected:
 	 * dissociation.
 	 */
 	void dissociateClusters(
-			const std::shared_ptr<Reactant> & firstDissociatedCluster,
-			const std::shared_ptr<Reactant> & secondDissociatedCluster);
+			Reactant * firstDissociatedCluster,
+			Reactant * secondDissociatedCluster);
 
 	/**
 	 * This operation "combines" clusters in the sense that it handles all of
@@ -239,7 +245,7 @@ protected:
 	 * @param maxSize The maximum size of the compound produced in the reaction.
 	 * @param productName The name of the product produced in the reaction.
 	 */
-	void combineClusters(std::shared_ptr<std::vector<std::shared_ptr<Reactant>>>clusters,
+	void combineClusters(std::vector<Reactant *> & clusters,
 			int maxSize, std::string productName);
 
 	/**
@@ -260,8 +266,7 @@ protected:
 	 * @param newComponentName The name of the component that will replace the old
 	 * component.
 	 */
-	void replaceInCompound(
-			std::shared_ptr<std::vector<std::shared_ptr<Reactant>>>clusters,
+	void replaceInCompound(std::vector<Reactant *> & clusters,
 			std::string oldComponentName, std::string newComponentName);
 
 	/** This operation handles reactions where interstitials fill vacancies,
@@ -293,8 +298,7 @@ protected:
 	 * @param clusters The set of clusters of the second type that interact
 	 * with this cluster.
 	 **/
-	void fillVWithI(std::string secondClusterName,
-			std::shared_ptr<std::vector<std::shared_ptr<Reactant> > > clusters);
+	void fillVWithI(std::string secondClusterName, std::vector<Reactant *> & clusters);
 
 	/**
 	 * This operation computes the partial derivatives due to production

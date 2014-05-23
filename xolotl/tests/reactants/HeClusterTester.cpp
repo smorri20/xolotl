@@ -43,8 +43,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	// Check the reaction connectivity of the 6th He reactant (numHe=6)
 	{
 		// Get the connectivity array from the reactant
-		auto reactant = dynamic_pointer_cast < PSICluster
-				> (network->get("He", 6));
+		auto reactant = (PSICluster *) network->get("He", 6);
 		// Check the type name
 		BOOST_REQUIRE_EQUAL("He",reactant->getType());
 		auto reactionConnectivity = reactant->getConnectivity();
@@ -97,9 +96,9 @@ BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
 
 	// Get an He cluster with compostion 1,0,0.
-	auto cluster = dynamic_pointer_cast<PSICluster>(network->get("He", 1));
+	auto cluster = (PSICluster *) network->get("He", 1);
 	// Get one that it combines with (He2)
-	auto secondCluster = dynamic_pointer_cast<PSICluster>(network->get("He", 2));
+	auto secondCluster = (PSICluster *) network->get("He", 2);
 	// Set the diffusion factor, migration and binding energies based on the
 	// values from the tungsten benchmark for this problem.
 	cluster->setDiffusionFactor(2.950E+10);
