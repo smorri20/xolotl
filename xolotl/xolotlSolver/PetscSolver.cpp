@@ -135,7 +135,7 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 	PetscScalar *concentrations;
 	char string[16];
 	auto reactants = network->getAll();
-	int size = reactants->size();
+	int size = reactants.size();
 	double * concOffset;
 	std::map<std::string, int> composition;
 
@@ -148,7 +148,7 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 
 	/* Name each of the concentrations */
 	for (i = 0; i < size; i++) {
-		composition = reactants->at(i)->getComposition();
+		composition = reactants[i]->getComposition();
 		nHe = composition["He"];
 		nV = composition["V"];
 		nI = composition["I"];
@@ -430,8 +430,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 		computeNewFluxes->start();
 		auto reactants = network->getAll();
 		for (int i = 0; i < size; i++) {
-			cluster = std::dynamic_pointer_cast < PSICluster
-					> (reactants->at(i)).get();
+			cluster = (PSICluster *) reactants[i];
 			// Compute the flux
 			flux = cluster->getTotalFlux(temperature);
 			// Update the concentration of the cluster
@@ -531,7 +530,6 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,void *ptr
 	double * concOffset;
 	Vec localC;
 	static PetscBool initialized = PETSC_FALSE;
-	std::shared_ptr < std::vector<std::shared_ptr<Reactant>>>reactants;
 	// Get the network
 	auto network = PetscSolver::getNetwork();
 	// Get the properties
@@ -701,11 +699,11 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,void *ptr
 		concOffset = concs + size * xi;
 		network->updateConcentrationsFromArray(concOffset);
 		// Get the reactants
-		reactants = network->getAll();
+		auto reactants = network->getAll();
 		updateJacobianCol->start();
 		// Update the column in the Jacobian that represents each reactant
 		for (int i = 0; i < size; i++) {
-			auto reactant = reactants->at(i);
+			auto reactant = reactants[i];
 			// Get the reactant index
 			reactantIndex = reactant->getId() - 1;
 			// Get the column id
@@ -755,10 +753,10 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,void *ptr
 	for (xi = xs; xi < xs + xm; xi++) {
 		if (xi == 0) {
 			// Get the reactants
-			reactants = network->getAll();
+			auto reactants = network->getAll();
 			// Loop on the reactants
 			for (int i = 0; i < size; i++) {
-				auto reactant = reactants->at(i);
+				auto reactant = reactants[i];
 				// Get the reactant index
 				reactantIndex = reactant->getId() - 1;
 				// Get the row id
@@ -822,7 +820,6 @@ PetscErrorCode PetscSolver::getDiagonalFill(PetscInt *diagFill,
 	int i = 0, j = 0, numReactants = network->size(), index = 0, id = 0,
 			connectivityLength = 0, size = numReactants * numReactants;
 	std::vector<int> connectivity;
-	std::shared_ptr<Reactant> reactant;
 
 	// Fill the diagonal block if the sizes match up
 	if (diagFillSize == size) {
@@ -830,7 +827,7 @@ PetscErrorCode PetscSolver::getDiagonalFill(PetscInt *diagFill,
 		// Get the connectivity for each reactant
 		for (i = 0; i < numReactants; i++) {
 			// Get the reactant and its connectivity
-			reactant = reactants->at(i);
+			auto reactant = reactants[i];
 			connectivity = reactant->getConnectivity();
 			connectivityLength = connectivity.size();
 			// Get the reactant id so that the connectivity can be lined up in

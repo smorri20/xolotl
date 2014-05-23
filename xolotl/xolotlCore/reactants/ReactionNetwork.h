@@ -110,7 +110,7 @@ public:
 	 * or may not be ordered and the decision is left to implementers.
 	 * @return The list of all of the reactants in the network
 	 */
-	virtual std::shared_ptr<std::vector<std::shared_ptr<Reactant> > > getAll() const = 0;
+	virtual const std::vector<Reactant *> & getAll() const = 0;
 
 	/**
 	 * This operation returns all reactants in the network with the given name.

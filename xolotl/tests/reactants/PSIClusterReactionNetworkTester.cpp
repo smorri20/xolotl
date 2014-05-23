@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(checkReactants) {
 
 	// Check the getter for all reactants
 	auto clusters = psiNetwork->getAll();
-	BOOST_REQUIRE_EQUAL(3, clusters->size());
+	BOOST_REQUIRE_EQUAL(3, clusters.size());
 	// Check the size of the network
 	BOOST_REQUIRE_EQUAL(3, psiNetwork->size());
 
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(checkReactants) {
 
 	// Make sure that everything was added
 	auto reactants = psiNetwork->getAll();
-	BOOST_REQUIRE_EQUAL(84, reactants->size());
+	BOOST_REQUIRE_EQUAL(84, reactants.size());
 	// Get the clusters by type and check them. Start with He.
 	auto heReactants = psiNetwork->getAll("He");
 	BOOST_REQUIRE_EQUAL(1, heReactants.size());
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(checkReactants) {
 
 	// Try changing the temperature and make sure it works
 	psiNetwork->setTemperature(1000.0);
-	BOOST_REQUIRE_CLOSE(1000.0,reactants->at(0)->getTemperature(),0.0001);
+	BOOST_REQUIRE_CLOSE(1000.0,reactants[0]->getTemperature(),0.0001);
 
 	return;
 }
@@ -353,7 +353,7 @@ BOOST_AUTO_TEST_CASE(checkNames) {
 	network->updateConcentrationsFromArray(concentrations);
 	auto reactants = network->getAll();
 	for (int i = 0; i < size; i++) {
-		BOOST_REQUIRE_CLOSE(1.0, reactants->at(i)->getConcentration(), 1.0e-15);
+		BOOST_REQUIRE_CLOSE(1.0, reactants[i]->getConcentration(), 1.0e-15);
 	}
 }
 BOOST_AUTO_TEST_SUITE_END()

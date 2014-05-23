@@ -215,7 +215,7 @@ void HeVCluster::createDissociationConnectivity() {
 double HeVCluster::getDissociationFlux(double temperature) const {
 
 	// Local Declarations
-	std::shared_ptr<PSICluster> currentCluster;
+	PSICluster * currentCluster;
 	double f4 = 0.0, f3 = 0.0;
 
 	// Get the required dissociating clusters. These are stored for the flux
@@ -247,7 +247,7 @@ double HeVCluster::getDissociationFlux(double temperature) const {
 		for (auto it = dissociatingSet.begin(); it != dissociatingSet.end();
 				it++) {
 			// Set the current reactant
-			currentCluster = std::dynamic_pointer_cast<PSICluster>(reactants->at(*it - 1));
+			currentCluster = (PSICluster *) reactants[*it - 1];
 			// Get the cluster map of this connection
 			auto dissClusterComposition = currentCluster->getComposition();
 			// We need to find if this is a Helium dissociation

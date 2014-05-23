@@ -348,14 +348,12 @@ static PetscErrorCode monitorScatter(TS ts, PetscInt timestep, PetscReal time,
 		// Fill the array of clusters name because the Id is not the same as
 		// reactants->at(i)
 		auto reactants = PetscSolver::getNetwork()->getAll();
-		std::shared_ptr<PSICluster> cluster;
 
 		// Loop on the reactants
 		for (int i = 0; i < networkSize; i++) {
 
 			// Get the cluster from the list, its id and composition
-			cluster = std::dynamic_pointer_cast < PSICluster
-					> (reactants->at(i));
+			auto cluster = (PSICluster *) reactants[i];
 			int id = cluster->getId() - 1;
 			auto composition = cluster->getComposition();
 
@@ -546,13 +544,11 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 		// Fill the array of clusters name because the Id is not the same as
 		// reactants->at(i)
 		auto reactants = PetscSolver::getNetwork()->getAll();
-		std::shared_ptr<PSICluster> cluster;
 
 		// Loop on the reactants
 		for (int i = 0; i < networkSize; i++) {
 			// Get the cluster from the list, its id and composition
-			cluster = std::dynamic_pointer_cast < PSICluster
-					> (reactants->at(i));
+			auto cluster = reactants[i];
 			int id = cluster->getId() - 1;
 			auto composition = cluster->getComposition();
 

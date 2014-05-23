@@ -33,7 +33,6 @@ static std::shared_ptr<xolotlPerf::IHandlerRegistry> registry = std::make_shared
 BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	
 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
-	auto reactants = network->getAll();
 	auto props = network->getProperties();
 	
 	// Prevent dissociation from being added to the connectivity array

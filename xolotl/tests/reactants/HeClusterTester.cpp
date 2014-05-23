@@ -34,7 +34,6 @@ BOOST_AUTO_TEST_SUITE(HeCluster_testSuite)
 BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	
 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
-	auto reactants = network->getAll();
 	auto props = network->getProperties();
 	
 	// Prevent dissociation from being added to the connectivity array

@@ -23,9 +23,6 @@ void PSIClusterReactionNetwork::setDefaultPropsAndNames() {
 			std::shared_ptr < std::vector<std::shared_ptr<Reactant>>> heIVector
 			= std::make_shared<std::vector<std::shared_ptr<Reactant>>>();
 
-			// Initialize the list of all reactants used by getAll.
-			allReactants = std::make_shared<std::vector<std::shared_ptr<Reactant>>>();
-
 			// Initialize default properties
 			(*properties)["reactionsEnabled"] = "true";
 			(*properties)["dissociationsEnabled"] = "true";
@@ -94,9 +91,18 @@ PSIClusterReactionNetwork::PSIClusterReactionNetwork(
 	// network is filled.
 	setDefaultPropsAndNames();
 	// Get all of the reactants from the other network and add them to this one
-	auto reactants = other.getAll();
-	for (int i = 0; i < reactants->size(); i++) {
-		add(reactants->at(i)->clone());
+	// Load the single-species clusters. Calling getAll() will not work because
+	// it is not const.
+	std::vector<std::shared_ptr<Reactant> > reactants;
+	for (auto it = other.singleSpeciesMap.begin(); it != other.singleSpeciesMap.end(); ++it) {
+		reactants.push_back(it->second);
+	}
+	// Load the mixed-species clusters
+	for (auto it = other.mixedSpeciesMap.begin(); it != other.mixedSpeciesMap.end(); ++it) {
+		reactants.push_back(it->second);
+	}
+	for (int i = 0; i < reactants.size(); i++) {
+		add(reactants[i]->clone());
 	}
 
 }
@@ -117,7 +123,7 @@ void PSIClusterReactionNetwork::setTemperature(double temp) {
 	// Update the temperature for all of the clusters
 	int networkSize = size();
 	for (int i = 0; i < networkSize; i++) {
-		allReactants->at(i)->setTemperature(temp);
+		allReactants[i]->setTemperature(temp);
 	}
 
 	return;
@@ -203,26 +209,7 @@ Reactant * PSIClusterReactionNetwork::getCompound(
  * or may not be ordered and the decision is left to implementers.
  * @return The list of all of the reactants in the network
  */
-std::shared_ptr<std::vector<std::shared_ptr<Reactant>>>PSIClusterReactionNetwork::getAll() const {
-
-	// Reload the array of all reactants if the size has changed
-	if (allReactants->size() != networkSize) {
-		// Clear the list
-		allReactants->clear();
-		// Load the single-species clusters
-		for (auto it = singleSpeciesMap.begin(); it != singleSpeciesMap.end(); ++it) {
-			allReactants->push_back(it->second);
-		}
-		// Load the mixed-species clusters
-		for (auto it = mixedSpeciesMap.begin(); it != mixedSpeciesMap.end(); ++it) {
-			allReactants->push_back(it->second);
-		}
-	}
-
-//	std::cout << "Num single species = " << singleSpeciesMap.size() << std::endl;
-//	std::cout << "Num mixed species = " << mixedSpeciesMap.size() << std::endl;
-//	std::cout << "Num species = " << allReactants->size() << std::endl;
-
+const std::vector<Reactant *> & PSIClusterReactionNetwork::getAll() const {
 	return allReactants;
 }
 
@@ -331,6 +318,8 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<Reactant> reactant) {
 		// Get the vector for this reactant from the type map
 		auto clusters = clusterTypeMap[reactant->getType()];
 		clusters->push_back(reactant);
+		// Add the pointer to the list of all clusters
+		allReactants.push_back(reactant.get());
 //				std::cout << "Num single species = " << singleSpeciesMap.size()
 //						<< std::endl;
 //				std::cout << "Num mixed species = " << mixedSpeciesMap.size()
