@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(checkGetReactantFluxes) {
 			"TungstenIntegrationTester Message: Size of the network is: " << nReactants);
 
 	for (int i = 0; i < nReactants; ++i) {
-		auto reactant = (PSICluster *) reactants[i];
+		auto reactant = (PSICluster *) reactants->at(i);
 		double flux = reactant->getTotalFlux(273.0);
 		auto partials = reactant->getPartialDerivatives(273.0);
 	}

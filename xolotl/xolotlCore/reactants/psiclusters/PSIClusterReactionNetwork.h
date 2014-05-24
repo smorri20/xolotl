@@ -90,7 +90,7 @@ private:
 	 * The list of all of the reactants in the network. This list is filled and
 	 * maintained by the getAll() operation.
 	 */
-	std::vector<Reactant *> allReactants;
+	std::shared_ptr<std::vector<Reactant *>> allReactants;
 
 	/**
 	 * This operation sets the default values of the properties table and names
@@ -162,7 +162,7 @@ public:
 	 * or may not be ordered and the decision is left to implementers.
 	 * @return The list of all of the reactants in the network
 	 */
-	const std::vector<Reactant *> & getAll() const;
+	const std::shared_ptr<std::vector<Reactant *>> & getAll() const;
 
 	/**
 	 * This operation returns all reactants in the network with the given name.

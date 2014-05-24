@@ -247,7 +247,7 @@ double HeVCluster::getDissociationFlux(double temperature) const {
 		for (auto it = dissociatingSet.begin(); it != dissociatingSet.end();
 				it++) {
 			// Set the current reactant
-			currentCluster = (PSICluster *) reactants[*it - 1];
+			currentCluster = (PSICluster *) reactants->at(*it - 1);
 			// Get the cluster map of this connection
 			auto dissClusterComposition = currentCluster->getComposition();
 			// We need to find if this is a Helium dissociation

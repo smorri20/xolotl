@@ -353,7 +353,7 @@ static PetscErrorCode monitorScatter(TS ts, PetscInt timestep, PetscReal time,
 		for (int i = 0; i < networkSize; i++) {
 
 			// Get the cluster from the list, its id and composition
-			auto cluster = (PSICluster *) reactants[i];
+			auto cluster = (PSICluster *) reactants->at(i);
 			int id = cluster->getId() - 1;
 			auto composition = cluster->getComposition();
 
@@ -548,7 +548,7 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 		// Loop on the reactants
 		for (int i = 0; i < networkSize; i++) {
 			// Get the cluster from the list, its id and composition
-			auto cluster = reactants[i];
+			auto cluster = reactants->at(i);
 			int id = cluster->getId() - 1;
 			auto composition = cluster->getComposition();
 

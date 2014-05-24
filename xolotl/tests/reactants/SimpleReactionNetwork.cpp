@@ -103,14 +103,14 @@ shared_ptr<xolotlCore::ReactionNetwork> testUtils::getSimpleReactionNetwork(cons
 			<< "Created network with size " << network->size() << endl;
 	// Register the reaction network with its clusters
 	auto reactants = network->getAll();
-	for (int i = 0; i < reactants.size(); i++) {
-		reactants[i]->setReactionNetwork(network);
+	for (int i = 0; i < reactants->size(); i++) {
+		reactants->at(i)->setReactionNetwork(network);
 	}
 
 	// ----- TEMPORARY DEBUG OUTPUT!!!!! -----
 	// Print the reaction connectivity matrix
-	for (auto reactantIt = reactants.begin();
-			reactantIt != reactants.end(); reactantIt++) {
+	for (auto reactantIt = reactants->begin();
+			reactantIt != reactants->end(); reactantIt++) {
 		auto cluster = (PSICluster *) (*reactantIt);
 		vector<int> conn = cluster->getConnectivity();
 
