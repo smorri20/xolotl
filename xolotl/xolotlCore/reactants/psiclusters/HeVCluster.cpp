@@ -301,10 +301,10 @@ void HeVCluster::getDissociationPartialDerivatives(
 	static auto iCluster = (PSICluster *) network->get(iType, 1);
 
 	static std::vector<int> compositionVec = { numHe - 1, numV, 0 };
-	static auto heVClusterLessHe = (PSICluster *) network->getCompound("HeV", compositionVec);
+	static auto heVClusterLessHe = (PSICluster *) network->getCompound(heVType, compositionVec);
 	// Store the cluster with one less vacancy
 	compositionVec = {numHe, numV - 1, 0};
-	static auto heVClusterLessV = (PSICluster *) network->getCompound("HeV", compositionVec);
+	static auto heVClusterLessV = (PSICluster *) network->getCompound(heVType, compositionVec);
 
 	// Partial derivative with respect to changes in this cluster
 	double partialDeriv = calculateDissociationConstant(*this, *heCluster,

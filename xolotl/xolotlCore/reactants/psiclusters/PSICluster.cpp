@@ -518,8 +518,6 @@ double PSICluster::calculateDissociationConstant(
 	int bindingEnergyIndex = -1;
 	double atomicVolume = 1.0; // Currently calculated below for He and W only!
 	double bindingEnergy = 0.0;
-	std::vector<int> parentCompVector = { 0, 0, 0 };
-	auto otherComposition = firstCluster.getComposition();
 
 	// Get the binding energy index.
 	bindingEnergyIndex = bindingEnergyIndexMap[firstCluster.typeName];
@@ -768,8 +766,6 @@ void PSICluster::getDissociationPartialDerivatives(
 		auto cluster = dissociatingClusters[i];
 		// Since we know that the other cluster has to be the same type as
 		// this one, we can just pull the size from the composition.
-//		std::cout << name << "_" << size << " d_COMP = " << cluster->getName()
-//				<< "_" << cluster->getComposition()[name] << std::endl;
 		smallerClusterSize = cluster->getComposition().at(typeName) - 1;
 		// Get the cluster one size smaller than the dissociating cluster.
 		auto smallerCluster = (PSICluster *) network->get(typeName, smallerClusterSize);
@@ -810,6 +806,31 @@ std::vector<double> PSICluster::getPartialDerivatives(
 	getDissociationPartialDerivatives(partials, temperature);
 
 	return partials;
+}
+
+/**
+ * This operation works as getPartialDerivatives above, but instead of
+ * returning a vector that it creates it fills a vector that is passed to
+ * it by the caller. This allows the caller to optimize the amount of
+ * memory allocations to just one if they are accessing the partial
+ * derivatives many times.
+ *
+ * @param the temperature at which the reactions are occurring
+ * @param the vector that should be filled with the partial derivatives
+ * for this reactant where index zero corresponds to the first reactant in
+ * the list returned by the ReactionNetwork::getAll() operation. The size of
+ * the vector should be equal to ReactionNetwork::size().
+ *
+ */
+void PSICluster::getPartialDerivatives(double temperature,
+		std::vector<double> & partials) const {
+
+	// Get the partial derivatives for each reaction type
+	getProductionPartialDerivatives(partials, temperature);
+	getCombinationPartialDerivatives(partials, temperature);
+	getDissociationPartialDerivatives(partials, temperature);
+
+	return;
 }
 
 void PSICluster::combineClusters(std::vector<Reactant *> & reactants,

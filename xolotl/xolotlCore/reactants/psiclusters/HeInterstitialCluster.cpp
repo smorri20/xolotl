@@ -263,10 +263,10 @@ void HeInterstitialCluster::getDissociationPartialDerivatives(
 	static auto vCluster = (PSICluster *) network->get(vType, 1);
 	static auto iCluster = (PSICluster *) network->get(iType, 1);
 	static std::vector<int> compositionVec = { numHe - 1, 0, numI };
-	static auto heIClusterLessHe = (PSICluster *) network->getCompound("HeI", compositionVec);
+	static auto heIClusterLessHe = (PSICluster *) network->getCompound(heIType, compositionVec);
 	// Store the cluster with one less vacancy
 	compositionVec = {numHe, 0, numI - 1};
-	static auto heIClusterLessI = (PSICluster *) network->getCompound("HeI", compositionVec);
+	static auto heIClusterLessI = (PSICluster *) network->getCompound(heIType, compositionVec);
 
 	// Partial derivative with respect to changes in this cluster
 	double partialDeriv = calculateDissociationConstant(*this, *heCluster,

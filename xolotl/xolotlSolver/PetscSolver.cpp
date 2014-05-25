@@ -111,6 +111,28 @@ static std::shared_ptr<std::vector<Reactant *>> allReactants;
  */
 static double lastTemperature = 0.0;
 
+/**
+ * A vector for holding the partial derivatives of one cluster. It is sized in
+ * the solve() operation.
+ *
+ * The vector is used for every cluster and immediately reset to zero before
+ * being used for the next. This allows the acquisition of the partial
+ * derivatives to take up minimal memory and require no additional dynamic
+ * allocations.
+ */
+static std::vector<double> clusterPartials;
+
+/**
+ * A vector for holding the partial derivatives for one cluster in the order
+ * that PETSc expects. It is sized in the solve() operation.
+ *
+ * The vector is used for every cluster and immediately reset to zero before
+ * being used for the next. This allows the acquisition of the partial
+ * derivatives to take up minimal memory and require no additional dynamic
+ * allocations.
+ */
+static std::vector<double> reactingPartialsForCluster;
+
 /* ----- Error Handling Code ----- */
 
 /**
@@ -679,9 +701,6 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,void *ptr
 	// Create a new row array of size n
 	PetscInt localPDColIds[size];
 	PetscInt rowId = 0;
-	// Create arrays for storing the partial derivatives
-	std::vector<double> reactingPartialsForCluster(size, 0.0);
-	std::vector<double> allPartialsForCluster;
 	int pdColIdsVectorSize = 0;
 
 	computeReactionTermPartials->start();
@@ -711,18 +730,22 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,void *ptr
 			// Get the column id
 			rowId = (xi - xs + 1) * size + reactantIndex;
 			// Get the partial derivatives
-			allPartialsForCluster = reactant->getPartialDerivatives(
-					temperature);
+			reactant->getPartialDerivatives(temperature,clusterPartials);
 			// Get the list of column ids from the map
 			auto pdColIdsVector = dFillMap.at(reactantIndex);
-			pdColIdsVectorSize = pdColIdsVector.size(); //Number of partial derivatives
+			//Number of partial derivatives
+			pdColIdsVectorSize = pdColIdsVector.size();
 			// Loop over the list of column ids
 			for (int j = 0; j < pdColIdsVectorSize; j++) {
-				// Calculate the appropriate index to match the dfill array configuration
+				// Calculate the appropriate index to match the dfill array
+				// configuration
 				localPDColIds[j] = (xi - xs + 1) * size + pdColIdsVector[j];
 				// Get the partial derivative from the array of all of the partials
 				reactingPartialsForCluster[j] =
-						allPartialsForCluster[pdColIdsVector[j]];
+						clusterPartials[pdColIdsVector[j]];
+				// Reset the cluster partial value to zero. This is much faster
+				// than using memset.
+				clusterPartials[pdColIdsVector[j]] = 0.0;
 			}
 			// Update the matrix
 			ierr = MatSetValuesLocal(J, 1, &rowId, pdColIdsVectorSize,
@@ -1005,6 +1028,10 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	int numHeClusters = std::stoi(props["numHeClusters"]);
 	// The degrees of freedom should be equal to the number of reactants.
 	int dof = network->size();
+
+	// Set the size of the partial derivatives vectors
+	clusterPartials.resize(dof,0.0);
+	reactingPartialsForCluster.resize(dof,0.0);
 
 	// Check the network before getting busy.
 	if (!network) {

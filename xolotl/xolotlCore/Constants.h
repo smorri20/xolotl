@@ -34,6 +34,8 @@ static const double latticeConstant = 0.31700000000000000;
 static const std::string heType = "He";
 static const std::string vType = "V";
 static const std::string iType = "I";
+static const std::string heVType = "HeV";
+static const std::string heIType = "HeI";
 
 } /* end namespace xolotlCore */
 #endif /* CONSTANTS_H_ */
