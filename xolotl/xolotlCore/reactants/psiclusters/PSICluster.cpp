@@ -543,18 +543,6 @@ double PSICluster::calculateDissociationConstant(
 			-1.0 * bindingEnergy / (xolotlCore::kBoltzmann * temperature));
 	double k_minus = (1.0 / atomicVolume) * kPlus * k_minus_exp;
 
-//	std::cout << "kPlus in " << name << "_" << size << " = " << kPlus
-//			<< std::endl;
-//	std::cout << "k_minus_exp in " << name << "_" << size << " = "
-//			<< k_minus_exp << std::endl;
-//	std::cout << "k_minus in " << name << "_" << size << " = " << k_minus
-//			<< std::endl;
-//	std::cout << "atomic volume in " << name << "_" << size << " = " << atomicVolume
-//			<< std::endl;
-//	std::cout << "E_b in " << name << "_" << size << " = "
-//			<< firstCluster.getBindingEnergies()[bindingEnergyIndex]
-//			<< " at index = " << bindingEnergyIndex << std::endl;
-
 	return k_minus;
 }
 
