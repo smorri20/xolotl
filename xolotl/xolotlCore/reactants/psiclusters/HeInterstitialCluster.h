@@ -92,6 +92,12 @@ public:
 	 */
 	virtual double getDissociationFlux(double temperature) const;
 
+	/**
+	 * This operation returns true to signify that this cluster is a mixture of
+	 * He and I.
+	 */
+	virtual bool isMixed() const { return true; };
+
 protected:
 
 	/**

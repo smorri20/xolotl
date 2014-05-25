@@ -45,14 +45,6 @@ HeInterstitialCluster::HeInterstitialCluster(const HeInterstitialCluster &other)
 HeInterstitialCluster::~HeInterstitialCluster() {
 }
 
-//std::shared_ptr<PSICluster> HeInterstitialCluster::getThisSharedPtrFromNetwork() const {
-//	auto composition = getComposition();
-//	std::vector<int> compVec = { composition[heType], composition[vType],
-//			composition[iType] };
-//	// THIS IS VERY WRONG! DON'T LEAVE HERE AFTER THE REFACTOR! FIXME!
-//	return std::shared_ptr<PSICluster>(network->getCompound("HeI", compVec));
-//}
-
 std::shared_ptr<Reactant> HeInterstitialCluster::clone() {
 	std::shared_ptr<Reactant> reactant = std::make_shared<HeInterstitialCluster>(*this);
 	return reactant;

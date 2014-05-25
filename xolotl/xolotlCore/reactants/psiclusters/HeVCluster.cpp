@@ -45,14 +45,6 @@ HeVCluster::HeVCluster(const HeVCluster &other) :
 HeVCluster::~HeVCluster() {
 }
 
-//std::shared_ptr<PSICluster> HeVCluster::getThisSharedPtrFromNetwork() const {
-//	auto composition = getComposition();
-//	std::vector<int> compVec = { composition[heType], composition[vType],
-//			composition[iType] };
-//	// THIS IS VERY WRONG! DON'T LEAVE HERE AFTER THE REFACTOR! FIXME!
-//	return std::shared_ptr<PSICluster>(network->getCompound("HeV", compVec));
-//}
-
 std::shared_ptr<Reactant> HeVCluster::clone() {
 	std::shared_ptr<Reactant> reactant(new HeVCluster(*this));
 	return reactant;
@@ -230,8 +222,9 @@ double HeVCluster::getDissociationFlux(double temperature) const {
 	// Only dissociate if possible
 	if (heCluster && vCluster && iCluster) {
 		// FIXME! Make sure that this works as expected! Make sure that it
-		// correctly picks out right component in
+		// correctly picks out the right component in
 		// calculateDissociationConstant!
+
 		// Calculate the much easier f4 term... first
 		f4 = calculateDissociationConstant(*this, *heCluster, temperature)
 				+ calculateDissociationConstant(*this, *vCluster, temperature)

@@ -133,25 +133,15 @@ protected:
 	std::vector<PSICluster *> dissociatingClusters;
 
 	/**
+	 * A pointer to the cluster of the same type as this one that has
+	 * size equal to 1. The reference is set in setReactionNetwork().
+	 */
+	PSICluster * sameTypeSizeOneCluster;
+
+	/**
 	 * Counter for the number of times getDissociationFlux is called.
 	 */
 	std::shared_ptr<xolotlPerf::IEventCounter> getDissociationFluxCounter;
-
-	/**
-	 * This operation retrieves the shared_ptr for this cluster from the
-	 * network so that the reference count will be maintained.
-	 *
-	 * Simply creating a shared_ptr with the "this" pointer will break
-	 * the reference count, so it is important to have the exact
-	 * shared pointer that the network is storing.
-	 *
-	 * This operation will fail if the network of which the cluster is a
-	 * member has not been set.
-	 *
-	 * @return The shared_ptr from the network or a null shared_ptr if the
-	 * network does not contain this reactant.
-	 */
-	//virtual std::shared_ptr<PSICluster> getThisSharedPtrFromNetwork() const;
 
 	/**
 	 * Calculate the reaction constant dependent on the
@@ -633,6 +623,12 @@ public:
 	 * @param temp
 	 */
 	virtual void setTemperature(double temp);
+
+	/**
+	 * This operation returns true if the cluster is a mixed-species or compound
+	 * cluster and false if it is a single species cluster.
+	 */
+	virtual bool isMixed() const { return false; };
 
 };
 

@@ -83,6 +83,9 @@ PSICluster::PSICluster(const PSICluster &other) :
 	// Recompute all of the temperature-dependent quantities
 	setTemperature(other.getTemperature());
 
+	// Set the single species cluster reference
+	sameTypeSizeOneCluster = other.sameTypeSizeOneCluster;
+
 	// Set up an event counter to count the number of times getDissociationFlux is called
 	getDissociationFluxCounter = handlerRegistry->getEventCounter(
 			"getDissociationFlux_Counter");
@@ -262,30 +265,11 @@ void PSICluster::setReactionNetwork(
 	combiningReactants.shrink_to_fit();
 	dissociatingClusters.shrink_to_fit();
 
-	// Print array size information
-//	std::cout << "Array sizes for " << getName() << " (Id = " << getId() << ")" << std::endl;
-//	std::cout << "reactionConnectivitySet: size = "
-//			<< reactionConnectivitySet.size() << std::endl;
-//	std::cout << "dissociationConnectivitySet: size = "
-//			<< dissociationConnectivitySet.size() << std::endl;
-//	std::cout << "reactingPairs: size = "
-//			<< reactingPairs.size() << ", capacity = "
-//			<< reactingPairs.capacity() << ", capacity/size = "
-//			<< ((float) reactingPairs.capacity()/
-//					(float) reactingPairs.size())
-//			<< std::endl;
-//	std::cout << "combiningReactants: size = "
-//			<< combiningReactants.size() << ", capacity = "
-//			<< combiningReactants.capacity() << ", capacity/size = "
-//			<< ((float) combiningReactants.capacity()/
-//					(float) combiningReactants.size())
-//			<< std::endl;
-//	std::cout << "dissociatingClusters: size = "
-//			<< dissociatingClusters.size() << ", capacity = "
-//			<< dissociatingClusters.capacity() << ", capacity/size = "
-//			<< ((float) dissociatingClusters.capacity()/
-//					(float) dissociatingClusters.size())
-//			<< std::endl;
+	// Get the cluster that represents the same type as this cluster, but with
+	// size = 1. This only works for single species clusters to being with.
+	if (!isMixed()) {
+		sameTypeSizeOneCluster = (PSICluster *) network->get(typeName,size);
+	}
 
 	return;
 }
@@ -300,22 +284,10 @@ double PSICluster::getDissociationFlux(double temperature) const {
 
 	// Only try this if the network is available
 	if (network != NULL) {
-		// Get this PSICluster or subclasses' cluster map
-		auto composition = getComposition();
-		// Get the number of species to determine if this
-		// cluster is mixed or single
-		int numSpecies = (composition[heType] > 0) + (composition[vType] > 0)
-				+ (composition[iType] > 0);
-		// If no species, throw error
-		if (numSpecies == 0) {
-			// Bad if we have no species
-			throw std::string("Cluster map contains no species");
-		} else if (numSpecies == 1) {
+		// Only compute the dissociation for single species clusters
+		if (!isMixed()) {
 
 			// ----- This doesn't seem completely correct. REVIEW!!!!! -----
-
-			// Get the single species cluster that comes out with it
-			auto singleSpeciesCluster = (PSICluster *) network->get(typeName, 1);
 
 			// Set the total number of reactants that dissociate to form this one
 			nClusters = dissociatingClusters.size();
@@ -331,27 +303,17 @@ double PSICluster::getDissociationFlux(double temperature) const {
 				if (smallerCluster) {
 					flux += fluxMultiplier
 							* calculateDissociationConstant(*smallerCluster,
-									*singleSpeciesCluster, temperature)
+									*sameTypeSizeOneCluster, temperature)
 							* dissociatingCluster->getConcentration();
-//				std::cout << "Adding dissociation flux for "
-//						<< dissociatingCluster->getName() << "_"
-//						<< dissociatingCluster->getSize() << " --> "
-//						<< getName() << "_"
-//						<< dissociatingCluster->getSize() - 1 << " + "
-//						<< getName() << "_" << getSize() << " = "
-//						<< calculateDissociationConstant(*smallerCluster,
-//								temperature)
-//								* dissociatingCluster->getConcentration()
-//						<< std::endl;
 				}
 			}
-		} else if (numSpecies == 2) {
+		} else {
 			std::cout << "PSICluster Message: "
 					<< "Caught invalid single-species composition! "
-					<< composition[heType] << " " << composition[vType] << " "
-					<< composition[iType] << std::endl;
+					<< compositionMap.at(heType) << " " << compositionMap.at(vType) << " "
+					<< compositionMap.at(iType) << std::endl;
 			throw std::string(
-					"Mixed Species dissociation flux must be implemented by subclass.");
+					"Mixed Species dissociation flux must be implemented by subclasses.");
 		}
 
 	}
