@@ -156,7 +156,9 @@ BOOST_AUTO_TEST_CASE(checkTotalFlux) {
 
 	// The flux should be nearly zero because the binding energies for all the
 	// data that we have are infinite for I1.
-	BOOST_REQUIRE_CLOSE(-4.747e-14, flux,.01);
+	BOOST_REQUIRE_CLOSE(-5958214005696.4355, flux,.01);
+
+	return;
 }
 
 /**

@@ -182,6 +182,16 @@ BOOST_AUTO_TEST_CASE(checkReactants) {
 	auto heIReactants = psiNetwork->getAll("HeI");
 	BOOST_REQUIRE_EQUAL(36, heIReactants.size());
 
+	// Add the required He_1, V_1, I_1 clusters to the network.
+	psiNetwork->add(make_shared<HeCluster>(1,registry));
+	psiNetwork->add(make_shared<VCluster>(1,registry));
+	psiNetwork->add(make_shared<InterstitialCluster>(1,registry));
+
+	// Set the reaction networks for all of the clusters
+	for (int i = 0; i < reactants->size(); i++) {
+		reactants->at(i)->setReactionNetwork(psiNetwork);
+	}
+
 	// Try changing the temperature and make sure it works
 	psiNetwork->setTemperature(1000.0);
 	BOOST_REQUIRE_CLOSE(1000.0,reactants->at(0)->getTemperature(),0.0001);

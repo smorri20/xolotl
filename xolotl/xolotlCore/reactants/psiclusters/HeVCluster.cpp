@@ -159,6 +159,19 @@ void HeVCluster::createReactionConnectivity() {
 		combineClusters(singleVInVector,maxHeVClusterSize,"HeV");
 	}
 
+	// Set the references to the size one clusters
+	heCluster = (PSICluster *) network->get(heType, 1);
+	vCluster = (PSICluster *) network->get(vType, 1);
+	iCluster = (PSICluster *) network->get(iType, 1);
+
+	// Set the references for clusters one size smaller than this cluster,
+	// starting with one less He.
+	std::vector<int> compositionVec = { numHe - 1, numV, 0 };
+	heVClusterLessHe = (PSICluster *) network->getCompound(heVType, compositionVec);
+	// Store the cluster with one less vacancy
+	compositionVec = {numHe, numV - 1, 0};
+	heVClusterLessV = (PSICluster *) network->getCompound(heVType, compositionVec);
+
 	return;
 }
 
@@ -169,12 +182,6 @@ void HeVCluster::createDissociationConnectivity() {
 			network);
 	auto props = psiNetwork->getProperties();
 	std::vector<int> composition;
-
-	// Get the required dissociating clusters. These are stored for the flux
-	// computation later.
-	auto heCluster = network->get(heType, 1);
-	auto vCluster = network->get(vType, 1);
-	auto iCluster = network->get(iType, 1);
 
 	// Store the cluster with one less helium
 	std::vector<int> compositionVec = { numHe - 1, numV, 0 };
@@ -204,31 +211,33 @@ void HeVCluster::createDissociationConnectivity() {
 	return;
 }
 
+void HeVCluster::setTemperature(double temp) {
+
+	// Call the base class version to set all of the basic quantities.
+	PSICluster::setTemperature(temp);
+
+	// Calculate the much easier f4 term... first
+	f4 = calculateDissociationConstant(*this, *heCluster, temperature)
+			+ calculateDissociationConstant(*this, *vCluster, temperature)
+			+ calculateDissociationConstant(*this, *iCluster, temperature);
+
+	return;
+}
+
 double HeVCluster::getDissociationFlux(double temperature) const {
 
 	// Local Declarations
 	PSICluster * currentCluster;
-	double f4 = 0.0, f3 = 0.0;
+	double f3 = 0.0;
 
 	// Get the required dissociating clusters. These are stored for the flux
 	// computation later.'
-
-	// FIXME - Can't I figure out a way to make them NOT static?
-
-	static auto heCluster = (PSICluster *) network->get(heType, 1);
-	static auto vCluster = (PSICluster *) network->get(vType, 1);
-	static auto iCluster = (PSICluster *) network->get(iType, 1);
 
 	// Only dissociate if possible
 	if (heCluster && vCluster && iCluster) {
 		// FIXME! Make sure that this works as expected! Make sure that it
 		// correctly picks out the right component in
 		// calculateDissociationConstant!
-
-		// Calculate the much easier f4 term... first
-		f4 = calculateDissociationConstant(*this, *heCluster, temperature)
-				+ calculateDissociationConstant(*this, *vCluster, temperature)
-				+ calculateDissociationConstant(*this, *iCluster, temperature);
 
 		// Loop over all the elements of the dissociation
 		// connectivity to find where this mixed species dissociates
@@ -282,22 +291,6 @@ void HeVCluster::getDissociationPartialDerivatives(
 
 	// Local Declarations
 	int index = 0;
-
-
-	// Get the required dissociating clusters. These are stored for the flux
-	// computation later.'
-
-	// FIXME - Can't I figure out a way to make them NOT static?
-
-	static auto heCluster = (PSICluster *) network->get(heType, 1);
-	static auto vCluster = (PSICluster *) network->get(vType, 1);
-	static auto iCluster = (PSICluster *) network->get(iType, 1);
-
-	static std::vector<int> compositionVec = { numHe - 1, numV, 0 };
-	static auto heVClusterLessHe = (PSICluster *) network->getCompound(heVType, compositionVec);
-	// Store the cluster with one less vacancy
-	compositionVec = {numHe, numV - 1, 0};
-	static auto heVClusterLessV = (PSICluster *) network->getCompound(heVType, compositionVec);
 
 	// Partial derivative with respect to changes in this cluster
 	double partialDeriv = calculateDissociationConstant(*this, *heCluster,

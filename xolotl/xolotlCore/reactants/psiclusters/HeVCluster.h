@@ -16,11 +16,30 @@ class HeVCluster: public PSICluster {
 
 private:
 
+	//! The helium cluster of size 1
+	PSICluster * heCluster;
+
+	//! The vacancy cluster of size 1
+	PSICluster * vCluster;
+
+	//! The interstitial cluster of size 1
+	PSICluster * iCluster;
+
+	//! The HeV cluster with one less helium
+	PSICluster * heVClusterLessHe;
+
+	//! The HeV cluster with one less vacancy
+	PSICluster * heVClusterLessV;
+
 	//! The number of helium atoms in this cluster.
 	int numHe;
 
 	//! The number of atomic vacancies in this cluster.
 	int numV;
+
+	//! The sum of the dissociation constants between this cluster and the
+	//! clusters of size 1.
+	double f4 = 0.0;
 
 	/**
 	 * The default constructor is private because PSIClusters must always be
@@ -98,16 +117,15 @@ public:
 	 */
 	virtual bool isMixed() const { return true; };
 
-protected:
-
 	/**
-	 * This operation overrides the base class implementation to provide
-	 * the proper pointer for HeV, which is a compound.
-	 *
-	 * @return The shared_ptr from the network or a null shared_ptr if the
-	 * network does not contain this reactant.
+	 * This operation overrides Reactant's setTemperature operation to
+	 * correctly recompute the diffusion coefficient and other
+	 * temperature-dependent quantities when the temperature is set.
+	 * @param temp
 	 */
-//	std::shared_ptr<PSICluster> getThisSharedPtrFromNetwork() const;
+	virtual void setTemperature(double temp);
+
+protected:
 
 	/**
 	 * Computes a row of the reaction connectivity matrix corresponding to

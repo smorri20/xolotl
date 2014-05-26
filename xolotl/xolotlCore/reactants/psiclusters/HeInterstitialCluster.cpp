@@ -126,6 +126,19 @@ void HeInterstitialCluster::createReactionConnectivity() {
 	reactants = psiNetwork->getAll(vType);
 	replaceInCompound(reactants, vType, iType);
 
+	// Set the references to the size one clusters
+	heCluster = (PSICluster *) network->get(heType, 1);
+	vCluster = (PSICluster *) network->get(vType, 1);
+	iCluster = (PSICluster *) network->get(iType, 1);
+
+	// Set the references for clusters one size smaller than this cluster,
+	// starting with one less He.
+	std::vector<int> compositionVec = { numHe - 1, 0, numI };
+	heIClusterLessHe = (PSICluster *) network->getCompound(heIType, compositionVec);
+	// Store the cluster with one less vacancy
+	compositionVec = {numHe, 0, numI - 1};
+	heIClusterLessI = (PSICluster *) network->getCompound(heIType, compositionVec);
+
 	return;
 }
 
@@ -165,29 +178,29 @@ void HeInterstitialCluster::createDissociationConnectivity() {
 	return;
 }
 
+void HeInterstitialCluster::setTemperature(double temp) {
+
+	// Call the base class version to set all of the basic quantities.
+	PSICluster::setTemperature(temp);
+
+	// Calculate the much easier f4 term... first
+	f4 = calculateDissociationConstant(*this, *heCluster, temperature)
+			+ calculateDissociationConstant(*this, *vCluster, temperature)
+			+ calculateDissociationConstant(*this, *iCluster, temperature);
+
+	return;
+}
+
 double HeInterstitialCluster::getDissociationFlux(double temperature) const {
 
 	// Local Declarations
-	double f4 = 0.0, f3 = 0.0;
-
-	// Get the required dissociating clusters. These are stored for the flux
-	// computation later.'
-
-	// FIXME - Can't I figure out a way to make them NOT static?
-
-	static auto heCluster = (PSICluster *) network->get(heType, 1);
-	static auto vCluster = (PSICluster *) network->get(vType, 1);
-	static auto iCluster = (PSICluster *) network->get(iType, 1);
+	double f3 = 0.0;
 
 	// Only dissociate if possible
 	if (heCluster && vCluster && iCluster) {
 		// FIXME! Make sure that this works as expected! Make sure that it
 		// correctly picks out right component in
 		// calculateDissociationConstant!
-		// Calculate the much easier f4 term... first
-		f4 = calculateDissociationConstant(*this, *heCluster, temperature)
-				+ calculateDissociationConstant(*this, *vCluster, temperature)
-				+ calculateDissociationConstant(*this, *iCluster, temperature);
 
 		// Loop over all the elements of the dissociation
 		// connectivity to find where this mixed species dissociates and
@@ -245,20 +258,6 @@ void HeInterstitialCluster::getDissociationPartialDerivatives(
 
 	// Local Declarations
 	int index = 0;
-
-	// Get the required dissociating clusters. These are stored for the flux
-	// computation later.'
-
-	// FIXME - Can't I figure out a way to make them NOT static?
-
-	static auto heCluster = (PSICluster *) network->get(heType, 1);
-	static auto vCluster = (PSICluster *) network->get(vType, 1);
-	static auto iCluster = (PSICluster *) network->get(iType, 1);
-	static std::vector<int> compositionVec = { numHe - 1, 0, numI };
-	static auto heIClusterLessHe = (PSICluster *) network->getCompound(heIType, compositionVec);
-	// Store the cluster with one less vacancy
-	compositionVec = {numHe, 0, numI - 1};
-	static auto heIClusterLessI = (PSICluster *) network->getCompound(heIType, compositionVec);
 
 	// Partial derivative with respect to changes in this cluster
 	double partialDeriv = calculateDissociationConstant(*this, *heCluster,

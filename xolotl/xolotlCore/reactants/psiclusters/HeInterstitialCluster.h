@@ -22,6 +22,25 @@ private:
 	//! The number of interstitial defects in this cluster.
 	int numI;
 
+	//! The helium cluster of size 1
+	PSICluster * heCluster;
+
+	//! The vacancy cluster of size 1
+	PSICluster * vCluster;
+
+	//! The interstitial cluster of size 1
+	PSICluster * iCluster;
+
+	//! The HeI cluster with one less helium
+	PSICluster * heIClusterLessHe;
+
+	//! The HeI cluster with one less vacancy
+	PSICluster * heIClusterLessI;
+
+	//! The sum of the dissociation constants between this cluster and the
+	//! clusters of size 1.
+	double f4 = 0.0;
+
 	/**
 	 * The default constructor is private because PSIClusters must always be
 	 * initialized with a size.
@@ -98,16 +117,15 @@ public:
 	 */
 	virtual bool isMixed() const { return true; };
 
-protected:
-
 	/**
-	 * This operation overrides the base class implementation to provide
-	 * the proper pointer for HeI, which is a compound.
-	 *
-	 * @return The shared_ptr from the network or a null shared_ptr if the
-	 * network does not contain this reactant.
+	 * This operation overrides Reactant's setTemperature operation to
+	 * correctly recompute the diffusion coefficient and other
+	 * temperature-dependent quantities when the temperature is set.
+	 * @param temp
 	 */
-//	std::shared_ptr<PSICluster> getThisSharedPtrFromNetwork() const;
+	virtual void setTemperature(double temp);
+
+protected:
 
 	/**
 	 * Computes a row of the reaction connectivity matrix corresponding to
