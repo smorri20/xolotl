@@ -327,12 +327,6 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<Reactant> reactant) {
 		clusters->push_back(reactant);
 		// Add the pointer to the list of all clusters
 		allReactants->push_back(reactant.get());
-//				std::cout << "Num single species = " << singleSpeciesMap.size()
-//						<< std::endl;
-//				std::cout << "Num mixed species = " << mixedSpeciesMap.size()
-//						<< std::endl;
-//				std::cout << "Num species = " << networkSize << std::endl;
-//				std::cout << "Real num species = " << (singleSpeciesMap.size() + mixedSpeciesMap.size()) << std::endl;
 	}
 
 	return;
