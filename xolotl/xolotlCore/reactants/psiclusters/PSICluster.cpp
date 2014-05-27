@@ -268,7 +268,7 @@ void PSICluster::setReactionNetwork(
 	// Get the cluster that represents the same type as this cluster, but with
 	// size = 1. This only works for single species clusters to being with.
 	if (!isMixed()) {
-		sameTypeSizeOneCluster = (PSICluster *) network->get(typeName,size);
+		sameTypeSizeOneCluster = (PSICluster *) network->get(typeName,1);
 	}
 
 	return;
