@@ -219,8 +219,15 @@ void HDF5Utils::finalizeFile() {
 
 void HDF5Utils::readHeader(std::string fileName, int & physicalDim,
 		double & time, double & deltaTime) {
+	// Set up file access property list with parallel I/O access
+	plistId = H5Pcreate(H5P_FILE_ACCESS);
+	H5Pset_fapl_mpio(plistId, MPI_COMM_WORLD, MPI_INFO_NULL);
+
 	// Open the given HDF5 file with read only access
-	fileId = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+	fileId = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, plistId);
+
+	// Close the property list
+	status = H5Pclose(plistId);
 
 	// Open the header group
 	hid_t groupId = H5Gopen(fileId, "/headerGroup", H5P_DEFAULT);
@@ -248,8 +255,15 @@ void HDF5Utils::readHeader(std::string fileName, int & physicalDim,
 }
 
 std::vector<std::vector<double> > HDF5Utils::readNetwork(std::string fileName) {
+	// Set up file access property list with parallel I/O access
+	plistId = H5Pcreate(H5P_FILE_ACCESS);
+	H5Pset_fapl_mpio(plistId, MPI_COMM_WORLD, MPI_INFO_NULL);
+
 	// Open the given HDF5 file with read only access
-	fileId = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+	fileId = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, plistId);
+
+	// Close the property list
+	status = H5Pclose(plistId);
 
 	// Open the dataset
 	hid_t datasetId = H5Dopen(fileId, "/networkGroup/network", H5P_DEFAULT);
@@ -288,8 +302,15 @@ std::vector<std::vector<double> > HDF5Utils::readNetwork(std::string fileName) {
 
 void HDF5Utils::readGridPoint(std::string fileName, int networkSize, int i,
 		double * concentrations) {
+	// Set up file access property list with parallel I/O access
+	plistId = H5Pcreate(H5P_FILE_ACCESS);
+	H5Pset_fapl_mpio(plistId, MPI_COMM_WORLD, MPI_INFO_NULL);
+
 	// Open the given HDF5 file with read only access
-	fileId = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+	fileId = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, plistId);
+
+	// Close the property list
+	status = H5Pclose(plistId);
 
 	// Set the dataset name
 	std::stringstream datasetName;
