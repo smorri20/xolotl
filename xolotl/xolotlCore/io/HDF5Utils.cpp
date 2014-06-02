@@ -64,7 +64,7 @@ void HDF5Utils::initializeFile(int timeStep, int networkSize, int gridSize) {
 
 		// Create property list for independent dataset write.
 		plistId = H5Pcreate(H5P_DATASET_XFER);
-		status = H5Pset_dxpl_mpio(plistId, H5FD_MPIO_INDEPENDENT);
+		status = H5Pset_dxpl_mpio(plistId, H5FD_MPIO_COLLECTIVE);
 
 		// Close it
 		status = H5Dclose(datasetId);
@@ -73,7 +73,7 @@ void HDF5Utils::initializeFile(int timeStep, int networkSize, int gridSize) {
 
 	// Create property list for independent dataset write.
 	plistId = H5Pcreate(H5P_DATASET_XFER);
-	status = H5Pset_dxpl_mpio(plistId, H5FD_MPIO_INDEPENDENT);
+	status = H5Pset_dxpl_mpio(plistId, H5FD_MPIO_COLLECTIVE);
 
 	return;
 }
