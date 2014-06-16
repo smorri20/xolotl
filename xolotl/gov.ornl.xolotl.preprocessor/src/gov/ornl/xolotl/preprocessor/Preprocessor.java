@@ -3,8 +3,12 @@
  */
 package gov.ornl.xolotl.preprocessor;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Properties;
+
+import ncsa.hdf.hdf5lib.H5;
+import ncsa.hdf.hdf5lib.HDF5Constants; 
 
 /**
  * This class generates a valid Xolotl input file with each line representing a
@@ -282,6 +286,201 @@ public class Preprocessor {
 		defaultParameters.setProperty("checkpoint", "true");
 				
 		return defaultParameters;
+	}
+	
+	/**
+	 * This operation generates the grid needed to write the concentrations.
+	 * 
+	 * @param dimension
+	 *            The physical length of the grid
+	 * @param refinement
+	 *            The refinement of the grid
+	 * 
+	 * @return The array of physical positions on the grid
+	 */
+	public double[] generateGrid(int dimension, int refinement) {
+		int totalLength = dimension;
+		// Compute the total number of positions
+		for (int i = 0; i < refinement; i++) {
+			totalLength = (totalLength * 2) - 1;
+		}
+		 // Create the array to return
+		double[] toReturn = new double[totalLength];
+		// Compute the distance between every position
+		double increment = (double) dimension / (totalLength - 1);
+		
+		for (int i = 0; i < totalLength; i++) {
+			toReturn[i] = i * increment;
+		}
+		
+		return toReturn;
+	}	
+	
+	/**
+	 * This operation creates the HDF5 file needed by Xolotl
+	 * 
+	 * @param name
+	 * 			The name of the HDF5 file
+	 */
+	public void createHDF5(String name) {	
+		// The status of the previous HDF5 operation
+		int status; 
+		
+		try {
+			// Create the HDF5 file
+			int fileId = H5.H5Fcreate(name, HDF5Constants.H5F_ACC_TRUNC, 
+					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT); 	
+			
+			// Close the HDF5 file
+			status = H5.H5Fclose(fileId);
+		} catch (Exception e) {
+			// Complain
+			e.printStackTrace();
+		}
+		
+		return;
+	}	
+	
+	/**
+	 * This operation writes the header in the HDF5 file
+	 * 
+	 * @param name
+	 * 			The name of the HDF5 file
+	 * @param dimension
+	 * 			The physical dimension of the grid
+	 * @param refinement
+	 *           The refinement of the grid
+	 */
+	public void writeHeader(String name, int[] dimension, int[] refinement) {	
+		// The status of the previous HDF5 operation
+		int status; 
+		
+		try {
+			// Open the HDF5 file
+			int fileId = H5.H5Fopen(name, HDF5Constants.H5F_ACC_RDWR, 
+					HDF5Constants.H5P_DEFAULT);	
+			
+			// Create the header group
+			int headerGroupId = H5.H5Gcreate(fileId, "headerGroup", 
+					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT,
+					HDF5Constants.H5P_DEFAULT);
+
+			// Create, write, and close the physicalDim attribute
+			int dimSId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
+			int dimAId = H5.H5Acreate(headerGroupId, "physicalDim", 
+					HDF5Constants.H5T_STD_I32LE, dimSId, 
+					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
+			status = H5.H5Awrite(dimAId, HDF5Constants.H5T_STD_I32LE, dimension);
+			status = H5.H5Aclose(dimAId);
+
+			// Create, write, and close the refinement attribute
+			int refineSId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
+			int refineAId = H5.H5Acreate(headerGroupId, "refinement", 
+					HDF5Constants.H5T_STD_I32LE, refineSId,
+					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
+			status = H5.H5Awrite(refineAId, HDF5Constants.H5T_STD_I32LE, refinement);
+			status = H5.H5Aclose(refineAId);
+			
+			// Close everything
+			status = H5.H5Gclose(headerGroupId);
+			status = H5.H5Fclose(fileId);
+		} catch (Exception e) {
+			// Complain
+			e.printStackTrace();
+		}
+		
+		return;
+	}	
+	
+	/**
+	 * This operation generates writes the generated network 
+	 * in the HDF5 file
+	 * 
+	 * @param name
+	 * 			The name of the HDF5 file
+	 * @param clusters
+	 * 			The list of clusters representing the network
+	 */
+	public void writeNetwork(String name, ArrayList<Cluster> clusters) {	
+		// The status of the previous HDF5 operation
+		int status; 
+		
+		try {
+			// Open the HDF5 file
+			int fileId = H5.H5Fopen(name, HDF5Constants.H5F_ACC_RDWR, 
+					HDF5Constants.H5P_DEFAULT);	
+			
+			// Create the header group
+			int networkGroupId = H5.H5Gcreate(fileId, "networkGroup", 
+					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT,
+					HDF5Constants.H5P_DEFAULT);
+			
+			// Create the array that will store the network
+			int networkSize = clusters.size();
+			double[][] networkArray = new double[networkSize][8];
+
+			int id = 0;
+			// Loop on the clusters
+			for (Cluster cluster : clusters) {
+				// Store the composition
+				networkArray[id][0] = cluster.nHe;
+				networkArray[id][1] = cluster.nV;
+				networkArray[id][2] = cluster.nI;
+
+				// Store the binding energies
+				networkArray[id][3] = cluster.E_He;
+				networkArray[id][4] = cluster.E_V;
+				networkArray[id][5] = cluster.E_I;
+
+				// Store the migration energy
+				networkArray[id][6] = cluster.E_m;
+
+				// Store the diffusion factor
+				networkArray[id][7] = cluster.D_0;
+				
+				//increment the id number
+				id++;
+			}
+
+			// Create the dataspace for the network with dimension dims
+			long[] dims = new long[2];
+			dims[0] = networkSize;
+			dims[1] = 8;
+			int networkSId = H5.H5Screate_simple(2, dims, null);
+
+			// Create the dataset for the network
+			int datasetId = H5.H5Dcreate(networkGroupId, "network", 
+					HDF5Constants.H5T_IEEE_F64LE, networkSId,
+					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT, 
+					HDF5Constants.H5P_DEFAULT);
+
+			// Write networkArray in the dataset
+			status = H5.H5Dwrite(datasetId, HDF5Constants.H5T_IEEE_F64LE, 
+					HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL,
+					HDF5Constants.H5P_DEFAULT, networkArray);
+
+			// Create the attribute for the network size
+			int networkSizeSId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
+			int networkSizeAId = H5.H5Acreate(datasetId, "networkSize", 
+					HDF5Constants.H5T_STD_I32LE, networkSizeSId,
+					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
+
+			// Write it
+			int[] tempNetworkSize = {networkSize};
+			status = H5.H5Awrite(networkSizeAId, HDF5Constants.H5T_STD_I32LE, 
+					tempNetworkSize);
+			
+			// Close everything
+			status = H5.H5Aclose(networkSizeAId);
+			status = H5.H5Dclose(datasetId);
+			status = H5.H5Gclose(networkGroupId);
+			status = H5.H5Fclose(fileId);
+		} catch (Exception e) {
+			// Complain
+			e.printStackTrace();
+		}
+		
+		return;
 	}	
 
 }

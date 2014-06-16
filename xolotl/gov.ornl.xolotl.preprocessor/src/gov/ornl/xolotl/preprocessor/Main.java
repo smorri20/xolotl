@@ -43,32 +43,22 @@ public class Main {
 			e1.printStackTrace();
 		}
 
-		// Create a file from the uri
-		File file = new File("test.hdf5");
-
-		// Retrieve an instance of the HDF5 format
-		FileFormat fileFormat = FileFormat
-				.getFileFormat(FileFormat.FILE_TYPE_HDF5);
-
-		// Create an H5 file. If it exists already, then delete it.
-		try {
-			H5File h5File = (H5File) fileFormat.createFile(file.getPath(),
-					FileFormat.FILE_CREATE_DELETE);
-		} catch (Exception e) {
-			// Complain
-			e.printStackTrace();
-		}
-
 		// Create the Preprocessor - FIXME! Check myArgs != null
 		Preprocessor preprocessor = new Preprocessor(myArgs);
 
 		// Generate the network of clusters
 		ArrayList<Cluster> clusters = preprocessor.generateNetwork(args);
-
-		// Dump the clusters to stdout
-		for (Cluster cluster : clusters) {
-			System.out.println(cluster.toString());
-		}
+		
+		// Create the HDF5 file
+		preprocessor.createHDF5("test.h5");
+		
+		// Write the header in it
+		int[] dim = {8};
+		int[] refinement = {0};
+		preprocessor.writeHeader("test.h5", dim, refinement);
+		
+		// Write the network in it
+		preprocessor.writeNetwork("test.h5", clusters);
 
 		// Generate the parameters that will be passed to Xolotl
 		Properties xolotlParams = preprocessor.generateParameters();
