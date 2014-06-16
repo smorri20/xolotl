@@ -241,7 +241,7 @@ public class Preprocessor {
 	 * @return The list of clusters created by the preprocessor based on its
 	 *         arguments and settings.
 	 */
-	public ArrayList<Cluster> generate(String[] args) {
+	public ArrayList<Cluster> generateNetwork(String[] args) {
 
 		// Create the list of clusters
 		ArrayList<Cluster> clusterList = new ArrayList<Cluster>();

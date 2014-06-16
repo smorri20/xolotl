@@ -59,7 +59,7 @@ public class Main {
 		Preprocessor preprocessor = new Preprocessor(myArgs);
 
 		// Generate the clusters
-		ArrayList<Cluster> clusters = preprocessor.generate(args);
+		ArrayList<Cluster> clusters = preprocessor.generateNetwork(args);
 
 		// Dump the clusters to stdout
 		for (Cluster cluster : clusters) {
