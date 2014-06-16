@@ -44,6 +44,9 @@ std::shared_ptr<xolotlViz::IPlot> perfPlot;
 //! The double that will store the accumulation of helium flux.
 double heliumFluence = 0.0;
 
+//! How often HDF5 file is written
+PetscInt stride = 0;
+
 /**
  * This is a monitoring method that will save an hdf5 file at each time step.
  * HDF5 is handling the parallel part, so no call to MPI here.
@@ -58,6 +61,8 @@ static PetscErrorCode startStop(TS ts, PetscInt timestep, PetscReal time,
 	PetscInt xs, xm, Mx;
 
 	PetscFunctionBeginUser;
+
+	if (timestep%stride != 0) PetscFunctionReturn(0);
 
 	// Get the da from ts
 	DM da;
@@ -88,31 +93,19 @@ static PetscErrorCode startStop(TS ts, PetscInt timestep, PetscReal time,
 	// Setup step size variable
 	double hx = 8.0 / (PetscReal) (Mx - 1);
 
-	// Initialize the HDF5 file for all the processes
-	xolotlCore::HDF5Utils::initializeFile(timestep, networkSize, Mx);
+	// Open the already created HDF5 file
+	xolotlCore::HDF5Utils::openFile();
 
 	// Get the physical dimension of the grid
 	int dimension = (Mx - 1) * hx;
-
-	// Get the refinement of the grid
-	PetscInt refinement = 0;
-	PetscBool flag;
-	ierr = PetscOptionsGetInt(NULL, "-da_refine", &refinement, &flag);
-	checkPetscError(ierr);
-	if (!flag)
-		refinement = 0;
 
 	// Get the current time step
 	PetscReal currentTimeStep;
 	ierr = TSGetTimeStep(ts, &currentTimeStep);
 	checkPetscError(ierr);
 
-	// Save the header in the HDF5 file
-	xolotlCore::HDF5Utils::fillHeader(dimension, refinement, time,
-			currentTimeStep);
-
-	// Save the network in the HDF5 file
-	xolotlCore::HDF5Utils::fillNetwork(PetscSolver::getNetwork());
+	// Add a concentration sub group
+	xolotlCore::HDF5Utils::addConcentrationSubGroup(timestep, networkSize, Mx, time, currentTimeStep);
 
 	// Loop on the grid
 	for (int xi = xs; xi < xs + xm; xi++) {
@@ -133,7 +126,7 @@ static PetscErrorCode startStop(TS ts, PetscInt timestep, PetscReal time,
 	}
 
 	// Finalize the HDF5 file
-	xolotlCore::HDF5Utils::finalizeFile();
+	xolotlCore::HDF5Utils::closeFile();
 
 	PetscFunctionReturn(0);
 }
@@ -1058,7 +1051,54 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 
 	// Set the monitor to save the status of the simulation in hdf5 file
 	if (flagStatus) {
-//		HDF5Utils::readNetwork("xolotlStop_10.h5");
+		// Find the stride to know how often the HDF5 file has to be written
+		PetscBool flag;
+		ierr = PetscOptionsGetInt(NULL, "-start_stop", &stride, &flag);
+		checkPetscError(ierr);
+		if (!flag)
+			stride = 1;
+
+		// Network size
+		const int networkSize = PetscSolver::getNetwork()->size();
+		PetscInt Mx;
+		PetscErrorCode ierr;
+
+		// Get the da from ts
+		DM da;
+		ierr = TSGetDM(ts, &da);
+		checkPetscError(ierr);
+
+		// Get the size of the total grid
+		ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
+		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+		PETSC_IGNORE);
+		checkPetscError(ierr);
+
+		// Initialize the HDF5 file for all the processes
+		xolotlCore::HDF5Utils::initializeFile(networkSize, Mx);
+
+		// Setup step size variable
+		double hx = 8.0 / (PetscReal) (Mx - 1);
+
+		// Get the physical dimension of the grid
+		int dimension = (Mx - 1) * hx;
+
+		// Get the refinement of the grid
+		PetscInt refinement = 0;
+		ierr = PetscOptionsGetInt(NULL, "-da_refine", &refinement, &flag);
+		checkPetscError(ierr);
+		if (!flag)
+			refinement = 0;
+
+		// Save the header in the HDF5 file
+		xolotlCore::HDF5Utils::fillHeader(dimension, refinement);
+
+		// Save the network in the HDF5 file
+		xolotlCore::HDF5Utils::fillNetwork(PetscSolver::getNetwork());
+
+		// Finalize the HDF5 file
+		xolotlCore::HDF5Utils::finalizeFile();
 
 		// startStop will be called at each timestep
 		ierr = TSMonitorSet(ts, startStop, NULL, NULL);

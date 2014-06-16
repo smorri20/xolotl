@@ -22,8 +22,9 @@ BOOST_AUTO_TEST_SUITE(HDF5Utils_testSuite)
  * Method checking the writing and reading of the HDF5 file.
  */
 BOOST_AUTO_TEST_CASE(checkOI) {
+
 	// Initialize MPI for HDF5
-	int argc;
+	int argc = 0;
 	char **argv;
 	MPI_Init(&argc, &argv);
 
@@ -51,7 +52,7 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 	// Set the time step number
 	int timeStep = 0;
 	// Initialize the HDF5 file
-	HDF5Utils::initializeFile(timeStep, networkSize, 1);
+	HDF5Utils::initializeFile(networkSize, 1);
 
 	// Set the physical dimension of the grid and the refinement
 	int dimension = 5;
@@ -60,10 +61,19 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 	double currentTime = 0.0001;
 	double currentTimeStep = 0.000001;
 	// Write the header in the HDF5 file
-	HDF5Utils::fillHeader(dimension, refinement, currentTime, currentTimeStep);
+	HDF5Utils::fillHeader(dimension, refinement);
 
 	// Write the network in the HDF5 file
 	HDF5Utils::fillNetwork(network);
+
+	// Finalize the HDF5 file
+	HDF5Utils::finalizeFile();
+
+	// Open it again to add the concentrations
+	HDF5Utils::openFile();
+
+	// Add the concentration sub group
+	HDF5Utils::addConcentrationSubGroup(timeStep, networkSize, 1, currentTime, currentTimeStep);
 
 	// Create an array of concentration for one grid point
 	double concentrations[networkSize];
@@ -78,20 +88,23 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 	// Write the concentrations in the HDF5 file
 	HDF5Utils::fillConcentrations(conc, gridPoint, position);
 
-	// Finalize the HDF5 file
-	xolotlCore::HDF5Utils::finalizeFile();
+	// Close the HDF5 file
+	xolotlCore::HDF5Utils::closeFile();
 
 	// Read the header of the written file
 	int dim = 0;
-	double t = 0.0, dt = 0.0;
-	HDF5Utils::readHeader("xolotlStop_0.h5", dim, t, dt);
+	HDF5Utils::readHeader("xolotlStop.h5", dim);
 	// Check the obtained values
 	BOOST_REQUIRE_EQUAL(dim, dimension);
+
+	// Read the times
+	double t = 0.0, dt = 0.0;
+	HDF5Utils::readTimes("xolotlStop.h5", 0, t, dt);
 	BOOST_REQUIRE_EQUAL(t, currentTime);
 	BOOST_REQUIRE_EQUAL(dt, currentTimeStep);
 
 	// Read the network of the written file
-	auto networkVector = HDF5Utils::readNetwork("xolotlStop_0.h5");
+	auto networkVector = HDF5Utils::readNetwork("xolotlStop.h5");
 	// Get all the reactants
 	auto reactants = network->getAll();
 	// Check the network vector
@@ -126,7 +139,7 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 	// Read the concentrations at the given grid point
 	double newConcentrations[networkSize];
 	double * newConc = &newConcentrations[0];
-	HDF5Utils::readGridPoint("xolotlStop_0.h5", networkSize, gridPoint, newConc);
+	HDF5Utils::readGridPoint("xolotlStop.h5", 0, networkSize, gridPoint, newConc);
 	// Check them
 	for (int i = 0; i < networkSize; i++) {
 		BOOST_REQUIRE_EQUAL(newConcentrations[i], concentrations[i]);

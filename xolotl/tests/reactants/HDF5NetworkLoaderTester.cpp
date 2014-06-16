@@ -7,6 +7,7 @@
 #include <DummyHandlerRegistry.h>
 #include <HDF5NetworkLoader.h>
 #include <XolotlConfig.h>
+#include <mpi.h>
 #include <memory>
 
 using namespace std;
@@ -21,6 +22,12 @@ BOOST_AUTO_TEST_SUITE(HDF5NetworkLoader_testSuite)
  * Method checking the loading of the network from the HDF5 file.
  */
 BOOST_AUTO_TEST_CASE(checkLoad) {
+
+	// Initialize MPI for HDF5
+	int argc = 0;
+	char **argv;
+	MPI_Init(&argc, &argv);
+
 	// Create the network loader
 	HDF5NetworkLoader loader =
 			HDF5NetworkLoader(make_shared<xolotlPerf::DummyHandlerRegistry>());
@@ -148,6 +155,9 @@ BOOST_AUTO_TEST_CASE(checkLoad) {
 	// Check the diffusion factor
 	diffusionFactor = reactant->getDiffusionFactor();
 	BOOST_REQUIRE_EQUAL(diffusionFactor, 0.0);
+
+	// Finalize MPI
+	MPI_Finalize();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
