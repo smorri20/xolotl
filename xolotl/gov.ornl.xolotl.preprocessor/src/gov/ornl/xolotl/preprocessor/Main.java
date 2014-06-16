@@ -4,7 +4,11 @@
 package gov.ornl.xolotl.preprocessor;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Properties;
 
 import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
 import uk.co.flamingpenguin.jewel.cli.CliFactory;
@@ -30,7 +34,7 @@ public class Main {
 
 		// Local Declarations
 		Arguments myArgs = null;
-		
+
 		// Get command line arguments
 		try {
 			myArgs = CliFactory.parseArguments(Arguments.class, args);
@@ -38,7 +42,7 @@ public class Main {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		
+
 		// Create a file from the uri
 		File file = new File("test.hdf5");
 
@@ -54,16 +58,41 @@ public class Main {
 			// Complain
 			e.printStackTrace();
 		}
-		
+
 		// Create the Preprocessor - FIXME! Check myArgs != null
 		Preprocessor preprocessor = new Preprocessor(myArgs);
 
-		// Generate the clusters
+		// Generate the network of clusters
 		ArrayList<Cluster> clusters = preprocessor.generateNetwork(args);
 
 		// Dump the clusters to stdout
 		for (Cluster cluster : clusters) {
 			System.out.println(cluster.toString());
+		}
+
+		// Generate the parameters that will be passed to Xolotl
+		Properties xolotlParams = preprocessor.generateParameters();
+		OutputStream paramsFile = null;
+
+		try {
+			// Create the file containing the parameters
+			paramsFile = new FileOutputStream("params.txt");
+
+			// Write the parameters to the output file and save 
+			// the file to the project root folder
+			xolotlParams.store(paramsFile, null);
+
+		} catch (IOException io) {
+			io.printStackTrace();
+		} finally {
+			if (paramsFile != null) {
+				try {
+					// Close the parameter file
+					paramsFile.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 
 		return;

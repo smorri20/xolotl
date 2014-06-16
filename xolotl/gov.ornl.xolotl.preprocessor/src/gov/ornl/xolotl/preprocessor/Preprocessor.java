@@ -4,6 +4,7 @@
 package gov.ornl.xolotl.preprocessor;
 
 import java.util.ArrayList;
+import java.util.Properties;
 
 /**
  * This class generates a valid Xolotl input file with each line representing a
@@ -253,5 +254,34 @@ public class Preprocessor {
 
 		return clusterList;
 	}
+	
+	/**
+	 * This operation generates the file containing the parameters that will be 
+	 * passed to Xolotl.
+	 * 
+	 * @return The property list of parameters that will be passed to Xolotl
+	 */
+	public Properties generateParameters() {
+		
+		// Create the default parameters to be used with Xolotl
+		Properties defaultParameters = new Properties();
+
+		// set the default parameters
+		defaultParameters.setProperty("material", "W");
+		defaultParameters.setProperty("startTemp", "1000");
+		defaultParameters.setProperty("tempFile", "tempFile");
+		defaultParameters.setProperty("heFlux", "2.5e27");
+		defaultParameters.setProperty("heFluence", "1.0e19");
+		defaultParameters.setProperty("perfHandler", "dummy");
+		defaultParameters.setProperty("vizHandler", "dummy");
+		defaultParameters.setProperty("petscArgs", "-ts_final_time 1000 -ts_adapt_dt_max 10 "
+				+ "-ts_max_snes_failures 200 -pc_type fieldsplit -pc_fieldsplit_detect_coupling "
+				+ "-fieldsplit_0_pc_type redundant -fieldsplit_1_pc_type sor -snes_monitor "
+				+ "-ksp_monitor -da_grid_x 10 -ts_max_steps 3 -ts_monitor");
+		defaultParameters.setProperty("networkFile", "HDF5file");
+		defaultParameters.setProperty("checkpoint", "true");
+				
+		return defaultParameters;
+	}	
 
 }
