@@ -44,13 +44,13 @@ public class PreprocessorTest {
 		// Check that the default vizHandler is dummy
 		assertEquals("dummy", defaults.getProperty("vizHandler"));
 		
-		// Check that the default perfHandler is dummy
+		// Check that the default checkpoint is true
 		assertEquals("true", defaults.getProperty("checkpoint"));
 		
-		// Check that the default perfHandler is dummy
-		assertEquals("HDF5file", defaults.getProperty("networkFile"));
+		// Check that the default networkFile is test.h5
+		assertEquals("test.h5", defaults.getProperty("networkFile"));
 		
-		// Check that the default perfHandler is dummy
+		// Check the default petscArgs
 		assertEquals("-ts_final_time 1000 -ts_adapt_dt_max 10 "
 				+ "-ts_max_snes_failures 200 -pc_type fieldsplit -pc_fieldsplit_detect_coupling "
 				+ "-fieldsplit_0_pc_type redundant -fieldsplit_1_pc_type sor -snes_monitor "
@@ -65,25 +65,24 @@ public class PreprocessorTest {
 	 * to a file.
 	 */
 	@Test
-	public void testWriteParamsFile() {
+	public void testWriteParameterFile() {
 
 		// Local Declarations
 		Preprocessor preprocessor = new Preprocessor();
-		OutputStream paramsFile = null;
 		InputStream inParamsFile = null;
+		
 		// Generate the default parameters
 		Properties defaults = preprocessor.generateParameters();
+		// Write the parameter file
+		preprocessor.writeParameterFile("paramsTest", defaults);
+		
+		// Create a new Properties object in order to check that 
+		// the correct parameters were written to the paramsTest file 
 		Properties params = new Properties();
 		
 		try {
-			// Create the file containing the parameters
-			paramsFile = new FileOutputStream("params.txt");
 
-			// Write the parameters to the file
-			defaults.store(paramsFile, null);
-			paramsFile.close();
-
-			inParamsFile = new FileInputStream("params.txt");
+			inParamsFile = new FileInputStream("paramsTest");
 			// Load the properties file
 			params.load(inParamsFile);
 			
