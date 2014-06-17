@@ -4,7 +4,6 @@
 package gov.ornl.xolotl.preprocessor;
 
 import java.util.ArrayList;
-import java.util.Properties;
 
 import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
 import uk.co.flamingpenguin.jewel.cli.CliFactory;
@@ -35,7 +34,7 @@ public class Main {
 			myArgs = CliFactory.parseArguments(Arguments.class, args);
 		} catch (ArgumentValidationException e1) {
 			// TODO Auto-generated catch block
-			//e1.printStackTrace();  // Causing error ??
+			e1.printStackTrace();  
 		} 
 
 		// Create the Preprocessor - FIXME! Check myArgs != null
@@ -58,12 +57,9 @@ public class Main {
 		
 		// Write the network in it
 		preprocessor.writeNetwork("test.h5", clusters);	
-
-		// Generate the parameters needed to run Xolotl
-		Properties xolotlParams = preprocessor.generateParameters();
-		// Write the file containing the parameters
-		preprocessor.writeParameterFile("params.txt", xolotlParams);
 		
+		// Write the file containing the parameters that are needed to run Xolotl
+		preprocessor.writeParameterFile("params.txt", preprocessor.xolotlParams);
 
 		return;
 	}				

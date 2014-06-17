@@ -3,7 +3,6 @@
  */
 package gov.ornl.xolotl.preprocessor;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -105,6 +104,11 @@ public class Preprocessor {
 	private BindingEnergyEngine bindingEnergyEngine = new BindingEnergyEngine();
 
 	/**
+	 * The list of parameters that will be passed to Xolotl
+	 */
+	protected Properties xolotlParams = new Properties();
+
+	/**
 	 * Default Constructor
 	 */
 	public Preprocessor() {
@@ -119,6 +123,18 @@ public class Preprocessor {
 	 *            interface.
 	 */
 	public Preprocessor(Arguments args) {
+
+		xolotlParams.setProperty("material", args.getMaterial());
+		xolotlParams.setProperty("startTemp", args.getStartTemp());
+		if (args.isTempFile() == true)
+			xolotlParams.setProperty("tempFile", args.getTempFile());
+		xolotlParams.setProperty("heFlux", args.getHeFlux());
+		xolotlParams.setProperty("heFluence", args.getHeFluence());
+		xolotlParams.setProperty("perfHandler", args.getPerfHandler());
+		xolotlParams.setProperty("vizHandler", args.getVizHandler());
+		xolotlParams.setProperty("petscArgs", args.getPetscArgs());
+		xolotlParams.setProperty("networkFile", args.getNetworkFile());
+		xolotlParams.setProperty("checkpoint", args.getCheckpoint());
 
 	}
 
