@@ -145,6 +145,8 @@ void HDF5Utils::fillNetwork(
 	status = H5Awrite(networkSizeAId, H5T_STD_I32LE, &networkSize);
 
 	// Close everything
+	status = H5Sclose(networkSId);
+	status = H5Sclose(networkSizeSId);
 	status = H5Aclose(networkSizeAId);
 	status = H5Dclose(datasetId);
 
@@ -189,12 +191,16 @@ void HDF5Utils::addConcentrationSubGroup(int timeStep, int networkSize, int grid
 		status = H5Pclose(plistId);
 	}
 
+	// Close the dataspace
+	status = H5Sclose(concSId);
+
 	// Create, write, and close the absolute time attribute
 	hid_t timeSId = H5Screate(H5S_SCALAR);
 	hid_t timeAId = H5Acreate2(subConcGroupId, "absoluteTime", H5T_IEEE_F64LE,
 			timeSId,
 			H5P_DEFAULT, H5P_DEFAULT);
 	status = H5Awrite(timeAId, H5T_IEEE_F64LE, &time);
+	status = H5Sclose(timeSId);
 	status = H5Aclose(timeAId);
 
 	// Create, write, and close the timestep time attribute
@@ -203,12 +209,14 @@ void HDF5Utils::addConcentrationSubGroup(int timeStep, int networkSize, int grid
 			deltaSId,
 			H5P_DEFAULT, H5P_DEFAULT);
 	status = H5Awrite(deltaAId, H5T_IEEE_F64LE, &deltaTime);
+	status = H5Sclose(deltaSId);
 	status = H5Aclose(deltaAId);
 
 	// Overwrite the last time step attribute of the concentration group
 	hid_t lastSId = H5Screate(H5S_SCALAR);
 	hid_t lastAId = H5Aopen(concGroupId, "lastTimeStep", H5P_DEFAULT);
 	status = H5Awrite(lastAId, H5T_STD_I32LE, &timeStep);
+	status = H5Sclose(lastSId);
 	status = H5Aclose(lastAId);
 
 	// Create property list for independent dataset write
@@ -242,6 +250,7 @@ void HDF5Utils::fillConcentrations(double * concArray, int index,
 	status = H5Awrite(posAId, H5T_IEEE_F64LE, &position);
 
 	// Close everything
+	status = H5Sclose(posSId);
 	status = H5Aclose(posAId);
 	status = H5Dclose(datasetId);
 
@@ -260,6 +269,7 @@ void HDF5Utils::finalizeFile() {
 
 void HDF5Utils::closeFile() {
 	// Close everything
+	status = H5Pclose(plistId);
 	status = H5Gclose(subConcGroupId);
 	status = H5Gclose(concGroupId);
 	status = H5Fclose(fileId);
@@ -309,9 +319,9 @@ bool HDF5Utils::hasConcentrationGroup(std::string fileName, int & lastTimeStep) 
 	status = H5Pclose(plistId);
 
 	// Check the group
-	status = H5Gget_objinfo (fileId, "/concentrationsGroup", 0, NULL);
-	// if the group exist
-	if (status == 0) {
+	bool groupExist = H5Lexists (fileId, "/concentrationsGroup", H5P_DEFAULT);
+	// If the group exist
+	if (groupExist) {
 		// Open the concentration group
 		concGroupId = H5Gopen(fileId, "/concentrationsGroup", H5P_DEFAULT);
 
@@ -327,6 +337,9 @@ bool HDF5Utils::hasConcentrationGroup(std::string fileName, int & lastTimeStep) 
 	}
 	// if not
 	else hasGroup = false;
+
+	// Close everything
+	status = H5Fclose(fileId);
 
 	return hasGroup;
 }

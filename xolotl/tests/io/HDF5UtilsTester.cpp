@@ -136,13 +136,17 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 		BOOST_REQUIRE_EQUAL(line[7], diffusionFactor);
 	}
 
-	// Read the concentrations at the given grid point
-	double newConcentrations[networkSize];
-	double * newConc = &newConcentrations[0];
-	HDF5Utils::readGridPoint("xolotlStop.h5", 0, networkSize, gridPoint, newConc);
-	// Check them
-	for (int i = 0; i < networkSize; i++) {
-		BOOST_REQUIRE_EQUAL(newConcentrations[i], concentrations[i]);
+	// If the HDF5 file contains initial concentrations
+	int tempTimeStep = -2;
+	if (HDF5Utils::hasConcentrationGroup("xolotlStop.h5", tempTimeStep)) {
+		// Read the concentrations at the given grid point
+		double newConcentrations[networkSize];
+		double * newConc = &newConcentrations[0];
+		HDF5Utils::readGridPoint("xolotlStop.h5", tempTimeStep, networkSize, gridPoint, newConc);
+		// Check them
+		for (int i = 0; i < networkSize; i++) {
+			BOOST_REQUIRE_EQUAL(newConcentrations[i], concentrations[i]);
+		}
 	}
 
 	// Finalize MPI
