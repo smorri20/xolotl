@@ -15,7 +15,7 @@ import org.junit.Test;
 public class PreprocessorTest {
 
 	/**
-	 * This operation checks the Helium binding energies.
+	 * This operation checks that the generateParameters function.
 	 */
 	@Test
 	public void generateParametersTest() {
