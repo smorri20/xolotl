@@ -73,20 +73,28 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 	HDF5Utils::openFile();
 
 	// Add the concentration sub group
-	HDF5Utils::addConcentrationSubGroup(timeStep, networkSize, 1, currentTime, currentTimeStep);
+	HDF5Utils::addConcentrationSubGroup(timeStep, networkSize, currentTime, currentTimeStep);
 
-	// Create an array of concentration for one grid point
-	double concentrations[networkSize];
-	// Fill it
-	for (int i = 0; i < networkSize; i++) {
-		concentrations[i] = (double) i / 5.0;
-	}
-	double * conc = &concentrations[0];
-	// Set the position at this grid point
+	// Add the concentration dataset
+	int length = 5;
 	int gridPoint = 0;
-	double position = 1.5;
+	HDF5Utils::addConcentrationDataset(gridPoint, length);
+
+	// Create a vector of concentration for one grid point
+	std::vector< std::vector<double> > concVector;
+	// Fill it
+	for (int i = 0; i < length; i++) {
+		// Create the concentration vector for this cluster
+		std::vector<double> conc;
+		conc.push_back((double) i);
+		conc.push_back((double) i * 10.0 - 5.0);
+
+		// Add it to the main vector
+		concVector.push_back(conc);
+	}
+
 	// Write the concentrations in the HDF5 file
-	HDF5Utils::fillConcentrations(conc, gridPoint, position);
+	HDF5Utils::fillConcentrations(concVector, gridPoint);
 
 	// Close the HDF5 file
 	xolotlCore::HDF5Utils::closeFile();
@@ -142,10 +150,14 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 		// Read the concentrations at the given grid point
 		double newConcentrations[networkSize];
 		double * newConc = &newConcentrations[0];
-		HDF5Utils::readGridPoint("xolotlStop.h5", tempTimeStep, networkSize, gridPoint, newConc);
-		// Check them
-		for (int i = 0; i < networkSize; i++) {
-			BOOST_REQUIRE_EQUAL(newConcentrations[i], concentrations[i]);
+		auto returnedVector = HDF5Utils::readGridPoint("xolotlStop.h5", tempTimeStep, gridPoint);
+
+		// Check the size of the vector
+		BOOST_REQUIRE_EQUAL(returnedVector.size(), concVector.size());
+		// Check the values
+		for (int i = 0; i < returnedVector.size(); i++) {
+			BOOST_REQUIRE_EQUAL(returnedVector.at(i).at(0), concVector.at(i).at(0));
+			BOOST_REQUIRE_EQUAL(returnedVector.at(i).at(1), concVector.at(i).at(1));
 		}
 	}
 

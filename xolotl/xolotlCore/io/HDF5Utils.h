@@ -37,19 +37,25 @@ namespace HDF5Utils {
 	 * Add a concentration subgroup for the given time step to the HDF5 file.
 	 * @param timeStep The number of the time step.
 	 * @param networkSize The total number of cluster in the network.
-	 * @param gridSize The total number of grid points.
 	 * @param time The physical time at this time step.
 	 * @param deltaTime The physical length of the time step.
 	 */
-	void addConcentrationSubGroup(int timeStep, int networkSize, int gridSize,
-			double time, double deltaTime);
+	void addConcentrationSubGroup(int timeStep, int networkSize, double time,
+			double deltaTime);
 
 	/**
 	 * Fill the concentration dataset at a specific grid point.
-	 * @param concArray The vector of concentration at a grid point.
-	 * @param position The physical position on the grid.
+	 * @param index The index of the position on the grid.
+	 * @param size The size of the dataset to create.
 	 */
-	void fillConcentrations(double * concArray, int index, double position);
+	void addConcentrationDataset(int index, int size);
+
+	/**
+	 * Fill the concentration dataset at a specific grid point.
+	 * @param concVector The vector of concentration at a grid point.
+	 * @param index The index of the position on the grid.
+	 */
+	void fillConcentrations(std::vector< std::vector<double> > concVector, int index);
 
 	/**
 	 * Close the file for the first time after creating it.
@@ -96,12 +102,11 @@ namespace HDF5Utils {
 	 * Read the i-th grid point concentrations from a HDF5 file.
 	 * @param fileName The name of the file to read from.
 	 * @param lastTimeStep The value of the last written time step.
-	 * @param networkSize The size of the network.
 	 * @param i The index of the grid point.
-	 * @param concentrations The array of concentrations.
+	 * @return The vector of concentrations.
 	 */
-	void readGridPoint(std::string fileName, int lastTimeStep, int networkSize,
-			int i, double * concentrations);
+	std::vector< std::vector<double> > readGridPoint(std::string fileName,
+			int lastTimeStep, int i);
 
 };
 

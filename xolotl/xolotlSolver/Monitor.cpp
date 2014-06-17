@@ -62,7 +62,17 @@ static PetscErrorCode startStop(TS ts, PetscInt timestep, PetscReal time,
 
 	PetscFunctionBeginUser;
 
-	if (timestep%stride != 0) PetscFunctionReturn(0);
+	// Don't do anything if it is not on the stride
+	if (timestep % stride != 0)
+		PetscFunctionReturn(0);
+
+	// Get the number of processes
+	int worldSize;
+	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
+
+	// Gets the process ID (important when it is running in parallel)
+	int procId;
+	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
 
 	// Get the da from ts
 	DM da;
@@ -105,24 +115,74 @@ static PetscErrorCode startStop(TS ts, PetscInt timestep, PetscReal time,
 	checkPetscError(ierr);
 
 	// Add a concentration sub group
-	xolotlCore::HDF5Utils::addConcentrationSubGroup(timestep, networkSize, Mx, time, currentTimeStep);
+	xolotlCore::HDF5Utils::addConcentrationSubGroup(timestep, networkSize,
+			time, currentTimeStep);
 
-	// Loop on the grid
-	for (int xi = xs; xi < xs + xm; xi++) {
-		// Get the pointer to the beginning of the solution data for this grid point
-		gridPointSolution = solutionArray + networkSize * xi;
-		// Update the concentrations in the network to have physics results
-		// (non negative)
-		PetscSolver::getNetwork()->updateConcentrationsFromArray(
-				gridPointSolution);
-		// Get the concentrations from the network
-		double concentrations[networkSize];
-		double * concentration = &concentrations[0];
-		PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
+	// Loop on the full grid
+	for (int xi = 0; xi < Mx; xi++) {
+		// Size of the concentration that will be stored
+		int concSize = -1;
+		// Vector for the concentrations
+		std::vector< std::vector<double> > concVector;
 
-		// Fill the concentrations dataset in the HDF5 file
-		xolotlCore::HDF5Utils::fillConcentrations(concentration, xi,
-				(double) xi * hx);
+		// If it is the locally owned part of the grid
+		if (xi >= xs && xi < xs + xm) {
+			// Get the pointer to the beginning of the solution data for this grid point
+			gridPointSolution = solutionArray + networkSize * xi;
+			// Update the concentrations in the network to have physics results
+			// (non negative)
+			PetscSolver::getNetwork()->updateConcentrationsFromArray(
+					gridPointSolution);
+			// Get the concentrations from the network
+			double concentrations[networkSize];
+			double * concentration = &concentrations[0];
+			PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
+
+			// Loop on the concentrations
+			concVector.clear();
+			for (int i = 0; i < networkSize; i++) {
+				if (concentrations[i] > 1.0e-16) {
+					// Create the concentration vector for this cluster
+					std::vector<double> conc;
+					conc.push_back((double) i);
+					conc.push_back(concentrations[i]);
+
+					// Add it to the main vector
+					concVector.push_back(conc);
+				}
+			}
+
+			// Send the size of the vector to the other processes
+			concSize = concVector.size();
+			// Loop on all the processes
+			for (int i = 0; i < worldSize; i++) {
+				// Skip its own
+				if (i == procId) continue;
+
+				// Send the size
+				MPI_Send(&concSize, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
+			}
+		}
+
+		// Else: only receive the conc size
+		else {
+			MPI_Recv(&concSize, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD,
+					MPI_STATUS_IGNORE);
+		}
+
+		// Skip the grid point if the size is 0
+		if (concSize == 0) continue;
+
+		// All processes must create the dataset
+		xolotlCore::HDF5Utils::addConcentrationDataset(xi, concSize);
+
+		MPI_Barrier(MPI_COMM_WORLD);
+
+		// If it is the locally owned part of the grid
+		if (xi >= xs && xi < xs + xm) {
+			// Fill the dataset
+			xolotlCore::HDF5Utils::fillConcentrations(concVector, xi);
+		}
 	}
 
 	// Finalize the HDF5 file
@@ -146,10 +206,6 @@ static PetscErrorCode heliumRetention(TS ts, PetscInt timestep, PetscReal time,
 	// Variable to represent the real, or current, time
 	PetscReal realTime;
 	ierr = TSGetTime(ts, &realTime);
-
-	// Get the process ID
-	int procId;
-	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
 
 	// Get the flux handler that will be used to compute fluxes.
 	auto fluxHandler = PetscSolver::getFluxHandler();
