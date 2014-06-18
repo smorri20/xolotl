@@ -3,9 +3,9 @@
  */
 package gov.ornl.xolotl.preprocessor;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Properties;
 
@@ -106,7 +106,7 @@ public class Preprocessor {
 	/**
 	 * The list of parameters that will be passed to Xolotl
 	 */
-	protected Properties xolotlParams = new Properties();
+	public Properties xolotlParams = new Properties();
 
 	/**
 	 * Default Constructor
@@ -306,11 +306,11 @@ public class Preprocessor {
 		defaultParameters
 				.setProperty(
 						"petscArgs",
-						"-ts_final_time 1000 -ts_adapt_dt_max 10 "
-								+ "-ts_max_snes_failures 200 -pc_type fieldsplit -pc_fieldsplit_detect_coupling "
-								+ "-fieldsplit_0_pc_type redundant -fieldsplit_1_pc_type sor -snes_monitor "
-								+ "-ksp_monitor -da_grid_x 10 -ts_max_steps 3 -ts_monitor");
-		defaultParameters.setProperty("networkFile", "test.h5");
+						"-da_grid_x 10 -ts_final_time 1000"
+								+ "-ts_max_steps 3 -ts_adapt_dt_max 10 -ts_max_snes_failures 200"
+								+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant"
+								+ "-fieldsplit_1_pc_type sor -snes_monitor -ksp_monitor -ts_monitor");
+		defaultParameters.setProperty("networkFile", "networkInit.h5");
 		defaultParameters.setProperty("checkpoint", "true");
 
 		return defaultParameters;
@@ -321,33 +321,51 @@ public class Preprocessor {
 	 * 
 	 * @param parameterFile
 	 *            The parameter file name
+	 * @param parameters
+	 *            The parameters that will be written to the file
 	 */
 	public void writeParameterFile(String parameterFile, Properties parameters) {
 
-		OutputStream paramsFile = null;
-
 		try {
 			// Create the file containing the parameters
-			paramsFile = new FileOutputStream(parameterFile);
+			FileOutputStream paramsFile = new FileOutputStream(parameterFile);
 
 			// Write the parameters to the output file and save
 			// the file to the project root folder
 			parameters.store(paramsFile, null);
+			// Close the parameter file
+			paramsFile.close();
 
 		} catch (IOException io) {
 			io.printStackTrace();
-		} finally {
-			if (paramsFile != null) {
-				try {
-					// Close the parameter file
-					paramsFile.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
 		}
 
 		return;
+	}
+
+	/**
+	 * This operation loads the parameters file that is needed to run Xolotl.
+	 * 
+	 * @param parameterFile
+	 *            The parameter file name
+	 */
+	public Properties loadParameterFile(String parameterFile) {
+
+		// Local declarations
+		Properties inProperties = new Properties();
+
+		try {
+
+			FileInputStream inParamsFile = new FileInputStream(parameterFile);
+			// Load the properties from the file
+			inProperties.load(inParamsFile);
+			// Close the parameter file
+			inParamsFile.close();
+
+		} catch (IOException io) {
+			io.printStackTrace();
+		}
+		return inProperties;
 	}
 
 	/**

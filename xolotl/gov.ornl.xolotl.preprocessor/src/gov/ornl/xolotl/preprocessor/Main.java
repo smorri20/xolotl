@@ -3,6 +3,8 @@
  */
 package gov.ornl.xolotl.preprocessor;
 
+import java.util.Enumeration;
+import java.util.Properties;
 import java.util.ArrayList;
 
 import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
@@ -23,45 +25,49 @@ public class Main {
 	 * @param args
 	 *            Command line arguments.
 	 */
-	public static void main(String[] args)
-	{
-
+	public static void main(String[] args) {
 		// Local Declarations
 		Arguments myArgs = null;
 
 		// Get command line arguments
-		try {	
+		try {
 			myArgs = CliFactory.parseArguments(Arguments.class, args);
 		} catch (ArgumentValidationException e1) {
 			// TODO Auto-generated catch block
-			e1.printStackTrace();  
-		} 
+			e1.printStackTrace();
+		}
 
-		// Create the Preprocessor - FIXME! Check myArgs != null
-		Preprocessor preprocessor = new Preprocessor(myArgs);
+		if (myArgs != null) {
+			try {
+				// Create the Preprocessor
+				Preprocessor preprocessor = new Preprocessor(myArgs);
 
-		// Generate the network of clusters
-		ArrayList<Cluster> clusters = preprocessor.generateNetwork(args);
-		// Dump the clusters to stdout
-//		for (Cluster cluster : clusters) {
-//			System.out.println(cluster.toString());
-//		}
-		
-		// Create the HDF5 file
-		preprocessor.createHDF5("networkInit.h5");
-		
-		// Write the header in it
-		int[] dim = {8};
-		int[] refinement = {0};
-		preprocessor.writeHeader("networkInit.h5", dim, refinement);
-		
-		// Write the network in it
-		preprocessor.writeNetwork("networkInit.h5", clusters);	
-		
-		// Write the file containing the parameters that are needed to run Xolotl
-		preprocessor.writeParameterFile("params.txt", preprocessor.xolotlParams);
+				// Generate the network of clusters
+				ArrayList<Cluster> clusters = preprocessor
+						.generateNetwork(args);
+
+				// Create the HDF5 file
+				preprocessor.createHDF5("networkInit.h5");
+
+				// Write the header in it
+				int[] dim = { 8 };
+				int[] refinement = { 0 };
+				preprocessor.writeHeader("networkInit.h5", dim, refinement);
+
+				// Write the network in it
+				preprocessor.writeNetwork("networkInit.h5", clusters);
+
+				// Write the file containing the parameters that are needed to
+				// run Xolotl
+				preprocessor.writeParameterFile("params.txt",
+						preprocessor.xolotlParams);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 
 		return;
-	}				
+	}
 
 }

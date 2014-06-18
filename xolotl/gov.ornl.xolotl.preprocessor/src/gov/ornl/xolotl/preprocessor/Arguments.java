@@ -56,7 +56,7 @@ public interface Arguments {
 			description = "List of arguments to be passed to PETSc")
 	String getPetscArgs();
 	
-	@Option(longName="networkFile", defaultValue = "test.h5",
+	@Option(longName="networkFile", defaultValue = "networkInit.h5",
 			description = "<fileName>  The file containing the network")
 	String getNetworkFile();
 	
