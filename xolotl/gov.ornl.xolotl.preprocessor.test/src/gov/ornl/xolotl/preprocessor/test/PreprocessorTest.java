@@ -2,14 +2,19 @@ package gov.ornl.xolotl.preprocessor.test;
 
 import static org.junit.Assert.*;
 
+import java.util.Enumeration;
 import java.util.Properties;
 import java.util.ArrayList;
 import java.io.*;
 
 import gov.ornl.xolotl.preprocessor.Preprocessor;
+import gov.ornl.xolotl.preprocessor.Arguments;
 import gov.ornl.xolotl.preprocessor.Cluster;
 
 import org.junit.Test;
+
+import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
+import uk.co.flamingpenguin.jewel.cli.CliFactory;
 
 /**
  * This class is responsible for testing the Preprocessor class
@@ -17,7 +22,7 @@ import org.junit.Test;
 public class PreprocessorTest {
 
 	/**
-	 * This operation checks that the generateParameters function.
+	 * This operation checks the generateParameters function.
 	 */
 	@Test
 	public void generateParametersTest() {
@@ -49,59 +54,54 @@ public class PreprocessorTest {
 		// Check that the default checkpoint is true
 		assertEquals("true", defaults.getProperty("checkpoint"));
 
-		// Check that the default networkFile is test.h5
-		assertEquals("test.h5", defaults.getProperty("networkFile"));
+		// Check that the default networkFile is networkInit.h5
+		assertEquals("networkInit.h5", defaults.getProperty("networkFile"));
 
 		// Check the default petscArgs
 		assertEquals(
-				"-ts_final_time 1000 -ts_adapt_dt_max 10 "
-						+ "-ts_max_snes_failures 200 -pc_type fieldsplit -pc_fieldsplit_detect_coupling "
-						+ "-fieldsplit_0_pc_type redundant -fieldsplit_1_pc_type sor -snes_monitor "
-						+ "-ksp_monitor -da_grid_x 10 -ts_max_steps 3 -ts_monitor",
+				"-da_grid_x 10 -ts_final_time 1000"
+						+ "-ts_max_steps 3 -ts_adapt_dt_max 10 -ts_max_snes_failures 200"
+						+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant"
+						+ "-fieldsplit_1_pc_type sor -snes_monitor -ksp_monitor -ts_monitor",
 				defaults.getProperty("petscArgs"));
 
 		return;
 	}
 
 	/**
-	 * This operation makes sure that the parameters can be written to a file.
+	 * This operation checks writeParameterFile and loadParameterFile.
 	 */
 	@Test
 	public void testWriteParameterFile() {
 
 		// Local Declarations
-		Preprocessor preprocessor = new Preprocessor();
-		InputStream inParamsFile = null;
-
-		// Generate the default parameters
-		Properties defaults = preprocessor.generateParameters();
-		// Write the parameter file
-		preprocessor.writeParameterFile("paramsTest", defaults);
-
-		// Create a new Properties object in order to check that
-		// the correct parameters were written to the paramsTest file
-		Properties params = new Properties();
+		Arguments parsedArgs = null;
 
 		try {
-
-			inParamsFile = new FileInputStream("paramsTest");
-			// Load the properties file
-			params.load(inParamsFile);
-
-			// Check that the parameters from the input file are
-			// the default parameters
-			assertEquals("W", params.getProperty("material"));
-			assertEquals("2.5e27", params.getProperty("heFlux"));
-			assertEquals("dummy", params.getProperty("perfHandler"));
-			assertEquals("1000", params.getProperty("startTemp"));
-
-			inParamsFile.close();
-
-		} catch (IOException e) {
-			// Complain and fail
-			e.printStackTrace();
-			fail();
+			parsedArgs = CliFactory.parseArguments(Arguments.class,
+					new String[] {});
+		} catch (ArgumentValidationException e1) {
+			e1.printStackTrace();
 		}
+			if (parsedArgs != null) {
+				Preprocessor preprocessor = new Preprocessor(parsedArgs);
+
+				// Write the parameter file
+				preprocessor.writeParameterFile("paramsTest",
+						preprocessor.xolotlParams);
+
+				// Load the properties from the parameter file to check they
+				// were written correctly
+				Properties inProps = preprocessor.loadParameterFile("paramsTest");
+				// Enumeration to hold the parameter names
+				Enumeration<?> paramNames = inProps.propertyNames();
+				while (paramNames.hasMoreElements()) {
+					String key = (String) paramNames.nextElement();
+					String value = inProps.getProperty(key);
+					assertEquals(preprocessor.xolotlParams.getProperty(key), value);
+				}
+
+			}
 
 		return;
 	}
@@ -193,5 +193,4 @@ public class PreprocessorTest {
 
 		return;
 	}
-
 }
