@@ -229,8 +229,7 @@ static PetscErrorCode heliumRetention(TS ts, PetscInt timestep, PetscReal time,
 	double hx = 8.0 / (PetscReal) (Mx - 1);
 
 	// Get the helium cluster
-	auto heCluster = std::dynamic_pointer_cast < PSICluster
-			> (PetscSolver::getNetwork()->get("He", 1));
+	auto heCluster = (PSICluster *) PetscSolver::getNetwork()->get("He", 1);
 
 	// Exit if there is no helium cluster in the network
 	if (!heCluster)
@@ -317,33 +316,6 @@ static PetscErrorCode monitorScatter(TS ts, PetscInt timestep, PetscReal time,
 	int iCluster = 7;
 
 	if (procId == 0) {
-		// The array of cluster names
-		std::vector<std::string> names(networkSize);
-
-		// Fill the array of clusters name because the Id is not the same as
-		// reactants->at(i)
-		auto reactants = PetscSolver::getNetwork()->getAll();
-		std::shared_ptr<PSICluster> cluster;
-
-		// Loop on the reactants
-		for (int i = 0; i < networkSize; i++) {
-
-			// Get the cluster from the list, its id and composition
-			cluster = std::dynamic_pointer_cast < PSICluster
-					> (reactants->at(i));
-			int id = cluster->getId() - 1;
-			auto composition = cluster->getComposition();
-
-			// Create the name
-			std::stringstream name;
-			name << (cluster->getName()).c_str() << "(" << composition["He"]
-					<< "," << composition["V"] << "," << composition["I"]
-					<< ") ";
-
-			// Push the header entry on the array
-			name >> names[id];
-		}
-
 		// Create a Point vector to store the data to give to the data provider
 		// for the visualization
 		auto myPoints = std::make_shared<std::vector<xolotlViz::Point> >();
@@ -403,9 +375,13 @@ static PetscErrorCode monitorScatter(TS ts, PetscInt timestep, PetscReal time,
 		// Get the data provider and give it the points
 		plot->getDataProvider()->setPoints(myPoints);
 
+		// Get the iCluster cluster to have access to its name
+		auto reactants = PetscSolver::getNetwork()->getAll();
+		auto cluster = (PSICluster *) reactants->at(iCluster);
+
 		// Change the title of the plot and the name of the data
 		std::stringstream title;
-		title << names[iCluster];
+		title << cluster->getName();
 		plot->getDataProvider()->setDataName(title.str());
 		title << " concentration";
 		plot->plotLabelProvider->titleLabel = title.str();
@@ -425,7 +401,7 @@ static PetscErrorCode monitorScatter(TS ts, PetscInt timestep, PetscReal time,
 
 		// Render and save in file
 		std::stringstream fileName;
-		fileName << names[iCluster] << "_scatter_TS" << timestep << ".pnm";
+		fileName << cluster->getName() << "_scatter_TS" << timestep << ".pnm";
 		plot->write(fileName.str());
 	}
 
@@ -515,32 +491,6 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 	const int loopSize = std::min(15, networkSize);
 
 	if (procId == 0) {
-		// The array of cluster names
-		std::vector<std::string> names(networkSize);
-
-		// Fill the array of clusters name because the Id is not the same as
-		// reactants->at(i)
-		auto reactants = PetscSolver::getNetwork()->getAll();
-		std::shared_ptr<PSICluster> cluster;
-
-		// Loop on the reactants
-		for (int i = 0; i < networkSize; i++) {
-			// Get the cluster from the list, its id and composition
-			cluster = std::dynamic_pointer_cast < PSICluster
-					> (reactants->at(i));
-			int id = cluster->getId() - 1;
-			auto composition = cluster->getComposition();
-
-			// Create the name
-			std::stringstream name;
-			name << (cluster->getName()).c_str() << "(" << composition["He"]
-					<< "," << composition["V"] << "," << composition["I"]
-					<< ") ";
-
-			// Push the header entry on the array
-			name >> names[id];
-		}
-
 		// Create a Point vector to store the data to give to the data provider
 		// for the visualization
 		std::vector<std::vector<xolotlViz::Point> > myPoints(loopSize);
@@ -601,12 +551,16 @@ static PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 			}
 		}
 
+		// Get all the reactants to have access to their names
+		auto reactants = PetscSolver::getNetwork()->getAll();
+
 		for (int i = 0; i < loopSize; i++) {
+			auto cluster = (PSICluster *) reactants->at(i);
 			// Get the data provider and give it the points
 			auto thePoints = std::make_shared < std::vector<xolotlViz::Point>
 					> (myPoints[i]);
 			seriesPlot->getDataProvider(i)->setPoints(thePoints);
-			seriesPlot->getDataProvider(i)->setDataName(names[i]);
+			seriesPlot->getDataProvider(i)->setDataName(cluster->getName());
 		}
 
 		// Change the title of the plot
@@ -718,9 +672,6 @@ static PetscErrorCode monitorSurface(TS ts, PetscInt timestep, PetscReal time,
 	// Setup some step size variables
 	hx = 8.0 / (PetscReal) (Mx - 1);
 
-	// The array of cluster names
-	std::vector<std::string> names(networkSize);
-
 	// Get the maximum size of HeV clusters
 	auto psiNetwork = std::dynamic_pointer_cast < PSIClusterReactionNetwork
 			> (PetscSolver::getNetwork());
@@ -744,8 +695,8 @@ static PetscErrorCode monitorSurface(TS ts, PetscInt timestep, PetscReal time,
 		double * concentration = &concentrations[0];
 		PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
 
-		// Prepare the cluster
-		std::shared_ptr<PSICluster> cluster;
+		// A pointer for the clusters used below
+		PSICluster * cluster;
 
 		// Loop on Y = V number
 		for (int i = 0; i < maxHeVClusterSize; i++) {
@@ -754,8 +705,7 @@ static PetscErrorCode monitorSurface(TS ts, PetscInt timestep, PetscReal time,
 				double conc = 0.0;
 				// V clusters
 				if (j == 0) {
-					cluster = std::dynamic_pointer_cast < PSICluster
-							> (PetscSolver::getNetwork()->get("V", i));
+					cluster = (PSICluster *) PetscSolver::getNetwork()->get("V", i);
 					if (cluster) {
 						// Get the ID of the cluster
 						int id = cluster->getId() - 1;
@@ -764,8 +714,7 @@ static PetscErrorCode monitorSurface(TS ts, PetscInt timestep, PetscReal time,
 				}
 				// He clusters
 				else if (i == 0) {
-					cluster = std::dynamic_pointer_cast < PSICluster
-							> (PetscSolver::getNetwork()->get("He", j));
+					cluster = (PSICluster *) PetscSolver::getNetwork()->get("He", j);
 					if (cluster) {
 						// Get the ID of the cluster
 						int id = cluster->getId() - 1;
@@ -774,9 +723,8 @@ static PetscErrorCode monitorSurface(TS ts, PetscInt timestep, PetscReal time,
 				}
 				// HeV clusters
 				else {
-					cluster = std::dynamic_pointer_cast < PSICluster
-							> (PetscSolver::getNetwork()->getCompound("HeV", {
-									j, i, 0 }));
+					cluster = (PSICluster *) PetscSolver::getNetwork()->getCompound("HeV", {
+									j, i, 0 });
 					if (cluster) {
 						// Get the ID of the cluster
 						int id = cluster->getId() - 1;
@@ -1175,8 +1123,7 @@ void computeRetention(TS ts, Vec C) {
 	const int size = PetscSolver::getNetwork()->size();
 
 	// Get the helium cluster
-	auto heCluster = std::dynamic_pointer_cast < PSICluster
-			> (PetscSolver::getNetwork()->get("He", 1));
+	auto heCluster = (PSICluster *) PetscSolver::getNetwork()->get("He", 1);
 
 	if (!heCluster) {
 		throw std::string(

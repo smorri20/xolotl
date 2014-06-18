@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(checkLoad) {
 	auto reactants = network->getAll();
 
 	// Get the first one of the network
-	auto reactant = static_pointer_cast<PSICluster>(reactants->at(0));
+	auto reactant = (PSICluster *) reactants->at(0);
 	// Check the composition
 	auto composition = reactant->getComposition();
 	BOOST_REQUIRE_EQUAL(composition["He"], 0);
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(checkLoad) {
 	BOOST_REQUIRE_EQUAL(diffusionFactor, 2.13e+10);
 
 	// Get the second reactant of the network
-	reactant = static_pointer_cast<PSICluster>(reactants->at(1));
+	reactant = (PSICluster *) reactants->at(1);
 	// Check the composition
 	composition = reactant->getComposition();
 	BOOST_REQUIRE_EQUAL(composition["He"], 1);
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(checkLoad) {
 	BOOST_REQUIRE_EQUAL(diffusionFactor, 2.95e+10);
 
 	// Get the third reactant of the network
-	reactant = static_pointer_cast<PSICluster>(reactants->at(2));
+	reactant = (PSICluster *) reactants->at(2);
 	// Check the composition
 	composition = reactant->getComposition();
 	BOOST_REQUIRE_EQUAL(composition["He"], 2);
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(checkLoad) {
 	BOOST_REQUIRE_EQUAL(diffusionFactor, 3.24e+10);
 
 	// Get the fourth reactant of the network
-	reactant = static_pointer_cast<PSICluster>(reactants->at(3));
+	reactant = (PSICluster *) reactants->at(3);
 	// Check the composition
 	composition = reactant->getComposition();
 	BOOST_REQUIRE_EQUAL(composition["He"], 0);
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(checkLoad) {
 	BOOST_REQUIRE_EQUAL(diffusionFactor, 2.41e+11);
 
 	// Get the last and fifth reactant of the network
-	reactant = static_pointer_cast<PSICluster>(reactants->at(4));
+	reactant = (PSICluster *) reactants->at(4);
 	// Check the composition
 	composition = reactant->getComposition();
 	BOOST_REQUIRE_EQUAL(composition["He"], 2);

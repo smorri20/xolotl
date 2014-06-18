@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 	// Check the network vector
 	for (int i = 0; i < networkSize; i++) {
 		// Get the i-th reactant in the network
-		shared_ptr<PSICluster> reactant = static_pointer_cast<PSICluster>(reactants->at(i));
+		auto reactant = (PSICluster *) reactants->at(i);
 		int id = reactant->getId() - 1;
 		// Get the corresponding line from the HDF5 file
 		auto line = networkVector.at(id);

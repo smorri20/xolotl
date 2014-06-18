@@ -97,32 +97,29 @@ void HDF5Utils::fillNetwork(
 
 	// Loop on them
 	for (int i = 0; i < networkSize; i++) {
-		// Get the i-th reactant
-		std::shared_ptr<PSICluster> reactant = std::static_pointer_cast
-				< PSICluster > (reactants->at(i));
 
-		// Get the reactant Id to keep the same order as the input file
-		int id = reactant->getId() - 1;
+		// Get the i-th reactant
+		auto reactant = (PSICluster *) reactants->at(i);
 
 		// Get its composition to store it
 		auto composition = reactant->getComposition();
-		networkArray[id][0] = composition["He"];
-		networkArray[id][1] = composition["V"];
-		networkArray[id][2] = composition["I"];
+		networkArray[i][0] = composition["He"];
+		networkArray[i][1] = composition["V"];
+		networkArray[i][2] = composition["I"];
 
 		// Get its binding energies to store them
 		auto bindingEnergies = reactant->getBindingEnergies();
-		networkArray[id][3] = bindingEnergies.at(0); // Helium binding energy
-		networkArray[id][4] = bindingEnergies.at(1); // Vacancy binding energy
-		networkArray[id][5] = bindingEnergies.at(2); // Interstitial binding energy
+		networkArray[i][3] = bindingEnergies.at(0); // Helium binding energy
+		networkArray[i][4] = bindingEnergies.at(1); // Vacancy binding energy
+		networkArray[i][5] = bindingEnergies.at(2); // Interstitial binding energy
 
 		// Get its migration energy to store it
 		double migrationEnergy = reactant->getMigrationEnergy();
-		networkArray[id][6] = migrationEnergy;
+		networkArray[i][6] = migrationEnergy;
 
 		// Get its diffusion factor to store it
 		double diffusionFactor = reactant->getDiffusionFactor();
-		networkArray[id][7] = diffusionFactor;
+		networkArray[i][7] = diffusionFactor;
 	}
 
 	// Create the dataset for the network

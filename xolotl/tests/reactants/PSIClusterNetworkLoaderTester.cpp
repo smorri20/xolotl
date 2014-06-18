@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(checkLoading) {
 	BOOST_REQUIRE(strtol(props["numIClusters"].c_str(),NULL,10) == 1);
 
 	// Check the reactants - He first
-	shared_ptr<PSICluster> heCluster = static_pointer_cast<PSICluster>(network->get("He",1));
+	auto heCluster = (PSICluster *) network->get("He",1);
 	BOOST_REQUIRE(heCluster->getSize() == 1);
 	vector<double> bindingEnergies = heCluster->getBindingEnergies();
 	BOOST_REQUIRE_CLOSE(bindingEnergies.at(0), 0.0, 0.00);
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(checkLoading) {
 	BOOST_REQUIRE_CLOSE(heCluster->getMigrationEnergy(),0.999,0.001);
 	BOOST_REQUIRE_CLOSE(heCluster->getDiffusionFactor(),1.34,0.01);
 	// V
-	shared_ptr<PSICluster> vCluster = static_pointer_cast<PSICluster>(network->get("V",50));
+	auto vCluster = (PSICluster *) network->get("V",50);
 	BOOST_REQUIRE(vCluster->getSize() == 50);
 	bindingEnergies.clear();
 	bindingEnergies = vCluster->getBindingEnergies();
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(checkLoading) {
 	BOOST_REQUIRE_CLOSE(vCluster->getMigrationEnergy(),0.888,0.001);
 	BOOST_REQUIRE_CLOSE(vCluster->getDiffusionFactor(),2.345,0.001);
 	// I
-	shared_ptr<PSICluster> iCluster = static_pointer_cast<PSICluster>(network->get("I",1));
+	auto iCluster = (PSICluster *) network->get("I",1);
 	BOOST_REQUIRE(iCluster->getSize() == 1);
 	bindingEnergies.clear();
 	bindingEnergies = iCluster->getBindingEnergies();
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(checkLoading) {
 	composition.push_back(1);
 	composition.push_back(50);
 	composition.push_back(0);
-	shared_ptr<PSICluster> heVCluster = static_pointer_cast<PSICluster>(network->getCompound("HeV",composition));
+	auto heVCluster = (PSICluster *) network->getCompound("HeV",composition);
 	BOOST_REQUIRE(heVCluster->getSize() == 51);
 	bindingEnergies.clear();
 	bindingEnergies = heVCluster->getBindingEnergies();
