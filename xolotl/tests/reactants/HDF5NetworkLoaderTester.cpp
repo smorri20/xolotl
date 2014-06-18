@@ -66,41 +66,22 @@ BOOST_AUTO_TEST_CASE(checkLoad) {
 	// Check the composition
 	auto composition = reactant->getComposition();
 	BOOST_REQUIRE_EQUAL(composition["He"], 0);
-	BOOST_REQUIRE_EQUAL(composition["V"], 0);
-	BOOST_REQUIRE_EQUAL(composition["I"], 1);
+	BOOST_REQUIRE_EQUAL(composition["V"], 1);
+	BOOST_REQUIRE_EQUAL(composition["I"], 0);
 	// Check the binding energies
 	auto bindingEnergies = reactant->getBindingEnergies();
 	BOOST_REQUIRE_EQUAL(bindingEnergies.at(0), numeric_limits<double>::infinity()); // Helium binding energy
 	BOOST_REQUIRE_EQUAL(bindingEnergies.at(1), numeric_limits<double>::infinity()); // Vacancy binding energy
 	BOOST_REQUIRE_EQUAL(bindingEnergies.at(2), numeric_limits<double>::infinity()); // Interstitial binding energy
 	// Check the migration energy
-	double migrationEnergy = reactant->getMigrationEnergy();
-	BOOST_REQUIRE_EQUAL(migrationEnergy, 0.013);
+	auto migrationEnergy = reactant->getMigrationEnergy();
+	BOOST_REQUIRE_EQUAL(migrationEnergy, 1.66);
 	// Check the diffusion factor
-	double diffusionFactor = reactant->getDiffusionFactor();
-	BOOST_REQUIRE_EQUAL(diffusionFactor, 2.13e+10);
+	auto diffusionFactor = reactant->getDiffusionFactor();
+	BOOST_REQUIRE_EQUAL(diffusionFactor, 2.41e+11);
 
 	// Get the second reactant of the network
 	reactant = (PSICluster *) reactants->at(1);
-	// Check the composition
-	composition = reactant->getComposition();
-	BOOST_REQUIRE_EQUAL(composition["He"], 1);
-	BOOST_REQUIRE_EQUAL(composition["V"], 0);
-	BOOST_REQUIRE_EQUAL(composition["I"], 0);
-	// Check the binding energies
-	bindingEnergies = reactant->getBindingEnergies();
-	BOOST_REQUIRE_EQUAL(bindingEnergies.at(0), numeric_limits<double>::infinity()); // Helium binding energy
-	BOOST_REQUIRE_EQUAL(bindingEnergies.at(1), numeric_limits<double>::infinity()); // Vacancy binding energy
-	BOOST_REQUIRE_EQUAL(bindingEnergies.at(2), numeric_limits<double>::infinity()); // Interstitial binding energy
-	// Check the migration energy
-	migrationEnergy = reactant->getMigrationEnergy();
-	BOOST_REQUIRE_EQUAL(migrationEnergy, 0.13);
-	// Check the diffusion factor
-	diffusionFactor = reactant->getDiffusionFactor();
-	BOOST_REQUIRE_EQUAL(diffusionFactor, 2.95e+10);
-
-	// Get the third reactant of the network
-	reactant = (PSICluster *) reactants->at(2);
 	// Check the composition
 	composition = reactant->getComposition();
 	BOOST_REQUIRE_EQUAL(composition["He"], 2);
@@ -118,12 +99,11 @@ BOOST_AUTO_TEST_CASE(checkLoad) {
 	diffusionFactor = reactant->getDiffusionFactor();
 	BOOST_REQUIRE_EQUAL(diffusionFactor, 3.24e+10);
 
-	// Get the fourth reactant of the network
-	reactant = (PSICluster *) reactants->at(3);
-	// Check the composition
+	// Get the third reactant of the network
+	reactant = (PSICluster *) reactants->at(2);// Check the composition
 	composition = reactant->getComposition();
-	BOOST_REQUIRE_EQUAL(composition["He"], 0);
-	BOOST_REQUIRE_EQUAL(composition["V"], 1);
+	BOOST_REQUIRE_EQUAL(composition["He"], 1);
+	BOOST_REQUIRE_EQUAL(composition["V"], 0);
 	BOOST_REQUIRE_EQUAL(composition["I"], 0);
 	// Check the binding energies
 	bindingEnergies = reactant->getBindingEnergies();
@@ -132,10 +112,29 @@ BOOST_AUTO_TEST_CASE(checkLoad) {
 	BOOST_REQUIRE_EQUAL(bindingEnergies.at(2), numeric_limits<double>::infinity()); // Interstitial binding energy
 	// Check the migration energy
 	migrationEnergy = reactant->getMigrationEnergy();
-	BOOST_REQUIRE_EQUAL(migrationEnergy, 1.66);
+	BOOST_REQUIRE_EQUAL(migrationEnergy, 0.13);
 	// Check the diffusion factor
 	diffusionFactor = reactant->getDiffusionFactor();
-	BOOST_REQUIRE_EQUAL(diffusionFactor, 2.41e+11);
+	BOOST_REQUIRE_EQUAL(diffusionFactor, 2.95e+10);
+
+	// Get the fourth reactant of the network
+	reactant = (PSICluster *) reactants->at(3);
+	// Check the composition
+	composition = reactant->getComposition();
+	BOOST_REQUIRE_EQUAL(composition["He"], 0);
+	BOOST_REQUIRE_EQUAL(composition["V"], 0);
+	BOOST_REQUIRE_EQUAL(composition["I"], 1);
+	// Check the binding energies
+	bindingEnergies = reactant->getBindingEnergies();
+	BOOST_REQUIRE_EQUAL(bindingEnergies.at(0), numeric_limits<double>::infinity()); // Helium binding energy
+	BOOST_REQUIRE_EQUAL(bindingEnergies.at(1), numeric_limits<double>::infinity()); // Vacancy binding energy
+	BOOST_REQUIRE_EQUAL(bindingEnergies.at(2), numeric_limits<double>::infinity()); // Interstitial binding energy
+	// Check the migration energy
+	migrationEnergy = reactant->getMigrationEnergy();
+	BOOST_REQUIRE_EQUAL(migrationEnergy, 0.013);
+	// Check the diffusion factor
+	diffusionFactor = reactant->getDiffusionFactor();
+	BOOST_REQUIRE_EQUAL(diffusionFactor, 2.13e+10);
 
 	// Get the last and fifth reactant of the network
 	reactant = (PSICluster *) reactants->at(4);

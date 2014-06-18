@@ -10,15 +10,17 @@ namespace HDF5Utils {
 
 	/**
 	 * Create the HDF5 file with the needed structure.
+	 * @param fileName The name of the file to create.
 	 * @param networkSize The total number of cluster in the network.
 	 * @param gridSize The total number of grid points.
 	 */
-	void initializeFile(int networkSize, int gridSize);
+	void initializeFile(std::string fileName, int networkSize, int gridSize);
 
 	/**
 	 * Open the already existing HDF5 file.
+	 * @param fileName The name of the file to open.
 	 */
-	void openFile();
+	void openFile(std::string fileName);
 
 	/**
 	 * Fill the header.

@@ -104,7 +104,7 @@ static PetscErrorCode startStop(TS ts, PetscInt timestep, PetscReal time,
 	double hx = 8.0 / (PetscReal) (Mx - 1);
 
 	// Open the already created HDF5 file
-	xolotlCore::HDF5Utils::openFile();
+	xolotlCore::HDF5Utils::openFile("xolotlStop.h5");
 
 	// Get the physical dimension of the grid
 	int dimension = (Mx - 1) * hx;
@@ -1080,7 +1080,7 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 		checkPetscError(ierr);
 
 		// Initialize the HDF5 file for all the processes
-		xolotlCore::HDF5Utils::initializeFile(networkSize, Mx);
+		xolotlCore::HDF5Utils::initializeFile("xolotlStop.h5", networkSize, Mx);
 
 		// Setup step size variable
 		double hx = 8.0 / (PetscReal) (Mx - 1);

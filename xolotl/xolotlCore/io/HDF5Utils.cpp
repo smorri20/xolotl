@@ -9,13 +9,14 @@ hid_t plistId, fileId, concGroupId, subConcGroupId, concSId, networkGroupId,
 		networkSId, headerGroupId;
 herr_t status;
 
-void HDF5Utils::initializeFile(int networkSize, int gridSize) {
+void HDF5Utils::initializeFile(std::string fileName, int networkSize,
+		int gridSize) {
 	// Set up file access property list with parallel I/O access
 	plistId = H5Pcreate(H5P_FILE_ACCESS);
 	H5Pset_fapl_mpio(plistId, MPI_COMM_WORLD, MPI_INFO_NULL);
 
 	// Create the file
-	fileId = H5Fcreate("xolotlStop.h5", H5F_ACC_TRUNC, H5P_DEFAULT, plistId);
+	fileId = H5Fcreate(fileName.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, plistId);
 
 	// Close the property list
 	status = H5Pclose(plistId);
@@ -50,13 +51,13 @@ void HDF5Utils::initializeFile(int networkSize, int gridSize) {
 	return;
 }
 
-void HDF5Utils::openFile() {
+void HDF5Utils::openFile(std::string fileName) {
 	// Set up file access property list with parallel I/O access
 	plistId = H5Pcreate(H5P_FILE_ACCESS);
 	H5Pset_fapl_mpio(plistId, MPI_COMM_WORLD, MPI_INFO_NULL);
 
 	// Open the given HDF5 file with read only access
-	fileId = H5Fopen("xolotlStop.h5", H5F_ACC_RDWR, plistId);
+	fileId = H5Fopen(fileName.c_str(), H5F_ACC_RDWR, plistId);
 
 	// Close the property list
 	status = H5Pclose(plistId);

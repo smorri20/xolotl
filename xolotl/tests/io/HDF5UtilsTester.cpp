@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 	// Set the time step number
 	int timeStep = 0;
 	// Initialize the HDF5 file
-	HDF5Utils::initializeFile(networkSize, 1);
+	HDF5Utils::initializeFile("test.h5", networkSize, 1);
 
 	// Set the physical dimension of the grid and the refinement
 	int dimension = 5;
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 	HDF5Utils::finalizeFile();
 
 	// Open it again to add the concentrations
-	HDF5Utils::openFile();
+	HDF5Utils::openFile("test.h5");
 
 	// Add the concentration sub group
 	HDF5Utils::addConcentrationSubGroup(timeStep, networkSize, currentTime, currentTimeStep);
@@ -101,18 +101,18 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 
 	// Read the header of the written file
 	int dim = 0;
-	HDF5Utils::readHeader("xolotlStop.h5", dim);
+	HDF5Utils::readHeader("test.h5", dim);
 	// Check the obtained values
 	BOOST_REQUIRE_EQUAL(dim, dimension);
 
 	// Read the times
 	double t = 0.0, dt = 0.0;
-	HDF5Utils::readTimes("xolotlStop.h5", 0, t, dt);
+	HDF5Utils::readTimes("test.h5", 0, t, dt);
 	BOOST_REQUIRE_EQUAL(t, currentTime);
 	BOOST_REQUIRE_EQUAL(dt, currentTimeStep);
 
 	// Read the network of the written file
-	auto networkVector = HDF5Utils::readNetwork("xolotlStop.h5");
+	auto networkVector = HDF5Utils::readNetwork("test.h5");
 	// Get all the reactants
 	auto reactants = network->getAll();
 	// Check the network vector
@@ -146,11 +146,11 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 
 	// If the HDF5 file contains initial concentrations
 	int tempTimeStep = -2;
-	if (HDF5Utils::hasConcentrationGroup("xolotlStop.h5", tempTimeStep)) {
+	if (HDF5Utils::hasConcentrationGroup("test.h5", tempTimeStep)) {
 		// Read the concentrations at the given grid point
 		double newConcentrations[networkSize];
 		double * newConc = &newConcentrations[0];
-		auto returnedVector = HDF5Utils::readGridPoint("xolotlStop.h5", tempTimeStep, gridPoint);
+		auto returnedVector = HDF5Utils::readGridPoint("test.h5", tempTimeStep, gridPoint);
 
 		// Check the size of the vector
 		BOOST_REQUIRE_EQUAL(returnedVector.size(), concVector.size());
