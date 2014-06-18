@@ -457,7 +457,7 @@ public class Preprocessor {
 	}
 
 	/**
-	 * This operation generates writes the generated network in the HDF5 file
+	 * This operation writes the generated network in the HDF5 file
 	 * 
 	 * @param name
 	 *            The name of the HDF5 file

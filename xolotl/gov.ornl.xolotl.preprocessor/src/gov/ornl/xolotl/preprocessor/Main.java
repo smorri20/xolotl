@@ -48,15 +48,15 @@ public class Main {
 //		}
 		
 		// Create the HDF5 file
-		preprocessor.createHDF5("test.h5");
+		preprocessor.createHDF5("networkInit.h5");
 		
 		// Write the header in it
 		int[] dim = {8};
 		int[] refinement = {0};
-		preprocessor.writeHeader("test.h5", dim, refinement);
+		preprocessor.writeHeader("networkInit.h5", dim, refinement);
 		
 		// Write the network in it
-		preprocessor.writeNetwork("test.h5", clusters);	
+		preprocessor.writeNetwork("networkInit.h5", clusters);	
 		
 		// Write the file containing the parameters that are needed to run Xolotl
 		preprocessor.writeParameterFile("params.txt", preprocessor.xolotlParams);
