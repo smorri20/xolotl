@@ -28,35 +28,38 @@ public class ArgumentsTest {
 			// Parse the empty string of arguments
 			args = CliFactory.parseArguments(Arguments.class, new String[] {});
 
-			// Check that the default material is W
-			assertEquals("W", args.getMaterial());
+			// Check if there is a material argument
+			assertEquals(false, args.isMaterial());
 
-			// Check that the default startTemp is 1000
-			assertEquals("1000", args.getStartTemp());
+			// Check if there is a startTemp argument
+			assertEquals(false, args.isStartTemp());
 
-			// Check if there is a default tempFile
+			// Check if there is a tempFile argument
 			assertEquals(false, args.isTempFile());
 
-			// Check that the default heFlux is 2.5e27
-			assertEquals("2.5e27", args.getHeFlux());
+			// Check if there is an heFlux argument
+			assertEquals(false, args.isHeFlux());
+			
+			// Check if there is an heFluence argument
+			assertEquals(false, args.isHeFluence());
 
 			// Check that the default perfHandler is dummy
 			assertEquals("dummy", args.getPerfHandler());
 
-			// Check that the default vizHandler is dummy
-			assertEquals("dummy", args.getVizHandler());
+			// Check if there is a vizHandler argument
+			assertEquals(false, args.isVizHandler());
 
-			// Check that the default checkpoint is true
-			assertEquals("true", args.getCheckpoint());
+			// Check if there is a checkpoint argument
+			assertEquals(false, args.isCheckpoint());
 
 			// Check that the default networkFile is networkInit.h5
 			assertEquals("networkInit.h5", args.getNetworkFile());
 
 			// Check the default petscArgs
 			assertEquals(
-					"-da_grid_x 10 -ts_final_time 1000"
-							+ "-ts_max_steps 3 -ts_adapt_dt_max 10 -ts_max_snes_failures 200"
-							+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant"
+					"-da_grid_x 10 -ts_final_time 1000 "
+							+ "-ts_max_steps 3 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
+							+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant "
 							+ "-fieldsplit_1_pc_type sor -snes_monitor -ksp_monitor -ts_monitor",
 					args.getPetscArgs());
 		} catch (ArgumentValidationException e) {
@@ -66,7 +69,8 @@ public class ArgumentsTest {
 
 	/**
 	 * This operation tests that default parameter values are only overridden if
-	 * they are specified via the command line
+	 * they are specified via the command line and that the optional arguments 
+	 * are only set if they are also specified
 	 */
 	@Test
 	public void testSpecifiedArguments() {
@@ -79,36 +83,45 @@ public class ArgumentsTest {
 			args = CliFactory.parseArguments(Arguments.class, new String[] {
 					"--startTemp", "900", "--material", "Fe", "--perfHandler",
 					"std" });
+			
+			// Check if there is a material argument
+			assertEquals(true, args.isMaterial());
 
 			// Check that the material is Fe
 			assertEquals("Fe", args.getMaterial());
+			
+			// Check if there is a startTemp argument
+			assertEquals(true, args.isStartTemp());
 
 			// Check that the startTemp is 900
 			assertEquals("900", args.getStartTemp());
 
-			// Check if there is a default tempFile
+			// Check if there is a tempFile argument
 			assertEquals(false, args.isTempFile());
 
-			// Check that the default heFlux is 2.5e27
-			assertEquals("2.5e27", args.getHeFlux());
+			// Check if there is an heFlux argument
+			assertEquals(false, args.isHeFlux());
+			
+			// Check if there is an heFluence argument
+			assertEquals(false, args.isHeFluence());
 
 			// Check that the default perfHandler is dummy
 			assertEquals("std", args.getPerfHandler());
 
-			// Check that the default vizHandler is dummy
-			assertEquals("dummy", args.getVizHandler());
+			// Check if there is a vizHandler argument
+			assertEquals(false, args.isVizHandler());
 
-			// Check that the default checkpoint is true
-			assertEquals("true", args.getCheckpoint());
+			// Check if there is a checkpoint argument
+			assertEquals(false, args.isCheckpoint());
 
 			// Check that the default networkFile is networkInit.h5
 			assertEquals("networkInit.h5", args.getNetworkFile());
 
 			// Check the default petscArgs
 			assertEquals(
-					"-da_grid_x 10 -ts_final_time 1000"
-							+ "-ts_max_steps 3 -ts_adapt_dt_max 10 -ts_max_snes_failures 200"
-							+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant"
+					"-da_grid_x 10 -ts_final_time 1000 "
+							+ "-ts_max_steps 3 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
+							+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant "
 							+ "-fieldsplit_1_pc_type sor -snes_monitor -ksp_monitor -ts_monitor",
 					args.getPetscArgs());
 		} catch (ArgumentValidationException e) {
