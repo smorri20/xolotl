@@ -109,13 +109,6 @@ public class Preprocessor {
 	public Properties xolotlParams = new Properties();
 
 	/**
-	 * Default Constructor
-	 */
-	public Preprocessor() {
-
-	}
-
-	/**
 	 * Constructor
 	 * 
 	 * @param args
@@ -124,17 +117,27 @@ public class Preprocessor {
 	 */
 	public Preprocessor(Arguments args) {
 
-		xolotlParams.setProperty("material", args.getMaterial());
-		xolotlParams.setProperty("startTemp", args.getStartTemp());
+		// Set the parameter options that will be passed to Xolotl
+		xolotlParams.setProperty("networkFile", args.getNetworkFile());
+		xolotlParams.setProperty("perfHandler", args.getPerfHandler());
+		xolotlParams.setProperty("petscArgs", args.getPetscArgs());
+
+		// The following parameter options are optional and will only
+		// be set if they are specified via the command line
+		if (args.isMaterial() == true)
+			xolotlParams.setProperty("material", args.getMaterial());
+		if (args.isStartTemp() == true)
+			xolotlParams.setProperty("startTemp", args.getStartTemp());
 		if (args.isTempFile() == true)
 			xolotlParams.setProperty("tempFile", args.getTempFile());
-		xolotlParams.setProperty("heFlux", args.getHeFlux());
-		xolotlParams.setProperty("heFluence", args.getHeFluence());
-		xolotlParams.setProperty("perfHandler", args.getPerfHandler());
-		xolotlParams.setProperty("vizHandler", args.getVizHandler());
-		xolotlParams.setProperty("petscArgs", args.getPetscArgs());
-		xolotlParams.setProperty("networkFile", args.getNetworkFile());
-		xolotlParams.setProperty("checkpoint", args.getCheckpoint());
+		if (args.isHeFlux() == true)
+			xolotlParams.setProperty("heFlux", args.getHeFlux());
+		if (args.isHeFluence() == true)
+			xolotlParams.setProperty("heFluence", args.getHeFluence());
+		if (args.isVizHandler() == true)
+			xolotlParams.setProperty("vizHandler", args.getVizHandler());
+		if (args.isCheckpoint() == true)
+			xolotlParams.setProperty("checkpoint", args.getCheckpoint());
 
 	}
 
@@ -288,6 +291,8 @@ public class Preprocessor {
 	/**
 	 * This operation generates the parameters needed to run Xolotl.
 	 * 
+	 * TODO is this function necessary?
+	 * 
 	 * @return The property list of parameters that will be passed to Xolotl
 	 */
 	public Properties generateParameters() {
@@ -306,12 +311,12 @@ public class Preprocessor {
 		defaultParameters
 				.setProperty(
 						"petscArgs",
-						"-da_grid_x 10 -ts_final_time 1000"
-								+ "-ts_max_steps 3 -ts_adapt_dt_max 10 -ts_max_snes_failures 200"
-								+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant"
+						"-da_grid_x 10 -ts_final_time 1000 "
+								+ "-ts_max_steps 3 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
+								+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant "
 								+ "-fieldsplit_1_pc_type sor -snes_monitor -ksp_monitor -ts_monitor");
 		defaultParameters.setProperty("networkFile", "networkInit.h5");
-		defaultParameters.setProperty("checkpoint", "true");
+		defaultParameters.setProperty("checkpoint", "false");
 
 		return defaultParameters;
 	}
