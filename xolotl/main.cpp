@@ -51,7 +51,6 @@ bool initPerf(bool opts, std::vector<xolotlPerf::HardwareQuantities> hwq) {
 std::shared_ptr<xolotlSolver::PetscSolver>
 setUpSolver( std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry, 
             int argc, char **argv) {
-
 	// Setup the solver
 	auto solverInitTimer = handlerRegistry->getTimer("initSolver");
 	solverInitTimer->start();
@@ -115,13 +114,17 @@ int main(int argc, char **argv) {
 	// Skip the executable name before parsing.
 	argc -= 1;  // one for the executable name
 	argv += 1;  // one for the executable name
+
 	XolotlOptions xopts;
-	int nOptsUsed = xopts.parseCommandLine(argc, argv);
+	xopts.readParams(argc, argv);
 	if (!xopts.shouldRun()) {
 		return xopts.getExitCode();
 	}
-	argc -= nOptsUsed;
-	argv += nOptsUsed;
+
+	// Skip the name of the parameter file that was just used.
+	// The arguments should be empty now.
+	argc -= 1;
+	argv += 1;
 
 	// Extract the argument for the file name
 	std::string networkFilename = xopts.getNetworkFilename();
@@ -146,7 +149,7 @@ int main(int argc, char **argv) {
 		totalTimer->start();
 
 		// Setup the solver
-		auto solver = setUpSolver(handlerRegistry, argc, argv);
+		auto solver = setUpSolver(handlerRegistry, xopts.getPetscArgc(), xopts.getPetscArgv());
 
 		// Load the network
 		auto networkLoadTimer = handlerRegistry->getTimer("loadNetwork");

@@ -13,7 +13,22 @@ private:
     bool useStdHandlers;
 
     // Name of the input network file.
-    std::string netFileName;
+    std::string networkFileName;
+
+    // The number of arguments that will be given to PETSc.
+    int petscArgc;
+
+    // The list of arguments that will be given to PETSc.
+    char **petscArgv;
+
+    // Deal with the name of the network file.
+    // @param arg Argument given for the network file.
+    bool handleNetworkOption( std::string arg );
+
+    // Callback when have seen the network option.
+    // @param opts Options object for the program.
+    // @param arg Argument provided to the option.
+    static bool handleNetworkOptionCB( Options* opts, std::string arg );
 
     // Deal with the handler selection option.
     // @param arg Argument given to the handler selection option.
@@ -38,16 +53,11 @@ public:
     XolotlOptions( void );
 
 
-    // Parse the given command line for user-configurable settings.
-    // We assume that the executable file/path has been skipped before
-    // calling this method.  (E.g., the program's main() function
-    // called this with something like 
-    //   xopts.parseCommandLine( argc - 1, argv + 1 );
-    //
+    // Read the parameters from the given file to set the different
+    // xolotl options.
     // @param argc The number of arguments in the argv vector.
     // @param argv Vector of argument strings.
-    // @return Number of command line arguments used.
-    virtual int parseCommandLine( int argc, char* argv[] );
+    virtual void readParams( int argc, char* argv[] );
 
 
     // Show our help message.
@@ -66,7 +76,17 @@ public:
 
     // Obtain the name of the file holding the input network.
     // @return Name of the input network file.
-    std::string getNetworkFilename( void ) const    { return netFileName; }
+    std::string getNetworkFilename( void ) const    { return networkFileName; }
+
+
+    // Obtain the number of arguments for PETSc.
+    // @return Number of arguments.
+    int getPetscArgc( void ) const    { return petscArgc; }
+
+
+    // Obtain the list of arguments for PETSc.
+    // @return The list of arguments.
+    char** getPetscArgv( void ) const    { return petscArgv; }
 };
 
 };
