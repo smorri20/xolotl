@@ -1,6 +1,7 @@
 // Includes
 #include "PetscSolver.h"
 #include <HandlerRegistryFactory.h>
+#include <HDF5NetworkLoader.h>
 #include "FitFluxHandler.h"
 #include "TemperatureHandler.h"
 #include <MathUtils.h>
@@ -198,9 +199,14 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
 	checkPetscError(ierr);
 
+	// Get the name of the HDF5 file to read the concentrations from
+	std::shared_ptr<HDF5NetworkLoader> HDF5Loader
+		= std::dynamic_pointer_cast<HDF5NetworkLoader> (networkLoader);
+	auto fileName = HDF5Loader->getFilename();
+
 	// Get the last time step written in the HDF5 file
 	int tempTimeStep = -2;
-	HDF5Utils::hasConcentrationGroup("xolotlStart.h5", tempTimeStep);
+	HDF5Utils::hasConcentrationGroup(fileName, tempTimeStep);
 
 	// Loop on all the grid points
 	for (i = xs; i < xs + xm; i++) {
@@ -212,7 +218,7 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 
 		if (tempTimeStep >= 0) {
 			// Read the concentrations from the HDF5 file
-			auto concVector = HDF5Utils::readGridPoint("xolotlStart.h5",
+			auto concVector = HDF5Utils::readGridPoint(fileName,
 					tempTimeStep, i);
 
 			// Loop on the concVector size
@@ -1059,15 +1065,20 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 
 	PetscFunctionBeginUser;
 
-// Get starting conditions from HDF5 file
+	// Get the name of the HDF5 file to read the concentrations from
+	std::shared_ptr<HDF5NetworkLoader> HDF5Loader
+		= std::dynamic_pointer_cast<HDF5NetworkLoader> (networkLoader);
+	auto fileName = HDF5Loader->getFilename();
+
+	// Get starting conditions from HDF5 file
 	int gridLength = 0;
 	double time = 0.0, deltaTime = 1.0e-8;
 	int tempTimeStep = -2;
-	HDF5Utils::readHeader("xolotlStart.h5", gridLength);
+	HDF5Utils::readHeader(fileName, gridLength);
 
 // Read the times if the information is in the HDF5 file
-	if (HDF5Utils::hasConcentrationGroup("xolotlStart.h5", tempTimeStep)) {
-		HDF5Utils::readTimes("xolotlStart.h5", tempTimeStep, time, deltaTime);
+	if (HDF5Utils::hasConcentrationGroup(fileName, tempTimeStep)) {
+		HDF5Utils::readTimes(fileName, tempTimeStep, time, deltaTime);
 	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -47,6 +47,9 @@ double heliumFluence = 0.0;
 //! How often HDF5 file is written
 PetscInt stride = 0;
 
+//! HDF5 output file name
+std::string outputFileName = "xolotlStop.h5";
+
 /**
  * This is a monitoring method that will save an hdf5 file at each time step.
  * HDF5 is handling the parallel part, so no call to MPI here.
@@ -104,7 +107,7 @@ static PetscErrorCode startStop(TS ts, PetscInt timestep, PetscReal time,
 	double hx = 8.0 / (PetscReal) (Mx - 1);
 
 	// Open the already created HDF5 file
-	xolotlCore::HDF5Utils::openFile("xolotlStop.h5");
+	xolotlCore::HDF5Utils::openFile(outputFileName);
 
 	// Get the physical dimension of the grid
 	int dimension = (Mx - 1) * hx;
@@ -1080,7 +1083,7 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 		checkPetscError(ierr);
 
 		// Initialize the HDF5 file for all the processes
-		xolotlCore::HDF5Utils::initializeFile("xolotlStop.h5", networkSize, Mx);
+		xolotlCore::HDF5Utils::initializeFile(outputFileName, networkSize, Mx);
 
 		// Setup step size variable
 		double hx = 8.0 / (PetscReal) (Mx - 1);
