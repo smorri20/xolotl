@@ -1021,7 +1021,6 @@ void PetscSolver::setupMesh() {
  * throw an exception of type std::string.
  */
 void PetscSolver::initialize() {
-
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Initialize program
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */

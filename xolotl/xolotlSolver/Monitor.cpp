@@ -26,9 +26,6 @@ static inline bool checkPetscError(PetscErrorCode errorCode) {
 	CHKERRQ(errorCode);
 }
 
-//! The xolotlViz handler registry
-auto vizHandlerRegistry = xolotlViz::getVizHandlerRegistry();
-
 //! The pointer to the plot that will be used to visualize the data.
 std::shared_ptr<xolotlViz::IPlot> plot;
 
@@ -886,6 +883,9 @@ static PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
  */
 PetscErrorCode setupPetscMonitor(TS ts) {
 	PetscErrorCode ierr;
+
+	//! The xolotlViz handler registry
+	auto vizHandlerRegistry = xolotlViz::getVizHandlerRegistry();
 
 	// Flags to launch the monitors or not
 	PetscBool flag2DPlot, flag1DPlot, flagSeries, flagPerf, flagRetention,
