@@ -170,7 +170,10 @@ BOOST_AUTO_TEST_CASE(goodParamFile)
     BOOST_REQUIRE_EQUAL( xopts.getNetworkFilename(), "tungsten.txt" );
 
     // Check the performance handler
-    BOOST_REQUIRE_EQUAL( xopts.useStandardHandlers(), false );
+    BOOST_REQUIRE_EQUAL( xopts.usePerfStandardHandlers(), false );
+
+    // Check the performance handler
+    BOOST_REQUIRE_EQUAL( xopts.useVizStandardHandlers(), true );
 
     // Check the PETSc options
     BOOST_REQUIRE_EQUAL( xopts.getPetscArgc(), 12 );

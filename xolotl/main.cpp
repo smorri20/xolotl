@@ -12,8 +12,10 @@
 #include <MPIUtils.h>
 #include <XolotlOptions.h>
 #include <HandlerRegistryFactory.h>
+#include <VizHandlerRegistryFactory.h>
 #include <HardwareQuantities.h>
 #include <IHandlerRegistry.h>
+#include <IVizHandlerRegistry.h>
 
 using namespace std;
 using std::shared_ptr;
@@ -46,6 +48,18 @@ bool initPerf(bool opts, std::vector<xolotlPerf::HardwareQuantities> hwq) {
 		return EXIT_FAILURE;
 	} else
 		return perfInitOK;
+}
+
+bool initViz(bool opts) {
+
+	bool vizInitOK = xolotlViz::initialize(opts);
+	if (!vizInitOK) {
+		std::cerr
+				<< "Unable to initialize requested visualization infrastructure. "
+				<< "Aborting" << std::endl;
+		return EXIT_FAILURE;
+	} else
+		return vizInitOK;
 }
 
 std::shared_ptr<xolotlSolver::PetscSolver>
@@ -134,7 +148,10 @@ int main(int argc, char **argv) {
 		// Set up our performance data infrastructure.
 		// Indicate we want to monitor some important hardware counters.
 		auto hwq = declareHWcounters();
-		auto perfInitOK = initPerf(xopts.useStandardHandlers(), hwq);
+		auto perfInitOK = initPerf(xopts.usePerfStandardHandlers(), hwq);
+
+		// Set up the visualization infrastructure.
+		auto vizInitOK = initViz(xopts.useVizStandardHandlers());
 
 		// Initialize MPI.  We do this instead of leaving it to some
 		// other package (e.g., PETSc), because we want to avoid problems
@@ -149,7 +166,8 @@ int main(int argc, char **argv) {
 		totalTimer->start();
 
 		// Setup the solver
-		auto solver = setUpSolver(handlerRegistry, xopts.getPetscArgc(), xopts.getPetscArgv());
+		auto solver = setUpSolver(handlerRegistry,
+				xopts.getPetscArgc(), xopts.getPetscArgv());
 
 		// Load the network
 		auto networkLoadTimer = handlerRegistry->getTimer("loadNetwork");

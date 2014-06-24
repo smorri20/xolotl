@@ -9,7 +9,8 @@ namespace xolotlCore {
 
 
 XolotlOptions::XolotlOptions( void )
-  : useStdHandlers( true )              // by default, use "standard" handlers
+  : usePerfStdHandlers( true ),  // by default, use "standard" handlers for performance
+    useVizStdHandlers( false ) // and "dummy" handlers for visualization
 {
     // Add our notion of which options we support.
     optionsMap["networkFile"] = new OptInfo(
@@ -17,7 +18,10 @@ XolotlOptions::XolotlOptions( void )
         handleNetworkOptionCB );
     optionsMap["perfHandler"] = new OptInfo(
         "perfHandler {std,dummy}     Which set of handlers to use for the performances.",
-        handleHandlersOptionCB );
+        handlePerfHandlersOptionCB );
+    optionsMap["vizHandler"] = new OptInfo(
+        "vizHandler {std,dummy}     Which set of handlers to use for the visualization.",
+        handleVizHandlersOptionCB );
     optionsMap["petscArgs"] = new OptInfo(
         "petscArgs                   All the arguments that will be given to PETSc",
         handlePetscOptionCB );
@@ -105,7 +109,7 @@ XolotlOptions::handleNetworkOptionCB( Options* opts, std::string arg )
 
 
 bool
-XolotlOptions::handleHandlersOption( std::string arg )
+XolotlOptions::handlePerfHandlersOption( std::string arg )
 {
     bool ret = true;
 
@@ -116,11 +120,11 @@ XolotlOptions::handleHandlersOption( std::string arg )
     // Determine the type of handlers we are being asked to use
     if( arg == "std" )
     {
-        useStdHandlers = true;
+        usePerfStdHandlers = true;
     }
     else if( arg == "dummy" )
     {
-        useStdHandlers = false;
+        usePerfStdHandlers = false;
     }
     else
     {
@@ -135,9 +139,46 @@ XolotlOptions::handleHandlersOption( std::string arg )
 }
 
 bool
-XolotlOptions::handleHandlersOptionCB( Options* opts, std::string arg )
+XolotlOptions::handlePerfHandlersOptionCB( Options* opts, std::string arg )
 {
-    return static_cast<XolotlOptions*>( opts )->handleHandlersOption( arg );
+    return static_cast<XolotlOptions*>( opts )->handlePerfHandlersOption( arg );
+}
+
+
+bool
+XolotlOptions::handleVizHandlersOption( std::string arg )
+{
+    bool ret = true;
+
+    // The base class should check for situations where
+    // we expect an argument but don't get one.
+    assert( !arg.empty() );
+
+    // Determine the type of handlers we are being asked to use
+    if( arg == "std" )
+    {
+        useVizStdHandlers = true;
+    }
+    else if( arg == "dummy" )
+    {
+        useVizStdHandlers = false;
+    }
+    else
+    {
+        std::cerr << "Options: unrecognized argument " << arg << std::endl;
+        showHelp( std::cerr );
+        shouldRunFlag = false;
+        exitCode = EXIT_FAILURE;
+        ret = false;
+    }
+
+    return ret;
+}
+
+bool
+XolotlOptions::handleVizHandlersOptionCB( Options* opts, std::string arg )
+{
+    return static_cast<XolotlOptions*>( opts )->handleVizHandlersOption( arg );
 }
 
 
