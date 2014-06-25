@@ -73,7 +73,6 @@ public interface Arguments {
 	// merged into the trunk
 	boolean isVizHandler();
 
-	// TODO make this a List<String>?
 	@Option(longName = "petscArgs", defaultValue = "-da_grid_x 10 -ts_final_time 1000 "
 			+ "-ts_max_steps 3 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
 			+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant "

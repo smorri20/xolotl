@@ -8,6 +8,9 @@ import java.io.FileOutputStream;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Properties;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import ncsa.hdf.hdf5lib.H5;
 import ncsa.hdf.hdf5lib.HDF5Constants;
@@ -109,6 +112,92 @@ public class Preprocessor {
 	public Properties xolotlParams = new Properties();
 
 	/**
+	 * This operation generates a single string containing the Petsc arguments
+	 * that will be used to set the Petsc parameter required to run Xolotl.
+	 * 
+	 * @param petscArgs
+	 *            The Petsc command line arguments as specified by the Arguments
+	 *            interface
+	 * @return A string containing the Petsc arguments that will be passed to
+	 *         Xolotl
+	 */
+	private String generatePetscArgs(String petscArgs) {
+
+		// Create a map of default Petsc options
+		Map<String, String> petscOptions = new HashMap<String, String>();
+		petscOptions.put("-da_grid_x", "10");
+		petscOptions.put("-ts_final_time", "1000");
+		petscOptions.put("-ts_max_steps", "3");
+		petscOptions.put("-ts_adapt_dt_max", "10");
+		petscOptions.put("-ts_max_snes_failures", "200");
+		petscOptions.put("-pc_type", "fieldsplit");
+		petscOptions.put("-pc_fieldsplit_detect_coupling", "");
+		petscOptions.put("-fieldsplit_0_pc_type", "redundant");
+		petscOptions.put("-fieldsplit_1_pc_type", "sor");
+		petscOptions.put("-snes_monitor", "");
+		petscOptions.put("-ksp_monitor", "");
+		petscOptions.put("-ts_monitor", "");
+
+		// Get the string of Petsc arguments from the command line
+		// and split the string around the blank spaces
+		List<String> petscList = new ArrayList<String>();
+		for (String str : petscArgs.split(" ")) {
+			petscList.add(str);
+		}
+
+		// Create a map containing the Petsc options and their corresponding
+		// arguments, if any, where the key is the option and the value is 
+		// the argument
+		Map<String, String> petscMap = new HashMap<String, String>();
+		for (int i = 1; i < petscList.size(); i++) {
+			// Check if the last string in the petscList is an option
+			if ((i == ((petscList.size()) - 1))
+					&& ((petscList.get(i)).contains("-")))
+				petscMap.put(petscList.get(i), "");
+			else {
+				// Check if there is an option followed by a corresponding
+				// argument
+				if (((petscList.get(i - 1)).contains("-"))
+						&& (!(petscList.get(i)).contains("-"))) {
+					petscMap.put(petscList.get(i - 1), petscList.get(i));
+				}
+				// Check if there is an option immediately followed by another
+				// option
+				else if ((petscList.get(i - 1).contains("-"))
+						&& (petscList.get(i).contains("-"))) {
+					petscMap.put(petscList.get(i - 1), "");
+				}
+				// Check if there is an option between an argument and an option
+				else if ((!(petscList.get(i - 2)).contains("-"))
+						&& ((petscList.get(i - 1)).contains("-"))
+						&& ((petscList.get(i)).contains("-"))) {
+					petscMap.put(petscList.get(i - 1), "");
+				} else {
+					petscMap.put(petscList.get(i), "");
+				}
+			}
+		}
+		petscList.clear();
+		System.out.println();
+		// Replace the default Petsc options with those from the command line
+		for (String key : petscMap.keySet()) {
+			petscOptions.put(key, petscMap.get(key));
+		}
+
+		// Get the list of petscArgs and create a single string for them
+		// in order to set the petsc parameter
+		StringBuilder petscString = new StringBuilder();
+		for (String key : petscOptions.keySet()) {
+			if (petscOptions.get(key) == "")
+				petscString.append(key + petscOptions.get(key) + " ");
+			else
+				petscString.append(key + " " + petscOptions.get(key) + " ");
+		}
+
+		return petscString.toString();
+	}
+
+	/**
 	 * Constructor
 	 * 
 	 * @param args
@@ -120,23 +209,24 @@ public class Preprocessor {
 		// Set the parameter options that will be passed to Xolotl
 		xolotlParams.setProperty("networkFile", args.getNetworkFile());
 		xolotlParams.setProperty("perfHandler", args.getPerfHandler());
-		xolotlParams.setProperty("petscArgs", args.getPetscArgs());
+		xolotlParams.setProperty("petscArgs",
+				generatePetscArgs(args.getPetscArgs()));
 
 		// The following parameter options are optional and will only
 		// be set if they are specified via the command line
-		if (args.isMaterial() == true)
+		if (args.isMaterial())
 			xolotlParams.setProperty("material", args.getMaterial());
-		if (args.isStartTemp() == true)
+		if (args.isStartTemp())
 			xolotlParams.setProperty("startTemp", args.getStartTemp());
-		if (args.isTempFile() == true)
+		if (args.isTempFile())
 			xolotlParams.setProperty("tempFile", args.getTempFile());
-		if (args.isHeFlux() == true)
+		if (args.isHeFlux())
 			xolotlParams.setProperty("heFlux", args.getHeFlux());
-		if (args.isHeFluence() == true)
+		if (args.isHeFluence())
 			xolotlParams.setProperty("heFluence", args.getHeFluence());
-		if (args.isVizHandler() == true)
+		if (args.isVizHandler())
 			xolotlParams.setProperty("vizHandler", args.getVizHandler());
-		if (args.isCheckpoint() == true)
+		if (args.isCheckpoint())
 			xolotlParams.setProperty("checkpoint", args.getCheckpoint());
 
 	}
@@ -368,6 +458,7 @@ public class Preprocessor {
 			inParamsFile.close();
 
 		} catch (IOException io) {
+			System.out.println("Error loading file.");
 			io.printStackTrace();
 		}
 		return inProperties;
