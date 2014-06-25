@@ -2,6 +2,7 @@
 #include "Reactant.h"
 #include "xolotlPerf/HandlerRegistryFactory.h"
 #include <iostream>
+#include <cassert>
 
 using namespace xolotlCore;
 
@@ -92,3 +93,18 @@ void ReactionNetwork::updateConcentrationsFromArray(double * concentrations) {
 
 	return;
 }
+
+
+void ReactionNetwork::askReactantsToReleaseNetwork(void) {
+
+    auto allReactants = this->getAll();    
+
+    for(auto iter = allReactants->begin(); iter != allReactants->end(); ++iter) {
+        Reactant* currReactant = *iter;
+        assert( currReactant != NULL );
+
+        currReactant->releaseReactionNetwork();
+    }
+}
+
+

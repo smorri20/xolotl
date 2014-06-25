@@ -6,6 +6,7 @@
 #include <map>
 #include "IFluxHandler.h"
 #include "ITemperatureHandler.h"
+#include "TemperatureHandler.h"
 
 using namespace xolotlCore;
 

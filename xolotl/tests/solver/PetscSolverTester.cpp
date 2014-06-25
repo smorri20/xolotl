@@ -17,8 +17,7 @@ using namespace xolotlCore;
 
 /**
  * The test suite configuration
- */
-BOOST_AUTO_TEST_SUITE (PetscSolverTester_testSuite)
+ */BOOST_AUTO_TEST_SUITE (PetscSolverTester_testSuite)
 
 /**
  * This operation checks the fluxs from the reactant as best as is possible
@@ -31,8 +30,8 @@ BOOST_AUTO_TEST_CASE(checkDOFConversion) {
 	string pathToFile("/tests/reactants/testfiles/tungsten.txt");
 	string networkFilename = sourceDir + pathToFile;
 
-	BOOST_TEST_MESSAGE("PetscSolverTester Message: Network filename is: "
-			<< networkFilename);
+	BOOST_TEST_MESSAGE(
+			"PetscSolverTester Message: Network filename is: " << networkFilename);
 
 	// Load the input file from the master task
 	shared_ptr<istream> networkStream = make_shared<ifstream>(networkFilename);
@@ -46,5 +45,4 @@ BOOST_AUTO_TEST_CASE(checkDOFConversion) {
 
 	BOOST_TEST_MESSAGE("PetscSolverTester Message: Network loaded");
 }
-
 BOOST_AUTO_TEST_SUITE_END()

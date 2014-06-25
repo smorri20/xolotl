@@ -44,9 +44,6 @@ initialize( bool useStdRegistry,
     return ret;
 }
 
-
-
-
 // Provide access to our handler registry.
 std::shared_ptr<IHandlerRegistry> getHandlerRegistry( void )
 {
