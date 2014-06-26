@@ -14,7 +14,10 @@
 #include <MaterialHandlerFactory.h>
 #include <TemperatureHandlerFactory.h>
 #include <HandlerRegistryFactory.h>
+#include <VizHandlerRegistryFactory.h>
 #include <HardwareQuantities.h>
+#include <HDF5NetworkLoader.h>
+#include <IVizHandlerRegistry.h>
 
 using namespace std;
 using std::shared_ptr;
@@ -71,15 +74,26 @@ bool initPerf(bool opts, std::vector<xolotlPerf::HardwareQuantities> hwq) {
 		return perfInitOK;
 }
 
-std::shared_ptr<xolotlSolver::PetscSolver> setUpSolver(
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry, int argc,
-		char **argv) {
+bool initViz(bool opts) {
 
+	bool vizInitOK = xolotlViz::initialize(opts);
+	if (!vizInitOK) {
+		std::cerr
+				<< "Unable to initialize requested visualization infrastructure. "
+				<< "Aborting" << std::endl;
+		return EXIT_FAILURE;
+	} else
+		return vizInitOK;
+}
+
+std::shared_ptr<xolotlSolver::PetscSolver>
+setUpSolver( std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry, 
+            int argc, char **argv) {
 	// Setup the solver
 	auto solverInitTimer = handlerRegistry->getTimer("initSolver");
 	solverInitTimer->start();
-	std::shared_ptr<xolotlSolver::PetscSolver> solver =
-			std::make_shared<xolotlSolver::PetscSolver>(handlerRegistry);
+	std::shared_ptr<xolotlSolver::PetscSolver> solver = 
+        std::make_shared<xolotlSolver::PetscSolver>(handlerRegistry);
 	solver->setCommandLineOptions(argc, argv);
 	solver->initialize();
 	solverInitTimer->stop();
@@ -103,24 +117,11 @@ std::shared_ptr<PSIClusterNetworkLoader> setUpNetworkLoader(int rank,
 		MPI_Comm comm, std::string networkFilename,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
 
-	std::shared_ptr<PSIClusterNetworkLoader> networkLoader;
-	shared_ptr < std::istream > networkStream;
-
-	// Setup the master
-	if (rank == 0) {
-		// Say hello
-		printStartMessage();
-		// Set the input stream on the master
-		networkStream = make_shared < std::ifstream > (networkFilename);
-	}
-
-	// Broadcast the stream to all worker tasks
-	networkLoader = std::make_shared < PSIClusterNetworkLoader > (registry);
-	networkStream = xolotlCore::MPIUtils::broadcastStream(networkStream, 0,
-			comm);
-
-	// Create a network loader and set the stream on every MPI task
-	networkLoader->setInputstream(networkStream);
+	// Create a HDF5NetworkLoader
+	std::shared_ptr<HDF5NetworkLoader> networkLoader;
+	networkLoader = std::make_shared<HDF5NetworkLoader>(registry);
+	// Give the networkFilename to the network loader
+	networkLoader->setFilename(networkFilename);
 
 	return networkLoader;
 }
@@ -135,13 +136,17 @@ int main(int argc, char **argv) {
 	// Skip the executable name before parsing.
 	argc -= 1; // one for the executable name
 	argv += 1; // one for the executable name
+
 	XolotlOptions xopts;
-	int nOptsUsed = xopts.parseCommandLine(argc, argv);
+	xopts.readParams(argc, argv);
 	if (!xopts.shouldRun()) {
 		return xopts.getExitCode();
 	}
-	argc -= nOptsUsed;
-	argv += nOptsUsed;
+
+	// Skip the name of the parameter file that was just used.
+	// The arguments should be empty now.
+	argc -= 1;
+	argv += 1;
 
 	// Extract the argument for the file name
 	std::string networkFilename = xopts.getNetworkFilename();
@@ -155,7 +160,10 @@ int main(int argc, char **argv) {
 		// Set up our performance data infrastructure.
 		// Indicate we want to monitor some important hardware counters.
 		auto hwq = declareHWcounters();
-		auto perfInitOK = initPerf(xopts.useStandardHandlers(), hwq);
+		auto perfInitOK = initPerf(xopts.usePerfStandardHandlers(), hwq);
+
+		// Set up the visualization infrastructure.
+		auto vizInitOK = initViz(xopts.useVizStandardHandlers());
 
 		// Initialize MPI. We do this instead of leaving it to some
 		// other package (e.g., PETSc), because we want to avoid problems
@@ -173,7 +181,8 @@ int main(int argc, char **argv) {
 		totalTimer->start();
 
 		// Setup the solver
-		auto solver = setUpSolver(handlerRegistry, argc, argv);
+		auto solver = setUpSolver(handlerRegistry,
+				xopts.getPetscArgc(), xopts.getPetscArgv());
 
 		// Load the network
 		auto networkLoadTimer = handlerRegistry->getTimer("loadNetwork");
