@@ -54,8 +54,9 @@ BOOST_AUTO_TEST_CASE(checkGetReactantFluxesAndParials) {
 			> (networkFilename);
 
 	// Create a network loader and set the istream on every MPI task
-	shared_ptr<PSIClusterNetworkLoader> networkLoader = make_shared<PSIClusterNetworkLoader>(
-			std::make_shared<xolotlPerf::DummyHandlerRegistry>());
+	shared_ptr<PSIClusterNetworkLoader> networkLoader = make_shared
+			< PSIClusterNetworkLoader
+			> (std::make_shared<xolotlPerf::DummyHandlerRegistry>());
 	networkLoader->setInputstream(networkStream);
 	// Load the network
 	shared_ptr<ReactionNetwork> network = networkLoader->load();
