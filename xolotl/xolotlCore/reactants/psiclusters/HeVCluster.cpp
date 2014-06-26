@@ -156,8 +156,8 @@ void HeVCluster::createReactionConnectivity() {
 		// Call the combination function even though there is only one cluster
 		// because it handles all of the work to properly connect the three
 		// clusters in the reaction.
-				combineClusters(singleVInVector,maxHeVClusterSize,"HeV");
-			}
+		combineClusters(singleVInVector,maxHeVClusterSize,"HeV");
+	}
 
 	// Set the references to the size one clusters
 	heCluster = (PSICluster *) network->get(heType, 1);

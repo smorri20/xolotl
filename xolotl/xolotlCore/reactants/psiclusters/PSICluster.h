@@ -599,7 +599,7 @@ public:
 	 * ReactionNetwork::getAll() operation.
 	 */
 	virtual std::vector<double> getPartialDerivatives(double temperature) const;
-
+	
 	/**
 	 * This operation works as getPartialDerivatives above, but instead of
 	 * returning a vector that it creates it fills a vector that is passed to
@@ -629,7 +629,7 @@ public:
 	 * cluster and false if it is a single species cluster.
 	 */
 	virtual bool isMixed() const { return false; };
-	
+
 };
 
 } /* end namespace xolotlCore */
