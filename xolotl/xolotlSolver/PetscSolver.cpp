@@ -1,6 +1,7 @@
 // Includes
 #include "PetscSolver.h"
 #include <HandlerRegistryFactory.h>
+#include <HDF5NetworkLoader.h>
 #include "TemperatureHandler.h"
 #include <MathUtils.h>
 #include <petscts.h>
@@ -12,6 +13,7 @@
 #include <fstream>
 #include <string>
 #include <unordered_map>
+#include <HDF5Utils.h>
 
 using namespace xolotlCore;
 
@@ -213,22 +215,33 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
 	checkPetscError(ierr);
 
-	/*
-	 Compute function over the locally owned part of the grid
-	 */
-	for (i = xs; i < xs + xm; i++) {
+	// Get the name of the HDF5 file to read the concentrations from
+	std::shared_ptr<HDF5NetworkLoader> HDF5Loader
+		= std::dynamic_pointer_cast<HDF5NetworkLoader> (networkLoader);
+	auto fileName = HDF5Loader->getFilename();
 
-		// For boundary conditions all the concentrations are 0
-		// at i == 0. Everywhere else, only I1 has a non-zero concentration.
-		if (i != 0) {
-			// Set the default interstitial concentrations
-			auto reactant = network->get("I", 1);
-			reactant->setConcentration(0.0023);
+	// Get the last time step written in the HDF5 file
+	int tempTimeStep = -2;
+	HDF5Utils::hasConcentrationGroup(fileName, tempTimeStep);
+
+	// Loop on all the grid points
+	for (i = xs; i < xs + xm; i++) {
+		concOffset = concentrations + size * i;
+		// Loop on all the clusters to initialize at 0.0
+		for (int k = 0; k < size; k++) {
+			concOffset[k] = 0.0;
 		}
 
-		// Update the PETSc concentrations array
-		concOffset = concentrations + size * i;
-		network->fillConcentrationsArray(concOffset);
+		if (tempTimeStep >= 0) {
+			// Read the concentrations from the HDF5 file
+			auto concVector = HDF5Utils::readGridPoint(fileName,
+					tempTimeStep, i);
+
+			// Loop on the concVector size
+			for (int k = 0; k < concVector.size(); k++) {
+				concOffset[(int) concVector.at(k).at(0)] = concVector.at(k).at(1);
+			}
+		}
 	}
 
 	/*
@@ -243,14 +256,14 @@ void getIncomingHeFlux(PSICluster * cluster, std::vector<double> gridPos,
 		PetscReal curTime, PetscScalar *updatedConcOffset) {
 
 	int reactantIndex = 0;
-	// Get the flux handler that will be used to compute fluxes.
+// Get the flux handler that will be used to compute fluxes.
 	auto fluxHandler = PetscSolver::getFluxHandler();
 
-	// Get the composition of the cluster
+// Get the composition of the cluster
 	auto thisComp = cluster->getComposition();
-	// Create the composition vector for the cluster
+// Create the composition vector for the cluster
 	std::vector<int> compVec = { thisComp["He"], thisComp["V"], thisComp["I"] };
-	// Only update the concentration if the cluster exists
+// Only update the concentration if the cluster exists
 	if (cluster) {
 		reactantIndex = cluster->getId() - 1;
 		// Calculate the incident flux
@@ -278,6 +291,7 @@ void computeDiffusion(PSICluster * cluster, double temp, PetscReal sx,
 	oldConc = concOffset[reactantIndex];
 	oldLeftConc = leftConcOffset[reactantIndex];
 	oldRightConc = rightConcOffset[reactantIndex];
+
 	// Use a simple midpoint stencil to compute the concentration
 	conc = cluster->getDiffusionCoefficient()
 			* (-2.0 * oldConc + oldLeftConc + oldRightConc) * sx;
@@ -357,6 +371,10 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 
 	// Setup some step size variables
 	hx = numOfxGridPoints / (PetscReal) (Mx - 1);
+// Display the number of grid points that will be used
+//	std::cout << "\nNumber of x grid points = " << numOfxGridPoints << std::endl;
+//	std::cout << "Number of grid points = " << Mx << std::endl;
+//	std::cout << "Step size hx = " << hx << std::endl;
 	sx = 1.0 / (hx * hx);
 
 	// Scatter ghost points to local vector, using the 2-step process
@@ -644,7 +662,6 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 			auto temperatureHandler = PetscSolver::getTemperatureHandler();
 			auto temperature = temperatureHandler->getTemperature(gridPosition,
 					realTime);
-
 
 //			xi = 1; // Uncomment this line for debugging in a single cell
 
@@ -1020,7 +1037,6 @@ void PetscSolver::setupMesh() {
  * throw an exception of type std::string.
  */
 void PetscSolver::initialize() {
-
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Initialize program
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -1063,6 +1079,23 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	std::cout.precision(16);
 
 	PetscFunctionBeginUser;
+
+	// Get the name of the HDF5 file to read the concentrations from
+	std::shared_ptr<HDF5NetworkLoader> HDF5Loader
+		= std::dynamic_pointer_cast<HDF5NetworkLoader> (networkLoader);
+	auto fileName = HDF5Loader->getFilename();
+
+	// Get starting conditions from HDF5 file
+	int gridLength = 0;
+	double time = 0.0, deltaTime = 1.0e-8;
+	int tempTimeStep = -2;
+	HDF5Utils::readHeader(fileName, gridLength);
+
+	// Read the times if the information is in the HDF5 file
+	if (HDF5Utils::hasConcentrationGroup(fileName, tempTimeStep)) {
+		HDF5Utils::readTimes(fileName, tempTimeStep, time, deltaTime);
+	}
+
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Create distributed array (DMDA) to manage parallel grid and vectors
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -1147,10 +1180,10 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	ierr = TSSetProblemType(ts, TS_NONLINEAR);
 	checkPetscError(ierr);
 	ierr = TSSetRHSFunction(ts, NULL, callRHSFunction, NULL);
-	//ierr = TSSetRHSFunction(ts, NULL, RHSFunction, NULL);
+//ierr = TSSetRHSFunction(ts, NULL, RHSFunction, NULL);
 	checkPetscError(ierr);
 	ierr = TSSetRHSJacobian(ts, NULL, NULL, callRHSJacobian, NULL);
-	//ierr = TSSetRHSJacobian(ts, NULL, NULL, RHSJacobian, NULL);
+//ierr = TSSetRHSJacobian(ts, NULL, NULL, RHSJacobian, NULL);
 	checkPetscError(ierr);
 	ierr = TSSetSolution(ts, C);
 	checkPetscError(ierr);
@@ -1158,7 +1191,7 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Set solver options
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = TSSetInitialTimeStep(ts, 0.0, 1.0e-8);
+	ierr = TSSetInitialTimeStep(ts, time, deltaTime);
 	checkPetscError(ierr);
 //	ierr = TSSetDuration(ts, 100, 50.0);
 //	checkPetscError(ierr);
