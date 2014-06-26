@@ -9,6 +9,7 @@ using namespace xolotlCore;
 
 Reactant::Reactant() :
 		concentration(0.0), name(""), id(0), temperature(0.0) {
+
 }
 
 Reactant::Reactant(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
