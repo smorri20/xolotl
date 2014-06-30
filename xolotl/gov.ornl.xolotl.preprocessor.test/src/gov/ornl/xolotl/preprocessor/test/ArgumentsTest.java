@@ -29,10 +29,10 @@ public class ArgumentsTest {
 			args = CliFactory.parseArguments(Arguments.class, new String[] {});
 
 			// Check if there is a material argument
-			assertEquals(false, args.isMaterial());
+			assertEquals("W", args.getMaterial());
 
 			// Check if there is a startTemp argument
-			assertEquals(false, args.isStartTemp());
+			assertEquals("1000", args.getStartTemp());
 
 			// Check if there is a tempFile argument
 			assertEquals(false, args.isTempFile());
@@ -47,7 +47,7 @@ public class ArgumentsTest {
 			assertEquals("dummy", args.getPerfHandler());
 
 			// Check if there is a vizHandler argument
-			assertEquals(false, args.isVizHandler());
+			assertEquals("dummy", args.getVizHandler());
 
 			// Check if there is a checkpoint argument
 			assertEquals(false, args.isCheckpoint());
@@ -84,15 +84,9 @@ public class ArgumentsTest {
 					"--startTemp", "900", "--material", "Fe", "--perfHandler",
 					"std" });
 			
-			// Check if there is a material argument
-			assertEquals(true, args.isMaterial());
-
 			// Check that the material is Fe
 			assertEquals("Fe", args.getMaterial());
 			
-			// Check if there is a startTemp argument
-			assertEquals(true, args.isStartTemp());
-
 			// Check that the startTemp is 900
 			assertEquals("900", args.getStartTemp());
 
@@ -109,7 +103,7 @@ public class ArgumentsTest {
 			assertEquals("std", args.getPerfHandler());
 
 			// Check if there is a vizHandler argument
-			assertEquals(false, args.isVizHandler());
+			assertEquals("dummy", args.getVizHandler());
 
 			// Check if there is a checkpoint argument
 			assertEquals(false, args.isCheckpoint());

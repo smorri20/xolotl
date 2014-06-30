@@ -22,64 +22,6 @@ import uk.co.flamingpenguin.jewel.cli.CliFactory;
 public class PreprocessorTest {
 
 	/**
-	 * This operation checks the generateParameters function.
-	 */
-	@Test
-	public void testGenerateParameters() {
-
-		// Local Declarations
-		Arguments parsedArgs = null;
-
-		try {
-			parsedArgs = CliFactory.parseArguments(Arguments.class,
-					new String[] {});
-
-			if (parsedArgs != null) {
-				Preprocessor preprocessor = new Preprocessor(parsedArgs);
-
-				// Generate the parameters
-				Properties defaults = preprocessor.generateParameters();
-
-				// Check that the default material is W
-				assertEquals("W", defaults.getProperty("material"));
-
-				// Check that the default startTemp is 1000
-				assertEquals("1000", defaults.getProperty("startTemp"));
-
-				// Check that the default tempFile is tempFile
-				assertEquals("tempFile", defaults.getProperty("tempFile"));
-
-				// Check that the default heFlux is 2.5e27
-				assertEquals("2.5e27", defaults.getProperty("heFlux"));
-
-				// Check that the default perfHandler is dummy
-				assertEquals("dummy", defaults.getProperty("perfHandler"));
-
-				// Check that the default vizHandler is dummy
-				assertEquals("dummy", defaults.getProperty("vizHandler"));
-
-				// Check that the default checkpoint is true
-				assertEquals("false", defaults.getProperty("checkpoint"));
-
-				// Check that the default networkFile is networkInit.h5
-				assertEquals("networkInit.h5",
-						defaults.getProperty("networkFile"));
-
-				// Check the default petscArgs
-				assertEquals(
-						"-da_grid_x 10 -ts_final_time 1000 "
-								+ "-ts_max_steps 3 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
-								+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant "
-								+ "-fieldsplit_1_pc_type sor -snes_monitor -ksp_monitor -ts_monitor",
-						defaults.getProperty("petscArgs"));
-			}
-		} catch (ArgumentValidationException e1) {
-			e1.printStackTrace();
-		}
-		return;
-	}
-
-	/**
 	 * This operation checks that the default parameters will be used along with
 	 * writeParameterFile and loadParameterFile.
 	 */
@@ -186,15 +128,9 @@ public class PreprocessorTest {
 			parsedArgs = CliFactory.parseArguments(Arguments.class,
 					new String[] { "--material", "Fe", "--startTemp", "900" });
 
-			// Check if there is a material argument
-			assertEquals(true, parsedArgs.isMaterial());
-
 			// Check that the material is Fe
 			assertEquals("Fe", parsedArgs.getMaterial());
-
-			// Check if there is a startTemp argument
-			assertEquals(true, parsedArgs.isStartTemp());
-
+			
 			// Check that the startTemp is 900
 			assertEquals("900", parsedArgs.getStartTemp());
 
