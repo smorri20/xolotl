@@ -376,39 +376,6 @@ public class Preprocessor {
 	}
 
 	/**
-	 * This operation generates the parameters needed to run Xolotl.
-	 * 
-	 * TODO is this function necessary?
-	 * 
-	 * @return The property list of parameters that will be passed to Xolotl
-	 */
-	public Properties generateParameters() {
-
-		// Create the default parameters to be used with Xolotl
-		Properties defaultParameters = new Properties();
-
-		// set the default parameters
-		defaultParameters.setProperty("material", "W");
-		defaultParameters.setProperty("startTemp", "1000");
-		defaultParameters.setProperty("tempFile", "tempFile");
-		defaultParameters.setProperty("heFlux", "2.5e27");
-		defaultParameters.setProperty("heFluence", "1.0e19");
-		defaultParameters.setProperty("perfHandler", "dummy");
-		defaultParameters.setProperty("vizHandler", "dummy");
-		defaultParameters
-				.setProperty(
-						"petscArgs",
-						"-da_grid_x 10 -ts_final_time 1000 "
-								+ "-ts_max_steps 3 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
-								+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant "
-								+ "-fieldsplit_1_pc_type sor -snes_monitor -ksp_monitor -ts_monitor");
-		defaultParameters.setProperty("networkFile", "networkInit.h5");
-		defaultParameters.setProperty("checkpoint", "false");
-
-		return defaultParameters;
-	}
-
-	/**
 	 * This operation writes the parameters file that is needed to run Xolotl.
 	 * 
 	 * @param parameterFile
