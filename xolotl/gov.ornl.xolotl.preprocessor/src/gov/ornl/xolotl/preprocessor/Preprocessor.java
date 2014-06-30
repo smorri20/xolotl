@@ -207,25 +207,22 @@ public class Preprocessor {
 	public Preprocessor(Arguments args) {
 
 		// Set the parameter options that will be passed to Xolotl
+		xolotlParams.setProperty("material", args.getMaterial());
+		xolotlParams.setProperty("startTemp", args.getStartTemp());
 		xolotlParams.setProperty("networkFile", args.getNetworkFile());
 		xolotlParams.setProperty("perfHandler", args.getPerfHandler());
+		xolotlParams.setProperty("vizHandler", args.getVizHandler());
 		xolotlParams.setProperty("petscArgs",
 				generatePetscArgs(args.getPetscArgs()));
 
 		// The following parameter options are optional and will only
 		// be set if they are specified via the command line
-		if (args.isMaterial())
-			xolotlParams.setProperty("material", args.getMaterial());
-		if (args.isStartTemp())
-			xolotlParams.setProperty("startTemp", args.getStartTemp());
 		if (args.isTempFile())
 			xolotlParams.setProperty("tempFile", args.getTempFile());
 		if (args.isHeFlux())
 			xolotlParams.setProperty("heFlux", args.getHeFlux());
 		if (args.isHeFluence())
-			xolotlParams.setProperty("heFluence", args.getHeFluence());
-		if (args.isVizHandler())
-			xolotlParams.setProperty("vizHandler", args.getVizHandler());
+			xolotlParams.setProperty("heFluence", args.getHeFluence());		
 		if (args.isCheckpoint())
 			xolotlParams.setProperty("checkpoint", args.getCheckpoint());
 

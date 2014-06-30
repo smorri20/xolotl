@@ -19,23 +19,15 @@ import uk.co.flamingpenguin.jewel.cli.Option;
  */
 public interface Arguments {
 
-	@Option(longName = "material", // defaultValue = "W",
+	@Option(longName = "material", defaultValue = "W",
 			description = "{W, Fe}  Which material will be used, Tungsten or Iron")
 	String getMaterial();
 
-	// Makes this option optional because this functionality has not yet been
-	// merged into the trunk
-	boolean isMaterial();
-
-	@Option(longName = "startTemp", // defaultValue = "1000",
+	@Option(longName = "startTemp", defaultValue = "1000",
 			description = "The temperature (in Kelvin) will be the constant"
 			+ "value specified")
 	String getStartTemp();
-
-	// Makes this option optional because this functionality has not yet been
-	// merged into the trunk
-	boolean isStartTemp();
-
+	
 	// The tempFile option is optional and should only be used when the user
 	// wishes to pass a file containing a temperature profile to Xolotl
 	@Option(longName = "tempFile", 
@@ -65,13 +57,9 @@ public interface Arguments {
 			description = "{dummy, std}  Which set of performance handlers to use")
 	String getPerfHandler();
 
-	@Option(longName = "vizHandler", // defaultValue = "dummy",
+	@Option(longName = "vizHandler", defaultValue = "dummy",
 			description = "{dummy, std}  Which set of visualization handlers to use")
 	String getVizHandler();
-
-	// Makes this option optional because this functionality has not yet been
-	// merged into the trunk
-	boolean isVizHandler();
 
 	@Option(longName = "petscArgs", defaultValue = "-da_grid_x 10 -ts_final_time 1000 "
 			+ "-ts_max_steps 3 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
