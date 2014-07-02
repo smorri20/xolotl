@@ -78,12 +78,12 @@ void HeInterstitialCluster::createReactionConnectivity() {
 	for (int c = 1; c <= maxVClusterSize; c++) { // hehe... c++!
 		// Get the first reactant's composition and then retrieve it
 		firstComposition = psiNetwork->getCompositionVector(numHe, 0, numI + c);
-		auto firstReactant = psiNetwork->getCompound("HeI", firstComposition);
+		auto firstReactant = psiNetwork->getCompound(typeName, firstComposition);
 		// Set the second reactant
 		auto secondReactant = psiNetwork->get(vType, c);
 		// Create a ReactingPair with the two reactants
 		if (firstReactant && secondReactant) {
-			ReactingPair pair((PSICluster *) firstReactant, (PSICluster *) secondReactant);
+			ClusterPair pair((PSICluster *) firstReactant, (PSICluster *) secondReactant);
 			// Add the pair to the list
 			reactingPairs.push_back(pair);
 		}
@@ -99,11 +99,11 @@ void HeInterstitialCluster::createReactionConnectivity() {
 	 */
 	firstComposition = psiNetwork->getCompositionVector(numHe, 0, numI - 1);
 	// Get those Reactants from the network
-	auto firstReactant = psiNetwork->getCompound("HeI", firstComposition);
+	auto firstReactant = psiNetwork->getCompound(typeName, firstComposition);
 	auto secondReactant = psiNetwork->get(iType, 1);
 	if (firstReactant && secondReactant) {
 		// Create the Reacting Pair
-		ReactingPair pair((PSICluster *) firstReactant, (PSICluster *) secondReactant);
+		ClusterPair pair((PSICluster *) firstReactant, (PSICluster *) secondReactant);
 		// Add the pair to the list
 		reactingPairs.push_back(pair);
 		// Add single I to the list of clusters this one interacts with if it
@@ -117,7 +117,7 @@ void HeInterstitialCluster::createReactionConnectivity() {
 	 * maximum size limit is not violated.
 	 */
 	auto reactants = psiNetwork->getAll(heType);
-	combineClusters(reactants, maxHeIClusterSize, "HeI");
+	combineClusters(reactants, maxHeIClusterSize, typeName);
 
 	/* ----- (A*He)(B*I) + (C*V) --> (A*He)[(B-C)*I] -----
 	 * This section adds the clusters that are produced by this cluster to the
@@ -143,37 +143,36 @@ void HeInterstitialCluster::createReactionConnectivity() {
 }
 
 void HeInterstitialCluster::createDissociationConnectivity() {
-
-	// Local Declarations
-	auto psiNetwork = std::dynamic_pointer_cast<PSIClusterReactionNetwork>(
-			network);
-	auto props = psiNetwork->getProperties();
-	std::vector<int> composition;
-
-	// Get the required dissociating clusters. These are stored for the flux
-	// computation later.
-	auto heCluster = network->get(heType, 1);
-	auto vCluster = network->get(vType, 1);
-	auto iCluster = network->get(iType, 1);
-
 	// Store the cluster with one less helium
 	std::vector<int> compositionVec = { numHe - 1, 0, numI };
-	auto heIClusterLessHe = network->getCompound("HeI", compositionVec);
-	// Store the cluster with one less vacancy
+	auto heIClusterLessHe = network->getCompound(typeName, compositionVec);
+	// Store the cluster with one more helium
+	compositionVec = { numHe + 1, 0, numI };
+	auto heIClusterMoreHe = network->getCompound(typeName, compositionVec);
+	// Store the cluster with one less interstitial
 	compositionVec = {numHe, 0, numI - 1};
-	auto heIClusterLessI = network->getCompound("HeI", compositionVec);
+	auto heIClusterLessI = network->getCompound(typeName, compositionVec);
+	// Store the cluster with one more interstitial
+	compositionVec = {numHe, 0, numI + 1};
+	auto heIClusterMoreI = network->getCompound(typeName, compositionVec);
 
-	// He Dissociation, get the [(numHe-1)*He]I and He
-	composition = psiNetwork->getCompositionVector(numHe - 1, 0, numI);
-	auto otherMixedCluster = psiNetwork->getCompound("HeI", composition);
-	auto singleCluster = psiNetwork->get(heType, 1);
-	dissociateClusters(singleCluster, otherMixedCluster);
+	// He Dissociation
+	// (He_a)(I_b) --> [He_(a-1)](I_b) + He_1
+	auto singleCluster = network->get(heType, 1);
+	emitClusters(singleCluster, heIClusterLessHe);
+	// [He_(a+1)](V_b) --> (He_a)(V_b) + He_1
+	// Here it is important that heVClusterMoreHe is the first cluster
+	// because it is the dissociating one.
+	dissociateCluster(heIClusterMoreHe, singleCluster);
 
-	// Interstitial Dissociation, get He[(numV-1)*I] and I
-	composition = psiNetwork->getCompositionVector(numHe, 0, numI - 1);
-	otherMixedCluster = psiNetwork->getCompound("HeI", composition);
-	singleCluster = psiNetwork->get(iType, 1);
-	dissociateClusters(singleCluster, otherMixedCluster);
+	// Interstitial Dissociation
+	// (He_a)(I_b) --> He_(a)[I_(b-1)] + I_1
+	singleCluster = network->get(iType, 1);
+	emitClusters(singleCluster, heIClusterLessI);
+	// He_(a)[I_(b+1)] --> (He_a)(I_b) + I_1
+	// Here it is important that heIClusterMoreI is the first cluster
+	// because it is the dissociating one.
+	dissociateCluster(heIClusterMoreI, singleCluster);
 
 	return;
 }
@@ -187,104 +186,6 @@ void HeInterstitialCluster::setTemperature(double temp) {
 	f4 = calculateDissociationConstant(*this, *heCluster, temperature)
 			+ calculateDissociationConstant(*this, *vCluster, temperature)
 			+ calculateDissociationConstant(*this, *iCluster, temperature);
-
-	return;
-}
-
-double HeInterstitialCluster::getDissociationFlux(double temperature) const {
-
-	// Local Declarations
-	double f3 = 0.0;
-
-	// Only dissociate if possible
-	if (heCluster && vCluster && iCluster) {
-		// FIXME! Make sure that this works as expected! Make sure that it
-		// correctly picks out right component in
-		// calculateDissociationConstant!
-
-		// Loop over all the elements of the dissociation
-		// connectivity to find where this mixed species dissociates and
-		// calculate the f3 term.
-		//
-		// TODO - What's the performance difference between getting all of the
-		// reactants and pulling each reactant separately?
-		auto reactants = network->getAll();
-		auto dissociatingSet = getDissociationConnectivitySet();
-		for (auto it = dissociatingSet.begin(); it != dissociatingSet.end();
-				it++) {
-			// Set the current reactant
-			auto currentCluster = (PSICluster *) reactants->at(*it-1);
-			// Get the cluster map of this connection
-			auto dissClusterComposition = currentCluster->getComposition();
-			// We need to find if this is a Helium dissociation
-			PSICluster * secondCluster;
-			if (numHe - dissClusterComposition[heType] == 1 && numI == dissClusterComposition[iType]
-					&& dissClusterComposition[vType] == 0) {
-				secondCluster = heCluster;
-			} else if (numHe == dissClusterComposition[heType]
-					&& numI - dissClusterComposition[iType] == 1 && dissClusterComposition[vType] == 0) {
-				// trap mutation
-				secondCluster = vCluster;
-			} else if (numHe == dissClusterComposition[heType]
-					&& dissClusterComposition[vType] - numI == 1 && dissClusterComposition[iType] == 0) {
-				// or interstitial dissociation
-				secondCluster = iCluster;
-			}
-			// Update the flux calculation
-			if (secondCluster) {
-				// Get the single species cluster that comes out with it
-				f3 += calculateDissociationConstant(*currentCluster,
-						*secondCluster, temperature)
-						* currentCluster->getConcentration();
-			}
-		}
-	}
-
-	return f3 - (f4 * getConcentration());
-}
-
-/**
- * This operation computes the partial derivatives due to dissociation
- * reactions. The partial derivatives due to dissociation for compound
- * clusters are significantly different than those single-species clusters.
- *
- * @param partials The vector into which the partial derivatives should be
- * inserted. This vector should have a length equal to the size of the
- * network.
- * @param temperature The temperature at which the reactions are occurring.
- */
-void HeInterstitialCluster::getDissociationPartialDerivatives(
-		std::vector<double> & partials, double temperature) const {
-
-	// Local Declarations
-	int index = 0;
-
-	// Partial derivative with respect to changes in this cluster
-	double partialDeriv = calculateDissociationConstant(*this, *heCluster,
-			temperature)
-			+ calculateDissociationConstant(*this, *vCluster, temperature)
-			+ calculateDissociationConstant(*this, *iCluster, temperature);
-	// Add it to the list of partials
-	partials[index] += partialDeriv;
-
-	// Compute the partial derivative if the smaller clusters exists
-	if (heIClusterLessHe) {
-		partialDeriv = calculateDissociationConstant(*heIClusterLessHe,
-				*(PSICluster *)heCluster, temperature);
-		index = heIClusterLessHe->getId() - 1;
-		partials[index] += partialDeriv;
-	}
-
-	// Compute the partial derivative if the smaller clusters exists
-	if (heIClusterLessI) {
-		partialDeriv = calculateDissociationConstant(*heIClusterLessI,
-				*(PSICluster *)vCluster, temperature);
-		index = heIClusterLessI->getId() - 1;
-		partials[index] += partialDeriv;
-	}
-
-	// This cluster cannot dissociate into a smaller HeI cluster and a vacancy,
-	// so there is no partial derivative term for that case.
 
 	return;
 }

@@ -64,7 +64,7 @@ void InterstitialCluster::createReactionConnectivity() {
 		auto secondReactant = (PSICluster *) network->get("I", secondSize);
 		// Create a ReactingPair with the two reactants
 		if (firstReactant && secondReactant) {
-			ReactingPair pair(firstReactant,secondReactant);
+			ClusterPair pair(firstReactant,secondReactant);
 			// Add the pair to the list
 			reactingPairs.push_back(pair);
 		}
@@ -140,6 +140,51 @@ void InterstitialCluster::createReactionConnectivity() {
 	if (size == 1 && numHeIClusters > 0) {
 		reactants = network->getAll("HeI");
 		combineClusters(reactants,maxHeIClusterSize,"HeI");
+	}
+
+	return;
+}
+
+void InterstitialCluster::createDissociationConnectivity() {
+	// Call the function from the PSICluster class to take care of the single
+	// species dissociation
+	PSICluster::createDissociationConnectivity();
+
+	// Specific case for the single species cluster
+	if (size == 1) {
+		// I dissociation of HeI cluster is handled here
+		// (He_a)(I_b) --> (He_a)[I_(b-1)] + I_1
+		// Get all the HeI clusters of the network
+		auto allHeIReactants = network->getAll("HeI");
+		for (int i = 0; i < allHeIReactants.size(); i++) {
+			auto cluster = (PSICluster *) allHeIReactants.at(i);
+
+			// (He_a)(I_b) is the dissociating one, (He_a)[I_(b-1)] is the one
+			// that is also emitted during the dissociation
+			auto comp = cluster->getComposition();
+			comp[iType] -= 1;
+			std::vector<int> compositionVec = { comp[heType], comp[vType],
+					comp[iType] };
+			auto smallerReactant = network->getCompound("HeI", compositionVec);
+			dissociateCluster(allHeIReactants.at(i), smallerReactant);
+		}
+
+		// Trap mutation of HeV cluster is handled here
+		// (He_a)(V_b) --> He_(a)[V_(b+1)] + I_1
+		// Get all the HeV clusters of the network
+		auto allHeVReactants = network->getAll("HeV");
+		for (int i = 0; i < allHeVReactants.size(); i++) {
+			auto cluster = (PSICluster *) allHeVReactants.at(i);
+
+			// (He_a)(V_b) is the dissociating one, (He_a)[V_(b+1)] is the one
+			// that is also emitted during the dissociation
+			auto comp = cluster->getComposition();
+			comp[vType] += 1;
+			std::vector<int> compositionVec = { comp[heType], comp[vType],
+					comp[iType] };
+			auto biggerReactant = network->getCompound("HeV", compositionVec);
+			dissociateCluster(allHeVReactants.at(i), biggerReactant);
+		}
 	}
 
 	return;

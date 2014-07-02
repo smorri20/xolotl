@@ -152,11 +152,12 @@ BOOST_AUTO_TEST_CASE(checkTotalFlux) {
 	BOOST_TEST_MESSAGE("HeInterstitialClusterTester Message: \n" << "Total Flux is " << flux << "\n"
 			  << "   -Production Flux: " << cluster->getProductionFlux(1000.0) << "\n"
 			  << "   -Combination Flux: " << cluster->getCombinationFlux(1000.0) << "\n"
-			  << "   -Dissociation Flux: " << cluster->getDissociationFlux(1000.0) << "\n");
+			  << "   -Dissociation Flux: " << cluster->getDissociationFlux(1000.0) << "\n"
+	  	  	  << "   -Emission Flux: " << cluster->getEmissionFlux(1000.0) << "\n");
 
 	// The flux should be nearly zero because the binding energies for all the
 	// data that we have are infinite for I1.
-	BOOST_REQUIRE_CLOSE(-5958214005696.4355, flux,.01);
+	BOOST_REQUIRE_CLOSE(0.0, flux,.01);
 
 	return;
 }

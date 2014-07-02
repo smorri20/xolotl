@@ -49,21 +49,6 @@ private:
 		PSICluster(1)
 	{ numHe = 1; numV = 1; }
 
-protected:
-
-	/**
-	 * This operation computes the partial derivatives due to dissociation
-	 * reactions. The partial derivatives due to dissociation for compound
-	 * clusters are significantly different than those single-species clusters.
-	 *
-	 * @param partials The vector into which the partial derivatives should be
-	 * inserted. This vector should have a length equal to the size of the
-	 * network.
-	 * @param temperature The temperature at which the reactions are occurring.
-	 */
-	virtual void getDissociationPartialDerivatives(std::vector<double> & partials,
-			double temperature) const;
-
 public:
 
 	/**
@@ -103,13 +88,6 @@ public:
 	 * this cluster.
 	 */
 	double getAnnByEm();
-
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * dissociation.
-	 * @return The flux due to dissociation.
-	 */
-	virtual double getDissociationFlux(double temperature) const;
 
 	/**
 	 * This operation returns true to signify that this cluster is a mixture of

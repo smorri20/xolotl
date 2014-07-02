@@ -149,7 +149,8 @@ BOOST_AUTO_TEST_CASE(checkTotalFlux) {
 	BOOST_TEST_MESSAGE("HeVClusterTester Message: \n" << "Total Flux is " << flux << "\n"
 			  << "   -Production Flux: " << cluster->getProductionFlux(1000.0) << "\n"
 			  << "   -Combination Flux: " << cluster->getCombinationFlux(1000.0) << "\n"
-			  << "   -Dissociation Flux: " << cluster->getDissociationFlux(1000.0) << "\n");
+			  << "   -Dissociation Flux: " << cluster->getDissociationFlux(1000.0) << "\n"
+	  	  	  << "   -Emission Flux: " << cluster->getEmissionFlux(1000.0) << "\n");
 	BOOST_REQUIRE_CLOSE(-8964899015.0, flux, 10.0);
 }
 

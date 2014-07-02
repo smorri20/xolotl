@@ -122,7 +122,8 @@ BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 	BOOST_TEST_MESSAGE("HeClusterTester Message: \n" << "Total Flux is " << flux << "\n"
 			  << "   -Production Flux: " << cluster->getProductionFlux(1000.0) << "\n"
 			  << "   -Combination Flux: " << cluster->getCombinationFlux(1000.0) << "\n"
-			  << "   -Dissociation Flux: " << cluster->getDissociationFlux(1000.0) << "\n");
+			  << "   -Dissociation Flux: " << cluster->getDissociationFlux(1000.0) << "\n"
+			  << "   -Emission Flux: " << cluster->getEmissionFlux(1000.0) << "\n");
 	BOOST_REQUIRE_CLOSE(-43623893263., flux, 10);
 }
 
