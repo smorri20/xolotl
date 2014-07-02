@@ -36,111 +36,60 @@ std::shared_ptr<Reactant> InterstitialCluster::clone() {
 }
 
 void InterstitialCluster::createReactionConnectivity() {
+	// Call the function from the PSICluster class to take care of the single
+	// species reaction
+	PSICluster::createReactionConnectivity();
 
-	// Local Declarations - Note the reference to the properties map
-	auto props = network->getProperties();
-	int maxIClusterSize = std::stoi(props["maxIClusterSize"]);
-	int maxHeIClusterSize = std::stoi(props["maxHeIClusterSize"]);
-	int numHeVClusters = std::stoi(props["numHeVClusters"]);
-	int numHeIClusters = std::stoi(props["numHeIClusters"]);
-	int firstSize = 0, secondSize = 0, reactantsSize = 0;
+	// Helium-Interstitial clustering
+	// He_a + I_b --> (He_a)(I_b)
+	// Get all the He clusters from the network
+	auto reactants = network->getAll(heType);
+	// combineClusters handles He combining with I to form HeI
+	combineClusters(reactants, heIType);
 
-	// Connect this cluster to itself since any reaction will affect it
-	setReactionConnectivity(getId());
+	// Single Interstitial absorption by HeI clusters
+	// (He_a)(I_b) + I --> (He_a)[I_(b+1)]
+	// Only if the size of this cluster is 1
+	if (size == 1) {
+		// Get all the HeI clusters from the network
+		reactants = network->getAll(heIType);
+		// combineClusters handles HeI combining with I to form HeI
+		combineClusters(reactants, heIType);
+	}
 
-	/*
-	 * This section fills the array of reacting pairs that combine to produce
-	 * this cluster from I clusters that are smaller than this.size. Each
-	 * cluster i combines with a second cluster of size this.size - i.size.
-	 *
-	 * Total size starts with a value of one so that clusters of size one are
-	 * not considered in this loop.
-	 */
-	for (firstSize = 1; firstSize <= (int) size/2; firstSize++) {
-		secondSize = size - firstSize;
-		// Get the first and second reactants for the reaction
-		// first + second = this.
-		auto firstReactant = (PSICluster *) network->get("I", firstSize);
-		auto secondReactant = (PSICluster *) network->get("I", secondSize);
-		// Create a ReactingPair with the two reactants
-		if (firstReactant && secondReactant) {
-			ClusterPair pair(firstReactant,secondReactant);
+	// Vacancy-Interstitial annihilation
+	// I_a + V_b
+	//        --> I_(a-b), if a > b
+	//        --> V_(b-a), if a < b
+	//        --> 0, if a = b
+	// Get all the V clusters from the network
+	reactants = network->getAll(vType);
+	// fillVWithI handles this reaction
+	fillVWithI(vType, reactants);
+
+	// Add the reactants to the reacting pairs for the cases where this cluster is
+	// produced by the above reaction. This has to be checked for every vacancy.
+	auto reactantsSize = reactants.size();
+	for (int i = 0; i < reactantsSize; i++) {
+		auto firstReactant = (PSICluster *) reactants[i];
+		// Get the interstitial cluster that is bigger than the vacancy
+		// and can form this cluster. I only results when it is bigger than V.
+		auto secondReactant = (PSICluster *) network->get(typeName,firstReactant->getSize() + size);
+		// Add to the reacting pairs if the second reactant exists
+		if (secondReactant) {
+			// Create the pair
+			ClusterPair pair(firstReactant, secondReactant);
 			// Add the pair to the list
 			reactingPairs.push_back(pair);
 		}
 	}
 
-	/* ----- I_a + I_b --> I_(a+b) -----
-	 *	Interstitial absorption
-	 *
-	 * All of these clusters are added to the set of combining reactants
-	 * because they contribute to the flux due to combination reactions.
-	 */
-	auto reactants = network->getAll("I");
-	combineClusters(reactants,maxIClusterSize,"I");
-
-	/* ----- He_a + I_b --> (He_a)*(I_b)
-	 * Interstitials can interact with clusters of He to form HeI clusters.
-	 * They cannot cluster with He clusters that are so large that the
-	 * combination of the two would produce an HeI cluster above the
-	 * maximum size.
-	 *
-	 * All of these clusters are added to the set of combining reactants
-	 * because they contribute to the flux due to combination reactions.
-	 */
-	reactants = network->getAll("He");
-	combineClusters(reactants,maxHeIClusterSize,"HeI");
-
-	/* ----- I_a + V_b -----
-	 * --> I_(a-b), if a > b
-	 * --> V_(b-a), if a < b
-	 * --> 0, if a = b
-	 * Interstitial-Vacancy Annihilation
-	 *
-	 * All of these clusters are added to the set of combining reactants
-	 * because they contribute to the flux due to combination reactions.
-	 */
-	reactants = network->getAll("V");
-	fillVWithI("V",reactants);
-	// Mark the reaction connectivity for the cases where this cluster is
-	// produced by the above reaction. This has to be checked for every
-	// vacancy.
-	reactantsSize = reactants.size();
-	for (int i = 0; i < reactantsSize; i++) {
-		auto firstReactant = (PSICluster *) reactants[i];
-		// Get the interstitial cluster that is bigger than the vacancy
-		// and can form this cluster. I only results when it is bigger than V.
-		auto secondReactant = (PSICluster *) network->get("I",firstReactant->getSize() + size);
-		// Update the connectivity
-		if (secondReactant) {
-			setReactionConnectivity(firstReactant->getId());
-			setReactionConnectivity(secondReactant->getId());
-		}
-	}
-
-	/* ----- (He_a)(V_b) + (I_c) --> (He_a)[V_(b-c)] -----
-	 * Interstitials interact with all mixed-species clusters by
-	 * annihilating vacancies.
-	 *
-	 * All of these clusters are added to the set of combining reactants
-	 * because they contribute to the flux due to combination reactions.
-	 */
-	if (numHeVClusters > 0) {
-		reactants = network->getAll("HeV");
-		replaceInCompound(reactants,"V","I");
-	}
-
-	/* ----- (He_a)*(I_b) + I --> (He_a)*[I_(b + 1)] -----
-	 * Single interstitial absorption by a HeI cluster under the condition
-	 * that (x + y + 1) <= maxSize
-	 *
-	 * All of these clusters are added to the set of combining reactants
-	 * because they contribute to the flux due to combination reactions.
-	 */
-	if (size == 1 && numHeIClusters > 0) {
-		reactants = network->getAll("HeI");
-		combineClusters(reactants,maxHeIClusterSize,"HeI");
-	}
+	// Vacancy reduction by Interstitial absorption in HeV clusters
+	// (He_a)(V_b) + (I_c) --> (He_a)[V_(b-c)]
+	// Get all the HeV clusters from the network
+	reactants = network->getAll(heVType);
+	// replaceInCompound handles this reaction
+	replaceInCompound(reactants, vType, iType);
 
 	return;
 }
@@ -155,34 +104,32 @@ void InterstitialCluster::createDissociationConnectivity() {
 		// I dissociation of HeI cluster is handled here
 		// (He_a)(I_b) --> (He_a)[I_(b-1)] + I_1
 		// Get all the HeI clusters of the network
-		auto allHeIReactants = network->getAll("HeI");
+		auto allHeIReactants = network->getAll(heIType);
 		for (int i = 0; i < allHeIReactants.size(); i++) {
 			auto cluster = (PSICluster *) allHeIReactants.at(i);
 
 			// (He_a)(I_b) is the dissociating one, (He_a)[I_(b-1)] is the one
 			// that is also emitted during the dissociation
 			auto comp = cluster->getComposition();
-			comp[iType] -= 1;
 			std::vector<int> compositionVec = { comp[heType], comp[vType],
-					comp[iType] };
-			auto smallerReactant = network->getCompound("HeI", compositionVec);
+					comp[iType] - 1 };
+			auto smallerReactant = network->getCompound(heIType, compositionVec);
 			dissociateCluster(allHeIReactants.at(i), smallerReactant);
 		}
 
 		// Trap mutation of HeV cluster is handled here
 		// (He_a)(V_b) --> He_(a)[V_(b+1)] + I_1
 		// Get all the HeV clusters of the network
-		auto allHeVReactants = network->getAll("HeV");
+		auto allHeVReactants = network->getAll(heVType);
 		for (int i = 0; i < allHeVReactants.size(); i++) {
 			auto cluster = (PSICluster *) allHeVReactants.at(i);
 
 			// (He_a)(V_b) is the dissociating one, (He_a)[V_(b+1)] is the one
 			// that is also emitted during the dissociation
 			auto comp = cluster->getComposition();
-			comp[vType] += 1;
-			std::vector<int> compositionVec = { comp[heType], comp[vType],
+			std::vector<int> compositionVec = { comp[heType], comp[vType] + 1,
 					comp[iType] };
-			auto biggerReactant = network->getCompound("HeV", compositionVec);
+			auto biggerReactant = network->getCompound(heVType, compositionVec);
 			dissociateCluster(allHeVReactants.at(i), biggerReactant);
 		}
 	}

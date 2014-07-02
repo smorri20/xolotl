@@ -106,6 +106,27 @@ public:
 protected:
 
 	/**
+	 * This operation handles partial replacement reactions of the form
+	 *
+	 * (A_x)(B_y) + C_z --> (A_x)[B_(y-z)]
+	 *
+	 * for each compound cluster in the set.
+	 *
+	 * This operation fills the reaction connectivity array as well as the
+	 * array of combining clusters.
+	 *
+	 * @param clusters The clusters that have part of their B components
+	 * replaced. It is assumed that each element of this set represents a
+	 * cluster of the form C_z.
+	 * @param oldComponentName The name of the component that will be partially
+	 * replaced.
+	 * @param newComponentName The name of the component that will replace the old
+	 * component.
+	 */
+	void replaceInCompound(std::vector<Reactant *> & clusters,
+			std::string oldComponentName, std::string newComponentName);
+
+	/**
 	 * Computes a row of the reaction connectivity matrix corresponding to
 	 * this reactant.
 	 *

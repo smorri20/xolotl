@@ -69,13 +69,6 @@ protected:
 	 */
 	double diffusionCoefficient;
 
-
-	/**
-	 * The shared pointer to this cluster in the network. It is assigned in
-	 * setReactionNetwork().
-	 */
-	std::shared_ptr<PSICluster> thisSharedPtr;
-
 	/**
 	 * The index/id of this cluster in the reaction network - 1. It is used for
 	 * indexing arrays (thus the -1).
@@ -184,6 +177,10 @@ protected:
 	 * Connections are made between this cluster and any clusters it
 	 * affects in combination and production reactions.
 	 *
+	 * The base-class implementation handles the common part of single species clusters.
+	 *
+	 * A_(x-i) + A_i --> A_x
+	 *
 	 * Must be overridden by subclasses.
 	 */
 	virtual void createReactionConnectivity();
@@ -251,11 +248,10 @@ protected:
 	 * array of combining clusters.
 	 *
 	 * @param clusters The clusters that can combine with this cluster.
-	 * @param maxSize The maximum size of the compound produced in the reaction.
 	 * @param productName The name of the product produced in the reaction.
 	 */
 	void combineClusters(std::vector<Reactant *> & clusters,
-			int maxSize, std::string productName);
+			std::string productName);
 
 	/**
 	 * This operation handles partial replacement reactions of the form
@@ -267,6 +263,9 @@ protected:
 	 * This operation fills the reaction connectivity array as well as the
 	 * array of combining clusters.
 	 *
+	 * Works only if "this" is not a mixed species. Needs to be overridden
+	 * for the other ones.
+	 *
 	 * @param clusters The clusters that have part of their B components
 	 * replaced. It is assumed that each element of this set represents a
 	 * cluster of the form (A_x)(B_y).
@@ -275,7 +274,7 @@ protected:
 	 * @param newComponentName The name of the component that will replace the old
 	 * component.
 	 */
-	void replaceInCompound(std::vector<Reactant *> & clusters,
+	virtual void replaceInCompound(std::vector<Reactant *> & clusters,
 			std::string oldComponentName, std::string newComponentName);
 
 	/** This operation handles reactions where interstitials fill vacancies,
@@ -301,7 +300,7 @@ protected:
 	 * operation on the child since it has to search all of the possible
 	 * parents.
 	 *
-	 * @param secondClusterName The name of the first cluster in the reaction,
+	 * @param secondClusterName The name of the second cluster in the reaction,
 	 * either "V" or "I" and always the opposite or alternative of
 	 * this->getName().
 	 * @param clusters The set of clusters of the second type that interact

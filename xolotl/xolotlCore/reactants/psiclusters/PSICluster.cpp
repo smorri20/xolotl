@@ -13,11 +13,10 @@ PSICluster::PSICluster() :
 	// Set the size
 	size = 1;
 	// Zero out the binding energies
-	bindingEnergies.resize(4);
+	bindingEnergies.resize(3);
 	bindingEnergies[0] = 0.0;
 	bindingEnergies[1] = 0.0;
 	bindingEnergies[2] = 0.0;
-	bindingEnergies[3] = 0.0;
 	// Zero out the diffusion factor and migration energy
 	diffusionFactor = 0.0;
 	diffusionCoefficient = 0.0;
@@ -44,11 +43,10 @@ PSICluster::PSICluster(const int clusterSize,
 	// Set the size
 	size = (clusterSize > 0) ? clusterSize : 1;
 	// Zero out the binding energies
-	bindingEnergies.resize(4);
+	bindingEnergies.resize(3);
 	bindingEnergies[0] = 0.0;
 	bindingEnergies[1] = 0.0;
 	bindingEnergies[2] = 0.0;
-	bindingEnergies[3] = 0.0;
 	// Zero out the diffusion factor and migration energy
 	diffusionFactor = 0.0;
 	diffusionCoefficient = 0.0;
@@ -71,12 +69,15 @@ PSICluster::PSICluster(const int clusterSize,
 // The copy constructor with a huge initialization list!
 PSICluster::PSICluster(const PSICluster &other) :
 		Reactant(other), size(other.size), diffusionFactor(
-				other.diffusionFactor), thisSharedPtr(other.thisSharedPtr), thisNetworkIndex(
-				other.thisNetworkIndex), bindingEnergies(other.bindingEnergies), migrationEnergy(
-				other.migrationEnergy), reactionRadius(other.reactionRadius), reactingPairs(
+				other.diffusionFactor), thisNetworkIndex(
+				other.thisNetworkIndex), bindingEnergies(
+				other.bindingEnergies), migrationEnergy(
+				other.migrationEnergy), reactionRadius(
+				other.reactionRadius), reactingPairs(
 				other.reactingPairs), combiningReactants(
 				other.combiningReactants), dissociatingPairs(
-				other.dissociatingPairs), emissionPairs(other.emissionPairs), reactionConnectivitySet(
+				other.dissociatingPairs), emissionPairs(
+				other.emissionPairs), reactionConnectivitySet(
 				other.reactionConnectivitySet), dissociationConnectivitySet(
 				other.dissociationConnectivitySet) {
 
@@ -96,10 +97,6 @@ std::shared_ptr<Reactant> PSICluster::clone() {
 	std::shared_ptr<Reactant> reactant(new PSICluster(*this));
 	return reactant;
 }
-
-//std::shared_ptr<PSICluster> PSICluster::getThisSharedPtrFromNetwork() const {
-//	return std::dynamic_pointer_cast<PSICluster>(network->get(typeName, size));
-//}
 
 PSICluster::~PSICluster() {
 }
@@ -187,9 +184,6 @@ void PSICluster::setReactionConnectivity(int clusterId) {
 
 	// Add the cluster to the set.
 	reactionConnectivitySet.insert(clusterId);
-	// Set the dissociation connectivity to 1 for the given cluster. The array
-	// is zero-indexed.
-	//reactionConnectivity[clusterId-1] = 1;
 }
 
 std::vector<int> PSICluster::getReactionConnectivity() const {
@@ -205,9 +199,6 @@ void PSICluster::setDissociationConnectivity(int clusterId) {
 
 	// Add the cluster to the set.
 	dissociationConnectivitySet.insert(clusterId);
-	// Set the dissociation connectivity to 1 for the given cluster. The array
-	// is zero-indexed.
-//	dissociationConnectivity[clusterId - 1] = 1;
 }
 
 std::vector<int> PSICluster::getDissociationConnectivity() const {
@@ -231,8 +222,6 @@ void PSICluster::setReactionNetwork(
 	// Call the superclass's method to actually set the reference
 	Reactant::setReactionNetwork(reactionNetwork);
 
-	// ----- Handle the connectivty for PSIClusters -----
-
 	// Extract properties from the network
 	auto properties = network->getProperties();
 	int connectivityLength = network->size();
@@ -247,11 +236,10 @@ void PSICluster::setReactionNetwork(
 	dissociatingPairs.clear();
 	emissionPairs.clear();
 
-	// Set the shared pointer to this cluster
-	//thisSharedPtr = getThisSharedPtrFromNetwork();
-
 	// Get the index/id of this cluster in the reaction network.
 	thisNetworkIndex = getId() - 1;
+
+	// ----- Handle the connectivty for PSIClusters -----
 
 	// Generate the reactant and dissociation connectivity arrays.
 	// This only must be done once since the arrays are stored as
@@ -371,8 +359,6 @@ double PSICluster::getProductionFlux(double temperature) const {
 			conc2 = secondReactant->getConcentration();
 			flux += calculateReactionRateConstant(*firstReactant,
 					*secondReactant, temperature) * conc1 * conc2;
-			// Debug output.
-			//printReaction(*firstReactant,*secondReactant,*this);
 		}
 	}
 
@@ -395,17 +381,9 @@ double PSICluster::getCombinationFlux(double temperature) const {
 		// Calculate Second term of production flux
 		flux += calculateReactionRateConstant(*this, *otherCluster, temperature)
 				* conc;
-//		std::cout << "Adding combination flux for " << getName() << "_"
-//				<< getSize() << " + " << otherCluster->getName() << "_"
-//				<< otherCluster->getSize() << " --> " << getName() << "_"
-//				<< size + otherCluster->getSize() << " = "
-//				<< calculateReactionRateConstant(*this, *otherCluster,
-//						temperature) * conc << std::endl;
 	}
 
 	// Return the production flux
-//	std::cout << "PSICluster::getCF ----- cf = " << flux * getConcentration()
-//			<< std::endl;
 	return (flux * getConcentration());
 }
 
@@ -417,16 +395,6 @@ double PSICluster::getTotalFlux(const double temperature) {
 	combFlux = getCombinationFlux(temperature);
 	dissFlux = getDissociationFlux(temperature);
 	emissFlux = getEmissionFlux(temperature);
-
-//	std::cout << "----- Cluster " << name << "_" << size << " fluxes -----"
-//			<< std::endl;
-//	std::cout << "FINAL Production flux = " << getProductionFlux(temperature)
-//			<< std::endl;
-//	std::cout << "FINAL Combination flux = " << getCombinationFlux(temperature)
-//			<< std::endl;
-//	std::cout << "FINAL Dissociation flux = "
-//			<< getDissociationFlux(temperature) << " for " << getName() << "_ "
-//			<< getSize() << std::endl;
 
 	return prodFlux - combFlux + dissFlux - emissFlux;
 }
@@ -489,10 +457,6 @@ double PSICluster::calculateReactionRateConstant(
 	// Get the diffusion coefficients
 	double firstDiffusion = firstReactant.getDiffusionCoefficient();
 	double secondDiffusion = secondReactant.getDiffusionCoefficient();
-
-//	std::cout << "Handling reaction: " << firstReactant.getName() << "_"
-//			<< firstReactant.getSize() << " + " << secondReactant.getName()
-//			<< "_" << secondReactant.getSize() << std::endl;
 
 	// Calculate and return
 	double k_plus = 4.0 * xolotlCore::pi * (r_first + r_second)
@@ -561,21 +525,39 @@ std::vector<int> PSICluster::getConnectivity() const {
 		connectivity[i] = reactionConnVector[i] || dissociationConnVector[i];
 	}
 
-//	// DEBUG
-//	std::cout << std::endl << "Reactant Column: " << this->name << "_"
-//			<< this->size << std::endl;
-//
-//	// DEBUG
-//	for (int i = 0; i < connectivity.size(); i++) {
-//		std::cout << connectivity[i] << " ";
-//	}
-//	std::cout << std::endl;
-
 	return connectivity;
 }
 
 void PSICluster::createReactionConnectivity() {
-	// Nothing to do.
+	// Connect this cluster to itself since any reaction will affect it
+	setReactionConnectivity(getId());
+
+	// Initial declarations
+	int firstSize = 0, secondSize = 0;
+
+	// Single species clustering
+	// A_(x-i) + A_i --> A_x
+	for (firstSize = 1; firstSize <= (int) size / 2; firstSize++) {
+		// Set the size of the second reactant
+		secondSize = size - firstSize;
+		// Get the first and second reactants for the reaction
+		auto firstReactant = (PSICluster *) network->get(typeName, firstSize);
+		auto secondReactant = (PSICluster *) network->get(typeName, secondSize);
+		// Create a ReactingPair with the two reactants
+		if (firstReactant && secondReactant) {
+			ClusterPair pair(firstReactant, secondReactant);
+			// Add the pair to the list
+			reactingPairs.push_back(pair);
+		}
+	}
+
+	// A_x + A_y --> A_(x+y)
+	// as long as A_y and A_(x+y) are present in the network
+	auto reactants = network->getAll(typeName);
+	// combineClusters handles everything for this type of reaction
+	combineClusters(reactants, typeName);
+
+	return;
 }
 
 void PSICluster::createDissociationConnectivity() {
@@ -657,14 +639,13 @@ void PSICluster::getProductionPartialDerivatives(std::vector<double> & partials,
 	int numReactants = 0, index = 0;
 	double rateConstant = 0.0;
 
-	// Load up everything from the reacting pairs array. The partial
-	// derivative for production reactions is k+_(j,m)*C_m where j is the index
-	// of the current cluster for which the derivative is being calculated
-	// and m the loop index of a cluster that produces this one.
-	//
-	// Practically, this just means that we have to compute k+ between each
-	// of reacting pair and multiply it separately by the population of each
-	// cluster in the pair.
+	// Production
+	// A + B --> D, D being this cluster
+	// The flux for D is
+	// F(C_D) = k+_(A,B)*C_A*C_B
+	// Thus, the partial derivatives
+	// dF(C_D)/dC_A = k+_(A,B)*C_B
+	// dF(C_D)/dC_B = k+_(A,B)*C_A
 	numReactants = reactingPairs.size();
 	for (int i = 0; i < numReactants; i++) {
 		auto pair = reactingPairs[i];
@@ -673,15 +654,9 @@ void PSICluster::getProductionPartialDerivatives(std::vector<double> & partials,
 		// Compute the contribution from the first part of the reacting pair
 		index = pair.first->getId() - 1;
 		partials[index] += rateConstant * pair.second->getConcentration();
-//		std::cout << "RP1 - Partial Derivative = " << partialDerivatives[index]
-//				<< " from " << pair.first->getName() << "_"
-//				<< pair.first->getSize() << std::endl;
 		// Compute the contribution from the second part of the reacting pair
 		index = pair.second->getId() - 1;
 		partials[index] += rateConstant * pair.first->getConcentration();
-//		std::cout << "RP2 - Partial Derivative = " << partialDerivatives[index]
-//				<< " from " << pair.second->getName() << "_"
-//				<< pair.second->getSize() << std::endl;
 	}
 
 	return;
@@ -691,52 +666,29 @@ void PSICluster::getCombinationPartialDerivatives(
 		std::vector<double> & partials, double temperature) const {
 
 	// Initial declarations
-	int numReactants = 0, index = 0;
+	int numReactants = 0, otherIndex = 0;
 
-	// Load up everything from the combining reactants.
-	// Combination fluxes are an outgoing flux, so they only
-	// affect this cluster (index = thisIndex). The partial derivative
-	// for the combining flux for any cluster C_j is dF_(C_i)/dC_j =
-	// k+_(i,j)*C_i.
-	//
-	// This means that we compute k+ and then multiply by the concentration
-	// of this cluster.
-	//
-	// This only computes the partial derivatives with respect to the
-	// combining reactants. The final term, df(C_i)/dC_i is computed below.
+	// Combination
+	// A + B --> D, A being this cluster
+	// The flux for A is outgoing
+	// F(C_A) = - k+_(A,B)*C_A*C_B
+	// Thus, the partial derivatives
+	// dF(C_A)/dC_A = - k+_(A,B)*C_B
+	// dF(C_A)/dC_B = - k+_(A,B)*C_A
 	numReactants = combiningReactants.size();
 	for (int i = 0; i < numReactants; i++) {
 		auto cluster = (PSICluster *) combiningReactants[i];
 		// Get the index of cluster
-		index = cluster->getId() - 1;
+		otherIndex = cluster->getId() - 1;
 		// Compute the contribution from the cluster. Remember that the flux
 		// due to combinations is OUTGOING (-=)!
-		partials[index] -= calculateReactionRateConstant(*this, *cluster,
-				temperature) * getConcentration();
-//		std::cout << "Combining Partial Derivative = "
-//				<< partialDerivatives[index] << ", c = " << getConcentration()
-//				<< ", rc = "
-//				<< calculateReactionRateConstant(*this, *cluster, temperature)
-//				<< ", of " << name << "_" << size << ", with "
-//				<< cluster->getName() << "_" << cluster->getSize() << std::endl;
+		auto reactionRateConstant = calculateReactionRateConstant(*this, *cluster,
+				temperature);
+		// Compute the contribution from this cluster
+		partials[thisNetworkIndex] -= reactionRateConstant * cluster->getConcentration();
+		// Compute the contribution from the combining cluster
+		partials[otherIndex] -= reactionRateConstant * getConcentration();
 	}
-
-	// This section computes the partial derivative of the combining flux due
-	// to changes in the concentration of this cluster.
-	//
-	// This is simply a loop over all of the combining clusters to compute
-	// df(C_i)/dC_i = sum(k+_(i,j)*C_j).
-	//
-	// Loop over all of the clusters and compute the sum
-	for (int i = 0; i < numReactants; i++) {
-		auto cluster = (PSICluster *) combiningReactants[i];
-		// Compute the contribution from the cluster. Remember that the flux
-		// due to combinations is OUTGOING (-=)!
-		partials[thisNetworkIndex] -= calculateReactionRateConstant(*this,
-				*cluster, temperature) * cluster->getConcentration();
-	}
-//	std::cout << "Combining Partial Derivative for df(C_i)/dC_i) = "
-//			<< partialDerivatives[index] << std::endl;
 
 	return;
 }
@@ -746,10 +698,12 @@ void PSICluster::getDissociationPartialDerivatives(
 	// Initial declarations
 	int numPairs = 0, index = 0;
 
-	// Load up everything from the dissociating reactants. The partial
-	// derivative for dissociation is just the dissociation constant between
-	// this cluster and the other emitted one that is store in the second field
-	// of the ClusterPair.
+	// Dissociation
+	// A --> B + D, B being this cluster
+	// The flux for B is
+	// F(C_B) = k-_(B,D)*C_A
+	// Thus, the partial derivatives
+	// dF(C_B)/dC_A = k-_(B,D)
 	numPairs = dissociatingPairs.size();
 	for (int i = 0; i < numPairs; i++) {
 		// Get the dissociating cluster
@@ -774,8 +728,6 @@ void PSICluster::getDissociationPartialDerivatives(
 
 		}
 		partials[index] += dissociationConstant;
-//		std::cout << name << "_" << size << " Dissociation Partial Derivative = "
-//				<< partialDerivatives[index] << " with " << index << std::endl;
 	}
 
 	return;
@@ -786,9 +738,12 @@ void PSICluster::getEmissionPartialDerivatives(std::vector<double> & partials,
 	// Initial declarations
 	int numPairs = 0, index = 0;
 
-	// Load up everything from the emission pairs. The partial
-	// derivative for dissociation is just the dissociation constant between
-	// the emission pairs.
+	// Emission
+	// A --> B + D, A being this cluster
+	// The flux for A is
+	// F(C_A) = - k-_(B,D)*C_A
+	// Thus, the partial derivatives
+	// dF(C_A)/dC_A = - k-_(B,D)
 	numPairs = emissionPairs.size();
 	for (int i = 0; i < numPairs; i++) {
 		// Get the pair of clusters
@@ -800,24 +755,11 @@ void PSICluster::getEmissionPartialDerivatives(std::vector<double> & partials,
 		index = getId() - 1;
 		partials[index] -= calculateDissociationConstant(*firstCluster,
 				*secondCluster, temperature);
-//		std::cout << name << "_" << size << " Dissociation Partial Derivative = "
-//				<< partialDerivatives[index] << " with " << index << std::endl;
 	}
 
 	return;
 }
 
-/**
- * This operation returns the list of partial derivatives of this Reactant
- * with respect to all other reactants in the network. The combined lists
- * of partial derivatives from all of the reactants in the network can be
- * used to form, for example, a Jacobian.
- *
- * @param the temperature at which the reactions are occurring
- * @return The partial derivatives for this reactant where index zero
- * corresponds to the first reactant in the list returned by the
- * ReactionNetwork::getAll() operation.
- */
 std::vector<double> PSICluster::getPartialDerivatives(
 		double temperature) const {
 	// Local Declarations
@@ -832,20 +774,6 @@ std::vector<double> PSICluster::getPartialDerivatives(
 	return partials;
 }
 
-/**
- * This operation works as getPartialDerivatives above, but instead of
- * returning a vector that it creates it fills a vector that is passed to
- * it by the caller. This allows the caller to optimize the amount of
- * memory allocations to just one if they are accessing the partial
- * derivatives many times.
- *
- * @param the temperature at which the reactions are occurring
- * @param the vector that should be filled with the partial derivatives
- * for this reactant where index zero corresponds to the first reactant in
- * the list returned by the ReactionNetwork::getAll() operation. The size of
- * the vector should be equal to ReactionNetwork::size().
- *
- */
 void PSICluster::getPartialDerivatives(double temperature,
 		std::vector<double> & partials) const {
 
@@ -859,8 +787,8 @@ void PSICluster::getPartialDerivatives(double temperature,
 }
 
 void PSICluster::combineClusters(std::vector<Reactant *> & reactants,
-		int maxSize, std::string productName) {
-
+		std::string productName) {
+	// Initial declarations
 	std::map<std::string, int> myComposition = getComposition(),
 			secondComposition;
 	int numHe, numV, numI, secondNumHe, secondNumV, secondNumI;
@@ -883,7 +811,7 @@ void PSICluster::combineClusters(std::vector<Reactant *> & reactants,
 		otherId = secondCluster->getId();
 		int productSize = size + secondCluster->getSize();
 		// Get and handle product for compounds
-		if (productName == "HeV" || productName == "HeI") {
+		if (productName == heVType || productName == heIType) {
 			// Modify the composition vector
 			compositionSizes[0] = numHe + secondNumHe;
 			compositionSizes[1] = numV + secondNumV;
@@ -896,19 +824,12 @@ void PSICluster::combineClusters(std::vector<Reactant *> & reactants,
 			productCluster = (PSICluster *) network->get(productName,
 					productSize);
 		}
-		// React if the size of the product is valid and it exists in the network
-		if (productSize <= maxSize && productCluster) {
+		// React if the product exists in the network
+		if (productCluster) {
 			// Setup the connectivity array for the second reactant
 			setReactionConnectivity(otherId);
-			// FIXME! - Debug output
-			//printReaction(*this,*secondCluster,*productCluster);
-//			std::cout << "reactionConnectivity["<< otherIndex << "] = " << reactionConnectivity[otherIndex] << " " << getName() << std::endl;
-			// Setup the connectivity array for the product
 			productId = productCluster->getId();
 			setReactionConnectivity(productId);
-			// FIXME! - Debug output
-//			std::cout << productSize << productName << ": " << "reactionConnectivity["<< productIndex << "] = "
-//			<< reactionConnectivity[productIndex] << std::endl;
 			// Push the product onto the list of clusters that combine with this one
 			combiningReactants.push_back(secondCluster);
 		}
@@ -919,14 +840,11 @@ void PSICluster::combineClusters(std::vector<Reactant *> & reactants,
 
 void PSICluster::replaceInCompound(std::vector<Reactant *> & reactants,
 		std::string oldComponentName, std::string newComponentName) {
-
 	// Local Declarations
-	std::map<std::string, int> myComp = getComposition(), secondReactantComp,
+	std::map<std::string, int> secondReactantComp,
 			productReactantComp;
-	int myComponentNumber = myComp[newComponentName];
 	int numReactants = reactants.size();
 	int secondId = 0, productId = 0;
-	std::vector<int> productCompositionVector(myComp.size());
 
 	// Loop over all of the extra reactants in this reaction and handle the replacement
 	for (int i = 0; i < numReactants; i++) {
@@ -937,15 +855,14 @@ void PSICluster::replaceInCompound(std::vector<Reactant *> & reactants,
 		productReactantComp = secondReactantComp;
 		// Updated the modified components
 		productReactantComp[oldComponentName] =
-				secondReactantComp[oldComponentName] - myComponentNumber;
+				secondReactantComp[oldComponentName] - size;
 		// Create the composition vector -- FIXME! This should be general!
-		productCompositionVector[0] = productReactantComp[heType];
-		productCompositionVector[1] = productReactantComp[vType];
-		productCompositionVector[2] = productReactantComp[iType];
-		// Get the product
+		std::vector<int> productCompositionVector = { productReactantComp[heType],
+				productReactantComp[vType], productReactantComp[iType] };
+		// Get the product of the same type as the second reactant
 		auto productReactant = network->getCompound(secondReactant->getType(),
 				productCompositionVector);
-		// If the product exists, mark the proper reaction arrays and it it to the list
+		// If the product exists, mark the proper reaction arrays and add it to the list
 		if (productReactant) {
 			// Setup the connectivity array for the second reactant
 			secondId = secondReactant->getId();
@@ -1009,12 +926,6 @@ void PSICluster::fillVWithI(std::string secondClusterName,
 			// Only deal with this reaction if the product exists. Otherwise the
 			// whole reaction is forbidden.
 			if (productCluster) {
-//				std::cout << "Trap Mutation: " << name << size << " + "
-//						<< secondCluster->getName() << secondCluster->getSize()
-//						<< " = " << productCluster->getName()
-//						<< productCluster->getSize() << " "
-//						<< productClusterName << productClusterSize
-//						<< std::endl;
 				// Setup the connectivity array to handle the second reactant
 				secondId = secondCluster->getId();
 				setReactionConnectivity(secondId);
@@ -1024,14 +935,6 @@ void PSICluster::fillVWithI(std::string secondClusterName,
 				// Setup the connectivity array to handle the product
 				productId = productCluster->getId();
 				setReactionConnectivity(productId);
-				// Add the current cluster and the second cluster as a reacting
-				// pair for the product. Start by getting the pointer for this
-				// cluster.
-//				thisCluster = getThisSharedPtrFromNetwork();
-				// Create the pair
-				ClusterPair pair(this, (PSICluster *) secondCluster);
-				// Add the pair to the list
-				productCluster->reactingPairs.push_back(pair);
 			}
 		}
 	}
