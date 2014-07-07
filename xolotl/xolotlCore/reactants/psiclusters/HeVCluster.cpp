@@ -103,8 +103,10 @@ void HeVCluster::createReactionConnectivity() {
 	// Connect this cluster to itself since any reaction will affect it
 	setReactionConnectivity(getId());
 
+	// This cluster is always (He_a)(V_b)
+
 	// Helium absorption by HeV clusters producing this cluster
-	// He_a + (He_b)(V_c) --> [He_(a+b)](V_c)
+	// He_(a-i) + (He_i)(V_b) --> (He_a)(V_b)
 	// Get all the He clusters from the network
 	auto reactants = network->getAll(heType);
 	auto reactantsSize = reactants.size();
@@ -118,7 +120,7 @@ void HeVCluster::createReactionConnectivity() {
 				comp[vType], comp[iType] };
 		auto secondReactant = (PSICluster *) network->getCompound(typeName, compositionVec);
 		// Create a ReactingPair with the two reactants if they both exist
-		if (heliumReactant && secondReactant) {
+		if (secondReactant) {
 			ClusterPair pair(heliumReactant, secondReactant);
 			// Add the pair to the list
 			reactingPairs.push_back(pair);
@@ -126,7 +128,7 @@ void HeVCluster::createReactionConnectivity() {
 	}
 
 	// Single Vacancy absorption by HeV clusters producing this cluster
-	// (He_a)(V_b) + V --> (He_a)[V_(b+1)]
+	// (He_a)[V_(b-1)] + V --> (He_a)(V_b)
 	// Get the single Vacancy cluster
 	auto singleVReactant = (PSICluster *) network->get(vType, 1);
 	// Get the second reactant, i.e. HeV cluster with one less V
@@ -154,6 +156,28 @@ void HeVCluster::createReactionConnectivity() {
 		reactingPairs.push_back(pair);
 	}
 
+	// Vacancy reduction by Interstitial absorption in HeV producing this cluster
+	// (He_a)[V_(b+i)] + (I_i) --> (He_a)(V_b)
+	// Get all the I clusters from the network
+	reactants = network->getAll(iType);
+	reactantsSize = reactants.size();
+	for (int i = 0; i < reactantsSize; i++) {
+		auto interstitialReactant = (PSICluster *) reactants[i];
+		auto interstitialReactantSize = interstitialReactant->getSize();
+		// Get the second reactant, i.e. HeV cluster with V number bigger
+		// by the size of the interstitial reactant
+		auto comp = getComposition();
+		std::vector<int> compositionVec = { comp[heType],
+				comp[vType] + interstitialReactantSize, comp[iType] };
+		auto secondReactant = (PSICluster *) network->getCompound(typeName, compositionVec);
+		// Create a ReactingPair with the two reactants if they both exist
+		if (secondReactant) {
+			ClusterPair pair(interstitialReactant, secondReactant);
+			// Add the pair to the list
+			reactingPairs.push_back(pair);
+		}
+	}
+
 	// Vacancy reduction by Interstitial absorption in HeV
 	// (He_a)(V_b) + (I_c) --> (He_a)[V_(b-c)]
 	// Get all the I clusters from the network
@@ -162,7 +186,7 @@ void HeVCluster::createReactionConnectivity() {
 	replaceInCompound(reactants, vType, iType);
 
 	// Helium absorption by HeV clusters
-	// He_a + (He_b)(V_c) --> [He_(a+b)](V_c)
+	// He_c + (He_a)(V_b) --> [He_(a+c)](V_b)
 	// Get all the He clusters from the network
 	reactants = network->getAll(heType);
 	// combineClusters handles He combining with HeV to form HeV
@@ -203,29 +227,31 @@ void HeVCluster::createDissociationConnectivity() {
 	compositionVec = {numHe, numV + 1, 0};
 	auto heVClusterMoreV = network->getCompound(typeName, compositionVec);
 
+	// This cluster is always (He_a)(V_b)
+
 	// He Dissociation
-	// (He_a)(V_b) --> [He_(a-1)](V_b) + He_1
+	// (He_a)(V_b) --> [He_(a-1)](V_b) + He
 	auto singleCluster = network->get(heType, 1);
 	emitClusters(singleCluster, heVClusterLessHe);
-	// [He_(a+1)](V_b) --> (He_a)(V_b) + He_1
+	// [He_(a+1)](V_b) --> (He_a)(V_b) + He
 	// Here it is important that heVClusterMoreHe is the first cluster
 	// because it is the dissociating one.
 	dissociateCluster(heVClusterMoreHe, singleCluster);
 
 	// Vacancy Dissociation
-	// (He_a)(V_b) --> He_(a)[V_(b-1)] + V_1
+	// (He_a)(V_b) --> He_(a)[V_(b-1)] + V
 	singleCluster = network->get(vType, 1);
 	emitClusters(singleCluster, heVClusterLessV);
-	// He_(a)[V_(b+1)] --> (He_a)(V_b) + V_1
+	// He_(a)[V_(b+1)] --> (He_a)(V_b) + V
 	// Here it is important that heVClusterMoreV is the first cluster
 	// because it is the dissociating one.
 	dissociateCluster(heVClusterMoreV, singleCluster);
 
 	// Trap mutation
-	// (He_a)(V_b) --> He_(a)[V_(b+1)] + I_1
+	// (He_a)(V_b) --> He_(a)[V_(b+1)] + I
 	singleCluster = network->get(iType, 1);
 	emitClusters(singleCluster, heVClusterMoreV);
-	// He_(a)[V_(b-1)] --> (He_a)(V_b) + I_1
+	// He_(a)[V_(b-1)] --> (He_a)(V_b) + I
 	// Here it is important that heVClusterLessV is the first cluster
 	// because it is the dissociating one.
 	dissociateCluster(heVClusterLessV, singleCluster);
@@ -237,11 +263,6 @@ void HeVCluster::setTemperature(double temp) {
 
 	// Call the base class version to set all of the basic quantities.
 	PSICluster::setTemperature(temp);
-
-	// Calculate the much easier f4 term... first
-	f4 = calculateDissociationConstant(*this, *heCluster, temperature)
-			+ calculateDissociationConstant(*this, *vCluster, temperature)
-			+ calculateDissociationConstant(*this, *iCluster, temperature);
 
 	return;
 }

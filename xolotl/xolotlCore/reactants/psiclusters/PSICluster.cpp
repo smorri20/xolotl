@@ -293,13 +293,13 @@ double PSICluster::getDissociationFlux(double temperature) const {
 			// which must be the single one
 			if (size == 1) {
 				// "this" is the single size one
-				dissociationConstant = calculateDissociationConstant(*this, *otherEmittedCluster,
-						temperature);
+				dissociationConstant = calculateDissociationConstant(*dissociatingCluster,
+						*this, *otherEmittedCluster, temperature);
 			}
 			else {
 				// otherEmittedCluster is the single size one
-				dissociationConstant = calculateDissociationConstant(*otherEmittedCluster, *this,
-						temperature);
+				dissociationConstant = calculateDissociationConstant(*dissociatingCluster,
+						*otherEmittedCluster, *this, temperature);
 
 			}
 			// Calculate the Dissociation flux
@@ -328,8 +328,8 @@ double PSICluster::getEmissionFlux(double temperature) const {
 			auto firstCluster = emissionPairs[i].first;
 			auto secondCluster = emissionPairs[i].second;
 			// Update the flux
-			flux += calculateDissociationConstant(*firstCluster, *secondCluster,
-					temperature);
+			flux += calculateDissociationConstant(*this, *firstCluster,
+					*secondCluster, temperature);
 		}
 	}
 
@@ -464,8 +464,8 @@ double PSICluster::calculateReactionRateConstant(
 	return k_plus;
 }
 
-double PSICluster::calculateDissociationConstant(
-		const PSICluster & firstCluster, const PSICluster & secondCluster,
+double PSICluster::calculateDissociationConstant(const PSICluster & dissociatingCluster,
+		const PSICluster & singleCluster, const PSICluster & secondCluster,
 		double temperature) const {
 
 	// Local Declarations
@@ -474,7 +474,7 @@ double PSICluster::calculateDissociationConstant(
 	double bindingEnergy = 0.0;
 
 	// Get the binding energy index.
-	bindingEnergyIndex = bindingEnergyIndexMap[firstCluster.typeName];
+	bindingEnergyIndex = bindingEnergyIndexMap[singleCluster.typeName];
 	// The atomic volume is computed by considering the BCC structure of the
 	// tungsten. In a given lattice cell in tungsten there are tungsten atoms
 	// at each corner and a tungsten atom in the center. The tungsten atoms at
@@ -486,11 +486,11 @@ double PSICluster::calculateDissociationConstant(
 
 	// Calculate the Reaction Rate Constant
 	double kPlus = 0.0;
-	kPlus = calculateReactionRateConstant(firstCluster, secondCluster,
+	kPlus = calculateReactionRateConstant(singleCluster, secondCluster,
 			temperature);
 
 	// Calculate and return
-	bindingEnergy = firstCluster.getBindingEnergies()[bindingEnergyIndex];
+	bindingEnergy = dissociatingCluster.getBindingEnergies()[bindingEnergyIndex];
 	double k_minus_exp = exp(
 			-1.0 * bindingEnergy / (xolotlCore::kBoltzmann * temperature));
 	double k_minus = (1.0 / atomicVolume) * kPlus * k_minus_exp;
@@ -532,11 +532,13 @@ void PSICluster::createReactionConnectivity() {
 	// Connect this cluster to itself since any reaction will affect it
 	setReactionConnectivity(getId());
 
+	// This cluster is always X_a
+
 	// Initial declarations
 	int firstSize = 0, secondSize = 0;
 
 	// Single species clustering
-	// A_(x-i) + A_i --> A_x
+	// X_(a-i) + X_i --> X_a
 	for (firstSize = 1; firstSize <= (int) size / 2; firstSize++) {
 		// Set the size of the second reactant
 		secondSize = size - firstSize;
@@ -551,8 +553,7 @@ void PSICluster::createReactionConnectivity() {
 		}
 	}
 
-	// A_x + A_y --> A_(x+y)
-	// as long as A_y and A_(x+y) are present in the network
+	// X_a + X_b --> X_(a+b)
 	auto reactants = network->getAll(typeName);
 	// combineClusters handles everything for this type of reaction
 	combineClusters(reactants, typeName);
@@ -562,16 +563,19 @@ void PSICluster::createReactionConnectivity() {
 
 void PSICluster::createDissociationConnectivity() {
 
-	// ----- X_a --> X_(a-1) + X ------
+	// This cluster is always X_a
+
+	// X_a --> X_(a-1) + X
 	auto smallerReactant = network->get(typeName, size - 1);
 	auto singleCluster = network->get(typeName, 1);
 	emitClusters(singleCluster, smallerReactant);
 
-	// ----- X_(a+1) --> X_a + X ------
+	// X_(a+1) --> X_a + X
 	auto biggerReactant = network->get(typeName, size + 1);
 	dissociateCluster(biggerReactant, singleCluster);
 
 	// Specific case for the single size cluster
+	// for a = 1
 	if (size == 1) {
 		// all the cluster of the same type dissociate into it
 		auto allSameTypeReactants = network->getAll(typeName);
@@ -581,7 +585,7 @@ void PSICluster::createDissociationConnectivity() {
 			if (cluster->getSize() < 3)
 				continue;
 
-			// X_a is the dissociating one, X_(a-1) is the one
+			// X_b is the dissociating one, X_(b-a) is the one
 			// that is also emitted during the dissociation
 			smallerReactant = network->get(typeName, cluster->getSize() - 1);
 			dissociateCluster(allSameTypeReactants.at(i), smallerReactant);
@@ -625,6 +629,7 @@ void PSICluster::emitClusters(Reactant * firstEmittedCluster,
 		setDissociationConnectivity(getId());
 
 		// Add the pair of emitted clusters to the vector of emissionPairs
+		// The first cluster is the size one one
 		ClusterPair pair(castedFirstCluster, castedSecondCluster);
 		emissionPairs.push_back(pair);
 	}
@@ -718,13 +723,13 @@ void PSICluster::getDissociationPartialDerivatives(
 		// which must be the single one
 		if (size == 1) {
 			// "this" is the single size one
-			dissociationConstant = calculateDissociationConstant(*this, *emittedCluster,
-					temperature);
+			dissociationConstant = calculateDissociationConstant(*cluster, *this,
+					*emittedCluster, temperature);
 		}
 		else {
 			// otherEmittedCluster is the single size one
-			dissociationConstant = calculateDissociationConstant(*emittedCluster, *this,
-					temperature);
+			dissociationConstant = calculateDissociationConstant(*cluster, *emittedCluster,
+					*this, temperature);
 
 		}
 		partials[index] += dissociationConstant;
@@ -753,7 +758,7 @@ void PSICluster::getEmissionPartialDerivatives(std::vector<double> & partials,
 		// Modify the partial derivative. Remember that the flux
 		// due to emission is OUTGOING (-=)!
 		index = getId() - 1;
-		partials[index] -= calculateDissociationConstant(*firstCluster,
+		partials[index] -= calculateDissociationConstant(*this, *firstCluster,
 				*secondCluster, temperature);
 	}
 

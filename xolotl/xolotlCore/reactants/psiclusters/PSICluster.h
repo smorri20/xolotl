@@ -30,18 +30,18 @@ protected:
 
 	/**
 	 * This is a protected class that is used to implement the flux calculations
-	 * for two body reactions of the form "first + second -> third".
+	 * for two body reactions or dissociation.
 	 */
 	class ClusterPair {
 	public:
 
 		/**
-		 * The first reacting cluster in the pair
+		 * The first cluster in the pair
 		 */
 		PSICluster * first;
 
 		/**
-		 * The second reacting cluster in the pair
+		 * The second cluster in the pair
 		 */
 		PSICluster * second;
 
@@ -78,7 +78,7 @@ protected:
 	/**
 	 * The binding energies for this cluster with clusters of other species
 	 * types. There is one binding energy for each of the other species ordered
-	 * by He, V, I and mixed species at indices 0, 1, 2 and 3 respectively.
+	 * by He, V, and I at indices 0, 1, and 2 respectively.
 	 */
 	std::vector<double> bindingEnergies;
 
@@ -116,11 +116,10 @@ protected:
 	/**
 	 * A vector of pairs of clusters: the first one is the one dissociation into
 	 * this cluster, the second one is the one that is emitted at the same time
-	 * during the dissociation.
-	 * For single-species clusters, this vector is filled in
-	 * PSICluster.cpp::dissociateCluster(). Compound clusters that override
-	 * dissociateCluster() or don't call it should make sure that they fill
-	 * this list.
+	 * during the dissociation. This vector should be populated early in the
+	 * cluster's lifecycle by subclasses. In the standard Xolotl clusters, this
+	 * vector is filled in dissociateCluster that is called by
+	 * createDissociationConnectivity.
 	 */
 	std::vector<ClusterPair> dissociatingPairs;
 
@@ -128,7 +127,8 @@ protected:
 	 * A vector of ClusterPairs that represent pairs of clusters that are emitted
 	 * from the dissociation of this cluster. This vector should be populated early
 	 * in the cluster's lifecycle by subclasses. In the standard Xolotl clusters,
-	 * this vector is filled in createDissociationConnectivity.
+	 * this vector is filled in emitClusters that is called by
+	 * createDissociationConnectivity.
 	 */
 	std::vector<ClusterPair> emissionPairs;
 
@@ -161,14 +161,17 @@ protected:
 	 * the single-species cluster of the same type based on the current clusters
 	 * atomic volume, reaction rate constant, and binding energies.
 	 *
-	 * @param firstCluster One of the clusters that dissociated from the parent,
+	 * @param dissociatingCluster The cluster that is dissociating, it is its binding
+	 * energy that must be used
+	 * @param singleCluster One of the clusters that dissociated from the parent,
 	 * must be the single size one in order to select the right type of binding energy
 	 * @param secondCluster The second cluster that dissociated from the parent
 	 * @param temperature The current system temperature
 	 * @return
 	 */
-	double calculateDissociationConstant(const PSICluster & firstCluster,
-			const PSICluster & secondCluster, double temperature) const;
+	double calculateDissociationConstant(const PSICluster & dissociatingCluster,
+			const PSICluster & singleCluster, const PSICluster & secondCluster,
+			double temperature) const;
 
 	/**
 	 * Computes a row (or column) of the reaction connectivity matrix
@@ -204,10 +207,9 @@ protected:
 
 	/**
 	 * This operation adds the dissociating cluster to the list of dissociatingPairs.
-	 * It is called by createDissociationConnectivity to process the reaction
-	 * and handle the connectivity.
+	 * It is called by createDissociationConnectivity to process the reaction.
 	 *
-	 * @param dissociatingCluster The cluster the creates this cluster
+	 * @param dissociatingCluster The cluster that creates this cluster
 	 * by dissociation.
 	 * @param emittedCluster The cluster that is also emitted during the
 	 * dissociation.
@@ -220,7 +222,8 @@ protected:
 	 * reaction and handle the connectivity.
 	 *
 	 * @param firstEmittedCluster The first cluster emitted by the
-	 * dissociation.
+	 * dissociation. Should be the single size one to have correct
+	 * computation of the dissociation constant.
 	 * @param secondEmittedCluster The second cluster emitted by the
 	 * dissociation.
 	 */

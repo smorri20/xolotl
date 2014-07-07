@@ -40,15 +40,18 @@ void InterstitialCluster::createReactionConnectivity() {
 	// species reaction
 	PSICluster::createReactionConnectivity();
 
+	// This cluster is always I_a
+
 	// Helium-Interstitial clustering
-	// He_a + I_b --> (He_a)(I_b)
+	// He_b + I_a --> (He_b)(I_a)
 	// Get all the He clusters from the network
 	auto reactants = network->getAll(heType);
 	// combineClusters handles He combining with I to form HeI
 	combineClusters(reactants, heIType);
 
 	// Single Interstitial absorption by HeI clusters
-	// (He_a)(I_b) + I --> (He_a)[I_(b+1)]
+	// (He_b)(I_c) + I_a --> (He_b)[I_(c+a)]
+	// for a = 1
 	// Only if the size of this cluster is 1
 	if (size == 1) {
 		// Get all the HeI clusters from the network
@@ -67,13 +70,14 @@ void InterstitialCluster::createReactionConnectivity() {
 	// fillVWithI handles this reaction
 	fillVWithI(vType, reactants);
 
-	// Add the reactants to the reacting pairs for the cases where this cluster is
-	// produced by the above reaction. This has to be checked for every vacancy.
+	// Vacancy-Interstitial annihilation producing this cluster
+	// I_(a+b) + V_b --> I_a
+	// All the V clusters are already in reactants
 	auto reactantsSize = reactants.size();
 	for (int i = 0; i < reactantsSize; i++) {
 		auto firstReactant = (PSICluster *) reactants[i];
 		// Get the interstitial cluster that is bigger than the vacancy
-		// and can form this cluster. I only results when it is bigger than V.
+		// and can form this cluster.
 		auto secondReactant = (PSICluster *) network->get(typeName,firstReactant->getSize() + size);
 		// Add to the reacting pairs if the second reactant exists
 		if (secondReactant) {
@@ -85,7 +89,7 @@ void InterstitialCluster::createReactionConnectivity() {
 	}
 
 	// Vacancy reduction by Interstitial absorption in HeV clusters
-	// (He_a)(V_b) + (I_c) --> (He_a)[V_(b-c)]
+	// (He_b)(V_c) + (I_a) --> (He_b)[V_(c-a)]
 	// Get all the HeV clusters from the network
 	reactants = network->getAll(heVType);
 	// replaceInCompound handles this reaction
@@ -99,16 +103,19 @@ void InterstitialCluster::createDissociationConnectivity() {
 	// species dissociation
 	PSICluster::createDissociationConnectivity();
 
+	// This cluster is always I_a
+
 	// Specific case for the single species cluster
 	if (size == 1) {
 		// I dissociation of HeI cluster is handled here
-		// (He_a)(I_b) --> (He_a)[I_(b-1)] + I_1
+		// (He_c)(I_b) --> (He_c)[I_(b-a)] + I_a
+		// for a = 1
 		// Get all the HeI clusters of the network
 		auto allHeIReactants = network->getAll(heIType);
 		for (int i = 0; i < allHeIReactants.size(); i++) {
 			auto cluster = (PSICluster *) allHeIReactants.at(i);
 
-			// (He_a)(I_b) is the dissociating one, (He_a)[I_(b-1)] is the one
+			// (He_c)(I_b) is the dissociating one, (He_c)[I_(b-a)] is the one
 			// that is also emitted during the dissociation
 			auto comp = cluster->getComposition();
 			std::vector<int> compositionVec = { comp[heType], comp[vType],
@@ -118,13 +125,14 @@ void InterstitialCluster::createDissociationConnectivity() {
 		}
 
 		// Trap mutation of HeV cluster is handled here
-		// (He_a)(V_b) --> He_(a)[V_(b+1)] + I_1
+		// (He_c)(V_b) --> He_(c)[V_(b+a)] + I_a
+		// for a = 1
 		// Get all the HeV clusters of the network
 		auto allHeVReactants = network->getAll(heVType);
 		for (int i = 0; i < allHeVReactants.size(); i++) {
 			auto cluster = (PSICluster *) allHeVReactants.at(i);
 
-			// (He_a)(V_b) is the dissociating one, (He_a)[V_(b+1)] is the one
+			// (He_c)(V_b) is the dissociating one, (He_c)[V_(b+a)] is the one
 			// that is also emitted during the dissociation
 			auto comp = cluster->getComposition();
 			std::vector<int> compositionVec = { comp[heType], comp[vType] + 1,

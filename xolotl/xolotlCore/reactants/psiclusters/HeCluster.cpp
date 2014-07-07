@@ -43,6 +43,8 @@ void HeCluster::createReactionConnectivity() {
 	// species reactions
 	PSICluster::createReactionConnectivity();
 
+	// This cluster is always He_a
+
 	// Helium-Vacancy clustering
 	// He_a + V_b --> (He_a)(V_b)
 	// Get all the V clusters from the network
@@ -79,16 +81,19 @@ void HeCluster::createDissociationConnectivity() {
 	// species dissociation
 	PSICluster::createDissociationConnectivity();
 
+	// This cluster is always He_a
+
 	// Specific case for the single species cluster
 	if (size == 1) {
 		// He dissociation of HeV cluster is handled here
-		// (He_a)(V_b) --> [He_(a-1)](V_b) + He_1
+		// (He_b)(V_c) --> [He_(b-a)](V_c) + He_a
+		// for a = 1
 		// Get all the HeV clusters of the network
 		auto allHeVReactants = network->getAll(heVType);
 		for (int i = 0; i < allHeVReactants.size(); i++) {
 			auto cluster = (PSICluster *) allHeVReactants.at(i);
 
-			// (He_a)(V_b) is the dissociating one, [He_(a-1)](V_b) is the one
+			// (He_b)(V_c) is the dissociating one, [He_(b-a)](V_c) is the one
 			// that is also emitted during the dissociation
 			auto comp = cluster->getComposition();
 			std::vector<int> compositionVec = { comp[heType] - 1, comp[vType],
@@ -98,13 +103,14 @@ void HeCluster::createDissociationConnectivity() {
 		}
 
 		// He dissociation of HeI cluster is handled here
-		// (He_a)(I_b) --> [He_(a-1)](I_b) + He_1
+		// (He_b)(I_c) --> [He_(b-a)](I_c) + He_a
+		// for a = 1
 		// Get all the HeI clusters of the network
 		auto allHeIReactants = network->getAll(heIType);
 		for (int i = 0; i < allHeIReactants.size(); i++) {
 			auto cluster = (PSICluster *) allHeIReactants.at(i);
 
-			// (He_a)(I_b) is the dissociating one, [He_(a-1)](I_b) is the one
+			// (He_b)(I_c) is the dissociating one, [He_(b-a)](I_c) is the one
 			// that is also emitted during the dissociation
 			auto comp = cluster->getComposition();
 			std::vector<int> compositionVec = { comp[heType] - 1, comp[vType],

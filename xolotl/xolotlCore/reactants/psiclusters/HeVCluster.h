@@ -37,10 +37,6 @@ private:
 	//! The number of atomic vacancies in this cluster.
 	int numV;
 
-	//! The sum of the dissociation constants between this cluster and the
-	//! clusters of size 1.
-	double f4 = 0.0;
-
 	/**
 	 * The default constructor is private because PSIClusters must always be
 	 * initialized with a size.
