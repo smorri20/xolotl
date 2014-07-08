@@ -50,19 +50,19 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 		// Check the connectivity for He, V, and I
 		int connectivityExpected[] = {
 			// He
-			1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 1, 0, 0, 0,
 			
 			// V
 			1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
-			
+
 			// I
 			1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
 			
 			// HeV
-			1, 1, 1, 0, 0, 1, 1, 1, 1,
-			1, 1, 0, 0, 0, 1, 1, 1,
-			1, 0, 0, 0, 0, 1, 1,
-			0, 0, 0, 0, 0, 1,
+			1, 1, 1, 0, 0, 0, 0, 0, 0,
+			1, 1, 0, 0, 0, 0, 0, 0,
+			1, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0,
 			0, 0, 0, 0,
 			0, 0, 0,
@@ -70,10 +70,10 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 			0,
 			
 			// HeI
-			1, 1, 1, 0, 0, 1, 1, 1, 1,
-			1, 1, 0, 0, 0, 1, 1, 1,
-			1, 0, 0, 0, 0, 1, 1,
-			0, 0, 0, 0, 0, 1,
+			1, 1, 1, 0, 0, 0, 0, 0, 0,
+			1, 1, 0, 0, 0, 0, 0, 0,
+			1, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0,
 			0, 0, 0, 0,
 			0, 0, 0,
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 			  << "   -Combination Flux: " << cluster->getCombinationFlux(1000.0) << "\n"
 			  << "   -Dissociation Flux: " << cluster->getDissociationFlux(1000.0) << "\n"
 			  << "   -Emission Flux: " << cluster->getEmissionFlux(1000.0) << "\n");
-	BOOST_REQUIRE_CLOSE(-43623893263., flux, 10);
+	BOOST_REQUIRE_CLOSE(-67953316139.0, flux, 10);
 }
 
 /**

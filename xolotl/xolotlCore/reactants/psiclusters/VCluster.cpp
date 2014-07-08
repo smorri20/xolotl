@@ -83,6 +83,11 @@ void VCluster::createReactionConnectivity() {
 			ClusterPair pair(firstReactant, secondReactant);
 			// Add the pair to the list
 			reactingPairs.push_back(pair);
+			// Setup the connectivity array
+			int Id = firstReactant->getId();
+			setReactionConnectivity(Id);
+			Id = secondReactant->getId();
+			setReactionConnectivity(Id);
 		}
 	}
 

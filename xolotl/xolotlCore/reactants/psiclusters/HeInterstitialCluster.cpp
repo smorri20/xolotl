@@ -88,9 +88,6 @@ void HeInterstitialCluster::replaceInCompound(std::vector<Reactant *> & reactant
 			// Setup the connectivity array for the second reactant
 			secondId = secondReactant->getId();
 			setReactionConnectivity(secondId);
-			// Setup the connectivity array for the product
-			productId = productReactant->getId();
-			setReactionConnectivity(productId);
 			// Push the product onto the list of clusters that combine with this one
 			combiningReactants.push_back(secondReactant);
 		}
@@ -124,6 +121,11 @@ void HeInterstitialCluster::createReactionConnectivity() {
 			ClusterPair pair(heliumReactant, secondReactant);
 			// Add the pair to the list
 			reactingPairs.push_back(pair);
+			// Setup the connectivity array
+			int Id = heliumReactant->getId();
+			setReactionConnectivity(Id);
+			Id = secondReactant->getId();
+			setReactionConnectivity(Id);
 		}
 	}
 
@@ -141,6 +143,11 @@ void HeInterstitialCluster::createReactionConnectivity() {
 		ClusterPair pair(singleIReactant, secondReactant);
 		// Add the pair to the list
 		reactingPairs.push_back(pair);
+		// Setup the connectivity array
+		int Id = singleIReactant->getId();
+		setReactionConnectivity(Id);
+		Id = secondReactant->getId();
+		setReactionConnectivity(Id);
 	}
 
 	// Helium-Interstitial clustering producing this cluster
@@ -154,6 +161,11 @@ void HeInterstitialCluster::createReactionConnectivity() {
 		ClusterPair pair(heliumReactant, interstitialReactant);;
 		// Add the pair to the list
 		reactingPairs.push_back(pair);
+		// Setup the connectivity array
+		int Id = heliumReactant->getId();
+		setReactionConnectivity(Id);
+		Id = interstitialReactant->getId();
+		setReactionConnectivity(Id);
 	}
 
 	// Interstitial reduction by Vacancy absorption in HeI clusters producing this cluster
@@ -175,6 +187,11 @@ void HeInterstitialCluster::createReactionConnectivity() {
 			ClusterPair pair(vacancyReactant, secondReactant);
 			// Add the pair to the list
 			reactingPairs.push_back(pair);
+			// Setup the connectivity array
+			int Id = vacancyReactant->getId();
+			setReactionConnectivity(Id);
+			Id = secondReactant->getId();
+			setReactionConnectivity(Id);
 		}
 	}
 

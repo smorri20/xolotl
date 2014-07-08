@@ -6,7 +6,9 @@
 using namespace xolotlCore;
 
 // Create the static map of binding energies
-std::unordered_map<std::string, int> PSICluster::bindingEnergyIndexMap;
+// It has to be initialized here because it was not working otherwise
+std::unordered_map<std::string, int> PSICluster::bindingEnergyIndexMap
+	= {{heType, 0}, {vType, 1}, {iType, 2}};
 
 PSICluster::PSICluster() :
 		Reactant() {
@@ -30,9 +32,6 @@ PSICluster::PSICluster() :
 	compositionMap[iType] = 0;
 	// Set the default reaction radius to 0. (Doesn't react.)
 	reactionRadius = 0.0;
-	// Setup the binding energy index map
-	bindingEnergyIndexMap = { {heType, 0},
-		{	vType, 1}, {iType, 2}};
 
 }
 
@@ -101,13 +100,6 @@ std::shared_ptr<Reactant> PSICluster::clone() {
 PSICluster::~PSICluster() {
 }
 
-/**
- * This operation prints a forward reaction given the three reactants in
- * A + B -> C.
- * @param firstReactant - The first reactant in the reaction, A.
- * @param secondReactant - The second reactant in the reaction, B.
- * @param thirdReactant - The third reactant in the reaction, C.
- */
 void PSICluster::printReaction(const Reactant & firstReactant,
 		const Reactant & secondReactant,
 		const Reactant & productReactant) const {
@@ -127,13 +119,6 @@ void PSICluster::printReaction(const Reactant & firstReactant,
 	return;
 }
 
-/**
- * This operation prints a backward reaction given the three reactants in
- * A -> B + C.
- * @param firstReactant - The first reactant in the reaction, A.
- * @param secondReactant - The second reactant in the reaction, B.
- * @param thirdReactant - The third reactant in the reaction, C.
- */
 void PSICluster::printDissociation(const Reactant & firstReactant,
 		const Reactant & secondReactant,
 		const Reactant & productReactant) const {
@@ -153,18 +138,6 @@ void PSICluster::printDissociation(const Reactant & firstReactant,
 	return;
 }
 
-/**
- * This operation creates a full vector from the connectivity set. It expands
- * the set to fill an array of length size with ones and zeros based on whether
- * or not the cluster at index i is in the set.
- *
- * It is mostly a convenience function to reduce the amount of code between
- * getReactionConnectivity and getDissociationConnectivity, which do the same
- * thing but with different sets.
- *
- * @param connSet The set that should be expanded into the vector.
- * @return The connectivity vector.
- */
 static std::vector<int> getFullConnectivityVector(std::set<int> connectivitySet,
 		int size) {
 
@@ -181,7 +154,6 @@ static std::vector<int> getFullConnectivityVector(std::set<int> connectivitySet,
 }
 
 void PSICluster::setReactionConnectivity(int clusterId) {
-
 	// Add the cluster to the set.
 	reactionConnectivitySet.insert(clusterId);
 }
@@ -196,7 +168,6 @@ std::set<int> PSICluster::getReactionConnectivitySet() const {
 }
 
 void PSICluster::setDissociationConnectivity(int clusterId) {
-
 	// Add the cluster to the set.
 	dissociationConnectivitySet.insert(clusterId);
 }
@@ -306,8 +277,15 @@ double PSICluster::getDissociationFlux(double temperature) const {
 			flux += fluxMultiplier
 					* dissociationConstant
 					* dissociatingCluster->getConcentration();
-		}
 
+			// Need to be added twice when a cluster is emitted with itself
+			// because it is just once in the dissociation pairs list
+			if (this->getName() == otherEmittedCluster->getName()) {
+				flux += fluxMultiplier
+						* dissociationConstant
+						* dissociatingCluster->getConcentration();
+			}
+		}
 	}
 
 	// Return the flux
@@ -381,6 +359,13 @@ double PSICluster::getCombinationFlux(double temperature) const {
 		// Calculate Second term of production flux
 		flux += calculateReactionRateConstant(*this, *otherCluster, temperature)
 				* conc;
+
+		// Need to be added twice when a cluster combine with itself
+		// because it is just once in the combining reactant list
+		if (this->getName() == otherCluster->getName()) {
+			flux += calculateReactionRateConstant(*this, *otherCluster, temperature)
+					* conc;
+		}
 	}
 
 	// Return the production flux
@@ -550,6 +535,11 @@ void PSICluster::createReactionConnectivity() {
 			ClusterPair pair(firstReactant, secondReactant);
 			// Add the pair to the list
 			reactingPairs.push_back(pair);
+			// Setup the connectivity array
+			int Id = firstReactant->getId();
+			setReactionConnectivity(Id);
+			Id = secondReactant->getId();
+			setReactionConnectivity(Id);
 		}
 	}
 
@@ -609,6 +599,9 @@ void PSICluster::dissociateCluster(Reactant * dissociatingCluster,
 		// Add the pair to the dissociating pair vector
 		// The connectivity is handled in emitCluster
 		dissociatingPairs.push_back(pair);
+
+		// Take care of the connectivity
+		setDissociationConnectivity(dissociatingCluster->getId());
 	}
 
 	return;
@@ -622,9 +615,6 @@ void PSICluster::emitClusters(Reactant * firstEmittedCluster,
 		auto castedFirstCluster = (PSICluster *) firstEmittedCluster;
 		auto castedSecondCluster = (PSICluster *) secondEmittedCluster;
 
-		// Take care of the connectivity
-		setDissociationConnectivity(castedFirstCluster->getId());
-		setDissociationConnectivity(castedSecondCluster->getId());
 		// Connect this cluster to itself since any reaction will affect it
 		setDissociationConnectivity(getId());
 
@@ -689,10 +679,20 @@ void PSICluster::getCombinationPartialDerivatives(
 		// due to combinations is OUTGOING (-=)!
 		auto reactionRateConstant = calculateReactionRateConstant(*this, *cluster,
 				temperature);
+
 		// Compute the contribution from this cluster
 		partials[thisNetworkIndex] -= reactionRateConstant * cluster->getConcentration();
 		// Compute the contribution from the combining cluster
 		partials[otherIndex] -= reactionRateConstant * getConcentration();
+
+		// Need to be added twice when a cluster combine with itself
+		// because it is just once in the combining reactant list
+		if (this->getName() == cluster->getName()) {
+			// Compute the contribution from this cluster
+			partials[thisNetworkIndex] -= reactionRateConstant * cluster->getConcentration();
+			// Compute the contribution from the combining cluster
+			partials[otherIndex] -= reactionRateConstant * getConcentration();
+		}
 	}
 
 	return;
@@ -733,6 +733,12 @@ void PSICluster::getDissociationPartialDerivatives(
 
 		}
 		partials[index] += dissociationConstant;
+
+		// Need to be added twice when a cluster is emitted with itself
+		// because it is just once in the dissociation pairs list
+		if (this->getName() == emittedCluster->getName()) {
+			partials[index] += dissociationConstant;
+		}
 	}
 
 	return;
@@ -760,6 +766,7 @@ void PSICluster::getEmissionPartialDerivatives(std::vector<double> & partials,
 		index = getId() - 1;
 		partials[index] -= calculateDissociationConstant(*this, *firstCluster,
 				*secondCluster, temperature);
+
 	}
 
 	return;
@@ -833,8 +840,6 @@ void PSICluster::combineClusters(std::vector<Reactant *> & reactants,
 		if (productCluster) {
 			// Setup the connectivity array for the second reactant
 			setReactionConnectivity(otherId);
-			productId = productCluster->getId();
-			setReactionConnectivity(productId);
 			// Push the product onto the list of clusters that combine with this one
 			combiningReactants.push_back(secondCluster);
 		}
@@ -872,9 +877,6 @@ void PSICluster::replaceInCompound(std::vector<Reactant *> & reactants,
 			// Setup the connectivity array for the second reactant
 			secondId = secondReactant->getId();
 			setReactionConnectivity(secondId);
-			// Setup the connectivity array for the product
-			productId = productReactant->getId();
-			setReactionConnectivity(productId);
 			// Push the product onto the list of clusters that combine with this one
 			combiningReactants.push_back(secondReactant);
 		}
@@ -937,9 +939,6 @@ void PSICluster::fillVWithI(std::string secondClusterName,
 				// Push the second cluster onto the list of clusters that combine
 				// with this one
 				combiningReactants.push_back(secondCluster);
-				// Setup the connectivity array to handle the product
-				productId = productCluster->getId();
-				setReactionConnectivity(productId);
 			}
 		}
 	}

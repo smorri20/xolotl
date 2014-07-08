@@ -46,16 +46,16 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	int connectivityExpected[] = {
 			// He
 			1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+
 			// V
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+
 			// I
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 
 			// HeV
-			// The VCluster type only reacts with HeV for
-			// single-V clusters.
 			0, 0, 0, 0, 0, 0, 0, 0, 0,
-			1, 1, 1, 1, 1, 1, 1, 1,
+			0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0,
@@ -65,8 +65,8 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 			0,
 
 			// HeI
-			1, 1, 1, 1, 1, 1, 1, 0, 0,
-			1, 1, 1, 1, 1, 1, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0,
 			1, 1, 1, 1, 1, 1, 1,
 			1, 1, 1, 1, 1, 1,
 			1, 1, 1, 1, 1,
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
  			  << "   -Combination Flux: " << cluster->getCombinationFlux(1000.0) << "\n"
  			  << "   -Dissociation Flux: " << cluster->getDissociationFlux(1000.0) << "\n"
  			  << "   -Emission Flux: " << cluster->getEmissionFlux(1000.0) << "\n");
- 	BOOST_REQUIRE_CLOSE(-2684., flux, 10);
+ 	BOOST_REQUIRE_CLOSE(-1485.0, flux, 10);
  }
 
 /**

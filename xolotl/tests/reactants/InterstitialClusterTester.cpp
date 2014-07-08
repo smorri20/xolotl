@@ -60,10 +60,10 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 			
 			// HeV
-			1, 1, 1, 1, 1, 0, 0, 0, 0,
-			1, 1, 1, 1, 0, 0, 0, 0,
-			1, 1, 1, 0, 0, 0, 0,
-			1, 1, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0,
 			1, 1, 1, 1, 1,
 			1, 1, 1, 1,
 			1, 1, 1,
@@ -71,11 +71,10 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 			1,
 			
 			// HeI
-			// Only a single-Interstitial cluster can react with a HeI cluster
 			0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0,
-			1, 1, 1, 1, 1, 1,
+			0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0,
 			0, 0, 0, 0,
 			0, 0, 0,
@@ -126,7 +125,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
  			  << "   -Combination Flux: " << cluster->getCombinationFlux(1000.0) << "\n"
  			  << "   -Dissociation Flux: " << cluster->getDissociationFlux(1000.0) << "\n"
  			  << "   -Emission Flux: " << cluster->getEmissionFlux(1000.0) << "\n");
- 	BOOST_REQUIRE_CLOSE(-67088824870., flux, 10);
+ 	BOOST_REQUIRE_CLOSE(-103424236193.0, flux, 10.0);
  }
 
 /**
