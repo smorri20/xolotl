@@ -117,6 +117,9 @@ BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 	secondCluster->setBindingEnergies(energies);
 	secondCluster->setConcentration(0.5);
  	secondCluster->setTemperature(1000.0);
+
+ 	// Compute the rate constants that are needed for the flux
+ 	cluster->computeRateConstants(1000.0);
 	// The flux can pretty much be anything except "not a number" (nan).
 	double flux = cluster->getTotalFlux(1000.0);
 	BOOST_TEST_MESSAGE("HeClusterTester Message: \n" << "Total Flux is " << flux << "\n"

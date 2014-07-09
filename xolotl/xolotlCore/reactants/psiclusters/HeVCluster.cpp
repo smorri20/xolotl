@@ -88,8 +88,11 @@ void HeVCluster::replaceInCompound(std::vector<Reactant *> & reactants,
 			// Setup the connectivity array for the second reactant
 			secondId = secondReactant->getId();
 			setReactionConnectivity(secondId);
+			// Creates the combining cluster
+			// The reaction constant will be computed later and is set to 0.0 for now
+			CombiningCluster combCluster(secondReactant, 0.0);
 			// Push the product onto the list of clusters that combine with this one
-			combiningReactants.push_back(secondReactant);
+			combiningReactants.push_back(combCluster);
 		}
 	}
 
@@ -118,7 +121,8 @@ void HeVCluster::createReactionConnectivity() {
 		auto secondReactant = (PSICluster *) network->getCompound(typeName, compositionVec);
 		// Create a ReactingPair with the two reactants if they both exist
 		if (secondReactant) {
-			ClusterPair pair(heliumReactant, secondReactant);
+			// The reaction constant will be computed later, it is set to 0.0 for now
+			ClusterPair pair(heliumReactant, secondReactant, 0.0);
 			// Add the pair to the list
 			reactingPairs.push_back(pair);
 			// Setup the connectivity array
@@ -140,7 +144,8 @@ void HeVCluster::createReactionConnectivity() {
 	auto secondReactant = (PSICluster *) network->getCompound(typeName, compositionVec);
 	// Create a ReactingPair with the two reactants if they both exist
 	if (singleVReactant && secondReactant) {
-		ClusterPair pair(singleVReactant, secondReactant);
+		// The reaction constant will be computed later, it is set to 0.0 for now
+		ClusterPair pair(singleVReactant, secondReactant, 0.0);
 		// Add the pair to the list
 		reactingPairs.push_back(pair);
 		// Setup the connectivity array
@@ -158,7 +163,8 @@ void HeVCluster::createReactionConnectivity() {
 	auto vacancyReactant = (PSICluster *) network->get(vType, numV);
 	// Create a ReactingPair with the two reactants if they both exist
 	if (heliumReactant && vacancyReactant) {
-		ClusterPair pair(heliumReactant, vacancyReactant);;
+		// The reaction constant will be computed later, it is set to 0.0 for now
+		ClusterPair pair(heliumReactant, vacancyReactant, 0.0);
 		// Add the pair to the list
 		reactingPairs.push_back(pair);
 		// Setup the connectivity array
@@ -184,7 +190,8 @@ void HeVCluster::createReactionConnectivity() {
 		auto secondReactant = (PSICluster *) network->getCompound(typeName, compositionVec);
 		// Create a ReactingPair with the two reactants if they both exist
 		if (secondReactant) {
-			ClusterPair pair(interstitialReactant, secondReactant);
+			// The reaction constant will be computed later, it is set to 0.0 for now
+			ClusterPair pair(interstitialReactant, secondReactant, 0.0);
 			// Add the pair to the list
 			reactingPairs.push_back(pair);
 			// Setup the connectivity array

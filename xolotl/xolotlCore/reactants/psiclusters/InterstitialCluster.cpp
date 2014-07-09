@@ -82,7 +82,8 @@ void InterstitialCluster::createReactionConnectivity() {
 		// Add to the reacting pairs if the second reactant exists
 		if (secondReactant) {
 			// Create the pair
-			ClusterPair pair(firstReactant, secondReactant);
+			// The reaction constant will be computed later, it is set to 0.0 for now
+			ClusterPair pair(firstReactant, secondReactant, 0.0);
 			// Add the pair to the list
 			reactingPairs.push_back(pair);
 			// Setup the connectivity array

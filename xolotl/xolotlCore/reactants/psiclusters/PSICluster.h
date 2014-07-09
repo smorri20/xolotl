@@ -31,6 +31,10 @@ protected:
 	/**
 	 * This is a protected class that is used to implement the flux calculations
 	 * for two body reactions or dissociation.
+	 *
+	 * The constant k+ or k- is stored along the clusters taking part in the
+	 * reaction or dissociation for faster computation because they only change
+	 * when the temperature change. k is computed when setTemperature() is called.
 	 */
 	class ClusterPair {
 	public:
@@ -45,9 +49,41 @@ protected:
 		 */
 		PSICluster * second;
 
+		/**
+		 * The reaction/dissociation constant associated to this
+		 * reaction or dissociation
+		 */
+		double kConstant;
+
 		//! The constructor
-		ClusterPair(PSICluster * firstPtr, PSICluster * secondPtr)
-		: first(firstPtr), second(secondPtr) {}
+		ClusterPair(PSICluster * firstPtr, PSICluster * secondPtr, double k)
+		: first(firstPtr), second(secondPtr), kConstant(k) {}
+	};
+
+	/**
+	 * This is a protected class that is used to implement the flux calculations
+	 * for combinations.
+	 *
+	 * The constant k+ is stored along the cluster that combines with this cluster
+	 * for faster computation because they only change when the temperature change.
+	 * k+ is computed when setTemperature() is called.
+	 */
+	class CombiningCluster {
+	public:
+
+		/**
+		 * The combining cluster
+		 */
+		PSICluster * combining;
+
+		/**
+		 * The reaction constant associated to this reaction
+		 */
+		double kConstant;
+
+		//! The constructor
+		CombiningCluster(PSICluster * Ptr, double k)
+		: combining(Ptr), kConstant(k) {}
 	};
 
 	/**
@@ -111,7 +147,7 @@ protected:
 	 * lifecycle by subclasses. In the standard Xolotl clusters, this vector is
 	 * filled in createReactionConnectivity.
 	 */
-	std::vector<Reactant *> combiningReactants;
+	std::vector<CombiningCluster> combiningReactants;
 
 	/**
 	 * A vector of pairs of clusters: the first one is the one dissociation into
@@ -151,7 +187,7 @@ protected:
 	 * @param The first cluster interacting
 	 * @param The second cluster interacting
 	 * @param temperature
-	 * @return
+	 * @return The rate
 	 */
 	double calculateReactionRateConstant(const PSICluster & firstcluster,
 			const PSICluster & secondcluster, double temperature) const;
@@ -658,6 +694,15 @@ public:
 	virtual void getPartialDerivatives(double temperature, std::vector<double> & partials) const;
 
 	/**
+	 * Calculate all the rate constants for the reactions and dissociations in which this
+	 * cluster is taking part. Store these values in the kConstant field of ClusterPair
+	 * or CombiningCluster. Need to be called only when the temperature changes.
+	 *
+	 * @param temperature The current system temperature
+	 */
+	void computeRateConstants(double temperature);
+
+	/**
 	 * This operation overrides Reactant's setTemperature operation to
 	 * correctly recompute the diffusion coefficient and other
 	 * temperature-dependent quantities when the temperature is set.
@@ -670,6 +715,14 @@ public:
 	 * cluster and false if it is a single species cluster.
 	 */
 	virtual bool isMixed() const { return false; };
+
+	std::vector<ClusterPair> getReactingPairs() { return reactingPairs; };
+
+	std::vector<CombiningCluster> getCombiningReactants() { return combiningReactants; };
+
+	std::vector<ClusterPair> getDissociatingPairs() { return dissociatingPairs; };
+
+	std::vector<ClusterPair> getEmissionPairs() { return emissionPairs; };
 
 };
 
