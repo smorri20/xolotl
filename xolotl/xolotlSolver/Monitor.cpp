@@ -892,8 +892,10 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 
 	// Get the physical length of the grid
 	PetscBool flg;
-	PetscOptionsGetInt(NULL, "-da_grid_x", &xGridLength, &flg);
-	if (!flg) xGridLength = 8.0;
+	PetscInt length;
+	PetscOptionsGetInt(NULL, "-da_grid_x", &length, &flg);
+	if (flg) xGridLength = length;
+	else xGridLength = 8.0;
 
 	// Flags to launch the monitors or not
 	PetscBool flag2DPlot, flag1DPlot, flagSeries, flagPerf, flagRetention,
@@ -1209,8 +1211,8 @@ void computeRetention(TS ts, Vec C) {
 		}
 
 		// Print the result
-		std::cout << "Helium retention = "
-				<< 100.0 * heConcentration / heliumFluence << " %" << std::endl;
+		std::cout << "Helium concentration = "
+				<< heConcentration << " %" << std::endl;
 	}
 
 	else {
