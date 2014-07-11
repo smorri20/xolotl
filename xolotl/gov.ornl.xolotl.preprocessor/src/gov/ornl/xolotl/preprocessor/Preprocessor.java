@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
+import uk.co.flamingpenguin.jewel.cli.*;
+
 import ncsa.hdf.hdf5lib.H5;
 import ncsa.hdf.hdf5lib.HDF5Constants;
 
@@ -123,7 +125,9 @@ public class Preprocessor {
 	 */
 	private String generatePetscArgs(String petscArgs) {
 
-		// Create a map of default Petsc options
+		// Create a map of the default Petsc options and their corresponding
+		// arguments, if any, where the key is the option and the value is
+		// the argument
 		Map<String, String> petscOptions = new HashMap<String, String>();
 		petscOptions.put("-da_grid_x", "10");
 		petscOptions.put("-ts_final_time", "1000");
@@ -145,43 +149,24 @@ public class Preprocessor {
 			petscList.add(str);
 		}
 
-		// Create a map containing the Petsc options and their corresponding
-		// arguments, if any, where the key is the option and the value is 
-		// the argument
-		Map<String, String> petscMap = new HashMap<String, String>();
+		// Check if the last string in the petscList is a stand-alone option
+		if ((petscList.get((petscList.size() - 1))).contains("-")) 
+			petscOptions.put(petscList.get((petscList.size() - 1)), "");
+
+		// Loop through the Petsc list of strings to pair Petsc options with
+		// their corresponding arguments and identify the stand-alone options
 		for (int i = 1; i < petscList.size(); i++) {
-			// Check if the last string in the petscList is an option
-			if ((i == ((petscList.size()) - 1))
-					&& ((petscList.get(i)).contains("-")))
-				petscMap.put(petscList.get(i), "");
-			else {
-				// Check if there is an option followed by a corresponding
-				// argument
-				if (((petscList.get(i - 1)).contains("-"))
-						&& (!(petscList.get(i)).contains("-"))) {
-					petscMap.put(petscList.get(i - 1), petscList.get(i));
-				}
-				// Check if there is an option immediately followed by another
-				// option
-				else if ((petscList.get(i - 1).contains("-"))
-						&& (petscList.get(i).contains("-"))) {
-					petscMap.put(petscList.get(i - 1), "");
-				}
-				// Check if there is an option between an argument and an option
-				else if ((!(petscList.get(i - 2)).contains("-"))
-						&& ((petscList.get(i - 1)).contains("-"))
-						&& ((petscList.get(i)).contains("-"))) {
-					petscMap.put(petscList.get(i - 1), "");
-				} else {
-					petscMap.put(petscList.get(i), "");
-				}
+			// Check if there is an option followed by a corresponding argument
+			if (((petscList.get(i - 1)).contains("-"))
+					&& (!(petscList.get(i)).contains("-"))) {
+				// Replace the default argument value with the specified value
+				petscOptions.put(petscList.get(i - 1), petscList.get(i));
+				i++;
 			}
-		}
-		petscList.clear();
-		System.out.println();
-		// Replace the default Petsc options with those from the command line
-		for (String key : petscMap.keySet()) {
-			petscOptions.put(key, petscMap.get(key));
+			// Identify stand-alone options
+			else {
+				petscOptions.put(petscList.get(i - 1), "");
+			}
 		}
 
 		// Get the list of petscArgs and create a single string for them
@@ -213,7 +198,7 @@ public class Preprocessor {
 		xolotlParams.setProperty("vizHandler", args.getVizHandler());
 		xolotlParams.setProperty("petscArgs",
 				generatePetscArgs(args.getPetscArgs()));
-
+		
 		// The following parameter options are optional and will only
 		// be set if they are specified via the command line
 		if (args.isMaterial())
@@ -223,7 +208,7 @@ public class Preprocessor {
 		if (args.isHeFlux())
 			xolotlParams.setProperty("heFlux", args.getHeFlux());
 		if (args.isHeFluence())
-			xolotlParams.setProperty("heFluence", args.getHeFluence());		
+			xolotlParams.setProperty("heFluence", args.getHeFluence());
 		if (args.isCheckpoint())
 			xolotlParams.setProperty("checkpoint", args.getCheckpoint());
 
@@ -393,6 +378,8 @@ public class Preprocessor {
 			// Write the parameters to the output file and save
 			// the file to the project root folder
 			parameters.store(paramsFile, null);
+			// Flush the parameters to the intended stream
+			paramsFile.flush();
 			// Close the parameter file
 			paramsFile.close();
 
@@ -423,7 +410,7 @@ public class Preprocessor {
 			inParamsFile.close();
 
 		} catch (IOException io) {
-			System.out.println("Error loading file.");
+			System.err.println("Error loading parameter file.");
 			io.printStackTrace();
 		}
 		return inProperties;
@@ -507,22 +494,22 @@ public class Preprocessor {
 					HDF5Constants.H5P_DEFAULT);
 
 			// Create, write, and close the physicalDim attribute
-			int dimSId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
-			int dimAId = H5.H5Acreate(headerGroupId, "physicalDim",
-					HDF5Constants.H5T_STD_I32LE, dimSId,
+			int dimDataSpaceId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
+			int dimAttributeId = H5.H5Acreate(headerGroupId, "physicalDim",
+					HDF5Constants.H5T_STD_I32LE, dimDataSpaceId,
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
 			status = H5
-					.H5Awrite(dimAId, HDF5Constants.H5T_STD_I32LE, dimension);
-			status = H5.H5Aclose(dimAId);
+					.H5Awrite(dimAttributeId, HDF5Constants.H5T_STD_I32LE, dimension);
+			status = H5.H5Aclose(dimAttributeId);
 
 			// Create, write, and close the refinement attribute
-			int refineSId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
-			int refineAId = H5.H5Acreate(headerGroupId, "refinement",
-					HDF5Constants.H5T_STD_I32LE, refineSId,
+			int refineDataSpaceId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
+			int refineAttributeId = H5.H5Acreate(headerGroupId, "refinement",
+					HDF5Constants.H5T_STD_I32LE, refineDataSpaceId,
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
-			status = H5.H5Awrite(refineAId, HDF5Constants.H5T_STD_I32LE,
+			status = H5.H5Awrite(refineAttributeId, HDF5Constants.H5T_STD_I32LE,
 					refinement);
-			status = H5.H5Aclose(refineAId);
+			status = H5.H5Aclose(refineAttributeId);
 
 			// Close everything
 			status = H5.H5Gclose(headerGroupId);
@@ -588,11 +575,11 @@ public class Preprocessor {
 			long[] dims = new long[2];
 			dims[0] = networkSize;
 			dims[1] = 8;
-			int networkSId = H5.H5Screate_simple(2, dims, null);
+			int networkDataSpaceId = H5.H5Screate_simple(2, dims, null);
 
 			// Create the dataset for the network
 			int datasetId = H5.H5Dcreate(networkGroupId, "network",
-					HDF5Constants.H5T_IEEE_F64LE, networkSId,
+					HDF5Constants.H5T_IEEE_F64LE, networkDataSpaceId,
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT,
 					HDF5Constants.H5P_DEFAULT);
 
@@ -602,18 +589,18 @@ public class Preprocessor {
 					HDF5Constants.H5P_DEFAULT, networkArray);
 
 			// Create the attribute for the network size
-			int networkSizeSId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
-			int networkSizeAId = H5.H5Acreate(datasetId, "networkSize",
-					HDF5Constants.H5T_STD_I32LE, networkSizeSId,
+			int networkSizeDataSpaceId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
+			int networkSizeAttributeId = H5.H5Acreate(datasetId, "networkSize",
+					HDF5Constants.H5T_STD_I32LE, networkSizeDataSpaceId,
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
 
 			// Write it
 			int[] tempNetworkSize = { networkSize };
-			status = H5.H5Awrite(networkSizeAId, HDF5Constants.H5T_STD_I32LE,
+			status = H5.H5Awrite(networkSizeAttributeId, HDF5Constants.H5T_STD_I32LE,
 					tempNetworkSize);
 
 			// Close everything
-			status = H5.H5Aclose(networkSizeAId);
+			status = H5.H5Aclose(networkSizeAttributeId);
 			status = H5.H5Dclose(datasetId);
 			status = H5.H5Gclose(networkGroupId);
 			status = H5.H5Fclose(fileId);
