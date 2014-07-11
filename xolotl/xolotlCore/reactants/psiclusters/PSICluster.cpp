@@ -261,7 +261,7 @@ double PSICluster::getDissociationFlux(double temperature) const {
 
 			// Need to be added twice when a cluster is emitted with itself
 			// because it is just once in the dissociation pairs list
-			if (this->getName() == otherEmittedCluster->getName()) {
+			if (this->getId() == otherEmittedCluster->getId()) {
 				flux += fluxMultiplier
 						* dissociatingPairs[j].kConstant
 						* dissociatingCluster->getConcentration();
@@ -338,7 +338,7 @@ double PSICluster::getCombinationFlux(double temperature) const {
 
 		// Need to be added twice when a cluster combine with itself
 		// because it is just once in the combining reactant list
-		if (this->getName() == otherCluster->getName()) {
+		if (this->getId() == otherCluster->getId()) {
 			flux += combiningReactants[j].kConstant * conc;
 		}
 	}
@@ -736,7 +736,7 @@ void PSICluster::getCombinationPartialDerivatives(
 
 		// Need to be added twice when a cluster combine with itself
 		// because it is just once in the combining reactant list
-		if (this->getName() == cluster->getName()) {
+		if (this->getId() == cluster->getId()) {
 			// Compute the contribution from this cluster
 			partials[thisNetworkIndex] -= combiningReactants[i].kConstant * cluster->getConcentration();
 			// Compute the contribution from the combining cluster
@@ -768,7 +768,7 @@ void PSICluster::getDissociationPartialDerivatives(
 
 		// Need to be added twice when a cluster is emitted with itself
 		// because it is just once in the dissociation pairs list
-		if (this->getName() == emittedCluster->getName()) {
+		if (this->getId() == emittedCluster->getId()) {
 			partials[index] += dissociatingPairs[i].kConstant;
 		}
 	}
