@@ -117,7 +117,7 @@ void VCluster::createDissociationConnectivity() {
 		// Get all the HeV clusters of the network
 		auto allHeVReactants = network->getAll(heVType);
 		for (int i = 0; i < allHeVReactants.size(); i++) {
-			auto cluster = (PSICluster *) allHeVReactants.at(i);
+			auto cluster = (PSICluster *) allHeVReactants[i];
 
 			// (He_c)(V_b) is the dissociating one, (He_c)[V_(b-a)] is the one
 			// that is also emitted during the dissociation
@@ -125,7 +125,7 @@ void VCluster::createDissociationConnectivity() {
 			std::vector<int> compositionVec = { comp[heType], comp[vType] - 1,
 					comp[iType] };
 			auto smallerReactant = network->getCompound(heVType, compositionVec);
-			dissociateCluster(allHeVReactants.at(i), smallerReactant);
+			dissociateCluster(cluster, smallerReactant);
 		}
 	}
 

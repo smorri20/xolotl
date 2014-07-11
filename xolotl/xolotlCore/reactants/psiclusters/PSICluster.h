@@ -716,14 +716,6 @@ public:
 	 */
 	virtual bool isMixed() const { return false; };
 
-	std::vector<ClusterPair> getReactingPairs() { return reactingPairs; };
-
-	std::vector<CombiningCluster> getCombiningReactants() { return combiningReactants; };
-
-	std::vector<ClusterPair> getDissociatingPairs() { return dissociatingPairs; };
-
-	std::vector<ClusterPair> getEmissionPairs() { return emissionPairs; };
-
 };
 
 } /* end namespace xolotlCore */

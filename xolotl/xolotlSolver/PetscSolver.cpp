@@ -232,12 +232,12 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 			concOffset[k] = 0.0;
 		}
 
-		// Uncomment this for debugging
-		if (i > 0) {
-			for (int k = 0; k < size; k++) {
-				concOffset[k] = 0.001;
-			}
-		}
+//		// Uncomment this for debugging
+//		if (i > 0) {
+//			for (int k = 0; k < size; k++) {
+//				concOffset[k] = 0.001;
+//			}
+//		}
 
 		if (tempTimeStep >= 0) {
 			// Read the concentrations from the HDF5 file

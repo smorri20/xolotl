@@ -623,14 +623,14 @@ void PSICluster::createDissociationConnectivity() {
 		auto allSameTypeReactants = network->getAll(typeName);
 		for (int i = 0; i < allSameTypeReactants.size(); i++) {
 			// the one with size two was already added
-			auto cluster = (PSICluster *) allSameTypeReactants.at(i);
+			auto cluster = (PSICluster *) allSameTypeReactants[i];
 			if (cluster->getSize() < 3)
 				continue;
 
 			// X_b is the dissociating one, X_(b-a) is the one
 			// that is also emitted during the dissociation
 			smallerReactant = network->get(typeName, cluster->getSize() - 1);
-			dissociateCluster(allSameTypeReactants.at(i), smallerReactant);
+			dissociateCluster(cluster, smallerReactant);
 		}
 	}
 
