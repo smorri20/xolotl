@@ -7,7 +7,7 @@
 #include <Constants.h>
 
 using namespace xolotlCore;
-using std::shared_ptr;
+
 
 void PSIClusterReactionNetwork::setDefaultPropsAndNames() {
 
@@ -128,7 +128,16 @@ void PSIClusterReactionNetwork::setTemperature(double temp) {
 	// Update the temperature for all of the clusters
 	int networkSize = size();
 	for (int i = 0; i < networkSize; i++) {
+		// This part will set the temperature in each reactant
+		// and recompute the diffusion coefficient
 		allReactants->at(i)->setTemperature(temp);
+	}
+	for (int i = 0; i < networkSize; i++) {
+		// Now that the diffusion coefficients of all the reactants
+		// are updated, the reaction and dissociation rates can be
+		// recomputed
+		auto cluster = (PSICluster *) allReactants->at(i);
+		cluster->computeRateConstants(temp);
 	}
 
 	return;
@@ -393,6 +402,9 @@ void PSIClusterReactionNetwork::setProperty(std::string key,
 /**
  * This operation returns the size or number of reactants in the network.
  * @return The number of reactants in the network
- */int PSIClusterReactionNetwork::size() {
+ */
+int PSIClusterReactionNetwork::size() {
 	return networkSize;
 }
+
+

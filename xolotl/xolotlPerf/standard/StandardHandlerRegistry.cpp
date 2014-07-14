@@ -3,7 +3,6 @@
 #include "gptl.h"
 #include <sstream>
 
-
 namespace xolotlPerf
 {
 
@@ -48,12 +47,15 @@ StandardHandlerRegistry::StandardHandlerRegistry( std::vector<HardwareQuantities
     // Initialize the GPTL library.
     //GPTLsetoption(GPTLverbose, 1);   // useful for debugging
     GPTLsetoption(GPTLpercent, 1);   // lists the percentage of wallclock time each region took compared to the first region timed
+    GPTLsetoption(GPTLpersec, 0);
     GPTLinitialize();
 }
 
 
 StandardHandlerRegistry::~StandardHandlerRegistry( void )
 {
+    // std::cerr << "Destroying a StandardHandlerRegistry" << std::endl;
+
     // We have been using GPTL for data collection, and 
     // since we assume that we are the only GPTL user in the process
     // (see the comment in the ctor), we can gracefully clean up GPTL.
