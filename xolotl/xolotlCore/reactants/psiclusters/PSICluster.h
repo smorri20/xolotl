@@ -9,6 +9,10 @@
 #include <unordered_map>
 #include <sstream>
 
+namespace xolotlPerf {
+    class ITimer;
+};
+
 namespace xolotlCore {
 
 /**
@@ -206,6 +210,29 @@ protected:
 	 * Counter for the number of times getDissociationFlux is called.
 	 */
 	std::shared_ptr<xolotlPerf::IEventCounter> getDissociationFluxCounter;
+
+	/**
+	 * Timers for getFlux functions
+	 */
+	std::shared_ptr<xolotlPerf::ITimer> getTotalFluxTimer;
+	std::shared_ptr<xolotlPerf::ITimer> getDissociationFluxTimer;
+	std::shared_ptr<xolotlPerf::ITimer> getProductionFluxTimer;
+	std::shared_ptr<xolotlPerf::ITimer> getEmissionFluxTimer;
+	std::shared_ptr<xolotlPerf::ITimer> getCombinationFluxTimer;
+
+	/**
+	 * Timers for the getPartialDerivatives functions
+	 */
+	std::shared_ptr<xolotlPerf::ITimer> getPartials;
+	std::shared_ptr<xolotlPerf::ITimer> getCombinationPartials;
+	std::shared_ptr<xolotlPerf::ITimer> getProductionPartials;
+	std::shared_ptr<xolotlPerf::ITimer> getDissociationPartials;
+
+	/**
+	 * Timers for getCombinationPartialDerivatives
+	 */
+	std::shared_ptr<xolotlPerf::ITimer> computeContribFromThis;
+	std::shared_ptr<xolotlPerf::ITimer> computeContribFromCombining;
 
 	/**
 	 * Calculate the reaction constant dependent on the

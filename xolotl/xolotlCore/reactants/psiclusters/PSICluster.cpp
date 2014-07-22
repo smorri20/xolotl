@@ -1,5 +1,5 @@
 #include "PSICluster.h"
-#include "HandlerRegistryFactory.h"
+#include <HandlerRegistryFactory.h>
 #include <Constants.h>
 #include <iostream>
 
@@ -61,6 +61,19 @@ PSICluster::PSICluster(const int clusterSize,
 	// Set up an event counter to count the number of times getDissociationFlux is called
 	getDissociationFluxCounter = handlerRegistry->getEventCounter(
 			"PSICluster_getDissociationFlux_Counter");
+
+	getTotalFluxTimer = handlerRegistry->getTimer("getTotalFlux");
+	getCombinationFluxTimer = handlerRegistry->getTimer("getCombinationFlux");
+	getProductionFluxTimer = handlerRegistry->getTimer("getProductionFlux");
+	getDissociationFluxTimer = handlerRegistry->getTimer("getDissociationFlux");
+	getEmissionFluxTimer = handlerRegistry->getTimer("getEmissionFlux");
+
+	getPartials = handlerRegistry->getTimer("getPartialDerivatives");
+	getCombinationPartials = handlerRegistry->getTimer("getCombinationPartials");
+	getProductionPartials = handlerRegistry->getTimer("getProductionPartials");
+	getDissociationPartials = handlerRegistry->getTimer("getDissociationPartials");
+	computeContribFromThis = handlerRegistry->getTimer("computeContribFromThis");
+	computeContribFromCombining = handlerRegistry->getTimer("computeContribFromCombining");
 }
 
 // The copy constructor with a huge initialization list!
@@ -238,7 +251,9 @@ void PSICluster::setReactionNetwork(
 
 double PSICluster::getDissociationFlux(double temperature) const {
 	// increment the getDissociationFlux counter
-	getDissociationFluxCounter->increment();
+	//getDissociationFluxCounter->increment();
+
+	getDissociationFluxTimer->start();
 
 	// Initial declarations
 	int nPairs = 0;
@@ -269,11 +284,16 @@ double PSICluster::getDissociationFlux(double temperature) const {
 		}
 	}
 
+	getDissociationFluxTimer->stop();
+
 	// Return the flux
 	return flux;
 }
 
 double PSICluster::getEmissionFlux(double temperature) const {
+
+	getEmissionFluxTimer->start();
+
 	// Initial declarations
 	int nPairs = 0;
 	double flux = 0.0, fluxMultiplier = 1.0;
@@ -292,10 +312,19 @@ double PSICluster::getEmissionFlux(double temperature) const {
 	}
 
 	// Return the flux
-	return (flux * getConcentration());
+	//return (flux * getConcentration());
+
+	double rtnFlux = flux * getConcentration();
+
+	getEmissionFluxTimer->stop();
+
+	return rtnFlux;
 }
 
 double PSICluster::getProductionFlux(double temperature) const {
+
+	getProductionFluxTimer->start();
+
 	// Local declarations
 	double flux = 0.0;
 	double conc1 = 0.0, conc2 = 0.0;
@@ -317,11 +346,15 @@ double PSICluster::getProductionFlux(double temperature) const {
 		}
 	}
 
+	getProductionFluxTimer->stop();
+
 	// Return the production flux
 	return flux;
 }
 
 double PSICluster::getCombinationFlux(double temperature) const {
+
+	getCombinationFluxTimer->start();
 
 	// Local declarations
 	double flux = 0.0, conc = 0.0;
@@ -344,10 +377,18 @@ double PSICluster::getCombinationFlux(double temperature) const {
 	}
 
 	// Return the production flux
-	return (flux * getConcentration());
+	//return (flux * getConcentration());
+
+	double rtnFlux = flux * getConcentration();
+
+	getCombinationFluxTimer->stop();
+
+	return rtnFlux;
 }
 
 double PSICluster::getTotalFlux(const double temperature) {
+
+	getTotalFluxTimer->start();
 
 	// Get the fluxes
 	double prodFlux, combFlux, dissFlux, emissFlux;
@@ -363,7 +404,12 @@ double PSICluster::getTotalFlux(const double temperature) {
 		emissFlux = 0.0;
 	}
 
-	return prodFlux - combFlux + dissFlux - emissFlux;
+	double returnFlux = prodFlux - combFlux + dissFlux - emissFlux;
+
+	getTotalFluxTimer->stop();
+
+	//return prodFlux - combFlux + dissFlux - emissFlux;
+	return returnFlux;
 }
 
 double PSICluster::getDiffusionFactor() const {
@@ -721,6 +767,8 @@ void PSICluster::emitClusters(Reactant * firstEmittedCluster,
 void PSICluster::getProductionPartialDerivatives(std::vector<double> & partials,
 		double temperature) const {
 
+	getProductionPartials->start();
+
 	// Initial declarations
 	int numReactants = 0, index = 0;
 	double rateConstant = 0.0;
@@ -744,11 +792,15 @@ void PSICluster::getProductionPartialDerivatives(std::vector<double> & partials,
 				* effReactingPairs[i]->first->getConcentration();
 	}
 
+	getProductionPartials->stop();
+
 	return;
 }
 
 void PSICluster::getCombinationPartialDerivatives(
 		std::vector<double> & partials, double temperature) const {
+
+	getCombinationPartials->start();
 
 	// Initial declarations
 	int numReactants = 0, otherIndex = 0;
@@ -767,9 +819,13 @@ void PSICluster::getCombinationPartialDerivatives(
 		otherIndex = cluster->getId() - 1;
 		// Remember that the flux due to combinations is OUTGOING (-=)!
 		// Compute the contribution from this cluster
+		computeContribFromThis->start();
 		partials[thisNetworkIndex] -= effCombiningReactants[i]->kConstant * cluster->getConcentration();
+		computeContribFromThis->stop();
 		// Compute the contribution from the combining cluster
+		computeContribFromCombining->start();
 		partials[otherIndex] -= effCombiningReactants[i]->kConstant * getConcentration();
+		computeContribFromCombining->stop();
 
 		// Need to be added twice when a cluster combine with itself
 		// because it is just once in the combining reactant list
@@ -781,11 +837,16 @@ void PSICluster::getCombinationPartialDerivatives(
 		}
 	}
 
+	getCombinationPartials->stop();
+
 	return;
 }
 
 void PSICluster::getDissociationPartialDerivatives(
 		std::vector<double> & partials, double temperature) const {
+
+	getDissociationPartials->start();
+
 	// Initial declarations
 	int numPairs = 0, index = 0;
 
@@ -809,6 +870,8 @@ void PSICluster::getDissociationPartialDerivatives(
 			partials[index] += effDissociatingPairs[i]->kConstant;
 		}
 	}
+
+	getDissociationPartials->stop();
 
 	return;
 }
@@ -857,11 +920,15 @@ std::vector<double> PSICluster::getPartialDerivatives(
 void PSICluster::getPartialDerivatives(double temperature,
 		std::vector<double> & partials) const {
 
+	getPartials->start();
+
 	// Get the partial derivatives for each reaction type
 	getProductionPartialDerivatives(partials, temperature);
 	getCombinationPartialDerivatives(partials, temperature);
 	getDissociationPartialDerivatives(partials, temperature);
 	getEmissionPartialDerivatives(partials, temperature);
+
+	getPartials->stop();
 
 	return;
 }
