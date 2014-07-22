@@ -201,12 +201,6 @@ protected:
 	std::vector<ClusterPair *> effEmissionPairs;
 
 	/**
-	 * A pointer to the cluster of the same type as this one that has
-	 * size equal to 1. The reference is set in setReactionNetwork().
-	 */
-	PSICluster * sameTypeSizeOneCluster;
-
-	/**
 	 * Counter for the number of times getDissociationFlux is called.
 	 */
 	std::shared_ptr<xolotlPerf::IEventCounter> getDissociationFluxCounter;
@@ -227,6 +221,7 @@ protected:
 	std::shared_ptr<xolotlPerf::ITimer> getCombinationPartials;
 	std::shared_ptr<xolotlPerf::ITimer> getProductionPartials;
 	std::shared_ptr<xolotlPerf::ITimer> getDissociationPartials;
+	std::shared_ptr<xolotlPerf::ITimer> getEmissionPartials;
 
 	/**
 	 * Timers for getCombinationPartialDerivatives
@@ -305,7 +300,7 @@ protected:
 	 * @param emittedCluster The cluster that is also emitted during the
 	 * dissociation.
 	 */
-	void dissociateCluster(Reactant * dissociatingCluster, Reactant * emittedCluster);
+	void dissociateCluster(PSICluster * dissociatingCluster, PSICluster * emittedCluster);
 
 	/**
 	 * This operation creates the two emitted clusters from the dissociation of
@@ -319,8 +314,8 @@ protected:
 	 * dissociation.
 	 */
 	void emitClusters(
-			Reactant * firstEmittedCluster,
-			Reactant * secondEmittedCluster);
+			PSICluster * firstEmittedCluster,
+			PSICluster * secondEmittedCluster);
 
 	/**
 	 * This operation "combines" clusters in the sense that it handles all of
@@ -454,9 +449,9 @@ protected:
 	 * @param secondReactant - The second reactant in the reaction, B.
 	 * @param thirdReactant - The third reactant in the reaction, C.
 	 */
-	void printReaction(const Reactant & firstReactant,
-			const Reactant & secondReactant,
-			const Reactant & productReactant) const;
+	void printReaction(const PSICluster & firstReactant,
+			const PSICluster & secondReactant,
+			const PSICluster & productReactant) const;
 
 	/**
 	 * This operation prints a backward reaction given the three reactants in
@@ -465,9 +460,9 @@ protected:
 	 * @param secondReactant - The second reactant in the reaction, B.
 	 * @param thirdReactant - The third reactant in the reaction, C.
 	 */
-	void printDissociation(const Reactant & firstReactant,
-			const Reactant & secondReactant,
-			const Reactant & productReactant) const;
+	void printDissociation(const PSICluster & firstReactant,
+			const PSICluster & secondReactant,
+			const PSICluster & productReactant) const;
 
 	/**
 	 * This operation signifies that the cluster with cluster Id should be

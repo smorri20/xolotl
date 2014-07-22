@@ -16,21 +16,6 @@ class HeVCluster: public PSICluster {
 
 private:
 
-	//! The helium cluster of size 1
-	PSICluster * heCluster;
-
-	//! The vacancy cluster of size 1
-	PSICluster * vCluster;
-
-	//! The interstitial cluster of size 1
-	PSICluster * iCluster;
-
-	//! The HeV cluster with one less helium
-	PSICluster * heVClusterLessHe;
-
-	//! The HeV cluster with one less vacancy
-	PSICluster * heVClusterLessV;
-
 	//! The number of helium atoms in this cluster.
 	int numHe;
 
