@@ -206,16 +206,17 @@ static PetscErrorCode heliumRetention(TS ts, PetscInt timestep, PetscReal time,
 
 	PetscFunctionBeginUser;
 
-	// Variable to represent the real, or current, time
-	PetscReal realTime;
-	ierr = TSGetTime(ts, &realTime);
-
 	// Get the flux handler that will be used to compute fluxes.
 	auto fluxHandler = PetscSolver::getFluxHandler();
 
 	// Get the da from ts
 	DM da;
 	ierr = TSGetDM(ts, &da);
+	checkPetscError(ierr);
+
+	// Get the current time step
+	PetscReal currentTimeStep;
+	ierr = TSGetTimeStep(ts, &currentTimeStep);
 	checkPetscError(ierr);
 
 	// Get the corners of the grid
@@ -256,10 +257,10 @@ static PetscErrorCode heliumRetention(TS ts, PetscInt timestep, PetscReal time,
 
 		// Calculate the incident flux
 		auto incidentFlux = fluxHandler->getIncidentFlux(compVec, gridPosition,
-				realTime);
+				time);
 
 		// And add it to the fluence
-		heliumFluence += 10000.0 * std::max(0.0, incidentFlux) * time;
+		heliumFluence += 10000.0 * std::max(0.0, incidentFlux) * currentTimeStep;
 	}
 
 	PetscFunctionReturn(0);
