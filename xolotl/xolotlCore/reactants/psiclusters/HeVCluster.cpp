@@ -101,7 +101,7 @@ void HeVCluster::replaceInCompound(std::vector<Reactant *> & reactants,
 
 void HeVCluster::createReactionConnectivity() {
 	// Connect this cluster to itself since any reaction will affect it
-	setReactionConnectivity(getId());
+	setReactionConnectivity(id);
 
 	// This cluster is always (He_a)(V_b)
 

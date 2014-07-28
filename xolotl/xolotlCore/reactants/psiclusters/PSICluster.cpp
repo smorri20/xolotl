@@ -268,7 +268,7 @@ double PSICluster::getDissociationFlux(double temperature) const {
 
 			// Need to be added twice when a cluster is emitted with itself
 			// because it is just once in the dissociation pairs list
-			if (this->id == otherEmittedCluster->id) {
+			if (id == otherEmittedCluster->id) {
 				flux += fluxMultiplier
 						* effDissociatingPairs[j]->kConstant
 						* dissociatingCluster->concentration;
@@ -303,7 +303,7 @@ double PSICluster::getEmissionFlux(double temperature) const {
 		}
 	}
 
-	double rtnFlux = flux * getConcentration();
+	double rtnFlux = flux * concentration;
 
 	getEmissionFluxTimer->stop();
 
@@ -360,12 +360,12 @@ double PSICluster::getCombinationFlux(double temperature) const {
 
 		// Need to be added twice when a cluster combine with itself
 		// because it is just once in the combining reactant list
-		if (this->id == otherCluster->id) {
+		if (id == otherCluster->id) {
 			flux += effCombiningReactants[j]->kConstant * conc;
 		}
 	}
 
-	double rtnFlux = flux * getConcentration();
+	double rtnFlux = flux * concentration;
 
 	getCombinationFluxTimer->stop();
 
@@ -381,7 +381,7 @@ double PSICluster::getTotalFlux(const double temperature) {
 	prodFlux = getProductionFlux(temperature);
 	dissFlux = getDissociationFlux(temperature);
 
-	if (getConcentration() != 0.0) {
+	if (concentration != 0.0) {
 		combFlux = getCombinationFlux(temperature);
 		emissFlux = getEmissionFlux(temperature);
 	}
@@ -394,7 +394,6 @@ double PSICluster::getTotalFlux(const double temperature) {
 
 	getTotalFluxTimer->stop();
 
-	//return prodFlux - combFlux + dissFlux - emissFlux;
 	return returnFlux;
 }
 
@@ -657,10 +656,8 @@ void PSICluster::createReactionConnectivity() {
 			// Add the pair to the list
 			reactingPairs.push_back(pair);
 			// Setup the connectivity array
-			int Id = firstReactant->id;
-			setReactionConnectivity(Id);
-			Id = secondReactant->id;
-			setReactionConnectivity(Id);
+			setReactionConnectivity(firstReactant->id);
+			setReactionConnectivity(secondReactant->id);
 		}
 	}
 
@@ -693,12 +690,12 @@ void PSICluster::createDissociationConnectivity() {
 		for (int i = 0; i < allSameTypeReactants.size(); i++) {
 			// the one with size two was already added
 			auto cluster = (PSICluster *) allSameTypeReactants[i];
-			if (cluster->getSize() < 3)
+			if (cluster->size < 3)
 				continue;
 
 			// X_b is the dissociating one, X_(b-a) is the one
 			// that is also emitted during the dissociation
-			smallerReactant = (PSICluster *) network->get(typeName, cluster->getSize() - 1);
+			smallerReactant = (PSICluster *) network->get(typeName, cluster->size - 1);
 			dissociateCluster(cluster, smallerReactant);
 		}
 	}
@@ -815,7 +812,7 @@ void PSICluster::getCombinationPartialDerivatives(
 
 		// Need to be added twice when a cluster combine with itself
 		// because it is just once in the combining reactant list
-		if (this->id == cluster->id) {
+		if (id == cluster->id) {
 			// Compute the contribution from this cluster
 			partials[thisNetworkIndex] -= effCombiningReactants[i]->kConstant * cluster->concentration;
 			// Compute the contribution from the combining cluster
@@ -847,12 +844,12 @@ void PSICluster::getDissociationPartialDerivatives(
 		// Get the dissociating cluster
 		auto cluster = effDissociatingPairs[i]->first;
 		auto emittedCluster = effDissociatingPairs[i]->second;
-		index = cluster->getId() - 1;
+		index = cluster->id - 1;
 		partials[index] += effDissociatingPairs[i]->kConstant;
 
 		// Need to be added twice when a cluster is emitted with itself
 		// because it is just once in the dissociation pairs list
-		if (this->id == emittedCluster->id) {
+		if (id == emittedCluster->id) {
 			partials[index] += effDissociatingPairs[i]->kConstant;
 		}
 	}
@@ -946,8 +943,7 @@ void PSICluster::combineClusters(std::vector<Reactant *> & reactants,
 		secondNumHe = secondComposition[heType];
 		secondNumV = secondComposition[vType];
 		secondNumI = secondComposition[iType];
-		otherId = secondCluster->id;
-		int productSize = size + secondCluster->getSize();
+		int productSize = size + secondCluster->size;
 		// Get and handle product for compounds
 		if (productName == heVType || productName == heIType) {
 			// Modify the composition vector
@@ -965,7 +961,7 @@ void PSICluster::combineClusters(std::vector<Reactant *> & reactants,
 		// React if the product exists in the network
 		if (productCluster) {
 			// Setup the connectivity array for the second reactant
-			setReactionConnectivity(otherId);
+			setReactionConnectivity(secondCluster->id);
 			// Creates the combining cluster
 			// The reaction constant will be computed later and is set to 0.0 for now
 			CombiningCluster combCluster(secondCluster, 0.0);
@@ -1004,8 +1000,7 @@ void PSICluster::replaceInCompound(std::vector<Reactant *> & reactants,
 		// If the product exists, mark the proper reaction arrays and add it to the list
 		if (productReactant) {
 			// Setup the connectivity array for the second reactant
-			secondId = secondReactant->id;
-			setReactionConnectivity(secondId);
+			setReactionConnectivity(secondReactant->id);
 			// Creates the combining cluster
 			// The reaction constant will be computed later and is set to 0.0 for now
 			CombiningCluster combCluster(secondReactant, 0.0);
@@ -1026,7 +1021,7 @@ void PSICluster::fillVWithI(std::string secondClusterName,
 	int secondId = 0, productId = 0, reactantVecSize = 0;
 
 	// Get the number of V or I in this cluster (the "first")
-	firstClusterSize = getSize();
+	firstClusterSize = size;
 	// Look at all of the second clusters, either V or I, and determine
 	// if a connection exists.
 	reactantVecSize = reactants.size();
@@ -1066,8 +1061,7 @@ void PSICluster::fillVWithI(std::string secondClusterName,
 			// whole reaction is forbidden.
 			if (productCluster) {
 				// Setup the connectivity array to handle the second reactant
-				secondId = secondCluster->id;
-				setReactionConnectivity(secondId);
+				setReactionConnectivity(secondCluster->id);
 				// Creates the combining cluster
 				// The reaction constant will be computed later and is set to 0.0 for now
 				CombiningCluster combCluster(secondCluster, 0.0);

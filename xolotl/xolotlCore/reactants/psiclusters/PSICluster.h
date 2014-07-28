@@ -27,6 +27,11 @@ namespace xolotlCore {
  * The getComposition() operation is implemented by subclasses and will always
  * return a map with the keys He, V, I, HeV or HeI. The operation getTypeName()
  * will always return one of the same values.
+ *
+ * As a rule, it is possible to access directly some of the private members of
+ * this class (id, concentration, reactionRadius, diffusionCoefficient, size,
+ * typeName) instead of using the "get" functions for performance reasons. In
+ * order to change these values the "set" functions must still be used.
  */
 class PSICluster: public Reactant {
 

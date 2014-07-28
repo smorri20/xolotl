@@ -101,7 +101,7 @@ void HeInterstitialCluster::replaceInCompound(std::vector<Reactant *> & reactant
 
 void HeInterstitialCluster::createReactionConnectivity() {
 	// Connect this cluster to itself since any reaction will affect it
-	setReactionConnectivity(getId());
+	setReactionConnectivity(id);
 
 	// This cluster is always (He_a)(I_b)
 
