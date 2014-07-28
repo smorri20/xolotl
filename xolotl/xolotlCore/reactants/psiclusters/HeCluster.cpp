@@ -121,5 +121,18 @@ void HeCluster::createDissociationConnectivity() {
 		}
 	}
 
+	// Specific case for the unstable cluster He_9
+	if (size == 9) {
+		// Trap mutation
+		// He_a --> (He_a)(V) + I
+		// for a = 9
+		// Get (He_a)(V)
+		std::vector<int> compositionVec = { size, 1, 0 };
+		auto biggerReactant = (PSICluster *) network->getCompound(heVType, compositionVec);
+		// Get I
+		auto singleReactant = (PSICluster *) network->get(iType, 1);
+		emitClusters(singleReactant, biggerReactant);
+	}
+
 	return;
 }
