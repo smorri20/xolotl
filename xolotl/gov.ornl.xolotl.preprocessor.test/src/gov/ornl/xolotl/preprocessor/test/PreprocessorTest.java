@@ -12,6 +12,7 @@ import gov.ornl.xolotl.preprocessor.Arguments;
 import gov.ornl.xolotl.preprocessor.Cluster;
 
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
 import uk.co.flamingpenguin.jewel.cli.CliFactory;
@@ -20,64 +21,6 @@ import uk.co.flamingpenguin.jewel.cli.CliFactory;
  * This class is responsible for testing the Preprocessor class
  */
 public class PreprocessorTest {
-
-	/**
-	 * This operation checks the generateParameters function.
-	 */
-	@Test
-	public void testGenerateParameters() {
-
-		// Local Declarations
-		Arguments parsedArgs = null;
-
-		try {
-			parsedArgs = CliFactory.parseArguments(Arguments.class,
-					new String[] {});
-
-			if (parsedArgs != null) {
-				Preprocessor preprocessor = new Preprocessor(parsedArgs);
-
-				// Generate the parameters
-				Properties defaults = preprocessor.generateParameters();
-
-				// Check that the default material is W
-				assertEquals("W", defaults.getProperty("material"));
-
-				// Check that the default startTemp is 1000
-				assertEquals("1000", defaults.getProperty("startTemp"));
-
-				// Check that the default tempFile is tempFile
-				assertEquals("tempFile", defaults.getProperty("tempFile"));
-
-				// Check that the default heFlux is 2.5e27
-				assertEquals("2.5e27", defaults.getProperty("heFlux"));
-
-				// Check that the default perfHandler is dummy
-				assertEquals("dummy", defaults.getProperty("perfHandler"));
-
-				// Check that the default vizHandler is dummy
-				assertEquals("dummy", defaults.getProperty("vizHandler"));
-
-				// Check that the default checkpoint is true
-				assertEquals("false", defaults.getProperty("checkpoint"));
-
-				// Check that the default networkFile is networkInit.h5
-				assertEquals("networkInit.h5",
-						defaults.getProperty("networkFile"));
-
-				// Check the default petscArgs
-				assertEquals(
-						"-da_grid_x 10 -ts_final_time 1000 "
-								+ "-ts_max_steps 3 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
-								+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant "
-								+ "-fieldsplit_1_pc_type sor -snes_monitor -ksp_monitor -ts_monitor",
-						defaults.getProperty("petscArgs"));
-			}
-		} catch (ArgumentValidationException e1) {
-			e1.printStackTrace();
-		}
-		return;
-	}
 
 	/**
 	 * This operation checks that the default parameters will be used along with
@@ -137,7 +80,7 @@ public class PreprocessorTest {
 
 		try {
 			parsedArgs = CliFactory.parseArguments(Arguments.class,
-					new String[] { "--perfHandler", "std",
+					new String[] { "--perfHandler", "dummy",
 							"--petscArgs=" + "-da_grid_x 8 -ts_final_time 2" });
 
 			if (parsedArgs != null) {
@@ -188,13 +131,10 @@ public class PreprocessorTest {
 
 			// Check if there is a material argument
 			assertEquals(true, parsedArgs.isMaterial());
-
+			
 			// Check that the material is Fe
 			assertEquals("Fe", parsedArgs.getMaterial());
-
-			// Check if there is a startTemp argument
-			assertEquals(true, parsedArgs.isStartTemp());
-
+			
 			// Check that the startTemp is 900
 			assertEquals("900", parsedArgs.getStartTemp());
 
@@ -223,6 +163,38 @@ public class PreprocessorTest {
 				new File("optionalOpsTest").delete();
 
 			}
+		} catch (ArgumentValidationException e1) {
+			e1.printStackTrace();
+		}
+
+		return;
+	}
+	
+	/**
+	 * This operation checks if the optional options are specified via the
+	 * command line, that they will be included in the parameter file.
+	 */
+	@Test(expected=IllegalArgumentException.class)
+	public void testBadMaxClusterSizeOptions() {
+
+		// Local Declarations
+		Arguments parsedArgs = null;
+
+		try {
+			parsedArgs = CliFactory.parseArguments(Arguments.class,
+					new String[] { "--maxHeSize", "10", "--maxISize", "7" });
+			
+			// Check that the max Helium cluster size is 10
+			assertEquals(10, parsedArgs.getMaxHeSize());
+			
+			// Check that the max interstitial cluster size is 7
+			assertEquals(7, parsedArgs.getMaxISize());
+
+			if (parsedArgs != null) {
+				Preprocessor preprocessor = new Preprocessor(parsedArgs);
+				fail("Should have thrown an IllegalArgumentException because the maximum He and I cluster sizes are out of range.");
+			}
+
 		} catch (ArgumentValidationException e1) {
 			e1.printStackTrace();
 		}

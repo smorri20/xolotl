@@ -40,9 +40,9 @@ ReactionNetwork::ReactionNetwork(const ReactionNetwork &other) {
 
 ReactionNetwork::~ReactionNetwork(void)
 {
-    std::cout << "ReactionNetwork: updated " 
-        << concUpdateCounter->getValue() << " times"
-        << std::endl;
+//    std::cout << "ReactionNetwork: updated "
+//        << concUpdateCounter->getValue() << " times"
+//        << std::endl;
 }
 
 
@@ -109,5 +109,3 @@ void ReactionNetwork::askReactantsToReleaseNetwork(void) {
         currReactant->releaseReactionNetwork();
     }
 }
-
-

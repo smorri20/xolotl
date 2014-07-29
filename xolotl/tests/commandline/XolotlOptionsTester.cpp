@@ -105,6 +105,7 @@ BOOST_AUTO_TEST_CASE(badParamFileName)
     // attempt to parse the command line
     fargc -= 1;
     fargv += 1;
+
     xopts.readParams( fargc, fargv );
 
     // If the parameter file does not exist, xolotl should not run
@@ -143,7 +144,6 @@ BOOST_AUTO_TEST_CASE(badParamFile)
 BOOST_AUTO_TEST_CASE(goodParamFile)
 {
     xolotlCore::XolotlOptions xopts;
-
 	string sourceDir(XolotlSourceDirectory);
 	string pathToFile("/tests/reactants/testfiles/param_good.txt");
 	string filename = sourceDir + pathToFile;
@@ -169,14 +169,17 @@ BOOST_AUTO_TEST_CASE(goodParamFile)
     // Check the network filename
     BOOST_REQUIRE_EQUAL( xopts.getNetworkFilename(), "tungsten.txt" );
 
+    // Check the temperature
+    BOOST_REQUIRE_EQUAL( xopts.useConstTemperatureHandlers(), true );
+
     // Check the performance handler
-    BOOST_REQUIRE_EQUAL( xopts.usePerfStandardHandlers(), false );
+    BOOST_REQUIRE_EQUAL( xopts.usePerfStandardHandlers(), true );
 
     // Check the performance handler
     BOOST_REQUIRE_EQUAL( xopts.useVizStandardHandlers(), true );
 
     // Check the PETSc options
-    BOOST_REQUIRE_EQUAL( xopts.getPetscArgc(), 12 );
+    BOOST_REQUIRE_EQUAL( xopts.getPetscArgc(), 20 );
 }
 
 BOOST_AUTO_TEST_CASE(wrongPerfHandler)
@@ -202,6 +205,33 @@ BOOST_AUTO_TEST_CASE(wrongPerfHandler)
     xopts.readParams( fargc, fargv );
 
     // Xolotl should not be able to run with a wrong performance handler parameter
+    BOOST_REQUIRE_EQUAL( xopts.shouldRun(), false );
+    BOOST_REQUIRE_EQUAL( xopts.getExitCode(), EXIT_FAILURE );
+}
+
+BOOST_AUTO_TEST_CASE(bothTempArgs)
+{
+    xolotlCore::XolotlOptions xopts;
+
+	string sourceDir(XolotlSourceDirectory);
+	string pathToFile("/tests/reactants/testfiles/param_bad_temp.txt");
+	string filename = sourceDir + pathToFile;
+    const char* fname = filename.c_str();
+
+    // cons a command line with a bad option.
+    int fargc = 2;
+    char* args[3];
+    args[0] = const_cast<char*>("./xolotl");
+    args[1] = const_cast<char*>(fname);
+    args[2] = NULL;
+    char** fargv = args;
+
+    // attempt to parse the command line
+    fargc -= 1;
+    fargv += 1;
+    xopts.readParams( fargc, fargv );
+
+    // Xolotl should not be able to run when both temperature arguments are specified
     BOOST_REQUIRE_EQUAL( xopts.shouldRun(), false );
     BOOST_REQUIRE_EQUAL( xopts.getExitCode(), EXIT_FAILURE );
 }

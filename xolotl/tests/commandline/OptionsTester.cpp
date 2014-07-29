@@ -2,7 +2,7 @@
 #define BOOST_TEST_MODULE Regression
 
 #include <boost/test/included/unit_test.hpp>
-#include "xolotlCore/commandline/Options.h"
+#include <Options.h>
 
 
 
@@ -29,6 +29,7 @@ BOOST_AUTO_TEST_CASE(noOptions)
     // attempt to parse the command line
     fargc -= 1;
     fargv += 1;
+
     xopts.readParams( fargc, fargv );
 
     // The Option class does not like empty command line
@@ -38,6 +39,4 @@ BOOST_AUTO_TEST_CASE(noOptions)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-
 

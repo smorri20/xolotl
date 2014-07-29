@@ -27,12 +27,21 @@ public class ArgumentsTest {
 		try {
 			// Parse the empty string of arguments
 			args = CliFactory.parseArguments(Arguments.class, new String[] {});
+			
+			// Check that the default maximum Helium cluster size is 8
+			assertEquals(8, args.getMaxHeSize());
+			
+			// Check that the default maximum vacancy cluster size is 29
+			assertEquals(29, args.getMaxVSize());
+			
+			// Check that the default maximum interstitial cluster size is 6
+			assertEquals(6, args.getMaxISize());
 
 			// Check if there is a material argument
 			assertEquals(false, args.isMaterial());
 
 			// Check if there is a startTemp argument
-			assertEquals(false, args.isStartTemp());
+			assertEquals("1000", args.getStartTemp());
 
 			// Check if there is a tempFile argument
 			assertEquals(false, args.isTempFile());
@@ -41,13 +50,13 @@ public class ArgumentsTest {
 			assertEquals(false, args.isHeFlux());
 			
 			// Check if there is an heFluence argument
-			assertEquals(false, args.isHeFluence());
+			assertEquals(false, args.isMaxHeFluence());
 
-			// Check that the default perfHandler is dummy
-			assertEquals("dummy", args.getPerfHandler());
+			// Check that the default perfHandler is std
+			assertEquals("std", args.getPerfHandler());
 
 			// Check if there is a vizHandler argument
-			assertEquals(false, args.isVizHandler());
+			assertEquals("dummy", args.getVizHandler());
 
 			// Check if there is a checkpoint argument
 			assertEquals(false, args.isCheckpoint());
@@ -82,17 +91,23 @@ public class ArgumentsTest {
 			// Parse the specified string of arguments
 			args = CliFactory.parseArguments(Arguments.class, new String[] {
 					"--startTemp", "900", "--material", "Fe", "--perfHandler",
-					"std" });
+					"dummy", "--maxHeSize", "7", "--maxVSize", "30", "--maxISize", "5" });
+			
+			// Check that the maximum Helium cluster size is 7
+			assertEquals(7, args.getMaxHeSize());
+			
+			// Check that the maximum vacancy cluster size is 30
+			assertEquals(30, args.getMaxVSize());
+			
+			// Check that the maximum interstitial cluster size is 5
+			assertEquals(5, args.getMaxISize());
 			
 			// Check if there is a material argument
 			assertEquals(true, args.isMaterial());
-
+			
 			// Check that the material is Fe
 			assertEquals("Fe", args.getMaterial());
 			
-			// Check if there is a startTemp argument
-			assertEquals(true, args.isStartTemp());
-
 			// Check that the startTemp is 900
 			assertEquals("900", args.getStartTemp());
 
@@ -103,13 +118,13 @@ public class ArgumentsTest {
 			assertEquals(false, args.isHeFlux());
 			
 			// Check if there is an heFluence argument
-			assertEquals(false, args.isHeFluence());
+			assertEquals(false, args.isMaxHeFluence());
 
-			// Check that the default perfHandler is dummy
-			assertEquals("std", args.getPerfHandler());
+			// Check that the perfHandler is dummy
+			assertEquals("dummy", args.getPerfHandler());
 
 			// Check if there is a vizHandler argument
-			assertEquals(false, args.isVizHandler());
+			assertEquals("dummy", args.getVizHandler());
 
 			// Check if there is a checkpoint argument
 			assertEquals(false, args.isCheckpoint());

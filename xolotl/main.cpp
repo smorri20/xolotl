@@ -11,10 +11,13 @@
 #include <mpi.h>
 #include <MPIUtils.h>
 #include <XolotlOptions.h>
+#include <MaterialHandlerFactory.h>
+#include <TemperatureHandlerFactory.h>
 #include <HandlerRegistryFactory.h>
 #include <VizHandlerRegistryFactory.h>
 #include <HardwareQuantities.h>
-#include <IHandlerRegistry.h>
+#include <HDF5NetworkLoader.h>
+#include <IVizHandlerRegistry.h>
 #include <IVizHandlerRegistry.h>
 
 using namespace std;
@@ -38,13 +41,35 @@ std::vector<xolotlPerf::HardwareQuantities> declareHWcounters() {
 	return hwq;
 }
 
+bool initMaterial(XolotlOptions &options) {
+
+	bool materialInitOK = xolotlSolver::initializeMaterial(options);
+	if (!materialInitOK) {
+		std::cerr << "Unable to initialize requested material.  Aborting"
+				<< std::endl;
+		return EXIT_FAILURE;
+	} else
+		return materialInitOK;
+}
+
+bool initTemp(bool opts, bool opts1, XolotlOptions &options) {
+
+	bool tempInitOK = xolotlSolver::initializeTempHandler(opts, opts1, options);
+	if (!tempInitOK) {
+		std::cerr << "Unable to initialize requested temperature.  Aborting"
+				<< std::endl;
+		return EXIT_FAILURE;
+	} else
+		return tempInitOK;
+}
+
 bool initPerf(bool opts, std::vector<xolotlPerf::HardwareQuantities> hwq) {
 
 	bool perfInitOK = xolotlPerf::initialize(opts, hwq);
 	if (!perfInitOK) {
 		std::cerr
-				<< "Unable to initialize requested performance data infrastructure. "
-				<< "Aborting" << std::endl;
+				<< "Unable to initialize requested performance data infrastructure.  Aborting"
+				<< std::endl;
 		return EXIT_FAILURE;
 	} else
 		return perfInitOK;
@@ -78,42 +103,26 @@ setUpSolver( std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry,
 }
 
 void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry) {
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry,
+		std::shared_ptr<xolotlSolver::IFluxHandler> materialHandler,
+		std::shared_ptr<xolotlSolver::ITemperatureHandler> tempHandler) {
 
 	// Launch the PetscSolver
 	auto solverTimer = handlerRegistry->getTimer("solve");
 	solverTimer->start();
-	// Create object to handle incident flux calculations
-	auto fitFluxHandler = std::make_shared<xolotlSolver::FitFluxHandler>();
-	// Create object to handle temperature
-	auto tempHandler = std::make_shared<xolotlSolver::TemperatureHandler>();
-	solver->solve(fitFluxHandler, tempHandler);
+	solver->solve(materialHandler, tempHandler);
 	solverTimer->stop();
-
 }
 
 std::shared_ptr<PSIClusterNetworkLoader> setUpNetworkLoader(int rank,
 		MPI_Comm comm, std::string networkFilename,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
 
-	std::shared_ptr<PSIClusterNetworkLoader> networkLoader;
-	shared_ptr<std::istream> networkStream;
-
-	// Setup the master
-	if (rank == 0) {
-		// Say hello
-		printStartMessage();
-		// Set the input stream on the master
-		networkStream = make_shared<std::ifstream>(networkFilename);
-	}
-
-	// Broadcast the stream to all worker tasks
-	networkLoader = std::make_shared<PSIClusterNetworkLoader>(registry);
-	networkStream = xolotlCore::MPIUtils::broadcastStream(networkStream, 0,
-			comm);
-
-	// Create a network loader and set the stream on every MPI task
-	networkLoader->setInputstream(networkStream);
+	// Create a HDF5NetworkLoader
+	std::shared_ptr<HDF5NetworkLoader> networkLoader;
+	networkLoader = std::make_shared<HDF5NetworkLoader>(registry);
+	// Give the networkFilename to the network loader
+	networkLoader->setFilename(networkFilename);
 
 	return networkLoader;
 }
@@ -126,8 +135,9 @@ int main(int argc, char **argv) {
 
 	// Check the command line arguments.
 	// Skip the executable name before parsing.
-	argc -= 1;  // one for the executable name
-	argv += 1;  // one for the executable name
+	argc -= 1; // one for the executable name
+	argv += 1; // one for the executable name
+
 
 	XolotlOptions xopts;
 	xopts.readParams(argc, argv);
@@ -145,18 +155,26 @@ int main(int argc, char **argv) {
 	assert(!networkFilename.empty());
 
 	try {
+		auto materialInitOK = initMaterial(xopts);
+		auto tempInitOK = initTemp(xopts.useConstTemperatureHandlers(),
+				xopts.useTemperatureProfileHandlers(), xopts);
+
 		// Set up our performance data infrastructure.
 		// Indicate we want to monitor some important hardware counters.
 		auto hwq = declareHWcounters();
+
 		auto perfInitOK = initPerf(xopts.usePerfStandardHandlers(), hwq);
 
 		// Set up the visualization infrastructure.
 		auto vizInitOK = initViz(xopts.useVizStandardHandlers());
 
-		// Initialize MPI.  We do this instead of leaving it to some
+		// Initialize MPI. We do this instead of leaving it to some
 		// other package (e.g., PETSc), because we want to avoid problems
 		// with overlapping Timer scopes.
 		MPI_Init(&argc, &argv);
+
+		auto materialHandler = xolotlSolver::getMaterialHandler();
+		auto tempHandler = xolotlSolver::getTemperatureHandler(xopts);
 
 		// Access our handler registry to obtain a Timer
 		// measuring the runtime of the entire program.
@@ -185,7 +203,8 @@ int main(int argc, char **argv) {
 		networkLoadTimer->stop();
 
 		// Launch the PetscSolver
-		launchPetscSolver(solver, handlerRegistry);
+		launchPetscSolver(solver, handlerRegistry, materialHandler,
+				tempHandler);
 
 		// Finalize our use of the solver.
 		auto solverFinalizeTimer = handlerRegistry->getTimer("solverFinalize");
@@ -214,8 +233,8 @@ int main(int argc, char **argv) {
 	// Uncomment if GPTL was built with pmpi disabled
 	// Output performance data if pmpi is disabled in GPTL
 	// Access the handler registry to output performance data
-//    auto handlerRegistry = xolotlPerf::getHandlerRegistry();
-//    handlerRegistry->dump(rank);
+    auto handlerRegistry = xolotlPerf::getHandlerRegistry();
+    handlerRegistry->dump(rank);
 
 	return EXIT_SUCCESS;
 }

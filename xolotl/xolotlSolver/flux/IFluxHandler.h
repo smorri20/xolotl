@@ -16,6 +16,13 @@ public:
 	virtual ~IFluxHandler() { }
 
 	/**
+	 * Function to calculate and store the incident flux values at each grid point
+	 * @param numGridpoints The total number of grid points that will be used
+	 * @param step The step size between grid points
+	 */
+	virtual void initializeFluxHandler(int numGridpoints, double step) = 0;
+
+	/**
 	 * This operation returns the incident flux for a specific cluster composition,
 	 * position, and time.
 	 * @param compositionVec  The composition of the cluster
@@ -38,6 +45,38 @@ public:
 	 */
 	virtual void setOutgoingFlux(std::vector<int> compositionVec,
 			std::vector<int> position, double time, double outgoingFlux) = 0;
+
+	/**
+	 * This operation increments the Helium fluence at the current time step.
+	 * @param dt			The length of the time step
+	 * @param step			The grid step size
+	 * @return				The value of the Helium fluence at the current time step
+	 */
+	virtual double incrementHeFluence(double dt, double step) = 0;
+
+	/**
+	 * This operation returns the Helium fluence
+	 * @return	The Helium fluence at current time step
+	 */
+	virtual double getHeFluence() const = 0;
+
+	/**
+	 * This operation sets the maximum value of the Helium fluence.
+	 * @param	The maximim Helium fluence value
+	 */
+	virtual void setMaxHeFluence(double fluence) = 0;
+
+	/**
+	 * This function returns the maximum value of the Helium fluence.
+	 */
+	virtual double getMaxHeFluence() const = 0;
+
+	/**
+	 * This operation sets whether or not the maximum Helium fluence will be used
+	 * @param use	If the program should or should not use the max He fluence
+	 * @return	True if program will use the max He fluence, and false if it won't
+	 */
+	virtual bool useMaximumHeFluence() = 0;
 
 }; //end class IFluxHandler
 

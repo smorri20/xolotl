@@ -7,11 +7,13 @@ import java.io.IOException;
 import java.io.FileOutputStream;
 import java.io.FileInputStream;
 import java.util.ArrayList;
+
 import java.util.Properties;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
+import uk.co.flamingpenguin.jewel.cli.*;
 import ncsa.hdf.hdf5lib.H5;
 import ncsa.hdf.hdf5lib.HDF5Constants;
 
@@ -54,7 +56,7 @@ import ncsa.hdf.hdf5lib.HDF5Constants;
 public class Preprocessor {
 
 	// The maximum size of a Helium cluster in the network.
-	private int maxHe = 8;
+	private int maxHe;
 
 	// The maximum size of a mobile He cluster.
 	private int maxHeDiffusionSize = 6;
@@ -68,7 +70,7 @@ public class Preprocessor {
 			0.20, 0.25, 0.20, 0.12, 0.3 };
 
 	// The maximum size of a vacancy cluster in the network.
-	private int maxV = 29;
+	private int maxV;
 
 	// The diffusion factor for a single vacancy.
 	private double vOneDiffusionFactor = 1800.0;
@@ -77,7 +79,7 @@ public class Preprocessor {
 	private double vOneMigrationEnergy = 1.30;
 
 	// The maximum size of an interstitial cluster in the network.
-	private int maxI = 6;
+	private int maxI;
 
 	// The maximum size of a mobile interstitial cluster.
 	private int maxIDiffusionSize = 5;
@@ -123,7 +125,9 @@ public class Preprocessor {
 	 */
 	private String generatePetscArgs(String petscArgs) {
 
-		// Create a map of default Petsc options
+		// Create a map of the default Petsc options and their corresponding
+		// arguments, if any, where the key is the option and the value is
+		// the argument
 		Map<String, String> petscOptions = new HashMap<String, String>();
 		petscOptions.put("-da_grid_x", "10");
 		petscOptions.put("-ts_final_time", "1000");
@@ -145,43 +149,24 @@ public class Preprocessor {
 			petscList.add(str);
 		}
 
-		// Create a map containing the Petsc options and their corresponding
-		// arguments, if any, where the key is the option and the value is 
-		// the argument
-		Map<String, String> petscMap = new HashMap<String, String>();
+		// Check if the last string in the petscList is a stand-alone option
+		if ((petscList.get((petscList.size() - 1))).contains("-"))
+			petscOptions.put(petscList.get((petscList.size() - 1)), "");
+
+		// Loop through the Petsc list of strings to pair Petsc options with
+		// their corresponding arguments and identify the stand-alone options
 		for (int i = 1; i < petscList.size(); i++) {
-			// Check if the last string in the petscList is an option
-			if ((i == ((petscList.size()) - 1))
-					&& ((petscList.get(i)).contains("-")))
-				petscMap.put(petscList.get(i), "");
-			else {
-				// Check if there is an option followed by a corresponding
-				// argument
-				if (((petscList.get(i - 1)).contains("-"))
-						&& (!(petscList.get(i)).contains("-"))) {
-					petscMap.put(petscList.get(i - 1), petscList.get(i));
-				}
-				// Check if there is an option immediately followed by another
-				// option
-				else if ((petscList.get(i - 1).contains("-"))
-						&& (petscList.get(i).contains("-"))) {
-					petscMap.put(petscList.get(i - 1), "");
-				}
-				// Check if there is an option between an argument and an option
-				else if ((!(petscList.get(i - 2)).contains("-"))
-						&& ((petscList.get(i - 1)).contains("-"))
-						&& ((petscList.get(i)).contains("-"))) {
-					petscMap.put(petscList.get(i - 1), "");
-				} else {
-					petscMap.put(petscList.get(i), "");
-				}
+			// Check if there is an option followed by a corresponding argument
+			if (((petscList.get(i - 1)).contains("-"))
+					&& (!(petscList.get(i)).contains("-"))) {
+				// Replace the default argument value with the specified value
+				petscOptions.put(petscList.get(i - 1), petscList.get(i));
+				i++;
 			}
-		}
-		petscList.clear();
-		System.out.println();
-		// Replace the default Petsc options with those from the command line
-		for (String key : petscMap.keySet()) {
-			petscOptions.put(key, petscMap.get(key));
+			// Identify stand-alone options
+			else {
+				petscOptions.put(petscList.get(i - 1), "");
+			}
 		}
 
 		// Get the list of petscArgs and create a single string for them
@@ -206,9 +191,29 @@ public class Preprocessor {
 	 */
 	public Preprocessor(Arguments args) {
 
+		// Set the maximum size of a Helium cluster in the network.
+		maxHe = args.getMaxHeSize();
+		// Check to make sure the user entered an appropriate value
+		if ( !(maxHe < 9) || !(maxHe > 0) ) {
+			throw new IllegalArgumentException(
+					"The maxium Helium size must be greater than 0 and less than 9 ( 0 < maxHeSize < 9 )");
+		}
+
+		// Set the maximum size of a vacancy cluster in the network.
+		maxV = args.getMaxVSize();
+		
+		// The maximum size of an interstitial cluster in the network.
+		maxI = args.getMaxISize();
+		if ( !(maxI < 7) || !(maxI > 0) ) {
+			throw new IllegalArgumentException(
+					"The maxium interstitial size must be greater than 0 and less than 7 ( 0 < maxHeSize < 7 )");
+		}
+
 		// Set the parameter options that will be passed to Xolotl
+		xolotlParams.setProperty("startTemp", args.getStartTemp());
 		xolotlParams.setProperty("networkFile", args.getNetworkFile());
 		xolotlParams.setProperty("perfHandler", args.getPerfHandler());
+		xolotlParams.setProperty("vizHandler", args.getVizHandler());
 		xolotlParams.setProperty("petscArgs",
 				generatePetscArgs(args.getPetscArgs()));
 
@@ -216,16 +221,12 @@ public class Preprocessor {
 		// be set if they are specified via the command line
 		if (args.isMaterial())
 			xolotlParams.setProperty("material", args.getMaterial());
-		if (args.isStartTemp())
-			xolotlParams.setProperty("startTemp", args.getStartTemp());
 		if (args.isTempFile())
 			xolotlParams.setProperty("tempFile", args.getTempFile());
 		if (args.isHeFlux())
 			xolotlParams.setProperty("heFlux", args.getHeFlux());
-		if (args.isHeFluence())
-			xolotlParams.setProperty("heFluence", args.getHeFluence());
-		if (args.isVizHandler())
-			xolotlParams.setProperty("vizHandler", args.getVizHandler());
+		if (args.isMaxHeFluence())
+			xolotlParams.setProperty("maxHeFluence", args.getMaxHeFluence());
 		if (args.isCheckpoint())
 			xolotlParams.setProperty("checkpoint", args.getCheckpoint());
 
@@ -357,6 +358,58 @@ public class Preprocessor {
 	};
 
 	/**
+	 * This operation creates an unstable cluster with the specified size. Unstable 
+	 * means that it will go through trap mutation with a relatively big dissociation
+	 * rate.
+	 * 
+	 * @param heSize
+	 *            The number of Helium atoms in the cluster
+	 * @param vSize
+	 *            The number of vacancies in the cluster
+	 * @return The cluster.
+	 */
+	private Cluster makeUnstableCluster(int heSize, int vSize) {
+		// Create the cluster
+		Cluster cluster = new Cluster();
+		cluster.nHe = heSize;
+		cluster.nV = vSize;
+		// Set its I binding energy to 0.0 to obtain a big dissociation rate 
+		// in Xolotl
+		cluster.E_I = 0.0;
+
+		return cluster;
+	}
+
+	/**
+	 * This operation generates unstable clusters in the network. They are the ones 
+	 * just after the maximum number of He per V and will go under trap mutation.
+	 * 
+	 * @return A list of clusters.
+	 */
+	private ArrayList<Cluster> generateUnstable() {
+
+		// Local Declarations
+		ArrayList<Cluster> clusterList = new ArrayList<Cluster>();
+		
+		// Add the He one to the list
+		clusterList.add(makeUnstableCluster(maxHe + 1, 0));
+		
+		// Loop over vacancies
+		for (int i = 1; i <= maxV && i <= maxHePerV.length; ++i) {
+			// Add the unstable cluster to the list
+			clusterList.add(makeUnstableCluster(maxHePerV[i - 1] + 1, i));
+		}
+
+		// Create unstable clusters for the cases where max He per V = 4.
+		for (int i = maxHePerV.length + 1; i <= maxV; i++) {
+			// Add the unstable cluster to the list
+			clusterList.add(makeUnstableCluster((i*4) + 1, i));
+		}
+
+		return clusterList;
+	};
+
+	/**
 	 * This operation generates the initial conditions based on the defaults and
 	 * the incoming command line arguments.
 	 * 
@@ -374,41 +427,9 @@ public class Preprocessor {
 		clusterList.addAll(generateInterstitials());
 		clusterList.addAll(generateHe());
 		clusterList.addAll(generateHeV());
+		clusterList.addAll(generateUnstable());
 
 		return clusterList;
-	}
-
-	/**
-	 * This operation generates the parameters needed to run Xolotl.
-	 * 
-	 * TODO is this function necessary?
-	 * 
-	 * @return The property list of parameters that will be passed to Xolotl
-	 */
-	public Properties generateParameters() {
-
-		// Create the default parameters to be used with Xolotl
-		Properties defaultParameters = new Properties();
-
-		// set the default parameters
-		defaultParameters.setProperty("material", "W");
-		defaultParameters.setProperty("startTemp", "1000");
-		defaultParameters.setProperty("tempFile", "tempFile");
-		defaultParameters.setProperty("heFlux", "2.5e27");
-		defaultParameters.setProperty("heFluence", "1.0e19");
-		defaultParameters.setProperty("perfHandler", "dummy");
-		defaultParameters.setProperty("vizHandler", "dummy");
-		defaultParameters
-				.setProperty(
-						"petscArgs",
-						"-da_grid_x 10 -ts_final_time 1000 "
-								+ "-ts_max_steps 3 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
-								+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant "
-								+ "-fieldsplit_1_pc_type sor -snes_monitor -ksp_monitor -ts_monitor");
-		defaultParameters.setProperty("networkFile", "networkInit.h5");
-		defaultParameters.setProperty("checkpoint", "false");
-
-		return defaultParameters;
 	}
 
 	/**
@@ -428,6 +449,8 @@ public class Preprocessor {
 			// Write the parameters to the output file and save
 			// the file to the project root folder
 			parameters.store(paramsFile, null);
+			// Flush the parameters to the intended stream
+			paramsFile.flush();
 			// Close the parameter file
 			paramsFile.close();
 
@@ -458,7 +481,7 @@ public class Preprocessor {
 			inParamsFile.close();
 
 		} catch (IOException io) {
-			System.out.println("Error loading file.");
+			System.err.println("Error loading parameter file.");
 			io.printStackTrace();
 		}
 		return inProperties;
@@ -542,22 +565,22 @@ public class Preprocessor {
 					HDF5Constants.H5P_DEFAULT);
 
 			// Create, write, and close the physicalDim attribute
-			int dimSId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
-			int dimAId = H5.H5Acreate(headerGroupId, "physicalDim",
-					HDF5Constants.H5T_STD_I32LE, dimSId,
+			int dimDataSpaceId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
+			int dimAttributeId = H5.H5Acreate(headerGroupId, "physicalDim",
+					HDF5Constants.H5T_STD_I32LE, dimDataSpaceId,
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
-			status = H5
-					.H5Awrite(dimAId, HDF5Constants.H5T_STD_I32LE, dimension);
-			status = H5.H5Aclose(dimAId);
+			status = H5.H5Awrite(dimAttributeId, HDF5Constants.H5T_STD_I32LE,
+					dimension);
+			status = H5.H5Aclose(dimAttributeId);
 
 			// Create, write, and close the refinement attribute
-			int refineSId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
-			int refineAId = H5.H5Acreate(headerGroupId, "refinement",
-					HDF5Constants.H5T_STD_I32LE, refineSId,
+			int refineDataSpaceId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
+			int refineAttributeId = H5.H5Acreate(headerGroupId, "refinement",
+					HDF5Constants.H5T_STD_I32LE, refineDataSpaceId,
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
-			status = H5.H5Awrite(refineAId, HDF5Constants.H5T_STD_I32LE,
-					refinement);
-			status = H5.H5Aclose(refineAId);
+			status = H5.H5Awrite(refineAttributeId,
+					HDF5Constants.H5T_STD_I32LE, refinement);
+			status = H5.H5Aclose(refineAttributeId);
 
 			// Close everything
 			status = H5.H5Gclose(headerGroupId);
@@ -623,11 +646,11 @@ public class Preprocessor {
 			long[] dims = new long[2];
 			dims[0] = networkSize;
 			dims[1] = 8;
-			int networkSId = H5.H5Screate_simple(2, dims, null);
+			int networkDataSpaceId = H5.H5Screate_simple(2, dims, null);
 
 			// Create the dataset for the network
 			int datasetId = H5.H5Dcreate(networkGroupId, "network",
-					HDF5Constants.H5T_IEEE_F64LE, networkSId,
+					HDF5Constants.H5T_IEEE_F64LE, networkDataSpaceId,
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT,
 					HDF5Constants.H5P_DEFAULT);
 
@@ -637,18 +660,18 @@ public class Preprocessor {
 					HDF5Constants.H5P_DEFAULT, networkArray);
 
 			// Create the attribute for the network size
-			int networkSizeSId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
-			int networkSizeAId = H5.H5Acreate(datasetId, "networkSize",
-					HDF5Constants.H5T_STD_I32LE, networkSizeSId,
+			int networkSizeDataSpaceId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
+			int networkSizeAttributeId = H5.H5Acreate(datasetId, "networkSize",
+					HDF5Constants.H5T_STD_I32LE, networkSizeDataSpaceId,
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
 
 			// Write it
 			int[] tempNetworkSize = { networkSize };
-			status = H5.H5Awrite(networkSizeAId, HDF5Constants.H5T_STD_I32LE,
-					tempNetworkSize);
+			status = H5.H5Awrite(networkSizeAttributeId,
+					HDF5Constants.H5T_STD_I32LE, tempNetworkSize);
 
 			// Close everything
-			status = H5.H5Aclose(networkSizeAId);
+			status = H5.H5Aclose(networkSizeAttributeId);
 			status = H5.H5Dclose(datasetId);
 			status = H5.H5Gclose(networkGroupId);
 			status = H5.H5Fclose(fileId);

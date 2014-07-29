@@ -21,7 +21,7 @@ bool initialize(bool useStdRegistry) {
 		theHandlerRegistry = std::make_shared<StandardHandlerRegistry>();
 #else
 		// it is not possible to use the standard registry
-		throw std::string("\nxolotlViz::initialize: unable to build requested visualization standard handler registry due to missing dependencies")
+		throw std::string("\nxolotlViz::initialize: unable to build requested visualization standard handler registry due to missing dependencies");
 #endif // defined(HAVE_VIZLIB_STD)
 	} else {
 		// we are to use a dummy handler registry
@@ -42,4 +42,3 @@ std::shared_ptr<IVizHandlerRegistry> getVizHandlerRegistry(void) {
 }
 
 } // end namespace xolotlViz
-

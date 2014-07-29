@@ -1,8 +1,7 @@
 #include <cassert>
 #include "StandardHandlerRegistry.h"
-#include "gptl.h"
+#include <gptl.h>
 #include <sstream>
-
 
 namespace xolotlPerf
 {
@@ -48,6 +47,7 @@ StandardHandlerRegistry::StandardHandlerRegistry( std::vector<HardwareQuantities
     // Initialize the GPTL library.
     //GPTLsetoption(GPTLverbose, 1);   // useful for debugging
     GPTLsetoption(GPTLpercent, 1);   // lists the percentage of wallclock time each region took compared to the first region timed
+    GPTLsetoption(GPTLpersec, 0);
     GPTLinitialize();
 }
 
@@ -135,7 +135,6 @@ void StandardHandlerRegistry::dump(int rank) const
 
     GPTLpr_file(outfile.str().c_str());
 }
-
 
 } //end namespace xolotlPerf
 
