@@ -1,7 +1,7 @@
 #include "TemperatureHandlerFactory.h"
 #include "TemperatureHandler.h"
 #include "TemperatureProfileHandler.h"
-#include <XolotlOptions.h>
+#include <Options.h>
 #include <fstream>
 #include <iostream>
 
@@ -12,7 +12,7 @@ static std::shared_ptr<ITemperatureHandler> theTemperatureHandler;
 
 // Create the desired type of handler registry.
 bool initializeTempHandler( bool useConstTempRegistry, bool useTempProfileRegistry,
-		xolotlCore::XolotlOptions &options)
+		xolotlCore::Options &options)
 {
     bool ret = true;
 
@@ -50,7 +50,7 @@ bool initializeTempHandler( bool useConstTempRegistry, bool useTempProfileRegist
 }
 
 // Provide access to our handler registry.
-std::shared_ptr<ITemperatureHandler> getTemperatureHandler( xolotlCore::XolotlOptions &options )
+std::shared_ptr<ITemperatureHandler> getTemperatureHandler( xolotlCore::Options &options )
 {
     if( !theTemperatureHandler )
     {

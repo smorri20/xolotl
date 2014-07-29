@@ -10,7 +10,7 @@
 #include <PetscSolver.h>
 #include <mpi.h>
 #include <MPIUtils.h>
-#include <XolotlOptions.h>
+#include <Options.h>
 #include <MaterialHandlerFactory.h>
 #include <TemperatureHandlerFactory.h>
 #include <HandlerRegistryFactory.h>
@@ -41,7 +41,7 @@ std::vector<xolotlPerf::HardwareQuantities> declareHWcounters() {
 	return hwq;
 }
 
-bool initMaterial(XolotlOptions &options) {
+bool initMaterial(Options &options) {
 
 	bool materialInitOK = xolotlSolver::initializeMaterial(options);
 	if (!materialInitOK) {
@@ -52,7 +52,7 @@ bool initMaterial(XolotlOptions &options) {
 		return materialInitOK;
 }
 
-bool initTemp(bool opts, bool opts1, XolotlOptions &options) {
+bool initTemp(bool opts, bool opts1, Options &options) {
 
 	bool tempInitOK = xolotlSolver::initializeTempHandler(opts, opts1, options);
 	if (!tempInitOK) {
@@ -139,10 +139,10 @@ int main(int argc, char **argv) {
 	argv += 1; // one for the executable name
 
 
-	XolotlOptions xopts;
-	xopts.readParams(argc, argv);
-	if (!xopts.shouldRun()) {
-		return xopts.getExitCode();
+	Options opts;
+	opts.readParams(argc, argv);
+	if (!opts.shouldRun()) {
+		return opts.getExitCode();
 	}
 
 	// Skip the name of the parameter file that was just used.
@@ -151,22 +151,22 @@ int main(int argc, char **argv) {
 	argv += 1;
 
 	// Extract the argument for the file name
-	std::string networkFilename = xopts.getNetworkFilename();
+	std::string networkFilename = opts.getNetworkFilename();
 	assert(!networkFilename.empty());
 
 	try {
-		auto materialInitOK = initMaterial(xopts);
-		auto tempInitOK = initTemp(xopts.useConstTemperatureHandlers(),
-				xopts.useTemperatureProfileHandlers(), xopts);
+		auto materialInitOK = initMaterial(opts);
+		auto tempInitOK = initTemp(opts.useConstTemperatureHandlers(),
+				opts.useTemperatureProfileHandlers(), opts);
 
 		// Set up our performance data infrastructure.
 		// Indicate we want to monitor some important hardware counters.
 		auto hwq = declareHWcounters();
 
-		auto perfInitOK = initPerf(xopts.usePerfStandardHandlers(), hwq);
+		auto perfInitOK = initPerf(opts.usePerfStandardHandlers(), hwq);
 
 		// Set up the visualization infrastructure.
-		auto vizInitOK = initViz(xopts.useVizStandardHandlers());
+		auto vizInitOK = initViz(opts.useVizStandardHandlers());
 
 		// Initialize MPI. We do this instead of leaving it to some
 		// other package (e.g., PETSc), because we want to avoid problems
@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
 		MPI_Init(&argc, &argv);
 
 		auto materialHandler = xolotlSolver::getMaterialHandler();
-		auto tempHandler = xolotlSolver::getTemperatureHandler(xopts);
+		auto tempHandler = xolotlSolver::getTemperatureHandler(opts);
 
 		// Access our handler registry to obtain a Timer
 		// measuring the runtime of the entire program.
@@ -185,7 +185,7 @@ int main(int argc, char **argv) {
 
 		// Setup the solver
 		auto solver = setUpSolver(handlerRegistry,
-				xopts.getPetscArgc(), xopts.getPetscArgv());
+				opts.getPetscArgc(), opts.getPetscArgv());
 
 		// Load the network
 		auto networkLoadTimer = handlerRegistry->getTimer("loadNetwork");
