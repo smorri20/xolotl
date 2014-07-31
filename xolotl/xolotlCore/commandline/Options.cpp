@@ -18,44 +18,44 @@ Options::Options() :
 				1000.0), heliumFluenceFlag(false), perfStandardHandlersFlag(
 				true), vizStandardHandlersFlag(false) {
 	// Create the network option handler
-	auto networkHandler =
+	auto networkHandler = new
 			NetworkOptionHandler("networkFile",
-					"networkFile                 The network will be loaded from this file.");
+					"networkFile <filename>      The network will be loaded from this file.");
 	// Create the PETSc option handler
-	auto petscHandler =
+	auto petscHandler = new
 			PetscOptionHandler("petscArgs",
 					"petscArgs                   All the arguments that will be given to PETSc");
 	// Create the constant temperature option handler
-	auto constTempHandler =
+	auto constTempHandler = new
 			ConstTempOptionHandler("startTemp",
-					"startTemp <const_temp> The temperature (in Kelvin) will be the constant floating point value specified. (default = 1000)"
-							"\n	(NOTE: Use only ONE temperature option)");
+					"startTemp <value>           The temperature (in Kelvin) will be the constant floating point value specified. (default = 1000)"
+							"\n	                      (NOTE: Use only ONE temperature option)");
 	// Create the temperature profile option handler
-	auto tempProfileHandler =
+	auto tempProfileHandler = new
 			TempProfileOptionHandler("tempFile",
-					"tempFile <filename> A temperature profile is given by the specified file, then linear interpolation is used to fit the data."
-							"\n	(NOTE: If a temperature file is given, a constant temperature should NOT be given)");
+					"tempFile <filename>         A temperature profile is given by the specified file, then linear interpolation is used to fit the data."
+							"\n	                      (NOTE: If a temperature file is given, a constant temperature should NOT be given)");
 	// Create the maximum fluence option handler
-	auto fluenceHandler =
+	auto fluenceHandler = new
 			FluenceOptionHandler("maxHeFluence",
-					"maxHeFluence <value>      The maximum value of the Helium fluence the user wishes to integrate to.");
+					"maxHeFluence <value>        The maximum value of the Helium fluence the user wishes to integrate to.");
 	// Create the performance handler option handler
-	auto perfHandler =
+	auto perfHandler = new
 			PerfOptionHandler("perfHandler",
 					"perfHandler {std,dummy}     Which set of performance handlers to use. (default = std)");
 	// Create the visualization handler option handler
-	auto vizHandler =
+	auto vizHandler = new
 			VizOptionHandler("vizHandler",
 					"vizHandler {std,dummy}      Which set of handlers to use for the visualization. (default = dummy)");
 
 	// Add our notion of which options we support.
-	optionsMap[networkHandler.key] = &networkHandler;
-	optionsMap[petscHandler.key] = &petscHandler;
-	optionsMap[constTempHandler.key] = &constTempHandler;
-	optionsMap[tempProfileHandler.key] = &tempProfileHandler;
-	optionsMap[fluenceHandler.key] = &fluenceHandler;
-	optionsMap[perfHandler.key] = &perfHandler;
-	optionsMap[vizHandler.key] = &vizHandler;
+	optionsMap[networkHandler->key] = networkHandler;
+	optionsMap[petscHandler->key] = petscHandler;
+	optionsMap[constTempHandler->key] = constTempHandler;
+	optionsMap[tempProfileHandler->key] = tempProfileHandler;
+	optionsMap[fluenceHandler->key] = fluenceHandler;
+	optionsMap[perfHandler->key] = perfHandler;
+	optionsMap[vizHandler->key] = vizHandler;
 }
 
 Options::~Options(void) {

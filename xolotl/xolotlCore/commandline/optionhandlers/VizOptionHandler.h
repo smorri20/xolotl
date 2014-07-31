@@ -53,7 +53,7 @@ public:
 			opt->setVizStandardHandlers(false);
 		}
 		else {
-			std::cerr << "Options: unrecognized argument " << arg << std::endl;
+			std::cerr << "Options: unrecognized argument in the visualization option handler: " << arg << std::endl;
 			opt->showHelp(std::cerr);
 			opt->setShouldRunFlag(false);
 			opt->setExitCode(EXIT_FAILURE);
