@@ -4,7 +4,7 @@
 #include "IFluxHandler.h"
 #include <vector>
 
-namespace xolotlSolver{
+namespace xolotlSolver {
 
 /**
  * Realizations of this interface are responsible for handling the incident (incoming)
@@ -25,13 +25,35 @@ protected:
 	 */
 	double stepSize;
 
+	/**
+	 * Helium fluence
+	 */
+	double heFluence;
+
+	/**
+	 * Should the program use the maximum Helium fluence value?
+	 */
+	bool usingMaxHeFluence;
+
+	/**
+	 * The maximum Helium fluence value?
+	 */
+	double maxHeFluence;
+
+	/**
+	 * The amplitude of the flux
+	 */
+	double heFlux;
+
 public:
 
-	FluxHandler()
-		: stepSize(0.0e-16)
-	{ }
+	FluxHandler() :
+			stepSize(0.0e-16), heFluence(0.0e-16), usingMaxHeFluence(false), maxHeFluence(
+					0.0e-16), heFlux(1.0) {
+	}
 
-	~FluxHandler() { }
+	~FluxHandler() {
+	}
 
 	/**
 	 * This operation returns the incident flux for a specific cluster composition,
@@ -57,7 +79,51 @@ public:
 	virtual void setOutgoingFlux(std::vector<int> compositionVec,
 			std::vector<int> position, double time, double outgoingFlux);
 
-}; //end class FluxHandler
+	/**
+	 * This operation increments the Helium fluence at the current time step.
+	 * @param dt			The length of the time step
+	 * @param step			The grid step size
+	 * @return				The value of the Helium fluence at the current time step
+	 */
+	virtual double incrementHeFluence(double dt, double step);
+
+	/**
+	 * This operation returns the Helium fluence
+	 * @return	The Helium fluence at current time step
+	 */
+	virtual double getHeFluence() const;
+
+	/**
+	 * This operation sets the maximum value of the Helium fluence.
+	 * @param fluence	The maximim Helium fluence value
+	 */
+	virtual void setMaxHeFluence(double fluence);
+
+	/**
+	 * This function returns the maximum value of the Helium fluence.
+	 */
+	virtual double getMaxHeFluence() const;
+
+	/**
+	 * This operation gets whether or not the maximum Helium fluence will be used
+	 * @return	True if program will use the max He fluence, and false if it won't
+	 */
+	virtual bool getUsingMaxHeFluence();
+
+	/**
+	 * This operation sets the factor to change the Helium flux.
+	 * @param flux	Helium flux value
+	 */
+	virtual void setHeFlux(double flux);
+
+	/**
+	 * This operation gets the factor that changes the Helium flux.
+	 * @return	Helium flux value
+	 */
+	virtual double getHeFlux() const;
+
+};
+//end class FluxHandler
 
 }
 
