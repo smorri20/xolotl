@@ -162,7 +162,7 @@ public:
 
     /**
      * Obtain the value of the Helium fluence to be used.
-     * @return Constant temperature.
+     * @return The value of the maximum fluence.
      */
     virtual double getMaxHeliumFluence() const = 0;
 
@@ -171,6 +171,32 @@ public:
      * @param fluence The value for the maximum fluence.
      */
     virtual void setMaxHeliumFluence(double fluence) = 0;
+
+    /**
+     * Should we use the Helium flux option?
+	 * If false, it will not be used.
+     * @return true if the Helium flux option was present in the parameter file,
+	 * false if it was not.
+     */
+    virtual bool useHeliumFlux() const = 0;
+
+    /**
+     * Set the heliumFluxFlag.
+     * @param flag The value for the heliumFluenceFlag.
+     */
+    virtual void setHeliumFluxFlag(bool flag) = 0;
+
+    /**
+     * Obtain the value of the Helium flux to be used.
+     * @return The value of the flux.
+     */
+    virtual double getHeliumFlux() const = 0;
+
+    /**
+     * Set the value for the flux to use.
+     * @param flux The value for the flux.
+     */
+    virtual void setHeliumFlux(double flux) = 0;
 
     /**
      * Should we use the "standard" set of handlers for the performance?

@@ -50,6 +50,14 @@ double FluxHandler::getMaxHeFluence() const {
 	return maxHeFluence;
 }
 
-bool FluxHandler::useMaximumHeFluence() {
+bool FluxHandler::getUsingMaxHeFluence() {
 	return usingMaxHeFluence;
+}
+
+void FluxHandler::setHeFlux(double flux) {
+	heFlux = flux;
+}
+
+double FluxHandler::getHeFlux() const {
+	return heFlux;
 }

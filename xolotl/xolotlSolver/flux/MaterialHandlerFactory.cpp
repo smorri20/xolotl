@@ -16,7 +16,13 @@ bool initializeMaterial( xolotlCore::Options &options ) {
 	// If the Helium fluence option is present, set the value
 	if( options.useMaxHeliumFluence() )
 	{
-		theFluxHandler->setMaxHeFluence(options.getMaxHeliumFluence());
+		theFluxHandler->setMaxHeFluence( options.getMaxHeliumFluence() );
+	}
+
+	// If the helium flux option is present, set the value
+	if( options.useHeliumFlux() )
+	{
+		theFluxHandler->setHeFlux( options.getHeliumFlux() );
 	}
 
 	return ret;
@@ -29,8 +35,8 @@ std::shared_ptr<IFluxHandler> getMaterialHandler(void) {
 		// Issue a warning.
 		std::cerr << "Warning: xolotlSolver material handler requested, but "
 				"library has not been initialized." << std::endl;
-
 	}
+
 	return theFluxHandler;
 }
 

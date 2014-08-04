@@ -148,6 +148,12 @@ BOOST_AUTO_TEST_CASE(goodParamFile)
     // Check the temperature
     BOOST_REQUIRE_EQUAL( opts.useConstTemperatureHandlers(), true );
 
+    // Check if the maxHeFluence option is used
+    BOOST_REQUIRE_EQUAL( opts.useMaxHeliumFluence(), true );
+
+    // Check if the heFlux option is used
+    BOOST_REQUIRE_EQUAL( opts.useHeliumFlux(), true );
+
     // Check the performance handler
     BOOST_REQUIRE_EQUAL( opts.usePerfStandardHandlers(), true );
 

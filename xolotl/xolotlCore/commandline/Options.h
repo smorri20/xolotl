@@ -76,6 +76,16 @@ protected:
 	double maxHeliumFluence;
 
 	/**
+	 * Use the helium flux option?
+	 */
+	bool heliumFluxFlag;
+
+	/**
+	 * Value for the  flux.
+	 */
+	double heliumFlux;
+
+	/**
 	 * Use the "standard" set of handlers for the performance infrastructure?
 	 */
 	bool perfStandardHandlersFlag;
@@ -245,6 +255,31 @@ public:
      * \see IOptions.h
      */
     void setMaxHeliumFluence(double fluence) {maxHeliumFluence = fluence;}
+
+    /**
+     * Should we use the Helium flux option?
+	 * If false, it will not be used.
+     * \see IOptions.h
+     */
+    bool useHeliumFlux() const {return heliumFluxFlag;};
+
+    /**
+     * Set the heliumFluxFlag.
+     * \see IOptions.h
+     */
+    void setHeliumFluxFlag(bool flag) {heliumFluxFlag = flag;}
+
+    /**
+     * Obtain the value of the Helium flux to be used.
+     * \see IOptions.h
+     */
+    double getHeliumFlux() const {return heliumFlux;}
+
+    /**
+     * Set the value for the flux to use.
+     * \see IOptions.h
+     */
+    void setHeliumFlux(double flux) {heliumFlux = flux;}
 
     /**
      * Should we use the "standard" set of handlers for the performance?

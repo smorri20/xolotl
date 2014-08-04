@@ -6,6 +6,7 @@
 #include <ConstTempOptionHandler.h>
 #include <TempProfileOptionHandler.h>
 #include <FluenceOptionHandler.h>
+#include <FluxOptionHandler.h>
 #include <PerfOptionHandler.h>
 #include <VizOptionHandler.h>
 #include "Options.h"
@@ -13,10 +14,17 @@
 namespace xolotlCore {
 
 Options::Options() :
-		shouldRunFlag(true), exitCode(EXIT_SUCCESS), petscArgc(0), petscArgv(
-				NULL), constTempFlag(true), tempProfileFlag(false), constTemperature(
-				1000.0), heliumFluenceFlag(false), perfStandardHandlersFlag(
-				true), vizStandardHandlersFlag(false) {
+		shouldRunFlag(true),
+		exitCode(EXIT_SUCCESS),
+		petscArgc(0),
+		petscArgv(NULL),
+		constTempFlag(true),
+		tempProfileFlag(false),
+		constTemperature(1000.0),
+		heliumFluenceFlag(false),
+		heliumFluxFlag(false),
+		perfStandardHandlersFlag(true),
+		vizStandardHandlersFlag(false) {
 	// Create the network option handler
 	auto networkHandler = new
 			NetworkOptionHandler("networkFile",
@@ -39,6 +47,10 @@ Options::Options() :
 	auto fluenceHandler = new
 			FluenceOptionHandler("maxHeFluence",
 					"maxHeFluence <value>        The maximum value of the Helium fluence the user wishes to integrate to.");
+	// Create the flux option handler
+	auto fluxHandler = new
+			FluxOptionHandler("heFlux",
+					"heFlux <value>              This option allows the user to change the Helium flux by the factor specified (in nm).");
 	// Create the performance handler option handler
 	auto perfHandler = new
 			PerfOptionHandler("perfHandler",
@@ -54,6 +66,7 @@ Options::Options() :
 	optionsMap[constTempHandler->key] = constTempHandler;
 	optionsMap[tempProfileHandler->key] = tempProfileHandler;
 	optionsMap[fluenceHandler->key] = fluenceHandler;
+	optionsMap[fluxHandler->key] = fluxHandler;
 	optionsMap[perfHandler->key] = perfHandler;
 	optionsMap[vizHandler->key] = vizHandler;
 }

@@ -4,16 +4,13 @@
 #include "IFluxHandler.h"
 #include <vector>
 
-namespace xolotlSolver{
+namespace xolotlSolver {
 
 /**
  * Realizations of this interface are responsible for handling the incident (incoming)
  * and outgoing flux calculations.
  */
 class FluxHandler: public IFluxHandler {
-
-private:
-
 
 protected:
 
@@ -43,13 +40,20 @@ protected:
 	 */
 	double maxHeFluence;
 
+	/**
+	 * The amplitude of the flux
+	 */
+	double heFlux;
+
 public:
 
-	FluxHandler()
-		: stepSize(0.0e-16), heFluence(0.0e-16), usingMaxHeFluence(false)
-	{ }
+	FluxHandler() :
+			stepSize(0.0e-16), heFluence(0.0e-16), usingMaxHeFluence(false), maxHeFluence(
+					0.0e-16), heFlux(1.0) {
+	}
 
-	~FluxHandler() { }
+	~FluxHandler() {
+	}
 
 	/**
 	 * This operation returns the incident flux for a specific cluster composition,
@@ -101,13 +105,25 @@ public:
 	virtual double getMaxHeFluence() const;
 
 	/**
-	 * This operation sets whether or not the maximum Helium fluence will be used
-	 * @param use	If the program should or should not use the max He fluence
+	 * This operation gets whether or not the maximum Helium fluence will be used
 	 * @return	True if program will use the max He fluence, and false if it won't
 	 */
-	virtual bool useMaximumHeFluence();
+	virtual bool getUsingMaxHeFluence();
 
-}; //end class FluxHandler
+	/**
+	 * This operation sets the factor to change the Helium flux.
+	 * @param flux	Helium flux value
+	 */
+	virtual void setHeFlux(double flux);
+
+	/**
+	 * This operation gets the factor that changes the Helium flux.
+	 * @return	Helium flux value
+	 */
+	virtual double getHeFlux() const;
+
+};
+//end class FluxHandler
 
 }
 
