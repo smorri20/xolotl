@@ -31,8 +31,9 @@ using namespace xolotlCore;
  -mymonitor                              -- plot the concentrations of He and V as a function of x and cluster size (2d contour plot)
  -da_refine <n=1,2,...>                  -- run on a finer grid
  -da_grid_x <nx>						 -- number of grid points in the x direction
- -ts_max_steps maxsteps                  -- maximum number of time-steps to take
- -ts_final_time time                     -- maximum time to compute to
+ -ts_max_steps <maxsteps>                -- maximum number of time-steps to take
+ -ts_final_time <time>                   -- maximum time to compute to
+ -ts_dt <size>							 -- initial size of the time step
 
  Rules for maximum number of He allowed for V in cluster
  */
@@ -61,8 +62,6 @@ std::shared_ptr<ITemperatureHandler> PetscSolver::temperatureHandler;
 extern PetscErrorCode RHSFunction(TS, PetscReal, Vec, Vec, void*);
 extern PetscErrorCode RHSJacobian(TS, PetscReal, Vec, Mat, Mat);
 extern PetscErrorCode setupPetscMonitor(TS);
-extern PetscErrorCode computeHeliumFluence(TS, PetscInt, PetscReal, Vec, void *);
-extern void computeRetention(TS, Vec);
 
 TS ts; /* nonlinear solver */
 Vec C; /* solution */
@@ -192,8 +191,8 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 	checkPetscError(ierr);
 
 	// Get the name of the HDF5 file to read the concentrations from
-	std::shared_ptr<HDF5NetworkLoader> HDF5Loader
-		= std::dynamic_pointer_cast<HDF5NetworkLoader> (networkLoader);
+	std::shared_ptr<HDF5NetworkLoader> HDF5Loader = std::dynamic_pointer_cast<
+			HDF5NetworkLoader>(networkLoader);
 	auto fileName = HDF5Loader->getFilename();
 
 	// Get the last time step written in the HDF5 file
@@ -217,12 +216,13 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 
 		if (tempTimeStep >= 0) {
 			// Read the concentrations from the HDF5 file
-			auto concVector = HDF5Utils::readGridPoint(fileName,
-					tempTimeStep, i);
+			auto concVector = HDF5Utils::readGridPoint(fileName, tempTimeStep,
+					i);
 
 			// Loop on the concVector size
 			for (int k = 0; k < concVector.size(); k++) {
-				concOffset[(int) concVector.at(k).at(0)] = concVector.at(k).at(1);
+				concOffset[(int) concVector.at(k).at(0)] = concVector.at(k).at(
+						1);
 			}
 		}
 	}
@@ -233,31 +233,6 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 	ierr = DMDAVecRestoreArray(da, C, &concentrations);
 	checkPetscError(ierr);
 	PetscFunctionReturn(0);
-}
-
-void getIncomingHeFlux(PSICluster * cluster, std::vector<double> gridPos,
-		PetscReal curTime, PetscScalar *updatedConcOffset) {
-
-	int reactantIndex = 0;
-	// Get the flux handler that will be used to compute fluxes.
-	auto fluxHandler = PetscSolver::getFluxHandler();
-
-	// Get the composition of the cluster
-	auto thisComp = cluster->getComposition();
-	// Create the composition vector for the cluster
-	std::vector<int> compVec = { thisComp["He"], thisComp["V"], thisComp["I"] };
-	// Only update the concentration if the cluster exists
-	if (cluster) {
-		reactantIndex = cluster->getId() - 1;
-		// Calculate the incident flux
-		auto incidentFlux = fluxHandler->getIncidentFlux(compVec, gridPos,
-				curTime);
-		// Update the concentration of the cluster
-		updatedConcOffset[reactantIndex] += incidentFlux;
-		// where incidentFlux = 6 * x * x * x - 87 * x * x + 300 * x
-	}
-
-	return;
 }
 
 void computeDiffusion(PSICluster * cluster, double temp, PetscReal sx,
@@ -329,6 +304,11 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	double flux = 0.0;
 	// Get the handle to the network that will be used to compute fluxes.
 	auto network = PetscSolver::getNetwork();
+	// Get the temperature handler that will be used to compute fluxes.
+	auto temperatureHandler = PetscSolver::getTemperatureHandler();
+	// Get the flux handler that will be used to compute fluxes.
+	auto fluxHandler = PetscSolver::getFluxHandler();
+	auto incidentFluxVector = fluxHandler->getIncidentFluxVec();
 	// Some required properties
 	auto props = network->getProperties();
 	int numHeClusters = std::stoi(props["numHeClusters"]);
@@ -392,9 +372,6 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 		// Vector representing the position at which the flux will be calculated
 		// Currently we are only in 1D
 		std::vector<double> gridPosition = { x, 0, 0 };
-
-		// Get the temperature handler that will be used to compute fluxes.
-		auto temperatureHandler = PetscSolver::getTemperatureHandler();
 		auto temperature = temperatureHandler->getTemperature(gridPosition,
 				realTime);
 
@@ -403,7 +380,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 			network->setTemperature(temperature);
 			lastTemperature = temperature;
 		}
-				
+
 //		xi = 1; // Uncomment this line for debugging in a single cell.
 
 		// Compute the middle, left, right and new array offsets
@@ -423,8 +400,11 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 		// produces He of cluster size 1 -----
 		// Crude cubic approximation of graph from Tibo's notes
 		heCluster = (PSICluster *) network->get("He", 1);
-
-		getIncomingHeFlux(heCluster, gridPosition, realTime, updatedConcOffset);
+		if (heCluster) {
+			reactantIndex = heCluster->getId() - 1;
+			// Update the concentration of the cluster
+			updatedConcOffset[reactantIndex] += incidentFluxVector[xi];
+		}
 
 		// ---- Compute diffusion over the locally owned part of the grid -----
 
@@ -569,6 +549,8 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	int numHeClusters = std::stoi(props["numHeClusters"]);
 	int reactantIndex = 0;
 	int size = 0;
+	// Get the temperature handler that will be used to compute fluxes.
+	auto temperatureHandler = PetscSolver::getTemperatureHandler();
 
 	// Get the matrix from PETSc
 	PetscFunctionBeginUser;
@@ -632,8 +614,6 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 			// Vector representing the position at which the flux will be calculated
 			// Currently we are only in 1D
 			std::vector<double> gridPosition = { xi * hx, 0, 0 };
-			// Get the temperature handler that will be used to compute fluxes.
-			auto temperatureHandler = PetscSolver::getTemperatureHandler();
 			auto temperature = temperatureHandler->getTemperature(gridPosition,
 					realTime);
 
@@ -712,8 +692,6 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 		// Vector representing the position at which the flux will be calculated
 		// Currently we are only in 1D
 		std::vector<double> gridPosition = { xi * hx, 0, 0 };
-		// Get the temperature handler that will be used to compute fluxes.
-		auto temperatureHandler = PetscSolver::getTemperatureHandler();
 		auto temperature = temperatureHandler->getTemperature(gridPosition,
 				realTime);
 
@@ -911,12 +889,12 @@ PetscSolver::PetscSolver(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry)
 //! The Destructor
 PetscSolver::~PetscSolver() {
 
-    // std::cerr << "Destroying a PetscSolver" << std::endl;
+	// std::cerr << "Destroying a PetscSolver" << std::endl;
 
-    // Break "pointer" cycles so that network, clusters, reactants
-    // will deallocate when the std::shared_ptrs owning them 
-    // are destroyed.
-    network->askReactantsToReleaseNetwork();
+	// Break "pointer" cycles so that network, clusters, reactants
+	// will deallocate when the std::shared_ptrs owning them 
+	// are destroyed.
+	network->askReactantsToReleaseNetwork();
 }
 
 /**
@@ -1034,13 +1012,13 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	PetscFunctionBeginUser;
 
 	// Get the name of the HDF5 file to read the concentrations from
-	std::shared_ptr<HDF5NetworkLoader> HDF5Loader
-		= std::dynamic_pointer_cast<HDF5NetworkLoader> (networkLoader);
+	std::shared_ptr<HDF5NetworkLoader> HDF5Loader = std::dynamic_pointer_cast<
+			HDF5NetworkLoader>(networkLoader);
 	auto fileName = HDF5Loader->getFilename();
 
 	// Get starting conditions from HDF5 file
 	int gridLength = 0;
-	double time = 0.0, deltaTime = 1.0e-8;
+	double time = 0.0, deltaTime = 1.0e-12;
 	int tempTimeStep = -2;
 	HDF5Utils::readHeader(fileName, gridLength);
 
@@ -1144,24 +1122,8 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	ierr = TSSetInitialTimeStep(ts, time, deltaTime);
 	checkPetscError(ierr);
-//	ierr = TSSetDuration(ts, 100, 50.0);
-//	checkPetscError(ierr);
 	ierr = TSSetFromOptions(ts);
 	checkPetscError(ierr);
-
-	// Flag to identify if the helium retention option is present
-	PetscBool flagRetention;
-	// Check for the option -helium_retention
-	ierr = PetscOptionsHasName(NULL, "-helium_retention", &flagRetention);
-	checkPetscError(ierr);
-
-	bool heFluenceOption = fluxHandler->getUsingMaxHeFluence();
-	// If the the option --maxHeFluence is present, compute the fluence
-	if ( heFluenceOption && !flagRetention )
-	{
-		ierr = TSMonitorSet(ts, computeHeliumFluence, NULL, NULL);
-		checkPetscError(ierr);
-	}
 
 	ierr = setupPetscMonitor(ts);
 	checkPetscError(ierr);
@@ -1178,9 +1140,6 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	if (ts != NULL && C != NULL) {
 		ierr = TSSolve(ts, C);
 		checkPetscError(ierr);
-
-		if ( flagRetention )
-			computeRetention(ts, C);
 	} else {
 		throw std::string(
 				"PetscSolver Exception: Unable to solve! Data not configured properly.");
