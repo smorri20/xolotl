@@ -10,7 +10,7 @@
 #include <PetscSolver.h>
 #include <mpi.h>
 #include <MPIUtils.h>
-#include <XolotlOptions.h>
+#include <Options.h>
 #include <MaterialHandlerFactory.h>
 #include <TemperatureHandlerFactory.h>
 #include <HandlerRegistryFactory.h>
@@ -40,9 +40,9 @@ std::vector<xolotlPerf::HardwareQuantities> declareHWcounters() {
 	return hwq;
 }
 
-bool initMaterial() {
+bool initMaterial(Options &options) {
 
-	bool materialInitOK = xolotlSolver::initializeMaterial();
+	bool materialInitOK = xolotlSolver::initializeMaterial(options);
 	if (!materialInitOK) {
 		std::cerr << "Unable to initialize requested material.  Aborting"
 				<< std::endl;
@@ -51,9 +51,9 @@ bool initMaterial() {
 		return materialInitOK;
 }
 
-bool initTemp(bool opts, bool opts1, XolotlOptions &options) {
+bool initTemp(Options &options) {
 
-	bool tempInitOK = xolotlSolver::initializeTempHandler(opts, opts1, options);
+	bool tempInitOK = xolotlSolver::initializeTempHandler(options);
 	if (!tempInitOK) {
 		std::cerr << "Unable to initialize requested temperature.  Aborting"
 				<< std::endl;
@@ -90,13 +90,13 @@ std::shared_ptr<xolotlSolver::PetscSolver>
 setUpSolver( std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry, 
             int argc, char **argv) {
 	// Setup the solver
-	//auto solverInitTimer = handlerRegistry->getTimer("initSolver");
-	//solverInitTimer->start();
+	auto solverInitTimer = handlerRegistry->getTimer("initSolver");
+	solverInitTimer->start();
 	std::shared_ptr<xolotlSolver::PetscSolver> solver = 
         std::make_shared<xolotlSolver::PetscSolver>(handlerRegistry);
 	solver->setCommandLineOptions(argc, argv);
 	solver->initialize();
-	//solverInitTimer->stop();
+	solverInitTimer->stop();
 
 	return solver;
 }
@@ -137,10 +137,11 @@ int main(int argc, char **argv) {
 	argc -= 1; // one for the executable name
 	argv += 1; // one for the executable name
 
-	XolotlOptions xopts;
-	xopts.readParams(argc, argv);
-	if (!xopts.shouldRun()) {
-		return xopts.getExitCode();
+
+	Options opts;
+	opts.readParams(argc, argv);
+	if (!opts.shouldRun()) {
+		return opts.getExitCode();
 	}
 
 	// Skip the name of the parameter file that was just used.
@@ -149,21 +150,21 @@ int main(int argc, char **argv) {
 	argv += 1;
 
 	// Extract the argument for the file name
-	std::string networkFilename = xopts.getNetworkFilename();
+	std::string networkFilename = opts.getNetworkFilename();
 	assert(!networkFilename.empty());
 
 	try {
-		auto materialInitOK = initMaterial();
-		auto tempInitOK = initTemp(xopts.useConstTemperatureHandlers(),
-				xopts.useTemperatureProfileHandlers(), xopts);
-
 		// Set up our performance data infrastructure.
 		// Indicate we want to monitor some important hardware counters.
 		auto hwq = declareHWcounters();
-		auto perfInitOK = initPerf(xopts.usePerfStandardHandlers(), hwq);
+		auto perfInitOK = initPerf(opts.usePerfStandardHandlers(), hwq);
+		// Set up the material infrastructure that is used to calculate flux
+		auto materialInitOK = initMaterial(opts);
+		// Set up the temperature infrastructure
+		auto tempInitOK = initTemp(opts);
 
 		// Set up the visualization infrastructure.
-		auto vizInitOK = initViz(xopts.useVizStandardHandlers());
+		auto vizInitOK = initViz(opts.useVizStandardHandlers());
 
 		// Initialize MPI. We do this instead of leaving it to some
 		// other package (e.g., PETSc), because we want to avoid problems
@@ -171,7 +172,7 @@ int main(int argc, char **argv) {
 		MPI_Init(&argc, &argv);
 
 		auto materialHandler = xolotlSolver::getMaterialHandler();
-		auto tempHandler = xolotlSolver::getTemperatureHandler(xopts);
+		auto tempHandler = xolotlSolver::getTemperatureHandler(opts);
 
 		// Access our handler registry to obtain a Timer
 		// measuring the runtime of the entire program.
@@ -182,7 +183,7 @@ int main(int argc, char **argv) {
 
 		// Setup the solver
 		auto solver = setUpSolver(handlerRegistry,
-				xopts.getPetscArgc(), xopts.getPetscArgv());
+				opts.getPetscArgc(), opts.getPetscArgv());
 
 		// Load the network
 		auto networkLoadTimer = handlerRegistry->getTimer("loadNetwork");
@@ -204,10 +205,10 @@ int main(int argc, char **argv) {
 				tempHandler);
 
 		// Finalize our use of the solver.
-		//auto solverFinalizeTimer = handlerRegistry->getTimer("solverFinalize");
-		//solverFinalizeTimer->start();
+		auto solverFinalizeTimer = handlerRegistry->getTimer("solverFinalize");
+		solverFinalizeTimer->start();
 		solver->finalize();
-		//solverFinalizeTimer->stop();
+		solverFinalizeTimer->stop();
 		totalTimer->stop();
 
 		// Report the performance data about the run we just completed

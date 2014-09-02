@@ -127,16 +127,22 @@ public class PreprocessorTest {
 
 		try {
 			parsedArgs = CliFactory.parseArguments(Arguments.class,
-					new String[] { "--material", "Fe", "--startTemp", "900" });
-
-			// Check if there is a material argument
-			assertEquals(true, parsedArgs.isMaterial());
-			
-			// Check that the material is Fe
-			assertEquals("Fe", parsedArgs.getMaterial());
+					new String[] { "--startTemp", "900", "--maxHeFluence", "10", "--heFlux", "1.5" });
 			
 			// Check that the startTemp is 900
 			assertEquals("900", parsedArgs.getStartTemp());
+			
+			// Check that the maxHeFluence option is present
+			assertEquals(true, parsedArgs.isMaxHeFluence());
+			
+			// Check the value of the maxHeFluence option
+			assertEquals("10", parsedArgs.getMaxHeFluence());
+			
+			// Check that the HeFlux option is present
+			assertEquals(true, parsedArgs.isHeFlux());
+			
+			// Check the value of the maxHeFluence option
+			assertEquals("1.5", parsedArgs.getHeFlux());
 
 			if (parsedArgs != null) {
 				Preprocessor preprocessor = new Preprocessor(parsedArgs);
@@ -218,25 +224,12 @@ public class PreprocessorTest {
 			if (parsedArgs != null) {
 				Preprocessor preprocessor = new Preprocessor(parsedArgs);
 
-				// Create the known grid array
-				double[] knownGrid = new double[15];
-
-				// Fill it with known values
-				for (int i = 0; i < 15; i++) {
-					knownGrid[i] = (double) i * 0.57142857142;
-				}
-
 				try {
 					// Generate a grid
-					double[] newGrid = preprocessor.generateGrid(8, 1);
+					int newGrid = preprocessor.generateGrid(8, 1);
 
 					// Check the length of it
-					assertEquals(newGrid.length, knownGrid.length);
-
-					// Check all the values
-					for (int i = 0; i < newGrid.length; i++) {
-						assertEquals(newGrid[i], knownGrid[i], 1.0e-5);
-					}
+					assertEquals(newGrid, 15);
 
 				} catch (Exception e) {
 					// Complain and fail

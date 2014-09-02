@@ -50,7 +50,7 @@ public class ArgumentsTest {
 			assertEquals(false, args.isHeFlux());
 			
 			// Check if there is an heFluence argument
-			assertEquals(false, args.isHeFluence());
+			assertEquals(false, args.isMaxHeFluence());
 
 			// Check that the default perfHandler is std
 			assertEquals("std", args.getPerfHandler());
@@ -66,8 +66,8 @@ public class ArgumentsTest {
 
 			// Check the default petscArgs
 			assertEquals(
-					"-da_grid_x 10 -ts_final_time 1000 "
-							+ "-ts_max_steps 3 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
+					"-da_grid_x 10 -ts_final_time 50 -ts_dt 1.0e-12 "
+							+ "-ts_max_steps 100 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
 							+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant "
 							+ "-fieldsplit_1_pc_type sor -snes_monitor -ksp_monitor -ts_monitor",
 					args.getPetscArgs());
@@ -91,7 +91,8 @@ public class ArgumentsTest {
 			// Parse the specified string of arguments
 			args = CliFactory.parseArguments(Arguments.class, new String[] {
 					"--startTemp", "900", "--material", "Fe", "--perfHandler",
-					"dummy", "--maxHeSize", "7", "--maxVSize", "30", "--maxISize", "5" });
+					"dummy", "--maxHeSize", "7", "--maxVSize", "30", "--maxISize", "5",
+					"--checkpoint", "xolotlStop.h5" });
 			
 			// Check that the maximum Helium cluster size is 7
 			assertEquals(7, args.getMaxHeSize());
@@ -118,7 +119,7 @@ public class ArgumentsTest {
 			assertEquals(false, args.isHeFlux());
 			
 			// Check if there is an heFluence argument
-			assertEquals(false, args.isHeFluence());
+			assertEquals(false, args.isMaxHeFluence());
 
 			// Check that the perfHandler is dummy
 			assertEquals("dummy", args.getPerfHandler());
@@ -127,15 +128,18 @@ public class ArgumentsTest {
 			assertEquals("dummy", args.getVizHandler());
 
 			// Check if there is a checkpoint argument
-			assertEquals(false, args.isCheckpoint());
+			assertEquals(true, args.isCheckpoint());
+
+			// Check the name of the file for the checkpoint
+			assertEquals("xolotlStop.h5", args.getCheckpoint());
 
 			// Check that the default networkFile is networkInit.h5
 			assertEquals("networkInit.h5", args.getNetworkFile());
 
 			// Check the default petscArgs
 			assertEquals(
-					"-da_grid_x 10 -ts_final_time 1000 "
-							+ "-ts_max_steps 3 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
+					"-da_grid_x 10 -ts_final_time 50 -ts_dt 1.0e-12 "
+							+ "-ts_max_steps 100 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
 							+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant "
 							+ "-fieldsplit_1_pc_type sor -snes_monitor -ksp_monitor -ts_monitor",
 					args.getPetscArgs());
