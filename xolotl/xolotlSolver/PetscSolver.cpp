@@ -20,7 +20,7 @@ using namespace xolotlCore;
 /*
  C_t =  -D*C_xx + F(C) + R(C) + D(C) from Brian Wirth's SciDAC project.
 
- D*C_xx  - diffusion of He[1-5] and V[1] and I[1]
+ D*C_xx  - diffusion of He[1-6] and V[1] and I[1]
  F(C)  -   forcing function; He being created.
  R(C)  -   reaction terms   (clusters combining)
  D(C)  -   dissociation terms (cluster breaking up)
@@ -159,8 +159,8 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 		numOfxGridPoints = 8.0;
 
 	// Setup some step size variables
-	PetscReal hx;
-	hx = numOfxGridPoints / (PetscReal) (Mx - 1);
+//	PetscReal hx;
+	double hx = (double) numOfxGridPoints / (PetscReal) (Mx - 1);
 
 	// Get the flux handler that will be used to compute fluxes.
 	auto fluxHandler = PetscSolver::getFluxHandler();
@@ -191,13 +191,14 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 	checkPetscError(ierr);
 
 	// Get the name of the HDF5 file to read the concentrations from
-	std::shared_ptr<HDF5NetworkLoader> HDF5Loader = std::dynamic_pointer_cast<
-			HDF5NetworkLoader>(networkLoader);
+	std::shared_ptr<HDF5NetworkLoader> HDF5Loader = std::dynamic_pointer_cast
+			< HDF5NetworkLoader > (networkLoader);
 	auto fileName = HDF5Loader->getFilename();
 
 	// Get the last time step written in the HDF5 file
 	int tempTimeStep = -2;
-	HDF5Utils::hasConcentrationGroup(fileName, tempTimeStep);
+	bool hasConcentrations = HDF5Utils::hasConcentrationGroup(fileName,
+			tempTimeStep);
 
 	// Loop on all the grid points
 	for (i = xs; i < xs + xm; i++) {
@@ -207,22 +208,35 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 			concOffset[k] = 0.0;
 		}
 
+//		if (i > 0) {
+//			int k = 14; // initial concentration for V only
+//			concOffset[k] = 0.00315 / hx;
+//		}
+
 //		// Uncomment this for debugging
 //		if (i > 0) {
 //			for (int k = 0; k < size; k++) {
 //				concOffset[k] = 0.001;
 //			}
 //		}
+	}
 
-		if (tempTimeStep >= 0) {
+	// If the concentration must be set from the HDF5 file
+	if (hasConcentrations) {
+		// Loop on the full grid
+		for (int i = 0; i < Mx; i++) {
 			// Read the concentrations from the HDF5 file
 			auto concVector = HDF5Utils::readGridPoint(fileName, tempTimeStep,
 					i);
 
-			// Loop on the concVector size
-			for (int k = 0; k < concVector.size(); k++) {
-				concOffset[(int) concVector.at(k).at(0)] = concVector.at(k).at(
-						1);
+			// Change the concentration only if we are on the locally owned part of the grid
+			if (i >= xs && i < xs + xm) {
+				concOffset = concentrations + size * i;
+				// Loop on the concVector size
+				for (int k = 0; k < concVector.size(); k++) {
+					concOffset[(int) concVector.at(k).at(0)] =
+							concVector.at(k).at(1);
+				}
 			}
 		}
 	}
@@ -241,8 +255,7 @@ void computeDiffusion(PSICluster * cluster, double temp, PetscReal sx,
 
 	int reactantIndex = 0;
 	// Dummy variables to keep the code clean
-	double oldConc = 0.0, oldLeftConc = 0.0, oldRightConc = 0.0, conc = 0.0,
-			flux = 0.0;
+	double oldConc = 0.0, oldLeftConc = 0.0, oldRightConc = 0.0, conc = 0.0;
 
 	reactantIndex = cluster->getId() - 1;
 	// Get the concentrations
@@ -277,7 +290,6 @@ void computeDiffusion(PSICluster * cluster, double temp, PetscReal sx,
  */
 /* ------------------------------------------------------------------- */
 PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
-
 	// Start the RHSFunction Timer
 	RHSFunctionTimer->start();
 
@@ -367,6 +379,9 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	// Loop over grid points computing ODE terms for each grid point
 	size = network->size();
 	for (xi = xs; xi < xs + xm; xi++) {
+
+//		xi = 1; // Uncomment this line for debugging in a single cell.
+
 		x = xi * hx;
 
 		// Vector representing the position at which the flux will be calculated
@@ -380,8 +395,6 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 			network->setTemperature(temperature);
 			lastTemperature = temperature;
 		}
-
-//		xi = 1; // Uncomment this line for debugging in a single cell.
 
 		// Compute the middle, left, right and new array offsets
 		concOffset = concs + size * xi;
@@ -408,8 +421,8 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 
 		// ---- Compute diffusion over the locally owned part of the grid -----
 
-		// He clusters larger than 5 do not diffuse -- they are immobile
-		for (int i = 1; i < PetscMin(numHeClusters + 1, 6); i++) {
+		// He clusters larger than 6 do not diffuse -- they are immobile
+		for (int i = 1; i < PetscMin(numHeClusters + 1, 7); i++) {
 			// Get the reactant index
 			heCluster = (PSICluster *) network->get("He", i);
 
@@ -529,7 +542,6 @@ void computePartialsForDiffusion(PSICluster * cluster, double temp,
  */
 PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 		void *ptr) {
-
 	// Start the RHSJacobian timer
 	RHSJacobianTimer->start();
 
@@ -628,9 +640,9 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 			 ---- Compute diffusion over the locally owned part of the grid
 			 */
 
-			/* He clusters larger than 5 do not diffuse -- they are immobile */
+			/* He clusters larger than 6 do not diffuse -- they are immobile */
 			// ---- Compute diffusion over the locally owned part of the grid -----
-			for (i = 1; i < PetscMin(numHeClusters + 1, 6); i++) {
+			for (i = 1; i < PetscMin(numHeClusters + 1, 7); i++) {
 				// Get the cluster
 				auto psiCluster = (PSICluster *) network->get("He", i);
 				computePartialsForDiffusion(psiCluster, temperature, sx, val,
@@ -752,33 +764,31 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 
 	// Enforce the Boundary conditions. Loop over the grid points and set the
 	// conditions.
-	for (xi = xs; xi < xs + xm; xi++) {
-		if (xi == 0) {
-			// Loop on the reactants
-			for (int i = 0; i < size; i++) {
-				auto reactant = allReactants->at(i);
-				// Get the reactant index
-				reactantIndex = reactant->getId() - 1;
-				// Get the row id
-				rowId = (xi - xs + 1) * size + reactantIndex;
+	if (xs == 0) {
+		// Loop on the reactants
+		for (int i = 0; i < size; i++) {
+			auto reactant = allReactants->at(i);
+			// Get the reactant index
+			reactantIndex = reactant->getId() - 1;
+			// Get the row id
+			rowId = size + reactantIndex;
 
-				// Get the list of column ids from the map
-				auto pdColIdsVector = dFillMap.at(reactantIndex);
-				pdColIdsVectorSize = pdColIdsVector.size(); //Number of partial derivatives
-				// Loop over the list of column ids
-				for (int j = 0; j < pdColIdsVectorSize; j++) {
-					// Calculate the appropriate index to match the dfill array configuration
-					localPDColIds[j] = (xi - xs + 1) * size + pdColIdsVector[j];
-					// Get the partial derivative from the array of all of the partials
-					reactingPartialsForCluster[j] = 0.0;
-				}
-
-				// Update the matrix
-				ierr = MatSetValuesLocal(J, 1, &rowId, pdColIdsVectorSize,
-						localPDColIds, reactingPartialsForCluster.data(),
-						INSERT_VALUES);
-				checkPetscError(ierr);
+			// Get the list of column ids from the map
+			auto pdColIdsVector = dFillMap.at(reactantIndex);
+			pdColIdsVectorSize = pdColIdsVector.size(); //Number of partial derivatives
+			// Loop over the list of column ids
+			for (int j = 0; j < pdColIdsVectorSize; j++) {
+				// Calculate the appropriate index to match the dfill array configuration
+				localPDColIds[j] = size + pdColIdsVector[j];
+				// Get the partial derivative from the array of all of the partials
+				reactingPartialsForCluster[j] = 0.0;
 			}
+
+			// Update the matrix
+			ierr = MatSetValuesLocal(J, 1, &rowId, pdColIdsVectorSize,
+					localPDColIds, reactingPartialsForCluster.data(),
+					INSERT_VALUES);
+			checkPetscError(ierr);
 		}
 	}
 
@@ -1012,8 +1022,8 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	PetscFunctionBeginUser;
 
 	// Get the name of the HDF5 file to read the concentrations from
-	std::shared_ptr<HDF5NetworkLoader> HDF5Loader = std::dynamic_pointer_cast<
-			HDF5NetworkLoader>(networkLoader);
+	std::shared_ptr<HDF5NetworkLoader> HDF5Loader = std::dynamic_pointer_cast
+			< HDF5NetworkLoader > (networkLoader);
 	auto fileName = HDF5Loader->getFilename();
 
 	// Get starting conditions from HDF5 file
@@ -1034,11 +1044,15 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	NULL, &da);
 	checkPetscError(ierr);
 
-	/* The only spatial coupling in the Jacobian (diffusion) is for the first 5 He, the first V, and the first I.
-	 The ofill (thought of as a dof by dof 2d (row-oriented) array represents the nonzero coupling between degrees
-	 of freedom at one point with degrees of freedom on the adjacent point to the left or right. A 1 at i,j in the
-	 ofill array indicates that the degree of freedom i at a point is coupled to degree of freedom j at the
-	 adjacent point. In this case ofill has only a few diagonal entries since the only spatial coupling is regular diffusion. */
+	/*  The only spatial coupling in the Jacobian (diffusion) is for the first 6 He,
+	 *  the first V, and the first I. The ofill (thought of as a dof by dof 2d
+	 *  (row-oriented) array represents the nonzero coupling between degrees
+	 *  of freedom at one point with degrees of freedom on the adjacent point to
+	 *  the left or right. A 1 at i,j in the ofill array indicates that the degree
+	 *  of freedom i at a point is coupled to degree of freedom j at the adjacent point.
+	 *  In this case ofill has only a few diagonal entries since the only spatial
+	 *  coupling is regular diffusion.
+	 */
 	ierr = PetscMalloc(dof * dof * sizeof(PetscInt), &ofill);
 	checkPetscError(ierr);
 	ierr = PetscMalloc(dof * dof * sizeof(PetscInt), &dfill);
@@ -1051,7 +1065,7 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	// Fill ofill, the matrix of "off-diagonal" elements that represents diffusion, with for He.
 	int reactantIndex = 0;
 	Reactant * reactant;
-	for (int numHe = 1; numHe < PetscMin(numHeClusters + 1, 6); numHe++) {
+	for (int numHe = 1; numHe < PetscMin(numHeClusters + 1, 7); numHe++) {
 		reactant = network->get("He", numHe);
 		// Only couple if the reactant exists
 		if (reactant) {

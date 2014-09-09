@@ -249,10 +249,11 @@ double PSICluster::getDissociationFlux(double temperature) const {
 	return flux;
 }
 
+
 double PSICluster::getEmissionFlux(double temperature) const {
 	// Initial declarations
 	int nPairs = 0;
-	double flux = 0.0, fluxMultiplier = 1.0;
+	double flux = 0.0;
 
 	// Only try this if the network is available
 	if (network != NULL) {
@@ -329,7 +330,7 @@ double PSICluster::getTotalFlux(const double temperature) {
 		combFlux = 0.0;
 		emissFlux = 0.0;
 	}
-
+	
 	return prodFlux - combFlux + dissFlux - emissFlux;
 }
 
@@ -790,7 +791,6 @@ void PSICluster::getEmissionPartialDerivatives(std::vector<double> & partials,
 		// due to emission is OUTGOING (-=)!
 		index = id - 1;
 		partials[index] -= effEmissionPairs[i]->kConstant;
-
 	}
 
 	return;
@@ -858,6 +858,7 @@ void PSICluster::combineClusters(std::vector<Reactant *> & reactants,
 			productCluster = (PSICluster *) network->get(productName,
 					productSize);
 		}
+		
 		// React if the product exists in the network
 		if (productCluster) {
 			// Setup the connectivity array for the second reactant
