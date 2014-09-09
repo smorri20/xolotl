@@ -98,18 +98,6 @@ public:
 	virtual std::shared_ptr<Reactant> clone();
 
 	/**
-	 * This operation returns the total generation rate due to emission for
-	 * this cluster.
-	 */
-	double getGenByEm();
-
-	/**
-	 * This operation returns the total annihilation rate due to emission for
-	 * this cluster.
-	 */
-	double getAnnByEm();
-
-	/**
 	 * This operation returns true to signify that this cluster is a mixture of
 	 * He and V.
 	 */

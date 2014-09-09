@@ -34,12 +34,15 @@ HeVCluster::HeVCluster(int numHe, int numV,
 					(3.0 * pow(xolotlCore::latticeConstant, 3.0))
 							/ (8.0 * xolotlCore::pi), (1.0 / 3.0));
 
+	return;
 }
 
 HeVCluster::HeVCluster(const HeVCluster &other) :
 		PSICluster(other) {
 	numHe = other.numHe;
 	numV = other.numV;
+
+	return;
 }
 
 HeVCluster::~HeVCluster() {
@@ -47,15 +50,8 @@ HeVCluster::~HeVCluster() {
 
 std::shared_ptr<Reactant> HeVCluster::clone() {
 	std::shared_ptr<Reactant> reactant(new HeVCluster(*this));
+
 	return reactant;
-}
-
-double HeVCluster::getGenByEm() {
-	return 0;
-}
-
-double HeVCluster::getAnnByEm() {
-	return 0;
 }
 
 void HeVCluster::replaceInCompound(std::vector<Reactant *> & reactants,
@@ -216,7 +212,7 @@ void HeVCluster::createReactionConnectivity() {
 	}
 
 	// Vacancy reduction by Interstitial absorption in HeV producing this cluster
-	// (He_a)[V_(b+i)] + (I_i) --> (He_a)(V_b)
+	// (He_a)[V_(b+c)] + (I_c) --> (He_a)(V_b)
 	// Get all the I clusters from the network
 	reactants = network->getAll(iType);
 	reactantsSize = reactants.size();
@@ -362,6 +358,17 @@ void HeVCluster::createDissociationConnectivity() {
 	// Here it is important that heVClusterMoreV is the first cluster
 	// because it is the dissociating one.
 	dissociateCluster(heVClusterMoreV, singleCluster);
+	
+	// Trap mutation
+	// (He_a)(V_b) --> He_(a)[V_(b+1)] + I
+	// Get the single interstitial cluster (we already have the one with
+	// one more vacancy)
+	singleCluster = (PSICluster *) network->get(iType, 1);
+	emitClusters(singleCluster, heVClusterMoreV);
+	// He_(a)[V_(b-1)] --> (He_a)(V_b) + I
+	// Here it is important that heVClusterLessV is the first cluster
+	// because it is the dissociating one.
+	dissociateCluster(heVClusterLessV, singleCluster);
 
 	return;
 }

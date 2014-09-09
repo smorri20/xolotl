@@ -35,6 +35,7 @@ HeCluster::~HeCluster() {
 
 std::shared_ptr<Reactant> HeCluster::clone() {
 	std::shared_ptr<Reactant> reactant(new HeCluster(*this));
+
 	return reactant;
 }
 

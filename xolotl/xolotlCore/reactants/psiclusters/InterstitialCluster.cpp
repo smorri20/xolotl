@@ -26,6 +26,7 @@ InterstitialCluster::InterstitialCluster(int nI,
 	double termThree = pow((3.0 / EightPi) * aCubed, (1.0 / 3.0));
 	reactionRadius = termOne + termTwo - termThree;
 
+	return;
 }
 
 InterstitialCluster::~InterstitialCluster() {
@@ -33,6 +34,7 @@ InterstitialCluster::~InterstitialCluster() {
 
 std::shared_ptr<Reactant> InterstitialCluster::clone() {
 	std::shared_ptr<Reactant> reactant(new InterstitialCluster(*this));
+
 	return reactant;
 }
 
