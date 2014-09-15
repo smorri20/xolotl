@@ -418,7 +418,7 @@ void PSICluster::printReaction(const PSICluster & firstReactant,
 	auto firstComp = firstReactant.getComposition();
 	auto secondComp = secondReactant.getComposition();
 	auto productComp = productReactant.getComposition();
-
+	
 	std::cout << firstReactant.getName() << "(" << firstComp[heType] << ", "
 			<< firstComp[vType] << ", " << firstComp[iType] << ") + "
 			<< secondReactant.getName() << "(" << secondComp[heType] << ", "
@@ -453,7 +453,7 @@ static std::vector<int> getFullConnectivityVector(std::set<int> connectivitySet,
 		int size) {
 	// Create a vector of zeroes with size equal to the network size
 	std::vector<int> connectivity(size);
-
+	
 	// Set the value of the connectivity array to one for each element that is
 	// in the set.
 	for (auto it = connectivitySet.begin(); it != connectivitySet.end(); it++) {

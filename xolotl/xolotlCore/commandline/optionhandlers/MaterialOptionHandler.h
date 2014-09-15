@@ -17,9 +17,13 @@ public:
 	 */
     MaterialOptionHandler() :
     	OptionHandler("material",
-    			"material {W100, W110, W111, W210, W211, W221, W310, W311, W320, W321, Fe}             "
+    			"material <material>         "
     			"This option allows the user to change the profile of "
-    			"the helium flux corresponding to the material.  (default = W100)") {}
+    			"the helium flux corresponding to the material.  (default = W100) \n"
+    			"                              The material options are as follows: "
+    			"{W100, W110, W111, W210, W211, W221, W310, W311, W320, W321, Fe}, where W is for \n"
+    			"                              tungsten and the numbers correspond to the surface orientation.")
+	{}
 
 	/**
 	 * The destructor
