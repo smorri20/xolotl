@@ -2,23 +2,16 @@
 #include <HandlerRegistryFactory.h>
 #include <Constants.h>
 #include <iostream>
+#include <limits>
 
 using namespace xolotlCore;
-
-// Create the static map of binding energies
-// It has to be initialized here because it was not working otherwise
-std::unordered_map<std::string, int> PSICluster::bindingEnergyIndexMap
-	= {{heType, 0}, {vType, 1}, {iType, 2}};
 
 PSICluster::PSICluster() :
 		Reactant() {
 	// Set the size
 	size = 1;
-	// Zero out the binding energies
-	bindingEnergies.resize(3);
-	bindingEnergies[0] = 0.0;
-	bindingEnergies[1] = 0.0;
-	bindingEnergies[2] = 0.0;
+	// Zero out the formation energy
+	formationEnergy = 0.0;
 	// Zero out the diffusion factor and migration energy
 	diffusionFactor = 0.0;
 	diffusionCoefficient = 0.0;
@@ -40,11 +33,8 @@ PSICluster::PSICluster(const int clusterSize,
 
 	// Set the size
 	size = (clusterSize > 0) ? clusterSize : 1;
-	// Zero out the binding energies
-	bindingEnergies.resize(3);
-	bindingEnergies[0] = 0.0;
-	bindingEnergies[1] = 0.0;
-	bindingEnergies[2] = 0.0;
+	// Zero out the formation energy
+	formationEnergy = 0.0;
 	// Zero out the diffusion factor and migration energy
 	diffusionFactor = 0.0;
 	diffusionCoefficient = 0.0;
@@ -67,8 +57,8 @@ PSICluster::PSICluster(const int clusterSize,
 PSICluster::PSICluster(const PSICluster &other) :
 		Reactant(other), size(other.size), diffusionFactor(
 				other.diffusionFactor), thisNetworkIndex(
-				other.thisNetworkIndex), bindingEnergies(
-				other.bindingEnergies), migrationEnergy(
+				other.thisNetworkIndex), formationEnergy(
+				other.formationEnergy), migrationEnergy(
 				other.migrationEnergy), reactionRadius(
 				other.reactionRadius), reactingPairs(
 				other.reactingPairs), combiningReactants(
@@ -351,20 +341,13 @@ double PSICluster::getDiffusionCoefficient() const {
 	return diffusionCoefficient;
 }
 
-std::vector<double> PSICluster::getBindingEnergies() const {
-	// Local Declarations
-	std::vector<double> energyVector;
-
-	// Set the return binding energies
-	energyVector = bindingEnergies;
-
-	// Return the energies
-	return energyVector;
+double PSICluster::getFormationEnergy() const {
+	return formationEnergy;
 }
 
-void PSICluster::setBindingEnergies(const std::vector<double> energies) {
-	// Set the binding energies
-	bindingEnergies = energies;
+void PSICluster::setFormationEnergy(double energy) {
+	// Set the formation energy
+	formationEnergy = energy;
 	return;
 }
 
@@ -404,12 +387,9 @@ double PSICluster::calculateDissociationConstant(const PSICluster & dissociating
 		double temperature) const {
 
 	// Local Declarations
-	int bindingEnergyIndex = -1;
 	double atomicVolume = 1.0; // Currently calculated below for He and W only!
 	double bindingEnergy = 0.0;
 
-	// Get the binding energy index.
-	bindingEnergyIndex = bindingEnergyIndexMap[singleCluster.typeName];
 	// The atomic volume is computed by considering the BCC structure of the
 	// tungsten. In a given lattice cell in tungsten there are tungsten atoms
 	// at each corner and a tungsten atom in the center. The tungsten atoms at
@@ -425,11 +405,27 @@ double PSICluster::calculateDissociationConstant(const PSICluster & dissociating
 			temperature);
 
 	// Calculate and return
-	bindingEnergy = dissociatingCluster.getBindingEnergies()[bindingEnergyIndex];
+	bindingEnergy = computeBindingEnergy(dissociatingCluster, singleCluster, secondCluster);
 	double k_minus_exp = exp(
 			-1.0 * bindingEnergy / (xolotlCore::kBoltzmann * temperature));
 	double k_minus = (1.0 / atomicVolume) * kPlus * k_minus_exp;
 	return k_minus;
+}
+
+double PSICluster::computeBindingEnergy(const PSICluster & dissociatingCluster,
+		const PSICluster & singleCluster, const PSICluster & secondCluster) const {
+	// for the dissociation A --> B + C we need A binding energy
+	// E_b(A) = E_f(B) + E_f(C) - E_f(A) where E_f is the formation energy
+	double bindingEnergy = singleCluster.formationEnergy + secondCluster.formationEnergy
+			- dissociatingCluster.formationEnergy;
+
+	// Because we only want the specific trap mutation to have a greatly negative binding energy
+	if ((bindingEnergy < -1.0) && (singleCluster.typeName != iType)
+			&& (secondCluster.typeName != iType)) {
+		bindingEnergy = numeric_limits<double>::infinity();
+	}
+
+	return bindingEnergy;
 }
 
 void PSICluster::computeRateConstants(double temperature) {
@@ -494,21 +490,8 @@ void PSICluster::computeRateConstants(double temperature) {
 		// emitted by the dissociation
 		auto otherEmittedCluster = dissociatingPairs[i].second;
 		// Compute the dissociation constant
-		double rate = 0.0;
-		// The order of the cluster is important here because of the binding
-		// energy used in the computation. It is taken from the type of the first cluster
-		// which must be the single one
-		if (size == 1) {
-			// "this" is the single size one
-			rate = calculateDissociationConstant(*dissociatingCluster,
+		double rate = calculateDissociationConstant(*dissociatingCluster,
 					*this, *otherEmittedCluster, temperature);
-		}
-		else {
-			// otherEmittedCluster is the single size one
-			rate = calculateDissociationConstant(*dissociatingCluster,
-					*otherEmittedCluster, *this, temperature);
-
-		}
 		// Set it in the pair
 		dissociatingPairs[i].kConstant = rate;
 
@@ -542,6 +525,11 @@ void PSICluster::computeRateConstants(double temperature) {
 			effEmissionPairs.push_back(&emissionPairs[i]);
 		}
 	}
+
+//	std::cout << name << ": " << effReactingPairs.size() << " "
+//			<< effCombiningReactants.size() << " "
+//			<< effDissociatingPairs.size() << " "
+//			<< effEmissionPairs.size() << std::endl;
 
 	return;
 }

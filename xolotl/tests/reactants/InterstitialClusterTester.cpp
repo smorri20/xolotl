@@ -99,24 +99,18 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
  	auto cluster = (PSICluster *) network->get("I", 1);
  	// Get one that it combines with (I2)
  	auto secondCluster = (PSICluster *) network->get("I", 2);
- 	// Set the diffusion factor, migration and binding energies based on the
+ 	// Set the diffusion factor and migration energy based on the
  	// values from the tungsten benchmark for this problem.
  	cluster->setDiffusionFactor(2.13E+10);
  	cluster->setMigrationEnergy(0.013);
- 	vector<double> energies = {numeric_limits<double>::infinity(), numeric_limits<double>::infinity(),
- 			numeric_limits<double>::infinity(), numeric_limits<double>::infinity()};
- 	cluster->setBindingEnergies(energies);
 	cluster->setTemperature(1000.0);
  	cluster->setConcentration(0.5);
 
- 	// Set the diffusion factor, migration and binding energies based on the
+ 	// Set the diffusion factor and migration energy based on the
  	// values from the tungsten benchmark for this problem for the second cluster
  	secondCluster->setDiffusionFactor(1.065E+10);
  	secondCluster->setMigrationEnergy(0.013);
 	secondCluster->setTemperature(1000.0);
- 	energies = {numeric_limits<double>::infinity(), numeric_limits<double>::infinity(),
- 			2.12, numeric_limits<double>::infinity()};
- 	secondCluster->setBindingEnergies(energies);
  	secondCluster->setConcentration(0.5);
 
  	// Compute the rate constants that are needed for the flux
@@ -128,7 +122,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
  			  << "   -Combination Flux: " << cluster->getCombinationFlux(1000.0) << "\n"
  			  << "   -Dissociation Flux: " << cluster->getDissociationFlux(1000.0) << "\n"
  			  << "   -Emission Flux: " << cluster->getEmissionFlux(1000.0) << "\n");
- 	BOOST_REQUIRE_CLOSE(-103424236193.0, flux, 0.1);
+ 	BOOST_REQUIRE_CLOSE(9021773486621.2, flux, 0.1);
  }
 
  /**
@@ -145,13 +139,10 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 
  	// Get an I cluster with compostion 0,0,1.
  	auto cluster = (PSICluster *) network->get("I", 1);
- 	// Set the diffusion factor, migration and binding energies based on the
+ 	// Set the diffusion factor and migration energy based on the
  	// values from the tungsten benchmark for this problem.
  	cluster->setDiffusionFactor(2.13E+10);
  	cluster->setMigrationEnergy(0.013);
- 	vector<double> energies = {numeric_limits<double>::infinity(), numeric_limits<double>::infinity(),
- 			numeric_limits<double>::infinity(), numeric_limits<double>::infinity()};
- 	cluster->setBindingEnergies(energies);
 	cluster->setTemperature(1000.0);
  	cluster->setConcentration(0.5);
 

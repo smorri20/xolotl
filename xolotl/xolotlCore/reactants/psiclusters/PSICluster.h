@@ -121,16 +121,10 @@ protected:
 	int thisNetworkIndex;
 
 	/**
-	 * The binding energies for this cluster with clusters of other species
-	 * types. There is one binding energy for each of the other species ordered
-	 * by He, V, and I at indices 0, 1, and 2 respectively.
+	 * The formation energy of this cluster. It will be used to compute the
+	 * binding energies appearing in the dissociation constant calculation.
 	 */
-	std::vector<double> bindingEnergies;
-
-	/**
-	 * A map used to look up binding energy indices quickly.
-	 */
-	static std::unordered_map<std::string, int> bindingEnergyIndexMap;
+	double formationEnergy;
 
 	/**
 	 * The migration energy for this cluster.
@@ -234,11 +228,23 @@ protected:
 	 * must be the single size one in order to select the right type of binding energy
 	 * @param secondCluster The second cluster that dissociated from the parent
 	 * @param temperature The current system temperature
-	 * @return
+	 * @return The dissociation rate
 	 */
 	double calculateDissociationConstant(const PSICluster & dissociatingCluster,
 			const PSICluster & singleCluster, const PSICluster & secondCluster,
 			double temperature) const;
+
+	/**
+	 * Calculate the binding energy for the dissociation cluster to emit the single
+	 * and second cluster.
+	 *
+	 * @param dissociatingCluster The cluster that is dissociating
+	 * @param singleCluster One of the clusters that dissociated from the parent
+	 * @param secondCluster The second cluster that dissociated from the parent
+	 * @return The binding energy corresponding to this dissociation.
+	 */
+	double computeBindingEnergy(const PSICluster & dissociatingCluster,
+			const PSICluster & singleCluster, const PSICluster & secondCluster) const;
 
 	/**
 	 * Computes a row (or column) of the reaction connectivity matrix
@@ -625,18 +631,16 @@ public:
 	virtual int getSize() const;
 
 	/**
-	 * This operation retrieves the binding energy for this cluster.
-	 * @return An array of the binding energies of this cluster with clusters
-	 * of other types as described above.
+	 * This operation retrieves the formation energy for this cluster.
+	 * @return The value of the formation energy.
 	 */
-	std::vector<double> getBindingEnergies() const;
+	double getFormationEnergy() const;
 
 	/**
-	 * This operation sets the binding energies for this cluster. It expects
-	 * the energy vector to be ordered as described above.
-	 * @param energies The vector of energies.
+	 * This operation sets the formation energy for this cluster.
+	 * @param energy The formation energy.
 	 */
-	void setBindingEnergies(std::vector<double> energies);
+	void setFormationEnergy(double energy);
 
 	/**
 	 * This operation retrieves the diffusion factor, D_0, that is used to

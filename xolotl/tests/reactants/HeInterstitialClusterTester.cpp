@@ -113,23 +113,16 @@ BOOST_AUTO_TEST_CASE(checkTotalFlux) {
 	auto cluster = (PSICluster *) network->getCompound("HeI", composition);
 	// Get one that it combines with (I)
 	auto secondCluster = (PSICluster *) network->get("I", 1);
-	// Set the diffusion factor, migration and binding energies to arbitrary
-	// values because HeI does not exist in benchmarks
+	// Set the diffusion factor and migration energy to arbitrary values
 	cluster->setDiffusionFactor(1.5E+10);
 	cluster->setTemperature(1000.0);
 	cluster->setMigrationEnergy(numeric_limits<double>::infinity());
-	vector<double> energies = { 5.09, numeric_limits<double>::infinity(), 5.09,
-			12.6 };
-	cluster->setBindingEnergies(energies);
 	cluster->setConcentration(0.5);
 
-	// Set the diffusion factor, migration and binding energies based on the
-	// values from the tungsten benchmark for this problem for the second cluster
+	// Set the diffusion factor and migration energy based on the
+	// values from the preprocessor
 	secondCluster->setDiffusionFactor(2.13E+10);
 	secondCluster->setMigrationEnergy(0.013);
-	energies = {numeric_limits<double>::infinity(), numeric_limits<double>::infinity(),
-		numeric_limits<double>::infinity(), numeric_limits<double>::infinity()};
-	secondCluster->setBindingEnergies(energies);
 	secondCluster->setConcentration(0.5);
 	secondCluster->setTemperature(1000.0);
 
@@ -159,14 +152,9 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	// Get an HeI cluster with compostion 2,0,1.
 	vector<int> composition = { 2, 0, 1 };
 	auto cluster = (PSICluster *) network->getCompound("HeI", composition);
-	// Set the diffusion factor, migration and binding energies to arbitrary
-	// values because HeI does not exist in benchmarks
+	// Set the diffusion factor and migration energy to arbitrary values
 	cluster->setDiffusionFactor(1.5E+10);
 	cluster->setTemperature(1000.0);
-	cluster->setMigrationEnergy(numeric_limits<double>::infinity());
-	vector<double> energies = { 5.09, numeric_limits<double>::infinity(), 5.09,
-			12.6 };
-	cluster->setBindingEnergies(energies);
 	cluster->setConcentration(0.5);
 
 	// Compute the rate constants that are needed for the partial derivatives
