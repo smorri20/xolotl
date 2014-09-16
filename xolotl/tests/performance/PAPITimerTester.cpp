@@ -19,32 +19,44 @@ using namespace xolotlPerf;
 
 // Normally, PAPI would be initialized by the HandlerRegistry.
 // Since our purpose is to test the Timer class and not the registry,
-// we recreate the initialization explicitly.
-bool
-InitializePAPI( void )
-{
-    bool ret = true;
+// we recreate the initialization explicitly and use it as a fixture
+// for the entire suite.
 
-    if( !PAPI_is_initialized() )
+struct UsePAPIFixture
+{
+    bool papiInitialized;
+
+    UsePAPIFixture(void)
+      : papiInitialized(PAPI_is_initialized())
     {
-        int papiVersion = PAPI_library_init(PAPI_VER_CURRENT);
-        if( papiVersion != PAPI_VER_CURRENT )
+        if( !papiInitialized )
         {
-            BOOST_TEST_MESSAGE("PAPI library version mismatch: asked for" << PAPI_VER_CURRENT << ", got " << papiVersion);
-            ret = false;
+            int papiVersion = PAPI_library_init(PAPI_VER_CURRENT);
+            if( papiVersion == PAPI_VER_CURRENT )
+            {
+                papiInitialized = true;
+            }
+            else
+            {
+                BOOST_TEST_MESSAGE("PAPI library version mismatch: asked for" << PAPI_VER_CURRENT << ", got " << papiVersion);
+            }
         }
     }
-    return ret;
-}
+
+    ~UsePAPIFixture(void)
+    {
+        // nothing to do
+    }
+};
 
 
 
 
-BOOST_AUTO_TEST_SUITE (PAPITimer_testSuite)
 
-BOOST_AUTO_TEST_CASE(checkName) {
+BOOST_FIXTURE_TEST_SUITE(PAPITimer_testSuite, UsePAPIFixture)
 
-    bool papiInitialized = InitializePAPI();
+BOOST_AUTO_TEST_CASE(checkName)
+{
     BOOST_REQUIRE_EQUAL(papiInitialized, true);
 
     PAPITimer tester("test");
@@ -57,9 +69,8 @@ BOOST_AUTO_TEST_CASE(checkName) {
 }
 
 
-BOOST_AUTO_TEST_CASE(checkTiming) {
-
-    bool papiInitialized = InitializePAPI();
+BOOST_AUTO_TEST_CASE(checkTiming)
+{
     BOOST_REQUIRE_EQUAL(papiInitialized, true);
 
 	PAPITimer tester("test");
@@ -89,13 +100,56 @@ BOOST_AUTO_TEST_CASE(checkTiming) {
 	BOOST_REQUIRE_CLOSE(sleepSeconds, tester.getValue(),0.03);
 }
 
+
 BOOST_AUTO_TEST_CASE(checkUnits)
 {
-    bool papiInitialized = InitializePAPI();
     BOOST_REQUIRE_EQUAL(papiInitialized, true);
 
 	PAPITimer tester("test");
 	BOOST_REQUIRE_EQUAL("s", tester.getUnits());
 }
+
+
+BOOST_AUTO_TEST_CASE(accumulate)
+{
+    BOOST_REQUIRE_EQUAL(papiInitialized, true);
+    PAPITimer tester("test");
+
+    const unsigned int sleepSeconds = 2;
+
+    tester.start();
+    sleep(sleepSeconds);
+    tester.stop();
+    tester.start();
+    sleep(sleepSeconds);
+    tester.stop();
+    
+    double timerValue = tester.getValue();
+    double expValue = 2*sleepSeconds;   // we had two sleep intervals
+    BOOST_REQUIRE_CLOSE(expValue, timerValue, 0.03);
+}
+
+
+BOOST_AUTO_TEST_CASE(reset)
+{
+    BOOST_REQUIRE_EQUAL(papiInitialized, true);
+    PAPITimer tester("test");
+
+    const unsigned int sleepSeconds = 2;
+
+    tester.start();
+    sleep(sleepSeconds);
+    tester.stop();
+    tester.reset();
+    BOOST_REQUIRE_EQUAL(tester.getValue(), 0.0);
+    tester.start();
+    sleep(sleepSeconds);
+    tester.stop();
+
+    double timerValue = tester.getValue();
+    double expValue = sleepSeconds;     // should only represent last sleep interval
+    BOOST_REQUIRE_CLOSE(expValue, timerValue, 0.03);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
