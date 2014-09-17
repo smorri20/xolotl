@@ -357,7 +357,7 @@ public class Preprocessor {
 		}
 
 		return clusterList;
-	};
+	}
 
 	/**
 	 * This operation creates an unstable cluster with the specified size.

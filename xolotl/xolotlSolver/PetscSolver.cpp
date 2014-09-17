@@ -1,6 +1,6 @@
 // Includes
 #include "PetscSolver.h"
-#include <HandlerRegistryFactory.h>
+#include "xolotlPerf/xolotlPerf.h"
 #include <HDF5NetworkLoader.h>
 #include "TemperatureHandler.h"
 #include <MathUtils.h>
@@ -941,8 +941,8 @@ void PetscSolver::setNetworkLoader(
 	// Get the processor id
 	int procId;
 	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
-	if (procId == 1) {
-		std::cout << "PETScSolver Message: " << "Master loaded network of size "
+	if (procId == 0) {
+		std::cout << "\nPETScSolver Message: " << "Master loaded network of size "
 				<< network->size() << "." << std::endl;
 	}
 

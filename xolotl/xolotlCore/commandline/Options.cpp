@@ -19,12 +19,12 @@ Options::Options() :
 		exitCode(EXIT_SUCCESS),
 		petscArgc(0),
 		petscArgv(NULL),
-		constTempFlag(true),
+		constTempFlag(false),
 		tempProfileFlag(false),
 		constTemperature(1000.0),
 		heliumFluenceFlag(false),
 		heliumFluxFlag(false),
-		perfStandardHandlersFlag(true),
+        perfRegistryType( xolotlPerf::IHandlerRegistry::std ),
 		vizStandardHandlersFlag(false),
 		materialFlag(false) {
 
@@ -107,7 +107,7 @@ void Options::readParams(int argc, char* argv[]) {
 	// And start looping on the lines
 	while (line.size() > 0) {
 		auto iter = optionsMap.find(line[0]);
-		// If the option if found
+		// If the option is found
 		if (iter != optionsMap.end()) {
 			// Call the option's handler
 			auto currOpt = iter->second;
@@ -117,7 +117,8 @@ void Options::readParams(int argc, char* argv[]) {
 
 			if (!continueReading) {
 				// Something went wrong.
-				std::cerr << "Option: Something went wrong setting the options."
+				std::cerr
+						<< "\nOption: Something went wrong while setting the options."
 						<< std::endl;
 				shouldRunFlag = false;
 				exitCode = EXIT_FAILURE;
@@ -127,7 +128,10 @@ void Options::readParams(int argc, char* argv[]) {
 
 		else {
 			// We did not recognize the option.
-			std::cerr << "Option: unrecognized option " << line[0] << std::endl;
+			std::cerr
+					<< "\nOption: Unrecognized option in the parameter file:  "
+					<< line[0] << "\n" << std::endl;
+			showHelp(std::cerr);
 			shouldRunFlag = false;
 			exitCode = EXIT_FAILURE;
 			break;
@@ -140,7 +144,7 @@ void Options::readParams(int argc, char* argv[]) {
 }
 
 void Options::showHelp(std::ostream& os) const {
-	os << "usage: xolotl param_file_name \n\n"
+	os << "Usage: xolotl param_file_name \n\n"
 			<< "See the Xolotl documentation for PETSc options. \n"
 			<< "Supported options:\n";
 
@@ -151,7 +155,5 @@ void Options::showHelp(std::ostream& os) const {
 	os << std::endl;
 }
 
-}
-;
-// end namespace xolotlCore
+};  // end namespace xolotlCore
 

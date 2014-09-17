@@ -1,7 +1,8 @@
 #include <FluxHandler.h>
-#include <HandlerRegistryFactory.h>
+#include "xolotlPerf/xolotlPerf.h"
 #include <iostream>
 #include <limits>
+#include <mpi.h>
 
 using namespace xolotlSolver;
 
@@ -50,7 +51,7 @@ double FluxHandler::getIncidentFlux(std::vector<int> compositionVec,
 
 	// Get the index number from the position
 	int i = position[0] / stepSize;
-	
+
 	// Return the corresponding value
 	return incidentFluxVec[i];
 }
@@ -60,7 +61,7 @@ std::vector<double> FluxHandler::getIncidentFluxVec() {
 }
 
 void FluxHandler::setOutgoingFlux(std::vector<int> compositionVec,
-	std::vector<int> position, double time, double outgoingFlux) {
+		std::vector<int> position, double time, double outgoingFlux) {
 
 	return;
 }

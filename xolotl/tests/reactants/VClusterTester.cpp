@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
  	for (int i = 0; i < partials.size(); i++) {
  		BOOST_REQUIRE_CLOSE(partials[i], knownPartials[i], 0.1);
  	}
- }
+}
 
 /**
  * This operation checks the reaction radius for VCluster.
