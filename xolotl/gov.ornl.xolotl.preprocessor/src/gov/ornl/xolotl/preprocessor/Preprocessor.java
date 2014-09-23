@@ -39,11 +39,7 @@ import ncsa.hdf.hdf5lib.HDF5Constants;
  * 
  * All energies are in eV and all diffusion factors are in nm^2/s.
  * 
- * The preprocessor generates 2067 clusters with its default configuration. If
- * only the maximum number of vacancies is changed it generates a number of
- * clusters equal to
- * 
- * maxI + maxHe + 2053 + (maxV - 29) + 2(maxV - 29)(30 + maxV)
+ * The preprocessor generates 2067 clusters with its default configuration.
  * 
  * @author Jay Jay Billings
  * 
@@ -99,10 +95,10 @@ public class Preprocessor {
 			112, 116 };
 
 	/**
-	 * The binding energy engine used to generate binding energies for the
+	 * The formation energy engine used to generate formation energies for the
 	 * different clusters.
 	 */
-	private BindingEnergyEngine bindingEnergyEngine = new BindingEnergyEngine();
+	private FormationEnergyEngine formationEnergyEngine = new FormationEnergyEngine();
 
 	/**
 	 * The list of parameters that will be passed to Xolotl
@@ -232,7 +228,7 @@ public class Preprocessor {
 	}
 
 	/**
-	 * This operation generates all Helium clusters in the network.
+	 * This operation generates all helium clusters in the network.
 	 * 
 	 * @return A list of clusters configured to satisfy the bounds and composed
 	 *         solely of Helium.
@@ -247,7 +243,7 @@ public class Preprocessor {
 			// Create the cluster
 			Cluster tmpCluster = new Cluster();
 			tmpCluster.nHe = i + 1;
-			tmpCluster.E_f = bindingEnergyEngine.getHeFormationEnergy(i + 1);
+			tmpCluster.E_f = formationEnergyEngine.getHeFormationEnergy(i + 1);
 			// Add the cluster to the list
 			clusterList.add(tmpCluster);
 		}
@@ -264,7 +260,7 @@ public class Preprocessor {
 
 	/**
 	 * This operation creates an HeV cluster with the specified size. It
-	 * configures the binding energies on its own.
+	 * configures the formation energies on its own.
 	 * 
 	 * @param heSize
 	 *            The number of Helium atoms in the cluster
@@ -279,10 +275,10 @@ public class Preprocessor {
 		cluster.nV = vSize;
 		// Separate the case where it is simply a V cluster
 		if (heSize == 0) {
-			cluster.E_f = bindingEnergyEngine.getVFormationEnergy(vSize);
+			cluster.E_f = formationEnergyEngine.getVFormationEnergy(vSize);
 		}
 		else {
-			cluster.E_f = bindingEnergyEngine.getHeVFormationEnergy(heSize,
+			cluster.E_f = formationEnergyEngine.getHeVFormationEnergy(heSize,
 					vSize);
 		}
 		
@@ -344,7 +340,7 @@ public class Preprocessor {
 			// Create the cluster
 			Cluster tmpCluster = new Cluster();
 			tmpCluster.nI = i + 1;
-			tmpCluster.E_f = bindingEnergyEngine.getIFormationEnergy(i + 1);
+			tmpCluster.E_f = formationEnergyEngine.getIFormationEnergy(i + 1);
 			// Add the cluster to the list
 			clusterList.add(tmpCluster);
 		}
@@ -1217,7 +1213,7 @@ public class Preprocessor {
 				networkArray[id][1] = cluster.nV;
 				networkArray[id][2] = cluster.nI;
 
-				// Store the formation energies
+				// Store the formation energy
 				networkArray[id][3] = cluster.E_f;
 
 				// Store the migration energy

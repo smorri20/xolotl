@@ -7,18 +7,18 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import gov.ornl.xolotl.preprocessor.BindingEnergyEngine;
+import gov.ornl.xolotl.preprocessor.FormationEnergyEngine;
 
 import org.junit.Test;
 
 /**
- * This class is responsible for testing the BindingEnergyEngine class to make
- * sure that it correctly reports binding energies for clusters.
+ * This class is responsible for testing the FormationEnergyEngine class to make
+ * sure that it correctly reports formation energies for clusters.
  * 
  * @author Jay Jay Billings
  * 
  */
-public class BindingEnergyEngineTest {
+public class FormationEnergyEngineTest {
 
 	/**
 	 * This operation checks the Helium formation energies.
@@ -27,7 +27,7 @@ public class BindingEnergyEngineTest {
 	public void testHeEnergies() {
 
 		// Local Declarations
-		BindingEnergyEngine engine = new BindingEnergyEngine();
+		FormationEnergyEngine engine = new FormationEnergyEngine();
 
 		// Check the code for He_2.
 		assertEquals(11.44, engine.getHeFormationEnergy(2), 1.0e-2);
@@ -53,7 +53,7 @@ public class BindingEnergyEngineTest {
 	public void testVEnergies() {
 
 		// Local Declarations
-		BindingEnergyEngine engine = new BindingEnergyEngine();
+		FormationEnergyEngine engine = new FormationEnergyEngine();
 
 		// Check the code for V_2.
 		assertEquals(7.25, engine.getVFormationEnergy(2), 1.0e-2);
@@ -76,7 +76,7 @@ public class BindingEnergyEngineTest {
 	public void testIEnergies() {
 
 		// Local Declarations
-		BindingEnergyEngine engine = new BindingEnergyEngine();
+		FormationEnergyEngine engine = new FormationEnergyEngine();
 
 		// Check the code for I_2.
 		assertEquals(18.5, engine.getIFormationEnergy(2), 1.0e-2);
@@ -105,7 +105,7 @@ public class BindingEnergyEngineTest {
 	public void testHeVEnergies() {
 
 		// Local Declarations
-		BindingEnergyEngine engine = new BindingEnergyEngine();
+		FormationEnergyEngine engine = new FormationEnergyEngine();
 
 		// Check the code for He_30V_6
 		assertEquals(70.931, engine.getHeVFormationEnergy(30, 6), 1.0e-2);
@@ -120,7 +120,7 @@ public class BindingEnergyEngineTest {
 	}
 
 	/**
-	 * This operation makes sure that the BindingEnergyEngine can read
+	 * This operation makes sure that the FormationEnergyEngine can read
 	 * coefficients from a file during construction.
 	 */
 	@Test
@@ -138,9 +138,9 @@ public class BindingEnergyEngineTest {
 			}
 			fitWriter.close();
 
-			// Create the BindingEnergyEngine and test it. The answer should be
+			// Create the FormationEnergyEngine and test it. The answer should be
 			// equal to 0.0.
-			BindingEnergyEngine engine = new BindingEnergyEngine();
+			FormationEnergyEngine engine = new FormationEnergyEngine();
 			assertEquals(0.0, engine.getHeVFormationEnergy(31, 6), 1.0e-2);
 
 			// Delete the fit file
@@ -149,7 +149,7 @@ public class BindingEnergyEngineTest {
 			// Check the code for He_30V_6 -> He_29V_6 + He_1 using the original
 			// coefficients. (Make sure the values from the file don't hang
 			// around.)
-			engine = new BindingEnergyEngine();
+			engine = new FormationEnergyEngine();
 			assertEquals(70.931, engine.getHeVFormationEnergy(30, 6), 1.0e-2);
 
 		} catch (IOException e) {

@@ -10,18 +10,18 @@ import java.io.FileReader;
 import java.io.IOException;
 
 /**
- * This class computes the binding energies for a cluster with a given
- * composition. All binding energies are in electron volts (eV).
+ * This class computes the formation energies for a cluster with a given
+ * composition. All formation energies are in electron volts (eV).
  * 
  * This class looks in the user directory during construction and will override
  * the fit coefficients if it finds a csv file with one set of coefficients per
- * row and named fit.csv. There should be six rows with four coefficients per
+ * row and named fit.csv. There should be three rows with three coefficients per
  * row.
  * 
  * @author Jay Jay Billings
  * 
  */
-public class BindingEnergyEngine {
+public class FormationEnergyEngine {
 
 	/**
 	 * The set of Helium formation energies up to He_8 indexed by size. That is
@@ -82,7 +82,7 @@ public class BindingEnergyEngine {
 	 * will try to load the coefficients from it. It closes the file when it is
 	 * finished.
 	 */
-	public BindingEnergyEngine() {
+	public FormationEnergyEngine() {
 
 		// Get the fit file
 		File fitFile = new File("fit.csv");
@@ -116,13 +116,13 @@ public class BindingEnergyEngine {
 				fitReader.close();
 			} catch (FileNotFoundException e) {
 				// Complain
-				System.err.println("BindingEnergyEngine Message:"
+				System.err.println("FormationEnergyEngine Message:"
 						+ " There is something wrong with your fit.csv file! "
 						+ " It does not exist. Aborting.");
 				e.printStackTrace();
 			} catch (IOException e) {
 				// Complain
-				System.err.println("BindingEnergyEngine Message:"
+				System.err.println("FormationEnergyEngine Message:"
 						+ " There is something wrong with your fit.csv file! "
 						+ " It cannot be read. Aborting.");
 				e.printStackTrace();
@@ -133,7 +133,7 @@ public class BindingEnergyEngine {
 	};
 
 	/**
-	 * This operation computes and returns the formation energy of a Helium
+	 * This operation computes and returns the formation energy of a helium
 	 * cluster of the specified size.
 	 * 
 	 * @param size
@@ -294,7 +294,7 @@ public class BindingEnergyEngine {
 			double x = 2.0 * (((double) heSize / (double) vSize) / 9.0) - 1.0;
 			// Get the energy for He_xV_y
 			energy = compute2ndOrderLegendrePCE(x, coefficients);
-
+			// Unscaling the energy
 			energy = energy * 281.254;
 
 		} else if ((vSize == 1 && heSize < heV1FormationEnergies.length)

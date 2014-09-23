@@ -214,11 +214,6 @@ double PSICluster::computeBindingEnergy(const PSICluster & dissociatingCluster,
 	double bindingEnergy = singleCluster.formationEnergy
 			+ secondCluster.formationEnergy
 			- dissociatingCluster.formationEnergy;
-	// Because we only want the specific trap mutation to have a greatly negative binding energy
-	if (bindingEnergy < -1.0) {
-		std::cout << "Wrong binding energy for " << name
-				<< " " << bindingEnergy << std::endl;
-	}
 	return bindingEnergy;
 }
 
