@@ -111,19 +111,19 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
  	secondCluster->setTemperature(1000.0);
 
  	// Compute the rate constants that are needed for the flux
- 	cluster->computeRateConstants(1000.0);
+ 	cluster->computeRateConstants();
  	// The flux can pretty much be anything except "not a number" (nan).
- 	double flux = cluster->getTotalFlux(1000.0);
+ 	double flux = cluster->getTotalFlux();
  	BOOST_TEST_MESSAGE("InterstitialClusterTester Message: \n" << "Total Flux is " << flux << "\n"
- 			  << "   -Production Flux: " << cluster->getProductionFlux(1000.0) << "\n"
- 			  << "   -Combination Flux: " << cluster->getCombinationFlux(1000.0) << "\n"
- 			  << "   -Dissociation Flux: " << cluster->getDissociationFlux(1000.0) << "\n"
- 			  << "   -Emission Flux: " << cluster->getEmissionFlux(1000.0) << "\n");
+ 			  << "   -Production Flux: " << cluster->getProductionFlux() << "\n"
+ 			  << "   -Combination Flux: " << cluster->getCombinationFlux() << "\n"
+ 			  << "   -Dissociation Flux: " << cluster->getDissociationFlux() << "\n"
+ 			  << "   -Emission Flux: " << cluster->getEmissionFlux() << "\n");
  	BOOST_REQUIRE_CLOSE(444828.3, flux, 0.1);
  }
 
  /**
-  * This operation checks the HeCluster get*PartialDerivatives methods.
+  * This operation checks the VCluster get*PartialDerivatives methods.
   */
  BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
  	// Local Declarations
@@ -143,9 +143,9 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
  	cluster->setConcentration(0.5);
 
  	// Compute the rate constants that are needed for the partial derivatives
- 	cluster->computeRateConstants(1000.0);
+ 	cluster->computeRateConstants();
  	// Get the vector of partial derivatives
- 	auto partials = cluster->getPartialDerivatives(1000.0);
+ 	auto partials = cluster->getPartialDerivatives();
 
  	// Check the size of the partials
  	BOOST_REQUIRE_EQUAL(partials.size(), 15);
