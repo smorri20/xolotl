@@ -4,6 +4,8 @@
 // Includes
 #include <petscsys.h>
 #include <PSICluster.h>
+#include <PSIClusterReactionNetwork.h>
+#include <memory>
 
 namespace xolotlCore {
 
@@ -19,24 +21,25 @@ public:
 	/**
 	 * The destructor
 	 */
-	virtual ~IDiffusionHandler(){}
+	virtual ~IDiffusionHandler() {}
 
 	/**
 	 * Initialize the off-diagonal part of the Jacobian. If this step is skipped it
 	 * won't be possible to set the partials for the diffusion.
 	 *
-	 * @param cluster The diffusing cluster
-	 * @param size The size of the network
+	 * @param network The network
 	 * @param ofill The pointer to the array that will contain the value 1 at the indices
 	 * of the diffusing clusters, 0 if they are not diffusing
 	 */
-	virtual void initializeOFill(PSICluster * cluster, int size, PetscInt *ofill) = 0;
+	virtual void initializeOFill(std::shared_ptr<PSIClusterReactionNetwork> network,
+			PetscInt *ofill) = 0;
 
 	/**
-	 * Compute the flux due to the diffusion of the cluster given the space parameter sx.
+	 * Compute the flux due to the diffusion for all the cluster that are diffusing,
+	 * given the space parameter sx.
 	 * This method is called by the RHSFunction from the PetscSolver.
 	 *
-	 * @param cluster The diffusing cluster
+	 * @param network The network
 	 * @param sx The space parameter, depending on the grid step size
 	 * @param concOffset The pointer to the array of concentration at the grid
 	 * point where the diffusion is computed
@@ -47,28 +50,39 @@ public:
 	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
 	 * point where the diffusion is computed used to find the next solution
 	 */
-	virtual void computeDiffusion(PSICluster * cluster, double sx,
+	virtual void computeDiffusion(std::shared_ptr<PSIClusterReactionNetwork> network, double sx,
 			PetscScalar *concOffset, PetscScalar *leftConcOffset,
 			PetscScalar *rightConcOffset, PetscScalar *updatedConcOffset) = 0;
 
 	/**
-	 * Compute the partials due to the diffusion of the cluster given the space parameter sx.
+	 * Compute the partials due to the diffusion of all the diffusing clusters given
+	 * the space parameter sx.
 	 * This method is called by the RHSJacobian from the PetscSolver.
 	 *
-	 * @param cluster The diffusing cluster
+	 * @param network The network
 	 * @param sx The space parameter, depending on the grid step size
-	 * @param val The array that will contain the values of partials for the diffusion
-	 * @param row The array that will contain the indices of the row for the Jacobian
-	 * @param col The array that will contain the indices of the columns for the Jacobian
+	 * @param val The pointer to the array that will contain the values of partials
+	 * for the diffusion
+	 * @param row The pointer to the array that will contain the indices of the row
+	 * for the Jacobian
+	 * @param col The pointer to the array that will contain the indices of the columns
+	 * for the Jacobian
 	 * @param xi The index of the grip point
 	 * @param xs The index of the first grid point on the locally owned grid
-	 * @param size The size of the network
 	 */
-	virtual void computePartialsForDiffusion(PSICluster * cluster,
-			PetscReal sx, PetscReal val[3], PetscInt row[1], PetscInt col[3],
-			PetscInt xi, PetscInt xs, int size) = 0;
+	virtual void computePartialsForDiffusion(std::shared_ptr<PSIClusterReactionNetwork> network,
+			double sx, PetscReal *val, PetscInt *row, PetscInt *col, PetscInt xi,
+			PetscInt xs) = 0;
 
-}; //end class IDiffusionHandler
+	/**
+	 * Get the total number of diffusing clusters in the network.
+	 *
+	 * @return The number of diffusing clusters
+	 */
+	virtual int getNumberOfDiffusing() = 0;
+
+};
+//end class IDiffusionHandler
 
 } /* namespace xolotlCore */
 #endif

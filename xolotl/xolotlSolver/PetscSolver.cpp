@@ -68,7 +68,7 @@ TS ts; /* nonlinear solver */
 Vec C; /* solution */
 PetscErrorCode ierr;
 DM da; /* manages the grid data */
-PetscInt He, *ofill, *dfill;
+PetscInt *ofill, *dfill;
 
 /**
  * A map for storing the dfill configuration and accelerating the formation of
@@ -392,7 +392,6 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 
 		// ----- Account for flux of incoming He by computing forcing that
 		// produces He of cluster size 1 -----
-		// Crude cubic approximation of graph from Tibo's notes
 		heCluster = (PSICluster *) network->get("He", 1);
 		if (heCluster) {
 			reactantIndex = heCluster->getId() - 1;
@@ -401,36 +400,8 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 		}
 
 		// ---- Compute diffusion over the locally owned part of the grid -----
-
-		// He clusters larger than 6 do not diffuse -- they are immobile
-		for (int i = 1; i < PetscMin(numHeClusters + 1, 7); i++) {
-			// Get the reactant index
-			heCluster = (PSICluster *) network->get("He", i);
-
-			// Only update the concentration if the cluster exists
-			if (heCluster) {
-				diffusionHandler.computeDiffusion(heCluster, sx, concOffset,
-						leftConcOffset, rightConcOffset, updatedConcOffset);
-			}
-		}
-
-		// ----- Vacancy Diffusion -----
-		// Only vacancy clusters of size 1 diffuse, so grab 1V.
-		vCluster = (PSICluster *) network->get("V", 1);
-		// Only update the concentration if the cluster exists
-		if (vCluster) {
-			diffusionHandler.computeDiffusion(vCluster, sx, concOffset,
-					leftConcOffset, rightConcOffset, updatedConcOffset);
-		}
-
-		// ----- Interstitial Diffusion -----
-		// Get 1I from the new network and gets its position in the array
-		iCluster = (PSICluster *) network->get("I", 1);
-		// Only update the concentration if the clusters exist
-		if (iCluster) {
-			diffusionHandler.computeDiffusion(iCluster, sx, concOffset,
-					leftConcOffset, rightConcOffset, updatedConcOffset);
-		}
+		diffusionHandler.computeDiffusion(network, sx, concOffset,
+				leftConcOffset, rightConcOffset, updatedConcOffset);
 
 		// ----- Compute all of the new fluxes -----
 		for (int i = 0; i < size; i++) {
@@ -450,10 +421,6 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 				updatedConcOffset[i] = 1.0 * concs[i];
 			}
 		}
-
-//		for (int i = 0; i < size; i++) {
-//			std::cout << updatedConcOffset[i] << std::endl;
-//		}
 
 		// Uncomment this line for debugging in a single cell.
 //		break;
@@ -498,7 +465,6 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	DM da;
 	PetscErrorCode ierr;
 	PetscInt xi, Mx, xs, xm, i;
-	PetscInt row[1], col[3];
 	PetscReal hx, sx, val[3];
 	PetscReal *concs, *updatedConcs;
 	double * concOffset;
@@ -570,14 +536,27 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 
 		// Create the diffusion handler
 		DiffusionHandler diffusionHandler;
+		// Get the total number of diffusing clusters
+		const int nDiff = diffusionHandler.getNumberOfDiffusing();
+
+		// Initialize the rows, columns, and values to set in the Jacobian
+		PetscInt row[nDiff], col[3*nDiff];
+		PetscReal val[3*nDiff];
+		// Get the pointer on them for the compute diffusion method
+		PetscInt *rowPointer = &row[0];
+		PetscInt *colPointer = &col[0];
+		PetscReal *valPointer = &val[0];
 
 		/*
 		 Loop over grid points computing Jacobian terms for diffusion at each
 		 grid point
 		 */
 		for (xi = xs; xi < xs + xm; xi++) {
-		
+
 //			xi = 1; // Uncomment this line for debugging in a single cell
+
+			// Boundary conditions
+			if (xi == 0) continue;
 
 			// Copy data into the PSIClusterReactionNetwork so that it can
 			// compute the new concentrations.
@@ -587,37 +566,10 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 			/* -------------------------------------------------------------
 			 ---- Compute diffusion over the locally owned part of the grid
 			 */
-
-			/* He clusters larger than 6 do not diffuse -- they are immobile */
-			// ---- Compute diffusion over the locally owned part of the grid -----
-			for (i = 1; i < PetscMin(numHeClusters + 1, 7); i++) {
-				// Get the cluster
-				auto psiCluster = (PSICluster *) network->get("He", i);
-				diffusionHandler.computePartialsForDiffusion(psiCluster, sx, val,
-						row, col, xi, xs, size);
-				ierr = MatSetValuesLocal(J, 1, row, 3, col, val, ADD_VALUES);
-				checkPetscError(ierr);
-			}
-
-			/* 1V and 1I are the only other clusters that diffuse */
-
-			// ----- Vacancy Diffusion -----
-			auto psiCluster = (PSICluster *) network->get("V", 1);
-			if (psiCluster) {
-				diffusionHandler.computePartialsForDiffusion(psiCluster, sx, val,
-						row, col, xi, xs, size);
-				ierr = MatSetValuesLocal(J, 1, row, 3, col, val, ADD_VALUES);
-				checkPetscError(ierr);
-			}
-
-			// ----- Interstitial Diffusion -----
-			psiCluster = (PSICluster *) network->get("I", 1);
-			if (psiCluster) {
-				diffusionHandler.computePartialsForDiffusion(psiCluster, sx, val,
-						row, col, xi, xs, size);
-				ierr = MatSetValuesLocal(J, 1, row, 3, col, val, ADD_VALUES);
-				checkPetscError(ierr);
-			}
+			diffusionHandler.computePartialsForDiffusion(network, sx, valPointer,
+					rowPointer, colPointer, xi, xs);
+			ierr = MatSetValuesLocal(J, nDiff, row, 3*nDiff, col, val, ADD_VALUES);
+			checkPetscError(ierr);
 
 //			break;   // Uncomment this line for debugging in a single cell.
 		}
@@ -1008,28 +960,8 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	// Create the diffusion handler
 	DiffusionHandler diffusionHandler;
 
-	// Fill ofill, the matrix of "off-diagonal" elements that represents diffusion, with for He.
-	int reactantIndex = 0;
-	PSICluster * reactant;
-	for (int numHe = 1; numHe < PetscMin(numHeClusters + 1, 7); numHe++) {
-		reactant = (PSICluster *) network->get("He", numHe);
-		// Only couple if the reactant exists
-		if (reactant) {
-			diffusionHandler.initializeOFill(reactant, dof, ofill);
-		}
-	}
-	// Now for single V
-	reactant = (PSICluster *) network->get("V", 1);
-	// Only couple if the reactant exists
-	if (reactant) {
-		diffusionHandler.initializeOFill(reactant, dof, ofill);
-	}
-	// Now for single I
-	reactant = (PSICluster *) network->get("I", 1);
-	// Only couple if the reactant exists
-	if (reactant) {
-		diffusionHandler.initializeOFill(reactant, dof, ofill);
-	}
+	// Fill ofill, the matrix of "off-diagonal" elements that represents diffusion
+	diffusionHandler.initializeOFill(network, ofill);
 
 	// Get the diagonal fill
 	ierr = getDiagonalFill(dfill, dof * dof);
