@@ -14,6 +14,7 @@
 #include <string>
 #include <unordered_map>
 #include <HDF5Utils.h>
+#include <DiffusionHandler.h>
 
 using namespace xolotlCore;
 
@@ -249,29 +250,6 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 	PetscFunctionReturn(0);
 }
 
-void computeDiffusion(PSICluster * cluster, PetscReal sx,
-		PetscScalar *concOffset, PetscScalar *leftConcOffset,
-		PetscScalar *rightConcOffset, PetscScalar *updatedConcOffset) {
-
-	int reactantIndex = 0;
-	// Dummy variables to keep the code clean
-	double oldConc = 0.0, oldLeftConc = 0.0, oldRightConc = 0.0, conc = 0.0;
-
-	reactantIndex = cluster->getId() - 1;
-	// Get the concentrations
-	oldConc = concOffset[reactantIndex];
-	oldLeftConc = leftConcOffset[reactantIndex];
-	oldRightConc = rightConcOffset[reactantIndex];
-
-	// Use a simple midpoint stencil to compute the concentration
-	conc = cluster->getDiffusionCoefficient()
-			* (-2.0 * oldConc + oldLeftConc + oldRightConc) * sx;
-
-	// Update the concentration of the cluster
-	updatedConcOffset[reactantIndex] += conc;
-
-}
-
 /* ------------------------------------------------------------------- */
 
 #undef __FUNCT__
@@ -376,6 +354,9 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	// Get the current time
 	ierr = TSGetTime(ts, &realTime);
 
+	// Create the diffusion handler
+	DiffusionHandler diffusionHandler;
+
 	// Loop over grid points computing ODE terms for each grid point
 	size = network->size();
 	for (xi = xs; xi < xs + xm; xi++) {
@@ -428,7 +409,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 
 			// Only update the concentration if the cluster exists
 			if (heCluster) {
-				computeDiffusion(heCluster, sx, concOffset,
+				diffusionHandler.computeDiffusion(heCluster, sx, concOffset,
 						leftConcOffset, rightConcOffset, updatedConcOffset);
 			}
 		}
@@ -438,7 +419,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 		vCluster = (PSICluster *) network->get("V", 1);
 		// Only update the concentration if the cluster exists
 		if (vCluster) {
-			computeDiffusion(vCluster, sx, concOffset,
+			diffusionHandler.computeDiffusion(vCluster, sx, concOffset,
 					leftConcOffset, rightConcOffset, updatedConcOffset);
 		}
 
@@ -447,7 +428,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 		iCluster = (PSICluster *) network->get("I", 1);
 		// Only update the concentration if the clusters exist
 		if (iCluster) {
-			computeDiffusion(iCluster, sx, concOffset,
+			diffusionHandler.computeDiffusion(iCluster, sx, concOffset,
 					leftConcOffset, rightConcOffset, updatedConcOffset);
 		}
 
@@ -504,37 +485,6 @@ PetscErrorCode callRHSFunction(TS ts, PetscReal ftime, Vec C, Vec F,
 	return ierr;
 }
 
-void computePartialsForDiffusion(PSICluster * cluster,
-		PetscReal sx, PetscReal val[6], PetscInt row[3], PetscInt col[3],
-		PetscInt xi, PetscInt xs, int size) {
-
-	int reactantIndex = 0;
-	double diffCoeff = 0.0;
-
-	diffCoeff = cluster->getDiffusionCoefficient();
-	// Compute the partial derivatives for diffusion of this cluster
-	val[0] = diffCoeff * sx;
-	val[1] = -2.0 * diffCoeff * sx;
-	val[2] = diffCoeff * sx;
-	// Get the reactant index
-	reactantIndex = cluster->getId() - 1;
-	// Set the row and column indices. These indices are computed
-	// by using xi, xi-1 and xi+1 and the arrays are shifted to
-	// (xs+1)*size to properly account for the neighboring ghost
-	// cells.
-	row[0] = (xi - xs + 1) * size + reactantIndex;
-	col[0] = ((xi - 1) - xs + 1) * size + reactantIndex;
-	col[1] = (xi - xs + 1) * size + reactantIndex;
-	col[2] = ((xi + 1 + 1) - xs) * size + reactantIndex;
-
-	// Boundary conditions
-	if (xi == 0) {
-		val[0] = 0.0;
-		val[1] = 0.0;
-		val[2] = 0.0;
-	}
-}
-
 #undef __FUNCT__
 #define __FUNCT__ "RHSJacobian"
 /*
@@ -548,8 +498,8 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	DM da;
 	PetscErrorCode ierr;
 	PetscInt xi, Mx, xs, xm, i;
-	PetscInt row[3], col[3];
-	PetscReal hx, sx, val[6];
+	PetscInt row[1], col[3];
+	PetscReal hx, sx, val[3];
 	PetscReal *concs, *updatedConcs;
 	double * concOffset;
 	Vec localC;
@@ -618,6 +568,9 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	// Only compute the linear part of the Jacobian once
 	if (!initialized) {
 
+		// Create the diffusion handler
+		DiffusionHandler diffusionHandler;
+
 		/*
 		 Loop over grid points computing Jacobian terms for diffusion at each
 		 grid point
@@ -640,7 +593,7 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 			for (i = 1; i < PetscMin(numHeClusters + 1, 7); i++) {
 				// Get the cluster
 				auto psiCluster = (PSICluster *) network->get("He", i);
-				computePartialsForDiffusion(psiCluster, sx, val,
+				diffusionHandler.computePartialsForDiffusion(psiCluster, sx, val,
 						row, col, xi, xs, size);
 				ierr = MatSetValuesLocal(J, 1, row, 3, col, val, ADD_VALUES);
 				checkPetscError(ierr);
@@ -651,7 +604,7 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 			// ----- Vacancy Diffusion -----
 			auto psiCluster = (PSICluster *) network->get("V", 1);
 			if (psiCluster) {
-				computePartialsForDiffusion(psiCluster, sx, val,
+				diffusionHandler.computePartialsForDiffusion(psiCluster, sx, val,
 						row, col, xi, xs, size);
 				ierr = MatSetValuesLocal(J, 1, row, 3, col, val, ADD_VALUES);
 				checkPetscError(ierr);
@@ -660,7 +613,7 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 			// ----- Interstitial Diffusion -----
 			psiCluster = (PSICluster *) network->get("I", 1);
 			if (psiCluster) {
-				computePartialsForDiffusion(psiCluster, sx, val,
+				diffusionHandler.computePartialsForDiffusion(psiCluster, sx, val,
 						row, col, xi, xs, size);
 				ierr = MatSetValuesLocal(J, 1, row, 3, col, val, ADD_VALUES);
 				checkPetscError(ierr);
@@ -1052,33 +1005,30 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	ierr = PetscMemzero(dfill, dof * dof * sizeof(PetscInt));
 	checkPetscError(ierr);
 
+	// Create the diffusion handler
+	DiffusionHandler diffusionHandler;
+
 	// Fill ofill, the matrix of "off-diagonal" elements that represents diffusion, with for He.
 	int reactantIndex = 0;
-	Reactant * reactant;
+	PSICluster * reactant;
 	for (int numHe = 1; numHe < PetscMin(numHeClusters + 1, 7); numHe++) {
-		reactant = network->get("He", numHe);
+		reactant = (PSICluster *) network->get("He", numHe);
 		// Only couple if the reactant exists
 		if (reactant) {
-			// Subtract one from the id to get a unique index between 0 and network->size() - 1
-			reactantIndex = reactant->getId() - 1;
-			ofill[reactantIndex * dof + reactantIndex] = 1;
+			diffusionHandler.initializeOFill(reactant, dof, ofill);
 		}
 	}
 	// Now for single V
-	reactant = network->get("V", 1);
+	reactant = (PSICluster *) network->get("V", 1);
 	// Only couple if the reactant exists
 	if (reactant) {
-		// Subtract one from the id to get a unique index between 0 and network->size() - 1
-		reactantIndex = reactant->getId() - 1;
-		ofill[reactantIndex * dof + reactantIndex] = 1;
+		diffusionHandler.initializeOFill(reactant, dof, ofill);
 	}
 	// Now for single I
-	reactant = network->get("I", 1);
+	reactant = (PSICluster *) network->get("I", 1);
 	// Only couple if the reactant exists
 	if (reactant) {
-		// Subtract one from the id to get a unique index between 0 and network->size() - 1
-		reactantIndex = reactant->getId() - 1;
-		ofill[reactantIndex * dof + reactantIndex] = 1;
+		diffusionHandler.initializeOFill(reactant, dof, ofill);
 	}
 
 	// Get the diagonal fill
