@@ -21,16 +21,14 @@ using namespace xolotlCore;
 /*
  C_t =  -D*C_xx + F(C) + R(C) + D(C) from Brian Wirth's SciDAC project.
 
- D*C_xx  - diffusion of He[1-6] and V[1] and I[1]
- F(C)  -   forcing function; He being created.
- R(C)  -   reaction terms   (clusters combining)
- D(C)  -   dissociation terms (cluster breaking up)
+ D*C_xx  - diffusion of He and V and I
+ F(C)    - forcing function; He being created.
+ R(C)    - reaction terms   (clusters combining)
+ D(C)    - dissociation terms (cluster breaking up)
 
  Sample Options:
  -ts_monitor_draw_solution               -- plot the solution for each concentration as a function of x each in a separate 1d graph
  -draw_fields_by_name 1-He-2-V,1-He 	 -- only plot the solution for these two concentrations
- -mymonitor                              -- plot the concentrations of He and V as a function of x and cluster size (2d contour plot)
- -da_refine <n=1,2,...>                  -- run on a finer grid
  -da_grid_x <nx>						 -- number of grid points in the x direction
  -ts_max_steps <maxsteps>                -- maximum number of time-steps to take
  -ts_final_time <time>                   -- maximum time to compute to
@@ -61,6 +59,8 @@ std::shared_ptr<IFluxHandler> PetscSolver::fluxHandler;
 std::shared_ptr<ITemperatureHandler> PetscSolver::temperatureHandler;
 // Allocate the static diffusion handler
 std::shared_ptr<IDiffusionHandler> PetscSolver::diffusionHandler;
+// Allocate the static step size
+double PetscSolver::hx;
 
 extern PetscErrorCode RHSFunction(TS, PetscReal, Vec, Vec, void*);
 extern PetscErrorCode RHSJacobian(TS, PetscReal, Vec, Mat, Mat);
@@ -154,16 +154,8 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 	PETSC_IGNORE);
 	checkPetscError(ierr);
 
-	// Get the total number of grid points specified by the command line option
-	PetscInt numOfxGridPoints;
-	PetscBool flg;
-	PetscOptionsGetInt(NULL, "-da_grid_x", &numOfxGridPoints, &flg);
-	if (!flg)
-		numOfxGridPoints = 8.0;
-
-	// Setup some step size variables
-//	PetscReal hx;
-	double hx = (double) numOfxGridPoints / (PetscReal) (Mx - 1);
+	// Get the step size
+	double hx = PetscSolver::getStepSize();
 
 	// Get the flux handler that will be used to compute fluxes.
 	auto fluxHandler = PetscSolver::getFluxHandler();
@@ -277,7 +269,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	DM da;
 	PetscErrorCode ierr;
 	PetscInt xi, Mx, xs, xm;
-	PetscReal hx, sx, x;
+	PetscReal x;
 	// Pointers to the Petsc arrays that start at the beginning (xs) of the
 	// local array!
 	PetscReal *concs, *updatedConcs;
@@ -317,16 +309,9 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	PETSC_IGNORE);
 	checkPetscError(ierr);
 
-	// Get the total number of grid points specified by the command line option
-	PetscInt numOfxGridPoints;
-	PetscBool flg;
-	PetscOptionsGetInt(NULL, "-da_grid_x", &numOfxGridPoints, &flg);
-	if (!flg)
-		numOfxGridPoints = 8.0;
-
 	// Setup some step size variables
-	hx = numOfxGridPoints / (PetscReal) (Mx - 1);
-	sx = 1.0 / (hx * hx);
+	double hx = PetscSolver::getStepSize();
+	double sx = 1.0 / (hx * hx);
 
 	// Scatter ghost points to local vector, using the 2-step process
 	// DMGlobalToLocalBegin(),DMGlobalToLocalEnd().
@@ -467,7 +452,6 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	DM da;
 	PetscErrorCode ierr;
 	PetscInt xi, Mx, xs, xm, i;
-	PetscReal hx, sx, val[3];
 	PetscReal *concs, *updatedConcs;
 	double * concOffset;
 	Vec localC;
@@ -496,16 +480,9 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	PETSC_IGNORE);
 	checkPetscError(ierr);
 
-	// Get the total number of grid points specified by the command line option
-	PetscInt numOfxGridPoints;
-	PetscBool flg;
-	PetscOptionsGetInt(NULL, "-da_grid_x", &numOfxGridPoints, &flg);
-	if (!flg)
-		numOfxGridPoints = 8.0;
-
 	// Setup some step size variables
-	hx = numOfxGridPoints / (PetscReal) (Mx - 1);
-	sx = 1.0 / (hx * hx);
+	double hx = PetscSolver::getStepSize();
+	double sx = 1.0 / (hx * hx);
 
 	// Get the complete data array
 	ierr = DMGlobalToLocalBegin(da, C, INSERT_VALUES, localC);
@@ -792,13 +769,11 @@ PetscSolver::PetscSolver() {
 
 PetscSolver::PetscSolver(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		handlerRegistry(registry) {
-
 	numCLIArgs = 0;
 	CLIArgs = NULL;
 
 	RHSFunctionTimer = handlerRegistry->getTimer("RHSFunctionTimer");
 	RHSJacobianTimer = handlerRegistry->getTimer("RHSJacobianTimer");
-
 }
 
 //! The Destructor
@@ -898,7 +873,8 @@ void PetscSolver::initialize() {
  * fails, it will throw an exception of type std::string.
  */
 void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
-		std::shared_ptr<ITemperatureHandler> temperatureHandler) {
+		std::shared_ptr<ITemperatureHandler> temperatureHandler,
+		double stepSize) {
 
 	// Set the flux handler
 	PetscSolver::fluxHandler = fluxHandler;
@@ -909,6 +885,9 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	// Set the diffusion handler
 	PetscSolver::diffusionHandler = std::make_shared<DiffusionHandler>();
 
+	// Set the grid step size
+	PetscSolver::hx = stepSize;
+	
 	// Get the properties
 	auto props = network->getProperties();
 	int numHeClusters = std::stoi(props["numHeClusters"]);
