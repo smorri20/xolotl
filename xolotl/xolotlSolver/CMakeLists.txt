@@ -26,6 +26,7 @@ include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants/psiclusters)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/diffusion)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlViz)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlViz/dataprovider)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
 
 include_directories(${PETSC_INCLUDES})
 

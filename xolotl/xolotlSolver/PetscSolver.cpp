@@ -1,8 +1,8 @@
 // Includes
 #include "PetscSolver.h"
-#include "xolotlPerf/xolotlPerf.h"
+#include <xolotlPerf.h>
 #include <HDF5NetworkLoader.h>
-#include "TemperatureHandler.h"
+#include <TemperatureHandler.h>
 #include <MathUtils.h>
 #include <petscts.h>
 #include <petscsys.h>
@@ -59,6 +59,8 @@ std::shared_ptr<PSIClusterReactionNetwork> PetscSolver::network;
 std::shared_ptr<IFluxHandler> PetscSolver::fluxHandler;
 // Allocate the static temperature handler
 std::shared_ptr<ITemperatureHandler> PetscSolver::temperatureHandler;
+// Allocate the static diffusion handler
+std::shared_ptr<IDiffusionHandler> PetscSolver::diffusionHandler;
 
 extern PetscErrorCode RHSFunction(TS, PetscReal, Vec, Vec, void*);
 extern PetscErrorCode RHSJacobian(TS, PetscReal, Vec, Mat, Mat);
@@ -354,8 +356,8 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	// Get the current time
 	ierr = TSGetTime(ts, &realTime);
 
-	// Create the diffusion handler
-	DiffusionHandler diffusionHandler;
+	// Get the diffusion handler
+	auto diffusionHandler = PetscSolver::getDiffusionHandler();
 
 	// Loop over grid points computing ODE terms for each grid point
 	size = network->size();
@@ -400,7 +402,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 		}
 
 		// ---- Compute diffusion over the locally owned part of the grid -----
-		diffusionHandler.computeDiffusion(network, sx, concOffset,
+		diffusionHandler->computeDiffusion(network, sx, concOffset,
 				leftConcOffset, rightConcOffset, updatedConcOffset);
 
 		// ----- Compute all of the new fluxes -----
@@ -535,17 +537,9 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	if (!initialized) {
 
 		// Create the diffusion handler
-		DiffusionHandler diffusionHandler;
+		auto diffusionHandler = PetscSolver::getDiffusionHandler();
 		// Get the total number of diffusing clusters
-		const int nDiff = diffusionHandler.getNumberOfDiffusing();
-
-		// Initialize the rows, columns, and values to set in the Jacobian
-		PetscInt row[nDiff], col[3*nDiff];
-		PetscReal val[3*nDiff];
-		// Get the pointer on them for the compute diffusion method
-		PetscInt *rowPointer = &row[0];
-		PetscInt *colPointer = &col[0];
-		PetscReal *valPointer = &val[0];
+		const int nDiff = diffusionHandler->getNumberOfDiffusing();
 
 		/*
 		 Loop over grid points computing Jacobian terms for diffusion at each
@@ -563,13 +557,29 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 			concOffset = concs + size * xi;
 			network->updateConcentrationsFromArray(concOffset);
 
+			// Initialize the rows, columns, and values to set in the Jacobian
+			PetscInt row[nDiff], col[3*nDiff];
+			PetscReal val[3*nDiff];
+			// Get the pointer on them for the compute diffusion method
+			PetscInt *rowPointer = &row[0];
+			PetscInt *colPointer = &col[0];
+			PetscReal *valPointer = &val[0];
+
 			/* -------------------------------------------------------------
 			 ---- Compute diffusion over the locally owned part of the grid
 			 */
-			diffusionHandler.computePartialsForDiffusion(network, sx, valPointer,
+			diffusionHandler->computePartialsForDiffusion(network, sx, valPointer,
 					rowPointer, colPointer, xi, xs);
-			ierr = MatSetValuesLocal(J, nDiff, row, 3*nDiff, col, val, ADD_VALUES);
-			checkPetscError(ierr);
+
+			// Loop on the number of diffusion cluster to set the values in the Jacobian
+			for(int i = 0; i < nDiff; i++) {
+				rowPointer = &row[i];
+				colPointer = &col[3*i];
+				valPointer = &val[3*i];
+
+				ierr = MatSetValuesLocal(J, 1, rowPointer, 3, colPointer, valPointer, ADD_VALUES);
+				checkPetscError(ierr);
+			}
 
 //			break;   // Uncomment this line for debugging in a single cell.
 		}
@@ -896,6 +906,9 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	// Set the temperature handler
 	PetscSolver::temperatureHandler = temperatureHandler;
 
+	// Set the diffusion handler
+	PetscSolver::diffusionHandler = std::make_shared<DiffusionHandler>();
+
 	// Get the properties
 	auto props = network->getProperties();
 	int numHeClusters = std::stoi(props["numHeClusters"]);
@@ -957,11 +970,8 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	ierr = PetscMemzero(dfill, dof * dof * sizeof(PetscInt));
 	checkPetscError(ierr);
 
-	// Create the diffusion handler
-	DiffusionHandler diffusionHandler;
-
 	// Fill ofill, the matrix of "off-diagonal" elements that represents diffusion
-	diffusionHandler.initializeOFill(network, ofill);
+	PetscSolver::diffusionHandler->initializeOFill(network, ofill);
 
 	// Get the diagonal fill
 	ierr = getDiagonalFill(dfill, dof * dof);
