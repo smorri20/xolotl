@@ -1,6 +1,6 @@
 #include "PSIClusterReactionNetwork.h"
 #include "PSICluster.h"
-#include <HandlerRegistryFactory.h>
+#include <xolotlPerf.h>
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -138,7 +138,7 @@ void PSIClusterReactionNetwork::setTemperature(double temp) {
 		// are updated, the reaction and dissociation rates can be
 		// recomputed
 		auto cluster = (PSICluster *) allReactants->at(i);
-		cluster->computeRateConstants(temp);
+		cluster->computeRateConstants();
 	}
 
 	return;

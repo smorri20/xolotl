@@ -296,6 +296,9 @@ void HeVCluster::createReactionConnectivity() {
 			// Get the other reactant [He_(a-c)][V_(b-1)] that can be He or HeV
 			PSICluster * otherReactant;
 			if (comp[vType] == 1) {
+				// We want (a-c) to be smaller or equal to c in order to avoid double counting
+				if (comp[heType] > 2 * heReactant->getSize()) continue;
+
 				otherReactant = (PSICluster *) network->get(heType, comp[heType] - heReactant->getSize());
 			}
 			else {
@@ -359,24 +362,5 @@ void HeVCluster::createDissociationConnectivity() {
 	// because it is the dissociating one.
 	dissociateCluster(heVClusterMoreV, singleCluster);
 	
-	// Trap mutation
-	// (He_a)(V_b) --> He_(a)[V_(b+1)] + I
-	// Get the single interstitial cluster (we already have the one with
-	// one more vacancy)
-	singleCluster = (PSICluster *) network->get(iType, 1);
-	emitClusters(singleCluster, heVClusterMoreV);
-	// He_(a)[V_(b-1)] --> (He_a)(V_b) + I
-	// Here it is important that heVClusterLessV is the first cluster
-	// because it is the dissociating one.
-	dissociateCluster(heVClusterLessV, singleCluster);
-
-	return;
-}
-
-void HeVCluster::setTemperature(double temp) {
-
-	// Call the base class version to set all of the basic quantities.
-	PSICluster::setTemperature(temp);
-
 	return;
 }

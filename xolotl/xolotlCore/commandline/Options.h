@@ -13,6 +13,7 @@ namespace xolotlCore {
 class Options : public IOptions {
 
 protected:
+
 	/**
 	 * Map of options we support, keyed by option switch string
 	 * (including leading dashes)
@@ -41,9 +42,14 @@ protected:
 	int petscArgc;
 
 	/**
-	 * The pointer to the options that will be given to PETSc
+	 * The pointer to the options that will be given to PETSc.
 	 */
 	char **petscArgv;
+
+	/**
+	 * The value of the step size for the spatial grid.
+	 */
+	double stepSize;
 
 	/**
 	 * Use the constant temperature set of handlers?
@@ -86,9 +92,9 @@ protected:
 	double heliumFlux;
 
 	/**
-	 * Use the "standard" set of handlers for the performance infrastructure?
+	 * Which type of performance infrastructure should we use?
 	 */
-	bool perfStandardHandlersFlag;
+	xolotlPerf::IHandlerRegistry::RegistryType perfRegistryType;
 
 	/**
 	 * Use the "standard" set of handlers for the visualization infrastructure?
@@ -193,6 +199,18 @@ public:
     void setPetscArgv(char** argv) {petscArgv = argv;}
 
     /**
+     * Get the value of the step size.
+     * \see IOptions.h
+     */
+    double getStepSize() const {return stepSize;}
+
+    /**
+     * Set the value of the step size.
+     * \see IOptions.h
+     */
+    void setStepSize(double value) {stepSize = value;}
+
+    /**
      * Should we use const temperature handlers?
      * \see IOptions.h
      */
@@ -291,17 +309,16 @@ public:
     void setHeliumFlux(double flux) {heliumFlux = flux;}
 
     /**
-     * Should we use the "standard" set of handlers for the performance?
-     * If false, use dummy (stub) handlers.
+     * Which type of performance handlers should we use?
      * \see IOptions.h
      */
-    bool usePerfStandardHandlers() const {return perfStandardHandlersFlag;}
+    xolotlPerf::IHandlerRegistry::RegistryType getPerfHandlerType(void) const { return perfRegistryType; }
 
     /**
-     * Set the perfStandardHandlersFlag.
+     * Set the type of performance handlers to use.
      * \see IOptions.h
      */
-    void setPerfStandardHandlers(bool flag) {perfStandardHandlersFlag = flag;}
+    void setPerfHandlerType(xolotlPerf::IHandlerRegistry::RegistryType rtype) { perfRegistryType = rtype; }
 
     /**
      * Should we use the "standard" set of handlers for the visualization?

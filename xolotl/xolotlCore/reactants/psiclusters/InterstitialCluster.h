@@ -3,7 +3,6 @@
 
 // Includes
 #include "PSICluster.h"
-#include "../../xolotlPerf/HandlerRegistryFactory.h"
 
 namespace xolotlCore {
 

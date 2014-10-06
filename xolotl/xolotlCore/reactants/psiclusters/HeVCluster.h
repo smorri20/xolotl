@@ -3,7 +3,6 @@
 
 // Includes
 #include "PSICluster.h"
-#include "../../xolotlPerf/HandlerRegistryFactory.h"
 #include <string>
 #include <map>
 
@@ -102,14 +101,6 @@ public:
 	 * He and V.
 	 */
 	virtual bool isMixed() const { return true; };
-
-	/**
-	 * This operation overrides Reactant's setTemperature operation to
-	 * correctly recompute the diffusion coefficient and other
-	 * temperature-dependent quantities when the temperature is set.
-	 * @param temp
-	 */
-	virtual void setTemperature(double temp);
 
 	/**
 	 * Computes a row of the reaction connectivity matrix corresponding to
