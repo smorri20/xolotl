@@ -6,6 +6,7 @@
 #include <PSIClusterNetworkLoader.h>
 #include <PSIClusterReactionNetwork.h>
 #include <IDiffusionHandler.h>
+#include <IAdvectionHandler.h>
 #include <petscsys.h>
 #include <petscdmda.h>
 #include <memory>
@@ -49,6 +50,9 @@ private:
 
 	//! The original diffusion handler created.
 	static std::shared_ptr<IDiffusionHandler> diffusionHandler;
+
+	//! The original diffusion handler created.
+	static std::shared_ptr<IAdvectionHandler> advectionHandler;
 
 	/**
 	 * This operation fills the diagonal block of the matrix. The diagonal
@@ -194,6 +198,16 @@ public:
 	 */
 	static std::shared_ptr<IDiffusionHandler> getDiffusionHandler() {
 		return diffusionHandler;
+	}
+
+	/**
+	 * This operation returns the advection handler for this solver. This
+	 * operation is only for use by PETSc code and is not part of the
+	 * ISolver interface.
+	 * @return The advection handler for this solver
+	 */
+	static std::shared_ptr<IAdvectionHandler> getAdvectionHandler() {
+		return advectionHandler;
 	}
 
 protected:

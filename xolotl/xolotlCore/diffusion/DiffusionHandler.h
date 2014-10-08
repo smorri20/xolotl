@@ -13,7 +13,7 @@ namespace xolotlCore {
 class DiffusionHandler: public IDiffusionHandler {
 private:
 
-	//! The vector containing the indices of the diffusion clusters
+	//! The vector containing the indices of the diffusing clusters
 	std::vector<int> indexVector;
 
 public:
