@@ -2,7 +2,7 @@
 #define BOOST_TEST_MODULE Regression
 
 #include <boost/test/included/unit_test.hpp>
-#include <AdvectionHandler.h>
+#include <W110AdvectionHandler.h>
 #include <HDF5NetworkLoader.h>
 #include <XolotlConfig.h>
 #include <DummyHandlerRegistry.h>
@@ -12,9 +12,9 @@ using namespace std;
 using namespace xolotlCore;
 
 /**
- * This suite is responsible for testing the AdvectionHandler.
+ * This suite is responsible for testing the W110AdvectionHandler.
  */
-BOOST_AUTO_TEST_SUITE(AdvectionHandler_testSuite)
+BOOST_AUTO_TEST_SUITE(W110AdvectionHandler_testSuite)
 
 /**
  * Method checking the initialization and the compute advection methods.
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	const int size = network->getAll()->size();
 
 	// Create the advection handler
-	AdvectionHandler advectionHandler;
+	W110AdvectionHandler advectionHandler;
 
 	// Initialize it
 	advectionHandler.initialize(network);
@@ -84,8 +84,8 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 
 	// Check the new values of updatedConcOffset
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 0.0, 0.01); // Does not advect
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], -14481096195.0, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], -22138753147.0, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], -5843249341.0, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], -6475366533.0, 0.01);
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], 0.0, 0.01); // Does not advect
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], 0.0, 0.01); // Does not advect
 
@@ -112,10 +112,10 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	BOOST_REQUIRE_EQUAL(col[3], 12);
 
 	// Check values
-	BOOST_REQUIRE_CLOSE(val[0], 509225360.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[1], -509225360.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[2], 553468828.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[3], -553468828.0, 0.01);
+	BOOST_REQUIRE_CLOSE(val[0], 205476899.0, 0.01);
+	BOOST_REQUIRE_CLOSE(val[1], -205476899.0, 0.01);
+	BOOST_REQUIRE_CLOSE(val[2], 161884163.0, 0.01);
+	BOOST_REQUIRE_CLOSE(val[3], -161884163.0, 0.01);
 
 	// Finalize MPI
 	MPI_Finalize();

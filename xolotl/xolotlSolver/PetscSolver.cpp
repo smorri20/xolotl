@@ -15,7 +15,7 @@
 #include <unordered_map>
 #include <HDF5Utils.h>
 #include <DiffusionHandler.h>
-#include <AdvectionHandler.h>
+#include <W100AdvectionHandler.h>
 
 using namespace xolotlCore;
 
@@ -925,7 +925,7 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	PetscSolver::diffusionHandler = std::make_shared<DiffusionHandler>();
 
 	// Set the advection handler
-	PetscSolver::advectionHandler = std::make_shared<AdvectionHandler>();
+	PetscSolver::advectionHandler = std::make_shared<W100AdvectionHandler>();
 
 	// Set the grid step size
 	PetscSolver::hx = stepSize;

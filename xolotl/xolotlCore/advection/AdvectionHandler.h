@@ -11,7 +11,7 @@ namespace xolotlCore {
  * the physical parts for the advection of mobile cluster.
  */
 class AdvectionHandler: public IAdvectionHandler {
-private:
+protected:
 
 	//! The vector containing the indices of the advecting clusters
 	std::vector<int> indexVector;
@@ -30,10 +30,11 @@ public:
 	/**
 	 * The off-diagonal part of the Jacobian is already initialized by the diffusion handler.
 	 * This function initialize the list of clusters that will move through advection.
+	 * It must be overridden by the subclasses for specific surface orientations.
 	 *
 	 * @param network The network
 	 */
-	void initialize(std::shared_ptr<PSIClusterReactionNetwork> network);
+	virtual void initialize(std::shared_ptr<PSIClusterReactionNetwork> network) {return;}
 
 	/**
 	 * Compute the flux due to the advection for all the cluster,
