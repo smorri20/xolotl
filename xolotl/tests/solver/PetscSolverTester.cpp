@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(checkDOFConversion) {
 
 	// Local Declarations
 	string sourceDir(XolotlSourceDirectory);
-	string pathToFile("/tests/reactants/testfiles/tungsten.txt");
+	string pathToFile("/tests/testfiles/tungsten.txt");
 	string networkFilename = sourceDir + pathToFile;
 
 	BOOST_TEST_MESSAGE(
@@ -37,8 +37,7 @@ BOOST_AUTO_TEST_CASE(checkDOFConversion) {
 	shared_ptr<istream> networkStream = make_shared<ifstream>(networkFilename);
 
 	// Create a network loader and set the istream on every MPI task
-	shared_ptr<PSIClusterNetworkLoader> networkLoader = make_shared<
-			PSIClusterNetworkLoader>(
+	shared_ptr<PSIClusterNetworkLoader> networkLoader = make_shared<PSIClusterNetworkLoader>(
 			std::make_shared<xolotlPerf::DummyHandlerRegistry>());
 	networkLoader->setInputstream(networkStream);
 	// Load the network

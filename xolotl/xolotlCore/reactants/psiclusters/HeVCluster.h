@@ -3,7 +3,6 @@
 
 // Includes
 #include "PSICluster.h"
-#include "../../xolotlPerf/HandlerRegistryFactory.h"
 #include <string>
 #include <map>
 
@@ -23,31 +22,6 @@ private:
 	int numV;
 
 	/**
-	 * A pointer to He_1 that is used for the dissociation flux calculation
-	 */
-	std::shared_ptr<PSICluster> heCluster;
-
-	/**
-	 * A pointer to V_1 that is used for the dissociation flux calculation
-	 */
-	std::shared_ptr<PSICluster> vCluster;
-
-	/**
-	 * A pointer to I_1 that is used for the dissociation flux calculation
-	 */
-	std::shared_ptr<PSICluster> iCluster;
-
-	/**
-	 * A pointer to the HeV cluster with one less He than this cluster
-	 */
-	std::shared_ptr<PSICluster> heVClusterLessHe;
-
-	/**
-	 * A pointer to the HeV cluster with one less V than this cluster
-	 */
-	std::shared_ptr<PSICluster> heVClusterLessV;
-
-	/**
 	 * The default constructor is private because PSIClusters must always be
 	 * initialized with a size.
 	 */
@@ -55,20 +29,44 @@ private:
 		PSICluster(1)
 	{ numHe = 1; numV = 1; }
 
-protected:
+	/**
+	 * This operation handles partial replacement reactions of the form
+	 *
+	 * (A_x)(B_y) + C_z --> (A_x)[B_(y-z)]
+	 *
+	 * for each compound cluster in the set.
+	 *
+	 * This operation fills the reaction connectivity array as well as the
+	 * array of combining clusters.
+	 *
+	 * @param clusters The clusters that have part of their B components
+	 * replaced. It is assumed that each element of this set represents a
+	 * cluster of the form C_z.
+	 * @param oldComponentName The name of the component that will be partially
+	 * replaced.
+	 * @param newComponentName The name of the component that will replace the old
+	 * component.
+	 */
+	void replaceInCompound(std::vector<Reactant *> & clusters,
+			std::string oldComponentName, std::string newComponentName);
 
 	/**
-	 * This operation computes the partial derivatives due to dissociation
-	 * reactions. The partial derivatives due to dissociation for compound
-	 * clusters are significantly different than those single-species clusters.
+	 * This operation "combines" clusters in the sense that it handles all of
+	 * the logic and caching required to correctly process the reaction
 	 *
-	 * @param partials The vector into which the partial derivatives should be
-	 * inserted. This vector should have a length equal to the size of the
-	 * network.
-	 * @param temperature The temperature at which the reactions are occurring.
+	 * (He_a)(V_b) + He_c --> [He_(a+c)][V_(b+1)] + I
+	 *
+	 * in the case of [He_(a+c)](V_b) not in the network
+	 *
+	 * This operation fills the reaction connectivity array as well as the
+	 * array of combining clusters.
+	 *
+	 * @param clusters The clusters that can combine with this cluster.
+	 * (Here it will be He clusters)
+	 * @param productName The name of the product produced in the reaction.
 	 */
-	virtual void getDissociationPartialDerivatives(std::vector<double> & partials,
-			double temperature) const;
+	void combineClusters(std::vector<Reactant *> & clusters,
+			std::string productName);
 
 public:
 
@@ -99,34 +97,10 @@ public:
 	virtual std::shared_ptr<Reactant> clone();
 
 	/**
-	 * This operation returns the total generation rate due to emission for
-	 * this cluster.
+	 * This operation returns true to signify that this cluster is a mixture of
+	 * He and V.
 	 */
-	double getGenByEm();
-
-	/**
-	 * This operation returns the total annihilation rate due to emission for
-	 * this cluster.
-	 */
-	double getAnnByEm();
-
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * dissociation.
-	 * @return The flux due to dissociation.
-	 */
-	virtual double getDissociationFlux(double temperature) const;
-
-protected:
-
-	/**
-	 * This operation overrides the base class implementation to provide
-	 * the proper pointer for HeV, which is a compound.
-	 *
-	 * @return The shared_ptr from the network or a null shared_ptr if the
-	 * network does not contain this reactant.
-	 */
-	std::shared_ptr<PSICluster> getThisSharedPtrFromNetwork() const;
+	virtual bool isMixed() const { return true; };
 
 	/**
 	 * Computes a row of the reaction connectivity matrix corresponding to

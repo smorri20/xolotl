@@ -5,6 +5,7 @@
 #include "ISolver.h"
 #include <PSIClusterNetworkLoader.h>
 #include <PSIClusterReactionNetwork.h>
+#include <IDiffusionHandler.h>
 #include <petscsys.h>
 #include <petscdmda.h>
 #include <memory>
@@ -37,11 +38,17 @@ private:
 	//! The original network created from the network loader.
 	static std::shared_ptr<PSIClusterReactionNetwork> network;
 
+	//! The grid step size.
+	static double hx;
+
 	//! The original flux handler created.
 	static std::shared_ptr<IFluxHandler> fluxHandler;
 
 	//! The original temperature handler created.
 	static std::shared_ptr<ITemperatureHandler> temperatureHandler;
+
+	//! The original diffusion handler created.
+	static std::shared_ptr<IDiffusionHandler> diffusionHandler;
 
 	/**
 	 * This operation fills the diagonal block of the matrix. The diagonal
@@ -123,9 +130,13 @@ public:
 	 * fails, it will throw an exception of type std::string.
 	 * @param fluxHandler The flux handler that will be used when performing
 	 * the solve
+	 * @param temperatureHandler The temperature handler that will be used
+	 * when performing the solve
+	 * @param stepSize The spatial grid step size
 	 */
 	void solve(std::shared_ptr<IFluxHandler> fluxHandler,
-			std::shared_ptr<ITemperatureHandler> temperatureHandler);
+			std::shared_ptr<ITemperatureHandler> temperatureHandler,
+			double stepSize);
 
 
 	/**
@@ -144,6 +155,15 @@ public:
 	 */
 	static std::shared_ptr<PSIClusterReactionNetwork> getNetwork() {
 		return network;
+	}
+
+	/**
+	 * This operation returns the grid step size. This operation is only for
+	 * use by PETSc cade and is not part of the ISolver interface.
+	 * @return The grid step size
+	 */
+	static double getStepSize() {
+		return hx;
 	}
 
 	/**
@@ -166,6 +186,16 @@ public:
 		return temperatureHandler;
 	}
 
+	/**
+	 * This operation returns the diffusion handler for this solver. This
+	 * operation is only for use by PETSc code and is not part of the
+	 * ISolver interface.
+	 * @return The diffusion handler for this solver
+	 */
+	static std::shared_ptr<IDiffusionHandler> getDiffusionHandler() {
+		return diffusionHandler;
+	}
+
 protected:
 
     /**
@@ -173,8 +203,6 @@ protected:
      * for this class.
      */
     std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry;
-
-
 
 }; //end class PetscSolver
 

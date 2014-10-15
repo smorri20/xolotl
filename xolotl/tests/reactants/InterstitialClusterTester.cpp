@@ -33,7 +33,6 @@ static std::shared_ptr<xolotlPerf::IHandlerRegistry> registry = std::make_shared
 BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	
 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
-	auto reactants = network->getAll();
 	auto props = network->getProperties();
 	
 	// Prevent dissociation from being added to the connectivity array
@@ -43,8 +42,9 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	
 	{
 		// Get the connectivity array from the reactant
-		auto reactant = dynamic_pointer_cast < PSICluster
-				> (network->get("I", 4));
+		auto reactant = (PSICluster *) network->get("I", 4);
+		// Check the type name
+		BOOST_REQUIRE_EQUAL("I",reactant->getType());
 		auto reactionConnectivity = reactant->getConnectivity();
 		
 		// Check the connectivity for He, V, and I
@@ -60,10 +60,10 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 			
 			// HeV
-			1, 1, 1, 1, 1, 0, 0, 0, 0,
-			1, 1, 1, 1, 0, 0, 0, 0,
-			1, 1, 1, 0, 0, 0, 0,
-			1, 1, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0,
 			1, 1, 1, 1, 1,
 			1, 1, 1, 1,
 			1, 1, 1,
@@ -71,11 +71,10 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 			1,
 			
 			// HeI
-			// Only a single-Interstitial cluster can react with a HeI cluster
 			0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0,
-			1, 1, 1, 1, 1, 1,
+			0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0,
 			0, 0, 0, 0,
 			0, 0, 0,
@@ -97,34 +96,69 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
  	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
 
  	// Get an I cluster with compostion 0,0,1.
- 	auto cluster = dynamic_pointer_cast<PSICluster>(network->get("I", 1));
+ 	auto cluster = (PSICluster *) network->get("I", 1);
  	// Get one that it combines with (I2)
- 	auto secondCluster = dynamic_pointer_cast<PSICluster>(network->get("I", 2));
- 	// Set the diffusion factor, migration and binding energies based on the
+ 	auto secondCluster = (PSICluster *) network->get("I", 2);
+ 	// Set the diffusion factor and migration energy based on the
  	// values from the tungsten benchmark for this problem.
  	cluster->setDiffusionFactor(2.13E+10);
  	cluster->setMigrationEnergy(0.013);
- 	vector<double> energies = {numeric_limits<double>::infinity(), numeric_limits<double>::infinity(),
- 			numeric_limits<double>::infinity(), numeric_limits<double>::infinity()};
- 	cluster->setBindingEnergies(energies);
+	cluster->setTemperature(1000.0);
  	cluster->setConcentration(0.5);
 
- 	// Set the diffusion factor, migration and binding energies based on the
+ 	// Set the diffusion factor and migration energy based on the
  	// values from the tungsten benchmark for this problem for the second cluster
  	secondCluster->setDiffusionFactor(1.065E+10);
  	secondCluster->setMigrationEnergy(0.013);
- 	energies = {numeric_limits<double>::infinity(), numeric_limits<double>::infinity(),
- 			2.12, numeric_limits<double>::infinity()};
- 	secondCluster->setBindingEnergies(energies);
+	secondCluster->setTemperature(1000.0);
  	secondCluster->setConcentration(0.5);
+
+ 	// Compute the rate constants that are needed for the flux
+ 	cluster->computeRateConstants();
  	// The flux can pretty much be anything except "not a number" (nan).
- 	double flux = cluster->getTotalFlux(1000.0);
+ 	double flux = cluster->getTotalFlux();
  	BOOST_TEST_MESSAGE("InterstitialClusterTester Message: \n" << "Total Flux is " << flux << "\n"
- 			  << "   -Production Flux: " << cluster->getProductionFlux(1000.0) << "\n"
- 			  << "   -Combination Flux: " << cluster->getCombinationFlux(1000.0) << "\n"
- 			  << "   -Dissociation Flux: " << cluster->getDissociationFlux(1000.0) << "\n");
- 	BOOST_REQUIRE_CLOSE(-67088824870., flux, 10);
+ 			  << "   -Production Flux: " << cluster->getProductionFlux() << "\n"
+ 			  << "   -Combination Flux: " << cluster->getCombinationFlux() << "\n"
+ 			  << "   -Dissociation Flux: " << cluster->getDissociationFlux() << "\n"
+ 			  << "   -Emission Flux: " << cluster->getEmissionFlux() << "\n");
+	BOOST_REQUIRE_CLOSE(9021773486621.2, flux, 0.1);
  }
+
+ /**
+  * This operation checks the InterstitialCluster get*PartialDerivatives methods.
+  */
+ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
+ 	// Local Declarations
+ 	// The vector of partial derivatives to compare with
+ 	double knownPartials[] = {-5.26951e+10, -5.54256e+10, 0.0, 0.0, -3.86349e+10,
+ 			-4.19101e+10, -2.90683e+11, 1.82094e+13, 5.1489e+12, 0.0, 0.0,
+ 			-3.86349e+10, -3.39657e+10, 0.0, 4.26504e+12};
+ 	// Get the simple reaction network
+ 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork(3);
+
+ 	// Get an I cluster with compostion 0,0,1.
+ 	auto cluster = (PSICluster *) network->get("I", 1);
+ 	// Set the diffusion factor and migration energy based on the
+ 	// values from the tungsten benchmark for this problem.
+ 	cluster->setDiffusionFactor(2.13E+10);
+ 	cluster->setMigrationEnergy(0.013);
+	cluster->setTemperature(1000.0);
+ 	cluster->setConcentration(0.5);
+
+ 	// Compute the rate constants that are needed for the partial derivatives
+ 	cluster->computeRateConstants();
+ 	// Get the vector of partial derivatives
+ 	auto partials = cluster->getPartialDerivatives();
+
+ 	// Check the size of the partials
+ 	BOOST_REQUIRE_EQUAL(partials.size(), 15);
+
+ 	// Check all the values
+ 	for (int i = 0; i < partials.size(); i++) {
+ 		BOOST_REQUIRE_CLOSE(partials[i], knownPartials[i], 0.1);
+ 	}
+}
 
 /**
  * This operation checks the reaction radius for InterstitialCluster.

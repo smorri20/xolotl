@@ -3,7 +3,7 @@
 
 // Includes
 #include "PSICluster.h"
-#include "../../xolotlPerf/HandlerRegistryFactory.h"
+#include <xolotlPerf.h>
 
 namespace xolotlCore {
 
@@ -21,6 +21,24 @@ private:
 	HeCluster() :
 		PSICluster(1)
 	{ }
+
+	/**
+	 * This operation "combines" clusters in the sense that it handles all of
+	 * the logic and caching required to correctly process the reaction
+	 *
+	 * (He_c)(V_b) + He_a --> [He_(a+c)][V_(b+1)] + I
+	 *
+	 * in the case of [He_(a+c)](V_b) not in the network
+	 *
+	 * This operation fills the reaction connectivity array as well as the
+	 * array of combining clusters.
+	 *
+	 * @param clusters The clusters that can combine with this cluster.
+	 * (Here it will be HeV clusters and He clusters)
+	 * @param productName The name of the product produced in the reaction.
+	 */
+	void combineClusters(std::vector<Reactant *> & clusters,
+			std::string productName);
 
 public:
 
@@ -52,6 +70,19 @@ protected:
 	 * of the second reactant is 1, otherwise 0.
 	 */
 	void createReactionConnectivity();
+
+	/**
+	 * Computes a row (or column) of the dissociation connectivity matrix
+	 * corresponding to this cluster.
+	 *
+	 * Connections are made between this cluster and any clusters it affects
+	 * in a dissociation reaction.
+	 *
+	 * The base-class implementation handles dissociation for regular clusters
+	 * by processing the reaction.
+	 *
+	 */
+	void createDissociationConnectivity();
 
 
 }; //end class HeCluster
