@@ -35,7 +35,7 @@ void printStartMessage() {
 
 bool initMaterial(Options &options) {
 
-	bool materialInitOK = xolotlSolver::initializeMaterial(options);
+	bool materialInitOK = xolotlCore::initializeMaterial(options);
 	if (!materialInitOK) {
 		std::cerr << "Unable to initialize requested material.  Aborting"
 				<< std::endl;
@@ -46,7 +46,7 @@ bool initMaterial(Options &options) {
 
 bool initTemp(Options &options) {
 
-	bool tempInitOK = xolotlSolver::initializeTempHandler(options);
+	bool tempInitOK = xolotlCore::initializeTempHandler(options);
 	if (!tempInitOK) {
 		std::cerr << "Unable to initialize requested temperature.  Aborting"
 				<< std::endl;
@@ -85,8 +85,8 @@ std::shared_ptr<xolotlSolver::PetscSolver> setUpSolver(
 
 void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry,
-		std::shared_ptr<xolotlSolver::IFluxHandler> materialHandler,
-		std::shared_ptr<xolotlSolver::ITemperatureHandler> tempHandler,
+		std::shared_ptr<xolotlCore::IFluxHandler> materialHandler,
+		std::shared_ptr<xolotlCore::ITemperatureHandler> tempHandler,
 		double stepSize) {
 
     xperf::IHardwareCounter::SpecType hwctrSpec;
@@ -168,9 +168,9 @@ int main(int argc, char **argv) {
 		auto vizInitOK = initViz(opts.useVizStandardHandlers());
 
 		// Access the material handler registry to get the material
-		auto materialHandler = xolotlSolver::getMaterialHandler();
+		auto materialHandler = xolotlCore::getMaterialHandler();
 		// Access the temperature handler registry to get the temperature
-		auto tempHandler = xolotlSolver::getTemperatureHandler(opts);
+		auto tempHandler = xolotlCore::getTemperatureHandler();
 
 		// Access our performance handler registry to obtain a Timer
 		// measuring the runtime of the entire program.
