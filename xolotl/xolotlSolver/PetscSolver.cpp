@@ -608,7 +608,7 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 			// Get the reactant index
 			reactantIndex = reactant->getId() - 1;
 			// Get the column id
-			rowId = (xi - xs) * size + reactantIndex;
+			rowId = (xi - xs + 1) * size + reactantIndex;
 			// Get the partial derivatives
 			reactant->getPartialDerivatives(clusterPartials);
 			// Get the list of column ids from the map
@@ -619,7 +619,7 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 			for (int j = 0; j < pdColIdsVectorSize; j++) {
 				// Calculate the appropriate index to match the dfill array
 				// configuration
-				localPDColIds[j] = (xi - xs) * size + pdColIdsVector[j];
+				localPDColIds[j] = (xi - xs + 1) * size + pdColIdsVector[j];
 				// Get the partial derivative from the array of all of the partials
 				reactingPartialsForCluster[j] =
 						clusterPartials[pdColIdsVector[j]];
@@ -895,7 +895,7 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Create distributed array (DMDA) to manage parallel grid and vectors
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_NONE, -8, dof, 1,
+	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, -8, dof, 1,
 	NULL, &da);
 	checkPetscError(ierr);
 

@@ -91,12 +91,12 @@ void DiffusionHandler::computePartialsForDiffusion(
 		// cells.
 
 		// Set the row index
-		row[i] = (xi - xs) * size + index;
+		row[i] = (xi - xs + 1) * size + index;
 
 		// Set the columns indices
-		col[i * 3] = ((xi - 1) - xs) * size + index;
-		col[(i * 3) + 1] = (xi - xs) * size + index;
-		col[(i * 3) + 2] = ((xi + 1) - xs) * size + index;
+		col[i * 3] = ((xi - 1) - xs + 1) * size + index;
+		col[(i * 3) + 1] = (xi - xs + 1) * size + index;
+		col[(i * 3) + 2] = ((xi + 1) - xs + 1) * size + index;
 
 		// Compute the partial derivatives for diffusion of this cluster
 		val[i * 3] = diffCoeff * sx;
