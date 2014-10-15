@@ -2,7 +2,6 @@
 #define IADVECTIONHANDLER_H
 
 // Includes
-#include <petscsys.h>
 #include <PSICluster.h>
 #include <PSIClusterReactionNetwork.h>
 #include <memory>
@@ -47,8 +46,8 @@ public:
 	 * point where the advection is computed used to find the next solution
 	 */
 	virtual void computeAdvection(std::shared_ptr<PSIClusterReactionNetwork> network, double hx,
-			int xi, PetscScalar *concOffset, PetscScalar *rightConcOffset,
-			PetscScalar *updatedConcOffset) = 0;
+			int xi, double *concOffset, double *rightConcOffset,
+			double *updatedConcOffset) = 0;
 
 	/**
 	 * Compute the partials due to the advection of all the clusters given
@@ -67,8 +66,8 @@ public:
 	 * @param xs The index of the first grid point on the locally owned grid
 	 */
 	virtual void computePartialsForAdvection(std::shared_ptr<PSIClusterReactionNetwork> network,
-			double hx, PetscReal *val, PetscInt *row, PetscInt *col, PetscInt xi,
-			PetscInt xs) = 0;
+			double hx, double *val, int *row, int *col, int xi,
+			int xs) = 0;
 
 	/**
 	 * Get the total number of advecting clusters in the network.

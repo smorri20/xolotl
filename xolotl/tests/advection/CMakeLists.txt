@@ -13,7 +13,6 @@ include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants/psiclusters)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf/dummy)
 include_directories(${Boost_BINARY_DIRS})
-include_directories(${PETSC_INCLUDES})
 
 #link the directories
 link_directories(${CMAKE_SOURCE_DIR}/src/xolotlCore/advection)

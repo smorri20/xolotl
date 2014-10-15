@@ -58,8 +58,8 @@ public:
 	 * point where the advection is computed used to find the next solution
 	 */
 	void computeAdvection(std::shared_ptr<PSIClusterReactionNetwork> network, double hx,
-			int xi, PetscScalar *concOffset, PetscScalar *rightConcOffset,
-			PetscScalar *updatedConcOffset);
+			int xi, double *concOffset, double *rightConcOffset,
+			double *updatedConcOffset);
 
 	/**
 	 * Compute the partials due to the advection of all the clusters given
@@ -83,8 +83,8 @@ public:
 	 * @param xs The index of the first grid point on the locally owned grid
 	 */
 	void computePartialsForAdvection(std::shared_ptr<PSIClusterReactionNetwork> network,
-			double hx, PetscReal *val, PetscInt *row, PetscInt *col, PetscInt xi,
-			PetscInt xs);
+			double hx, double *val, int *row, int *col, int xi,
+			int xs);
 
 	/**
 	 * Get the total number of advecting clusters in the network.

@@ -53,12 +53,12 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	double hx = 1.0;
 
 	// The arrays of concentration
-	PetscReal concentration[3*size];
-	PetscReal newConcentration[3*size];
+	double concentration[3*size];
+	double newConcentration[3*size];
 
 	// Initialize their values
 	for (int i = 0; i < 3*size; i++) {
-		concentration[i] = (PetscReal) i * i;
+		concentration[i] = (double) i * i;
 		newConcentration[i] = 0.0;
 	}
 
@@ -70,13 +70,13 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	}
 
 	// Get pointers
-	PetscReal *conc = &concentration[0];
-	PetscReal *updatedConc = &newConcentration[0];
+	double *conc = &concentration[0];
+	double *updatedConc = &newConcentration[0];
 
 	// Get the offset for the grid point in the middle
-	PetscReal *concOffset = conc + size;
-	PetscReal *rightConcOffset = conc + size * 2;
-	PetscReal *updatedConcOffset = updatedConc + size;
+	double *concOffset = conc + size;
+	double *rightConcOffset = conc + size * 2;
+	double *updatedConcOffset = updatedConc + size;
 
 	// Compute the advection at this grid point
 	advectionHandler.computeAdvection(network, hx, 1,
@@ -91,12 +91,12 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 
 	// Initialize the rows, columns, and values to set in the Jacobian
 	int nAdvec = advectionHandler.getNumberOfAdvecting();
-	PetscInt row[nAdvec], col[2*nAdvec];
-	PetscReal val[2*nAdvec];
+	int row[nAdvec], col[2*nAdvec];
+	double val[2*nAdvec];
 	// Get the pointer on them for the compute advection method
-	PetscInt *rowPointer = &row[0];
-	PetscInt *colPointer = &col[0];
-	PetscReal *valPointer = &val[0];
+	int *rowPointer = &row[0];
+	int *colPointer = &col[0];
+	double *valPointer = &val[0];
 
 	// Compute the partial derivatives for the advection a the grid point 1
 	advectionHandler.computePartialsForAdvection(network, hx, valPointer,

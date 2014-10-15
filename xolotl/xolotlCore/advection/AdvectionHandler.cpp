@@ -4,8 +4,8 @@
 namespace xolotlCore {
 
 void AdvectionHandler::computeAdvection(std::shared_ptr<PSIClusterReactionNetwork> network,
-		double hx, int xi, PetscScalar *concOffset, PetscScalar *rightConcOffset,
-		PetscScalar *updatedConcOffset) {
+		double hx, int xi, double *concOffset, double *rightConcOffset,
+		double *updatedConcOffset) {
 	// Get all the reactant
 	auto reactants = network->getAll();
 	// Get the number of advecting cluster
@@ -38,8 +38,8 @@ void AdvectionHandler::computeAdvection(std::shared_ptr<PSIClusterReactionNetwor
 
 void AdvectionHandler::computePartialsForAdvection(
 		std::shared_ptr<PSIClusterReactionNetwork> network,
-		double hx, PetscReal *val, PetscInt *row, PetscInt *col, PetscInt xi,
-		PetscInt xs) {
+		double hx, double *val, int *row, int *col, int xi,
+		int xs) {
 	// Get all the reactant
 	auto reactants = network->getAll();
 	// And the size of the network
