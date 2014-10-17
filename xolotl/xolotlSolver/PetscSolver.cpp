@@ -208,9 +208,9 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 			concOffset[k] = 0.0;
 		}
 
-//		if (i > 0) {
+//		if (i > 0 && i < Mx) {
 //			int k = 14; // initial concentration for V only
-//			concOffset[k] = 0.00315 / hx;
+//			concOffset[k] = 0.000315 / hx;
 //		}
 
 //		// Uncomment this for debugging
@@ -383,6 +383,21 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 
 //		xi = 1; // Uncomment this line for debugging in a single cell.
 
+		// Compute the middle, left, right and new array offsets
+		concOffset = concs + size * xi;
+		leftConcOffset = concs + size * (xi - 1);
+		rightConcOffset = concs + size * (xi + 1);
+		updatedConcOffset = updatedConcs + size * xi;
+
+		// Boundary conditions
+		if (xi == 0 || xi == Mx -1) {
+			for (int i = 0; i < size; i++) {
+				updatedConcOffset[i] = 1.0 * concOffset[i];
+			}
+
+			continue;
+		}
+
 		x = xi * hx;
 
 		// Vector representing the position at which the flux will be calculated
@@ -396,12 +411,6 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 			network->setTemperature(temperature);
 			lastTemperature = temperature;
 		}
-
-		// Compute the middle, left, right and new array offsets
-		concOffset = concs + size * xi;
-		leftConcOffset = concs + size * (xi - 1);
-		rightConcOffset = concs + size * (xi + 1);
-		updatedConcOffset = updatedConcs + size * xi;
 
 		// Copy data into the PSIClusterReactionNetwork so that it can
 		// compute the fluxes properly. The network is only used to compute the
@@ -467,13 +476,6 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 //					<< cluster->getConcentration() << std::endl;
 		}
 
-		// Boundary conditions
-		if (xi == 0) {
-			for (int i = 0; i < size; i++) {
-				updatedConcOffset[i] = 1.0 * concs[i];
-			}
-		}
-
 //		for (int i = 0; i < size; i++) {
 //			std::cout << updatedConcOffset[i] << std::endl;
 //		}
@@ -530,13 +532,6 @@ void computePartialsForDiffusion(PSICluster * cluster, double temp,
 	col[0] = ((xi - 1) - xs + 1) * size + reactantIndex;
 	col[1] = (xi - xs + 1) * size + reactantIndex;
 	col[2] = ((xi + 1 + 1) - xs) * size + reactantIndex;
-
-	// Boundary conditions
-	if (xi == 0) {
-		val[0] = 0.0;
-		val[1] = 0.0;
-		val[2] = 0.0;
-	}
 }
 
 #undef __FUNCT__
@@ -628,13 +623,17 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 		 grid point
 		 */
 		for (xi = xs; xi < xs + xm; xi++) {
+
+//			xi = 1; // Uncomment this line for debugging in a single cell
+
+			// Boundary conditions
+			if (xi == 0 || xi == Mx - 1) continue;
+
 			// Vector representing the position at which the flux will be calculated
 			// Currently we are only in 1D
 			std::vector<double> gridPosition = { xi * hx, 0, 0 };
 			auto temperature = temperatureHandler->getTemperature(gridPosition,
 					realTime);
-
-//			xi = 1; // Uncomment this line for debugging in a single cell
 
 			// Copy data into the PSIClusterReactionNetwork so that it can
 			// compute the new concentrations.
@@ -711,13 +710,17 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 
 	// Loop over the grid points
 	for (xi = xs; xi < xs + xm; xi++) {
+
+		//		xi = 1; // Uncomment this line for debugging in a single cell
+
+		// Boundary conditions
+		if (xi == 0 || xi == Mx - 1) continue;
+
 		// Vector representing the position at which the flux will be calculated
 		// Currently we are only in 1D
 		std::vector<double> gridPosition = { xi * hx, 0, 0 };
 		auto temperature = temperatureHandler->getTemperature(gridPosition,
 				realTime);
-
-//		xi = 1; // Uncomment this line for debugging in a single cell
 
 		// Copy data into the PSIClusterReactionNetwork so that it can
 		// compute the new concentrations.
@@ -767,42 +770,6 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	checkPetscError(ierr);
 	ierr = DMRestoreLocalVector(da, &localC);
 	checkPetscError(ierr);
-	ierr = MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);
-	checkPetscError(ierr);
-	ierr = MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);
-	checkPetscError(ierr);
-
-	// Enforce the Boundary conditions. Loop over the grid points and set the
-	// conditions.
-	if (xs == 0) {
-		// Loop on the reactants
-		for (int i = 0; i < size; i++) {
-			auto reactant = allReactants->at(i);
-			// Get the reactant index
-			reactantIndex = reactant->getId() - 1;
-			// Get the row id
-			rowId = size + reactantIndex;
-
-			// Get the list of column ids from the map
-			auto pdColIdsVector = dFillMap.at(reactantIndex);
-			pdColIdsVectorSize = pdColIdsVector.size(); //Number of partial derivatives
-			// Loop over the list of column ids
-			for (int j = 0; j < pdColIdsVectorSize; j++) {
-				// Calculate the appropriate index to match the dfill array configuration
-				localPDColIds[j] = size + pdColIdsVector[j];
-				// Get the partial derivative from the array of all of the partials
-				reactingPartialsForCluster[j] = 0.0;
-			}
-
-			// Update the matrix
-			ierr = MatSetValuesLocal(J, 1, &rowId, pdColIdsVectorSize,
-					localPDColIds, reactingPartialsForCluster.data(),
-					INSERT_VALUES);
-			checkPetscError(ierr);
-		}
-	}
-
-	// Assemble again
 	ierr = MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);
 	checkPetscError(ierr);
 	ierr = MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);
@@ -1051,7 +1018,7 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Create distributed array (DMDA) to manage parallel grid and vectors
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_MIRROR, -8, dof, 1,
+	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, -8, dof, 1,
 	NULL, &da);
 	checkPetscError(ierr);
 
