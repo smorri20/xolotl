@@ -97,6 +97,13 @@ static std::shared_ptr<std::vector<Reactant *>> allReactants;
 static double lastTemperature = 0.0;
 
 /**
+ * A boolean that is true if the temperature has changed. It is set to true
+ * in the RHSFunction, and back to false once the off-diagonal part of the
+ * Jacobian is computed in the RHSJacobian method.
+ */
+static bool temperatureChanged = false;
+
+/**
  * A vector for holding the partial derivatives of one cluster. It is sized in
  * the solve() operation.
  *
@@ -209,7 +216,7 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 
 //		if (i > 0) {
 //			int k = 14; // initial concentration for V only
-//			concOffset[k] = 0.00315 / hx;
+//			concOffset[k] = 0.000315 / hx;
 //		}
 
 //		// Uncomment this for debugging
@@ -296,10 +303,6 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	auto temperatureHandler = PetscSolver::getTemperatureHandler();
 	// Get the flux handler that will be used to compute fluxes.
 	auto fluxHandler = PetscSolver::getFluxHandler();
-	auto incidentFluxVector = fluxHandler->getIncidentFluxVec();
-	// Some required properties
-	auto props = network->getProperties();
-	int numHeClusters = std::stoi(props["numHeClusters"]);
 
 	// Get the local data vector from petsc
 	PetscFunctionBeginUser;
@@ -340,10 +343,8 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
 	checkPetscError(ierr);
 
-	// Variable to represent the real, or current, time
-	PetscReal realTime;
-	// Get the current time
-	ierr = TSGetTime(ts, &realTime);
+	// Get the incident flux vector
+	auto incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime);
 
 	// Get the diffusion handler
 	auto diffusionHandler = PetscSolver::getDiffusionHandler();
@@ -357,25 +358,35 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 
 //		xi = 1; // Uncomment this line for debugging in a single cell.
 
+		// Compute the middle, left, right and new array offsets
+		concOffset = concs + size * xi;
+		leftConcOffset = concs + size * (xi - 1);
+		rightConcOffset = concs + size * (xi + 1);
+		updatedConcOffset = updatedConcs + size * xi;
+
+		// Boundary conditions
+		if (xi == 0 || xi == Mx - 1) {
+			for (int i = 0; i < size; i++) {
+				updatedConcOffset[i] = 1.0 * concOffset[i];
+			}
+
+			continue;
+		}
+
 		x = xi * hx;
 
 		// Vector representing the position at which the flux will be calculated
 		// Currently we are only in 1D
 		std::vector<double> gridPosition = { x, 0, 0 };
 		auto temperature = temperatureHandler->getTemperature(gridPosition,
-				realTime);
+				ftime);
 
 		// Update the network if the temperature changed
 		if (!xolotlCore::equal(temperature, lastTemperature)) {
 			network->setTemperature(temperature);
 			lastTemperature = temperature;
+			temperatureChanged = true;
 		}
-
-		// Compute the middle, left, right and new array offsets
-		concOffset = concs + size * xi;
-		leftConcOffset = concs + size * (xi - 1);
-		rightConcOffset = concs + size * (xi + 1);
-		updatedConcOffset = updatedConcs + size * xi;
 
 		// Copy data into the PSIClusterReactionNetwork so that it can
 		// compute the fluxes properly. The network is only used to compute the
@@ -411,13 +422,6 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 			updatedConcOffset[reactantIndex] += flux;
 //			std::cout << "New flux = " << flux << " "
 //					<< cluster->getConcentration() << std::endl;
-		}
-
-		// Boundary conditions
-		if (xi == 0) {
-			for (int i = 0; i < size; i++) {
-				updatedConcOffset[i] = 1.0 * concs[i];
-			}
 		}
 
 		// Uncomment this line for debugging in a single cell.
@@ -466,16 +470,10 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	PetscReal *concs, *updatedConcs;
 	double * concOffset;
 	Vec localC;
-	static PetscBool initialized = PETSC_FALSE;
 	// Get the network
 	auto network = PetscSolver::getNetwork();
-	// Get the properties
-	auto props = network->getProperties();
-	int numHeClusters = std::stoi(props["numHeClusters"]);
 	int reactantIndex = 0;
 	int size = 0;
-	// Get the temperature handler that will be used to compute fluxes.
-	auto temperatureHandler = PetscSolver::getTemperatureHandler();
 
 	// Get the matrix from PETSc
 	PetscFunctionBeginUser;
@@ -520,9 +518,10 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	PetscReal realTime;
 	// Get the current time
 	ierr = TSGetTime(ts, &realTime);
+	checkPetscError(ierr);
 
-	// Only compute the linear part of the Jacobian once
-	if (!initialized) {
+	// Only compute the linear part of the Jacobian if the temperature has changed
+	if (temperatureChanged) {
 
 		// Get the diffusion handler
 		auto diffusionHandler = PetscSolver::getDiffusionHandler();
@@ -543,7 +542,7 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 //			xi = 1; // Uncomment this line for debugging in a single cell
 
 			// Boundary conditions
-			if (xi == 0) continue;
+			if (xi == 0 || xi == Mx - 1) continue;
 
 			// Copy data into the PSIClusterReactionNetwork so that it can
 			// compute the new concentrations.
@@ -609,7 +608,7 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 		ierr = MatStoreValues(J);
 		checkPetscError(ierr);
 //		MatSetFromOptions(J);
-		initialized = PETSC_TRUE;
+		temperatureChanged = false;
 		// Debug line for viewing the matrix
 		//MatView(J, PETSC_VIEWER_STDOUT_WORLD);
 	} else {
@@ -629,6 +628,9 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	for (xi = xs; xi < xs + xm; xi++) {
 
 //		xi = 1; // Uncomment this line for debugging in a single cell
+
+		// Boundary conditions
+		if (xi == 0 || xi == Mx - 1) continue;
 
 		// Copy data into the PSIClusterReactionNetwork so that it can
 		// compute the new concentrations.
@@ -678,42 +680,6 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	checkPetscError(ierr);
 	ierr = DMRestoreLocalVector(da, &localC);
 	checkPetscError(ierr);
-	ierr = MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);
-	checkPetscError(ierr);
-	ierr = MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);
-	checkPetscError(ierr);
-
-	// Enforce the Boundary conditions. Loop over the grid points and set the
-	// conditions.
-	if (xs == 0) {
-		// Loop on the reactants
-		for (int i = 0; i < size; i++) {
-			auto reactant = allReactants->at(i);
-			// Get the reactant index
-			reactantIndex = reactant->getId() - 1;
-			// Get the row id
-			rowId = size + reactantIndex;
-
-			// Get the list of column ids from the map
-			auto pdColIdsVector = dFillMap.at(reactantIndex);
-			pdColIdsVectorSize = pdColIdsVector.size(); //Number of partial derivatives
-			// Loop over the list of column ids
-			for (int j = 0; j < pdColIdsVectorSize; j++) {
-				// Calculate the appropriate index to match the dfill array configuration
-				localPDColIds[j] = size + pdColIdsVector[j];
-				// Get the partial derivative from the array of all of the partials
-				reactingPartialsForCluster[j] = 0.0;
-			}
-
-			// Update the matrix
-			ierr = MatSetValuesLocal(J, 1, &rowId, pdColIdsVectorSize,
-					localPDColIds, reactingPartialsForCluster.data(),
-					INSERT_VALUES);
-			checkPetscError(ierr);
-		}
-	}
-
-	// Assemble again
 	ierr = MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);
 	checkPetscError(ierr);
 	ierr = MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);
@@ -930,10 +896,7 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	// Set the grid step size
 	PetscSolver::hx = stepSize;
 	
-	// Get the properties
-	auto props = network->getProperties();
-	int numHeClusters = std::stoi(props["numHeClusters"]);
-	// The degrees of freedom should be equal to the number of reactants.
+	// Degrees of freedom
 	int dof = network->size();
 
 	// Set the size of the partial derivatives vectors
@@ -969,16 +932,16 @@ void PetscSolver::solve(std::shared_ptr<IFluxHandler> fluxHandler,
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Create distributed array (DMDA) to manage parallel grid and vectors
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_MIRROR, -8, dof, 1,
+	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, -8, dof, 1,
 	NULL, &da);
 	checkPetscError(ierr);
 
-	/*  The only spatial coupling in the Jacobian (diffusion) is for the first 6 He,
-	 *  the first V, and the first I. The ofill (thought of as a dof by dof 2d
-	 *  (row-oriented) array represents the nonzero coupling between degrees
-	 *  of freedom at one point with degrees of freedom on the adjacent point to
-	 *  the left or right. A 1 at i,j in the ofill array indicates that the degree
-	 *  of freedom i at a point is coupled to degree of freedom j at the adjacent point.
+	/*  The only spatial coupling in the Jacobian is due to diffusion.
+	 *  The ofill (thought of as a dof by dof 2d (row-oriented) array represents
+	 *  the nonzero coupling between degrees of freedom at one point with degrees
+	 *  of freedom on the adjacent point to the left or right. A 1 at i,j in the
+	 *  ofill array indicates that the degree of freedom i at a point is coupled
+	 *  to degree of freedom j at the adjacent point.
 	 *  In this case ofill has only a few diagonal entries since the only spatial
 	 *  coupling is regular diffusion.
 	 */

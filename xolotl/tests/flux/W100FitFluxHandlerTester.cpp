@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(checkgetIncidentFlux) {
 						<< "incidentFlux = " << testFlux << " with position "
 						<< "(" << x[0] << "," << x[1] << "," << x[2] << ") "
 						<< "at time = " << currTime << "\n");
-	BOOST_REQUIRE_CLOSE(testFlux, 0.449045, 0.01);
+	BOOST_REQUIRE_CLOSE(testFlux, 0.476819, 0.01);
 
 }
 
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(checkHeFluence) {
 
 	// Check the flux
 	auto testFlux = testFitFlux->getIncidentFlux(compVec, x, 1);
-	BOOST_REQUIRE_CLOSE(testFlux, 0.449045, 0.01);
+	BOOST_REQUIRE_CLOSE(testFlux, 0.476819, 0.01);
 
 	// Set the maximum helium fluence value
 	testFitFlux->setMaxHeFluence(8.0e-09);
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(checkHeFlux) {
 	vector<double> x = {1.25, 0.0, 0.0};
 
 	auto testFlux = testFitFlux->getIncidentFlux(compVec, x, 1);
-	BOOST_REQUIRE_CLOSE(testFlux, 2.5 * 0.449045, 0.01);
+	BOOST_REQUIRE_CLOSE(testFlux, 2.5 * 0.476819, 0.01);
 }
 
 

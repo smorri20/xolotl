@@ -23,13 +23,13 @@ public interface Arguments {
 	 */
 	@Option(defaultValue = "8", 
 			description = "The maximum size of a Helium cluster in the network "
-			+ "satisfying the condition 0 < maxHeSize < 9. (default = 8)")
+			+ "satisfying the condition 0 <= maxHeSize < 9. (default = 8)")
 	/**
 	 * This operation produces the required command line option '--maxHeSize' which 
 	 * takes a single integer value and is defined by the previous Option annotation
 	 * 
 	 * @return The maximum size of a Helium cluster in the network satisfying 
-	 * the condition 0 < maxHeSize < 9
+	 * the condition 0 <= maxHeSize < 9
 	 */
 	int getMaxHeSize();
 
@@ -46,7 +46,8 @@ public interface Arguments {
 	 *            Brief description of this option
 	 */
 	@Option(defaultValue = "29", 
-			description = "The maximum size of a vacancy cluster in the network. (default = 29)")
+			description = "The maximum size of a vacancy cluster in the network "
+			+ "satisfying the condition 0 <= maxVSize.. (default = 29)")
 	/**
 	 * This operation produces the required command line option '--maxVSize' which 
 	 * takes a single integer value and is defined by the previous Option annotation
@@ -69,13 +70,13 @@ public interface Arguments {
 	 */
 	@Option(defaultValue = "6", 
 			description = "The maximum size of an interstitial cluster in the network "
-			+ "satisfying the condition 0 < maxISize < 7. (default = 6)")
+			+ "satisfying the condition 0 <= maxISize. (default = 6)")
 	/**
 	 * This operation produces the required command line option '--maxISize' which 
 	 * takes a single integer value and is defined by the previous Option annotation
 	 * 
 	 * @return The maximum size of an interstitial cluster in the network satisfying 
-	 * the condition 0 < maxISize < 7
+	 * the condition 0 <= maxISize
 	 */
 	int getMaxISize();
 
@@ -285,6 +286,33 @@ public interface Arguments {
 	 *         not
 	 */
 	boolean isHeFlux();
+
+	/**
+	 * This Option annotation corresponds to the optional '--fluxFile' option
+	 * and provides a brief description of the option.
+	 * 
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(description = "<fluxFileName>  A time profile is given for the flux "
+			+ "by the specified file, then linear interpolation is used to fit the data")
+	/**
+	 * This operation produces the optional command line option '--fluxFile' which 
+	 * takes a single string value and is defined by the previous Option annotation.
+	 * NOTE:  This option should only be used when the user wishes to pass a file 
+	 * containing a time profile profile for the flux to Xolotl.
+	 * 
+	 * @return The name of the flux file
+	 */
+	String getFluxFile();
+
+	/**
+	 * This operation makes the command line option '--fluxFile' optional.
+	 * 
+	 * @return Returns true if the option has been specified and false if it has
+	 *         not
+	 */
+	boolean isFluxFile();
 
 	/**
 	 * This Option annotation corresponds to the optional '--maxHeFluence' option

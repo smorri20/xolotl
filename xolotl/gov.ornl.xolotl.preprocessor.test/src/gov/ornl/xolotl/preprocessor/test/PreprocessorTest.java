@@ -188,17 +188,14 @@ public class PreprocessorTest {
 
 		try {
 			parsedArgs = CliFactory.parseArguments(Arguments.class,
-					new String[] { "--maxHeSize", "10", "--maxISize", "7" });
+					new String[] { "--maxHeSize", "10" });
 			
 			// Check that the max Helium cluster size is 10
 			assertEquals(10, parsedArgs.getMaxHeSize());
-			
-			// Check that the max interstitial cluster size is 7
-			assertEquals(7, parsedArgs.getMaxISize());
 
 			if (parsedArgs != null) {
 				Preprocessor preprocessor = new Preprocessor(parsedArgs);
-				fail("Should have thrown an IllegalArgumentException because the maximum He and I cluster sizes are out of range.");
+				fail("Should have thrown an IllegalArgumentException because the maximum He size is out of range.");
 			}
 
 		} catch (ArgumentValidationException e1) {

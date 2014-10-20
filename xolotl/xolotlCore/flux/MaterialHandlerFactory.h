@@ -13,9 +13,8 @@ namespace xolotlCore
  * TODO determine if we need to take an enum instead of a bool,
  * if we need to support more than these two types of registries.
  *
- * @param usesMaxHeFluence	Whether the maximum Helium fluence option was specified
  * @param options	Xolotl options set from the parameter file
- * @return True iff the handler registry was created successfully.
+ * @return True if the handler registry was created successfully.
  */
 bool initializeMaterial( Options &options );
 
@@ -26,6 +25,6 @@ bool initializeMaterial( Options &options );
  */
 std::shared_ptr<IFluxHandler> getMaterialHandler( void );
 
-}; // end namespace xolotlPerf
+}; // end namespace xolotlCore
 
 #endif // MATERIALHANDLERFACTORY_H
