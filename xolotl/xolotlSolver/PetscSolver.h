@@ -132,13 +132,12 @@ public:
 	/**
 	 * This operation directs the Solver to perform the solve. If the solve
 	 * fails, it will throw an exception of type std::string.
-	 * @param fluxHandler The flux handler that will be used when performing
-	 * the solve
+	 * @param material The material factory
 	 * @param temperatureHandler The temperature handler that will be used
 	 * when performing the solve
 	 * @param stepSize The spatial grid step size
 	 */
-	void solve(std::shared_ptr<IFluxHandler> fluxHandler,
+	void solve(std::shared_ptr<IMaterialFactory> material,
 			std::shared_ptr<ITemperatureHandler> temperatureHandler,
 			double stepSize);
 

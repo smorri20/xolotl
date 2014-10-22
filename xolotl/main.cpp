@@ -12,7 +12,7 @@
 #include <MPIUtils.h>
 #include <Options.h>
 #include <xolotlPerf.h>
-#include <MaterialHandlerFactory.h>
+#include <IMaterialFactory.h>
 #include <TemperatureHandlerFactory.h>
 #include <VizHandlerRegistryFactory.h>
 #include <HDF5NetworkLoader.h>
@@ -33,15 +33,14 @@ void printStartMessage() {
 	std::cout << std::asctime(std::localtime(&currentTime)); // << std::endl;
 }
 
-bool initMaterial(Options &options) {
+std::shared_ptr<IMaterialFactory> initMaterial(Options &options) {
+	// Create the material factory
+	auto materialFactory = IMaterialFactory::createMaterialFactory(options.getMaterial());
 
-	bool materialInitOK = xolotlCore::initializeMaterial(options);
-	if (!materialInitOK) {
-		std::cerr << "Unable to initialize requested material.  Aborting"
-				<< std::endl;
-		return EXIT_FAILURE;
-	} else
-		return materialInitOK;
+	// Initialize it with the options
+	materialFactory->initializeMaterial(options);
+
+	return materialFactory;
 }
 
 bool initTemp(Options &options) {
@@ -85,7 +84,7 @@ std::shared_ptr<xolotlSolver::PetscSolver> setUpSolver(
 
 void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry,
-		std::shared_ptr<xolotlCore::IFluxHandler> materialHandler,
+		std::shared_ptr<xolotlCore::IMaterialFactory> material,
 		std::shared_ptr<xolotlCore::ITemperatureHandler> tempHandler,
 		double stepSize) {
 
@@ -99,7 +98,7 @@ void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
     auto solverHwctr = handlerRegistry->getHardwareCounter( "solve", hwctrSpec );
 	solverTimer->start();
     solverHwctr->start();
-	solver->solve(materialHandler, tempHandler, stepSize);
+	solver->solve(material, tempHandler, stepSize);
     solverHwctr->stop();
 	solverTimer->stop();
 }
@@ -161,14 +160,12 @@ int main(int argc, char **argv) {
 		}
 
 		// Set up the material infrastructure that is used to calculate flux
-		auto materialInitOK = initMaterial(opts);
+		auto material = initMaterial(opts);
 		// Set up the temperature infrastructure
 		auto tempInitOK = initTemp(opts);
 		// Set up the visualization infrastructure.
 		auto vizInitOK = initViz(opts.useVizStandardHandlers());
 
-		// Access the material handler registry to get the material
-		auto materialHandler = xolotlCore::getMaterialHandler();
 		// Access the temperature handler registry to get the temperature
 		auto tempHandler = xolotlCore::getTemperatureHandler();
 
@@ -196,7 +193,7 @@ int main(int argc, char **argv) {
 		networkLoadTimer->stop();
 
 		// Launch the PetscSolver
-		launchPetscSolver(solver, handlerRegistry, materialHandler,
+		launchPetscSolver(solver, handlerRegistry, material,
 				tempHandler, opts.getStepSize());
 
 		// Finalize our use of the solver.

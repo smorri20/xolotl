@@ -93,7 +93,6 @@ public:
 	 */
 	int getNumberOfAdvecting() {return indexVector.size();}
 
-
 };
 //end class AdvectionHandler
 
