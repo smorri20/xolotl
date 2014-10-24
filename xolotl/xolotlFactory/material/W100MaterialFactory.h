@@ -5,8 +5,9 @@
 #include <MaterialFactory.h>
 #include <W100FitFluxHandler.h>
 #include <W100AdvectionHandler.h>
+#include <DiffusionHandler.h>
 
-namespace xolotlCore {
+namespace xolotlFactory {
 
 /**
  * Subclass of MaterialFactory for a (100) oriented tungsten material.
@@ -19,9 +20,9 @@ public:
 	 * The constructor creates the handlers.
 	 */
 	W100MaterialFactory() {
-		theFluxHandler = std::make_shared<W100FitFluxHandler>();
-		theAdvectionHandler = std::make_shared<W100AdvectionHandler>();
-
+		theFluxHandler = std::make_shared<xolotlCore::W100FitFluxHandler>();
+		theAdvectionHandler = std::make_shared<xolotlCore::W100AdvectionHandler>();
+		theDiffusionHandler = std::make_shared<xolotlCore::DiffusionHandler>();
 		return;
 	}
 
@@ -31,6 +32,6 @@ public:
 	~W100MaterialFactory() {}
 };
 
-} // end namespace xolotlCore
+} // end namespace xolotlFactory
 
 #endif // W100MATERIALHANDLERFACTORY_H

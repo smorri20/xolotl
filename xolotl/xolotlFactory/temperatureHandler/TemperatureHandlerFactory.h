@@ -2,10 +2,10 @@
 #define TEMPERATUREHANDLERFACTORY_H
 
 #include <memory>
-#include "ITemperatureHandler.h"
+#include <ITemperatureHandler.h>
 #include <Options.h>
 
-namespace xolotlCore {
+namespace xolotlFactory {
 
 /**
  * Build the desired type of handler registry.
@@ -13,14 +13,14 @@ namespace xolotlCore {
  * @param options Options for the program
  * @return True iff the handler registry was created successfully.
  */
-bool initializeTempHandler(Options &options);
+bool initializeTempHandler(xolotlCore::Options &options);
 
 /**
  * Access the handler registry.
  *
  *  @return The handler registry object.
  */
-std::shared_ptr<ITemperatureHandler> getTemperatureHandler();
+std::shared_ptr<xolotlCore::ITemperatureHandler> getTemperatureHandler();
 
 }; // end namespace xolotlPerf
 

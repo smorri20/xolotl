@@ -81,7 +81,7 @@ public:
 	 * when performing the solve
 	 * @param stepSize The spatial grid step size
 	 */
-	virtual void solve(std::shared_ptr<IMaterialFactory> material,
+	virtual void solve(std::shared_ptr<xolotlFactory::IMaterialFactory> material,
 			std::shared_ptr<ITemperatureHandler> temperatureHandler,
 			double stepSize) = 0;
 

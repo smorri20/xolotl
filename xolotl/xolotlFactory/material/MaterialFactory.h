@@ -3,10 +3,8 @@
 
 #include <memory>
 #include <IMaterialFactory.h>
-#include <IFluxHandler.h>
-#include <IAdvectionHandler.h>
 
-namespace xolotlCore {
+namespace xolotlFactory {
 
 /**
  * Realizes the IMaterialFactory interface. Handles the flux and the advection
@@ -16,10 +14,13 @@ class MaterialFactory: public IMaterialFactory {
 protected:
 
 	//! The flux handler
-	std::shared_ptr<IFluxHandler> theFluxHandler;
+	std::shared_ptr<xolotlCore::IFluxHandler> theFluxHandler;
 
 	//! The advection handler
-	std::shared_ptr<IAdvectionHandler> theAdvectionHandler;
+	std::shared_ptr<xolotlCore::IAdvectionHandler> theAdvectionHandler;
+
+	//! The diffusion handler
+	std::shared_ptr<xolotlCore::IDiffusionHandler> theDiffusionHandler;
 
 public:
 
@@ -40,7 +41,7 @@ public:
 	 *
 	 * @param options The Xolotl options.
 	 */
-	void initializeMaterial(Options &options) {
+	void initializeMaterial(xolotlCore::Options &options) {
 		// If the Helium fluence option is present, set the value
 		if (options.useMaxHeliumFluence()) {
 			theFluxHandler->setMaxHeFluence(options.getMaxHeliumFluence());
@@ -69,7 +70,7 @@ public:
 	 *
 	 *  @return The flux handler.
 	 */
-	std::shared_ptr<IFluxHandler> getFluxHandler() const {
+	std::shared_ptr<xolotlCore::IFluxHandler> getFluxHandler() const {
 		return theFluxHandler;
 	}
 
@@ -78,11 +79,20 @@ public:
 	 *
 	 *  @return The advection handler.
 	 */
-	std::shared_ptr<IAdvectionHandler> getAdvectionHandler() const {
+	std::shared_ptr<xolotlCore::IAdvectionHandler> getAdvectionHandler() const {
 		return theAdvectionHandler;
+	}
+
+	/**
+	 * Return the diffusion handler.
+	 *
+	 *  @return The diffusion handler.
+	 */
+	std::shared_ptr<xolotlCore::IDiffusionHandler> getDiffusionHandler() const {
+		return theDiffusionHandler;
 	}
 };
 
-} // end namespace xolotlCore
+} // end namespace xolotlFactory
 
 #endif // MATERIALHANDLERFACTORY_H

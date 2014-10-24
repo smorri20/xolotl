@@ -1,8 +1,7 @@
 // Includes
-#include "PetscSolver.h"
+#include <PetscSolver.h>
 #include <xolotlPerf.h>
 #include <HDF5NetworkLoader.h>
-#include <TemperatureHandler.h>
 #include <MathUtils.h>
 #include <petscts.h>
 #include <petscsys.h>
@@ -14,7 +13,6 @@
 #include <string>
 #include <unordered_map>
 #include <HDF5Utils.h>
-#include <DiffusionHandler.h>
 
 using namespace xolotlCore;
 
@@ -876,7 +874,7 @@ void PetscSolver::initialize() {
  * This operation directs the Solver to perform the solve. If the solve
  * fails, it will throw an exception of type std::string.
  */
-void PetscSolver::solve(std::shared_ptr<IMaterialFactory> material,
+void PetscSolver::solve(std::shared_ptr<xolotlFactory::IMaterialFactory> material,
 		std::shared_ptr<ITemperatureHandler> temperatureHandler,
 		double stepSize) {
 
@@ -887,7 +885,7 @@ void PetscSolver::solve(std::shared_ptr<IMaterialFactory> material,
 	PetscSolver::temperatureHandler = temperatureHandler;
 
 	// Set the diffusion handler
-	PetscSolver::diffusionHandler = std::make_shared<DiffusionHandler>();
+	PetscSolver::diffusionHandler = material->getDiffusionHandler();
 
 	// Set the advection handler
 	PetscSolver::advectionHandler = material->getAdvectionHandler();

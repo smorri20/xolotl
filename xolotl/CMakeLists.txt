@@ -188,6 +188,9 @@ add_subdirectory(xolotlPerf)
 add_subdirectory(xolotlViz)
 # Add the I/O, data structures and reactor directories
 add_subdirectory(xolotlCore)
+# Add the factory directory
+add_subdirectory(xolotlFactory)
+# Keep the solver for the end (it uses everything else)
 add_subdirectory(xolotlSolver)
 
 # Add the tests is Boost is available
@@ -226,7 +229,9 @@ include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants/psiclusters)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/temperature)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/flux)
-include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/factory)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlFactory/material)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlFactory/vizHandler)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlFactory/temperatureHandler)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlSolver)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlViz)

@@ -1,9 +1,9 @@
-#include "IMaterialFactory.h"
-#include "W100MaterialFactory.h"
-#include "W110MaterialFactory.h"
-#include "W111MaterialFactory.h"
+#include <IMaterialFactory.h>
+#include <W100MaterialFactory.h>
+#include <W110MaterialFactory.h>
+#include <W111MaterialFactory.h>
 
-namespace xolotlCore {
+namespace xolotlFactory {
 
 static std::shared_ptr<IMaterialFactory> theMaterialFactory;
 
@@ -23,4 +23,4 @@ std::shared_ptr<IMaterialFactory> IMaterialFactory::createMaterialFactory(std::s
 	return theMaterialFactory;
 }
 
-};  // end namespace xolotlCore
+};  // end namespace xolotlFactory

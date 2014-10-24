@@ -16,7 +16,6 @@
 #include <TemperatureHandlerFactory.h>
 #include <VizHandlerRegistryFactory.h>
 #include <HDF5NetworkLoader.h>
-#include <IVizHandlerRegistry.h>
 #include <ctime>
 
 using namespace std;
@@ -33,9 +32,9 @@ void printStartMessage() {
 	std::cout << std::asctime(std::localtime(&currentTime)); // << std::endl;
 }
 
-std::shared_ptr<IMaterialFactory> initMaterial(Options &options) {
+std::shared_ptr<xolotlFactory::IMaterialFactory> initMaterial(Options &options) {
 	// Create the material factory
-	auto materialFactory = IMaterialFactory::createMaterialFactory(options.getMaterial());
+	auto materialFactory = xolotlFactory::IMaterialFactory::createMaterialFactory(options.getMaterial());
 
 	// Initialize it with the options
 	materialFactory->initializeMaterial(options);
@@ -45,7 +44,7 @@ std::shared_ptr<IMaterialFactory> initMaterial(Options &options) {
 
 bool initTemp(Options &options) {
 
-	bool tempInitOK = xolotlCore::initializeTempHandler(options);
+	bool tempInitOK = xolotlFactory::initializeTempHandler(options);
 	if (!tempInitOK) {
 		std::cerr << "Unable to initialize requested temperature.  Aborting"
 				<< std::endl;
@@ -57,7 +56,7 @@ bool initTemp(Options &options) {
 
 bool initViz(bool opts) {
 
-	bool vizInitOK = xolotlViz::initialize(opts);
+	bool vizInitOK = xolotlFactory::initializeVizHandler(opts);
 	if (!vizInitOK) {
 		std::cerr
 				<< "Unable to initialize requested visualization infrastructure. "
@@ -84,7 +83,7 @@ std::shared_ptr<xolotlSolver::PetscSolver> setUpSolver(
 
 void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry,
-		std::shared_ptr<xolotlCore::IMaterialFactory> material,
+		std::shared_ptr<xolotlFactory::IMaterialFactory> material,
 		std::shared_ptr<xolotlCore::ITemperatureHandler> tempHandler,
 		double stepSize) {
 
@@ -167,7 +166,7 @@ int main(int argc, char **argv) {
 		auto vizInitOK = initViz(opts.useVizStandardHandlers());
 
 		// Access the temperature handler registry to get the temperature
-		auto tempHandler = xolotlCore::getTemperatureHandler();
+		auto tempHandler = xolotlFactory::getTemperatureHandler();
 
 		// Access our performance handler registry to obtain a Timer
 		// measuring the runtime of the entire program.

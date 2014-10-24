@@ -5,8 +5,9 @@
 #include <Options.h>
 #include <IFluxHandler.h>
 #include <IAdvectionHandler.h>
+#include <IDiffusionHandler.h>
 
-namespace xolotlCore {
+namespace xolotlFactory {
 
 /**
  * Realizations of this interface are responsible for handling the flux and the advection.
@@ -25,21 +26,28 @@ public:
 	 *
 	 * @param options The Xolotl options.
 	 */
-	virtual void initializeMaterial(Options &options) = 0;
+	virtual void initializeMaterial(xolotlCore::Options &options) = 0;
 
 	/**
 	 * Return the flux handler.
 	 *
 	 * @return The flux handler.
 	 */
-	virtual std::shared_ptr<IFluxHandler> getFluxHandler() const = 0;
+	virtual std::shared_ptr<xolotlCore::IFluxHandler> getFluxHandler() const = 0;
 
 	/**
 	 * Return the advection handler.
 	 *
 	 * @return The advection handler.
 	 */
-	virtual std::shared_ptr<IAdvectionHandler> getAdvectionHandler() const = 0;
+	virtual std::shared_ptr<xolotlCore::IAdvectionHandler> getAdvectionHandler() const = 0;
+
+	/**
+	 * Return the diffusion handler.
+	 *
+	 * @return The diffusion handler.
+	 */
+	virtual std::shared_ptr<xolotlCore::IDiffusionHandler> getDiffusionHandler() const = 0;
 
 	/**
 	 * Function that create the wanted material factory depending on the given type.
@@ -51,6 +59,6 @@ public:
 
 };
 
-} // end namespace xolotlCore
+} // end namespace xolotlFactory
 
 #endif // IMATERIALHANDLERFACTORY_H
