@@ -12,11 +12,10 @@
 #include <MPIUtils.h>
 #include <Options.h>
 #include <xolotlPerf.h>
-#include <MaterialHandlerFactory.h>
+#include <IMaterialFactory.h>
 #include <TemperatureHandlerFactory.h>
 #include <VizHandlerRegistryFactory.h>
 #include <HDF5NetworkLoader.h>
-#include <IVizHandlerRegistry.h>
 #include <ctime>
 
 using namespace std;
@@ -33,20 +32,19 @@ void printStartMessage() {
 	std::cout << std::asctime(std::localtime(&currentTime)); // << std::endl;
 }
 
-bool initMaterial(Options &options) {
+std::shared_ptr<xolotlFactory::IMaterialFactory> initMaterial(Options &options) {
+	// Create the material factory
+	auto materialFactory = xolotlFactory::IMaterialFactory::createMaterialFactory(options.getMaterial());
 
-	bool materialInitOK = xolotlSolver::initializeMaterial(options);
-	if (!materialInitOK) {
-		std::cerr << "Unable to initialize requested material.  Aborting"
-				<< std::endl;
-		return EXIT_FAILURE;
-	} else
-		return materialInitOK;
+	// Initialize it with the options
+	materialFactory->initializeMaterial(options);
+
+	return materialFactory;
 }
 
 bool initTemp(Options &options) {
 
-	bool tempInitOK = xolotlSolver::initializeTempHandler(options);
+	bool tempInitOK = xolotlFactory::initializeTempHandler(options);
 	if (!tempInitOK) {
 		std::cerr << "Unable to initialize requested temperature.  Aborting"
 				<< std::endl;
@@ -58,7 +56,7 @@ bool initTemp(Options &options) {
 
 bool initViz(bool opts) {
 
-	bool vizInitOK = xolotlViz::initialize(opts);
+	bool vizInitOK = xolotlFactory::initializeVizHandler(opts);
 	if (!vizInitOK) {
 		std::cerr
 				<< "Unable to initialize requested visualization infrastructure. "
@@ -69,14 +67,31 @@ bool initViz(bool opts) {
 }
 
 std::shared_ptr<xolotlSolver::PetscSolver> setUpSolver(
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry, int argc,
-		char **argv) {
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry, 
+        const char* argv0,
+        int argc, char **argv) {
 	// Setup the solver
 	auto solverInitTimer = handlerRegistry->getTimer("initSolver");
 	solverInitTimer->start();
 	std::shared_ptr<xolotlSolver::PetscSolver> solver = std::make_shared<
 			xolotlSolver::PetscSolver>(handlerRegistry);
-	solver->setCommandLineOptions(argc, argv);
+
+    // PETSc assumes that argv[0] in the arguments it is given is the
+    // program name.  But our parsing of the PETSc arguments from
+    // the input parameter file gives us only the PETSc arguments without
+    // the program name as argv[0].  So - we adjust the arguments array
+    // so that it has the right argv[0].
+    int petscArgc = argc + 1;
+    char** petscArgv = new char*[petscArgc+1];
+    petscArgv[0] = new char[strlen(argv0)+1];
+    strcpy( petscArgv[0], argv0 );
+    for( int idx = 0; idx < petscArgc; ++idx )
+    {
+        petscArgv[idx+1] = argv[idx];
+    }
+    petscArgv[petscArgc] = NULL;
+	solver->setCommandLineOptions(petscArgc, petscArgv);
+
 	solver->initialize();
 	solverInitTimer->stop();
 
@@ -85,8 +100,8 @@ std::shared_ptr<xolotlSolver::PetscSolver> setUpSolver(
 
 void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry,
-		std::shared_ptr<xolotlSolver::IFluxHandler> materialHandler,
-		std::shared_ptr<xolotlSolver::ITemperatureHandler> tempHandler,
+		std::shared_ptr<xolotlFactory::IMaterialFactory> material,
+		std::shared_ptr<xolotlCore::ITemperatureHandler> tempHandler,
 		double stepSize) {
 
     xperf::IHardwareCounter::SpecType hwctrSpec;
@@ -99,7 +114,7 @@ void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
     auto solverHwctr = handlerRegistry->getHardwareCounter( "solve", hwctrSpec );
 	solverTimer->start();
     solverHwctr->start();
-	solver->solve(materialHandler, tempHandler, stepSize);
+	solver->solve(material, tempHandler, stepSize);
     solverHwctr->stop();
 	solverTimer->stop();
 }
@@ -125,7 +140,9 @@ int main(int argc, char **argv) {
 	int rank;
 
 	// Check the command line arguments.
-	// Skip the executable name before parsing.
+	// Skip the executable name before parsing (but save it, 
+    // because PETSc expects it in its argument list).
+    char* progName = argv[0];
 	argc -= 1; // one for the executable name
 	argv += 1; // one for the executable name
 	Options opts;
@@ -161,16 +178,14 @@ int main(int argc, char **argv) {
 		}
 
 		// Set up the material infrastructure that is used to calculate flux
-		auto materialInitOK = initMaterial(opts);
+		auto material = initMaterial(opts);
 		// Set up the temperature infrastructure
 		auto tempInitOK = initTemp(opts);
 		// Set up the visualization infrastructure.
 		auto vizInitOK = initViz(opts.useVizStandardHandlers());
 
-		// Access the material handler registry to get the material
-		auto materialHandler = xolotlSolver::getMaterialHandler();
 		// Access the temperature handler registry to get the temperature
-		auto tempHandler = xolotlSolver::getTemperatureHandler(opts);
+		auto tempHandler = xolotlFactory::getTemperatureHandler();
 
 		// Access our performance handler registry to obtain a Timer
 		// measuring the runtime of the entire program.
@@ -180,8 +195,8 @@ int main(int argc, char **argv) {
 		totalTimer->start();
 
 		// Setup the solver
-		auto solver = setUpSolver(handlerRegistry, opts.getPetscArgc(),
-				opts.getPetscArgv());
+		auto solver = setUpSolver(handlerRegistry, progName,
+                                    opts.getPetscArgc(), opts.getPetscArgv());
 
 		// Load the network
 		auto networkLoadTimer = handlerRegistry->getTimer("loadNetwork");
@@ -196,7 +211,7 @@ int main(int argc, char **argv) {
 		networkLoadTimer->stop();
 
 		// Launch the PetscSolver
-		launchPetscSolver(solver, handlerRegistry, materialHandler,
+		launchPetscSolver(solver, handlerRegistry, material,
 				tempHandler, opts.getStepSize());
 
 		// Finalize our use of the solver.
