@@ -1,7 +1,8 @@
 #include "ReactionNetwork.h"
 #include "Reactant.h"
-#include "xolotlPerf/HandlerRegistryFactory.h"
+#include <xolotlPerf.h>
 #include <iostream>
+#include <cassert>
 
 using namespace xolotlCore;
 
@@ -39,9 +40,9 @@ ReactionNetwork::ReactionNetwork(const ReactionNetwork &other) {
 
 ReactionNetwork::~ReactionNetwork(void)
 {
-    std::cout << "ReactionNetwork: updated " 
-        << concUpdateCounter->getValue() << " times"
-        << std::endl;
+//    std::cout << "ReactionNetwork: updated "
+//        << concUpdateCounter->getValue() << " times"
+//        << std::endl;
 }
 
 
@@ -94,4 +95,17 @@ void ReactionNetwork::updateConcentrationsFromArray(double * concentrations) {
 	}
 
 	return;
+}
+
+
+void ReactionNetwork::askReactantsToReleaseNetwork(void) {
+
+    auto allReactants = this->getAll();    
+
+    for(auto iter = allReactants->begin(); iter != allReactants->end(); ++iter) {
+        Reactant* currReactant = *iter;
+        assert( currReactant != NULL );
+
+        currReactant->releaseReactionNetwork();
+    }
 }

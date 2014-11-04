@@ -10,13 +10,21 @@ include_directories(${CMAKE_SOURCE_DIR}/xolotlSolver)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants/psiclusters)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/diffusion)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/advection)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/flux)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/temperature)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/commandline)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf/dummy)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlFactory/material)
 include_directories(${Boost_BINARY_DIRS})
 include_directories(${PETSC_INCLUDES})
 
 #Link the directories
 link_directories(${CMAKE_SOURCE_DIR}/src/xolotlSolver)
+link_directories(${CMAKE_SOURCE_DIR}/src/xolotlSolver/flux)
+link_directories(${CMAKE_SOURCE_DIR}/src/xolotlSolver/temperature)
 
 #Get the test files
 file(GLOB tests *Tester.cpp)

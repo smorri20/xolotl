@@ -13,7 +13,7 @@
 #include <memory>
 #include "PSICluster.h"
 #include <PSIClusterReactionNetwork.h>
-#include <IHandlerRegistry.h>
+#include "xolotlPerf/IHandlerRegistry.h"
 #include <string>
 
 namespace xolotlCore {
@@ -28,12 +28,7 @@ namespace xolotlCore {
  * > The number of He in the cluster
  * > The number of V in the cluster
  * > The number of I in the cluster
- * > The He binding energy
- * > The V binding energy
- * > The I binding energy
- *
- * Where appropriate, any binding energy may be specified as "Infinity" to
- * signify that the cluster does not undergo that type of dissociation.
+ * > The formation energy
  *
  * Lines of comments starting with a "#" will be ignored as will lines that do
  * not clearly provide the information above.
@@ -66,7 +61,7 @@ namespace xolotlCore {
  */
 class PSIClusterNetworkLoader {
 
-private:
+protected:
 
 	/**
 	 * The istream from which the network of clusters will be read.
@@ -141,7 +136,7 @@ public:
 	 * be loaded.
 	 * @param network The reaction network
 	 */
-	std::shared_ptr<PSIClusterReactionNetwork> load();
+	virtual std::shared_ptr<PSIClusterReactionNetwork> load();
 };
 
 } /* namespace xolotlCore */

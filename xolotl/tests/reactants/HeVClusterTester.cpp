@@ -50,7 +50,6 @@ BOOST_AUTO_TEST_CASE(getSpeciesSize) {
 BOOST_AUTO_TEST_CASE(checkConnectivity) {
 
 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
-	auto reactants = network->getAll();
 	auto props = network->getProperties();
 	
 	// Prevent dissociation from being added to the connectivity array
@@ -62,8 +61,9 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	{
 		// Get the connectivity array from the reactant
 		vector<int> composition = {3, 2, 0 };
-		auto reactant = dynamic_pointer_cast < PSICluster
-				> (network->getCompound("HeV", composition));
+		auto reactant = (PSICluster *) network->getCompound("HeV", composition);
+		// Check the type name
+		BOOST_REQUIRE_EQUAL("HeV",reactant->getType());
 		auto reactionConnectivity = reactant->getConnectivity();
 		
 		BOOST_REQUIRE_EQUAL(reactant->getComposition().at("He"), 3);
@@ -76,20 +76,19 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 			1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
 			
 			// V
-			// Only single-V clusters react with HeV
-			1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
 			
 			// I
-			1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
 			
 			// HeV
 			0, 0, 1, 0, 0, 0, 0, 0, 0,
-			0, 1, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 0, 0, 0, 0,
 			0, 0, 1, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0,
-			0, 0, 0, 0,
-			0, 0, 0,
+			0, 0, 1, 0, 0, 0,
+			0, 0, 1, 0, 0,
+			0, 0, 1, 0,
+			0, 0, 1,
 			0, 0,
 			0,
 			
@@ -121,34 +120,70 @@ BOOST_AUTO_TEST_CASE(checkTotalFlux) {
 
 	// Get an HeV cluster with compostion 2,1,0.
 	vector<int> composition = {2, 1, 0};
-	auto cluster = dynamic_pointer_cast<PSICluster>(network->getCompound(
-			"HeV",composition));
+	auto cluster = (PSICluster *) network->getCompound(
+			"HeV",composition);
 	// Get one that it combines with (He)
-	auto secondCluster = dynamic_pointer_cast<PSICluster>(network->get("He", 1));
-	// Set the diffusion factor, migration and binding energies based on the
-	// values from the tungsten benchmark for this problem.
+	auto secondCluster = (PSICluster *) network->get("He", 1);
+	// Set the diffusion factor and migration energy based on the
+	// values from the preprocessor.
 	cluster->setDiffusionFactor(0.0);
 	cluster->setMigrationEnergy(numeric_limits<double>::infinity());
-	vector<double> energies = {3.02, 7.25,
-			numeric_limits<double>::infinity(), 10.2};
-	cluster->setBindingEnergies(energies);
+	cluster->setTemperature(1000.0);
 	cluster->setConcentration(0.5);
 
-	// Set the diffusion factor, migration and binding energies based on the
+	// Set the diffusion factor and migration energy based on the
 	// values from the tungsten benchmark for this problem for the second cluster
 	secondCluster->setDiffusionFactor(2.950E+10);
 	secondCluster->setMigrationEnergy(0.13);
-	energies = {numeric_limits<double>::infinity(), numeric_limits<double>::infinity(),
-			numeric_limits<double>::infinity(), 8.27};
-	secondCluster->setBindingEnergies(energies);
+	secondCluster->setTemperature(1000.0);
 	secondCluster->setConcentration(0.5);
+
+ 	// Compute the rate constants that are needed for the flux
+ 	cluster->computeRateConstants();
 	// The flux can pretty much be anything except "not a number" (nan).
-	double flux = cluster->getTotalFlux(1000.0);
+	double flux = cluster->getTotalFlux();
 	BOOST_TEST_MESSAGE("HeVClusterTester Message: \n" << "Total Flux is " << flux << "\n"
-			  << "   -Production Flux: " << cluster->getProductionFlux(1000.0) << "\n"
-			  << "   -Combination Flux: " << cluster->getCombinationFlux(1000.0) << "\n"
-			  << "   -Dissociation Flux: " << cluster->getDissociationFlux(1000.0) << "\n");
-	BOOST_REQUIRE_CLOSE(-8964899015.0, flux, 10.0);
+			  << "   -Production Flux: " << cluster->getProductionFlux() << "\n"
+			  << "   -Combination Flux: " << cluster->getCombinationFlux() << "\n"
+			  << "   -Dissociation Flux: " << cluster->getDissociationFlux() << "\n"
+	  	  	  << "   -Emission Flux: " << cluster->getEmissionFlux() << "\n");
+	BOOST_REQUIRE_CLOSE(-1134677704810.4, flux, 0.1);
+}
+
+/**
+ * This operation checks the HeVCluster get*PartialDerivatives methods.
+ */
+BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
+	// Local Declarations
+	// The vector of partial derivatives to compare with
+	double knownPartials[] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+			0.0, 0.0, 0.0, 0.0, 0.0};
+	// Get the simple reaction network
+	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork(3);
+
+	// Get an HeV cluster with compostion 2,1,0.
+	vector<int> composition = {2, 1, 0};
+	auto cluster = (PSICluster *) network->getCompound(
+			"HeV",composition);
+	// Set the diffusion factor and migration energy based on the
+	// values from the tungsten benchmark for this problem.
+	cluster->setDiffusionFactor(0.0);
+	cluster->setMigrationEnergy(numeric_limits<double>::infinity());
+	cluster->setTemperature(1000.0);
+	cluster->setConcentration(0.5);
+
+	// Compute the rate constants that are needed for the partial derivatives
+	cluster->computeRateConstants();
+	// Get the vector of partial derivatives
+	auto partials = cluster->getPartialDerivatives();
+
+	// Check the size of the partials
+	BOOST_REQUIRE_EQUAL(partials.size(), 15);
+
+	// Check all the values
+	for (int i = 0; i < partials.size(); i++) {
+		BOOST_REQUIRE_CLOSE(partials[i], knownPartials[i], 0.1);
+	}
 }
 
 /**

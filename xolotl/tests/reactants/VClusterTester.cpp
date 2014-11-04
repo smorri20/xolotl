@@ -20,6 +20,8 @@ using namespace std;
 using namespace xolotlCore;
 using namespace testUtils;
 
+static std::shared_ptr<xolotlPerf::IHandlerRegistry> registry = std::make_shared<xolotlPerf::DummyHandlerRegistry>();
+
 /**
  * This suite is responsible for testing the VCluster.
  */BOOST_AUTO_TEST_SUITE(VCluster_testSuite)
@@ -37,24 +39,25 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	props["dissociationsEnabled"] = "false";
 
 	// Get the connectivity array from the reactant for a vacancy cluster of size 2.
-	auto reactant = dynamic_pointer_cast < PSICluster
-			> (network->get("V", 2));
+	auto reactant = (PSICluster *) network->get("V", 2);
+	// Check the type name
+	BOOST_REQUIRE_EQUAL("V",reactant->getType());
 	auto reactionConnectivity = reactant->getConnectivity();
 
 	// Check the connectivity for He, V, and I
 	int connectivityExpected[] = {
 			// He
 			1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+
 			// V
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+
 			// I
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 
 			// HeV
-			// The VCluster type only reacts with HeV for
-			// single-V clusters.
 			0, 0, 0, 0, 0, 0, 0, 0, 0,
-			1, 1, 1, 1, 1, 1, 1, 1,
+			0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0,
@@ -64,8 +67,8 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 			0,
 
 			// HeI
-			1, 1, 1, 1, 1, 1, 1, 0, 0,
-			1, 1, 1, 1, 1, 1, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0,
 			1, 1, 1, 1, 1, 1, 1,
 			1, 1, 1, 1, 1, 1,
 			1, 1, 1, 1, 1,
@@ -92,41 +95,86 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
  	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
 
  	// Get an V cluster with compostion 0,1,0.
- 	auto cluster = dynamic_pointer_cast<PSICluster>(network->get("V", 1));
+ 	auto cluster = (PSICluster *) network->get("V", 1);
  	// Get one that it combines with (V2)
- 	auto secondCluster = dynamic_pointer_cast<PSICluster>(network->get("V", 2));
- 	// Set the diffusion factor, migration and binding energies based on the
+ 	auto secondCluster = (PSICluster *) network->get("V", 2);
+ 	// Set the diffusion factor, and migration energy based on the
  	// values from the tungsten benchmark for this problem.
  	cluster->setDiffusionFactor(2.41E+11);
  	cluster->setMigrationEnergy(1.66);
- 	vector<double> energies = {numeric_limits<double>::infinity(), numeric_limits<double>::infinity(),
- 			numeric_limits<double>::infinity(), numeric_limits<double>::infinity()};
- 	cluster->setBindingEnergies(energies);
+ 	cluster->setTemperature(1000.0);
  	cluster->setConcentration(0.5);
 
- 	// Set the diffusion factor, migration and binding energies based on the
+ 	// Set the diffusion factor and migration energy based on the
  	// values from the tungsten benchmark for this problem for the second cluster
- 	secondCluster->setDiffusionFactor(0.);
+ 	secondCluster->setDiffusionFactor(0.0);
  	secondCluster->setMigrationEnergy(numeric_limits<double>::infinity());
- 	energies = {numeric_limits<double>::infinity(), 0.432,
- 			numeric_limits<double>::infinity(), numeric_limits<double>::infinity()};
- 	secondCluster->setBindingEnergies(energies);
  	secondCluster->setConcentration(0.5);
+ 	secondCluster->setTemperature(1000.0);
+
+ 	// Compute the rate constants that are needed for the flux
+ 	cluster->computeRateConstants();
  	// The flux can pretty much be anything except "not a number" (nan).
- 	double flux = cluster->getTotalFlux(1000.0);
+ 	double flux = cluster->getTotalFlux();
  	BOOST_TEST_MESSAGE("InterstitialClusterTester Message: \n" << "Total Flux is " << flux << "\n"
- 			  << "   -Production Flux: " << cluster->getProductionFlux(1000.0) << "\n"
- 			  << "   -Combination Flux: " << cluster->getCombinationFlux(1000.0) << "\n"
- 			  << "   -Dissociation Flux: " << cluster->getDissociationFlux(1000.0) << "\n");
- 	BOOST_REQUIRE_CLOSE(-2684., flux, 10);
+ 			  << "   -Production Flux: " << cluster->getProductionFlux() << "\n"
+ 			  << "   -Combination Flux: " << cluster->getCombinationFlux() << "\n"
+ 			  << "   -Dissociation Flux: " << cluster->getDissociationFlux() << "\n"
+ 			  << "   -Emission Flux: " << cluster->getEmissionFlux() << "\n");
+ 	BOOST_REQUIRE_CLOSE(444828.3, flux, 0.1);
  }
+
+ /**
+  * This operation checks the VCluster get*PartialDerivatives methods.
+  */
+ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
+ 	// Local Declarations
+ 	// The vector of partial derivatives to compare with
+ 	double knownPartials[] = {-2850.42, -3005.08, 0.0, -14316.7, 896815.0, 257925.0,
+ 			0.0, -2188.27, -2373.78, -1789.59, 0.0, 224717.0, 0.0, 0.0, -2054.05};
+ 	// Get the simple reaction network
+ 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork(3);
+
+ 	// Get an V cluster with compostion 0,1,0.
+ 	auto cluster = (PSICluster *) network->get("V", 1);
+ 	// Set the diffusion factor and migration energy based on the
+ 	// values from the tungsten benchmark for this problem.
+ 	cluster->setDiffusionFactor(2.41E+11);
+ 	cluster->setMigrationEnergy(1.66);
+ 	cluster->setTemperature(1000.0);
+ 	cluster->setConcentration(0.5);
+
+ 	// Compute the rate constants that are needed for the partial derivatives
+ 	cluster->computeRateConstants();
+ 	// Get the vector of partial derivatives
+ 	auto partials = cluster->getPartialDerivatives();
+
+ 	// Check the size of the partials
+ 	BOOST_REQUIRE_EQUAL(partials.size(), 15);
+
+ 	// Check all the values
+ 	for (int i = 0; i < partials.size(); i++) {
+ 		BOOST_REQUIRE_CLOSE(partials[i], knownPartials[i], 0.1);
+ 	}
+}
 
 /**
  * This operation checks the reaction radius for VCluster.
  */
  BOOST_AUTO_TEST_CASE(checkReactionRadius) {
-	BOOST_TEST_MESSAGE("VClustertTester Message: BOOST_AUTO_TEST_CASE(checkReactionRadius): \n"
-			<< "getReactionRadius needs to be fixed");
+
+	vector<shared_ptr<VCluster>> clusters;
+	shared_ptr<VCluster> cluster;
+
+	double expectedRadii[] = { 0.1372650265, 0.1778340462, 0.2062922619,
+			0.2289478080, 0.2480795532 };
+
+	for (int i = 1; i <= 5; i++) {
+		cluster = shared_ptr<VCluster>(new VCluster(i, registry));
+		BOOST_REQUIRE_CLOSE(expectedRadii[i - 1], cluster->getReactionRadius(),
+				.000001);
+	}
 }
+
 BOOST_AUTO_TEST_SUITE_END()
 
