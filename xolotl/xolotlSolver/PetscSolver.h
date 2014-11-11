@@ -7,6 +7,7 @@
 #include <PSIClusterReactionNetwork.h>
 #include <IDiffusionHandler.h>
 #include <IAdvectionHandler.h>
+#include <IBubbleBurstingHandler.h>
 #include <petscsys.h>
 #include <petscdmda.h>
 #include <memory>
@@ -51,8 +52,11 @@ private:
 	//! The original diffusion handler created.
 	static std::shared_ptr<IDiffusionHandler> diffusionHandler;
 
-	//! The original diffusion handler created.
+	//! The original advection handler created.
 	static std::shared_ptr<IAdvectionHandler> advectionHandler;
+
+	//! The original bubble bursting handler created.
+	static std::shared_ptr<IBubbleBurstingHandler> bubbleBurstingHandler;
 
 	/**
 	 * This operation fills the diagonal block of the matrix. The diagonal
@@ -207,6 +211,16 @@ public:
 	 */
 	static std::shared_ptr<IAdvectionHandler> getAdvectionHandler() {
 		return advectionHandler;
+	}
+
+	/**
+	 * This operation returns the bubble bursting handler for this solver.
+	 * This operation is only for use by PETSc code and is not part of the
+	 * ISolver interface.
+	 * @return The bubble bursting handler for this solver
+	 */
+	static std::shared_ptr<IBubbleBurstingHandler> getBubbleBurstingHandler() {
+		return bubbleBurstingHandler;
 	}
 
 protected:

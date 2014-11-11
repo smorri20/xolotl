@@ -60,6 +60,8 @@ std::shared_ptr<ITemperatureHandler> PetscSolver::temperatureHandler;
 std::shared_ptr<IDiffusionHandler> PetscSolver::diffusionHandler;
 // Allocate the static advection handler
 std::shared_ptr<IAdvectionHandler> PetscSolver::advectionHandler;
+// Allocate the static bubble bursting handler
+std::shared_ptr<IBubbleBurstingHandler> PetscSolver::bubbleBurstingHandler;
 // Allocate the static step size
 double PetscSolver::hx;
 
@@ -349,6 +351,9 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	// Get the advection handler
 	auto advectionHandler = PetscSolver::getAdvectionHandler();
 
+	// Get the bubble bursting handler
+	auto bubbleBurstingHandler = PetscSolver::getBubbleBurstingHandler();
+
 	// Loop over grid points computing ODE terms for each grid point
 	size = network->size();
 	for (xi = xs; xi < xs + xm; xi++) {
@@ -421,6 +426,9 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 //					<< cluster->getConcentration() << std::endl;
 		}
 
+		// ----- Compute the bubble bursting -----
+		bubbleBurstingHandler->computeBursting(network, xi, concOffset, updatedConcOffset);
+
 		// Uncomment this line for debugging in a single cell.
 //		break;
 	}
@@ -470,7 +478,6 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	// Get the network
 	auto network = PetscSolver::getNetwork();
 	int reactantIndex = 0;
-	int size = 0;
 
 	// Get the matrix from PETSc
 	PetscFunctionBeginUser;
@@ -509,7 +516,7 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 
 	// Store network size for both the linear and nonlinear parts of the
 	// computation.
-	size = network->size();
+	int size = network->size();
 
 	// Variable to represent the real, or current, time
 	PetscReal realTime;
@@ -621,6 +628,12 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	PetscInt rowId = 0;
 	int pdColIdsVectorSize = 0;
 
+	// Get the bubble bursting handler
+	auto bubbleBurstingHandler = PetscSolver::getBubbleBurstingHandler();
+
+	// Store te total number of HeV bubbles in the network
+	int nBubble = network->getAll(heVType).size();
+
 	// Loop over the grid points
 	for (xi = xs; xi < xs + xm; xi++) {
 
@@ -664,6 +677,32 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 					ADD_VALUES);
 			checkPetscError(ierr);
 		}
+
+		// ----- Take care of the bubble bursting for all the reactant -----
+
+		// Initialize the rows, columns, and values to set in the Jacobian
+		PetscInt row[2*nBubble], col[nBubble];
+		PetscReal val[2*nBubble];
+		// Get the pointer on them for the compute bursting method
+		PetscInt *rowPointer = &row[0];
+		PetscInt *colPointer = &col[0];
+		PetscReal *valPointer = &val[0];
+
+		// Compute the partial derivative from bubble bursting at this grid point
+		int nBursting = bubbleBurstingHandler->computePartialsForBursting(network,
+				valPointer, rowPointer, colPointer, xi, xs);
+
+		// Loop on the number of bursting bubbles to set the values in the Jacobian
+		for(int i = 0; i < 2 * nBursting; i++) {
+			rowPointer = &row[i];
+			colPointer = &col[(int) i/2];
+			valPointer = &val[i];
+
+			ierr = MatSetValuesLocal(J, 1, rowPointer, 1, colPointer, valPointer, ADD_VALUES);
+			checkPetscError(ierr);
+		}
+
+
 		// Uncomment this line for debugging in a single cell.
 //		break;
 	}
@@ -896,6 +935,9 @@ void PetscSolver::solve(std::shared_ptr<xolotlFactory::IMaterialFactory> materia
 	// Set the advection handler
 	PetscSolver::advectionHandler = material->getAdvectionHandler();
 
+	// Set the bubble bursting handler
+	PetscSolver::bubbleBurstingHandler = material->getBubbleBurstingHandler();
+
 	// Set the grid step size
 	PetscSolver::hx = stepSize;
 	
@@ -959,6 +1001,18 @@ void PetscSolver::solve(std::shared_ptr<xolotlFactory::IMaterialFactory> materia
 
 	// Fill ofill, the matrix of "off-diagonal" elements that represents diffusion
 	PetscSolver::diffusionHandler->initializeOFill(network, ofill);
+
+	// Get the total number of grid points to then initialize the bubble bursting handler
+	int Mx;
+	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
+	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+	PETSC_IGNORE);
+	checkPetscError(ierr);
+
+	// Initialize the bubble bursting handler here because it adds connectivity
+	// and the getDiagonalFill method needs it
+	PetscSolver::bubbleBurstingHandler->initialize(network, hx, Mx);
 
 	// Get the diagonal fill
 	ierr = getDiagonalFill(dfill, dof * dof);

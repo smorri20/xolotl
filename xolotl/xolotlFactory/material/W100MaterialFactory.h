@@ -6,6 +6,7 @@
 #include <W100FitFluxHandler.h>
 #include <W100AdvectionHandler.h>
 #include <DiffusionHandler.h>
+#include <BubbleBurstingHandler.h>
 
 namespace xolotlFactory {
 
@@ -23,6 +24,7 @@ public:
 		theFluxHandler = std::make_shared<xolotlCore::W100FitFluxHandler>();
 		theAdvectionHandler = std::make_shared<xolotlCore::W100AdvectionHandler>();
 		theDiffusionHandler = std::make_shared<xolotlCore::DiffusionHandler>();
+		theBubbleBurstingHandler = std::make_shared<xolotlCore::BubbleBurstingHandler>();
 		return;
 	}
 

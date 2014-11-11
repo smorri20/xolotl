@@ -599,7 +599,7 @@ PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 				// Create a Point with the concentration[iCluster] as the value
 				// and add it to myPoints
 				xolotlViz::Point aPoint;
-				aPoint.value = concentration[i];
+				aPoint.value = concentration[networkSize - i - 1];
 				aPoint.t = time;
 				aPoint.x = x;
 				myPoints[i].push_back(aPoint);
@@ -640,7 +640,7 @@ PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 		auto reactants = PetscSolver::getNetwork()->getAll();
 
 		for (int i = 0; i < loopSize; i++) {
-			auto cluster = (PSICluster *) reactants->at(i);
+			auto cluster = (PSICluster *) reactants->at(networkSize - i - 1);
 			// Get the data provider and give it the points
 			auto thePoints = std::make_shared<std::vector<xolotlViz::Point> >(
 					myPoints[i]);
@@ -697,7 +697,7 @@ PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 
 			for (int i = 0; i < loopSize; i++) {
 				// Send the value of the concentrations to the master process
-				MPI_Send(&concentration[i], 1, MPI_DOUBLE, 0, 3,
+				MPI_Send(&concentration[networkSize - i - 1], 1, MPI_DOUBLE, 0, 3,
 						MPI_COMM_WORLD);
 			}
 		}
@@ -761,6 +761,7 @@ PetscErrorCode monitorSurface(TS ts, PetscInt timestep, PetscReal time,
 
 	// Loop on the grid points
 	for (xi = xs; xi < xs + xm; xi++) {
+
 		// Create a Point vector to store the data to give to the data provider
 		// for the visualization
 		auto myPoints = std::make_shared<std::vector<xolotlViz::Point> >();

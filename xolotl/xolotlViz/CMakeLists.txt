@@ -68,7 +68,7 @@ install(TARGETS ${LIBRARY_NAME} DESTINATION lib)
 # Configure file for the performance library.
 # Note: must do this after all the other checks, or else the 
 # contents of the generated file won't take the check results into account.
-configure_file( "${CMAKE_SOURCE_DIR}/xolotlFactory/vizHandler/XolotlConfigViz.h.in" "${CMAKE_BINARY_DIR}/xolotlFactory/XolotlConfigViz.h" )
+configure_file( "${CMAKE_SOURCE_DIR}/xolotlFactory/vizhandler/XolotlConfigViz.h.in" "${CMAKE_BINARY_DIR}/xolotlFactory/XolotlConfigViz.h" )
 
 
 

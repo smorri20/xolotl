@@ -25,18 +25,19 @@ include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/diffusion)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/advection)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/flux)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/temperature)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/bubblebursting)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlViz)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlViz/dataprovider)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlFactory/material)
-include_directories(${CMAKE_SOURCE_DIR}/xolotlFactory/vizHandler)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlFactory/vizhandler)
 
 include_directories(${PETSC_INCLUDES})
 
 #Add the library
 add_library(${LIBRARY_NAME} STATIC ${SRC})
 target_link_libraries(${LIBRARY_NAME} xolotlReactants xolotlIO xolotlCL xolotlDiffusion
-xolotlAdvection xolotlFlux xolotlTemperature ${PETSC_LIBRARIES} xolotlPerf xolotlViz)
+xolotlAdvection xolotlFlux xolotlTemperature xolotlBursting ${PETSC_LIBRARIES} xolotlPerf xolotlViz)
 
 #Install the xolotl header files
 install(FILES ${HEADERS} DESTINATION include)
