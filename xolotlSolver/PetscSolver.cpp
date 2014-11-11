@@ -280,7 +280,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	PetscReal x;
 	// Pointers to the Petsc arrays that start at the beginning (xs) of the
 	// local array!
-	PetscReal *concs, *updatedConcs;
+	PetscScalar **concs, **updatedConcs;
 	Vec localC;
 	// Loop variables
 	int size = 0, reactantIndex = 0;
@@ -331,9 +331,9 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	checkPetscError(ierr);
 
 	// Get pointers to vector data
-	ierr = DMDAVecGetArray(da, localC, &concs);
+	ierr = DMDAVecGetArrayDOF(da, localC, &concs);
 	checkPetscError(ierr);
-	ierr = DMDAVecGetArray(da, F, &updatedConcs);
+	ierr = DMDAVecGetArrayDOF(da, F, &updatedConcs);
 	checkPetscError(ierr);
 
 	//Get local grid boundaries
@@ -356,10 +356,10 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 //		xi = 1; // Uncomment this line for debugging in a single cell.
 
 		// Compute the middle, left, right and new array offsets
-		concOffset = concs + size * xi;
-		leftConcOffset = concs + size * (xi - 1);
-		rightConcOffset = concs + size * (xi + 1);
-		updatedConcOffset = updatedConcs + size * xi;
+		concOffset = concs[xi];
+		leftConcOffset = concs[xi - 1];
+		rightConcOffset = concs[xi + 1];
+		updatedConcOffset = updatedConcs[xi];
 
 		// Boundary conditions
 		if (xi == 0 || xi == Mx - 1) {
@@ -428,9 +428,9 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	/*
 	 Restore vectors
 	 */
-	ierr = DMDAVecRestoreArray(da, localC, &concs);
+	ierr = DMDAVecRestoreArrayDOF(da, localC, &concs);
 	checkPetscError(ierr);
-	ierr = DMDAVecRestoreArray(da, F, &updatedConcs);
+	ierr = DMDAVecRestoreArrayDOF(da, F, &updatedConcs);
 	checkPetscError(ierr);
 	ierr = DMRestoreLocalVector(da, &localC);
 	checkPetscError(ierr);
