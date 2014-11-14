@@ -18,10 +18,12 @@ BOOST_AUTO_TEST_CASE(checkgetIncidentFlux) {
 	int nGridpts = 5;
 	// Specify the step size between grid points
 	double step = 1.25;
+	// Specify the surface position
+	int surfacePos = 0;
 
     auto testFitFlux = make_shared<W100FitFluxHandler>();
     // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(nGridpts, step);
+    testFitFlux->initializeFluxHandler(nGridpts, step, surfacePos);
 
 	// Create a composition vector
 	vector<int> compVec = {1, 0, 0};
@@ -31,7 +33,7 @@ BOOST_AUTO_TEST_CASE(checkgetIncidentFlux) {
 	// Create a vector representing the position of the cluster
 	vector<double> x = {1.25, 0.0, 0.0};
 
-	auto testFlux = testFitFlux->getIncidentFlux(compVec, x, 1);
+	auto testFlux = testFitFlux->getIncidentFlux(compVec, x, 1, surfacePos);
 
 	BOOST_TEST_MESSAGE( "\nW100FitFluxHandlerTester Message: \n"
 						<< "incidentFlux = " << testFlux << " with position "
@@ -46,10 +48,12 @@ BOOST_AUTO_TEST_CASE(checkHeFluence) {
 	int nGridpts = 5;
 	// Specify the step size between grid points
 	double step = 1.25;
+	// Specify the surface position
+	int surfacePos = 0;
 
     auto testFitFlux = make_shared<W100FitFluxHandler>();
     // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(nGridpts, step);
+    testFitFlux->initializeFluxHandler(nGridpts, step, surfacePos);
 
 	// Create the composition vector
 	vector<int> compVec = {1, 0, 0};
@@ -60,7 +64,7 @@ BOOST_AUTO_TEST_CASE(checkHeFluence) {
 	vector<double> x = {1.25, 0.0, 0.0};
 
 	// Check the flux
-	auto testFlux = testFitFlux->getIncidentFlux(compVec, x, 1);
+	auto testFlux = testFitFlux->getIncidentFlux(compVec, x, 1, surfacePos);
 	BOOST_REQUIRE_CLOSE(testFlux, 0.476819, 0.01);
 
 	// Check that the fluence is 0.0 at the beginning
@@ -78,12 +82,14 @@ BOOST_AUTO_TEST_CASE(checkHeFlux) {
 	int nGridpts = 5;
 	// Specify the step size between grid points
 	double step = 1.25;
+	// Specify the surface position
+	int surfacePos = 0;
 
     auto testFitFlux = make_shared<W100FitFluxHandler>();
     // Set the factor to change the Helium flux
     testFitFlux->setHeFlux(2.5);
     // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(nGridpts, step);
+    testFitFlux->initializeFluxHandler(nGridpts, step, surfacePos);
 
     BOOST_REQUIRE_EQUAL(testFitFlux->getHeFlux(), 2.5);
 
@@ -95,9 +101,8 @@ BOOST_AUTO_TEST_CASE(checkHeFlux) {
 	// Create a vector representing the position of the cluster
 	vector<double> x = {1.25, 0.0, 0.0};
 
-	auto testFlux = testFitFlux->getIncidentFlux(compVec, x, 1);
+	auto testFlux = testFitFlux->getIncidentFlux(compVec, x, 1, surfacePos);
 	BOOST_REQUIRE_CLOSE(testFlux, 2.5 * 0.476819, 0.01);
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()

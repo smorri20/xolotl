@@ -64,6 +64,8 @@ std::shared_ptr<IAdvectionHandler> PetscSolver::advectionHandler;
 double PetscSolver::hx;
 // Allocate the static initial vacancy concentration
 double PetscSolver::initialV;
+// Allocate the static surface position
+int PetscSolver::surfacePosition;
 
 extern PetscErrorCode RHSFunction(TS, PetscReal, Vec, Vec, void*);
 extern PetscErrorCode RHSJacobian(TS, PetscReal, Vec, Mat, Mat);
@@ -167,9 +169,12 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 	// Get the step size
 	double hx = PetscSolver::getStepSize();
 
+	// Get the surface position
+	int surfacePos = PetscSolver::getSurfacePosition();
+
 	// Get the flux handler that will be used to compute fluxes.
 	auto fluxHandler = PetscSolver::getFluxHandler();
-	fluxHandler->initializeFluxHandler(Mx, hx);
+	fluxHandler->initializeFluxHandler(Mx, hx, surfacePos);
 
 	/* Name each of the concentrations */
 	for (i = 0; i < size; i++) {
@@ -197,7 +202,9 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 
 	// Get the handle to the network in order to find the single vacancy ID.
 	auto network = PetscSolver::getNetwork();
-	int vacancyIndex = (network->get(vType, 1)->getId()) - 1;
+	auto singleVacancyCluster = (PSICluster *) network->get(vType, 1);
+	int vacancyIndex = -1;
+	if (singleVacancyCluster) vacancyIndex = singleVacancyCluster->getId() - 1;
 
 	// Get the intial concentration for vacancies
 	double initialVConc = PetscSolver::getInitialV();
@@ -221,7 +228,8 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 		}
 
 		// Initialize the vacancy concentration
-		if (i > 0 && i < Mx - 1) {
+		// The left side of the surface is empty
+		if (i > surfacePos && i < Mx - 1 && vacancyIndex > 0) {
 			concOffset[vacancyIndex] = initialVConc / hx;
 		}
 
@@ -326,6 +334,9 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	double hx = PetscSolver::getStepSize();
 	double sx = 1.0 / (hx * hx);
 
+	// Get the position of the surface
+	int surfacePos = PetscSolver::getSurfacePosition();
+
 	// Scatter ghost points to local vector, using the 2-step process
 	// DMGlobalToLocalBegin(),DMGlobalToLocalEnd().
 	// By placing code between these two statements, computations can be
@@ -350,7 +361,8 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	checkPetscError(ierr);
 
 	// Get the incident flux vector
-	auto incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime);
+	auto incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime,
+			surfacePos);
 
 	// Get the diffusion handler
 	auto diffusionHandler = PetscSolver::getDiffusionHandler();
@@ -363,21 +375,6 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	for (xi = xs; xi < xs + xm; xi++) {
 
 //		xi = 1; // Uncomment this line for debugging in a single cell.
-
-		// Compute the middle, left, right and new array offsets
-		concOffset = concs + size * xi;
-		leftConcOffset = concs + size * (xi - 1);
-		rightConcOffset = concs + size * (xi + 1);
-		updatedConcOffset = updatedConcs + size * xi;
-
-		// Boundary conditions
-		if (xi == 0 || xi == Mx - 1) {
-			for (int i = 0; i < size; i++) {
-				updatedConcOffset[i] = 1.0 * concOffset[i];
-			}
-
-			continue;
-		}
 
 		x = xi * hx;
 
@@ -392,6 +389,24 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 			network->setTemperature(temperature);
 			lastTemperature = temperature;
 			temperatureChanged = true;
+		}
+
+		// Compute the middle, left, right and new array offsets
+		concOffset = concs + size * xi;
+		leftConcOffset = concs + size * (xi - 1);
+		rightConcOffset = concs + size * (xi + 1);
+		updatedConcOffset = updatedConcs + size * xi;
+
+		// Boundary conditions
+		// Everything to the left of the surface is empty
+		// It is important to do it after the check on the temperature so that the
+		// information on the change of temperature will be correct in the RHSJacobian
+		if (xi <= surfacePos || xi == Mx - 1) {
+			for (int i = 0; i < size; i++) {
+				updatedConcOffset[i] = 1.0 * concOffset[i];
+			}
+
+			continue;
 		}
 
 		// Copy data into the PSIClusterReactionNetwork so that it can
@@ -415,7 +430,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 				leftConcOffset, rightConcOffset, updatedConcOffset);
 
 		// ---- Compute advection over the locally owned part of the grid -----
-		advectionHandler->computeAdvection(network, hx, xi,
+		advectionHandler->computeAdvection(network, hx, xi, surfacePos,
 				concOffset, rightConcOffset, updatedConcOffset);
 
 		// ----- Compute all of the new fluxes -----
@@ -499,6 +514,9 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	double hx = PetscSolver::getStepSize();
 	double sx = 1.0 / (hx * hx);
 
+	// Get the position of the surface
+	int surfacePos = PetscSolver::getSurfacePosition();
+
 	// Get the complete data array
 	ierr = DMGlobalToLocalBegin(da, C, INSERT_VALUES, localC);
 	checkPetscError(ierr);
@@ -510,8 +528,6 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	 determine the local row for the entries in the Jacobian
 	 */
 	ierr = DMDAVecGetArray(da, localC, &concs);
-	checkPetscError(ierr);
-	ierr = DMDAVecGetArray(da, localC, &updatedConcs);
 	checkPetscError(ierr);
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
 	checkPetscError(ierr);
@@ -548,7 +564,8 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 //			xi = 1; // Uncomment this line for debugging in a single cell
 
 			// Boundary conditions
-			if (xi == 0 || xi == Mx - 1) continue;
+			// Nothing happens on the left side of the surface
+			if (xi <= surfacePos || xi == Mx - 1) continue;
 
 			// Copy data into the PSIClusterReactionNetwork so that it can
 			// compute the new concentrations.
@@ -556,8 +573,8 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 			network->updateConcentrationsFromArray(concOffset);
 
 			// Initialize the rows, columns, and values to set in the Jacobian
-			PetscInt row[nDiff], col[3*nDiff];
-			PetscReal val[3*nDiff];
+			PetscInt row[nDiff], col[3 * nDiff];
+			PetscReal val[3 * nDiff];
 			// Get the pointer on them for the compute diffusion method
 			PetscInt *rowPointer = &row[0];
 			PetscInt *colPointer = &col[0];
@@ -566,16 +583,17 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 			/* -------------------------------------------------------------
 			 ---- Compute diffusion over the locally owned part of the grid
 			 */
-			diffusionHandler->computePartialsForDiffusion(network, sx, valPointer,
-					rowPointer, colPointer, xi, xs);
+			diffusionHandler->computePartialsForDiffusion(network, sx,
+					valPointer, rowPointer, colPointer, xi, xs);
 
 			// Loop on the number of diffusion cluster to set the values in the Jacobian
-			for(int i = 0; i < nDiff; i++) {
+			for (int i = 0; i < nDiff; i++) {
 				rowPointer = &row[i];
-				colPointer = &col[3*i];
-				valPointer = &val[3*i];
+				colPointer = &col[3 * i];
+				valPointer = &val[3 * i];
 
-				ierr = MatSetValuesLocal(J, 1, rowPointer, 3, colPointer, valPointer, ADD_VALUES);
+				ierr = MatSetValuesLocal(J, 1, rowPointer, 3, colPointer,
+						valPointer, ADD_VALUES);
 				checkPetscError(ierr);
 			}
 
@@ -589,16 +607,17 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 			/* -------------------------------------------------------------
 			 ---- Compute advection over the locally owned part of the grid
 			 */
-			advectionHandler->computePartialsForAdvection(network, hx, valPointer,
-					rowPointer, colPointer, xi, xs);
+			advectionHandler->computePartialsForAdvection(network, hx,
+					valPointer, rowPointer, colPointer, xi, xs, surfacePos);
 
 			// Loop on the number of advecting cluster to set the values in the Jacobian
-			for(int i = 0; i < nAdvec; i++) {
+			for (int i = 0; i < nAdvec; i++) {
 				rowPointer = &row[i];
-				colPointer = &col[2*i];
-				valPointer = &val[2*i];
+				colPointer = &col[2 * i];
+				valPointer = &val[2 * i];
 
-				ierr = MatSetValuesLocal(J, 1, rowPointer, 2, colPointer, valPointer, ADD_VALUES);
+				ierr = MatSetValuesLocal(J, 1, rowPointer, 2, colPointer,
+						valPointer, ADD_VALUES);
 				checkPetscError(ierr);
 			}
 
@@ -609,15 +628,21 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 		checkPetscError(ierr);
 		ierr = MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);
 		checkPetscError(ierr);
+
 //		ierr = MatSetOption(J, MAT_NEW_NONZERO_LOCATIONS, PETSC_FALSE);
 //		checkPetscError(ierr);
+		// Store the J matrix for the off-diagonal part so that it can be retrieved
+		// as long as the temperature doesn't change
 		ierr = MatStoreValues(J);
 		checkPetscError(ierr);
-//		MatSetFromOptions(J);
+		MatSetFromOptions(J);
 		temperatureChanged = false;
-		// Debug line for viewing the matrix
-		//MatView(J, PETSC_VIEWER_STDOUT_WORLD);
-	} else {
+
+//		// Debug line for viewing the matrix
+//		MatView(J, PETSC_VIEWER_STDOUT_WORLD);
+	}
+	else {
+		// Retrieve the matrix that was previously stored
 		ierr = MatRetrieveValues(J);
 		checkPetscError(ierr);
 	}
@@ -636,7 +661,9 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 //		xi = 1; // Uncomment this line for debugging in a single cell
 
 		// Boundary conditions
-		if (xi == 0 || xi == Mx - 1) continue;
+		// Nothing happens on the left side of the surface
+		if (xi <= surfacePos || xi == Mx - 1)
+			continue;
 
 		// Copy data into the PSIClusterReactionNetwork so that it can
 		// compute the new concentrations.
@@ -682,8 +709,6 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	 */
 	ierr = DMDAVecRestoreArray(da, C, &concs);
 	checkPetscError(ierr);
-	ierr = DMDAVecRestoreArray(da, C, &updatedConcs);
-	checkPetscError(ierr);
 	ierr = DMRestoreLocalVector(da, &localC);
 	checkPetscError(ierr);
 	ierr = MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);
@@ -702,7 +727,6 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	RHSJacobianTimer->stop();
 
 	PetscFunctionReturn(0);
-
 }
 
 PetscErrorCode callRHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
@@ -839,8 +863,9 @@ void PetscSolver::setNetworkLoader(
 	int procId;
 	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
 	if (procId == 0) {
-		std::cout << "\nPETScSolver Message: " << "Master loaded network of size "
-				<< network->size() << "." << std::endl;
+		std::cout << "\nPETScSolver Message: "
+				<< "Master loaded network of size " << network->size() << "."
+				<< std::endl;
 	}
 
 	return;
@@ -889,7 +914,8 @@ void PetscSolver::initialize() {
  * This operation directs the Solver to perform the solve. If the solve
  * fails, it will throw an exception of type std::string.
  */
-void PetscSolver::solve(std::shared_ptr<xolotlFactory::IMaterialFactory> material,
+void PetscSolver::solve(
+		std::shared_ptr<xolotlFactory::IMaterialFactory> material,
 		std::shared_ptr<ITemperatureHandler> temperatureHandler,
 		Options &options) {
 
@@ -910,7 +936,7 @@ void PetscSolver::solve(std::shared_ptr<xolotlFactory::IMaterialFactory> materia
 
 	// Set the initial vacancy concentration
 	PetscSolver::initialV = options.getInitialVConcentration();
-	
+
 	// Degrees of freedom
 	int dof = network->size();
 
@@ -950,6 +976,17 @@ void PetscSolver::solve(std::shared_ptr<xolotlFactory::IMaterialFactory> materia
 	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, -8, dof, 1,
 	NULL, &da);
 	checkPetscError(ierr);
+
+	// Get the total number of grid points to then initialize the bubble bursting handler
+	int Mx;
+	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
+	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+	PETSC_IGNORE);
+	checkPetscError(ierr);
+
+	// Set the surface position to the middle of the grid
+	PetscSolver::surfacePosition = Mx / 2;
 
 	/*  The only spatial coupling in the Jacobian is due to diffusion.
 	 *  The ofill (thought of as a dof by dof 2d (row-oriented) array represents

@@ -51,6 +51,8 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 
 	// The size parameter
 	double hx = 1.0;
+	// The surface position
+	int surfacePos = 0;
 
 	// The arrays of concentration
 	double concentration[3*size];
@@ -79,7 +81,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	double *updatedConcOffset = updatedConc + size;
 
 	// Compute the advection at this grid point
-	advectionHandler.computeAdvection(network, hx, 1,
+	advectionHandler.computeAdvection(network, hx, 1, surfacePos,
 			concOffset, rightConcOffset, updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
@@ -100,7 +102,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 
 	// Compute the partial derivatives for the advection a the grid point 1
 	advectionHandler.computePartialsForAdvection(network, hx, valPointer,
-			rowPointer, colPointer, 1, 0);
+			rowPointer, colPointer, 1, 0, surfacePos);
 
 	// Check the values for the indices
 	BOOST_REQUIRE_EQUAL(row[0], 11);

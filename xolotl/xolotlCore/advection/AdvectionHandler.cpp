@@ -4,7 +4,7 @@
 namespace xolotlCore {
 
 void AdvectionHandler::computeAdvection(std::shared_ptr<PSIClusterReactionNetwork> network,
-		double hx, int xi, double *concOffset, double *rightConcOffset,
+		double hx, int xi, int surfacePos, double *concOffset, double *rightConcOffset,
 		double *updatedConcOffset) {
 	// Get all the reactant
 	auto reactants = network->getAll();
@@ -24,10 +24,8 @@ void AdvectionHandler::computeAdvection(std::shared_ptr<PSIClusterReactionNetwor
 
 		// Compute the concentration as explained in the description of the method
 		double conc = (3.0 * sinkStrengthVector[i] * cluster->getDiffusionCoefficient())
-				* ((oldRightConc / pow((xi + 1) * hx, 4)) - (oldConc / pow(xi * hx, 4)))
+				* ((oldRightConc / pow((xi - surfacePos + 1) * hx, 4)) - (oldConc / pow((xi - surfacePos) * hx, 4)))
 				/ (xolotlCore::kBoltzmann * cluster->getTemperature() * hx);
-
-//		double conc = sinkStrengthVector[i] * (oldRightConc - oldConc) / hx;
 
 		// Update the concentration of the cluster
 		updatedConcOffset[index] += conc;
@@ -39,7 +37,7 @@ void AdvectionHandler::computeAdvection(std::shared_ptr<PSIClusterReactionNetwor
 void AdvectionHandler::computePartialsForAdvection(
 		std::shared_ptr<PSIClusterReactionNetwork> network,
 		double hx, double *val, int *row, int *col, int xi,
-		int xs) {
+		int xs, int surfacePos) {
 	// Get all the reactant
 	auto reactants = network->getAll();
 	// And the size of the network
@@ -74,13 +72,10 @@ void AdvectionHandler::computePartialsForAdvection(
 		// explained in the description of this method
 		val[i * 2] = (3.0 * sinkStrength * diffCoeff)
 						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-								* hx * pow(xi * hx, 4));
+								* hx * pow((xi - surfacePos) * hx, 4));
 		val[(i * 2) + 1] = -(3.0 * sinkStrength * diffCoeff)
 								/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-										* hx * pow(xi * hx, 4));
-
-//		val[i * 2] = sinkStrength / hx;
-//		val[(i * 2) + 1] = - sinkStrength / hx;
+										* hx * pow((xi - surfacePos) * hx, 4));
 	}
 
 	return;

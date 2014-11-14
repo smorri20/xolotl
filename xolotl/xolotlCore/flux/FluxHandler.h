@@ -78,8 +78,9 @@ protected:
 	/**
 	 * This method recomputes the values of the incident flux vector when
 	 * a time profile is given.
+	 * @param surfacePos The current position of the surface
 	 */
-	void recomputeFluxHandler();
+	void recomputeFluxHandler(int surfacePos);
 
 public:
 
@@ -92,8 +93,9 @@ public:
 	 * Function to calculate and store the incident flux values at each grid point
 	 * @param numGridpoints The total number of grid points that will be used
 	 * @param step The step size between grid points
+	 * @param surfacePos The current position of the surface
 	 */
-	virtual void initializeFluxHandler(int numGridpoints, double step);
+	virtual void initializeFluxHandler(int numGridpoints, double step, int surfacePos);
 
 	/**
 	 * This method reads the values on the time profile file and store them in the
@@ -108,18 +110,20 @@ public:
 	 * @param compositionVec  The composition of the cluster
 	 * @param position        The position of the cluster
 	 * @param currentTime     The time
+	 * @param surfacePos      The current position of the surface
 	 * @return incidentFlux   The incident flux at the given position and time of the cluster with
 	 * the specified composition
 	 */
 	virtual double getIncidentFlux(std::vector<int> compositionVec,
-			std::vector<double> position, double currentTime);
+			std::vector<double> position, double currentTime, int surfacePos);
 
 	/**
 	 * This operation returns the incident flux vector
 	 * @param currentTime     	 The time
+	 * @param surfacePos         The current position of the surface
 	 * @return incidentFluxVec   The incident flux vector
 	 */
-	virtual std::vector<double> getIncidentFluxVec(double currentTime);
+	virtual std::vector<double> getIncidentFluxVec(double currentTime, int surfacePos);
 
 	/**
 	 * Given a specific concentration, position, and time, this operation sets the outgoing

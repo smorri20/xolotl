@@ -45,6 +45,9 @@ private:
 	//! The initial vacancy concentration.
 	static double initialV;
 
+	//! The position of the surface
+	static int surfacePosition;
+
 	//! The original flux handler created.
 	static std::shared_ptr<IFluxHandler> fluxHandler;
 
@@ -179,6 +182,15 @@ public:
 	 */
 	static double getInitialV() {
 		return initialV;
+	}
+
+	/**
+	 * This operation returns the surface position. This operation
+	 * is only for use by PETSc code and is not part of the ISolver interface.
+	 * @return The grid step size
+	 */
+	static int getSurfacePosition() {
+		return surfacePosition;
 	}
 
 	/**

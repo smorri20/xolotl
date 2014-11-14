@@ -18,10 +18,12 @@ BOOST_AUTO_TEST_CASE(checkgetIncidentFlux) {
 	int nGridpts = 21;
 	// Specify the step size between grid points
 	double step = 1.05;
+	// Specify the surface position
+	int surfacePos = 0;
 
     auto testFitFlux = make_shared<FeFitFluxHandler>();
     // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(nGridpts, step);
+    testFitFlux->initializeFluxHandler(nGridpts, step, surfacePos);
 
 	// Create a composition vector
 	vector<int> compVec = {1, 0, 0};
@@ -32,8 +34,8 @@ BOOST_AUTO_TEST_CASE(checkgetIncidentFlux) {
 	vector<double> x = {1.05, 0.0, 0.0};
 	vector<double> x1 = {10.5, 0.0, 0.0};
 
-	auto testFlux = testFitFlux->getIncidentFlux(compVec, x, 1);
-	auto testFlux1 = testFitFlux->getIncidentFlux(compVec, x1, 1);
+	auto testFlux = testFitFlux->getIncidentFlux(compVec, x, 1, surfacePos);
+	auto testFlux1 = testFitFlux->getIncidentFlux(compVec, x1, 1, surfacePos);
 
 	BOOST_TEST_MESSAGE( "\n" << "\nFeFitFluxHandlerTester Message: \n"
 						<< "incidentFlux = " << testFlux << " with composition "
