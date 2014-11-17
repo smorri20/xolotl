@@ -110,6 +110,11 @@ protected:
 	 */
 	double initialVConcentration;
 
+	/**
+	 * Value of the portion of the void on the grid at the start of the simulation.
+	 */
+	double voidPortion;
+
 public:
 
 	/**
@@ -355,6 +360,18 @@ public:
      * \see IOptions.h
      */
     void setInitialVConcentration(double conc) {initialVConcentration = conc;}
+
+    /**
+     * Obtain the value of the void portion for the simulation.
+     * \see IOptions.h
+     */
+    double getVoidPortion() const {return voidPortion;}
+
+    /**
+     * Set the value of the void portion for the surface to grow.
+     * \see IOptions.h
+     */
+    void setVoidPortion(double portion) {voidPortion = portion;}
 
 
 };//end class Options

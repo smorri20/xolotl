@@ -230,6 +230,8 @@ public class Preprocessor {
 			xolotlParams.setProperty("fluxFile", args.getTempFile());
 		if (args.isInitialV())
 			xolotlParams.setProperty("initialV", args.getInitialV());
+		if (args.isVoidPortion())
+			xolotlParams.setProperty("voidPortion", args.getVoidPortion());
 
 	}
 

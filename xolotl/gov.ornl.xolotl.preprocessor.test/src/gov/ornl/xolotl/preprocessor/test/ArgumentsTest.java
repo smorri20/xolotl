@@ -96,7 +96,7 @@ public class ArgumentsTest {
 					"--startTemp", "900", "--material", "W111", "--perfHandler",
 					"dummy", "--maxHeSize", "7", "--maxVSize", "30", "--maxISize", "5",
 					"--checkpoint", "xolotlStop.h5", "--stepSize", "3.0",
-					"--initialV", "0.05"});
+					"--initialV", "0.05", "--voidPortion", "60.0"});
 			
 			// Check that the maximum Helium cluster size is 7
 			assertEquals(7, args.getMaxHeSize());
@@ -136,6 +136,12 @@ public class ArgumentsTest {
 
 			// Check its value
 			assertEquals("0.05", args.getInitialV());
+
+			// Check if there is an void portion argument
+			assertEquals(true, args.isVoidPortion());
+
+			// Check its value
+			assertEquals("60.0", args.getVoidPortion());
 
 			// Check that the default networkFile is networkInit.h5
 			assertEquals("networkInit.h5", args.getNetworkFile());

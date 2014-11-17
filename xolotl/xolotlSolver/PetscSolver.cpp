@@ -1006,8 +1006,10 @@ void PetscSolver::solve(
 	PETSC_IGNORE);
 	checkPetscError(ierr);
 
+	// Get the void portion the user wants to use in the simulation
+	double portion = options.getVoidPortion();
 	// Set the surface position to the middle of the grid
-	PetscSolver::surfacePosition = Mx / 2;
+	PetscSolver::surfacePosition = (int) (Mx * portion / 100.0);
 
 	/*  The only spatial coupling in the Jacobian is due to diffusion.
 	 *  The ofill (thought of as a dof by dof 2d (row-oriented) array represents

@@ -17,7 +17,7 @@ public:
 	 */
     NetworkOptionHandler() :
     	OptionHandler("networkFile",
-    			"networkFile <filename>      "
+    			"networkFile <filename>              "
     			"The network will be loaded from this HDF5 file.") {}
 
 	/**

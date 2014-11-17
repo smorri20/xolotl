@@ -18,7 +18,7 @@ public:
 	 */
     VConcentrationOptionHandler() :
     	OptionHandler("initialV",
-    			"initialV <value>        "
+    			"initialV <value>                    "
     			"The value of the initial concentration of vacancies in the material.") {}
 
 	/**

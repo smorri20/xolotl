@@ -147,6 +147,9 @@ BOOST_AUTO_TEST_CASE(goodParamFile)
     // Check the initial vacancy concentration option
     BOOST_REQUIRE_EQUAL(opts.getInitialVConcentration(), 0.05);
 
+    // Check the void portion option
+    BOOST_REQUIRE_EQUAL(opts.getVoidPortion(), 60.0);
+
     // Check the PETSc options
     BOOST_REQUIRE_EQUAL(opts.getPetscArgc(), 21);
 }
