@@ -37,7 +37,7 @@ void FluxHandler::initializeFluxHandler(int numGridpoints, double step, int surf
 		incidentFluxVec.push_back(0.0);
 	}
 
-	// Starts a i = 1 because the first value was already put in the vector
+	// End before the last grid point because of the boundary conditions
 	for (int i = surfacePos + 1; i < numGridpoints - 1; i++) {
 		double x = (double) (i - surfacePos) * stepSize;
 

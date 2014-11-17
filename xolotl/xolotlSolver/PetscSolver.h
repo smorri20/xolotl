@@ -178,7 +178,7 @@ public:
 	/**
 	 * This operation returns the initial vacancy concentration. This operation
 	 * is only for use by PETSc code and is not part of the ISolver interface.
-	 * @return The grid step size
+	 * @return The initial vacancy concentration
 	 */
 	static double getInitialV() {
 		return initialV;
@@ -187,10 +187,20 @@ public:
 	/**
 	 * This operation returns the surface position. This operation
 	 * is only for use by PETSc code and is not part of the ISolver interface.
-	 * @return The grid step size
+	 * @return The surface position
 	 */
 	static int getSurfacePosition() {
 		return surfacePosition;
+	}
+
+	/**
+	 * This operation sets the surface position. This operation
+	 * is only for use by PETSc code and is not part of the ISolver interface.
+	 * @param pos The surface position
+	 */
+	static void setSurfacePosition(int pos) {
+		surfacePosition = pos;
+		return;
 	}
 
 	/**

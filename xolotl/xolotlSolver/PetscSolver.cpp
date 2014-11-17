@@ -105,6 +105,18 @@ static double lastTemperature = 0.0;
 static bool temperatureChanged = false;
 
 /**
+ * The last surface position on the grid.
+ */
+static int lastSurfacePosition = 0;
+
+/**
+ * A boolean that is true if the surface has moved. It is set to true
+ * in the RHSJacobian, and back to false once the off-diagonal part of the
+ * Jacobian is computed in the RHSJacobian method.
+ */
+static bool hasMoved = false;
+
+/**
  * A vector for holding the partial derivatives of one cluster. It is sized in
  * the solve() operation.
  *
@@ -206,7 +218,7 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 	int vacancyIndex = -1;
 	if (singleVacancyCluster) vacancyIndex = singleVacancyCluster->getId() - 1;
 
-	// Get the intial concentration for vacancies
+	// Get the initial concentration for vacancies
 	double initialVConc = PetscSolver::getInitialV();
 
 	// Get the name of the HDF5 file to read the concentrations from
@@ -516,6 +528,11 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 
 	// Get the position of the surface
 	int surfacePos = PetscSolver::getSurfacePosition();
+	// Compare it to the previous one to know is the surface has moved
+	if (surfacePos != lastSurfacePosition) {
+		hasMoved = true;
+		lastSurfacePosition = surfacePos;
+	}
 
 	// Get the complete data array
 	ierr = DMGlobalToLocalBegin(da, C, INSERT_VALUES, localC);
@@ -543,7 +560,7 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	checkPetscError(ierr);
 
 	// Only compute the linear part of the Jacobian if the temperature has changed
-	if (temperatureChanged) {
+	if (temperatureChanged || hasMoved) {
 
 		// Get the diffusion handler
 		auto diffusionHandler = PetscSolver::getDiffusionHandler();
@@ -636,7 +653,11 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 		ierr = MatStoreValues(J);
 		checkPetscError(ierr);
 		MatSetFromOptions(J);
+
+		// Set the boolean to know when to recompute the off-diagonal part of the
+		// Jacobian to false
 		temperatureChanged = false;
+		hasMoved = false;
 
 //		// Debug line for viewing the matrix
 //		MatView(J, PETSC_VIEWER_STDOUT_WORLD);
