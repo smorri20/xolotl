@@ -6,12 +6,13 @@
 #include <StepSizeOptionHandler.h>
 #include <ConstTempOptionHandler.h>
 #include <TempProfileOptionHandler.h>
-#include <FluenceOptionHandler.h>
 #include <FluxOptionHandler.h>
 #include <FluxProfileOptionHandler.h>
 #include <PerfOptionHandler.h>
 #include <VizOptionHandler.h>
 #include <MaterialOptionHandler.h>
+#include <VConcentrationOptionHandler.h>
+#include <VoidPortionOptionHandler.h>
 #include "Options.h"
 
 namespace xolotlCore {
@@ -25,12 +26,13 @@ Options::Options() :
 		constTempFlag(false),
 		tempProfileFlag(false),
 		constTemperature(1000.0),
-		heliumFluenceFlag(false),
 		heliumFluxFlag(false),
 		fluxProfileFlag(false),
         perfRegistryType( xolotlPerf::IHandlerRegistry::std ),
 		vizStandardHandlersFlag(false),
-		materialFlag(false) {
+		materialName(""),
+		initialVConcentration(0.0),
+		voidPortion(50.0) {
 
 	// Create the network option handler
 	auto networkHandler = new NetworkOptionHandler();
@@ -42,8 +44,6 @@ Options::Options() :
 	auto constTempHandler = new ConstTempOptionHandler();
 	// Create the temperature profile option handler
 	auto tempProfileHandler = new TempProfileOptionHandler();
-	// Create the maximum fluence option handler
-	auto fluenceHandler = new FluenceOptionHandler();
 	// Create the flux option handler
 	auto fluxHandler = new FluxOptionHandler();
 	// Create the flux time profile option handler
@@ -54,6 +54,10 @@ Options::Options() :
 	auto vizHandler = new VizOptionHandler();
 	// Create the material option handler
 	auto materialHandler = new MaterialOptionHandler();
+	// Create the initial vacancy concentration option handler
+	auto vConcHandler = new VConcentrationOptionHandler();
+	// Create the void portion option handler
+	auto voidHandler = new VoidPortionOptionHandler();
 
 	// Add our notion of which options we support.
 	optionsMap[networkHandler->key] = networkHandler;
@@ -61,12 +65,13 @@ Options::Options() :
 	optionsMap[stepHandler->key] = stepHandler;
 	optionsMap[constTempHandler->key] = constTempHandler;
 	optionsMap[tempProfileHandler->key] = tempProfileHandler;
-	optionsMap[fluenceHandler->key] = fluenceHandler;
 	optionsMap[fluxHandler->key] = fluxHandler;
 	optionsMap[fluxProfileHandler->key] = fluxProfileHandler;
 	optionsMap[perfHandler->key] = perfHandler;
 	optionsMap[vizHandler->key] = vizHandler;
 	optionsMap[materialHandler->key] = materialHandler;
+	optionsMap[vConcHandler->key] = vConcHandler;
+	optionsMap[voidHandler->key] = voidHandler;
 }
 
 Options::~Options(void) {

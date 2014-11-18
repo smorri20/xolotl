@@ -46,6 +46,9 @@ double previousTime = 0.0;
 //! The variable to store the interstitial flux at the previous time step.
 double previousFlux = 0.0;
 
+//! The variable to store the total number of interstitial going through the surface.
+double nInterstitial = 0.0;
+
 //! How often HDF5 file is written
 PetscInt stride = 0;
 
@@ -1096,7 +1099,7 @@ PetscErrorCode monitorMaxClusterConc(TS ts, PetscInt timestep, PetscReal time,
 
 /**
  * This is a monitoring method that will compute the flux of interstitials
- * at the surface
+ * at the surface and move the surface when the fluence is bigger than a given value.
  */
 PetscErrorCode monitorInterstitial(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
@@ -1137,60 +1140,133 @@ PetscErrorCode monitorInterstitial(TS ts, PetscInt timestep, PetscReal time,
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
 	checkPetscError(ierr);
 
-	// Return if the grid point 1 is not on this process
-	if (xs > 1) PetscFunctionReturn(0);
+	// Get the position of the surface
+	int surfacePos = PetscSolver::getSurfacePosition();
+	xi = surfacePos + 1;
 
 	// Setup some step size variables
 	double hx = PetscSolver::getStepSize();
 	double sx = 1.0 / (hx * hx);
 
-	// Get the concentrations at xi = 1
-	xi = 1;
-	gridPointSolution = solutionArray + networkSize * xi;
-	// Update the concentrations in the network to have physics results
-	// (non negative)
-	PetscSolver::getNetwork()->updateConcentrationsFromArray(
-			gridPointSolution);
-	// Get the concentrations from the network
-	double concentrations[networkSize];
-	double * concentration = &concentrations[0];
-	PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
+	// if xi is on this process
+	if (xi >= xs && xi < xs + xm ) {
+		// Get the concentrations at xi = surfacePos + 1
+		gridPointSolution = solutionArray + networkSize * xi;
+		// Update the concentrations in the network
+		PetscSolver::getNetwork()->updateConcentrationsFromArray(
+				gridPointSolution);
+		// Get the concentrations from the network
+		double concentrations[networkSize];
+		double * concentration = &concentrations[0];
+		PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
 
-	// Get the delta time from the previous timestep to this timestep
-	double dt = time - previousTime;
+		// Get the delta time from the previous timestep to this timestep
+		double dt = time - previousTime;
 
-	// Compute the total density of intersitials that escaped from the
-	// surface since last timestep using the stored flux
-	double nInterstitial = previousFlux * dt;
+		// Compute the total density of intersitials that escaped from the
+		// surface since last timestep using the stored flux
+		nInterstitial += previousFlux * dt;
 
-//	// Uncomment to write the interstitial flux in a file
-//	std::ofstream outputFile;
-//	outputFile.open("interstitialOut.txt", ios::app);
-//	outputFile << time << " "
-//			<< nInterstitial << std::endl;
-//	outputFile.close();
+		// Initialize the value for the flux
+		double newFlux = 0.0;
 
-	// Initialize the value for the flux
-	double newFlux = 0.0;
+		// Get all the interstitial clusters
+		auto interstitials = PetscSolver::getNetwork()->getAll("I");
+		// Loop on them
+		for (int i = 0; i < interstitials.size(); i++) {
+			// Get the cluster
+			auto cluster = (PSICluster *) interstitials[i];
+			// Get its id and concentration
+			int id = cluster->getId() - 1;
+			double conc = concentration[id];
+			// Get its size and diffusion coefficient
+			int size = cluster->getSize();
+			double coef = cluster->getDiffusionCoefficient();
 
-	// Get all the interstitial clusters
-	auto interstitials = PetscSolver::getNetwork()->getAll("I");
-	// Loop on them
-	for (int i = 0; i < interstitials.size(); i++) {
-		// Get the cluster
-		auto cluster = (PSICluster *) interstitials.at(i);
-		// Get its id and concentration
-		int id = cluster->getId() - 1;
-		double conc = concentration[id];
-		// Get its size and diffusion coefficient
-		int size = cluster->getSize();
-		double coef = cluster->getDiffusionCoefficient();
+			// Compute the flux
+			newFlux += (double) size * sx * coef * conc;
+		}
 
-		// Compute the flux
-		newFlux += (double) size * sx * coef * conc;
+		previousFlux = newFlux;
+
+		// Send the information about nInterstitial and previousFlux to the other processes
+		// Loop on all the processes
+		for (int i = 0; i < worldSize; i++) {
+			// Skip this process
+			if (i == procId) continue;
+
+			// Send nInterstitial
+			MPI_Send(&nInterstitial, 1, MPI_DOUBLE, i, 4, MPI_COMM_WORLD);
+
+			// Send previousFlux
+			MPI_Send(&previousFlux, 1, MPI_DOUBLE, i, 4, MPI_COMM_WORLD);
+		}
+	}
+	// xi is not on this process, but the process needs to know what is the
+	// flux and interstitial value from the other process
+	else {
+		// Receive nInterstitial
+		MPI_Recv(&nInterstitial, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 4, MPI_COMM_WORLD,
+				MPI_STATUS_IGNORE);
+
+		// Receive previousFlux
+		MPI_Recv(&previousFlux, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 4, MPI_COMM_WORLD,
+				MPI_STATUS_IGNORE);
 	}
 
-	previousFlux = newFlux;
+	// Now that all the processes have the same value of nInterstitials, compare
+	// it to the threshold to now if we should move the surface
+
+	// The density of tungsten is 62.8 atoms/nm3, thus the threshold is
+	double threshold = 62.8 * hx;
+	if (nInterstitial > threshold) {
+		// Compute the number of grid points to move the surface of
+		int nGridPoints = (int) nInterstitial / threshold;
+		// Remove the number of interstitials we just transformed in new material
+		// from nInterstitial
+		nInterstitial = nInterstitial - threshold * (double) nGridPoints;
+
+		// Compute the new surface position
+		surfacePos -= nGridPoints;
+
+		// Throw an exception if the position is negative
+		if (surfacePos < 0) {
+			throw std::string(
+					"\nxolotlSolver::Monitor: The surface is trying to go outside of the grid!!");
+		}
+
+		// Printing information about the extension of the material
+		if (procId == 0) {
+			std::cout << "Adding " << nGridPoints << " points to the grid at time: "
+					<< time << " s." << std::endl;
+		}
+
+		// Set it in the solver
+		PetscSolver::setSurfacePosition(surfacePos);
+
+		// Get the flux handler to reinitialize it
+		auto fluxHandler = PetscSolver::getFluxHandler();
+
+		// Get the total length of the grid
+		int Mx;
+		ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
+		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+		PETSC_IGNORE);
+		checkPetscError(ierr);
+
+		// Initiliaze the flux with the new surface position
+		fluxHandler->initializeFluxHandler(Mx, hx, surfacePos);
+
+		// Get the bubble bursting handler to reinitialize it
+		auto bubbleBurstingHandler = PetscSolver::getBubbleBurstingHandler();
+
+		// Get the network
+		auto network = PetscSolver::getNetwork();
+
+		// Initiliaze the bubble bursting with the new surface position
+		bubbleBurstingHandler->initialize(network, hx, Mx, surfacePos);
+	}
 
     PetscFunctionReturn(0);
 }
@@ -1208,7 +1284,7 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 
 	// Flags to launch the monitors or not
 	PetscBool flag2DPlot, flag1DPlot, flagSeries, flagPerf, flagRetention,
-			flagStatus, flagMaxClusterConc, flagInterstitial;
+			flagStatus, flagMaxClusterConc;
 
 	// Check the option -plot_perf
 	ierr = PetscOptionsHasName(NULL, "-plot_perf", &flagPerf);
@@ -1236,10 +1312,6 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 
 	// Check the option -max_cluster_conc
 	ierr = PetscOptionsHasName(NULL, "-max_cluster_conc", &flagMaxClusterConc);
-	checkPetscError(ierr);
-
-	// Check the option -interstitial_diff
-	ierr = PetscOptionsHasName(NULL, "-interstitial_diff", &flagInterstitial);
 	checkPetscError(ierr);
 
 	// Set the monitor to save 1D plot of one concentration
@@ -1416,18 +1488,6 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 //		outputFile.close();
 	}
 
-	// Set only the monitor to compute the fluence in the case the retention
-	// option is not used but the fluence one is
-	// Get the flux handler that will be used to compute fluxes.
-	auto fluxHandler = PetscSolver::getFluxHandler();
-	// Get the fluence option
-	bool heFluenceOption = fluxHandler->getUsingMaxHeFluence();
-	if (!flagRetention && heFluenceOption) {
-		// computeHeliumFluence will be called at each timestep
-		ierr = TSMonitorSet(ts, computeHeliumFluence, NULL, NULL);
-		checkPetscError(ierr);
-	}
-
 	// Set the monitor to save the status of the simulation in hdf5 file
 	if (flagStatus) {
 		// Find the stride to know how often the HDF5 file has to be written
@@ -1493,23 +1553,14 @@ PetscErrorCode setupPetscMonitor(TS ts) {
 	}
 
 	// Set the monitor on the outgoing flux of interstitials at the surface
-	if (flagInterstitial) {
-		// monitorInterstitial will be called at each timestep
-		ierr = TSMonitorSet(ts, monitorInterstitial, NULL, NULL);
-		checkPetscError(ierr);
-
-//		// Uncomment to clear the file where the interstitial flux will be written
-//		std::ofstream outputFile;
-//		outputFile.open("interstitialOut.txt");
-//		outputFile.close();
-	}
+	// monitorInterstitial will be called at each timestep
+	ierr = TSMonitorSet(ts, monitorInterstitial, NULL, NULL);
+	checkPetscError(ierr);
 
 	// Set the monitor to simply change the previous time to the new time
-	if (flagRetention || heFluenceOption || flagInterstitial) {
-		// monitorTime will be called at each timestep
-		ierr = TSMonitorSet(ts, monitorTime, NULL, NULL);
-		checkPetscError(ierr);
-	}
+	// monitorTime will be called at each timestep
+	ierr = TSMonitorSet(ts, monitorTime, NULL, NULL);
+	checkPetscError(ierr);
 
 	PetscFunctionReturn(0);
 }

@@ -43,12 +43,14 @@ BOOST_AUTO_TEST_CASE(checkBubbleBursting) {
 	// Suppose we have a grid with 3 grip points and distance of 0.5 nm between grid points
 	double hx = 0.5;
 	int nGrid = 3;
+	// And the surface is on the left side
+	int surfacePos = 0;
 
 	// Create the bubble bursting handler
 	BubbleBurstingHandler bubbleBurstingHandler;
 
 	// Initialize it
-	bubbleBurstingHandler.initialize(network, hx, nGrid);
+	bubbleBurstingHandler.initialize(network, hx, nGrid, surfacePos);
 
 	// The arrays of concentration
 	double concentration[3*size];
@@ -68,8 +70,8 @@ BOOST_AUTO_TEST_CASE(checkBubbleBursting) {
 	double *concOffset = conc + size;
 	double *updatedConcOffset = updatedConc + size;
 
-	// Compute the advection at this grid point
-	bubbleBurstingHandler.computeBursting(network, 1,
+	// Compute the bubble bursting at this grid point
+	bubbleBurstingHandler.computeBursting(network, 1, surfacePos,
 			concOffset, updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
@@ -90,7 +92,7 @@ BOOST_AUTO_TEST_CASE(checkBubbleBursting) {
 
 	// Compute the partial derivatives for the advection a the grid point 1
 	int nBursting = bubbleBurstingHandler.computePartialsForBursting(network, valPointer,
-			rowPointer, colPointer, 1, 0);
+			rowPointer, colPointer, 1, 0, surfacePos);
 
 	// Check the values for the indices
 	BOOST_REQUIRE_EQUAL(row[0], 13895);

@@ -38,6 +38,7 @@ public:
 	 * @param network The network
 	 * @param hx The space parameter, here the grid step size
 	 * @param xi The index of the position on the grid
+	 * @param surfacePos The index of the position on the surface
 	 * @param concOffset The pointer to the array of concentration at the grid
 	 * point where the advection is computed
 	 * @param rightConcOffset The pointer to the array of concentration at the grid
@@ -46,7 +47,7 @@ public:
 	 * point where the advection is computed used to find the next solution
 	 */
 	virtual void computeAdvection(std::shared_ptr<PSIClusterReactionNetwork> network, double hx,
-			int xi, double *concOffset, double *rightConcOffset,
+			int xi, int surfacePos, double *concOffset, double *rightConcOffset,
 			double *updatedConcOffset) = 0;
 
 	/**
@@ -64,10 +65,11 @@ public:
 	 * for the Jacobian
 	 * @param xi The index of the grip point
 	 * @param xs The index of the first grid point on the locally owned grid
+	 * @param surfacePos The index of the position on the surface
 	 */
 	virtual void computePartialsForAdvection(std::shared_ptr<PSIClusterReactionNetwork> network,
 			double hx, double *val, int *row, int *col, int xi,
-			int xs) = 0;
+			int xs, int surfacePos) = 0;
 
 	/**
 	 * Get the total number of advecting clusters in the network.

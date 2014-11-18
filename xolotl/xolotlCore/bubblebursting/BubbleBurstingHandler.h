@@ -46,9 +46,10 @@ public:
 	 * @param network The network
 	 * @param hx The grid step size
 	 * @param nGrid The number of points on the grid
+	 * @param surfacePos The index of the position on the surface
 	 */
 	void initialize(std::shared_ptr<PSIClusterReactionNetwork> network, double hx,
-			int nGrid);
+			int nGrid, int surfacePos);
 
 	/**
 	 * Compute the flux due to the bubble bursting for all the cluster,
@@ -61,13 +62,14 @@ public:
 	 *
 	 * @param network The network
 	 * @param xi The index of the position on the grid
+	 * @param surfacePos The index of the position on the surface
 	 * @param concOffset The pointer to the array of concentration at the grid
 	 * point where the advection is computed
 	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
 	 * point where the advection is computed used to find the next solution
 	 */
 	void computeBursting(std::shared_ptr<PSIClusterReactionNetwork> network,
-			int xi, double *concOffset, double *updatedConcOffset);
+			int xi, int surfacePos, double *concOffset, double *updatedConcOffset);
 
 	/**
 	 * Compute the partials due to the bubble bursting for all the clusters given
@@ -87,11 +89,12 @@ public:
 	 * for the Jacobian
 	 * @param xi The index of the grip point
 	 * @param xs The index of the first grid point on the locally owned grid
+	 * @param surfacePos The index of the position on the surface
 	 *
 	 * @return The number of bubbles that can burst at this grid point
 	 */
 	int computePartialsForBursting(std::shared_ptr<PSIClusterReactionNetwork> network,
-			double *val, int *row, int *col, int xi, int xs);
+			double *val, int *row, int *col, int xi, int xs, int surfacePos);
 
 };
 //end class BubbleBurstingHandler

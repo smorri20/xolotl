@@ -20,14 +20,14 @@ FluxHandler::FluxHandler() :
 
 }
 
-void FluxHandler::initializeFluxHandler(int numGridpoints, double step) {
+void FluxHandler::initializeFluxHandler(int numGridpoints, double step, int surfacePos) {
 
 	// Set the step size
 	stepSize = step;
 
 	normFactor = 0.0;
-	for (int i = 1; i < numGridpoints - 1; i++) {
-		double x = (double) i * stepSize;
+	for (int i = surfacePos + 1; i < numGridpoints - 1; i++) {
+		double x = (double) (i - surfacePos) * stepSize;
 
 		normFactor += FitFunction(x) * stepSize;
 	}
@@ -35,12 +35,14 @@ void FluxHandler::initializeFluxHandler(int numGridpoints, double step) {
 	// Factor the incident flux will be multiplied by
 	double heFluxNormalized = heFlux / normFactor;
 
-	// The first value should always be 0.0 because of boundary conditions
-	incidentFluxVec.push_back(0.0);
+	// The first values should always be 0.0 because it is on the left side of the surface
+	for (int i = 0; i <= surfacePos; i++) {
+		incidentFluxVec.push_back(0.0);
+	}
 
-	// Starts a i = 1 because the first value was already put in the vector
-	for (int i = 1; i < numGridpoints - 1; i++) {
-		auto x = i * stepSize;
+	// End before the last grid point because of the boundary conditions
+	for (int i = surfacePos + 1; i < numGridpoints - 1; i++) {
+		double x = (double) (i - surfacePos) * stepSize;
 
 		auto incidentFlux = heFluxNormalized * FitFunction(x);
 
@@ -53,7 +55,7 @@ void FluxHandler::initializeFluxHandler(int numGridpoints, double step) {
 	return;
 }
 
-void FluxHandler::recomputeFluxHandler() {
+void FluxHandler::recomputeFluxHandler(int surfacePos) {
 	// Factor the incident flux will be multiplied by
 	double heFluxNormalized = heFlux / normFactor;
 
@@ -63,17 +65,22 @@ void FluxHandler::recomputeFluxHandler() {
 	// Clear the flux vector
 	incidentFluxVec.clear();
 
-	// The first value should always be 0.0 because of boundary conditions
-	incidentFluxVec.push_back(0.0);
+	// The first values should always be 0.0 because it is on the left side of the surface
+	for (int i = 0; i <= surfacePos; i++) {
+		incidentFluxVec.push_back(0.0);
+	}
 
 	// Starts a i = 1 because the first value was already put in the vector
-	for (int i = 1; i < numGridPoints; i++) {
-		auto x = i * stepSize;
+	for (int i = surfacePos + 1; i < numGridPoints - 1; i++) {
+		double x = (double) (i - surfacePos) * stepSize;
 
 		auto incidentFlux = heFluxNormalized * FitFunction(x);
 
 		incidentFluxVec.push_back(incidentFlux);
 	}
+
+	// The last value should always be 0.0 because of boundary conditions
+	incidentFluxVec.push_back(0.0);
 
 	return;
 }
@@ -125,12 +132,12 @@ double FluxHandler::getAmplitude(double currentTime) const {
 }
 
 double FluxHandler::getIncidentFlux(std::vector<int> compositionVec,
-		std::vector<double> position, double currentTime) {
+		std::vector<double> position, double currentTime, int surfacePos) {
 
 	// Recompute the flux vector if a time profile is used
 	if (useTimeProfile) {
 		heFlux = getAmplitude(currentTime);
-		recomputeFluxHandler();
+		recomputeFluxHandler(surfacePos);
 	}
 
 	// Get the index number from the position
@@ -140,12 +147,12 @@ double FluxHandler::getIncidentFlux(std::vector<int> compositionVec,
 	return incidentFluxVec[i];
 }
 
-std::vector<double> FluxHandler::getIncidentFluxVec(double currentTime) {
+std::vector<double> FluxHandler::getIncidentFluxVec(double currentTime, int surfacePos) {
 
 	// Recompute the flux vector if a time profile is used
 	if (useTimeProfile) {
 		heFlux = getAmplitude(currentTime);
-		recomputeFluxHandler();
+		recomputeFluxHandler(surfacePos);
 	}
 
 	return incidentFluxVec;

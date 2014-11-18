@@ -20,7 +20,7 @@ public:
 	 */
 	PetscOptionHandler() :
 		OptionHandler("petscArgs",
-				"petscArgs                   "
+				"petscArgs                           "
 				"All the arguments that will be given to PETSc") {}
 
 	/**

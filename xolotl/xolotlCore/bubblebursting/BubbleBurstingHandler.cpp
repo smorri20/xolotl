@@ -4,7 +4,7 @@
 namespace xolotlCore {
 
 void BubbleBurstingHandler::initialize(std::shared_ptr<PSIClusterReactionNetwork> network,
-		double hx, int nGrid) {
+		double hx, int nGrid, int surfacePos) {
 	// Add the needed reaction connectivity
 	// Each V cluster connects to every HeV clusters with the same number of V
 
@@ -33,10 +33,10 @@ void BubbleBurstingHandler::initialize(std::shared_ptr<PSIClusterReactionNetwork
 
 	// Clear the vector of HeV bubble bursting at each grid point
 	indexVector.clear();
-	// Loop on the grid points
-	for (int i = 0; i < nGrid; i++) {
+	// Loop on the grid points located to the right of the surface
+	for (int i = surfacePos; i < nGrid; i++) {
 		// Compute the distance between the surface and this grid point
-		double surfaceDistance = (double) i * hx;
+		double surfaceDistance = (double) (i - surfacePos) * hx;
 		// Create the list (vector) of indices at this grid point
 		std::vector<int> indices;
 
@@ -46,7 +46,7 @@ void BubbleBurstingHandler::initialize(std::shared_ptr<PSIClusterReactionNetwork
 			auto bubble = (PSICluster *) bubbles[j];
 			double radius = bubble->getReactionRadius();
 
-			// If the radius is bigger than tha distance to the surface there is bursting
+			// If the radius is bigger than the distance to the surface there is bursting
 			if (radius > surfaceDistance) {
 				// Add the bubble index to the list of indices
 				indices.push_back(j);
@@ -61,12 +61,12 @@ void BubbleBurstingHandler::initialize(std::shared_ptr<PSIClusterReactionNetwork
 }
 
 void BubbleBurstingHandler::computeBursting(std::shared_ptr<PSIClusterReactionNetwork> network,
-		int xi, double *concOffset, double *updatedConcOffset) {
+		int xi, int surfacePos, double *concOffset, double *updatedConcOffset) {
 	// Get all the HeV bubbles
 	auto bubbles = network->getAll(heVType);
 
 	// Get the pointer to list of indices at this grid point
-	std::vector<int> * indices = &indexVector[xi];
+	std::vector<int> * indices = &indexVector[xi - surfacePos];
 	// Loop on the list
 	for (int i = 0; i < indices->size(); i++) {
 		// Get the stored bubble and its ID
@@ -94,14 +94,14 @@ void BubbleBurstingHandler::computeBursting(std::shared_ptr<PSIClusterReactionNe
 }
 
 int BubbleBurstingHandler::computePartialsForBursting(std::shared_ptr<PSIClusterReactionNetwork> network,
-		double *val, int *row, int *col, int xi, int xs) {
+		double *val, int *row, int *col, int xi, int xs, int surfacePos) {
 	// Get all the HeV bubbles
 	auto bubbles = network->getAll(heVType);
 	// Get the size of the network
 	int size = network->getAll()->size();
 
 	// Get the pointer to list of indices at this grid point
-	std::vector<int> * indices = &indexVector[xi];
+	std::vector<int> * indices = &indexVector[xi - surfacePos];
 	// Loop on the list
 	for (int i = 0; i < indices->size(); i++) {
 		// Get the stored bubble and its ID

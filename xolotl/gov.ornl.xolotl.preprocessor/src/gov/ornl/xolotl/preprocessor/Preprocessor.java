@@ -230,6 +230,8 @@ public class Preprocessor {
 			xolotlParams.setProperty("fluxFile", args.getTempFile());
 		if (args.isMaxHeFluence())
 			xolotlParams.setProperty("maxHeFluence", args.getMaxHeFluence());
+		if (args.isVoidPortion())
+			xolotlParams.setProperty("voidPortion", args.getVoidPortion());
 
 	}
 

@@ -17,7 +17,7 @@ public:
 	 */
     FluxOptionHandler() :
     	OptionHandler("heFlux",
-    			"heFlux <value>              "
+    			"heFlux <value>                      "
     			"This option allows the user to change the Helium flux "
     			"by the factor specified (in nm).") {}
 

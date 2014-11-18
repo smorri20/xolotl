@@ -17,12 +17,12 @@ public:
 	 */
     MaterialOptionHandler() :
     	OptionHandler("material",
-    			"material <material>         "
+    			"material <material>                 "
     			"This option allows the user to change the profile of "
     			"the helium flux corresponding to the material.  \n"
-    			"                              The material options are as follows: "
+    			"                                      The material options are as follows: "
     			"{W100, W110, W111}, where W is for \n"
-    			"                              tungsten and the numbers correspond to the surface orientation.")
+    			"                                      tungsten and the numbers correspond to the surface orientation.")
 	{}
 
 	/**
@@ -38,9 +38,7 @@ public:
      * @param arg The name of the material.
      */
     bool handler(IOptions *opt, std::string arg) {
-    	// Set the corresponding flag to true
-    	opt->setMaterialFlag(true);
-
+    	// Set the material name
     	opt->setMaterial(arg);
     	return true;
     }

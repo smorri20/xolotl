@@ -351,6 +351,32 @@ public interface Arguments {
 	boolean isCheckpoint();
 
 	/**
+	 * This Option annotation corresponds to the optional '--voidPortion' option
+	 * and provides a brief description of the option.
+	 * 
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(description = "The portion of the grid (in %) that won't be material at "
+			+ "the start of the simulation. It is room for the surface to grow.")
+	
+	/**
+	 * This operation produces the optional command line option '--voidPortion' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The portion of the grid that is NOT the material 
+	 */
+	String getVoidPortion();
+
+	/**
+	 * This operation makes the command line option '--voidPortion' optional.
+	 * 
+	 * @return Returns true if the option has been specified and false if it has
+	 *         not
+	 */
+	boolean isVoidPortion();
+
+	/**
 	 * This produces the command line arguments '--help' or '-h' either of which
 	 * can be used to print usage help
 	 * 

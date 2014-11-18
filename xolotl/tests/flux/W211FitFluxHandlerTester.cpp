@@ -18,10 +18,12 @@ BOOST_AUTO_TEST_CASE(checkgetIncidentFlux) {
 	int nGridpts = 5;
 	// Specify the step size between grid points
 	double step = 1.25;
+	// Specify the surface position
+	int surfacePos = 0;
 
     auto testFitFlux = make_shared<W211FitFluxHandler>();
     // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(nGridpts, step);
+    testFitFlux->initializeFluxHandler(nGridpts, step, surfacePos);
 
 	// Create a composition vector
 	vector<int> compVec = {1, 0, 0};
@@ -31,7 +33,7 @@ BOOST_AUTO_TEST_CASE(checkgetIncidentFlux) {
 	// Create a vector representing the position of the cluster
 	vector<double> x = {1.25, 0.0, 0.0};
 
-	auto testFlux = testFitFlux->getIncidentFlux(compVec, x, 1);
+	auto testFlux = testFitFlux->getIncidentFlux(compVec, x, 1, surfacePos);
 
 	BOOST_TEST_MESSAGE( "\nW211FitFluxHandlerTester Message: \n"
 						<< "At time = " << currTime
