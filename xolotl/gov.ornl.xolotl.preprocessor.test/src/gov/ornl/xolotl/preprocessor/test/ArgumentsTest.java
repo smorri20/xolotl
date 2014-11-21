@@ -51,9 +51,6 @@ public class ArgumentsTest {
 
 			// Check if there is an fluxFile argument
 			assertEquals(false, args.isFluxFile());
-			
-			// Check if there is an heFluence argument
-			assertEquals(false, args.isMaxHeFluence());
 
 			// Check that the default perfHandler is std
 			assertEquals("std", args.getPerfHandler());
@@ -121,9 +118,6 @@ public class ArgumentsTest {
 
 			// Check if there is an heFlux argument
 			assertEquals(false, args.isHeFlux());
-			
-			// Check if there is an heFluence argument
-			assertEquals(false, args.isMaxHeFluence());
 
 			// Check that the perfHandler is dummy
 			assertEquals("dummy", args.getPerfHandler());
@@ -136,6 +130,12 @@ public class ArgumentsTest {
 
 			// Check the name of the file for the checkpoint
 			assertEquals("xolotlStop.h5", args.getCheckpoint());
+
+			// Check if there is an initial vacancy concentration argument
+			assertEquals(true, args.isInitialV());
+
+			// Check its value
+			assertEquals("0.05", args.getInitialV());
 
 			// Check if there is an void portion argument
 			assertEquals(true, args.isVoidPortion());
