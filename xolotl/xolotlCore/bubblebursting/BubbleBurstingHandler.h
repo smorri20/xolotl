@@ -31,7 +31,7 @@ public:
 	/**
 	 * The constructor
 	 */
-	BubbleBurstingHandler() : kBursting(1.0e14){}
+	BubbleBurstingHandler() : kBursting(0.0){}
 
 	/**
 	 * The destructor

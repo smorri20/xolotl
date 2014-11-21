@@ -31,6 +31,20 @@ void BubbleBurstingHandler::initialize(std::shared_ptr<PSIClusterReactionNetwork
 		}
 	}
 
+	// Initialize the rate by finding the biggest rate in all the HeV bubbles
+	kBursting = 0.0;
+	// Loop on the bubbles
+	for (int j = 0; j < bubbles.size(); j++) {
+		// Get the bubble and its rate
+		auto bubble =  (PSICluster *) bubbles[j];
+		double rate = bubble->getBiggestRate();
+
+		// Compare it to the bursting rate
+		if (kBursting < rate) kBursting = rate;
+	}
+	// Multiply it by 100.0
+	kBursting = 100.0 * kBursting;
+
 	// Clear the vector of HeV bubble bursting at each grid point
 	indexVector.clear();
 	// Loop on the grid points located to the right of the surface

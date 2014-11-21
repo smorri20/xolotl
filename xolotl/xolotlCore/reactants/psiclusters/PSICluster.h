@@ -137,6 +137,11 @@ protected:
 	double reactionRadius;
 
 	/**
+	 * The biggest rate for this cluster
+	 */
+	double biggestRate;
+
+	/**
 	 * A vector of ClusterPairs that represents reacting pairs of clusters
 	 * that produce this cluster. This vector should be populated early in the
 	 * cluster's lifecycle by subclasses. In the standard Xolotl clusters,
@@ -693,9 +698,17 @@ public:
 	 * This operation returns the reaction radius for the
 	 * particular cluster.
 	 *
-	 * @return
+	 * @return The reaction radius
 	 */
-	virtual double getReactionRadius() const;
+	double getReactionRadius() const;
+
+	/**
+	 * This operation returns the biggest rate for the
+	 * particular cluster.
+	 *
+	 * @return The biggest rate
+	 */
+	double getBiggestRate() const;
 
 	/**
 	 * This operation returns a list that represents the connectivity

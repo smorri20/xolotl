@@ -39,6 +39,8 @@ BOOST_AUTO_TEST_CASE(checkBubbleBursting) {
 	auto network = loader.load();
 	// Get its size
 	const int size = network->getAll()->size();
+	// Set the temperature to 1000.0 K
+	network->setTemperature(1000.0);
 
 	// Suppose we have a grid with 3 grip points and distance of 0.5 nm between grid points
 	double hx = 0.5;
@@ -76,10 +78,10 @@ BOOST_AUTO_TEST_CASE(checkBubbleBursting) {
 
 	// Check the new values of updatedConcOffset
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[2900], 0.0, 0.01); // Does not burst (He47V36)
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[3146], -7.3857e21, 0.01); // (He148V37)
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[3454], -7.9246e21, 0.01); // (He154V39)
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[4302], 1.7431e24, 0.01); // (V45)
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[4481], -9.8585e21, 0.01); // (He179V45)
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[3146], -5.1929e21, 0.01); // (He148V37)
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[3454], -5.5718e21, 0.01); // (He154V39)
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[4302], 1.2256e24, 0.01); // (V45)
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[4481], -6.9316e21, 0.01); // (He179V45)
 
 	// Initialize the rows, columns, and values to set in the Jacobian
 	int nBubble = network->getAll(heVType).size();
@@ -104,10 +106,10 @@ BOOST_AUTO_TEST_CASE(checkBubbleBursting) {
 	BOOST_REQUIRE_EQUAL(col[1], 13896);
 
 	// Check values
-	BOOST_REQUIRE_CLOSE(val[0], -1.0e14, 0.01);
-	BOOST_REQUIRE_CLOSE(val[1], 1.0e14, 0.01);
-	BOOST_REQUIRE_CLOSE(val[2], -1.0e14, 0.01);
-	BOOST_REQUIRE_CLOSE(val[3], 1.0e14, 0.01);
+	BOOST_REQUIRE_CLOSE(val[0], -7.0311e13, 0.01);
+	BOOST_REQUIRE_CLOSE(val[1], 7.0311e13, 0.01);
+	BOOST_REQUIRE_CLOSE(val[2], -7.0311e13, 0.01);
+	BOOST_REQUIRE_CLOSE(val[3], 7.0311e13, 0.01);
 
 	// Finalize MPI
 	MPI_Finalize();
