@@ -28,7 +28,7 @@ public:
 	 *
 	 * @param network The network
 	 * @param ofill The pointer to the array that will contain the value 1 at the indices
-	 * of the diffusing clusters, 0 if they are not diffusing
+	 * of the diffusing clusters
 	 */
 	virtual void initializeOFill(std::shared_ptr<PSIClusterReactionNetwork> network,
 			int *ofill) = 0;

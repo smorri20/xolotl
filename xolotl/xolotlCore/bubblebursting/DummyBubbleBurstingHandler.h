@@ -1,64 +1,53 @@
-#ifndef BUBBLEBURSTINGHANDLER_H
-#define BUBBLEBURSTINGHANDLER_H
+#ifndef DUMMYBUBBLEBURSTINGHANDLER_H
+#define DUMMYBUBBLEBURSTINGHANDLER_H
 
 // Includes
-#include <PSICluster.h>
-#include <PSIClusterReactionNetwork.h>
-#include <IBubbleBurstingHandler.h>
-#include <memory>
+#include <BubbleBurstingHandler.h>
 
 namespace xolotlCore {
 
 /**
  * This class realizes the IBubbleBursting interface, responsible for all the
- * physical parts for the bursting of HeV bubbles.
+ * physical parts for the bursting of HeV bubbles. Here it is a dummy class,
+ * it won't do anything.
  */
-class BubbleBurstingHandler: public IBubbleBurstingHandler {
-protected:
-
-	//! The bursting rate
-	double kBursting;
-
-	/**
-	 * The vector containing the indices of the clusters taking part in the
-	 * bursting process for each grid point
-	 */
-	std::vector<std::vector<int> > indexVector;
-
+class DummyBubbleBurstingHandler: public BubbleBurstingHandler {
 
 public:
 
 	/**
 	 * The constructor
 	 */
-	BubbleBurstingHandler() : kBursting(0.0){}
+	DummyBubbleBurstingHandler() : BubbleBurstingHandler() {}
 
 	/**
 	 * The destructor
 	 */
-	~BubbleBurstingHandler() {}
+	~DummyBubbleBurstingHandler() {}
 
 	/**
-	 * The initialize method has to add connectivity between the V clusters and HeV clusters
-	 * of same number of V. It must also initialize the rates of the reactions and define
-	 * which bubbles can burst at each grid point.
+	 * The initialize method only clears the indexVector to be sure that no bubble
+	 * is bursting.
 	 *
 	 * @param network The network
 	 * @param hx The grid step size
 	 * @param nGrid The number of points on the grid
 	 * @param surfacePos The index of the position on the surface
 	 */
-	virtual void initialize(std::shared_ptr<PSIClusterReactionNetwork> network, double hx,
-			int nGrid, int surfacePos);
+	void initialize(std::shared_ptr<PSIClusterReactionNetwork> network, double hx,
+			int nGrid, int surfacePos) {
+		// Clear the vector of HeV bubble bursting at each grid point
+		indexVector.clear();
+
+		// And don't do anything else
+		return;
+	}
 
 	/**
 	 * Compute the flux due to the bubble bursting for all the cluster,
 	 * given the position index xi.
 	 * This method is called by the RHSFunction from the PetscSolver.
-	 *
-	 * A --> B
-	 *
-	 * F(B) = -F(A) = kBursting * C_A
+	 * Here it won't do anything to the vector of concentration because it is a dummy class.
 	 *
 	 * @param network The network
 	 * @param xi The index of the position on the grid
@@ -68,17 +57,16 @@ public:
 	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
 	 * point where the advection is computed used to find the next solution
 	 */
-	virtual void computeBursting(std::shared_ptr<PSIClusterReactionNetwork> network,
-			int xi, int surfacePos, double *concOffset, double *updatedConcOffset);
+	void computeBursting(std::shared_ptr<PSIClusterReactionNetwork> network,
+			int xi, int surfacePos, double *concOffset, double *updatedConcOffset) {
+		return;
+	}
 
 	/**
 	 * Compute the partials due to the bubble bursting for all the clusters given
 	 * the position index xi. Returns the number of bubbles that can possibly burst.
 	 * This method is called by the RHSJacobian from the PetscSolver.
-	 *
-	 * A --> B
-	 *
-	 * dF(B)/dC_A = -dF(A)/dC_A = kBursting
+	 * Here it won't do anything to the vector of concentration because it is a dummy class.
 	 *
 	 * @param network The network
 	 * @param val The pointer to the array that will contain the values of partials
@@ -93,11 +81,13 @@ public:
 	 *
 	 * @return The number of bubbles that can burst at this grid point
 	 */
-	virtual int computePartialsForBursting(std::shared_ptr<PSIClusterReactionNetwork> network,
-			double *val, int *row, int *col, int xi, int xs, int surfacePos);
+	int computePartialsForBursting(std::shared_ptr<PSIClusterReactionNetwork> network,
+			double *val, int *row, int *col, int xi, int xs, int surfacePos) {
+		return 0;
+	}
 
 };
-//end class BubbleBurstingHandler
+//end class DummyBubbleBurstingHandler
 
 } /* namespace xolotlCore */
 #endif
