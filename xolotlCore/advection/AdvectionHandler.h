@@ -93,6 +93,20 @@ public:
 	 */
 	int getNumberOfAdvecting() {return indexVector.size();}
 
+	/**
+	 * Get the index of an advecting cluster in indexVector.
+	 *
+	 * @return The index of an advecting cluster
+	 */
+	int getAdvectingIndex(int i) {return indexVector[i];}
+
+	/**
+	 * Get the value of a sink strength in sinkStrengthVector.
+	 *
+	 * @return The value of a sink strength
+	 */
+	double getSinkStrength(int i) {return sinkStrengthVector[i];}
+
 };
 //end class AdvectionHandler
 

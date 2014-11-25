@@ -92,6 +92,13 @@ public:
 	 */
 	int getNumberOfDiffusing() {return indexVector.size();}
 
+	/**
+	 * Get the index of a diffusing cluster in indexVector.
+	 *
+	 * @return The index of a diffusing cluster
+	 */
+	int getDiffusingIndex(int i) {return indexVector[i];}
+
 };
 //end class DiffusionHandler
 
