@@ -530,6 +530,10 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 		// Get the total number of advecting clusters
 		const int nAdvec = advectionHandler->getNumberOfAdvecting();
 
+		// Arguments for MatSetValuesStencil called below
+		MatStencil row, cols[3];
+		PetscScalar vals[3];
+
 		/*
 		 Loop over grid points computing Jacobian terms for diffusion and advection
 		 at each grid point
@@ -546,50 +550,60 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 			concOffset = concs + size * xi;
 			network->updateConcentrationsFromArray(concOffset);
 
-			// Initialize the rows, columns, and values to set in the Jacobian
-			PetscInt row[nDiff], col[3*nDiff];
-			PetscReal val[3*nDiff];
-			// Get the pointer on them for the compute diffusion method
-			PetscInt *rowPointer = &row[0];
-			PetscInt *colPointer = &col[0];
-			PetscReal *valPointer = &val[0];
-
-			/* -------------------------------------------------------------
-			 ---- Compute diffusion over the locally owned part of the grid
-			 */
-			diffusionHandler->computePartialsForDiffusion(network, sx, valPointer,
-					rowPointer, colPointer, xi, xs);
-
 			// Loop on the number of diffusion cluster to set the values in the Jacobian
-			for(int i = 0; i < nDiff; i++) {
-				rowPointer = &row[i];
-				colPointer = &col[3*i];
-				valPointer = &val[3*i];
+			for (int i = 0; i < nDiff; i++) {
+				// Get the diffusing cluster
+				auto cluster = (PSICluster *) allReactants->at(diffusionHandler->getDiffusingIndex(i));
+				// Get the index of the cluster
+				int index = cluster->getId() - 1;
+				double diffCoeff = cluster->getDiffusionCoefficient();
 
-				ierr = MatSetValuesLocal(J, 1, rowPointer, 3, colPointer, valPointer, ADD_VALUES);
+				// Set grid coordinate and component number for the row
+				row.i = xi;
+				row.c = index;
+
+				// Set grid coordinates and component numbers for the columns
+				cols[0].i = xi - 1;
+				cols[0].c = index;
+				cols[1].i = xi;
+				cols[1].c = index;
+				cols[2].i = xi + 1;
+				cols[2].c = index;
+
+				// Compute the partial derivatives for diffusion of this cluster
+				vals[0] = diffCoeff * sx;
+				vals[1] = -2.0 * vals[0];
+				vals[2] = vals[0];
+
+				ierr = MatSetValuesStencil(J, 1, &row, 3, cols, vals, ADD_VALUES);
 				checkPetscError(ierr);
 			}
 
-			// Get the pointer on them for the compute advection method
-			// This is safe to use the same arrays because there cannot be more advecting
-			// clusters than diffusing ones
-			rowPointer = &row[0];
-			colPointer = &col[0];
-			valPointer = &val[0];
-
-			/* -------------------------------------------------------------
-			 ---- Compute advection over the locally owned part of the grid
-			 */
-			advectionHandler->computePartialsForAdvection(network, hx, valPointer,
-					rowPointer, colPointer, xi, xs);
-
 			// Loop on the number of advecting cluster to set the values in the Jacobian
-			for(int i = 0; i < nAdvec; i++) {
-				rowPointer = &row[i];
-				colPointer = &col[2*i];
-				valPointer = &val[2*i];
+			for (int i = 0; i < nAdvec; i++) {
+				// Get the diffusing cluster
+				auto cluster = (PSICluster *) allReactants->at(advectionHandler->getAdvectingIndex(i));
+				// Get the index of the cluster
+				int index = cluster->getId() - 1;
+				double diffCoeff = cluster->getDiffusionCoefficient();
+				double sinkStrength = advectionHandler->getSinkStrength(i);
 
-				ierr = MatSetValuesLocal(J, 1, rowPointer, 2, colPointer, valPointer, ADD_VALUES);
+				// Set grid coordinate and component number for the row
+				row.i = xi;
+				row.c = index;
+
+				// Set grid coordinates and component numbers for the columns
+				cols[0].i = xi - 1;
+				cols[0].c = index;
+				cols[1].i = xi;
+				cols[1].c = index;
+
+				// Compute the partial derivatives for advection of this cluster
+				vals[0] = (3.0 * sinkStrength * diffCoeff) / (xolotlCore::kBoltzmann * cluster->getTemperature() * hx * pow(xi * hx, 4));
+				vals[1] = -vals[0];
+
+				// Update the matrix
+				ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals, ADD_VALUES);
 				checkPetscError(ierr);
 			}
 
@@ -616,9 +630,9 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	/* ----- Compute the partial derivatives for the reaction term at each
 	 * grid point ----- */
 
-	// Create a new row array of size n
-	PetscInt localPDColIds[size];
-	PetscInt rowId = 0;
+	// Arguments for MatSetValuesStencil called below
+	MatStencil rowId;
+	MatStencil colIds[size];
 	int pdColIdsVectorSize = 0;
 
 	// Loop over the grid points
@@ -638,19 +652,22 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 			auto reactant = allReactants->at(i);
 			// Get the reactant index
 			reactantIndex = reactant->getId() - 1;
-			// Get the column id
-			rowId = (xi - xs + 1) * size + reactantIndex;
+
+			// Set grid coordinate and component number for the row
+			rowId.i = xi;
+			rowId.c = reactantIndex;
+
 			// Get the partial derivatives
 			reactant->getPartialDerivatives(clusterPartials);
 			// Get the list of column ids from the map
 			auto pdColIdsVector = dFillMap.at(reactantIndex);
-			//Number of partial derivatives
+			// Number of partial derivatives
 			pdColIdsVectorSize = pdColIdsVector.size();
 			// Loop over the list of column ids
 			for (int j = 0; j < pdColIdsVectorSize; j++) {
-				// Calculate the appropriate index to match the dfill array
-				// configuration
-				localPDColIds[j] = (xi - xs + 1) * size + pdColIdsVector[j];
+				// Set grid coordinate and component number for a column in the list
+				colIds[j].i = xi;
+				colIds[j].c = pdColIdsVector[j];
 				// Get the partial derivative from the array of all of the partials
 				reactingPartialsForCluster[j] =
 						clusterPartials[pdColIdsVector[j]];
@@ -659,8 +676,8 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 				clusterPartials[pdColIdsVector[j]] = 0.0;
 			}
 			// Update the matrix
-			ierr = MatSetValuesLocal(J, 1, &rowId, pdColIdsVectorSize,
-					localPDColIds, reactingPartialsForCluster.data(),
+			ierr = MatSetValuesStencil(J, 1, &rowId, pdColIdsVectorSize,
+					colIds, reactingPartialsForCluster.data(),
 					ADD_VALUES);
 			checkPetscError(ierr);
 		}

@@ -62,7 +62,7 @@ public:
 	 * for the Jacobian
 	 * @param col The pointer to the array that will contain the indices of the columns
 	 * for the Jacobian
-	 * @param xi The index of the grip point
+	 * @param xi The index of the grid point
 	 * @param xs The index of the first grid point on the locally owned grid
 	 */
 	virtual void computePartialsForAdvection(std::shared_ptr<PSIClusterReactionNetwork> network,
@@ -75,6 +75,20 @@ public:
 	 * @return The number of advecting clusters
 	 */
 	virtual int getNumberOfAdvecting() = 0;
+
+	/**
+	 * Get the index of an advecting cluster in indexVector.
+	 *
+	 * @return The index of an advecting cluster
+	 */
+	virtual int getAdvectingIndex(int i) = 0;
+
+	/**
+	 * Get the value of a sink strength in sinkStrengthVector.
+	 *
+	 * @return The alue of a sink strength
+	 */
+	virtual double getSinkStrength(int i) = 0;
 
 };
 //end class IAdvectionHandler

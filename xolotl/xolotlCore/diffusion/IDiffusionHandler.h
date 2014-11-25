@@ -80,6 +80,13 @@ public:
 	 */
 	virtual int getNumberOfDiffusing() = 0;
 
+	/**
+	 * Get the index of a diffusing cluster in indexVector.
+	 *
+	 * @return The index of a diffusing cluster
+	 */
+	virtual int getDiffusingIndex(int i) = 0;
+
 };
 //end class IDiffusionHandler
 
