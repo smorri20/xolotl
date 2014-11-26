@@ -44,6 +44,19 @@ public:
 	}
 
 	/**
+	 * This method update the rate for the bubble bursting if the rates changed in the network,
+	 * it should be called when temperature changes for instance.
+	 * Reset the rate to 0.0 just in case for the dummy class
+	 *
+	 * @param network The network
+	 */
+	void updateBurstingRate(std::shared_ptr<PSIClusterReactionNetwork> network) {
+		kBursting = 0.0;
+
+		return;
+	}
+
+	/**
 	 * Compute the flux due to the bubble bursting for all the cluster,
 	 * given the position index xi.
 	 * This method is called by the RHSFunction from the PetscSolver.

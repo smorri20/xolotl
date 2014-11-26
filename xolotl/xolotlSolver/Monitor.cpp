@@ -371,6 +371,8 @@ PetscErrorCode monitorScatter(TS ts, PetscInt timestep, PetscReal time,
 	double *solutionArray, *gridPointSolution, x;
 	Vec localSolution;
 	int xs, xm, xi;
+	// The network
+	auto network = PetscSolver::getNetwork();
 
 	PetscFunctionBeginUser;
 
@@ -421,12 +423,12 @@ PetscErrorCode monitorScatter(TS ts, PetscInt timestep, PetscReal time,
 			gridPointSolution = solutionArray + networkSize * xi;
 			// Update the concentrations in the network to have physics results
 			// (non negative)
-			PetscSolver::getNetwork()->updateConcentrationsFromArray(
+			network->updateConcentrationsFromArray(
 					gridPointSolution);
 			// Get the concentrations from the network
 			double concentrations[networkSize];
 			double * concentration = &concentrations[0];
-			PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
+			network->fillConcentrationsArray(concentration);
 
 			// Create a Point with the concentration[iCluster] as the value
 			// and add it to myPoints
@@ -469,7 +471,7 @@ PetscErrorCode monitorScatter(TS ts, PetscInt timestep, PetscReal time,
 		plot->getDataProvider()->setPoints(myPoints);
 
 		// Get the iCluster cluster to have access to its name
-		auto reactants = PetscSolver::getNetwork()->getAll();
+		auto reactants = network->getAll();
 		auto cluster = (PSICluster *) reactants->at(iCluster);
 
 		// Change the title of the plot and the name of the data
@@ -511,12 +513,12 @@ PetscErrorCode monitorScatter(TS ts, PetscInt timestep, PetscReal time,
 			gridPointSolution = solutionArray + networkSize * xi;
 			// Update the concentrations in the network to have physics results
 			// (non negative)
-			PetscSolver::getNetwork()->updateConcentrationsFromArray(
+			network->updateConcentrationsFromArray(
 					gridPointSolution);
 			// Get the concentrations from the network
 			double concentrations[networkSize];
 			double * concentration = &concentrations[0];
-			PetscSolver::getNetwork()->fillConcentrationsArray(concentration);
+			network->fillConcentrationsArray(concentration);
 
 			// Send the value of the local position to the master process
 			MPI_Send(&x, 1, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
@@ -602,7 +604,7 @@ PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 				// Create a Point with the concentration[iCluster] as the value
 				// and add it to myPoints
 				xolotlViz::Point aPoint;
-				aPoint.value = concentration[networkSize - i - 1];
+				aPoint.value = concentration[i];
 				aPoint.t = time;
 				aPoint.x = x;
 				myPoints[i].push_back(aPoint);
@@ -643,7 +645,7 @@ PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 		auto reactants = PetscSolver::getNetwork()->getAll();
 
 		for (int i = 0; i < loopSize; i++) {
-			auto cluster = (PSICluster *) reactants->at(networkSize - i - 1);
+			auto cluster = (PSICluster *) reactants->at(i);
 			// Get the data provider and give it the points
 			auto thePoints = std::make_shared<std::vector<xolotlViz::Point> >(
 					myPoints[i]);
@@ -700,7 +702,7 @@ PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 
 			for (int i = 0; i < loopSize; i++) {
 				// Send the value of the concentrations to the master process
-				MPI_Send(&concentration[networkSize - i - 1], 1, MPI_DOUBLE, 0, 3,
+				MPI_Send(&concentration[i], 1, MPI_DOUBLE, 0, 3,
 						MPI_COMM_WORLD);
 			}
 		}
@@ -1111,6 +1113,11 @@ PetscErrorCode monitorInterstitial(TS ts, PetscInt timestep, PetscReal time,
 	int xs, xm, xi;
 
 	PetscFunctionBeginUser;
+
+	// Don't do anything if the diffusion is off, that is if the
+	// number of diffusion cluster is 0
+	if (PetscSolver::getDiffusionHandler()->getNumberOfDiffusing() == 0)
+		PetscFunctionReturn(0);
 
 	// Get the number of processes
 	int worldSize;

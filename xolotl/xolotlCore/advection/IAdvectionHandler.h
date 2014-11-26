@@ -23,12 +23,15 @@ public:
 	virtual ~IAdvectionHandler() {}
 
 	/**
-	 * The off-diagonal part of the Jacobian is already initialized by the diffusion handler.
+	 * Initialize the off-diagonal part of the Jacobian for advection.
 	 * This function initialize the list of clusters that will move through advection.
 	 *
 	 * @param network The network
+	 * @param ofill The pointer to the array that will contain the value 1 at the indices
+	 * of the advecting clusters
 	 */
-	virtual void initialize(std::shared_ptr<PSIClusterReactionNetwork> network) = 0;
+	virtual void initialize(std::shared_ptr<PSIClusterReactionNetwork> network,
+			int *ofill) = 0;
 
 	/**
 	 * Compute the flux due to the advection for all the cluster,

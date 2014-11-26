@@ -239,13 +239,15 @@ public:
     virtual void setVizStandardHandlers(bool flag) = 0;
 
     /**
-     * Obtain the name of the material to be used for the flux profile.
+     * Obtain the name of the material to be used for the flux profile
+     * and advection handler.
      * @return The name of the material.
      */
     virtual std::string getMaterial() const = 0;
 
     /**
-     * Set the name of the material to be used for the flux profile.
+     * Set the name of the material to be used for the flux profile
+     * and advection handler.
      * @param material The name of the material.
      */
     virtual void setMaterial(std::string material) = 0;
@@ -273,6 +275,18 @@ public:
      * @param portion The value for the portion.
      */
     virtual void setVoidPortion(double portion) = 0;
+
+    /**
+     * Obtain the name of the physics process to be used.
+     * @return The name of the process.
+     */
+    virtual std::string getPhysicsProcess() const = 0;
+
+    /**
+     * Set the name of the physics process to be used.
+     * @param material The name of the process.
+     */
+    virtual void setPhysicsProcess(std::string process) = 0;
 
 };//end class IOptions
 

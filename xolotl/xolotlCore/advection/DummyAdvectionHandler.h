@@ -22,14 +22,15 @@ public:
 	~DummyAdvectionHandler() {}
 
 	/**
-	 * The off-diagonal part of the Jacobian is already initialized by the diffusion handler.
 	 * This function initialize the list of clusters that will move through advection. For the
 	 * dummy class we don't want any cluster to advect, so this class only clears the vector
 	 * and doesn't fill them.
 	 *
 	 * @param network The network
+	 * @param ofill The pointer to the array that will contain the value 1 at the indices
+	 * of the advecting clusters
 	 */
-	void initialize(std::shared_ptr<PSIClusterReactionNetwork> network) {
+	void initialize(std::shared_ptr<PSIClusterReactionNetwork> network, int *ofill) {
 
 		// Clear the index and sink strength vectors
 		indexVector.clear();

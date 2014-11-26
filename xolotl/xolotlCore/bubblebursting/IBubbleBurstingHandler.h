@@ -37,6 +37,14 @@ public:
 			int nGrid, int surfacePos) = 0;
 
 	/**
+	 * This method update the rate for the bubble bursting if the rates changed in the network,
+	 * it should be called when temperature changes for instance.
+	 *
+	 * @param network The network
+	 */
+	virtual void updateBurstingRate(std::shared_ptr<PSIClusterReactionNetwork> network) = 0;
+
+	/**
 	 * Compute the flux due to the bubble bursting for all the cluster,
 	 * given the position index xi.
 	 * This method is called by the RHSFunction from the PetscSolver.

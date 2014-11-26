@@ -18,7 +18,7 @@ std::shared_ptr<IMaterialFactory> IMaterialFactory::createMaterialFactory(std::s
 	else {
 		throw std::string(
 				"\nThe material type is not known: \"" + materialType
-				+ "\"");
+				+ "\", look at Xolotl's help to know which type are available.");
 	}
 	return theMaterialFactory;
 }

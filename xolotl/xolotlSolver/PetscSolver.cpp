@@ -218,7 +218,8 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 	auto network = PetscSolver::getNetwork();
 	auto singleVacancyCluster = (PSICluster *) network->get(vType, 1);
 	int vacancyIndex = -1;
-	if (singleVacancyCluster) vacancyIndex = singleVacancyCluster->getId() - 1;
+	if (singleVacancyCluster)
+		vacancyIndex = singleVacancyCluster->getId() - 1;
 
 	// Get the initial concentration for vacancies
 	double initialVConc = PetscSolver::getInitialV();
@@ -404,7 +405,12 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 		// Update the network if the temperature changed
 		if (!xolotlCore::equal(temperature, lastTemperature)) {
 			network->setTemperature(temperature);
+			// Update the bubble bursting rate that depends on the network reaction rates
+			bubbleBurstingHandler->updateBurstingRate(network);
+			// Set the last temperature to the new one
 			lastTemperature = temperature;
+			// The temperature has changed so the off-diagonal part of the Jacobian
+			// will be recomputed
 			temperatureChanged = true;
 		}
 
@@ -463,7 +469,8 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 		}
 
 		// ----- Compute the bubble bursting -----
-		bubbleBurstingHandler->computeBursting(network, xi, surfacePos, concOffset, updatedConcOffset);
+		bubbleBurstingHandler->computeBursting(network, xi, surfacePos,
+				concOffset, updatedConcOffset);
 
 		// Uncomment this line for debugging in a single cell.
 //		break;
@@ -498,7 +505,7 @@ PetscErrorCode callRHSFunction(TS ts, PetscReal ftime, Vec C, Vec F,
 #undef __FUNCT__
 #define __FUNCT__ "RHSJacobian"
 /*
- Compute the Jacobian entries based on IFuction() and insert them into the matrix
+ Compute the Jacobian entries based on IFunction() and insert them into the matrix
  */
 PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 		void *ptr) {
@@ -589,7 +596,8 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 
 			// Boundary conditions
 			// Nothing happens on the left side of the surface
-			if (xi <= surfacePos || xi == Mx - 1) continue;
+			if (xi <= surfacePos || xi == Mx - 1)
+				continue;
 
 			// Copy data into the PSIClusterReactionNetwork so that it can
 			// compute the new concentrations.
@@ -597,12 +605,12 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 			network->updateConcentrationsFromArray(concOffset);
 
 			// Initialize the rows, columns, and values to set in the Jacobian
-			PetscInt row[nDiff], col[3 * nDiff];
-			PetscReal val[3 * nDiff];
+			PetscInt rowDiff[nDiff], colDiff[3 * nDiff];
+			PetscReal valDiff[3 * nDiff];
 			// Get the pointer on them for the compute diffusion method
-			PetscInt *rowPointer = &row[0];
-			PetscInt *colPointer = &col[0];
-			PetscReal *valPointer = &val[0];
+			PetscInt *rowPointer = &rowDiff[0];
+			PetscInt *colPointer = &colDiff[0];
+			PetscReal *valPointer = &valDiff[0];
 
 			/* -------------------------------------------------------------
 			 ---- Compute diffusion over the locally owned part of the grid
@@ -612,21 +620,22 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 
 			// Loop on the number of diffusion cluster to set the values in the Jacobian
 			for (int i = 0; i < nDiff; i++) {
-				rowPointer = &row[i];
-				colPointer = &col[3 * i];
-				valPointer = &val[3 * i];
+				rowPointer = &rowDiff[i];
+				colPointer = &colDiff[3 * i];
+				valPointer = &valDiff[3 * i];
 
 				ierr = MatSetValuesLocal(J, 1, rowPointer, 3, colPointer,
 						valPointer, ADD_VALUES);
 				checkPetscError(ierr);
 			}
 
-			// Get the pointer on them for the compute advection method
-			// This is safe to use the same arrays because there cannot be more advecting
-			// clusters than diffusing ones
-			rowPointer = &row[0];
-			colPointer = &col[0];
-			valPointer = &val[0];
+			// Initialize the rows, columns, and values to set in the Jacobian
+			PetscInt rowAdvec[nAdvec], colAdvec[2 * nAdvec];
+			PetscReal valAdvec[2 * nAdvec];
+			// Get the pointer on them for the compute diffusion method
+			rowPointer = &rowAdvec[0];
+			colPointer = &colAdvec[0];
+			valPointer = &valAdvec[0];
 
 			/* -------------------------------------------------------------
 			 ---- Compute advection over the locally owned part of the grid
@@ -636,9 +645,9 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 
 			// Loop on the number of advecting cluster to set the values in the Jacobian
 			for (int i = 0; i < nAdvec; i++) {
-				rowPointer = &row[i];
-				colPointer = &col[2 * i];
-				valPointer = &val[2 * i];
+				rowPointer = &rowAdvec[i];
+				colPointer = &colAdvec[2 * i];
+				valPointer = &valAdvec[2 * i];
 
 				ierr = MatSetValuesLocal(J, 1, rowPointer, 2, colPointer,
 						valPointer, ADD_VALUES);
@@ -668,8 +677,7 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 
 //		// Debug line for viewing the matrix
 //		MatView(J, PETSC_VIEWER_STDOUT_WORLD);
-	}
-	else {
+	} else {
 		// Retrieve the matrix that was previously stored
 		ierr = MatRetrieveValues(J);
 		checkPetscError(ierr);
@@ -738,24 +746,26 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 		// ----- Take care of the bubble bursting for all the reactant -----
 
 		// Initialize the rows, columns, and values to set in the Jacobian
-		PetscInt row[2*nBubble], col[nBubble];
-		PetscReal val[2*nBubble];
+		PetscInt row[2 * nBubble], col[nBubble];
+		PetscReal val[2 * nBubble];
 		// Get the pointer on them for the compute bursting method
 		PetscInt *rowPointer = &row[0];
 		PetscInt *colPointer = &col[0];
 		PetscReal *valPointer = &val[0];
 
 		// Compute the partial derivative from bubble bursting at this grid point
-		int nBursting = bubbleBurstingHandler->computePartialsForBursting(network,
-				valPointer, rowPointer, colPointer, xi, xs, surfacePos);
+		int nBursting = bubbleBurstingHandler->computePartialsForBursting(
+				network, valPointer, rowPointer, colPointer, xi, xs,
+				surfacePos);
 
 		// Loop on the number of bursting bubbles to set the values in the Jacobian
-		for(int i = 0; i < 2 * nBursting; i++) {
+		for (int i = 0; i < 2 * nBursting; i++) {
 			rowPointer = &row[i];
-			colPointer = &col[(int) i/2];
+			colPointer = &col[(int) i / 2];
 			valPointer = &val[i];
 
-			ierr = MatSetValuesLocal(J, 1, rowPointer, 1, colPointer, valPointer, ADD_VALUES);
+			ierr = MatSetValuesLocal(J, 1, rowPointer, 1, colPointer,
+					valPointer, ADD_VALUES);
 			checkPetscError(ierr);
 		}
 
@@ -1073,9 +1083,13 @@ void PetscSolver::solve(
 	// Fill ofill, the matrix of "off-diagonal" elements that represents diffusion
 	PetscSolver::diffusionHandler->initializeOFill(network, ofill);
 
+	// Initialize the advection handler that fills ofill too
+	PetscSolver::advectionHandler->initialize(network, ofill);
+
 	// Initialize the bubble bursting handler here because it adds connectivity
 	// and the getDiagonalFill method needs it
-	PetscSolver::bubbleBurstingHandler->initialize(network, hx, Mx, surfacePosition);
+	PetscSolver::bubbleBurstingHandler->initialize(network, hx, Mx,
+			surfacePosition);
 
 	// Get the diagonal fill
 	ierr = getDiagonalFill(dfill, dof * dof);
@@ -1133,9 +1147,6 @@ void PetscSolver::solve(
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	ierr = setupInitialConditions(da, C);
 	checkPetscError(ierr);
-
-	// Initialize the advection handler
-	PetscSolver::advectionHandler->initialize(network);
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Solve the ODE system

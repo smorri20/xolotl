@@ -385,6 +385,32 @@ public interface Arguments {
 	boolean isVoidPortion();
 
 	/**
+	 * This Option annotation corresponds to the optional '--process' option
+	 * and provides a brief description of the option.
+	 * 
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(description = "{diff, advec, burst, none, all}. The physics process that "
+			+ "will be used additionally to the reactions in Xolotl.")
+	
+	/**
+	 * This operation produces the optional command line option '--process' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The process that will be used additionally to the reactions
+	 */
+	String getProcess();
+
+	/**
+	 * This operation makes the command line option '--process' optional.
+	 * 
+	 * @return Returns true if the option has been specified and false if it has
+	 *         not
+	 */
+	boolean isProcess();
+
+	/**
 	 * This produces the command line arguments '--help' or '-h' either of which
 	 * can be used to print usage help
 	 * 

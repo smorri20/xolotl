@@ -111,8 +111,26 @@ BOOST_AUTO_TEST_CASE(checkBubbleBursting) {
 	BOOST_REQUIRE_CLOSE(val[2], -7.0311e13, 0.01);
 	BOOST_REQUIRE_CLOSE(val[3], 7.0311e13, 0.01);
 
+	// Change the temperature of the network
+	network->setTemperature(500.0);
+
+	// Update the bursting rate
+	bubbleBurstingHandler.updateBurstingRate(network);
+
+	// Compute the partial derivatives for the advection a the grid point 1
+	nBursting = bubbleBurstingHandler.computePartialsForBursting(network, valPointer,
+			rowPointer, colPointer, 1, 0, surfacePos);
+
+	// Check values that are different for the previous ones
+	BOOST_REQUIRE_CLOSE(val[0], -6.2607e13, 0.01);
+	BOOST_REQUIRE_CLOSE(val[1], 6.2607e13, 0.01);
+	BOOST_REQUIRE_CLOSE(val[2], -6.2607e13, 0.01);
+	BOOST_REQUIRE_CLOSE(val[3], 6.2607e13, 0.01);
+
 	// Finalize MPI
 	MPI_Finalize();
+
+	return;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

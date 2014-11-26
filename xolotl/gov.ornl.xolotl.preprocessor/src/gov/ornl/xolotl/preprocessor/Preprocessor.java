@@ -232,6 +232,8 @@ public class Preprocessor {
 			xolotlParams.setProperty("initialV", args.getInitialV());
 		if (args.isVoidPortion())
 			xolotlParams.setProperty("voidPortion", args.getVoidPortion());
+		if (args.isProcess())
+			xolotlParams.setProperty("process", args.getProcess());
 
 	}
 

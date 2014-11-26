@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(goodParamFile)
     // Check the performance handler
     BOOST_REQUIRE_EQUAL(opts.getPerfHandlerType(), xolotlPerf::IHandlerRegistry::std);
 
-    // Check the performance handler
+    // Check the visualization handler
     BOOST_REQUIRE_EQUAL(opts.useVizStandardHandlers(), true);
 
     // Check the material option
@@ -149,6 +149,9 @@ BOOST_AUTO_TEST_CASE(goodParamFile)
 
     // Check the void portion option
     BOOST_REQUIRE_EQUAL(opts.getVoidPortion(), 60.0);
+
+    // Check the physics process option
+    BOOST_REQUIRE_EQUAL(opts.getPhysicsProcess(), "diff");
 
     // Check the PETSc options
     BOOST_REQUIRE_EQUAL(opts.getPetscArgc(), 21);
@@ -353,6 +356,40 @@ BOOST_AUTO_TEST_CASE(dummyPerfHandler)
 
     // Check the performance handler
     BOOST_REQUIRE_EQUAL(opts.getPerfHandlerType(), xolotlPerf::IHandlerRegistry::dummy);
+}
+
+BOOST_AUTO_TEST_CASE(defaultOptions)
+{
+	// Create the option but don't read any file
+    xolotlCore::Options opts;
+
+    // Xolotl should run
+    BOOST_REQUIRE_EQUAL(opts.shouldRun(), true);
+    BOOST_REQUIRE_EQUAL(opts.getExitCode(), EXIT_SUCCESS);
+
+
+    // Check the PETSc options
+    BOOST_REQUIRE_EQUAL(opts.getPetscArgc(), 0);
+    // Check the step size option
+    BOOST_REQUIRE_EQUAL(opts.getStepSize(), 0.0);
+    // Check the temperature flags
+    BOOST_REQUIRE_EQUAL(opts.useTemperatureProfileHandlers(), false);
+    BOOST_REQUIRE_EQUAL(opts.useConstTemperatureHandlers(), false);
+    // Check flux flags
+    BOOST_REQUIRE_EQUAL(opts.useHeliumFlux(), false);
+    BOOST_REQUIRE_EQUAL(opts.useFluxTimeProfile(), false);
+    // Check the performance handler
+    BOOST_REQUIRE_EQUAL(opts.getPerfHandlerType(), xolotlPerf::IHandlerRegistry::std);
+    // Check the visualization handler
+    BOOST_REQUIRE_EQUAL(opts.useVizStandardHandlers(), false);
+    // Check the material option
+    BOOST_REQUIRE_EQUAL(opts.getMaterial(), "");
+    // Check the initial vacancy concentration option
+    BOOST_REQUIRE_EQUAL(opts.getInitialVConcentration(), 0.0);
+    // Check the void portion option
+    BOOST_REQUIRE_EQUAL(opts.getVoidPortion(), 50.0);
+    // Check the physics process option
+    BOOST_REQUIRE_EQUAL(opts.getPhysicsProcess(), "all");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

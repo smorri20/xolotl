@@ -115,6 +115,11 @@ protected:
 	 */
 	double voidPortion;
 
+	/**
+	 * Name of the process to use in Xolotl additionally to the reactions.
+	 */
+	std::string processName;
+
 public:
 
 	/**
@@ -372,6 +377,18 @@ public:
      * \see IOptions.h
      */
     void setVoidPortion(double portion) {voidPortion = portion;}
+
+    /**
+     * Obtain the name of the physics process to be used.
+     * \see IOptions.h
+     */
+    std::string getPhysicsProcess() const {return processName;}
+
+    /**
+     * Set the name of the physics process to be used.
+     * \see IOptions.h
+     */
+    void setPhysicsProcess(std::string process) {processName = process;}
 
 
 };//end class Options

@@ -21,13 +21,16 @@ public:
 	~W110AdvectionHandler() {}
 
 	/**
-	 * The off-diagonal part of the Jacobian is already initialized by the diffusion handler.
+	 * Initialize the off-diagonal part of the Jacobian for advection.
 	 * This function initialize the list of clusters that will move through advection for a
 	 * (110) tungsten material.
 	 *
 	 * @param network The network
+	 * @param ofill The pointer to the array that will contain the value 1 at the indices
+	 * of the advecting clusters
 	 */
-	void initialize(std::shared_ptr<PSIClusterReactionNetwork> network) {
+	void initialize(std::shared_ptr<PSIClusterReactionNetwork> network,
+			int *ofill) {
 		// Get all the reactant
 		auto reactants = network->getAll();
 		int size = reactants->size();
@@ -50,11 +53,11 @@ public:
 			if (cluster->getType() != heType) continue;
 
 			// Get its size
-			int size = cluster->getSize();
+			int clusterSize = cluster->getSize();
 
 			// Switch on it to get the sink strength (in eV.nm3)
 			double sinkStrength = 0.0;
-			switch (size) {
+			switch (clusterSize) {
 				case 1:
 					sinkStrength = 0.92e-3;
 					break;
@@ -86,6 +89,12 @@ public:
 
 			// Add the sink strength to the vector
 			sinkStrengthVector.push_back(sinkStrength);
+
+			// Set the off-diagonal part for the Jacobian to 1
+			// Get its id
+			int index = cluster->getId() - 1;
+			// Set the ofill value to 1 for this cluster
+			ofill[index * size + index] = 1;
 		}
 
 		return;

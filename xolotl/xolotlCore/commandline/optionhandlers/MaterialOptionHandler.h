@@ -31,7 +31,7 @@ public:
     ~MaterialOptionHandler() {}
 
     /**
-     * This method will set the IOptions materialFlag and materialName
+     * This method will set the IOptions materialName
      * to the value given as the argument.
      *
      * @param opt The pointer to the option that will be modified.
