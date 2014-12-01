@@ -532,7 +532,8 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 
 		// Arguments for MatSetValuesStencil called below
 		MatStencil row, cols[3];
-		PetscScalar vals[3];
+		PetscScalar vals[3 * nDiff];
+		PetscInt indices[nDiff];
 
 		/*
 		 Loop over grid points computing Jacobian terms for diffusion and advection
@@ -550,60 +551,60 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 			concOffset = concs + size * xi;
 			network->updateConcentrationsFromArray(concOffset);
 
+			// Get the pointers to vals and indices
+			PetscScalar *valsPointer = &vals[0];
+			PetscInt *indicesPointer = &indices[0];
+
+			// Get the partial derivatives for the diffusion
+			diffusionHandler->computePartialsForDiffusion(network, sx, valsPointer, indicesPointer);
+
 			// Loop on the number of diffusion cluster to set the values in the Jacobian
 			for (int i = 0; i < nDiff; i++) {
-				// Get the diffusing cluster
-				auto cluster = (PSICluster *) allReactants->at(diffusionHandler->getDiffusingIndex(i));
-				// Get the index of the cluster
-				int index = cluster->getId() - 1;
-				double diffCoeff = cluster->getDiffusionCoefficient();
-
 				// Set grid coordinate and component number for the row
 				row.i = xi;
-				row.c = index;
+				row.c = indices[i];
 
 				// Set grid coordinates and component numbers for the columns
+				// corresponding to the left, middle, and right grid points
 				cols[0].i = xi - 1;
-				cols[0].c = index;
+				cols[0].c = indices[i];
 				cols[1].i = xi;
-				cols[1].c = index;
+				cols[1].c = indices[i];
 				cols[2].i = xi + 1;
-				cols[2].c = index;
+				cols[2].c = indices[i];
 
-				// Compute the partial derivatives for diffusion of this cluster
-				vals[0] = diffCoeff * sx;
-				vals[1] = -2.0 * vals[0];
-				vals[2] = vals[0];
+				// Get the values for this diffusing cluster
+				valsPointer = &vals[3 * i];
 
-				ierr = MatSetValuesStencil(J, 1, &row, 3, cols, vals, ADD_VALUES);
+				ierr = MatSetValuesStencil(J, 1, &row, 3, cols, valsPointer, ADD_VALUES);
 				checkPetscError(ierr);
 			}
 
+			// Reset the pointers to vals and indices for the advection
+			valsPointer = &vals[0];
+			indicesPointer = &indices[0];
+
+			// Get the partial derivatives for the advection
+			advectionHandler->computePartialsForAdvection(network, hx, valsPointer, indicesPointer, xi);
+
 			// Loop on the number of advecting cluster to set the values in the Jacobian
 			for (int i = 0; i < nAdvec; i++) {
-				// Get the diffusing cluster
-				auto cluster = (PSICluster *) allReactants->at(advectionHandler->getAdvectingIndex(i));
-				// Get the index of the cluster
-				int index = cluster->getId() - 1;
-				double diffCoeff = cluster->getDiffusionCoefficient();
-				double sinkStrength = advectionHandler->getSinkStrength(i);
-
 				// Set grid coordinate and component number for the row
 				row.i = xi;
-				row.c = index;
+				row.c = indices[i];
 
 				// Set grid coordinates and component numbers for the columns
+				// corresponding to the left and middle grid points
 				cols[0].i = xi - 1;
-				cols[0].c = index;
+				cols[0].c = indices[i];
 				cols[1].i = xi;
-				cols[1].c = index;
+				cols[1].c = indices[i];
 
-				// Compute the partial derivatives for advection of this cluster
-				vals[0] = (3.0 * sinkStrength * diffCoeff) / (xolotlCore::kBoltzmann * cluster->getTemperature() * hx * pow(xi * hx, 4));
-				vals[1] = -vals[0];
+				// Get the values for this advecting cluster
+				valsPointer = &vals[2 * i];
 
 				// Update the matrix
-				ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals, ADD_VALUES);
+				ierr = MatSetValuesStencil(J, 1, &row, 2, cols, valsPointer, ADD_VALUES);
 				checkPetscError(ierr);
 			}
 

@@ -91,25 +91,19 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 
 	// Initialize the rows, columns, and values to set in the Jacobian
 	int nAdvec = advectionHandler.getNumberOfAdvecting();
-	int row[nAdvec], col[2*nAdvec];
+	int indices[nAdvec];
 	double val[2*nAdvec];
 	// Get the pointer on them for the compute advection method
-	int *rowPointer = &row[0];
-	int *colPointer = &col[0];
+	int *indicesPointer = &indices[0];
 	double *valPointer = &val[0];
 
 	// Compute the partial derivatives for the advection a the grid point 1
 	advectionHandler.computePartialsForAdvection(network, hx, valPointer,
-			rowPointer, colPointer, 1, 0);
+			indicesPointer, 1);
 
 	// Check the values for the indices
-	BOOST_REQUIRE_EQUAL(row[0], 11);
-	BOOST_REQUIRE_EQUAL(row[1], 12);
-
-	BOOST_REQUIRE_EQUAL(col[0], 6);
-	BOOST_REQUIRE_EQUAL(col[1], 11);
-	BOOST_REQUIRE_EQUAL(col[2], 7);
-	BOOST_REQUIRE_EQUAL(col[3], 12);
+	BOOST_REQUIRE_EQUAL(indices[0], 1);
+	BOOST_REQUIRE_EQUAL(indices[1], 2);
 
 	// Check values
 	BOOST_REQUIRE_CLOSE(val[0], 205476899.0, 0.01);

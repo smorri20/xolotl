@@ -67,8 +67,7 @@ void DiffusionHandler::computeDiffusion(std::shared_ptr<PSIClusterReactionNetwor
 
 void DiffusionHandler::computePartialsForDiffusion(
 		std::shared_ptr<PSIClusterReactionNetwork> network,
-		double sx, double *val, int *row, int *col, int xi,
-		int xs) {
+		double sx, double *val, int *indices) {
 	// Get all the reactant
 	auto reactants = network->getAll();
 	// And the size of the network
@@ -85,20 +84,12 @@ void DiffusionHandler::computePartialsForDiffusion(
 		// Get the diffusion coefficient of the cluster
 		double diffCoeff = cluster->getDiffusionCoefficient();
 
-		// Set the row and column indices. These indices are computed
-		// by using xi, xi-1 and xi+1 and the arrays are shifted to
-		// (xs+1)*size to properly account for the neighboring ghost
-		// cells.
-
-		// Set the row index
-		row[i] = (xi - xs + 1) * size + index;
-
-		// Set the columns indices
-		col[i * 3] = ((xi - 1) - xs + 1) * size + index;
-		col[(i * 3) + 1] = (xi - xs + 1) * size + index;
-		col[(i * 3) + 2] = ((xi + 1) - xs + 1) * size + index;
+		// Set the cluster index, the PetscSolver will use it to compute
+		// the row and column indices for the Jacobian
+		indices[i] = index;
 
 		// Compute the partial derivatives for diffusion of this cluster
+		// for the left, middle, and right grid point
 		val[i * 3] = diffCoeff * sx;
 		val[(i * 3) + 1] = -2.0 * diffCoeff * sx;
 		val[(i * 3) + 2] = diffCoeff * sx;

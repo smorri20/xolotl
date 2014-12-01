@@ -75,16 +75,12 @@ public:
 	 * @param hx The space parameter, here the grid step size
 	 * @param val The pointer to the array that will contain the values of partials
 	 * for the advection
-	 * @param row The pointer to the array that will contain the indices of the row
-	 * for the Jacobian
-	 * @param col The pointer to the array that will contain the indices of the columns
-	 * for the Jacobian
-	 * @param xi The index of the grip point
-	 * @param xs The index of the first grid point on the locally owned grid
+	 * @param indices The pointer to the array that will contain the indices of the
+	 * advecting cluster in the network
+	 * @param xi The index of the grid point
 	 */
 	void computePartialsForAdvection(std::shared_ptr<PSIClusterReactionNetwork> network,
-			double hx, double *val, int *row, int *col, int xi,
-			int xs);
+			double hx, double *val, int *indices, int xi);
 
 	/**
 	 * Get the total number of advecting clusters in the network.
@@ -92,20 +88,6 @@ public:
 	 * @return The number of advecting clusters
 	 */
 	int getNumberOfAdvecting() {return indexVector.size();}
-
-	/**
-	 * Get the index of an advecting cluster in indexVector.
-	 *
-	 * @return The index of an advecting cluster
-	 */
-	int getAdvectingIndex(int i) {return indexVector[i];}
-
-	/**
-	 * Get the value of a sink strength in sinkStrengthVector.
-	 *
-	 * @return The value of a sink strength
-	 */
-	double getSinkStrength(int i) {return sinkStrengthVector[i];}
 
 };
 //end class AdvectionHandler
