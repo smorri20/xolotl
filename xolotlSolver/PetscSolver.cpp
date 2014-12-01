@@ -151,7 +151,7 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 	PetscInt i, nI, nHe, nV, xs, xm, Mx, cnt = 0;
 	PetscScalar *concentrations;
 	char string[16];
-	int size = allReactants->size();
+	int dof = allReactants->size();
 	double * concOffset;
 	std::map<std::string, int> composition;
 
@@ -170,7 +170,7 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 	fluxHandler->initializeFluxHandler(Mx, hx);
 
 	/* Name each of the concentrations */
-	for (i = 0; i < size; i++) {
+	for (i = 0; i < dof; i++) {
 		composition = allReactants->at(i)->getComposition();
 		nHe = composition["He"];
 		nV = composition["V"];
@@ -205,9 +205,9 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 
 	// Loop on all the grid points
 	for (i = xs; i < xs + xm; i++) {
-		concOffset = concentrations + size * i;
+		concOffset = concentrations + dof * i;
 		// Loop on all the clusters to initialize at 0.0
-		for (int k = 0; k < size; k++) {
+		for (int k = 0; k < dof; k++) {
 			concOffset[k] = 0.0;
 		}
 
@@ -218,7 +218,7 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 
 //		// Uncomment this for debugging
 //		if (i > 0) {
-//			for (int k = 0; k < size; k++) {
+//			for (int k = 0; k < dof; k++) {
 //				concOffset[k] = 0.001;
 //			}
 //		}
@@ -234,7 +234,7 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 
 			// Change the concentration only if we are on the locally owned part of the grid
 			if (i >= xs && i < xs + xm) {
-				concOffset = concentrations + size * i;
+				concOffset = concentrations + dof * i;
 				// Loop on the concVector size
 				for (int k = 0; k < concVector.size(); k++) {
 					concOffset[(int) concVector.at(k).at(0)] =
@@ -283,7 +283,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	PetscScalar **concs, **updatedConcs;
 	Vec localC;
 	// Loop variables
-	int size = 0, reactantIndex = 0;
+	int dof = 0, reactantIndex = 0;
 	// Handy pointers to keep the code clean
 	PSICluster * heCluster = NULL, *vCluster = NULL, *iCluster = NULL,
 			*cluster = NULL;
@@ -350,7 +350,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	auto advectionHandler = PetscSolver::getAdvectionHandler();
 
 	// Loop over grid points computing ODE terms for each grid point
-	size = network->size();
+	dof = network->size();
 	for (xi = xs; xi < xs + xm; xi++) {
 
 //		xi = 1; // Uncomment this line for debugging in a single cell.
@@ -363,7 +363,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 
 		// Boundary conditions
 		if (xi == 0 || xi == Mx - 1) {
-			for (int i = 0; i < size; i++) {
+			for (int i = 0; i < dof; i++) {
 				updatedConcOffset[i] = 1.0 * concOffset[i];
 			}
 
@@ -410,7 +410,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 				concOffset, rightConcOffset, updatedConcOffset);
 
 		// ----- Compute all of the new fluxes -----
-		for (int i = 0; i < size; i++) {
+		for (int i = 0; i < dof; i++) {
 			cluster = (PSICluster *) allReactants->at(i);
 			// Compute the flux
 			flux = cluster->getTotalFlux();
@@ -464,13 +464,13 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	DM da;
 	PetscErrorCode ierr;
 	PetscInt xi, Mx, xs, xm, i;
-	PetscReal *concs, *updatedConcs;
+	PetscReal **concs;
 	double * concOffset;
 	Vec localC;
 	// Get the network
 	auto network = PetscSolver::getNetwork();
 	int reactantIndex = 0;
-	int size = 0;
+	int dof = 0;
 
 	// Get the matrix from PETSc
 	PetscFunctionBeginUser;
@@ -496,20 +496,17 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	ierr = DMGlobalToLocalEnd(da, C, INSERT_VALUES, localC);
 	checkPetscError(ierr);
 
-	/*
-	 The f[] is a dummy, values are never set into it. It is only used to
-	 determine the local row for the entries in the Jacobian
-	 */
-	ierr = DMDAVecGetArray(da, localC, &concs);
+	// Get pointers to vector data
+	ierr = DMDAVecGetArrayDOF(da, localC, &concs);
 	checkPetscError(ierr);
-	ierr = DMDAVecGetArray(da, localC, &updatedConcs);
-	checkPetscError(ierr);
+
+	// Get local grid boundaries
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
 	checkPetscError(ierr);
 
 	// Store network size for both the linear and nonlinear parts of the
 	// computation.
-	size = network->size();
+	dof = network->size();
 
 	// Variable to represent the real, or current, time
 	PetscReal realTime;
@@ -548,7 +545,7 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 
 			// Copy data into the PSIClusterReactionNetwork so that it can
 			// compute the new concentrations.
-			concOffset = concs + size * xi;
+			concOffset = concs[xi];
 			network->updateConcentrationsFromArray(concOffset);
 
 			// Get the pointers to vals and indices
@@ -633,7 +630,7 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 
 	// Arguments for MatSetValuesStencil called below
 	MatStencil rowId;
-	MatStencil colIds[size];
+	MatStencil colIds[dof];
 	int pdColIdsVectorSize = 0;
 
 	// Loop over the grid points
@@ -646,10 +643,10 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 
 		// Copy data into the PSIClusterReactionNetwork so that it can
 		// compute the new concentrations.
-		concOffset = concs + size * xi;
+		concOffset = concs[xi];
 		network->updateConcentrationsFromArray(concOffset);
 		// Update the column in the Jacobian that represents each reactant
-		for (int i = 0; i < size; i++) {
+		for (int i = 0; i < dof; i++) {
 			auto reactant = allReactants->at(i);
 			// Get the reactant index
 			reactantIndex = reactant->getId() - 1;
@@ -689,9 +686,7 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	/*
 	 Restore vectors
 	 */
-	ierr = DMDAVecRestoreArray(da, C, &concs);
-	checkPetscError(ierr);
-	ierr = DMDAVecRestoreArray(da, C, &updatedConcs);
+	ierr = DMDAVecRestoreArrayDOF(da, localC, &concs);
 	checkPetscError(ierr);
 	ierr = DMRestoreLocalVector(da, &localC);
 	checkPetscError(ierr);
