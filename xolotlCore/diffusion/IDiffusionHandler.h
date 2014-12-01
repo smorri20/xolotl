@@ -62,16 +62,11 @@ public:
 	 * @param sx The space parameter, depending on the grid step size
 	 * @param val The pointer to the array that will contain the values of partials
 	 * for the diffusion
-	 * @param row The pointer to the array that will contain the indices of the row
-	 * for the Jacobian
-	 * @param col The pointer to the array that will contain the indices of the columns
-	 * for the Jacobian
-	 * @param xi The index of the grip point
-	 * @param xs The index of the first grid point on the locally owned grid
+	 * @param indices The pointer to the array that will contain the indices of the
+	 * diffusing clusters in the network
 	 */
 	virtual void computePartialsForDiffusion(std::shared_ptr<PSIClusterReactionNetwork> network,
-			double sx, double *val, int *row, int *col, int xi,
-			int xs) = 0;
+			double sx, double *val, int *indices) = 0;
 
 	/**
 	 * Get the total number of diffusing clusters in the network.
@@ -79,13 +74,6 @@ public:
 	 * @return The number of diffusing clusters
 	 */
 	virtual int getNumberOfDiffusing() = 0;
-
-	/**
-	 * Get the index of a diffusing cluster in indexVector.
-	 *
-	 * @return The index of a diffusing cluster
-	 */
-	virtual int getDiffusingIndex(int i) = 0;
 
 };
 //end class IDiffusionHandler

@@ -101,37 +101,23 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], 25265634.0, 0.01);
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], 0.0, 0.01); // Does not diffuse
 
-	// Initialize the rows, columns, and values to set in the Jacobian
+	// Initialize the indices and values to set in the Jacobian
 	int nDiff = diffusionHandler.getNumberOfDiffusing();
-	int row[nDiff], col[3*nDiff];
+	int indices[nDiff];
 	double val[3*nDiff];
 	// Get the pointer on them for the compute diffusion method
-	int *rowPointer = &row[0];
-	int *colPointer = &col[0];
+	int *indicesPointer = &indices[0];
 	double *valPointer = &val[0];
 
 	// Compute the partial derivatives for the diffusion a the grid point 1
 	diffusionHandler.computePartialsForDiffusion(network, sx, valPointer,
-			rowPointer, colPointer, 1, 0);
+			indicesPointer);
 
 	// Check the values for the indices
-	BOOST_REQUIRE_EQUAL(row[0], 10);
-	BOOST_REQUIRE_EQUAL(row[1], 11);
-	BOOST_REQUIRE_EQUAL(row[2], 12);
-	BOOST_REQUIRE_EQUAL(row[3], 13);
-
-	BOOST_REQUIRE_EQUAL(col[0], 5);
-	BOOST_REQUIRE_EQUAL(col[1], 10);
-	BOOST_REQUIRE_EQUAL(col[2], 15);
-	BOOST_REQUIRE_EQUAL(col[3], 6);
-	BOOST_REQUIRE_EQUAL(col[4], 11);
-	BOOST_REQUIRE_EQUAL(col[5], 16);
-	BOOST_REQUIRE_EQUAL(col[6], 7);
-	BOOST_REQUIRE_EQUAL(col[7], 12);
-	BOOST_REQUIRE_EQUAL(col[8], 17);
-	BOOST_REQUIRE_EQUAL(col[9], 8);
-	BOOST_REQUIRE_EQUAL(col[10], 13);
-	BOOST_REQUIRE_EQUAL(col[11], 18);
+	BOOST_REQUIRE_EQUAL(indices[0], 0);
+	BOOST_REQUIRE_EQUAL(indices[1], 1);
+	BOOST_REQUIRE_EQUAL(indices[2], 2);
+	BOOST_REQUIRE_EQUAL(indices[3], 3);
 
 	// Check some values
 	BOOST_REQUIRE_CLOSE(val[0], 78358278338.0, 0.01);
