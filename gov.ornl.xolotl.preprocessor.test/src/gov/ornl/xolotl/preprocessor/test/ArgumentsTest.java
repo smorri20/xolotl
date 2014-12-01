@@ -51,9 +51,6 @@ public class ArgumentsTest {
 
 			// Check if there is an fluxFile argument
 			assertEquals(false, args.isFluxFile());
-			
-			// Check if there is an heFluence argument
-			assertEquals(false, args.isMaxHeFluence());
 
 			// Check that the default perfHandler is std
 			assertEquals("std", args.getPerfHandler());
@@ -98,7 +95,8 @@ public class ArgumentsTest {
 			args = CliFactory.parseArguments(Arguments.class, new String[] {
 					"--startTemp", "900", "--material", "W111", "--perfHandler",
 					"dummy", "--maxHeSize", "7", "--maxVSize", "30", "--maxISize", "5",
-					"--checkpoint", "xolotlStop.h5", "--stepSize", "3.0" });
+					"--checkpoint", "xolotlStop.h5", "--stepSize", "3.0",
+					"--initialV", "0.05"});
 			
 			// Check that the maximum Helium cluster size is 7
 			assertEquals(7, args.getMaxHeSize());
@@ -120,9 +118,6 @@ public class ArgumentsTest {
 
 			// Check if there is an heFlux argument
 			assertEquals(false, args.isHeFlux());
-			
-			// Check if there is an heFluence argument
-			assertEquals(false, args.isMaxHeFluence());
 
 			// Check that the perfHandler is dummy
 			assertEquals("dummy", args.getPerfHandler());
@@ -135,6 +130,12 @@ public class ArgumentsTest {
 
 			// Check the name of the file for the checkpoint
 			assertEquals("xolotlStop.h5", args.getCheckpoint());
+
+			// Check if there is an initial vacancy concentration argument
+			assertEquals(true, args.isInitialV());
+
+			// Check its value
+			assertEquals("0.05", args.getInitialV());
 
 			// Check that the default networkFile is networkInit.h5
 			assertEquals("networkInit.h5", args.getNetworkFile());

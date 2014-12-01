@@ -67,8 +67,8 @@ bool initViz(bool opts) {
 }
 
 std::shared_ptr<xolotlSolver::PetscSolver> setUpSolver(
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry, int argc,
-		char **argv) {
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry, 
+        int argc, char **argv) {
 	// Setup the solver
 	auto solverInitTimer = handlerRegistry->getTimer("initSolver");
 	solverInitTimer->start();
@@ -85,7 +85,7 @@ void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry,
 		std::shared_ptr<xolotlFactory::IMaterialFactory> material,
 		std::shared_ptr<xolotlCore::ITemperatureHandler> tempHandler,
-		double stepSize) {
+		Options &options) {
 
     xperf::IHardwareCounter::SpecType hwctrSpec;
     hwctrSpec.push_back( xperf::IHardwareCounter::FPOps );
@@ -97,7 +97,7 @@ void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
     auto solverHwctr = handlerRegistry->getHardwareCounter( "solve", hwctrSpec );
 	solverTimer->start();
     solverHwctr->start();
-	solver->solve(material, tempHandler, stepSize);
+	solver->solve(material, tempHandler, options);
     solverHwctr->stop();
 	solverTimer->stop();
 }
@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
 	int rank;
 
 	// Check the command line arguments.
-	// Skip the executable name before parsing.
+	// Skip the executable name before parsing
 	argc -= 1; // one for the executable name
 	argv += 1; // one for the executable name
 	Options opts;
@@ -161,9 +161,9 @@ int main(int argc, char **argv) {
 		// Set up the material infrastructure that is used to calculate flux
 		auto material = initMaterial(opts);
 		// Set up the temperature infrastructure
-		auto tempInitOK = initTemp(opts);
+		bool tempInitOK = initTemp(opts);
 		// Set up the visualization infrastructure.
-		auto vizInitOK = initViz(opts.useVizStandardHandlers());
+		bool vizInitOK = initViz(opts.useVizStandardHandlers());
 
 		// Access the temperature handler registry to get the temperature
 		auto tempHandler = xolotlFactory::getTemperatureHandler();
@@ -176,8 +176,8 @@ int main(int argc, char **argv) {
 		totalTimer->start();
 
 		// Setup the solver
-		auto solver = setUpSolver(handlerRegistry, opts.getPetscArgc(),
-				opts.getPetscArgv());
+		auto solver = setUpSolver(handlerRegistry,
+                                    opts.getPetscArgc(), opts.getPetscArgv());
 
 		// Load the network
 		auto networkLoadTimer = handlerRegistry->getTimer("loadNetwork");
@@ -193,7 +193,7 @@ int main(int argc, char **argv) {
 
 		// Launch the PetscSolver
 		launchPetscSolver(solver, handlerRegistry, material,
-				tempHandler, opts.getStepSize());
+				tempHandler, opts);
 
 		// Finalize our use of the solver.
 		auto solverFinalizeTimer = handlerRegistry->getTimer("solverFinalize");
