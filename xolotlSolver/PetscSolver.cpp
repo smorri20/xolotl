@@ -151,10 +151,10 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 // Local Declarations
 	PetscErrorCode ierr;
 	PetscInt i, nI, nHe, nV, xs, xm, Mx, cnt = 0;
-	PetscScalar *concentrations;
+	PetscScalar **concentrations;
 	char string[16];
 	int dof = allReactants->size();
-	double * concOffset;
+	PetscScalar *concOffset;
 	std::map<std::string, int> composition;
 
 	PetscFunctionBeginUser;
@@ -186,7 +186,7 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 	/*
 	 Get pointer to vector data
 	 */
-	ierr = DMDAVecGetArray(da, C, &concentrations);
+	ierr = DMDAVecGetArrayDOF(da, C, &concentrations);
 	checkPetscError(ierr);
 
 	/*
@@ -199,7 +199,7 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 	auto network = PetscSolver::getNetwork();
 	int vacancyIndex = (network->get(vType, 1)->getId()) - 1;
 
-	// Get the intial concentration for vacancies
+	// Get the initial concentration for vacancies
 	double initialVConc = PetscSolver::getInitialV();
 
 	// Get the name of the HDF5 file to read the concentrations from
@@ -214,7 +214,7 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 
 	// Loop on all the grid points
 	for (i = xs; i < xs + xm; i++) {
-		concOffset = concentrations + dof * i;
+		concOffset = concentrations[i];
 		// Loop on all the clusters to initialize at 0.0
 		for (int k = 0; k < dof; k++) {
 			concOffset[k] = 0.0;
@@ -243,7 +243,7 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 
 			// Change the concentration only if we are on the locally owned part of the grid
 			if (i >= xs && i < xs + xm) {
-				concOffset = concentrations + dof * i;
+				concOffset = concentrations[i];
 				// Loop on the concVector size
 				for (int k = 0; k < concVector.size(); k++) {
 					concOffset[(int) concVector.at(k).at(0)] =
@@ -256,7 +256,7 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 	/*
 	 Restore vectors
 	 */
-	ierr = DMDAVecRestoreArray(da, C, &concentrations);
+	ierr = DMDAVecRestoreArrayDOF(da, C, &concentrations);
 	checkPetscError(ierr);
 	PetscFunctionReturn(0);
 }
@@ -299,7 +299,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	// The following pointers are set to the first position in the conc or
 	// updatedConc arrays that correspond to the beginning of the data for the
 	// current gridpoint. They are accessed just like regular arrays.
-	PetscScalar * concOffset, *leftConcOffset, *rightConcOffset,
+	PetscScalar *concOffset, *leftConcOffset, *rightConcOffset,
 			*updatedConcOffset;
 	// Dummy variables to keep the code clean
 	double flux = 0.0;
@@ -473,8 +473,8 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	DM da;
 	PetscErrorCode ierr;
 	PetscInt xi, Mx, xs, xm, i;
-	PetscReal **concs;
-	double * concOffset;
+	PetscScalar **concs;
+	PetscScalar *concOffset;
 	Vec localC;
 	// Get the network
 	auto network = PetscSolver::getNetwork();
@@ -557,12 +557,8 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 			concOffset = concs[xi];
 			network->updateConcentrationsFromArray(concOffset);
 
-			// Get the pointers to vals and indices
-			PetscScalar *valsPointer = &vals[0];
-			PetscInt *indicesPointer = &indices[0];
-
 			// Get the partial derivatives for the diffusion
-			diffusionHandler->computePartialsForDiffusion(network, sx, valsPointer, indicesPointer);
+			diffusionHandler->computePartialsForDiffusion(network, sx, vals, indices);
 
 			// Loop on the number of diffusion cluster to set the values in the Jacobian
 			for (int i = 0; i < nDiff; i++) {
@@ -579,19 +575,12 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 				cols[2].i = xi + 1;
 				cols[2].c = indices[i];
 
-				// Get the values for this diffusing cluster
-				valsPointer = &vals[3 * i];
-
-				ierr = MatSetValuesStencil(J, 1, &row, 3, cols, valsPointer, ADD_VALUES);
+				ierr = MatSetValuesStencil(J, 1, &row, 3, cols, vals + (3 * i), ADD_VALUES);
 				checkPetscError(ierr);
 			}
 
-			// Reset the pointers to vals and indices for the advection
-			valsPointer = &vals[0];
-			indicesPointer = &indices[0];
-
 			// Get the partial derivatives for the advection
-			advectionHandler->computePartialsForAdvection(network, hx, valsPointer, indicesPointer, xi);
+			advectionHandler->computePartialsForAdvection(network, hx, vals, indices, xi);
 
 			// Loop on the number of advecting cluster to set the values in the Jacobian
 			for (int i = 0; i < nAdvec; i++) {
@@ -606,11 +595,8 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 				cols[1].i = xi;
 				cols[1].c = indices[i];
 
-				// Get the values for this advecting cluster
-				valsPointer = &vals[2 * i];
-
 				// Update the matrix
-				ierr = MatSetValuesStencil(J, 1, &row, 2, cols, valsPointer, ADD_VALUES);
+				ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals + (2 * i), ADD_VALUES);
 				checkPetscError(ierr);
 			}
 
