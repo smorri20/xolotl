@@ -17,8 +17,8 @@ public:
 	 */
 	StepSizeOptionHandler() :
 		OptionHandler("stepSize",
-				"stepSize <value>      "
-				"The size of the step for the spatial grid in nm. (default = 1.0nm)") {}
+				"stepSize <value>                  "
+				"The size of the step for the spatial grid in nm. (default = 1.0nm)/n") {}
 
 	/**
 	 * The destructor

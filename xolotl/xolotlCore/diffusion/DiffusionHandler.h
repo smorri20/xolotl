@@ -34,7 +34,7 @@ public:
 	 * @param ofill The pointer to the array that will contain the value 1 at the indices
 	 * of the diffusing clusters, 0 if they are not diffusing
 	 */
-	void initializeOFill(std::shared_ptr<PSIClusterReactionNetwork> network, int *ofill);
+	void initializeOFill(PSIClusterReactionNetwork *network, int *ofill);
 
 	/**
 	 * Compute the flux due to the diffusion for all the cluster that are diffusing,
@@ -58,7 +58,7 @@ public:
 	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
 	 * point where the diffusion is computed used to find the next solution
 	 */
-	void computeDiffusion(std::shared_ptr<PSIClusterReactionNetwork> network,
+	void computeDiffusion(PSIClusterReactionNetwork *network,
 			double sx, double *concOffset, double *leftConcOffset,
 			double *rightConcOffset, double *updatedConcOffset);
 
@@ -77,7 +77,7 @@ public:
 	 * @param indices The pointer to the array that will contain the indices of the
 	 * diffusing clusters in the network
 	 */
-	void computePartialsForDiffusion(std::shared_ptr<PSIClusterReactionNetwork> network,
+	void computePartialsForDiffusion(PSIClusterReactionNetwork *network,
 			double sx, double *val, int *indices);
 
 	/**

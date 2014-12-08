@@ -110,6 +110,11 @@ protected:
 	 */
 	double initialVConcentration;
 
+	/**
+	 * Number of dimensions for the simulation.
+	 */
+	int dimensionNumber;
+
 public:
 
 	/**
@@ -355,6 +360,18 @@ public:
      * \see IOptions.h
      */
     void setInitialVConcentration(double conc) {initialVConcentration = conc;}
+
+    /**
+     * Obtain the number of dimensions for the simulation.
+     * \see IOptions.h
+     */
+    int getDimensionNumber() const {return dimensionNumber;}
+
+    /**
+     * Set the number of dimensions for the simulation.
+     * \see IOptions.h
+     */
+    void setDimensionNumber(int number) {dimensionNumber = number;}
 
 
 };//end class Options

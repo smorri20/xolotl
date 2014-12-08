@@ -33,7 +33,7 @@ namespace HDF5Utils {
 	 * Fill the network dataset.
 	 * @param network The network of clusters.
 	 */
-	void fillNetwork(std::shared_ptr<PSIClusterReactionNetwork> network);
+	void fillNetwork(PSIClusterReactionNetwork *network);
 
 	/**
 	 * Add a concentration subgroup for the given time step to the HDF5 file.

@@ -189,6 +189,27 @@ public interface Arguments {
 	String getNetworkFile();
 
 	/**
+	 * This Option annotation corresponds to the '--dimensions' option which
+	 * defines a default 1D and additionally provides a brief description of 
+	 * the option.
+	 * 
+	 * @param defaultValue
+	 *            The default number of dimensions that will be used if this option
+	 *            is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "1", 
+			description = "<dimensionNumber> The number of dimensions for the simulation (default = 1)")
+	/**
+	 * This operation produces the required command line option '--dimensions' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The name of the network file
+	 */
+	String getDimensions();
+
+	/**
 	 * This Option annotation corresponds to the '--stepSize' option which
 	 * defines a default step size and additionally provides a brief description 
 	 * of the option.
