@@ -12,6 +12,7 @@
 #include <VizOptionHandler.h>
 #include <MaterialOptionHandler.h>
 #include <VConcentrationOptionHandler.h>
+#include <DimensionsOptionHandler.h>
 #include "Options.h"
 
 namespace xolotlCore {
@@ -30,7 +31,8 @@ Options::Options() :
         perfRegistryType( xolotlPerf::IHandlerRegistry::std ),
 		vizStandardHandlersFlag(false),
 		materialName(""),
-		initialVConcentration(0.0) {
+		initialVConcentration(0.0),
+		dimensionNumber(0) {
 
 	// Create the network option handler
 	auto networkHandler = new NetworkOptionHandler();
@@ -54,6 +56,8 @@ Options::Options() :
 	auto materialHandler = new MaterialOptionHandler();
 	// Create the initial vacancy concentration option handler
 	auto vConcHandler = new VConcentrationOptionHandler();
+	// Create the dimensions option handler
+	auto dimHandler = new DimensionsOptionHandler();
 
 	// Add our notion of which options we support.
 	optionsMap[networkHandler->key] = networkHandler;
@@ -67,6 +71,7 @@ Options::Options() :
 	optionsMap[vizHandler->key] = vizHandler;
 	optionsMap[materialHandler->key] = materialHandler;
 	optionsMap[vConcHandler->key] = vConcHandler;
+	optionsMap[dimHandler->key] = dimHandler;
 }
 
 Options::~Options(void) {

@@ -147,6 +147,9 @@ BOOST_AUTO_TEST_CASE(goodParamFile)
     // Check the initial vacancy concentration option
     BOOST_REQUIRE_EQUAL(opts.getInitialVConcentration(), 0.05);
 
+    // Check the number of dimensions option
+    BOOST_REQUIRE_EQUAL(opts.getDimensionNumber(), 2);
+
     // Check the PETSc options
     BOOST_REQUIRE_EQUAL(opts.getPetscArgc(), 18);
 }

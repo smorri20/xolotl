@@ -262,6 +262,18 @@ public:
      */
     virtual void setInitialVConcentration(double conc) = 0;
 
+    /**
+     * Obtain the number of dimensions for the simulation.
+     * @return The number of dimensions.
+     */
+    virtual int getDimensionNumber() const = 0;
+
+    /**
+     * Set the number of dimensions for the simulation.
+     * @param number The number of dimensions.
+     */
+    virtual void setDimensionNumber(int number) = 0;
+
 };//end class IOptions
 
 } /* namespace xolotlCore */

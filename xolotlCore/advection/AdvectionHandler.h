@@ -34,7 +34,7 @@ public:
 	 *
 	 * @param network The network
 	 */
-	virtual void initialize(std::shared_ptr<PSIClusterReactionNetwork> network) {return;}
+	virtual void initialize(PSIClusterReactionNetwork *network) {return;}
 
 	/**
 	 * Compute the flux due to the advection for all the cluster,
@@ -57,7 +57,7 @@ public:
 	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
 	 * point where the advection is computed used to find the next solution
 	 */
-	void computeAdvection(std::shared_ptr<PSIClusterReactionNetwork> network, double hx,
+	void computeAdvection(PSIClusterReactionNetwork *network, double hx,
 			int xi, double *concOffset, double *rightConcOffset,
 			double *updatedConcOffset);
 
@@ -79,7 +79,7 @@ public:
 	 * advecting cluster in the network
 	 * @param xi The index of the grid point
 	 */
-	void computePartialsForAdvection(std::shared_ptr<PSIClusterReactionNetwork> network,
+	void computePartialsForAdvection(PSIClusterReactionNetwork *network,
 			double hx, double *val, int *indices, int xi);
 
 	/**

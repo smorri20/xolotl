@@ -26,8 +26,6 @@ include_directories(${PETSC_INCLUDES})
 
 #Link the directories
 link_directories(${CMAKE_SOURCE_DIR}/src/xolotlSolver)
-link_directories(${CMAKE_SOURCE_DIR}/src/xolotlSolver/flux)
-link_directories(${CMAKE_SOURCE_DIR}/src/xolotlSolver/temperature)
 
 #Get the test files
 file(GLOB tests *Tester.cpp)

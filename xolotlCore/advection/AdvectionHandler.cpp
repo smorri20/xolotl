@@ -3,7 +3,7 @@
 
 namespace xolotlCore {
 
-void AdvectionHandler::computeAdvection(std::shared_ptr<PSIClusterReactionNetwork> network,
+void AdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 		double hx, int xi, double *concOffset, double *rightConcOffset,
 		double *updatedConcOffset) {
 	// Get all the reactant
@@ -35,7 +35,7 @@ void AdvectionHandler::computeAdvection(std::shared_ptr<PSIClusterReactionNetwor
 }
 
 void AdvectionHandler::computePartialsForAdvection(
-		std::shared_ptr<PSIClusterReactionNetwork> network,
+		PSIClusterReactionNetwork *network,
 		double hx, double *val, int *indices, int xi) {
 	// Get all the reactant
 	auto reactants = network->getAll();

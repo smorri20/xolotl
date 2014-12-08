@@ -3,7 +3,7 @@
 
 namespace xolotlCore {
 
-void DiffusionHandler::initializeOFill(std::shared_ptr<PSIClusterReactionNetwork> network,
+void DiffusionHandler::initializeOFill(PSIClusterReactionNetwork *network,
 		int *ofill) {
 	// Get all the reactant
 	auto reactants = network->getAll();
@@ -34,7 +34,7 @@ void DiffusionHandler::initializeOFill(std::shared_ptr<PSIClusterReactionNetwork
 	return;
 }
 
-void DiffusionHandler::computeDiffusion(std::shared_ptr<PSIClusterReactionNetwork> network,
+void DiffusionHandler::computeDiffusion(PSIClusterReactionNetwork *network,
 		double sx, double *concOffset, double *leftConcOffset,
 		double *rightConcOffset, double *updatedConcOffset) {
 	// Get all the reactant
@@ -66,7 +66,7 @@ void DiffusionHandler::computeDiffusion(std::shared_ptr<PSIClusterReactionNetwor
 }
 
 void DiffusionHandler::computePartialsForDiffusion(
-		std::shared_ptr<PSIClusterReactionNetwork> network,
+		PSIClusterReactionNetwork *network,
 		double sx, double *val, int *indices) {
 	// Get all the reactant
 	auto reactants = network->getAll();

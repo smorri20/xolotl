@@ -211,6 +211,7 @@ public class Preprocessor {
 		}
 
 		// Set the parameter options that will be passed to Xolotl
+		xolotlParams.setProperty("dimensions", args.getDimensions());
 		xolotlParams.setProperty("startTemp", args.getStartTemp());
 		xolotlParams.setProperty("networkFile", args.getNetworkFile());
 		xolotlParams.setProperty("material", args.getMaterial());

@@ -15,6 +15,7 @@
 #include <DummyHandlerRegistry.h>
 #include <HDF5NetworkLoader.h>
 #include <Options.h>
+#include <PetscSolver1DHandler.h>
 #include <IMaterialFactory.h>
 #include <TemperatureHandlerFactory.h>
 #include <VizHandlerRegistryFactory.h>
@@ -27,9 +28,10 @@ using namespace xolotlCore;
  */BOOST_AUTO_TEST_SUITE (PetscSolverTester_testSuite)
 
 /**
- * This operation checks the concentration of clusters after solving a test case.
+ * This operation checks the concentration of clusters after solving a test case
+ * in 1D.
  */
-BOOST_AUTO_TEST_CASE(checkConcentrations) {
+BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 
 	// Initialize MPI for HDF5
 	int argc = 0;
@@ -80,19 +82,23 @@ BOOST_AUTO_TEST_CASE(checkConcentrations) {
     xolotlPerf::initialize(xolotlPerf::toPerfRegistryType("dummy"));
     xolotlFactory::initializeVizHandler(false);
 
+    // Create a solver handler and initialize it
+	auto solvHandler = std::make_shared<xolotlSolver::PetscSolver1DHandler> ();
+	solvHandler->initializeHandlers(materialFactory, tempHandler, opts);
+
     // Set the solver command line to give the PETSc options and initialize it
     solver->setCommandLineOptions(opts.getPetscArgc(), opts.getPetscArgv());
-	solver->initialize();
+	solver->initialize(solvHandler);
 
 	// Give it the network loader
 	solver->setNetworkLoader(loader);
 
 	// Solve and finalize
-	solver->solve(materialFactory, tempHandler, opts);
+	solver->solve();
 	solver->finalize();
 
 	// Check the concentrations left in the network
-	auto network = solver->getNetwork();
+	auto network = solvHandler->getNetwork();
 	double concs[network->getAll()->size()];
 	network->fillConcentrationsArray(concs);
 

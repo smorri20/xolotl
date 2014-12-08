@@ -88,8 +88,7 @@ void HDF5Utils::fillHeader(int physicalDim, int refinement) {
 	return;
 }
 
-void HDF5Utils::fillNetwork(
-		std::shared_ptr<PSIClusterReactionNetwork> network) {
+void HDF5Utils::fillNetwork(PSIClusterReactionNetwork *network) {
 	// Create the array that will store the network
 	int networkSize = network->size();
 	double networkArray[networkSize][6];

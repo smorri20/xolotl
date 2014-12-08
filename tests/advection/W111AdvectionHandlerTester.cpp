@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	loader.setFilename(filename);
 
 	// Load the network
-	auto network = loader.load();
+	auto network = (PSIClusterReactionNetwork *) loader.load().get();
 	// Get its size
 	const int size = network->getAll()->size();
 
