@@ -19,13 +19,14 @@ include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/bubblebursting)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf/dummy)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlFactory/material)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlFactory/temperaturehandler)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlFactory/vizhandler)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlViz)
 include_directories(${Boost_BINARY_DIRS})
 include_directories(${PETSC_INCLUDES})
 
 #Link the directories
 link_directories(${CMAKE_SOURCE_DIR}/src/xolotlSolver)
-link_directories(${CMAKE_SOURCE_DIR}/src/xolotlSolver/flux)
-link_directories(${CMAKE_SOURCE_DIR}/src/xolotlSolver/temperature)
 
 #Get the test files
 file(GLOB tests *Tester.cpp)
@@ -37,7 +38,8 @@ if(Boost_FOUND)
         message(STATUS "Making test ${test}")
         get_filename_component(testName ${test} NAME_WE)
         add_executable(${testName} ${test})
-        target_link_libraries(${testName} xolotlSolver xolotlReactants ${PETSC_LIBRARIES} xolotlPerf)
+        target_link_libraries(${testName} xolotlSolver xolotlReactants ${PETSC_LIBRARIES} 
+        xolotlPerf xolotlFactory)
         add_test(${testName} ${testName}) 
         #add a label so the tests can be run separately
         set_property(TEST ${testName} PROPERTY LABELS ${PACKAGE_NAME})   

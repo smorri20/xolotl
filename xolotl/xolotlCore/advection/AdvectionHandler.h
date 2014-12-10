@@ -35,8 +35,7 @@ public:
 	 * @param ofill The pointer to the array that will contain the value 1 at the indices
 	 * of the advecting clusters
 	 */
-	virtual void initialize(std::shared_ptr<PSIClusterReactionNetwork> network,
-			int *ofill) {return;}
+	virtual void initializeOFill(PSIClusterReactionNetwork *network, int *ofill) {return;}
 
 	/**
 	 * Compute the flux due to the advection for all the cluster,
@@ -60,7 +59,7 @@ public:
 	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
 	 * point where the advection is computed used to find the next solution
 	 */
-	void computeAdvection(std::shared_ptr<PSIClusterReactionNetwork> network, double hx,
+	void computeAdvection(PSIClusterReactionNetwork *network, double hx,
 			int xi, int surfacePos, double *concOffset, double *rightConcOffset,
 			double *updatedConcOffset);
 
@@ -78,17 +77,13 @@ public:
 	 * @param hx The space parameter, here the grid step size
 	 * @param val The pointer to the array that will contain the values of partials
 	 * for the advection
-	 * @param row The pointer to the array that will contain the indices of the row
-	 * for the Jacobian
-	 * @param col The pointer to the array that will contain the indices of the columns
-	 * for the Jacobian
-	 * @param xi The index of the grip point
-	 * @param xs The index of the first grid point on the locally owned grid
+	 * @param indices The pointer to the array that will contain the indices of the
+	 * advecting cluster in the network
+	 * @param xi The index of the grid point
 	 * @param surfacePos The index of the position on the surface
 	 */
-	void computePartialsForAdvection(std::shared_ptr<PSIClusterReactionNetwork> network,
-			double hx, double *val, int *row, int *col, int xi,
-			int xs, int surfacePos);
+	void computePartialsForAdvection(PSIClusterReactionNetwork *network,
+			double hx, double *val, int *indices, int xi, int surfacePos);
 
 	/**
 	 * Get the total number of advecting clusters in the network.

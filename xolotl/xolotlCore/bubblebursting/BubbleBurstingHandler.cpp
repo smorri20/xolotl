@@ -3,7 +3,7 @@
 
 namespace xolotlCore {
 
-void BubbleBurstingHandler::initialize(std::shared_ptr<PSIClusterReactionNetwork> network,
+void BubbleBurstingHandler::initialize(PSIClusterReactionNetwork *network,
 		double hx, int nGrid, int surfacePos) {
 	// Add the needed reaction connectivity
 	// Each V cluster connects to every HeV clusters with the same number of V
@@ -63,7 +63,7 @@ void BubbleBurstingHandler::initialize(std::shared_ptr<PSIClusterReactionNetwork
 	return;
 }
 
-void BubbleBurstingHandler::updateBurstingRate(std::shared_ptr<PSIClusterReactionNetwork> network) {
+void BubbleBurstingHandler::updateBurstingRate(PSIClusterReactionNetwork *network) {
 	// Get all the HeV bubbles from the network
 	auto bubbles = network->getAll(heVType);
 
@@ -84,7 +84,7 @@ void BubbleBurstingHandler::updateBurstingRate(std::shared_ptr<PSIClusterReactio
 	return;
 }
 
-void BubbleBurstingHandler::computeBursting(std::shared_ptr<PSIClusterReactionNetwork> network,
+void BubbleBurstingHandler::computeBursting(PSIClusterReactionNetwork *network,
 		int xi, int surfacePos, double *concOffset, double *updatedConcOffset) {
 	// Get all the HeV bubbles
 	auto bubbles = network->getAll(heVType);
@@ -117,27 +117,23 @@ void BubbleBurstingHandler::computeBursting(std::shared_ptr<PSIClusterReactionNe
 	return;
 }
 
-int BubbleBurstingHandler::computePartialsForBursting(std::shared_ptr<PSIClusterReactionNetwork> network,
-		double *val, int *row, int *col, int xi, int xs, int surfacePos) {
+int BubbleBurstingHandler::computePartialsForBursting(PSIClusterReactionNetwork *network,
+		double *val, int *indices, int xi, int surfacePos) {
 	// Get all the HeV bubbles
 	auto bubbles = network->getAll(heVType);
 	// Get the size of the network
 	int size = network->getAll()->size();
 
 	// Get the pointer to list of indices at this grid point
-	std::vector<int> * indices = &indexVector[xi - surfacePos];
+	std::vector<int> * clusterIndices = &indexVector[xi - surfacePos];
 	// Loop on the list
-	for (int i = 0; i < indices->size(); i++) {
+	for (int i = 0; i < clusterIndices->size(); i++) {
 		// Get the stored bubble and its ID
-		auto bubble = (PSICluster *) bubbles[indices->at(i)];
+		auto bubble = (PSICluster *) bubbles[clusterIndices->at(i)];
 		int bubbleIndex = bubble->getId() - 1;
 
-		// Set the row and column indices. These indices are computed
-		// by using xi and xi-1, and the arrays are shifted to
-		// (xs+1)*size to properly account for the neighboring ghost
-		// cells.
-		row[i * 2] = (xi - xs + 1) * size + bubbleIndex;
-		col[i] = (xi - xs + 1) * size + bubbleIndex;
+		// Keep the bubble index
+		indices[i * 2] = bubbleIndex;
 		// Set its partial derivative
 		val[i * 2] = -kBursting;
 
@@ -146,12 +142,12 @@ int BubbleBurstingHandler::computePartialsForBursting(std::shared_ptr<PSICluster
 		auto vCluster = (PSICluster *) network->get(vType, comp[vType]);
 		// And its ID
 		int vIndex = vCluster->getId() - 1;
-		// Set its partial derivative (the column is the same as previously)
-		row[(i * 2) + 1] = (xi - xs + 1) * size + vIndex;
+		// Set its partial derivative
+		indices[(i * 2) + 1] = vIndex;
 		val[(i * 2) + 1] = kBursting;
 	}
 
-	return indices->size();
+	return clusterIndices->size();
 }
 
 }/* end namespace xolotlCore */

@@ -20,8 +20,8 @@ public:
 	 */
 	PetscOptionHandler() :
 		OptionHandler("petscArgs",
-				"petscArgs                           "
-				"All the arguments that will be given to PETSc") {}
+				"petscArgs                         "
+				"All the arguments that will be given to PETSc.\n") {}
 
 	/**
 	 * The destructor
@@ -56,7 +56,7 @@ public:
 		// The PETSc argv is an array of pointers to C strings.
 		auto argv = new char*[tokens.size() + 2];
 		// Create the fake application name
-		std::string appName = "fakeApplicationNameForPETSc";
+		std::string appName = "fakeXolotlApplicationNameForPETSc";
 		argv[0] = new char[appName.length() + 1];
 		strcpy(argv[0], appName.c_str());
 

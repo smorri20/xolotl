@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	loader.setFilename(filename);
 
 	// Load the network
-	auto network = loader.load();
+	auto network = (PSIClusterReactionNetwork *) loader.load().get();
 	// Get its size
 	const int size = network->getAll()->size();
 
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	int *ofill = &mat[0];
 
 	// Initialize it
-	advectionHandler.initialize(network, ofill);
+	advectionHandler.initializeOFill(network, ofill);
 
 	// Check the total number of advecting clusters
 	BOOST_REQUIRE_EQUAL(advectionHandler.getNumberOfAdvecting(), 2);
@@ -101,25 +101,19 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 
 	// Initialize the rows, columns, and values to set in the Jacobian
 	int nAdvec = advectionHandler.getNumberOfAdvecting();
-	int row[nAdvec], col[2*nAdvec];
+	int indices[nAdvec];
 	double val[2*nAdvec];
 	// Get the pointer on them for the compute advection method
-	int *rowPointer = &row[0];
-	int *colPointer = &col[0];
+	int *indicesPointer = &indices[0];
 	double *valPointer = &val[0];
 
 	// Compute the partial derivatives for the advection a the grid point 1
 	advectionHandler.computePartialsForAdvection(network, hx, valPointer,
-			rowPointer, colPointer, 1, 0, surfacePos);
+			indicesPointer, 1, surfacePos);
 
 	// Check the values for the indices
-	BOOST_REQUIRE_EQUAL(row[0], 11);
-	BOOST_REQUIRE_EQUAL(row[1], 12);
-
-	BOOST_REQUIRE_EQUAL(col[0], 6);
-	BOOST_REQUIRE_EQUAL(col[1], 11);
-	BOOST_REQUIRE_EQUAL(col[2], 7);
-	BOOST_REQUIRE_EQUAL(col[3], 12);
+	BOOST_REQUIRE_EQUAL(indices[0], 1);
+	BOOST_REQUIRE_EQUAL(indices[1], 2);
 
 	// Check values
 	BOOST_REQUIRE_CLOSE(val[0], 509225360.0, 0.01);

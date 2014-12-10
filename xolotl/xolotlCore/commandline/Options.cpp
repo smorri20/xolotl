@@ -14,6 +14,7 @@
 #include <VConcentrationOptionHandler.h>
 #include <VoidPortionOptionHandler.h>
 #include <PhysicsProcessOptionHandler.h>
+#include <DimensionsOptionHandler.h>
 #include "Options.h"
 
 namespace xolotlCore {
@@ -34,7 +35,8 @@ Options::Options() :
 		materialName(""),
 		initialVConcentration(0.0),
 		voidPortion(50.0),
-		processName("all") {
+		processName("all"),
+		dimensionNumber(0) {
 
 	// Create the network option handler
 	auto networkHandler = new NetworkOptionHandler();
@@ -62,6 +64,8 @@ Options::Options() :
 	auto voidHandler = new VoidPortionOptionHandler();
 	// Create the physics process option handler
 	auto processHandler = new PhysicsProcessOptionHandler();
+	// Create the dimensions option handler
+	auto dimHandler = new DimensionsOptionHandler();
 
 	// Add our notion of which options we support.
 	optionsMap[networkHandler->key] = networkHandler;
@@ -77,6 +81,7 @@ Options::Options() :
 	optionsMap[vConcHandler->key] = vConcHandler;
 	optionsMap[voidHandler->key] = voidHandler;
 	optionsMap[processHandler->key] = processHandler;
+	optionsMap[dimHandler->key] = dimHandler;
 }
 
 Options::~Options(void) {

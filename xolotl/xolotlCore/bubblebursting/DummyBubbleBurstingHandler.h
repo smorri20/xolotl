@@ -34,7 +34,7 @@ public:
 	 * @param nGrid The number of points on the grid
 	 * @param surfacePos The index of the position on the surface
 	 */
-	void initialize(std::shared_ptr<PSIClusterReactionNetwork> network, double hx,
+	void initialize(PSIClusterReactionNetwork *network, double hx,
 			int nGrid, int surfacePos) {
 		// Clear the vector of HeV bubble bursting at each grid point
 		indexVector.clear();
@@ -50,7 +50,7 @@ public:
 	 *
 	 * @param network The network
 	 */
-	void updateBurstingRate(std::shared_ptr<PSIClusterReactionNetwork> network) {
+	void updateBurstingRate(PSIClusterReactionNetwork *network) {
 		kBursting = 0.0;
 
 		return;
@@ -66,11 +66,11 @@ public:
 	 * @param xi The index of the position on the grid
 	 * @param surfacePos The index of the position on the surface
 	 * @param concOffset The pointer to the array of concentration at the grid
-	 * point where the advection is computed
+	 * point where the bursting is computed
 	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
-	 * point where the advection is computed used to find the next solution
+	 * point where the bursting is computed used to find the next solution
 	 */
-	void computeBursting(std::shared_ptr<PSIClusterReactionNetwork> network,
+	void computeBursting(PSIClusterReactionNetwork *network,
 			int xi, int surfacePos, double *concOffset, double *updatedConcOffset) {
 		return;
 	}
@@ -83,7 +83,7 @@ public:
 	 *
 	 * @param network The network
 	 * @param val The pointer to the array that will contain the values of partials
-	 * for the advection
+	 * for the bursting
 	 * @param row The pointer to the array that will contain the indices of the row
 	 * for the Jacobian
 	 * @param col The pointer to the array that will contain the indices of the columns
@@ -94,8 +94,8 @@ public:
 	 *
 	 * @return The number of bubbles that can burst at this grid point
 	 */
-	int computePartialsForBursting(std::shared_ptr<PSIClusterReactionNetwork> network,
-			double *val, int *row, int *col, int xi, int xs, int surfacePos) {
+	int computePartialsForBursting(PSIClusterReactionNetwork *network,
+			double *val, int *indices, int xi, int surfacePos) {
 		return 0;
 	}
 

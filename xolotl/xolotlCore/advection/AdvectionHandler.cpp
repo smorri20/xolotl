@@ -3,7 +3,7 @@
 
 namespace xolotlCore {
 
-void AdvectionHandler::computeAdvection(std::shared_ptr<PSIClusterReactionNetwork> network,
+void AdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 		double hx, int xi, int surfacePos, double *concOffset, double *rightConcOffset,
 		double *updatedConcOffset) {
 	// Get all the reactant
@@ -35,9 +35,8 @@ void AdvectionHandler::computeAdvection(std::shared_ptr<PSIClusterReactionNetwor
 }
 
 void AdvectionHandler::computePartialsForAdvection(
-		std::shared_ptr<PSIClusterReactionNetwork> network,
-		double hx, double *val, int *row, int *col, int xi,
-		int xs, int surfacePos) {
+		PSIClusterReactionNetwork *network,
+		double hx, double *val, int *indices, int xi, int surfacePos) {
 	// Get all the reactant
 	auto reactants = network->getAll();
 	// And the size of the network
@@ -56,17 +55,9 @@ void AdvectionHandler::computePartialsForAdvection(
 		// Get the sink strenght value
 		double sinkStrength = sinkStrengthVector[i];
 
-		// Set the row and column indices. These indices are computed
-		// by using xi and xi-1, and the arrays are shifted to
-		// (xs+1)*size to properly account for the neighboring ghost
-		// cells.
-
-		// Set the row index
-		row[i] = (xi - xs + 1) * size + index;
-
-		// Set the columns indices
-		col[i * 2] = ((xi - 1) - xs + 1) * size + index;
-		col[(i * 2) + 1] = (xi - xs + 1) * size + index;
+		// Set the cluster index that will be used by PetscSolver
+		// to compute the row and column indices for the Jacobian
+		indices[i] = index;
 
 		// Compute the partial derivatives for advection of this cluster as
 		// explained in the description of this method

@@ -251,19 +251,7 @@ public:
      * @param material The name of the material.
      */
     virtual void setMaterial(std::string material) = 0;
-
-    /**
-     * Obtain the value of the concentration for the vacancies.
-     * @return The concentration value.
-     */
-    virtual double getInitialVConcentration() const = 0;
-
-    /**
-     * Set the value of the concentration for the vacancies.
-     * @param conc The value for the concentration.
-     */
-    virtual void setInitialVConcentration(double conc) = 0;
-
+    
     /**
      * Obtain the value of the void portion for the simulation.
      * @return The portion.
@@ -287,6 +275,30 @@ public:
      * @param material The name of the process.
      */
     virtual void setPhysicsProcess(std::string process) = 0;
+
+    /**
+     * Obtain the value of the concentration for the vacancies.
+     * @return The concentration value.
+     */
+    virtual double getInitialVConcentration() const = 0;
+
+    /**
+     * Set the value of the concentration for the vacancies.
+     * @param conc The value for the concentration.
+     */
+    virtual void setInitialVConcentration(double conc) = 0;
+
+    /**
+     * Obtain the number of dimensions for the simulation.
+     * @return The number of dimensions.
+     */
+    virtual int getDimensionNumber() const = 0;
+
+    /**
+     * Set the number of dimensions for the simulation.
+     * @param number The number of dimensions.
+     */
+    virtual void setDimensionNumber(int number) = 0;
 
 };//end class IOptions
 

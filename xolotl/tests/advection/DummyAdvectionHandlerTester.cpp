@@ -36,15 +36,19 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	loader.setFilename(filename);
 
 	// Load the network
-	auto network = loader.load();
+	auto network = (PSIClusterReactionNetwork *) loader.load().get();
 	// Get its size
 	const int size = network->getAll()->size();
 
 	// Create the advection handler
 	DummyAdvectionHandler advectionHandler;
 
+	// Create ofill
+	int mat[size*size];
+	int *ofill = &mat[0];
+
 	// Initialize it
-	advectionHandler.initialize(network);
+	advectionHandler.initializeOFill(network, ofill);
 
 	// Check the total number of advecting clusters, it should be 0 here
 	BOOST_REQUIRE_EQUAL(advectionHandler.getNumberOfAdvecting(), 0);

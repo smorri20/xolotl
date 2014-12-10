@@ -153,8 +153,11 @@ BOOST_AUTO_TEST_CASE(goodParamFile)
     // Check the physics process option
     BOOST_REQUIRE_EQUAL(opts.getPhysicsProcess(), "diff");
 
+    // Check the number of dimensions option
+    BOOST_REQUIRE_EQUAL(opts.getDimensionNumber(), 2);
+
     // Check the PETSc options
-    BOOST_REQUIRE_EQUAL(opts.getPetscArgc(), 21);
+    BOOST_REQUIRE_EQUAL(opts.getPetscArgc(), 18);
 }
 
 BOOST_AUTO_TEST_CASE(wrongPerfHandler)
@@ -390,6 +393,8 @@ BOOST_AUTO_TEST_CASE(defaultOptions)
     BOOST_REQUIRE_EQUAL(opts.getVoidPortion(), 50.0);
     // Check the physics process option
     BOOST_REQUIRE_EQUAL(opts.getPhysicsProcess(), "all");
+    // Check the dimension option
+    BOOST_REQUIRE_EQUAL(opts.getDimensionNumber(), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

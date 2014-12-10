@@ -5,9 +5,6 @@
 #include "ISolver.h"
 #include <PSIClusterNetworkLoader.h>
 #include <PSIClusterReactionNetwork.h>
-#include <IDiffusionHandler.h>
-#include <IAdvectionHandler.h>
-#include <IBubbleBurstingHandler.h>
 #include <petscsys.h>
 #include <petscdmda.h>
 #include <memory>
@@ -35,44 +32,13 @@ private:
 	char **CLIArgs;
 
 	//! The network loader that can load the reaction network data.
-	std::shared_ptr<PSIClusterNetworkLoader> networkLoader;
+	PSIClusterNetworkLoader *networkLoader;
 
 	//! The original network created from the network loader.
-	static std::shared_ptr<PSIClusterReactionNetwork> network;
+	PSIClusterReactionNetwork *network;
 
-	//! The grid step size.
-	static double hx;
-
-	//! The initial vacancy concentration.
-	static double initialV;
-
-	//! The position of the surface
-	static int surfacePosition;
-
-	//! The original flux handler created.
-	static std::shared_ptr<IFluxHandler> fluxHandler;
-
-	//! The original temperature handler created.
-	static std::shared_ptr<ITemperatureHandler> temperatureHandler;
-
-	//! The original diffusion handler created.
-	static std::shared_ptr<IDiffusionHandler> diffusionHandler;
-
-	//! The original advection handler created.
-	static std::shared_ptr<IAdvectionHandler> advectionHandler;
-
-	//! The original bubble bursting handler created.
-	static std::shared_ptr<IBubbleBurstingHandler> bubbleBurstingHandler;
-
-	/**
-	 * This operation fills the diagonal block of the matrix. The diagonal
-	 * block in Xolotl represents the coupling between different reactants
-	 * via their reactions.
-	 * @param diagFill The diagonal block of the matrix.
-	 * @param diagFillSize The number of PetscInts in the diagonal block.
-	 * @return The error code. 0 if there is no error.
-	 */
-	PetscErrorCode getDiagonalFill(PetscInt *diagFill, int diagFillSize);
+	//! The original solver handler.
+	static ISolverHandler *solverHandler;
 
 	/**
 	 * This operation configures the initial conditions of the grid in Xolotl.
@@ -136,21 +102,15 @@ public:
 	 * possibly including but not limited to setting up MPI and loading initial
 	 * conditions. If the solver can not be initialized, this operation will
 	 * throw an exception of type std::string.
+	 * @param solverHandler The solver handler
 	 */
-	void initialize();
+	void initialize(std::shared_ptr<ISolverHandler> solverHandler);
 
 	/**
 	 * This operation directs the Solver to perform the solve. If the solve
 	 * fails, it will throw an exception of type std::string.
-	 * @param material The material factory
-	 * @param temperatureHandler The temperature handler that will be used
-	 * when performing the solve
-	 * @param options The options from the parameter file
 	 */
-	void solve(std::shared_ptr<xolotlFactory::IMaterialFactory> material,
-			std::shared_ptr<ITemperatureHandler> temperatureHandler,
-			Options &options);
-
+	void solve();
 
 	/**
 	 * This operation performs all necessary finalization for the solver
@@ -161,100 +121,13 @@ public:
 	void finalize();
 
 	/**
-	 * This operation returns the network loaded for this solver. This
-	 * operation is only for use by PETSc code and is not part of the
-	 * ISolver interface.
-	 * @return The reaction network loaded for this solver
-	 */
-	static std::shared_ptr<PSIClusterReactionNetwork> getNetwork() {
-		return network;
-	}
-
-	/**
-	 * This operation returns the grid step size. This operation is only for
-	 * use by PETSc code and is not part of the ISolver interface.
-	 * @return The grid step size
-	 */
-	static double getStepSize() {
-		return hx;
-	}
-
-	/**
-	 * This operation returns the initial vacancy concentration. This operation
-	 * is only for use by PETSc code and is not part of the ISolver interface.
-	 * @return The initial vacancy concentration
-	 */
-	static double getInitialV() {
-		return initialV;
-	}
-
-	/**
-	 * This operation returns the surface position. This operation
-	 * is only for use by PETSc code and is not part of the ISolver interface.
-	 * @return The surface position
-	 */
-	static int getSurfacePosition() {
-		return surfacePosition;
-	}
-
-	/**
-	 * This operation sets the surface position. This operation
-	 * is only for use by PETSc code and is not part of the ISolver interface.
-	 * @param pos The surface position
-	 */
-	static void setSurfacePosition(int pos) {
-		surfacePosition = pos;
-		return;
-	}
-
-	/**
-	 * This operation returns the flux handler for this solver. This
-	 * operation is only for use by PETSc code and is not part of the
-	 * ISolver interface.
-	 * @return The flux handler for this solver
-	 */
-	static std::shared_ptr<IFluxHandler> getFluxHandler() {
-		return fluxHandler;
-	}
-
-	/**
-	 * This operation returns the temperature handler for this solver. This
-	 * operation is only for use by PETSc code and is not part of the
-	 * ISolver interface.
-	 * @return The temperature handler for this solver
-	 */
-	static std::shared_ptr<ITemperatureHandler> getTemperatureHandler() {
-		return temperatureHandler;
-	}
-
-	/**
-	 * This operation returns the diffusion handler for this solver. This
-	 * operation is only for use by PETSc code and is not part of the
-	 * ISolver interface.
-	 * @return The diffusion handler for this solver
-	 */
-	static std::shared_ptr<IDiffusionHandler> getDiffusionHandler() {
-		return diffusionHandler;
-	}
-
-	/**
-	 * This operation returns the advection handler for this solver. This
+	 * This operation returns the solver handler for this solver. This
 	 * operation is only for use by PETSc code and is not part of the
 	 * ISolver interface.
 	 * @return The advection handler for this solver
 	 */
-	static std::shared_ptr<IAdvectionHandler> getAdvectionHandler() {
-		return advectionHandler;
-	}
-
-	/**
-	 * This operation returns the bubble bursting handler for this solver.
-	 * This operation is only for use by PETSc code and is not part of the
-	 * ISolver interface.
-	 * @return The bubble bursting handler for this solver
-	 */
-	static std::shared_ptr<IBubbleBurstingHandler> getBubbleBurstingHandler() {
-		return bubbleBurstingHandler;
+	static ISolverHandler *getSolverHandler() {
+		return solverHandler;
 	}
 
 protected:

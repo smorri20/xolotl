@@ -120,6 +120,11 @@ protected:
 	 */
 	std::string processName;
 
+	/**
+	 * Number of dimensions for the simulation.
+	 */
+	int dimensionNumber;
+
 public:
 
 	/**
@@ -390,6 +395,17 @@ public:
      */
     void setPhysicsProcess(std::string process) {processName = process;}
 
+    /**
+     * Obtain the number of dimensions for the simulation.
+     * \see IOptions.h
+     */
+    int getDimensionNumber() const {return dimensionNumber;}
+
+    /**
+     * Set the number of dimensions for the simulation.
+     * \see IOptions.h
+     */
+    void setDimensionNumber(int number) {dimensionNumber = number;}
 
 };//end class Options
 

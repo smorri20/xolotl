@@ -31,7 +31,7 @@ public:
 	 * @param ofill The pointer to the array that will contain the value 1 at the indices
 	 * of the diffusing clusters
 	 */
-	void initializeOFill(std::shared_ptr<PSIClusterReactionNetwork> network, int *ofill) {
+	void initializeOFill(PSIClusterReactionNetwork *network, int *ofill) {
 		// Clear the index vector
 		indexVector.clear();
 
