@@ -32,7 +32,7 @@ Options::Options() :
 		vizStandardHandlersFlag(false),
 		materialName(""),
 		initialVConcentration(0.0),
-		dimensionNumber(0) {
+		dimensionNumber(1) {
 
 	// Create the network option handler
 	auto networkHandler = new NetworkOptionHandler();
