@@ -41,16 +41,6 @@ private:
 	static ISolverHandler *solverHandler;
 
 	/**
-	 * This operation fills the diagonal block of the matrix. The diagonal
-	 * block in Xolotl represents the coupling between different reactants
-	 * via their reactions.
-	 * @param diagFill The diagonal block of the matrix.
-	 * @param diagFillSize The number of PetscInts in the diagonal block.
-	 * @return The error code. 0 if there is no error.
-	 */
-	PetscErrorCode getDiagonalFill(PetscInt *diagFill, int diagFillSize);
-
-	/**
 	 * This operation configures the initial conditions of the grid in Xolotl.
 	 * @param data The DM (data manager) created by Petsc
 	 * @param solutionVector The solution vector that contains the PDE
