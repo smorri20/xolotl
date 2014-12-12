@@ -21,10 +21,15 @@ bool initializeDimension(xolotlCore::Options &options) {
 		case 1:
 			theSolverHandler = std::make_shared<xolotlSolver::PetscSolver1DHandler>();
 			break;
+		case 2:
+			// To be implemented
+			throw std::string("\nxolotlFactory: 2D solver handler is not implemented yet.");
+		case 3:
+			// To be implemented
+			throw std::string("\nxolotlFactory: 3D solver handler is not implemented yet.");
 		default:
-			// The asked dimension is not good
-			throw std::string(
-					"\nxolotlFactory: Cannot handle the required dimension.");
+			// The asked dimension is not good (e.g. -1, 0, 4)
+			throw std::string("\nxolotlFactory: Bad dimension for the solver handler.");
 	}
 
 	return ret;
