@@ -16,6 +16,8 @@ namespace xolotlSolver {
 /**
  * Realizations of this interface are responsible for the actual implementation of
  * each piece of the solver. It is created to handle the multiple dimensions more easily.
+ *
+ * TODO - It will be better to have a PETSc-free solver handler interface (like ISolver)
  */
 class ISolverHandler {
 

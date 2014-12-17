@@ -1,5 +1,5 @@
 // Includes
-#include <PetscSolver1DHandler.h>
+#include <PetscSolver3DHandler.h>
 #include <HDF5Utils.h>
 #include <MathUtils.h>
 #include <Constants.h>
@@ -16,7 +16,7 @@ inline bool checkPetscError(PetscErrorCode errorCode) {
 	CHKERRQ(errorCode);
 }
 
-void PetscSolver1DHandler::createSolverContext(DM &da) const {
+void PetscSolver3DHandler::createSolverContext(DM &da) const {
 	PetscErrorCode ierr;
 
 	// Degrees of freedom is the total number of clusters in the network
@@ -74,7 +74,7 @@ void PetscSolver1DHandler::createSolverContext(DM &da) const {
 	return;
 }
 
-void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
+void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 	PetscErrorCode ierr;
 
 	// Pointer for the concentration vector
@@ -159,7 +159,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 	return;
 }
 
-void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, PetscReal ftime,
+void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, PetscReal ftime,
 		bool &temperatureChanged) const {
 	PetscErrorCode ierr;
 
@@ -296,7 +296,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 	return;
 }
 
-void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J) const {
+void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J) const {
 	PetscErrorCode ierr;
 
 	// Get the distributed array
@@ -407,7 +407,7 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	return;
 }
 
-void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) const {
+void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) const {
 	PetscErrorCode ierr;
 
 	// Get the distributed array
