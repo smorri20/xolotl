@@ -53,7 +53,7 @@ public:
 	 *
 	 * @param da The PETSC distributed array
 	 */
-	virtual void createSolverContext(DM &da) const = 0;
+	virtual void createSolverContext(DM &da) = 0;
 
 	/**
 	 * Get the diagonal fill for the Jacobian, corresponding to the reactions.
@@ -61,7 +61,7 @@ public:
 	 * @param diagFill The pointer to the vector where the connectivity information is kept
 	 * @param diagFillSize The size of this vector
 	 */
-	virtual void getDiagonalFill(PetscInt *diagFill, int diagFillSize) const = 0;
+	virtual void getDiagonalFill(PetscInt *diagFill, int diagFillSize) = 0;
 
 	/**
 	 * Initialize the concentration solution vector.
@@ -82,7 +82,7 @@ public:
 	 * @param temperatureChanged True is the temperature has changed at this time
 	 */
 	virtual void updateConcentration(TS &ts, Vec &localC, Vec &F, PetscReal ftime,
-			bool &temperatureChanged) const = 0;
+			bool &temperatureChanged) = 0;
 
 	/**
 	 * Compute the off-diagonal part of the Jacobian which is related to cluster's motion.
@@ -100,7 +100,7 @@ public:
 	 * @param localC The PETSC local solution vector
 	 * @param J The Jacobian
 	 */
-	virtual void computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) const = 0;
+	virtual void computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) = 0;
 
 	/**
 	 * Get the step size.

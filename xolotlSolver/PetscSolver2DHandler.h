@@ -23,7 +23,7 @@ public:
 	 * Create everything needed before starting to solve.
      * \see ISolverHandler.h
 	 */
-	void createSolverContext(DM &da) const;
+	void createSolverContext(DM &da);
 
 	/**
 	 * Initialize the concentration solution vector.
@@ -37,7 +37,7 @@ public:
      * \see ISolverHandler.h
 	 */
 	void updateConcentration(TS &ts, Vec &localC, Vec &F, PetscReal ftime,
-			bool &temperatureChanged) const;
+			bool &temperatureChanged);
 
 	/**
 	 * Compute the off-diagonal part of the Jacobian which is related to cluster's motion.
@@ -49,7 +49,7 @@ public:
 	 * Compute the diagonal part of the Jacobian which is related to cluster reactions.
      * \see ISolverHandler.h
 	 */
-	void computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) const;
+	void computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J);
 
 }; //end class PetscSolver2DHandler
 

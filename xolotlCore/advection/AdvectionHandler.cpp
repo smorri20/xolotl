@@ -4,12 +4,15 @@
 namespace xolotlCore {
 
 void AdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
-		double hx, int xi, double *concOffset, double *rightConcOffset,
+		double hx, std::vector<double> &pos, double **concVector,
 		double *updatedConcOffset) {
 	// Get all the reactant
 	auto reactants = network->getAll();
 	// Get the number of advecting cluster
 	int nAdvec = indexVector.size();
+
+	// Get the number of degrees of freedom which is the size of the network
+	int dof = reactants->size();
 
 	// Loop on them
 	for (int i = 0; i < nAdvec; i++) {
@@ -19,12 +22,12 @@ void AdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 		int index = cluster->getId() - 1;
 
 		// Get the initial concentrations
-		double oldConc = concOffset[index];
-		double oldRightConc = rightConcOffset[index];
+		double oldConc = concVector[1][index];
+		double oldRightConc = concVector[2][index];
 
 		// Compute the concentration as explained in the description of the method
 		double conc = (3.0 * sinkStrengthVector[i] * cluster->getDiffusionCoefficient())
-				* ((oldRightConc / pow((xi + 1) * hx, 4)) - (oldConc / pow(xi * hx, 4)))
+				* ((oldRightConc / pow(pos[0] + hx, 4)) - (oldConc / pow(pos[0], 4)))
 				/ (xolotlCore::kBoltzmann * cluster->getTemperature() * hx);
 
 		// Update the concentration of the cluster
@@ -36,7 +39,7 @@ void AdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 
 void AdvectionHandler::computePartialsForAdvection(
 		PSIClusterReactionNetwork *network,
-		double hx, double *val, int *indices, int xi) {
+		double hx, double *val, int *indices, std::vector<double> &pos) {
 	// Get all the reactant
 	auto reactants = network->getAll();
 	// And the size of the network
@@ -63,10 +66,10 @@ void AdvectionHandler::computePartialsForAdvection(
 		// explained in the description of this method
 		val[i * 2] = (3.0 * sinkStrength * diffCoeff)
 						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-								* hx * pow(xi * hx, 4));
+								* hx * pow(pos[0], 4));
 		val[(i * 2) + 1] = -(3.0 * sinkStrength * diffCoeff)
 								/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-										* hx * pow(xi * hx, 4));
+										* hx * pow(pos[0], 4));
 	}
 
 	return;

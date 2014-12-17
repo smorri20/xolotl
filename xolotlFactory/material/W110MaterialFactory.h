@@ -5,7 +5,7 @@
 #include <MaterialFactory.h>
 #include <W110FitFluxHandler.h>
 #include <W110AdvectionHandler.h>
-#include <DiffusionHandler.h>
+#include <Diffusion1DHandler.h>
 
 namespace xolotlFactory {
 
@@ -22,7 +22,7 @@ public:
 	W110MaterialFactory() {
 		theFluxHandler = std::make_shared<xolotlCore::W110FitFluxHandler>();
 		theAdvectionHandler = std::make_shared<xolotlCore::W110AdvectionHandler>();
-		theDiffusionHandler = std::make_shared<xolotlCore::DiffusionHandler>();
+		theDiffusionHandler = std::make_shared<xolotlCore::Diffusion1DHandler>();
 
 		return;
 	}

@@ -75,12 +75,20 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 
 	// Get the offset for the grid point in the middle
 	double *concOffset = conc + size;
-	double *rightConcOffset = conc + size * 2;
 	double *updatedConcOffset = updatedConc + size;
 
+	// Fill the concVector with the pointer to the left, middle, and right grid points
+	double **concVector = new double*[3];
+	concVector[0] = conc;
+	concVector[1] = concOffset;
+	concVector[2] = conc + 2 * size;
+
+	// Set the grid position
+	std::vector<double> gridPosition = { hx, 0, 0 };
+
 	// Compute the advection at this grid point
-	advectionHandler.computeAdvection(network, hx, 1,
-			concOffset, rightConcOffset, updatedConcOffset);
+	advectionHandler.computeAdvection(network, hx, gridPosition,
+			concVector, updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 0.0, 0.01); // Does not advect
@@ -99,7 +107,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 
 	// Compute the partial derivatives for the advection a the grid point 1
 	advectionHandler.computePartialsForAdvection(network, hx, valPointer,
-			indicesPointer, 1);
+			indicesPointer, gridPosition);
 
 	// Check the values for the indices
 	BOOST_REQUIRE_EQUAL(indices[0], 1);

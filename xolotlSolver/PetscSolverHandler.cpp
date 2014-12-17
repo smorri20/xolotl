@@ -24,7 +24,7 @@ std::vector<double> clusterPartials;
 std::vector<double> reactingPartialsForCluster;
 
 void PetscSolverHandler::getDiagonalFill(PetscInt *diagFill,
-		int diagFillSize) const {
+		int diagFillSize) {
 
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = network->size();

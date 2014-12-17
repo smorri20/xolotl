@@ -32,26 +32,23 @@ public:
 
 	/**
 	 * Compute the flux due to the advection for all the cluster,
-	 * given the space parameter hx and the position index xi.
+	 * given the space parameter hx and the position.
 	 * This method is called by the RHSFunction from the PetscSolver.
 	 *
 	 * @param network The network
 	 * @param hx The space parameter, here the grid step size
-	 * @param xi The index of the position on the grid
-	 * @param concOffset The pointer to the array of concentration at the grid
-	 * point where the advection is computed
-	 * @param rightConcOffset The pointer to the array of concentration at the grid
-	 * point to the right of where the advection is computed
+	 * @param pos The position on the grid
+	 * @param concVector The pointer to the pointer of arrays of concentration at left,
+	 * middle, right grid points
 	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
 	 * point where the advection is computed used to find the next solution
 	 */
 	virtual void computeAdvection(PSIClusterReactionNetwork *network, double hx,
-			int xi, double *concOffset, double *rightConcOffset,
-			double *updatedConcOffset) = 0;
+			std::vector<double> &pos, double **concVector, double *updatedConcOffset) = 0;
 
 	/**
 	 * Compute the partials due to the advection of all the clusters given
-	 * the space parameter hx and the position index xi.
+	 * the space parameter hx and the position.
 	 * This method is called by the RHSJacobian from the PetscSolver.
 	 *
 	 * @param network The network
@@ -60,10 +57,10 @@ public:
 	 * for the advection
 	 * @param indices The pointer to the array that will contain the indices of the
 	 * advecting cluster in the network
-	 * @param xi The index of the grid point
+	 * @param pos The position on the grid
 	 */
 	virtual void computePartialsForAdvection(PSIClusterReactionNetwork *network,
-			double hx, double *val, int *indices, int xi) = 0;
+			double hx, double *val, int *indices, std::vector<double> &pos) = 0;
 
 	/**
 	 * Get the total number of advecting clusters in the network.

@@ -1,46 +1,17 @@
 // Includes
-#include "DiffusionHandler.h"
+#include "Diffusion1DHandler.h"
 
 namespace xolotlCore {
 
-void DiffusionHandler::initializeOFill(PSIClusterReactionNetwork *network,
-		int *ofill) {
-	// Get all the reactant
-	auto reactants = network->getAll();
-	int size = reactants->size();
-
-	// Clear the index vector
-	indexVector.clear();
-
-	// Loop on them
-	for (int i = 0; i < size; i++) {
-		// Get the i-th cluster
-		auto cluster = (PSICluster *) reactants->at(i);
-		// Get its diffusion coefficient
-		double diffFactor = cluster->getDiffusionFactor();
-
-		// Don't do anything if the diffusion factor is 0.0
-		if (diffFactor == 0.0) continue;
-
-		// Add it's index (i) to the vector of indices
-		indexVector.push_back(i);
-
-		// Get its id
-		int index = cluster->getId() - 1;
-		// Set the ofill value to 1 for this cluster
-		ofill[index * size + index] = 1;
-	}
-
-	return;
-}
-
-void DiffusionHandler::computeDiffusion(PSIClusterReactionNetwork *network,
-		double sx, double *concOffset, double *leftConcOffset,
-		double *rightConcOffset, double *updatedConcOffset) {
+void Diffusion1DHandler::computeDiffusion(PSIClusterReactionNetwork *network,
+		double sx, double **concVector, double *updatedConcOffset) {
 	// Get all the reactant
 	auto reactants = network->getAll();
 	// Get the number of diffusing cluster
 	int nDiff = indexVector.size();
+
+	// Get the number of degrees of freedom which is the size of the network
+	int dof = reactants->size();
 
 	// Loop on them
 	for (int i = 0; i < nDiff; i++) {
@@ -50,9 +21,9 @@ void DiffusionHandler::computeDiffusion(PSIClusterReactionNetwork *network,
 		int index = cluster->getId() - 1;
 
 		// Get the initial concentrations
-		double oldConc = concOffset[index];
-		double oldLeftConc = leftConcOffset[index];
-		double oldRightConc = rightConcOffset[index];
+		double oldLeftConc = concVector[0][index];
+		double oldConc = concVector[1][index];
+		double oldRightConc = concVector[2][index];
 
 		// Use a simple midpoint stencil to compute the concentration
 		double conc = cluster->getDiffusionCoefficient()
@@ -65,7 +36,7 @@ void DiffusionHandler::computeDiffusion(PSIClusterReactionNetwork *network,
 	return;
 }
 
-void DiffusionHandler::computePartialsForDiffusion(
+void Diffusion1DHandler::computePartialsForDiffusion(
 		PSIClusterReactionNetwork *network,
 		double sx, double *val, int *indices) {
 	// Get all the reactant

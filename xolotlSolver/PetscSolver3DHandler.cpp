@@ -16,7 +16,7 @@ inline bool checkPetscError(PetscErrorCode errorCode) {
 	CHKERRQ(errorCode);
 }
 
-void PetscSolver3DHandler::createSolverContext(DM &da) const {
+void PetscSolver3DHandler::createSolverContext(DM &da) {
 	PetscErrorCode ierr;
 
 	// Degrees of freedom is the total number of clusters in the network
@@ -160,7 +160,7 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 }
 
 void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, PetscReal ftime,
-		bool &temperatureChanged) const {
+		bool &temperatureChanged) {
 	PetscErrorCode ierr;
 
 	// Get the local data vector from petsc
@@ -193,8 +193,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 	// The following pointers are set to the first position in the conc or
 	// updatedConc arrays that correspond to the beginning of the data for the
 	// current grid point. They are accessed just like regular arrays.
-	PetscScalar *concOffset, *leftConcOffset, *rightConcOffset,
-			*updatedConcOffset;
+	PetscScalar *concOffset, *updatedConcOffset;
 
 	// Set some step size variable
 	double sx = 1.0 / (h * h);
@@ -207,6 +206,8 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 	double flux;
 	auto heCluster = (xolotlCore::PSICluster *) network->get(xolotlCore::heType, 1);
 	xolotlCore::PSICluster *cluster = NULL;
+	double **concVector = new double*[3];
+	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
 
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = network->size();
@@ -216,11 +217,14 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 
 //		xi = 1; // Uncomment this line for debugging in a single cell.
 
-		// Compute the middle, left, right and new array offsets
+		// Compute the old and new array offsets
 		concOffset = concs[xi];
-		leftConcOffset = concs[xi - 1];
-		rightConcOffset = concs[xi + 1];
 		updatedConcOffset = updatedConcs[xi];
+
+		// Fill the concVector with the pointer to the left, middle, and right grid points
+		concVector[0] = concs[xi - 1];
+		concVector[1] = concOffset;
+		concVector[2] = concs[xi + 1];
 
 		// Boundary conditions
 		if (xi == 0 || xi == Mx - 1) {
@@ -233,9 +237,9 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 
 		double x = xi * h;
 
-		// Vector representing the position at which the flux will be calculated
+		// Vector representing the physical position
 		// Currently we are only in 1D
-		std::vector<double> gridPosition = { x, 0, 0 };
+		gridPosition[0] = x;
 		auto temperature = temperatureHandler->getTemperature(gridPosition,
 				ftime);
 
@@ -262,12 +266,12 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 		}
 
 		// ---- Compute diffusion over the locally owned part of the grid -----
-		diffusionHandler->computeDiffusion(network, sx, concOffset,
-				leftConcOffset, rightConcOffset, updatedConcOffset);
+		diffusionHandler->computeDiffusion(network, sx, concVector,
+				updatedConcOffset);
 
 		// ---- Compute advection over the locally owned part of the grid -----
-		advectionHandler->computeAdvection(network, h, xi,
-				concOffset, rightConcOffset, updatedConcOffset);
+		advectionHandler->computeAdvection(network, h, gridPosition,
+				concVector, updatedConcOffset);
 
 		// ----- Compute all of the new fluxes -----
 		for (int i = 0; i < dof; i++) {
@@ -341,6 +345,7 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	MatStencil row, cols[3];
 	PetscScalar vals[3 * nDiff];
 	PetscInt indices[nDiff];
+	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
 
 	/*
 	 Loop over grid points computing Jacobian terms for diffusion and advection
@@ -352,6 +357,9 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 
 		// Boundary conditions
 		if (xi == 0 || xi == Mx - 1) continue;
+
+		// Set the grid position
+		gridPosition[0] = xi * h;
 
 		// Copy data into the PSIClusterReactionNetwork so that it can
 		// compute the new concentrations.
@@ -381,7 +389,8 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 		}
 
 		// Get the partial derivatives for the advection
-		advectionHandler->computePartialsForAdvection(network, h, vals, indices, xi);
+		advectionHandler->computePartialsForAdvection(network, h, vals,
+				indices, gridPosition);
 
 		// Loop on the number of advecting cluster to set the values in the Jacobian
 		for (int i = 0; i < nAdvec; i++) {
@@ -407,7 +416,7 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	return;
 }
 
-void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) const {
+void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) {
 	PetscErrorCode ierr;
 
 	// Get the distributed array
