@@ -7,12 +7,8 @@
 namespace xolotlSolver {
 
 /**
- * This class realizes the ISolverHandler interface to solve the
- * advection-diffusion-reaction problem with the PETSc solvers from Argonne
- * National Laboratory.
- *
- * This class does NOT implement most of the methods that are needed by the
- * PetscSolver. Only subclasses of this class must be used by the PetscSolver.
+ * This class and its subclasses realize the ISolverHandler interface to solve the
+ * advection-diffusion-reaction problem with currently supported solvers.
  */
 class SolverHandler: public ISolverHandler {
 protected:
@@ -105,8 +101,6 @@ public:
 	 * \see ISolverHandler.h
 	 */
 	xolotlCore::PSIClusterReactionNetwork *getNetwork() const {return network;}
-
-
 
 }; //end class SolverHandler
 
