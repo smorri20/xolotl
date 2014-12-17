@@ -40,18 +40,13 @@ public:
 	 *
 	 * @param network The network
 	 * @param sx The space parameter, depending on the grid step size
-	 * @param concOffset The pointer to the array of concentration at the grid
-	 * point where the diffusion is computed
-	 * @param leftConcOffset The pointer to the array of concentration at the grid
-	 * point to the left of where the diffusion is computed
-	 * @param rightConcOffset The pointer to the array of concentration at the grid
-	 * point to the right of where the diffusion is computed
+	 * @param concVector The pointer to the pointer of arrays of concentration at left,
+	 * middle, right grid points
 	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
 	 * point where the diffusion is computed used to find the next solution
 	 */
 	virtual void computeDiffusion(PSIClusterReactionNetwork *network, double sx,
-			double *concOffset, double *leftConcOffset,
-			double *rightConcOffset, double *updatedConcOffset) = 0;
+			double **concVector, double *updatedConcOffset) = 0;
 
 	/**
 	 * Compute the partials due to the diffusion of all the diffusing clusters given
