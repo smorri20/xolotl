@@ -98,22 +98,27 @@ void ScatterPlot::render(std::string fileName) {
     // Print the title
     auto titleAnnotation = new eavlScreenTextAnnotation(window, plotLabelProvider->titleLabel,
     		eavlColor::black, 0.065, 0.0, 0.9);
+    titleAnnotation->SetAlignment(eavlTextAnnotation::HCenter, eavlTextAnnotation::VCenter);
     window->AddAnnotation(titleAnnotation);
 
     // Print the axis labels
     auto axis1Annotation = new eavlScreenTextAnnotation(window, plotLabelProvider->axis1Label,
     		eavlColor::black, 0.05, 0.0, -0.9);
+    axis1Annotation->SetAlignment(eavlTextAnnotation::HCenter, eavlTextAnnotation::VCenter);
     window->AddAnnotation(axis1Annotation);
     auto axis2Annotation = new eavlScreenTextAnnotation(window, plotLabelProvider->axis2Label,
     		eavlColor::black, 0.05, -0.9, 0.0, 90.0);
+    axis2Annotation->SetAlignment(eavlTextAnnotation::HCenter, eavlTextAnnotation::VCenter);
     window->AddAnnotation(axis2Annotation);
 
     // Add the time information
     auto timeAnnotation = new eavlScreenTextAnnotation(window, plotLabelProvider->timeLabel,
     		eavlColor::black, 0.055, 0.8, -0.85);
+    timeAnnotation->SetAlignment(eavlTextAnnotation::HCenter, eavlTextAnnotation::VCenter);
     window->AddAnnotation(timeAnnotation);
     auto timeStepAnnotation = new eavlScreenTextAnnotation(window, plotLabelProvider->timeStepLabel,
     		eavlColor::black, 0.055, 0.8, -0.91);
+    timeStepAnnotation->SetAlignment(eavlTextAnnotation::HCenter, eavlTextAnnotation::VCenter);
     window->AddAnnotation(timeStepAnnotation);
 
     // Set the log scale

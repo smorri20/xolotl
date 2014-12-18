@@ -77,9 +77,9 @@ void SurfacePlot::render(std::string fileName) {
     eavlColor bg(0.5, 0.5, 0.5, 0.5);
 
     // Create a window
-    eavlScene *scene = new eavl1DScene();
+    eavlScene *scene = new eavl2DScene();
     ///\todo: get OpenGL mode set some proper way
-    bool OpenGL_Mode = true;
+    bool OpenGL_Mode = false;
     eavlRenderSurface *surface;
     eavlSceneRenderer *renderer = NULL;
     eavlWorldAnnotator *annotator = NULL;
@@ -102,25 +102,31 @@ void SurfacePlot::render(std::string fileName) {
     // Print the title
     auto titleAnnotation = new eavlScreenTextAnnotation(window, plotLabelProvider->titleLabel,
     		eavlColor::white, 0.065, 0.0, 0.96);
+    titleAnnotation->SetAlignment(eavlTextAnnotation::HCenter, eavlTextAnnotation::VCenter);
     window->AddAnnotation(titleAnnotation);
 
     // Print the axis labels
     auto axis1Annotation = new eavlScreenTextAnnotation(window, plotLabelProvider->axis1Label,
     		eavlColor::white, 0.05, 0.0, -0.35);
+    axis1Annotation->SetAlignment(eavlTextAnnotation::HCenter, eavlTextAnnotation::VCenter);
     window->AddAnnotation(axis1Annotation);
     auto axis2Annotation = new eavlScreenTextAnnotation(window, plotLabelProvider->axis2Label,
     		eavlColor::white, 0.05, -0.9, 0.0, 90.0);
+    axis2Annotation->SetAlignment(eavlTextAnnotation::HCenter, eavlTextAnnotation::VCenter);
     window->AddAnnotation(axis2Annotation);
     auto axis3Annotation = new eavlScreenTextAnnotation(window, plotLabelProvider->axis3Label,
     		eavlColor::white, 0.05, 0.0, 0.78);
+    axis3Annotation->SetAlignment(eavlTextAnnotation::HCenter, eavlTextAnnotation::VCenter);
     window->AddAnnotation(axis3Annotation);
 
     // Add the time information
     auto timeAnnotation = new eavlScreenTextAnnotation(window, plotLabelProvider->timeLabel,
     		eavlColor::white, 0.055, 0.8, -0.85);
+    timeAnnotation->SetAlignment(eavlTextAnnotation::HCenter, eavlTextAnnotation::VCenter);
     window->AddAnnotation(timeAnnotation);
     auto timeStepAnnotation = new eavlScreenTextAnnotation(window, plotLabelProvider->timeStepLabel,
     		eavlColor::white, 0.055, 0.8, -0.91);
+    timeStepAnnotation->SetAlignment(eavlTextAnnotation::HCenter, eavlTextAnnotation::VCenter);
     window->AddAnnotation(timeStepAnnotation);
 
     // Set up a plot for the data set
