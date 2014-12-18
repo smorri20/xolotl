@@ -3,7 +3,17 @@
 #include "eavl.h"
 #include "eavlDataSet.h"
 #include "eavlColor.h"
+///\todo: Get HAVE_OSMESA set up properly in cmake.
+#define HAVE_OSMESA
+#ifdef HAVE_OSMESA
+#include <GL/gl_mangle.h>
 #include "eavlRenderSurfaceOSMesa.h"
+#include "eavlSceneRendererGL.h"
+#include "eavlWorldAnnotatorGL.h"
+#endif
+#include "eavlRenderSurfacePS.h"
+#include "eavlSceneRendererPS.h"
+#include "eavlWorldAnnotatorPS.h"
 #include "eavlScene.h"
 #include "eavl1DWindow.h"
 #include <iostream>
@@ -34,9 +44,6 @@ void SeriesPlot::render(std::string fileName) {
 		return;
 	}
 
-    // Create an offscreen render surface
-    eavlRenderSurface *surface = new eavlRenderSurfaceOSMesa;
-
     // Pick a background color
     eavlColor bg(1,1,1,1);
 
@@ -49,30 +56,52 @@ void SeriesPlot::render(std::string fileName) {
     eavlColor(0.2, 0.8, 0.2), eavlColor(0.8, 0.2, 0.2), eavlColor(0.2, 0.2, 0.1)};
 
     // Create a window
-    eavlScene *scene = new eavl1DGLScene();
-    eavl1DWindow *window = new eavl1DWindow(bg, surface, scene);
+    eavlScene *scene = new eavl1DScene();
+    ///\todo: get OpenGL mode set some proper way
+    bool OpenGL_Mode = true;
+    eavlRenderSurface *surface;
+    eavlSceneRenderer *renderer = NULL;
+    eavlWorldAnnotator *annotator = NULL;
+    if (OpenGL_Mode)
+    {
+        surface = new eavlRenderSurfaceOSMesa;
+        renderer = new eavlSceneRendererGL;
+        annotator = new eavlWorldAnnotatorGL;
+    }
+    else
+    {
+        surface = new eavlRenderSurfacePS;
+        renderer = new eavlSceneRendererPS;
+        annotator = new eavlWorldAnnotatorPS;
+    }
+    eavl1DWindow *window = new eavl1DWindow(bg, surface, scene, renderer, annotator);
     window->Initialize();
     window->Resize(W_WIDTH,W_HEIGHT);
 
     // Print the title
     auto titleAnnotation = new eavlScreenTextAnnotation(window, plotLabelProvider->titleLabel,
     		eavlColor::black, 0.065, 0.2, 0.8);
+    titleAnnotation->SetAlignment(eavlTextAnnotation::HCenter, eavlTextAnnotation::VCenter);
     window->AddAnnotation(titleAnnotation);
 
     // Print the axis labels
     auto axis1Annotation = new eavlScreenTextAnnotation(window, plotLabelProvider->axis1Label,
     		eavlColor::black, 0.05, 0.2, -0.8);
+    axis1Annotation->SetAlignment(eavlTextAnnotation::HCenter, eavlTextAnnotation::VCenter);
     window->AddAnnotation(axis1Annotation);
     auto axis2Annotation = new eavlScreenTextAnnotation(window, plotLabelProvider->axis2Label,
     		eavlColor::black, 0.05, -0.65, 0.0, 90.0);
+    axis2Annotation->SetAlignment(eavlTextAnnotation::HCenter, eavlTextAnnotation::VCenter);
     window->AddAnnotation(axis2Annotation);
 
     // Add the time information
     auto timeAnnotation = new eavlScreenTextAnnotation(window, plotLabelProvider->timeLabel,
     		eavlColor::black, 0.055, -0.8, -0.85);
+    timeAnnotation->SetAlignment(eavlTextAnnotation::HCenter, eavlTextAnnotation::VCenter);
     window->AddAnnotation(timeAnnotation);
     auto timeStepAnnotation = new eavlScreenTextAnnotation(window, plotLabelProvider->timeStepLabel,
     		eavlColor::black, 0.055, -0.8, -0.91);
+    timeStepAnnotation->SetAlignment(eavlTextAnnotation::HCenter, eavlTextAnnotation::VCenter);
     window->AddAnnotation(timeStepAnnotation);
 
     // Set the log scale
@@ -112,11 +141,10 @@ void SeriesPlot::render(std::string fileName) {
     	data->AddField(field);
 
     	// Set up a plot for the data set
-    	eavlRenderer *plot;
-    	plot = new eavlCurveRenderer(data, NULL,
-    			lineColor[i%18],
-    			"",
-    			plotDataProviders->at(i)->getDataName());
+    	eavlPlot *plot;
+        plot = new eavl1DPlot(data, "RectilinearGridCells");
+        plot->SetSingleColor(lineColor[i%18]);
+        plot->SetField(plotDataProviders->at(i)->getDataName());
 
     	// Add the plot to the scene
     	scene->plots.push_back(plot);
@@ -130,8 +158,9 @@ void SeriesPlot::render(std::string fileName) {
 
     // Save the final buffer as an image
     char fn[25];
-    sprintf(fn, (fileName).c_str());
-    window->SaveWindowAsPNM(fn);
+    sprintf(fn, "%s", (fileName).c_str());
+    ///\todo: file extension currently hard-coded by caller
+    surface->SaveAs(fn, OpenGL_Mode ? eavlRenderSurface::PNM : eavlRenderSurface::EPS);
 
 	return;
 }

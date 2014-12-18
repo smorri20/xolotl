@@ -3,7 +3,17 @@
 #include "eavl.h"
 #include "eavlDataSet.h"
 #include "eavlColor.h"
+///\todo: Get HAVE_OSMESA set up properly in cmake.
+#define HAVE_OSMESA
+#ifdef HAVE_OSMESA
+#include <GL/gl_mangle.h>
 #include "eavlRenderSurfaceOSMesa.h"
+#include "eavlSceneRendererGL.h"
+#include "eavlWorldAnnotatorGL.h"
+#endif
+#include "eavlRenderSurfacePS.h"
+#include "eavlSceneRendererPS.h"
+#include "eavlWorldAnnotatorPS.h"
 #include "eavlScene.h"
 #include "eavl2DWindow.h"
 #include <iostream>
@@ -62,18 +72,30 @@ void SurfacePlot::render(std::string fileName) {
 	eavlField *field = new eavlField(1, axisValues, eavlField::ASSOC_POINTS);
 	data->AddField(field);
 
-    // Create an offscreen render surface
-    eavlRenderSurface *surface = new eavlRenderSurfaceOSMesa;
-
     // Pick a background color
 //    eavlColor bg(0.15, 0.05, 0.1, 1.0);
     eavlColor bg(0.5, 0.5, 0.5, 0.5);
 
-    // Create a 2D scene
-    eavlScene *scene = new eavl2DGLScene();
-
-    // Create the window
-    eavl2DWindow *window = new eavl2DWindow(bg, surface, scene);
+    // Create a window
+    eavlScene *scene = new eavl1DScene();
+    ///\todo: get OpenGL mode set some proper way
+    bool OpenGL_Mode = true;
+    eavlRenderSurface *surface;
+    eavlSceneRenderer *renderer = NULL;
+    eavlWorldAnnotator *annotator = NULL;
+    if (OpenGL_Mode)
+    {
+        surface = new eavlRenderSurfaceOSMesa;
+        renderer = new eavlSceneRendererGL;
+        annotator = new eavlWorldAnnotatorGL;
+    }
+    else
+    {
+        surface = new eavlRenderSurfacePS;
+        renderer = new eavlSceneRendererPS;
+        annotator = new eavlWorldAnnotatorPS;
+    }
+    eavl2DWindow *window = new eavl2DWindow(bg, surface, scene, renderer, annotator);
     window->Initialize();
     window->Resize(W_WIDTH,W_HEIGHT);
 
@@ -102,12 +124,10 @@ void SurfacePlot::render(std::string fileName) {
     window->AddAnnotation(timeStepAnnotation);
 
     // Set up a plot for the data set
-    eavlRenderer *plot;
-    plot = new eavlPseudocolorRenderer(data, NULL,
-                                       "temperature",
-                                       false,
-                                       data->GetCellSet(0)->GetName(),
-                                       plotDataProvider->getDataName());
+    eavlPlot *plot;
+    plot = new eavlPlot(data, data->GetCellSet(0)->GetName());
+    plot->SetField(plotDataProvider->getDataName());
+    plot->SetColorTableName("temperature");
     scene->plots.push_back(plot);
 
     // Set the view
@@ -118,8 +138,9 @@ void SurfacePlot::render(std::string fileName) {
 
     // Save the final buffer as an image
     char fn[25];
-    sprintf(fn, (fileName).c_str());
-    window->SaveWindowAsPNM(fn);
+    sprintf(fn, "%s", (fileName).c_str());
+    ///\todo: file extension currently hard-coded by caller
+    surface->SaveAs(fn, OpenGL_Mode ? eavlRenderSurface::PNM : eavlRenderSurface::EPS);
 
 	return;
 }

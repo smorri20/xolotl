@@ -3,7 +3,17 @@
 #include "eavl.h"
 #include "eavlDataSet.h"
 #include "eavlColor.h"
+///\todo: Get HAVE_OSMESA set up properly in cmake.
+#define HAVE_OSMESA
+#ifdef HAVE_OSMESA
+#include <GL/gl_mangle.h>
 #include "eavlRenderSurfaceOSMesa.h"
+#include "eavlSceneRendererGL.h"
+#include "eavlWorldAnnotatorGL.h"
+#endif
+#include "eavlRenderSurfacePS.h"
+#include "eavlSceneRendererPS.h"
+#include "eavlWorldAnnotatorPS.h"
 #include "eavlScene.h"
 #include "eavl1DWindow.h"
 #include <iostream>
@@ -59,15 +69,29 @@ void ScatterPlot::render(std::string fileName) {
 	eavlField *field = new eavlField(1, axisValues, eavlField::ASSOC_POINTS);
 	data->AddField(field);
 
-    // Create an offscreen render surface
-    eavlRenderSurface *surface = new eavlRenderSurfaceOSMesa;
-
     // Pick a background color
     eavlColor bg(1,1,1,1);
 
     // Create a window
-    eavlScene *scene = new eavl1DGLScene();
-    eavl1DWindow *window = new eavl1DWindow(bg, surface, scene);
+    eavlScene *scene = new eavl1DScene();
+    ///\todo: get OpenGL mode set some proper way
+    bool OpenGL_Mode = true;
+    eavlRenderSurface *surface;
+    eavlSceneRenderer *renderer = NULL;
+    eavlWorldAnnotator *annotator = NULL;
+    if (OpenGL_Mode)
+    {
+        surface = new eavlRenderSurfaceOSMesa;
+        renderer = new eavlSceneRendererGL;
+        annotator = new eavlWorldAnnotatorGL;
+    }
+    else
+    {
+        surface = new eavlRenderSurfacePS;
+        renderer = new eavlSceneRendererPS;
+        annotator = new eavlWorldAnnotatorPS;
+    }
+    eavl1DWindow *window = new eavl1DWindow(bg, surface, scene, renderer, annotator);
     window->Initialize();
     window->Resize(W_WIDTH,W_HEIGHT);
 
@@ -96,11 +120,10 @@ void ScatterPlot::render(std::string fileName) {
     if (enableLogScale) window->view.view2d.logy = true;
 
     // Set up a plot for the data set
-    eavlRenderer *plot;
-    plot = new eavlCurveRenderer(data, NULL,
-                                 eavlColor::magenta,
-                                 "",
-                                 plotDataProvider->getDataName());
+    eavlPlot *plot;
+    plot = new eavl1DPlot(data);//, "RectilinearGridCells");
+    plot->SetSingleColor(eavlColor::magenta);
+    plot->SetField(plotDataProvider->getDataName());
     scene->plots.push_back(plot);
 
     // Set the view
@@ -111,8 +134,9 @@ void ScatterPlot::render(std::string fileName) {
 
     // Save the final buffer as an image
     char fn[25];
-    sprintf(fn, fileName.c_str());
-    window->SaveWindowAsPNM(fn);
+    sprintf(fn, "%s", (fileName).c_str());
+    ///\todo: file extension currently hard-coded by caller
+    surface->SaveAs(fn, OpenGL_Mode ? eavlRenderSurface::PNM : eavlRenderSurface::EPS);
 
 	return;
 }
