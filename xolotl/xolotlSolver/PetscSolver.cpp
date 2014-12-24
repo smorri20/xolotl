@@ -1,16 +1,6 @@
 // Includes
 #include <PetscSolver.h>
-#include <xolotlPerf.h>
 #include <HDF5NetworkLoader.h>
-#include <petscts.h>
-#include <petscsys.h>
-#include <sstream>
-#include <iostream>
-#include <vector>
-#include <memory>
-#include <fstream>
-#include <string>
-#include <unordered_map>
 #include <HDF5Utils.h>
 
 using namespace xolotlCore;
@@ -45,9 +35,6 @@ static char help[] =
 		"Solves C_t =  -D*C_xx + A*C_x + F(C) + R(C) + D(C) from Brian Wirth's SciDAC project.\n";
 
 // ----- GLOBAL VARIABLES ----- //
-
-// Allocate the static solver handler
-ISolverHandler *PetscSolver::solverHandler;
 
 extern PetscErrorCode RHSFunction(TS, PetscReal, Vec, Vec, void*);
 extern PetscErrorCode RHSJacobian(TS, PetscReal, Vec, Mat, Mat);
@@ -238,61 +225,13 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	PetscFunctionReturn(0);
 }
 
-PetscSolver::PetscSolver() {
-	numCLIArgs = 0;
-	CLIArgs = NULL;
-}
-
 PetscSolver::PetscSolver(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		handlerRegistry(registry) {
-	numCLIArgs = 0;
-	CLIArgs = NULL;
-
+	Solver(registry) {
 	RHSFunctionTimer = handlerRegistry->getTimer("RHSFunctionTimer");
 	RHSJacobianTimer = handlerRegistry->getTimer("RHSJacobianTimer");
 }
 
 PetscSolver::~PetscSolver() {
-
-	// std::cerr << "Destroying a PetscSolver" << std::endl;
-
-	// Break "pointer" cycles so that network, clusters, reactants
-	// will deallocate when the std::shared_ptrs owning them 
-	// are destroyed.
-	network->askReactantsToReleaseNetwork();
-}
-
-void PetscSolver::setCommandLineOptions(int argc, char **argv) {
-	// Keep the arguments
-	numCLIArgs = argc;
-	CLIArgs = argv;
-}
-
-void PetscSolver::setNetworkLoader(
-		std::shared_ptr<PSIClusterNetworkLoader> networkLoader) {
-
-	// Store the loader and load the network
-	this->networkLoader = (PSIClusterNetworkLoader *) networkLoader.get();
-	network = (PSIClusterReactionNetwork *) networkLoader->load().get();
-
-	// Debug output
-	// Get the processor id
-	int procId;
-	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
-
-	if (procId == 0) {
-		std::cout << "\nPETScSolver Message: " << "Master loaded network of size "
-				<< network->size() << "." << std::endl;
-	}
-
-	// Get the name of the HDF5 file to give to the solver handler
-	auto HDF5Loader = (HDF5NetworkLoader *) this->networkLoader;
-	auto fileName = HDF5Loader->getFilename();
-
-	// Set the network in the solver handler
-	PetscSolver::solverHandler->initializeNetwork(fileName, network);
-
-	return;
 }
 
 void PetscSolver::setOptions(std::map<std::string, std::string> options) {
@@ -302,14 +241,13 @@ void PetscSolver::setupMesh() {
 }
 
 void PetscSolver::initialize(std::shared_ptr<ISolverHandler> solverHandler) {
-
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Initialize program
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	PetscInitialize(&numCLIArgs, &CLIArgs, (char*) 0, help);
 
 	// Set the solver handler
-	PetscSolver::solverHandler = (ISolverHandler *) solverHandler.get();
+	Solver::solverHandler = (ISolverHandler *) solverHandler.get();
 
 	return;
 }
@@ -324,7 +262,7 @@ void PetscSolver::solve() {
 
 	// Create the solver context
 	DM da;
-	PetscSolver::solverHandler->createSolverContext(da);
+	Solver::solverHandler->createSolverContext(da);
 
 	/*  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Extract global vector from DMDA to hold solution
@@ -372,7 +310,6 @@ void PetscSolver::solve() {
 	if (HDF5Utils::hasConcentrationGroup(fileName, tempTimeStep)) {
 		HDF5Utils::readTimes(fileName, tempTimeStep, time, deltaTime);
 	}
-
 
 	ierr = TSSetInitialTimeStep(ts, time, deltaTime);
 	checkPetscError(ierr);
@@ -423,7 +360,6 @@ void PetscSolver::finalize() {
 	if (petscReturn() != 0) {
 		throw std::string("PetscSolver Exception: Unable to finalize solve!");
 	}
-
 }
 
 } /* end namespace xolotlSolver */
