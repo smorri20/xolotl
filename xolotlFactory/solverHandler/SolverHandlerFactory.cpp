@@ -1,5 +1,7 @@
 #include <SolverHandlerFactory.h>
 #include <PetscSolver1DHandler.h>
+#include <PetscSolver2DHandler.h>
+#include <PetscSolver3DHandler.h>
 #include <fstream>
 #include <iostream>
 #include <mpi.h>
@@ -23,9 +25,13 @@ bool initializeDimension(xolotlCore::Options &options) {
 			break;
 		case 2:
 			// To be implemented
+			//theSolverHandler = std::make_shared<xolotlSolver::PetscSolver2DHandler>();
+			//break;
 			throw std::string("\nxolotlFactory: 2D solver handler is not implemented yet.");
 		case 3:
 			// To be implemented
+			//theSolverHandler = std::make_shared<xolotlSolver::PetscSolver3DHandler>();
+			//break;
 			throw std::string("\nxolotlFactory: 3D solver handler is not implemented yet.");
 		default:
 			// The asked dimension is not good (e.g. -1, 0, 4)
