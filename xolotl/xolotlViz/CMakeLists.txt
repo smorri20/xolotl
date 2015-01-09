@@ -11,6 +11,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dataprovider)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/labelprovider)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dummy)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_BINARY_DIR}/xolotlFactory)
 
 # Find EAVL
 FIND_PACKAGE(EAVL)
@@ -22,12 +23,17 @@ FIND_PACKAGE(MESA)
 file(GLOB HEADERS *.h dummy/*.h dataprovider/*.h labelprovider/*.h)
 file(GLOB SRC *.cpp dummy/*.cpp dataprovider/*.cpp)
 
-if(EAVL_FOUND AND MESA_FOUND)
+if(EAVL_FOUND)
     message(STATUS "EAVL includes = ${EAVL_INCLUDE_DIRS}")
     message(STATUS "EAVL config = ${EAVL_CONFIG_DIRS}")
     message(STATUS "EAVL libraries = ${EAVL_LIBRARIES}")
-    message(STATUS "Mesa includes = ${MESA_INCLUDE_DIRS}")
-    message(STATUS "Mesa libraries = ${MESA_LIBRARIES}")
+
+    if(MESA_FOUND)
+        message(STATUS "Mesa includes = ${MESA_INCLUDE_DIRS}")
+        message(STATUS "Mesa libraries = ${MESA_LIBRARIES}")
+    else(MESA_FOUND)
+        message(STATUS "Mesa not found; raster output disabled.")
+    endif(MESA_FOUND)
     
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/standard)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/standard/plot)
@@ -39,7 +45,9 @@ if(EAVL_FOUND AND MESA_FOUND)
     include_directories(${EAVL_INCLUDE_DIRS}/fonts)
     include_directories(${EAVL_INCLUDE_DIRS}/importers)
     include_directories(${EAVL_CONFIG_DIRS})
-    include_directories(${MESA_INCLUDE_DIRS})
+    if(MESA_FOUND)
+        include_directories(${MESA_INCLUDE_DIRS})
+    endif(MESA_FOUND)
     
     # Add the standard classes to the HEADERS and SRCS.
     file(GLOB STDHEADERS standard/*.h standard/plot/*.h)
@@ -47,13 +55,18 @@ if(EAVL_FOUND AND MESA_FOUND)
     file(GLOB STDSRC standard/*.cpp standard/plot/*.cpp)
     set(SRC ${SRC} ${STDSRC})
     
-    set(MAYBE_EAVL_MESA ${EAVL_LIBRARIES} ${MESA_LIBRARIES})
+    if(MESA_FOUND)
+        set(MAYBE_EAVL_MESA ${EAVL_LIBRARIES} ${MESA_LIBRARIES})
+        set(HAVE_OSMESA 1)
+    else(MESA_FOUND)
+        set(MAYBE_EAVL_MESA ${EAVL_LIBRARIES})
+    endif(MESA_FOUND)
 
     # Ensure that our config file indicates we have built the 
     # standard visualization classes in our visualization infrastructure.
     set(HAVE_VIZLIB_STD 1)
     
-endif(EAVL_FOUND AND MESA_FOUND)
+endif(EAVL_FOUND)
 
 #Add the library
 add_library(${LIBRARY_NAME} STATIC ${SRC})

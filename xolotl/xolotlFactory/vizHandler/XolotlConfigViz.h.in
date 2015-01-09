@@ -4,4 +4,6 @@
 
 #cmakedefine HAVE_VIZLIB_STD
 
+#cmakedefine HAVE_OSMESA
+
 #endif // XOLOTLCONFIGVIZ_H

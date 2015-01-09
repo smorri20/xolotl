@@ -3,8 +3,7 @@
 #include "eavl.h"
 #include "eavlDataSet.h"
 #include "eavlColor.h"
-///\todo: Get HAVE_OSMESA set up properly in cmake.
-#define HAVE_OSMESA
+#include "XolotlConfigViz.h"
 #ifdef HAVE_OSMESA
 #include <GL/gl_mangle.h>
 #include "eavlRenderSurfaceOSMesa.h"
@@ -74,11 +73,16 @@ void ScatterPlot::render(std::string fileName) {
 
     // Create a window
     eavlScene *scene = new eavl1DScene();
+#ifdef HAVE_OSMESA
     ///\todo: get OpenGL mode set some proper way
     bool OpenGL_Mode = true;
+#else
+    bool OpenGL_Mode = false;
+#endif
     eavlRenderSurface *surface;
     eavlSceneRenderer *renderer = NULL;
     eavlWorldAnnotator *annotator = NULL;
+#ifdef HAVE_OSMESA
     if (OpenGL_Mode)
     {
         surface = new eavlRenderSurfaceOSMesa;
@@ -86,6 +90,7 @@ void ScatterPlot::render(std::string fileName) {
         annotator = new eavlWorldAnnotatorGL;
     }
     else
+#endif
     {
         surface = new eavlRenderSurfacePS;
         renderer = new eavlSceneRendererPS;
