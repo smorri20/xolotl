@@ -4,7 +4,7 @@
 namespace xolotlCore {
 
 void Diffusion1DHandler::computeDiffusion(PSIClusterReactionNetwork *network,
-		double sx, double **concVector, double *updatedConcOffset) {
+		double s, double **concVector, double *updatedConcOffset) {
 	// Get all the reactant
 	auto reactants = network->getAll();
 	// Get the number of diffusing cluster
@@ -21,13 +21,13 @@ void Diffusion1DHandler::computeDiffusion(PSIClusterReactionNetwork *network,
 		int index = cluster->getId() - 1;
 
 		// Get the initial concentrations
-		double oldLeftConc = concVector[0][index];
-		double oldConc = concVector[1][index];
+		double oldConc = concVector[0][index];
+		double oldLeftConc = concVector[1][index];
 		double oldRightConc = concVector[2][index];
 
 		// Use a simple midpoint stencil to compute the concentration
 		double conc = cluster->getDiffusionCoefficient()
-				* (-2.0 * oldConc + oldLeftConc + oldRightConc) * sx;
+				* (-2.0 * oldConc + oldLeftConc + oldRightConc) * s;
 
 		// Update the concentration of the cluster
 		updatedConcOffset[index] += conc;
@@ -38,7 +38,7 @@ void Diffusion1DHandler::computeDiffusion(PSIClusterReactionNetwork *network,
 
 void Diffusion1DHandler::computePartialsForDiffusion(
 		PSIClusterReactionNetwork *network,
-		double sx, double *val, int *indices) {
+		double s, double *val, int *indices) {
 	// Get all the reactant
 	auto reactants = network->getAll();
 	// And the size of the network
@@ -60,10 +60,10 @@ void Diffusion1DHandler::computePartialsForDiffusion(
 		indices[i] = index;
 
 		// Compute the partial derivatives for diffusion of this cluster
-		// for the left, middle, and right grid point
-		val[i * 3] = diffCoeff * sx;
-		val[(i * 3) + 1] = -2.0 * diffCoeff * sx;
-		val[(i * 3) + 2] = diffCoeff * sx;
+		// for the middle, left, and right grid point
+		val[i * 3] = -2.0 * diffCoeff * s; // middle
+		val[(i * 3) + 1] = diffCoeff * s; // left
+		val[(i * 3) + 2] = diffCoeff * s; // right
 	}
 
 	return;

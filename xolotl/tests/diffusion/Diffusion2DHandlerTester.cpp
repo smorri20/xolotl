@@ -80,19 +80,19 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 
 	// Get the offset for the grid point in the middle
 	// Supposing the 9 grid points are laid-out as follow:
-	// 0 | 1 | 2
-	// 3 | 4 | 5
 	// 6 | 7 | 8
-	double *concOffset = conc + 4 * size ;
+	// 3 | 4 | 5
+	// 0 | 1 | 2
+	double *concOffset = conc + 4 * size;
 	double *updatedConcOffset = updatedConc + 4 * size;
 
-	// Fill the concVector with the pointer to the left, middle, and right grid points
+	// Fill the concVector with the pointer to the middle, left, right, bottom, and top grid points
 	double **concVector = new double*[5];
 	concVector[0] = concOffset; // middle
 	concVector[1] = conc + 3 * size; // left
 	concVector[2] = conc + 5 * size; // right
-	concVector[3] = conc + 1 * size; // top
-	concVector[4] = conc + 7 * size; // bottom
+	concVector[3] = conc + 1 * size; // bottom
+	concVector[4] = conc + 7 * size; // top
 
 	// Compute the diffusion at this grid point
 	diffusionHandler.computeDiffusion(network, s, concVector,

@@ -23,16 +23,16 @@ public:
 	 * given the space parameter s.
 	 * This method is called by the RHSFunction from the PetscSolver.
 	 *
-	 * If D is the diffusion coefficient, and C_l, C_r, C_m, C_t, C_b the left, right,
-	 * middle, top, and bottom concentration of this cluster, the value to add to the
+	 * If D is the diffusion coefficient, and C_l, C_r, C_b, C_t, C_m the left, right,
+	 * bottom, top, and middle concentration of this cluster, the value to add to the
 	 * updated concentration is:
 	 *
-	 * D * s * (C_l + C_r + C_t + C_b - 4 * C_m)
+	 * D * s * (C_l + C_r + C_b + C_t - 4 * C_m)
 	 *
 	 * @param network The network
 	 * @param s The space parameter, depending on the grid step size
 	 * @param concVector The pointer to the pointer of arrays of concentration at middle, left,
-	 * right, top, and bottom grid points
+	 * right, bottom, and top grid points
 	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
 	 * point where the diffusion is computed used to find the next solution
 	 */

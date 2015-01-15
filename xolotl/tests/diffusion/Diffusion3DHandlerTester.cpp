@@ -80,20 +80,20 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 
 	// Get the offset for the grid point in the middle
 	// Supposing the 27 grid points are laid-out as follow (a cube!):
-	// 0 | 1 | 2    9  | 10 | 11    18 | 19 | 20
-	// 3 | 4 | 5    12 | 13 | 14    21 | 22 | 23
 	// 6 | 7 | 8    15 | 16 | 17    24 | 25 | 26
+	// 3 | 4 | 5    12 | 13 | 14    21 | 22 | 23
+	// 0 | 1 | 2    9  | 10 | 11    18 | 19 | 20
 	//   front         middle           back
-	double *concOffset = conc + 13 * size ;
+	double *concOffset = conc + 13 * size;
 	double *updatedConcOffset = updatedConc + 13 * size;
 
-	// Fill the concVector with the pointer to the left, middle, and right grid points
+	// Fill the concVector with the pointer to the middle, left, right, bottom, top, front, and back grid points
 	double **concVector = new double*[7];
 	concVector[0] = concOffset; // middle
 	concVector[1] = conc + 12 * size; // left
 	concVector[2] = conc + 14 * size; // right
-	concVector[3] = conc + 10 * size; // top
-	concVector[4] = conc + 16 * size; // bottom
+	concVector[3] = conc + 10 * size; // bottom
+	concVector[4] = conc + 16 * size; // top
 	concVector[5] = conc + 4 * size; // front
 	concVector[6] = conc + 22 * size; // back
 

@@ -4,7 +4,7 @@
 namespace xolotlCore {
 
 void AdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
-		double hx, std::vector<double> &pos, double **concVector,
+		double h, std::vector<double> &pos, double **concVector,
 		double *updatedConcOffset) {
 	// Get all the reactant
 	auto reactants = network->getAll();
@@ -22,13 +22,13 @@ void AdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 		int index = cluster->getId() - 1;
 
 		// Get the initial concentrations
-		double oldConc = concVector[1][index];
-		double oldRightConc = concVector[2][index];
+		double oldConc = concVector[0][index]; // middle
+		double oldRightConc = concVector[2][index]; // right
 
 		// Compute the concentration as explained in the description of the method
 		double conc = (3.0 * sinkStrengthVector[i] * cluster->getDiffusionCoefficient())
-				* ((oldRightConc / pow(pos[0] + hx, 4)) - (oldConc / pow(pos[0], 4)))
-				/ (xolotlCore::kBoltzmann * cluster->getTemperature() * hx);
+				* ((oldRightConc / pow(pos[0] + h, 4)) - (oldConc / pow(pos[0], 4)))
+				/ (xolotlCore::kBoltzmann * cluster->getTemperature() * h);
 
 		// Update the concentration of the cluster
 		updatedConcOffset[index] += conc;
@@ -39,7 +39,7 @@ void AdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 
 void AdvectionHandler::computePartialsForAdvection(
 		PSIClusterReactionNetwork *network,
-		double hx, double *val, int *indices, std::vector<double> &pos) {
+		double h, double *val, int *indices, std::vector<double> &pos) {
 	// Get all the reactant
 	auto reactants = network->getAll();
 	// And the size of the network
@@ -66,10 +66,10 @@ void AdvectionHandler::computePartialsForAdvection(
 		// explained in the description of this method
 		val[i * 2] = (3.0 * sinkStrength * diffCoeff)
 						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-								* hx * pow(pos[0], 4));
+								* h * pow(pos[0], 4));
 		val[(i * 2) + 1] = -(3.0 * sinkStrength * diffCoeff)
 								/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-										* hx * pow(pos[0], 4));
+										* h * pow(pos[0], 4));
 	}
 
 	return;

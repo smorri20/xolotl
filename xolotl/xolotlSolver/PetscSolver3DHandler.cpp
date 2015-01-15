@@ -36,6 +36,9 @@ void PetscSolver3DHandler::createSolverContext(DM &da) {
 	clusterPartials.resize(dof, 0.0);
 	reactingPartialsForCluster.resize(dof, 0.0);
 
+	// Set the last temperature to 0
+	lastTemperature = 0.0;
+
 	/*  The only spatial coupling in the Jacobian is due to diffusion.
 	 *  The ofill (thought of as a dof by dof 2d (row-oriented) array represents
 	 *  the nonzero coupling between degrees of freedom at one point with degrees
@@ -196,7 +199,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 	PetscScalar *concOffset, *updatedConcOffset;
 
 	// Set some step size variable
-	double sx = 1.0 / (h * h);
+	double s = 1.0 / (h * h);
 
 	// Get the incident flux vector
 	auto incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime);
@@ -221,10 +224,10 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 		concOffset = concs[xi];
 		updatedConcOffset = updatedConcs[xi];
 
-		// Fill the concVector with the pointer to the left, middle, and right grid points
-		concVector[0] = concs[xi - 1];
-		concVector[1] = concOffset;
-		concVector[2] = concs[xi + 1];
+		// Fill the concVector with the pointer to the middle, left, and right grid points
+		concVector[0] = concOffset; // middle
+		concVector[1] = concs[xi - 1]; // left
+		concVector[2] = concs[xi + 1]; // right
 
 		// Boundary conditions
 		if (xi == 0 || xi == Mx - 1) {
@@ -266,7 +269,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 		}
 
 		// ---- Compute diffusion over the locally owned part of the grid -----
-		diffusionHandler->computeDiffusion(network, sx, concVector,
+		diffusionHandler->computeDiffusion(network, s, concVector,
 				updatedConcOffset);
 
 		// ---- Compute advection over the locally owned part of the grid -----
@@ -317,7 +320,7 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	checkPetscError(ierr);
 
 	// Setup some step size variables
-	double sx = 1.0 / (h * h);
+	double s = 1.0 / (h * h);
 
 	// Get pointers to vector data
 	PetscScalar **concs;
@@ -367,7 +370,7 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 		network->updateConcentrationsFromArray(concOffset);
 
 		// Get the partial derivatives for the diffusion
-		diffusionHandler->computePartialsForDiffusion(network, sx, vals, indices);
+		diffusionHandler->computePartialsForDiffusion(network, s, vals, indices);
 
 		// Loop on the number of diffusion cluster to set the values in the Jacobian
 		for (int i = 0; i < nDiff; i++) {
@@ -376,12 +379,12 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 			row.c = indices[i];
 
 			// Set grid coordinates and component numbers for the columns
-			// corresponding to the left, middle, and right grid points
-			cols[0].i = xi - 1;
+			// corresponding to the middle, left, and right grid points
+			cols[0].i = xi; // middle
 			cols[0].c = indices[i];
-			cols[1].i = xi;
+			cols[1].i = xi - 1; // left
 			cols[1].c = indices[i];
-			cols[2].i = xi + 1;
+			cols[2].i = xi + 1; // right
 			cols[2].c = indices[i];
 
 			ierr = MatSetValuesStencil(J, 1, &row, 3, cols, vals + (3 * i), ADD_VALUES);
@@ -400,9 +403,9 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 
 			// Set grid coordinates and component numbers for the columns
 			// corresponding to the left and middle grid points
-			cols[0].i = xi - 1;
+			cols[0].i = xi - 1; // left
 			cols[0].c = indices[i];
-			cols[1].i = xi;
+			cols[1].i = xi; // middle
 			cols[1].c = indices[i];
 
 			// Update the matrix
@@ -499,8 +502,7 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 			}
 			// Update the matrix
 			ierr = MatSetValuesStencil(J, 1, &rowId, pdColIdsVectorSize,
-					colIds, reactingPartialsForCluster.data(),
-					ADD_VALUES);
+					colIds, reactingPartialsForCluster.data(), ADD_VALUES);
 			checkPetscError(ierr);
 		}
 
