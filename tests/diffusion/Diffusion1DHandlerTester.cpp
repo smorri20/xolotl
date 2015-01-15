@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	BOOST_REQUIRE_EQUAL(diffusionHandler.getNumberOfDiffusing(), 4);
 
 	// The size parameter
-	double sx = 1.0;
+	double s = 1.0;
 
 	// The arrays of concentration
 	double concentration[3*size];
@@ -85,17 +85,19 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	double *updatedConc = &newConcentration[0];
 
 	// Get the offset for the grid point in the middle
-	double *concOffset = conc + size ;
+	// Supposing the 3 grid points are laid-out as follow:
+	// 0 | 1 | 2
+	double *concOffset = conc + size;
 	double *updatedConcOffset = updatedConc + size;
 
-	// Fill the concVector with the pointer to the left, middle, and right grid points
+	// Fill the concVector with the pointer to the middle, left, and right grid points
 	double **concVector = new double*[3];
-	concVector[0] = conc;
-	concVector[1] = concOffset;
-	concVector[2] = conc + 2 * size;
+	concVector[0] = concOffset; // middle
+	concVector[1] = conc; // left
+	concVector[2] = conc + 2 * size; // right
 
 	// Compute the diffusion at this grid point
-	diffusionHandler.computeDiffusion(network, sx, concVector,
+	diffusionHandler.computeDiffusion(network, s, concVector,
 			updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
@@ -114,7 +116,7 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	double *valPointer = &val[0];
 
 	// Compute the partial derivatives for the diffusion a the grid point 1
-	diffusionHandler.computePartialsForDiffusion(network, sx, valPointer,
+	diffusionHandler.computePartialsForDiffusion(network, s, valPointer,
 			indicesPointer);
 
 	// Check the values for the indices
@@ -124,11 +126,11 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	BOOST_REQUIRE_EQUAL(indices[3], 3);
 
 	// Check some values
-	BOOST_REQUIRE_CLOSE(val[0], 78358278338.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[3], 6415444736.0, 0.01);
+	BOOST_REQUIRE_CLOSE(val[1], 78358278338.0, 0.01);
+	BOOST_REQUIRE_CLOSE(val[4], 6415444736.0, 0.01);
 	BOOST_REQUIRE_CLOSE(val[5], 6415444736.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[7], -6283827232.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[10], -1010625.0, 0.01);
+	BOOST_REQUIRE_CLOSE(val[6], -6283827232.0, 0.01);
+	BOOST_REQUIRE_CLOSE(val[9], -1010625.0, 0.01);
 
 	// Finalize MPI
 	MPI_Finalize();

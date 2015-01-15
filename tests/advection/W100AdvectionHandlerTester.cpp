@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	BOOST_REQUIRE_EQUAL(advectionHandler.getNumberOfAdvecting(), 2);
 
 	// The size parameter
-	double hx = 1.0;
+	double h = 1.0;
 
 	// The arrays of concentration
 	double concentration[3*size];
@@ -77,17 +77,17 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	double *concOffset = conc + size;
 	double *updatedConcOffset = updatedConc + size;
 
-	// Fill the concVector with the pointer to the left, middle, and right grid points
+	// Fill the concVector with the pointer to the middle, left, and right grid points
 	double **concVector = new double*[3];
-	concVector[0] = conc;
-	concVector[1] = concOffset;
-	concVector[2] = conc + 2 * size;
+	concVector[0] = concOffset; // middle
+	concVector[1] = conc; // left
+	concVector[2] = conc + 2 * size; // right
 
 	// Set the grid position
-	std::vector<double> gridPosition = { hx, 0, 0 };
+	std::vector<double> gridPosition = { h, 0, 0 };
 
 	// Compute the advection at this grid point
-	advectionHandler.computeAdvection(network, hx, gridPosition,
+	advectionHandler.computeAdvection(network, h, gridPosition,
 			concVector, updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	double *valPointer = &val[0];
 
 	// Compute the partial derivatives for the advection a the grid point 1
-	advectionHandler.computePartialsForAdvection(network, hx, valPointer,
+	advectionHandler.computePartialsForAdvection(network, h, valPointer,
 			indicesPointer, gridPosition);
 
 	// Check the values for the indices

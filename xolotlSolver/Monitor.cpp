@@ -1106,7 +1106,7 @@ PetscErrorCode monitorInterstitial(TS ts, PetscInt timestep, PetscReal time,
 
 	// Setup step size variable
 	double h = solverHandler->getStepSize();
-	double sx = 1.0 / (h * h);
+	double s = 1.0 / (h * h);
 
 	// Get the concentrations at xi = 1
 	xi = 1;
@@ -1143,7 +1143,7 @@ PetscErrorCode monitorInterstitial(TS ts, PetscInt timestep, PetscReal time,
 		double coef = cluster->getDiffusionCoefficient();
 
 		// Compute the flux
-		newFlux += (double) size * sx * coef * conc;
+		newFlux += (double) size * s * coef * conc;
 	}
 
 	previousFlux = newFlux;

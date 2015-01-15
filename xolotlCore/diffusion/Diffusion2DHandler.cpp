@@ -21,16 +21,16 @@ void Diffusion2DHandler::computeDiffusion(PSIClusterReactionNetwork *network,
 		int index = cluster->getId() - 1;
 
 		// Get the initial concentrations
-		double oldConc = concVector[0][index];
-		double oldLeftConc = concVector[1][index];
-		double oldRightConc = concVector[2][index];
-		double oldTopConc = concVector[3][index];
-		double oldBottomConc = concVector[4][index];
+		double oldConc = concVector[0][index]; // middle
+		double oldLeftConc = concVector[1][index]; // left
+		double oldRightConc = concVector[2][index]; // right
+		double oldBottomConc = concVector[3][index]; // bottom
+		double oldTopConc = concVector[4][index]; // top
 
 		// Use a simple midpoint stencil to compute the concentration
 		double conc = cluster->getDiffusionCoefficient()
-				* (-4.0 * oldConc + oldLeftConc + oldRightConc + oldTopConc
-						+ oldBottomConc) * s;
+				* (-4.0 * oldConc + oldLeftConc + oldRightConc + oldBottomConc
+						+ oldTopConc) * s;
 
 		// Update the concentration of the cluster
 		updatedConcOffset[index] += conc;
@@ -63,12 +63,12 @@ void Diffusion2DHandler::computePartialsForDiffusion(
 		indices[i] = index;
 
 		// Compute the partial derivatives for diffusion of this cluster
-		// for the middle, left, right, top, and bottom grid point
-		val[i * 5] = -4.0 * diffCoeff * s;
-		val[(i * 5) + 1] = diffCoeff * s;
-		val[(i * 5) + 2] = diffCoeff * s;
-		val[(i * 5) + 3] = diffCoeff * s;
-		val[(i * 5) + 4] = diffCoeff * s;
+		// for the middle, left, right, bottom, and top grid point
+		val[i * 5] = -4.0 * diffCoeff * s; // middle
+		val[(i * 5) + 1] = diffCoeff * s; // left
+		val[(i * 5) + 2] = diffCoeff * s; // right
+		val[(i * 5) + 3] = diffCoeff * s; // bottom
+		val[(i * 5) + 4] = diffCoeff * s; // top
 	}
 
 	return;
