@@ -81,13 +81,13 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) const {
 	PetscErrorCode ierr;
 
 	// Pointer for the concentration vector
-	PetscScalar **concentrations;
+	PetscScalar ***concentrations;
 	ierr = DMDAVecGetArrayDOF(da, C, &concentrations);
 	checkPetscError(ierr);
 
 	// Get the local boundaries
-	PetscInt xs, xm;
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
+	PetscInt xs, xm, ys, ym;
+	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);
 	checkPetscError(ierr);
 
 	// Get the last time step written in the HDF5 file
@@ -96,8 +96,8 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) const {
 			networkName, tempTimeStep);
 
 	// Get the total size of the grid for the boundary conditions
-	PetscInt Mx;
-	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
+	PetscInt Mx, My;
+	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE);
@@ -119,35 +119,40 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) const {
 	int vacancyIndex = (network->get(xolotlCore::vType, 1)->getId()) - 1;
 
 	// Loop on all the grid points
-	for (int i = xs; i < xs + xm; i++) {
-		concOffset = concentrations[i];
+	for (int j = ys; j < ys + ym; j++) {
+		for (int i = xs; i < xs + xm; i++) {
+			concOffset = concentrations[j][i];
 
-		// Loop on all the clusters to initialize at 0.0
-		for (int k = 0; k < dof; k++) {
-			concOffset[k] = 0.0;
-		}
+			// Loop on all the clusters to initialize at 0.0
+			for (int n = 0; n < dof; n++) {
+				concOffset[n] = 0.0;
+			}
 
-		// Initialize the vacancy concentration
-		if (i > 0 && i < Mx - 1) {
-			concOffset[vacancyIndex] = initialVConc / h;
+			// Initialize the vacancy concentration
+			if (i > 0 && i < Mx - 1 && j > 0 && j < My - 1) {
+				concOffset[vacancyIndex] = initialVConc / h;
+			}
 		}
 	}
 
 	// If the concentration must be set from the HDF5 file
 	if (hasConcentrations) {
 		// Loop on the full grid
-		for (int i = 0; i < Mx; i++) {
-			// Read the concentrations from the HDF5 file
-			auto concVector = xolotlCore::HDF5Utils::readGridPoint(networkName,
-					tempTimeStep, i);
+		for (int j = 0; j < My; j++) {
+			for (int i = 0; i < Mx; i++) {
+				// Read the concentrations from the HDF5 file
+				// TODO - HDF5Utils::readGridPoint() needs to take j as a new argument
+				auto concVector = xolotlCore::HDF5Utils::readGridPoint(networkName,
+						tempTimeStep, i);
 
-			// Change the concentration only if we are on the locally owned part of the grid
-			if (i >= xs && i < xs + xm) {
-				concOffset = concentrations[i];
-				// Loop on the concVector size
-				for (int k = 0; k < concVector.size(); k++) {
-					concOffset[(int) concVector.at(k).at(0)] =
-							concVector.at(k).at(1);
+				// Change the concentration only if we are on the locally owned part of the grid
+				if (i >= xs && i < xs + xm && j >= ys && j < ys + ym) {
+					concOffset = concentrations[j][i];
+					// Loop on the concVector size
+					for (int n = 0; n < concVector.size(); n++) {
+						concOffset[(int) concVector.at(n).at(0)] =
+								concVector.at(n).at(1);
+					}
 				}
 			}
 		}
@@ -172,8 +177,8 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	checkPetscError(ierr);
 
 	// Get the total size of the grid for the boundary conditions
-	PetscInt Mx;
-	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
+	PetscInt Mx, My;
+	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE);
@@ -181,7 +186,7 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 	// Pointers to the Petsc arrays that start at the beginning (xs) of the
 	// local array!
-	PetscScalar **concs, **updatedConcs;
+	PetscScalar ***concs, ***updatedConcs;
 	// Get pointers to vector data
 	ierr = DMDAVecGetArrayDOF(da, localC, &concs);
 	checkPetscError(ierr);
@@ -189,8 +194,8 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	checkPetscError(ierr);
 
 	//Get local grid boundaries
-	PetscInt xs, xm;
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
+	PetscInt xs, xm, ys, ym;
+	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);
 	checkPetscError(ierr);
 
 	// The following pointers are set to the first position in the conc or
@@ -209,85 +214,89 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	double flux;
 	auto heCluster = (xolotlCore::PSICluster *) network->get(xolotlCore::heType, 1);
 	xolotlCore::PSICluster *cluster = NULL;
-	double **concVector = new double*[3];
+	double **concVector = new double*[5];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
 
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = network->size();
 
 	// Loop over grid points computing ODE terms for each grid point
-	for (int xi = xs; xi < xs + xm; xi++) {
+	for (int yj = ys; yj < ys + ym; yj++) {
+		for (int xi = xs; xi < xs + xm; xi++) {
+			//xi = 1; // Uncomment this line for debugging in a single cell.
 
-//		xi = 1; // Uncomment this line for debugging in a single cell.
+			// Compute the old and new array offsets
+			concOffset = concs[yj][xi];
+			updatedConcOffset = updatedConcs[yj][xi];
 
-		// Compute the old and new array offsets
-		concOffset = concs[xi];
-		updatedConcOffset = updatedConcs[xi];
+			// Fill the concVector with the pointer to the middle, left, right, bottom, and top grid points
+			concVector[0] = concOffset; // middle
+			concVector[1] = concs[yj][xi - 1]; // left
+			concVector[2] = concs[yj][xi + 1]; // right
+			concVector[3] = concs[yj - 1][xi]; // bottom
+			concVector[4] = concs[yj + 1][xi]; // top
 
-		// Fill the concVector with the pointer to the middle, left, and right grid points
-		concVector[0] = concOffset; // middle
-		concVector[1] = concs[xi - 1]; // left
-		concVector[2] = concs[xi + 1]; // right
+			// Boundary conditions
+			if (xi == 0 || xi == Mx - 1 || yj == 0 || yj == My - 1) {
+				for (int i = 0; i < dof; i++) {
+					updatedConcOffset[i] = 1.0 * concOffset[i];
+				}
 
-		// Boundary conditions
-		if (xi == 0 || xi == Mx - 1) {
-			for (int i = 0; i < dof; i++) {
-				updatedConcOffset[i] = 1.0 * concOffset[i];
+				continue;
 			}
 
-			continue;
+			double x = xi * h;
+			double y = yj * h;
+
+			// Vector representing the physical position
+			gridPosition[0] = x;
+			gridPosition[1] = y;
+			auto temperature = temperatureHandler->getTemperature(gridPosition,
+					ftime);
+
+			// Update the network if the temperature changed
+			if (!xolotlCore::equal(temperature, lastTemperature)) {
+				network->setTemperature(temperature);
+				lastTemperature = temperature;
+				temperatureChanged = true;
+			}
+
+			// Copy data into the PSIClusterReactionNetwork so that it can
+			// compute the fluxes properly. The network is only used to compute the
+			// fluxes and hold the state data from the last time step. I'm reusing
+			// it because it cuts down on memory significantly (about 400MB per
+			// grid point) at the expense of being a little tricky to comprehend.
+			network->updateConcentrationsFromArray(concOffset);
+
+			// ----- Account for flux of incoming He by computing forcing that
+			// produces He of cluster size 1 -----
+			if (heCluster) {
+				reactantIndex = heCluster->getId() - 1;
+				// Update the concentration of the cluster
+				updatedConcOffset[reactantIndex] += incidentFluxVector[xi];
+			}
+
+			// ---- Compute diffusion over the locally owned part of the grid -----
+			diffusionHandler->computeDiffusion(network, s, concVector,
+					updatedConcOffset);
+
+			// ---- Compute advection over the locally owned part of the grid -----
+			advectionHandler->computeAdvection(network, h, gridPosition, concVector,
+					updatedConcOffset);
+
+			// ----- Compute all of the new fluxes -----
+			for (int i = 0; i < dof; i++) {
+				cluster = (xolotlCore::PSICluster *) allReactants->at(i);
+				// Compute the flux
+				flux = cluster->getTotalFlux();
+				// Update the concentration of the cluster
+				reactantIndex = cluster->getId() - 1;
+				updatedConcOffset[reactantIndex] += flux;
+			}
+
+			// Uncomment this line for debugging in a single cell.
+			//break;
 		}
-
-		double x = xi * h;
-
-		// Vector representing the physical position
-		// Currently we are only in 1D
-		gridPosition[0] = x;
-		auto temperature = temperatureHandler->getTemperature(gridPosition,
-				ftime);
-
-		// Update the network if the temperature changed
-		if (!xolotlCore::equal(temperature, lastTemperature)) {
-			network->setTemperature(temperature);
-			lastTemperature = temperature;
-			temperatureChanged = true;
-		}
-
-		// Copy data into the PSIClusterReactionNetwork so that it can
-		// compute the fluxes properly. The network is only used to compute the
-		// fluxes and hold the state data from the last time step. I'm reusing
-		// it because it cuts down on memory significantly (about 400MB per
-		// grid point) at the expense of being a little tricky to comprehend.
-		network->updateConcentrationsFromArray(concOffset);
-
-		// ----- Account for flux of incoming He by computing forcing that
-		// produces He of cluster size 1 -----
-		if (heCluster) {
-			reactantIndex = heCluster->getId() - 1;
-			// Update the concentration of the cluster
-			updatedConcOffset[reactantIndex] += incidentFluxVector[xi];
-		}
-
-		// ---- Compute diffusion over the locally owned part of the grid -----
-		diffusionHandler->computeDiffusion(network, s, concVector,
-				updatedConcOffset);
-
-		// ---- Compute advection over the locally owned part of the grid -----
-		advectionHandler->computeAdvection(network, h, gridPosition, concVector,
-				updatedConcOffset);
-
-		// ----- Compute all of the new fluxes -----
-		for (int i = 0; i < dof; i++) {
-			cluster = (xolotlCore::PSICluster *) allReactants->at(i);
-			// Compute the flux
-			flux = cluster->getTotalFlux();
-			// Update the concentration of the cluster
-			reactantIndex = cluster->getId() - 1;
-			updatedConcOffset[reactantIndex] += flux;
-		}
-
-		// Uncomment this line for debugging in a single cell.
-//		break;
 	}
 
 	/*
@@ -312,8 +321,8 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	checkPetscError(ierr);
 
 	// Get the total size of the grid for the boundary conditions
-	PetscInt Mx;
-	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
+	PetscInt Mx, My;
+	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE);
@@ -323,13 +332,13 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	double s = 1.0 / (h * h);
 
 	// Get pointers to vector data
-	PetscScalar **concs;
+	PetscScalar ***concs;
 	ierr = DMDAVecGetArrayDOF(da, localC, &concs);
 	checkPetscError(ierr);
 
 	// Get local grid boundaries
-	PetscInt xs, xm;
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
+	PetscInt xs, xm, ys, ym;
+	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);
 	checkPetscError(ierr);
 
 	// The degree of freedom is the size of the network
@@ -345,8 +354,8 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	const int nAdvec = advectionHandler->getNumberOfAdvecting();
 
 	// Arguments for MatSetValuesStencil called below
-	MatStencil row, cols[3];
-	PetscScalar vals[3 * nDiff];
+	MatStencil row, cols[5];
+	PetscScalar vals[5 * nDiff];
 	PetscInt indices[nDiff];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
 
@@ -354,66 +363,81 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	 Loop over grid points computing Jacobian terms for diffusion and advection
 	 at each grid point
 	 */
-	for (int xi = xs; xi < xs + xm; xi++) {
+	for (int yj = ys; yj < ys + ym; yj++) {
+		for (int xi = xs; xi < xs + xm; xi++) {
+			//xi = 1; // Uncomment this line for debugging in a single cell
 
-//			xi = 1; // Uncomment this line for debugging in a single cell
+			// Boundary conditions
+			if (xi == 0 || xi == Mx - 1 || yj == 0 || yj == My - 1) continue;
 
-		// Boundary conditions
-		if (xi == 0 || xi == Mx - 1) continue;
+			// Set the grid position
+			gridPosition[0] = xi * h;
+			gridPosition[1] = yj * h;
 
-		// Set the grid position
-		gridPosition[0] = xi * h;
+			// Copy data into the PSIClusterReactionNetwork so that it can
+			// compute the new concentrations.
+			concOffset = concs[yj][xi];
+			network->updateConcentrationsFromArray(concOffset);
 
-		// Copy data into the PSIClusterReactionNetwork so that it can
-		// compute the new concentrations.
-		concOffset = concs[xi];
-		network->updateConcentrationsFromArray(concOffset);
+			// Get the partial derivatives for the diffusion
+			diffusionHandler->computePartialsForDiffusion(network, s, vals, indices);
 
-		// Get the partial derivatives for the diffusion
-		diffusionHandler->computePartialsForDiffusion(network, s, vals, indices);
+			// Loop on the number of diffusion cluster to set the values in the Jacobian
+			for (int i = 0; i < nDiff; i++) {
+				// Set grid coordinate and component number for the row
+				row.i = xi;
+				row.j = yj;
+				row.c = indices[i];
 
-		// Loop on the number of diffusion cluster to set the values in the Jacobian
-		for (int i = 0; i < nDiff; i++) {
-			// Set grid coordinate and component number for the row
-			row.i = xi;
-			row.c = indices[i];
+				// Set grid coordinates and component numbers for the columns
+				// corresponding to the middle, left, right, bottom and top grid points
+				cols[0].i = xi; // middle
+				cols[0].j = yj;
+				cols[0].c = indices[i];
+				cols[1].i = xi - 1; // left
+				cols[1].j = yj;
+				cols[1].c = indices[i];
+				cols[2].i = xi + 1; // right
+				cols[2].j = yj;
+				cols[2].c = indices[i];
+				cols[3].i = xi; // bottom
+				cols[3].j = yj - 1;
+				cols[3].c = indices[i];
+				cols[4].i = xi; // top
+				cols[4].j = yj + 1;
+				cols[4].c = indices[i];
 
-			// Set grid coordinates and component numbers for the columns
-			// corresponding to the middle, left, and right grid points
-			cols[0].i = xi; // middle
-			cols[0].c = indices[i];
-			cols[1].i = xi - 1; // left
-			cols[1].c = indices[i];
-			cols[2].i = xi + 1; // right
-			cols[2].c = indices[i];
+				ierr = MatSetValuesStencil(J, 1, &row, 5, cols, vals + (5 * i), ADD_VALUES);
+				checkPetscError(ierr);
+			}
 
-			ierr = MatSetValuesStencil(J, 1, &row, 3, cols, vals + (3 * i), ADD_VALUES);
-			checkPetscError(ierr);
+			// Get the partial derivatives for the advection
+			advectionHandler->computePartialsForAdvection(network, h, vals,
+					indices, gridPosition);
+
+			// Loop on the number of advecting cluster to set the values in the Jacobian
+			for (int i = 0; i < nAdvec; i++) {
+				// Set grid coordinate and component number for the row
+				row.i = xi;
+				row.j = yj;
+				row.c = indices[i];
+
+				// Set grid coordinates and component numbers for the columns
+				// corresponding to the left and middle grid points
+				cols[0].i = xi - 1; // left
+				cols[0].j = yj;
+				cols[0].c = indices[i];
+				cols[1].i = xi; // middle
+				cols[1].j = yj;
+				cols[1].c = indices[i];
+
+				// Update the matrix
+				ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals + (2 * i), ADD_VALUES);
+				checkPetscError(ierr);
+			}
+
+			//break;   // Uncomment this line for debugging in a single cell.
 		}
-
-		// Get the partial derivatives for the advection
-		advectionHandler->computePartialsForAdvection(network, h, vals,
-				indices, gridPosition);
-
-		// Loop on the number of advecting cluster to set the values in the Jacobian
-		for (int i = 0; i < nAdvec; i++) {
-			// Set grid coordinate and component number for the row
-			row.i = xi;
-			row.c = indices[i];
-
-			// Set grid coordinates and component numbers for the columns
-			// corresponding to the left and middle grid points
-			cols[0].i = xi - 1; // left
-			cols[0].c = indices[i];
-			cols[1].i = xi; // middle
-			cols[1].c = indices[i];
-
-			// Update the matrix
-			ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals + (2 * i), ADD_VALUES);
-			checkPetscError(ierr);
-		}
-
-//		break;   // Uncomment this line for debugging in a single cell.
 	}
 
 	return;
@@ -428,21 +452,21 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	checkPetscError(ierr);
 
 	// Get the total size of the grid for the boundary conditions
-	PetscInt Mx;
-	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
+	PetscInt Mx, My;
+	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE);
 	checkPetscError(ierr);
 
 	// Get pointers to vector data
-	PetscScalar **concs;
+	PetscScalar ***concs;
 	ierr = DMDAVecGetArrayDOF(da, localC, &concs);
 	checkPetscError(ierr);
 
 	// Get local grid boundaries
-	PetscInt xs, xm;
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
+	PetscInt xs, xm, ys, ym;
+	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);
 	checkPetscError(ierr);
 
 	// The degree of freedom is the size of the network
@@ -460,54 +484,57 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	int reactantIndex;
 
 	// Loop over the grid points
-	for (int xi = xs; xi < xs + xm; xi++) {
+	for (int yj = ys; yj < ys + ym; yj++) {
+		for (int xi = xs; xi < xs + xm; xi++) {
+			//xi = 1; // Uncomment this line for debugging in a single cell
 
-//		xi = 1; // Uncomment this line for debugging in a single cell
+			// Boundary conditions
+			if (xi == 0 || xi == Mx - 1 || yj == 0 || yj == My - 1) continue;
 
-		// Boundary conditions
-		if (xi == 0 || xi == Mx - 1) continue;
+			// Copy data into the PSIClusterReactionNetwork so that it can
+			// compute the new concentrations.
+			concOffset = concs[yj][xi];
+			network->updateConcentrationsFromArray(concOffset);
 
-		// Copy data into the PSIClusterReactionNetwork so that it can
-		// compute the new concentrations.
-		concOffset = concs[xi];
-		network->updateConcentrationsFromArray(concOffset);
+			// Update the column in the Jacobian that represents each reactant
+			for (int i = 0; i < dof; i++) {
+				auto reactant = allReactants->at(i);
+				// Get the reactant index
+				reactantIndex = reactant->getId() - 1;
 
-		// Update the column in the Jacobian that represents each reactant
-		for (int i = 0; i < dof; i++) {
-			auto reactant = allReactants->at(i);
-			// Get the reactant index
-			reactantIndex = reactant->getId() - 1;
+				// Set grid coordinate and component number for the row
+				rowId.i = xi;
+				rowId.j = yj;
+				rowId.c = reactantIndex;
 
-			// Set grid coordinate and component number for the row
-			rowId.i = xi;
-			rowId.c = reactantIndex;
-
-			// Get the partial derivatives
-			reactant->getPartialDerivatives(clusterPartials);
-			// Get the list of column ids from the map
-			auto pdColIdsVector = dFillMap.at(reactantIndex);
-			// Number of partial derivatives
-			pdColIdsVectorSize = pdColIdsVector.size();
-			// Loop over the list of column ids
-			for (int j = 0; j < pdColIdsVectorSize; j++) {
-				// Set grid coordinate and component number for a column in the list
-				colIds[j].i = xi;
-				colIds[j].c = pdColIdsVector[j];
-				// Get the partial derivative from the array of all of the partials
-				reactingPartialsForCluster[j] =
-						clusterPartials[pdColIdsVector[j]];
-				// Reset the cluster partial value to zero. This is much faster
-				// than using memset.
-				clusterPartials[pdColIdsVector[j]] = 0.0;
+				// Get the partial derivatives
+				reactant->getPartialDerivatives(clusterPartials);
+				// Get the list of column ids from the map
+				auto pdColIdsVector = dFillMap.at(reactantIndex);
+				// Number of partial derivatives
+				pdColIdsVectorSize = pdColIdsVector.size();
+				// Loop over the list of column ids
+				for (int j = 0; j < pdColIdsVectorSize; j++) {
+					// Set grid coordinate and component number for a column in the list
+					colIds[j].i = xi;
+					colIds[j].j = yj;
+					colIds[j].c = pdColIdsVector[j];
+					// Get the partial derivative from the array of all of the partials
+					reactingPartialsForCluster[j] =
+							clusterPartials[pdColIdsVector[j]];
+					// Reset the cluster partial value to zero. This is much faster
+					// than using memset.
+					clusterPartials[pdColIdsVector[j]] = 0.0;
+				}
+				// Update the matrix
+				ierr = MatSetValuesStencil(J, 1, &rowId, pdColIdsVectorSize, colIds,
+						reactingPartialsForCluster.data(), ADD_VALUES);
+				checkPetscError(ierr);
 			}
-			// Update the matrix
-			ierr = MatSetValuesStencil(J, 1, &rowId, pdColIdsVectorSize, colIds,
-					reactingPartialsForCluster.data(), ADD_VALUES);
-			checkPetscError(ierr);
-		}
 
-		// Uncomment this line for debugging in a single cell.
-//		break;
+			// Uncomment this line for debugging in a single cell.
+			//break;
+		}
 	}
 
 	/*
