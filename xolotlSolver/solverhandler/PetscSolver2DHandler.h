@@ -1,5 +1,5 @@
-#ifndef PETSCSOLVER3DHANDLER_H
-#define PETSCSOLVER3DHANDLER_H
+#ifndef PETSCSOLVER2DHANDLER_H
+#define PETSCSOLVER2DHANDLER_H
 
 // Includes
 #include "PetscSolverHandler.h"
@@ -8,22 +8,23 @@ namespace xolotlSolver {
 
 /**
  * This class is a subclass of PetscSolverHandler and implement all the methods needed
- * to solve the ADR equations in 3D using PETSc from Argonne National Laboratory.
+ * to solve the ADR equations in 2D using PETSc from Argonne National Laboratory.
  */
-class PetscSolver3DHandler: public PetscSolverHandler {
+class PetscSolver2DHandler: public PetscSolverHandler {
 public:
 
 	//! The Constructor
-	PetscSolver3DHandler() {}
+	PetscSolver2DHandler() {}
 
 	//! The Destructor
-	~PetscSolver3DHandler() {}
+	~PetscSolver2DHandler() {}
 
 	/**
 	 * Create everything needed before starting to solve.
      * \see ISolverHandler.h
 	 */
-	void createSolverContext(DM &da);
+	void createSolverContext(DM &da, int nx, double hx, int ny,
+			double hy, int nz, double hz);
 
 	/**
 	 * Initialize the concentration solution vector.
@@ -51,7 +52,7 @@ public:
 	 */
 	void computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J);
 
-}; //end class PetscSolver3DHandler
+}; //end class PetscSolver2DHandler
 
 } /* end namespace xolotlSolver */
 #endif

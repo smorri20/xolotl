@@ -52,8 +52,15 @@ public:
 	 * Create everything needed before starting to solve.
 	 *
 	 * @param da The PETSC distributed array
+	 * @param nx The number of grid points in the x direction (depth)
+	 * @param hx The step size in the x direction
+	 * @param ny The number of grid points in the y direction
+	 * @param hy The step size in the y direction
+	 * @param nz The number of grid points in the z direction
+	 * @param hz The step size in the z direction
 	 */
-	virtual void createSolverContext(DM &da) = 0;
+	virtual void createSolverContext(DM &da, int nx, double hx, int ny,
+			double hy, int nz, double hz) = 0;
 
 	/**
 	 * Get the diagonal fill for the Jacobian, corresponding to the reactions.
@@ -108,6 +115,13 @@ public:
 	 * @return The step size
 	 */
 	virtual double getStepSize() const = 0;
+
+	/**
+	 * Get the number of dimensions of the problem.
+	 *
+	 * @return The number of dimensions
+	 */
+	virtual int getDimension() const = 0;
 
 	/**
 	 * Get the flux handler.

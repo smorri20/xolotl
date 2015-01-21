@@ -3,7 +3,6 @@
 #include <TokenizedLineReader.h>
 #include <NetworkOptionHandler.h>
 #include <PetscOptionHandler.h>
-#include <StepSizeOptionHandler.h>
 #include <ConstTempOptionHandler.h>
 #include <TempProfileOptionHandler.h>
 #include <FluxOptionHandler.h>
@@ -22,7 +21,6 @@ Options::Options() :
 		exitCode(EXIT_SUCCESS),
 		petscArgc(0),
 		petscArgv(NULL),
-		stepSize(0.0),
 		constTempFlag(false),
 		tempProfileFlag(false),
 		constTemperature(1000.0),
@@ -38,8 +36,6 @@ Options::Options() :
 	auto networkHandler = new NetworkOptionHandler();
 	// Create the PETSc option handler
 	auto petscHandler = new PetscOptionHandler();
-	// Create the step size option option handler
-	auto stepHandler = new StepSizeOptionHandler();
 	// Create the constant temperature option handler
 	auto constTempHandler = new ConstTempOptionHandler();
 	// Create the temperature profile option handler
@@ -62,7 +58,6 @@ Options::Options() :
 	// Add our notion of which options we support.
 	optionsMap[networkHandler->key] = networkHandler;
 	optionsMap[petscHandler->key] = petscHandler;
-	optionsMap[stepHandler->key] = stepHandler;
 	optionsMap[constTempHandler->key] = constTempHandler;
 	optionsMap[tempProfileHandler->key] = tempProfileHandler;
 	optionsMap[fluxHandler->key] = fluxHandler;

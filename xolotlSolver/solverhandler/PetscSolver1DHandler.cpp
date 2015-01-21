@@ -1,5 +1,5 @@
 // Includes
-#include <PetscSolver3DHandler.h>
+#include <PetscSolver1DHandler.h>
 #include <HDF5Utils.h>
 #include <MathUtils.h>
 #include <Constants.h>
@@ -16,7 +16,8 @@ inline bool checkPetscError(PetscErrorCode errorCode) {
 	CHKERRQ(errorCode);
 }
 
-void PetscSolver3DHandler::createSolverContext(DM &da) {
+void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int ny,
+		double hy, int nz, double hz) {
 	PetscErrorCode ierr;
 
 	// Degrees of freedom is the total number of clusters in the network
@@ -28,9 +29,12 @@ void PetscSolver3DHandler::createSolverContext(DM &da) {
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Create distributed array (DMDA) to manage parallel grid and vectors
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = DMDACreate3d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, DM_BOUNDARY_GHOSTED, DM_BOUNDARY_GHOSTED,
-	DMDA_STENCIL_STAR, -8, -8, -8, PETSC_DECIDE, PETSC_DECIDE, PETSC_DECIDE, dof, 1, NULL, NULL, NULL, &da);
+	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, nx, dof, 1,
+	NULL, &da);
 	checkPetscError(ierr);
+
+	// Set the step size
+	h = hx;
 
 	// Set the size of the partial derivatives vectors
 	clusterPartials.resize(dof, 0.0);
@@ -77,7 +81,7 @@ void PetscSolver3DHandler::createSolverContext(DM &da) {
 	return;
 }
 
-void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
+void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 	PetscErrorCode ierr;
 
 	// Pointer for the concentration vector
@@ -145,9 +149,9 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 			if (i >= xs && i < xs + xm) {
 				concOffset = concentrations[i];
 				// Loop on the concVector size
-				for (int k = 0; k < concVector.size(); k++) {
-					concOffset[(int) concVector.at(k).at(0)] =
-							concVector.at(k).at(1);
+				for (int l = 0; l < concVector.size(); l++) {
+					concOffset[(int) concVector.at(l).at(0)] =
+							concVector.at(l).at(1);
 				}
 			}
 		}
@@ -162,7 +166,7 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 	return;
 }
 
-void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, PetscReal ftime,
+void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, PetscReal ftime,
 		bool &temperatureChanged) {
 	PetscErrorCode ierr;
 
@@ -303,7 +307,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 	return;
 }
 
-void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J) const {
+void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J) const {
 	PetscErrorCode ierr;
 
 	// Get the distributed array
@@ -419,7 +423,7 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	return;
 }
 
-void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) {
+void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) {
 	PetscErrorCode ierr;
 
 	// Get the distributed array

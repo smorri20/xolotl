@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	diffusionHandler.initializeOFill(network, ofill);
 
 	// Check the total number of diffusing clusters
-	BOOST_REQUIRE_EQUAL(diffusionHandler.getNumberOfDiffusing(), 4);
+	BOOST_REQUIRE_EQUAL(diffusionHandler.getNumberOfDiffusing(), 7);
 
 	// The size parameter
 	double s = 1.0;
@@ -99,11 +99,15 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 			updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 39179139169076.0, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], 3207722368244.0, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], 1570956808235.0, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], 252656347.0, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], 0.0, 0.01); // Does not diffuse
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 1.0393e+13, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], 5.0899e+12, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], 2.04785e+12, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], 2.70401e+12, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], 2.01239e+12, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[5], 4.98404e+10, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[6], 0.0, 0.01); // Does not diffuse
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[7], 0.0, 0.01); // Does not diffuse
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[8], 8.18607e+08, 0.01);
 
 	// Initialize the indices and values to set in the Jacobian
 	int nDiff = diffusionHandler.getNumberOfDiffusing();
@@ -122,13 +126,16 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	BOOST_REQUIRE_EQUAL(indices[1], 1);
 	BOOST_REQUIRE_EQUAL(indices[2], 2);
 	BOOST_REQUIRE_EQUAL(indices[3], 3);
+	BOOST_REQUIRE_EQUAL(indices[4], 4);
+	BOOST_REQUIRE_EQUAL(indices[5], 5);
+	BOOST_REQUIRE_EQUAL(indices[6], 8);
 
 	// Check some values
-	BOOST_REQUIRE_CLOSE(val[0], -313433113353.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[3], 78358278338.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[8], 6415444736.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[12], 3141913616.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[15], -2021251.0, 0.01);
+	BOOST_REQUIRE_CLOSE(val[0], -2.56618e+10, 0.01);
+	BOOST_REQUIRE_CLOSE(val[3], 6.41544e+09, 0.01);
+	BOOST_REQUIRE_CLOSE(val[8], 3.14191e+09, 0.01);
+	BOOST_REQUIRE_CLOSE(val[12], 1.26411e+09, 0.01);
+	BOOST_REQUIRE_CLOSE(val[15], -6.67657e+09, 0.01);
 
 	// Finalize MPI
 	MPI_Finalize();

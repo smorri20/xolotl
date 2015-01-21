@@ -43,6 +43,15 @@ public class ArgumentsTest {
 			// Check the default number of dimensions
 			assertEquals("1", args.getDimensions());
 
+			// Check the default number of grid points in the x direction
+			assertEquals("20", args.getNxGrid());
+
+			// Check the default number of grid points in the y direction
+			assertEquals("0", args.getNyGrid());
+
+			// Check the default number of grid points in the z direction
+			assertEquals("0", args.getNzGrid());
+
 			// Check if there is a startTemp argument
 			assertEquals("1000", args.getStartTemp());
 
@@ -72,7 +81,7 @@ public class ArgumentsTest {
 
 			// Check the default petscArgs
 			assertEquals(
-					"-da_grid_x 10 -ts_final_time 50 -ts_dt 1.0e-12 "
+					"-ts_final_time 50 -ts_dt 1.0e-12 "
 							+ "-ts_max_steps 100 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
 							+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant "
 							+ "-fieldsplit_1_pc_type sor -snes_monitor -ksp_monitor -ts_monitor",
@@ -97,9 +106,9 @@ public class ArgumentsTest {
 			// Parse the specified string of arguments
 			args = CliFactory.parseArguments(Arguments.class, new String[] {
 					"--startTemp", "900", "--material", "W111", "--perfHandler",
-					"dummy", "--dimensions", "2", "--maxHeSize", "7", "--maxVSize", 
-					"30", "--maxISize", "5", "--checkpoint", "xolotlStop.h5", 
-					"--stepSize", "3.0", "--initialV", "0.05"});
+					"dummy", "--dimensions", "2", "--nyGrid", "50", "--maxHeSize", 
+					"7", "--maxVSize", "30", "--maxISize", "5", "--checkpoint", 
+					"xolotlStop.h5", "--stepSize", "3.0", "--initialV", "0.05"});
 			
 			// Check that the maximum Helium cluster size is 7
 			assertEquals(7, args.getMaxHeSize());
@@ -115,6 +124,9 @@ public class ArgumentsTest {
 			
 			// Check that the number of dimensions is 2
 			assertEquals("2", args.getDimensions());
+			
+			// Check that the number of grid points in the y direction is 50
+			assertEquals("50", args.getNyGrid());
 			
 			// Check that the startTemp is 900
 			assertEquals("900", args.getStartTemp());
@@ -151,7 +163,7 @@ public class ArgumentsTest {
 
 			// Check the default petscArgs
 			assertEquals(
-					"-da_grid_x 10 -ts_final_time 50 -ts_dt 1.0e-12 "
+					"-ts_final_time 50 -ts_dt 1.0e-12 "
 							+ "-ts_max_steps 100 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
 							+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant "
 							+ "-fieldsplit_1_pc_type sor -snes_monitor -ksp_monitor -ts_monitor",

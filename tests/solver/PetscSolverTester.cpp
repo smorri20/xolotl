@@ -102,11 +102,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 	double concs[network->getAll()->size()];
 	network->fillConcentrationsArray(concs);
 
-    BOOST_REQUIRE_CLOSE(concs[0], 0.0, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[1], 8.082e-17, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[2], -5.242e-29, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[3], 0.025, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[4], -1.632e-30, 0.01);
+	// Check some concentrations
+    BOOST_REQUIRE_CLOSE(concs[0], 8.082e-17, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[1], -5.872e-29, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[2], -1.653e-41, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[7], 1.4966e-103, 0.01);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
