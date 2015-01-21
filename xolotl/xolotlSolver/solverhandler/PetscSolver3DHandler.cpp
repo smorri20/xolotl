@@ -1,5 +1,5 @@
 // Includes
-#include <PetscSolver1DHandler.h>
+#include <PetscSolver3DHandler.h>
 #include <HDF5Utils.h>
 #include <MathUtils.h>
 #include <Constants.h>
@@ -16,7 +16,8 @@ inline bool checkPetscError(PetscErrorCode errorCode) {
 	CHKERRQ(errorCode);
 }
 
-void PetscSolver1DHandler::createSolverContext(DM &da) {
+void PetscSolver3DHandler::createSolverContext(DM &da, int nx, double hx, int ny,
+		double hy, int nz, double hz) {
 	PetscErrorCode ierr;
 
 	// Degrees of freedom is the total number of clusters in the network
@@ -28,9 +29,13 @@ void PetscSolver1DHandler::createSolverContext(DM &da) {
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Create distributed array (DMDA) to manage parallel grid and vectors
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, -8, dof, 1,
-	NULL, &da);
+	ierr = DMDACreate3d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, DM_BOUNDARY_GHOSTED,
+			DM_BOUNDARY_GHOSTED, DMDA_STENCIL_STAR, nx, ny, nz, PETSC_DECIDE,
+			PETSC_DECIDE, PETSC_DECIDE, dof, 1, NULL, NULL, NULL, &da);
 	checkPetscError(ierr);
+
+	// Set the step size
+	h = hx;
 
 	// Set the size of the partial derivatives vectors
 	clusterPartials.resize(dof, 0.0);
@@ -77,7 +82,7 @@ void PetscSolver1DHandler::createSolverContext(DM &da) {
 	return;
 }
 
-void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
+void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 	PetscErrorCode ierr;
 
 	// Pointer for the concentration vector
@@ -162,7 +167,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 	return;
 }
 
-void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, PetscReal ftime,
+void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, PetscReal ftime,
 		bool &temperatureChanged) {
 	PetscErrorCode ierr;
 
@@ -303,7 +308,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 	return;
 }
 
-void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J) const {
+void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J) const {
 	PetscErrorCode ierr;
 
 	// Get the distributed array
@@ -419,7 +424,7 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	return;
 }
 
-void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) {
+void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) {
 	PetscErrorCode ierr;
 
 	// Get the distributed array

@@ -155,7 +155,7 @@ public interface Arguments {
 	 * @param description
 	 *            Brief description of this option
 	 */
-	@Option(defaultValue = "-da_grid_x 10 -ts_final_time 50 -ts_dt 1.0e-12 "
+	@Option(defaultValue = "-ts_final_time 50 -ts_dt 1.0e-12 "
 			+ "-ts_max_steps 100 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
 			+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant "
 			+ "-fieldsplit_1_pc_type sor -snes_monitor -ksp_monitor -ts_monitor", description = "List of arguments to be passed to PETSc")
@@ -205,9 +205,75 @@ public interface Arguments {
 	 * This operation produces the required command line option '--dimensions' which 
 	 * takes a single string value and is defined by the previous Option annotation
 	 * 
-	 * @return The name of the network file
+	 * @return The number of dimensions
 	 */
 	String getDimensions();
+
+	/**
+	 * This Option annotation corresponds to the '--nxGrid' option which defines a 
+	 * default number of grid points in the x directions and additionally provides a 
+	 * brief description of the option.
+	 * 
+	 * @param defaultValue
+	 *            The default number of grid points that will be used if this option
+	 *            is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "20", 
+			description = "<nxGrid> The number of grid points in the x direction "
+					+ "(default = 20)")
+	/**
+	 * This operation produces the required command line option '--nxGrid' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The number of grid points in the x direction
+	 */
+	String getNxGrid();
+
+	/**
+	 * This Option annotation corresponds to the '--nyGrid' option which defines a 
+	 * default number of grid points in the y directions and additionally provides a 
+	 * brief description of the option.
+	 * 
+	 * @param defaultValue
+	 *            The default number of grid points that will be used if this option
+	 *            is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "0", 
+			description = "<nyGrid> The number of grid points in the y direction "
+					+ "(default = 0)")
+	/**
+	 * This operation produces the required command line option '--nyGrid' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The number of grid points in the y direction
+	 */
+	String getNyGrid();
+
+	/**
+	 * This Option annotation corresponds to the '--nzGrid' option which defines a 
+	 * default number of grid points in the z directions and additionally provides a 
+	 * brief description of the option.
+	 * 
+	 * @param defaultValue
+	 *            The default number of grid points that will be used if this option
+	 *            is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "0", 
+			description = "<nzGrid> The number of grid points in the z direction "
+					+ "(default = 0)")
+	/**
+	 * This operation produces the required command line option '--nzGrid' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The number of grid points in the z direction
+	 */
+	String getNzGrid();
 
 	/**
 	 * This Option annotation corresponds to the '--stepSize' option which

@@ -23,7 +23,8 @@ public:
 	 * Create everything needed before starting to solve.
      * \see ISolverHandler.h
 	 */
-	void createSolverContext(DM &da);
+	void createSolverContext(DM &da, int nx, double hx, int ny,
+			double hy, int nz, double hz);
 
 	/**
 	 * Initialize the concentration solution vector.

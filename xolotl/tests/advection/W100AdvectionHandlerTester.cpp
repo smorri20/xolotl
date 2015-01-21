@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	advectionHandler.initialize(network);
 
 	// Check the total number of advecting clusters
-	BOOST_REQUIRE_EQUAL(advectionHandler.getNumberOfAdvecting(), 2);
+	BOOST_REQUIRE_EQUAL(advectionHandler.getNumberOfAdvecting(), 6);
 
 	// The size parameter
 	double h = 1.0;
@@ -91,11 +91,15 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 			concVector, updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 0.0, 0.01); // Does not advect
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], -14481096195.0, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], -22138753147.0, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], 0.0, 0.01); // Does not advect
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], 0.0, 0.01); // Does not advect
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], -3.09354e+10, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], -4.28592e+10, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], -3.06718e+10, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], -1.07377e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], -1.01706e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[5], -4.73986e+09, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[6], 0.0, 0.01); // Does not advect
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[7], 0.0, 0.01); // Does not advect
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[8], 0.0, 0.01); // Does not advect
 
 	// Initialize the rows, columns, and values to set in the Jacobian
 	int nAdvec = advectionHandler.getNumberOfAdvecting();
@@ -110,8 +114,12 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 			indicesPointer, gridPosition);
 
 	// Check the values for the indices
-	BOOST_REQUIRE_EQUAL(indices[0], 1);
-	BOOST_REQUIRE_EQUAL(indices[1], 2);
+	BOOST_REQUIRE_EQUAL(indices[0], 0);
+	BOOST_REQUIRE_EQUAL(indices[1], 1);
+	BOOST_REQUIRE_EQUAL(indices[2], 2);
+	BOOST_REQUIRE_EQUAL(indices[3], 3);
+	BOOST_REQUIRE_EQUAL(indices[4], 4);
+	BOOST_REQUIRE_EQUAL(indices[5], 5);
 
 	// Check values
 	BOOST_REQUIRE_CLOSE(val[0], 509225360.0, 0.01);

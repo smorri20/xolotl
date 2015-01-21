@@ -37,6 +37,9 @@ protected:
 	//! The original advection handler created.
 	xolotlCore::IAdvectionHandler *advectionHandler;
 
+	//! The number of dimensions for the problem.
+	int dimension;
+
 public:
 
 	/**
@@ -59,11 +62,11 @@ public:
 		// Set the advection handler
 		advectionHandler = (xolotlCore::IAdvectionHandler *) material->getAdvectionHandler().get();
 
-		// Set the grid step size
-		h = options.getStepSize();
-
 		// Set the initial vacancy concentration
 		initialVConc = options.getInitialVConcentration();
+
+		// Set the number of dimension
+		dimension = options.getDimensionNumber();
 
 		return;
 	}
@@ -89,6 +92,12 @@ public:
 	 * \see ISolverHandler.h
 	 */
 	double getStepSize() const {return h;}
+
+	/**
+	 * Get the number of dimensions of the problem.
+	 * \see ISolverHandler.h
+	 */
+	int getDimension() const {return dimension;}
 
 	/**
 	 * Get the flux handler.

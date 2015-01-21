@@ -38,7 +38,9 @@ static char help[] =
 
 extern PetscErrorCode RHSFunction(TS, PetscReal, Vec, Vec, void*);
 extern PetscErrorCode RHSJacobian(TS, PetscReal, Vec, Mat, Mat);
-extern PetscErrorCode setupPetscMonitor(TS);
+extern PetscErrorCode setupPetsc1DMonitor(TS);
+extern PetscErrorCode setupPetsc2DMonitor(TS);
+extern PetscErrorCode setupPetsc3DMonitor(TS);
 
 /**
  * A boolean that is true if the temperature has changed.
@@ -260,9 +262,18 @@ void PetscSolver::solve() {
 		throw std::string("PetscSolver Exception: Network not set!");
 	}
 
+	// Get the name of the HDF5 file to read the concentrations from
+	auto HDF5Loader = (HDF5NetworkLoader *) networkLoader;
+	auto fileName = HDF5Loader->getFilename();
+
+	// Get starting conditions from HDF5 file
+	int nx = 0, ny = 0, nz = 0;
+	double hx = 0.0, hy = 0.0, hz = 0.0;
+	HDF5Utils::readHeader(fileName, nx, hx, ny, hy, nz, hz);
+
 	// Create the solver context
 	DM da;
-	Solver::solverHandler->createSolverContext(da);
+	Solver::solverHandler->createSolverContext(da, nx, hx, ny, hy, nz, hz);
 
 	/*  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Extract global vector from DMDA to hold solution
@@ -296,17 +307,9 @@ void PetscSolver::solve() {
 	 Set solver options
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-	// Get the name of the HDF5 file to read the concentrations from
-	auto HDF5Loader = (HDF5NetworkLoader *) networkLoader;
-	auto fileName = HDF5Loader->getFilename();
-
-	// Get starting conditions from HDF5 file
-	int gridLength = 0;
+	// Read the times if the information is in the HDF5 file
 	double time = 0.0, deltaTime = 1.0e-12;
 	int tempTimeStep = -2;
-	HDF5Utils::readHeader(fileName, gridLength);
-
-	// Read the times if the information is in the HDF5 file
 	if (HDF5Utils::hasConcentrationGroup(fileName, tempTimeStep)) {
 		HDF5Utils::readTimes(fileName, tempTimeStep, time, deltaTime);
 	}
@@ -316,8 +319,30 @@ void PetscSolver::solve() {
 	ierr = TSSetFromOptions(ts);
 	checkPetscError(ierr);
 
-	ierr = setupPetscMonitor(ts);
-	checkPetscError(ierr);
+
+	// Switch on the number of dimensions to set the monitors
+	int dim = Solver::solverHandler->getDimension();
+	switch (dim) {
+		case 1:
+			// One dimension
+			ierr = setupPetsc1DMonitor(ts);
+			checkPetscError(ierr);
+			break;
+		case 2:
+			// Two dimensions
+			ierr = setupPetsc2DMonitor(ts);
+			checkPetscError(ierr);
+			break;
+		case 3:
+			// Three dimensions
+			ierr = setupPetsc3DMonitor(ts);
+			checkPetscError(ierr);
+			break;
+		default:
+			throw std::string(
+							"PetscSolver Exception: Wrong number of dimensions "
+							"to set the monitors.");
+	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Set initial conditions

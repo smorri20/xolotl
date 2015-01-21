@@ -51,14 +51,17 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	// Initialize it
 	diffusionHandler.initializeOFill(network, ofill);
 
-	// All the clusters diffuse except the last one
+	// All the clusters diffuse except the 7-th and 8-th one
 	BOOST_REQUIRE_EQUAL(ofill[0], 1);
-	BOOST_REQUIRE_EQUAL(ofill[6], 1);
-	BOOST_REQUIRE_EQUAL(ofill[12], 1);
-	BOOST_REQUIRE_EQUAL(ofill[18], 1);
+	BOOST_REQUIRE_EQUAL(ofill[10], 1);
+	BOOST_REQUIRE_EQUAL(ofill[20], 1);
+	BOOST_REQUIRE_EQUAL(ofill[30], 1);
+	BOOST_REQUIRE_EQUAL(ofill[40], 1);
+	BOOST_REQUIRE_EQUAL(ofill[50], 1);
+	BOOST_REQUIRE_EQUAL(ofill[80], 1);
 
 	// Check the total number of diffusing clusters
-	BOOST_REQUIRE_EQUAL(diffusionHandler.getNumberOfDiffusing(), 4);
+	BOOST_REQUIRE_EQUAL(diffusionHandler.getNumberOfDiffusing(), 7);
 
 	// The size parameter
 	double s = 1.0;
@@ -101,11 +104,15 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 			updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 3917913916907.0, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], 320772236824.0, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], 157095680823.0, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], 25265634.0, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], 0.0, 0.01); // Does not diffuse
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 1.0393e+12, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], 5.0899e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], 2.04785e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], 2.70401e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], 2.01239e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[5], 4.98404e+09, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[6], 0.0, 0.01); // Does not diffuse
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[7], 0.0, 0.01); // Does not diffuse
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[8], 8.18607e+07, 0.01);
 
 	// Initialize the indices and values to set in the Jacobian
 	int nDiff = diffusionHandler.getNumberOfDiffusing();
@@ -124,13 +131,16 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	BOOST_REQUIRE_EQUAL(indices[1], 1);
 	BOOST_REQUIRE_EQUAL(indices[2], 2);
 	BOOST_REQUIRE_EQUAL(indices[3], 3);
+	BOOST_REQUIRE_EQUAL(indices[4], 4);
+	BOOST_REQUIRE_EQUAL(indices[5], 5);
+	BOOST_REQUIRE_EQUAL(indices[6], 8);
 
 	// Check some values
-	BOOST_REQUIRE_CLOSE(val[1], 78358278338.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[4], 6415444736.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[5], 6415444736.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[6], -6283827232.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[9], -1010625.0, 0.01);
+	BOOST_REQUIRE_CLOSE(val[1], 6.41544e+09, 0.01);
+	BOOST_REQUIRE_CLOSE(val[4], 3.14191e+09, 0.01);
+	BOOST_REQUIRE_CLOSE(val[5], 3.14191e+09, 0.01);
+	BOOST_REQUIRE_CLOSE(val[6], -2.52821e+09, 0.01);
+	BOOST_REQUIRE_CLOSE(val[9], -3.33828e+09, 0.01);
 
 	// Finalize MPI
 	MPI_Finalize();

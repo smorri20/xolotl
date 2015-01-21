@@ -33,6 +33,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/temperatureHandler)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/temperature)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/solverHandler)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlSolver)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlSolver/solverhandler)
 
 include_directories(${PETSC_INCLUDES})
 

@@ -16,7 +16,8 @@ inline bool checkPetscError(PetscErrorCode errorCode) {
 	CHKERRQ(errorCode);
 }
 
-void PetscSolver2DHandler::createSolverContext(DM &da) {
+void PetscSolver2DHandler::createSolverContext(DM &da, int nx, double hx, int ny,
+		double hy, int nz, double hz) {
 	PetscErrorCode ierr;
 
 	// Degrees of freedom is the total number of clusters in the network
@@ -29,8 +30,11 @@ void PetscSolver2DHandler::createSolverContext(DM &da) {
 	 Create distributed array (DMDA) to manage parallel grid and vectors
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	ierr = DMDACreate2d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, DM_BOUNDARY_GHOSTED,
-	DMDA_STENCIL_STAR, -8, -8, PETSC_DECIDE, PETSC_DECIDE, dof, 1, NULL, NULL, &da);
+	DMDA_STENCIL_STAR, nx, ny, PETSC_DECIDE, PETSC_DECIDE, dof, 1, NULL, NULL, &da);
 	checkPetscError(ierr);
+
+	// Set the step size
+	h = hx;
 
 	// Set the size of the partial derivatives vectors
 	clusterPartials.resize(dof, 0.0);
@@ -141,17 +145,16 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) const {
 		for (int j = 0; j < My; j++) {
 			for (int i = 0; i < Mx; i++) {
 				// Read the concentrations from the HDF5 file
-				// TODO - HDF5Utils::readGridPoint() needs to take j as a new argument
 				auto concVector = xolotlCore::HDF5Utils::readGridPoint(networkName,
-						tempTimeStep, i);
+						tempTimeStep, i, j);
 
 				// Change the concentration only if we are on the locally owned part of the grid
 				if (i >= xs && i < xs + xm && j >= ys && j < ys + ym) {
 					concOffset = concentrations[j][i];
 					// Loop on the concVector size
-					for (int n = 0; n < concVector.size(); n++) {
-						concOffset[(int) concVector.at(n).at(0)] =
-								concVector.at(n).at(1);
+					for (int l = 0; l < concVector.size(); l++) {
+						concOffset[(int) concVector.at(l).at(0)] =
+								concVector.at(l).at(1);
 					}
 				}
 			}
