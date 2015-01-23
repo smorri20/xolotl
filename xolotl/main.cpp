@@ -36,7 +36,8 @@ void printStartMessage() {
 
 std::shared_ptr<xolotlFactory::IMaterialFactory> initMaterial(Options &options) {
 	// Create the material factory
-	auto materialFactory = xolotlFactory::IMaterialFactory::createMaterialFactory(options.getMaterial());
+	auto materialFactory = xolotlFactory::IMaterialFactory::createMaterialFactory(options.getMaterial(),
+			options.getDimensionNumber());
 
 	// Initialize it with the options
 	materialFactory->initializeMaterial(options);

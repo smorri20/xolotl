@@ -108,7 +108,7 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) const {
 	checkPetscError(ierr);
 
 	// Initialize the flux handler
-	fluxHandler->initializeFluxHandler(Mx, h);
+	fluxHandler->initializeFluxHandler(Mx, h, h);
 
 	// Initialize the advection handler
 	advectionHandler->initialize(network);
@@ -284,6 +284,12 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 					updatedConcOffset);
 
 			// ---- Compute advection over the locally owned part of the grid -----
+
+			// Change the second value in the concVector because the advection handler
+			// excepts the middle point for the first value and the right point for the
+			// second one
+			concVector[1] = concs[yj][xi + 1]; // right
+
 			advectionHandler->computeAdvection(network, h, gridPosition, concVector,
 					updatedConcOffset);
 

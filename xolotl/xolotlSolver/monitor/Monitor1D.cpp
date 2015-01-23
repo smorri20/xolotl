@@ -1203,7 +1203,8 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 		if (heIndices1D.size() == 0) {
 			throw std::string(
-					"PetscSolver Exception: Cannot compute the retention because there is no helium or helium-vacancy cluster in the network.");
+					"PetscSolver Exception: Cannot compute the retention because there is no helium "
+					"or helium-vacancy cluster in the network.");
 		}
 
 		// computeHeliumFluence will be called at each timestep

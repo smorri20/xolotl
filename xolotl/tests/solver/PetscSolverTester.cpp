@@ -72,7 +72,8 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 			xolotlSolver::PetscSolver>(make_shared<xolotlPerf::DummyHandlerRegistry>());
 
 	// Create the material factory
-	auto materialFactory = xolotlFactory::IMaterialFactory::createMaterialFactory(opts.getMaterial());
+	auto materialFactory = xolotlFactory::IMaterialFactory::createMaterialFactory(opts.getMaterial(),
+			opts.getDimensionNumber());
 
 	// Initialize and get the temperature handler
 	bool tempInitOK = xolotlFactory::initializeTempHandler(opts);
