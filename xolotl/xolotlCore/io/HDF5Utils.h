@@ -64,7 +64,7 @@ namespace HDF5Utils {
 	 * @param j The index of the position on the grid on the y direction
 	 * @param k The index of the position on the grid on the z direction
 	 */
-	void addConcentrationDataset(int size, int i, int j = 0, int k = 0);
+	void addConcentrationDataset(int size, int i, int j = -1, int k = -1);
 
 	/**
 	 * Fill the concentration dataset at a specific grid point.
@@ -75,7 +75,7 @@ namespace HDF5Utils {
 	 * @param k The index of the position on the grid on the z direction
 	 */
 	void fillConcentrations(std::vector< std::vector<double> > concVector,
-			int i, int j = 0, int k = 0);
+			int i, int j = -1, int k = -1);
 
 	/**
 	 * Close the file for the first time after creating it.
@@ -139,7 +139,7 @@ namespace HDF5Utils {
 	 * @return The vector of concentrations
 	 */
 	std::vector< std::vector<double> > readGridPoint(std::string fileName,
-			int lastTimeStep, int i, int j = 0, int k = 0);
+			int lastTimeStep, int i, int j = -1, int k = -1);
 
 };
 
