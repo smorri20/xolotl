@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(goodParamFile)
     BOOST_REQUIRE_EQUAL(opts.getDimensionNumber(), 1);
 
     // Check the PETSc options
-    BOOST_REQUIRE_EQUAL(opts.getPetscArgc(), 18);
+    BOOST_REQUIRE_EQUAL(opts.getPetscArgc(), 16);
 }
 
 BOOST_AUTO_TEST_CASE(wrongPerfHandler)
