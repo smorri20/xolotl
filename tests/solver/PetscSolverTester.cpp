@@ -106,9 +106,9 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 
 	// Check some concentrations
     BOOST_REQUIRE_CLOSE(concs[0], 8.082e-17, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[1], -5.872e-29, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[2], -1.653e-41, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[7], 1.4966e-103, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[1], 2.979e-29, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[2], 4.307e-42, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[7], 4.364e-106, 0.01);
     BOOST_REQUIRE_CLOSE(concs[8], 0.02500, 0.01);
 }
 
@@ -189,11 +189,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
  	network->fillConcentrationsArray(concs);
 
  	// Check some concentrations
-     BOOST_REQUIRE_CLOSE(concs[0], -7.1660e-92, 0.01);
-     BOOST_REQUIRE_CLOSE(concs[1], 4.8330e-181, 0.01);
-     BOOST_REQUIRE_CLOSE(concs[6], 4.7962e-12, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[0], 6.287e-93, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[1], 7.403e-184, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[6], 4.796e-12, 0.01);
      BOOST_REQUIRE_CLOSE(concs[14], 0.0, 0.01);
-     BOOST_REQUIRE_CLOSE(concs[23], 5.7314e-97, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[23], 2.350e-97, 0.01);
  }
 
 BOOST_AUTO_TEST_SUITE_END()

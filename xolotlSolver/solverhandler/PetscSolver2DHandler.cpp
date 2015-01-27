@@ -426,11 +426,11 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 				row.c = indices[i];
 
 				// Set grid coordinates and component numbers for the columns
-				// corresponding to the left and middle grid points
-				cols[0].i = xi - 1; // left
+				// corresponding to the middle and right grid points
+				cols[0].i = xi; // middle
 				cols[0].j = yj;
 				cols[0].c = indices[i];
-				cols[1].i = xi; // middle
+				cols[1].i = xi + 1; // right
 				cols[1].j = yj;
 				cols[1].c = indices[i];
 
