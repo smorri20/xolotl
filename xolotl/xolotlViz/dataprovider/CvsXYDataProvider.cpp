@@ -32,7 +32,7 @@ std::vector<double> CvsXYDataProvider::getAxis1Vector() const {
 
 	// Add the last point for the mesh (data are in cells, we need one more mesh points than cell points)
 	xVector.push_back(2.0 * max - almostMax);
-
+	
 	return xVector;
 }
 

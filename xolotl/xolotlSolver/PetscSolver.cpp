@@ -36,8 +36,6 @@ static char help[] =
 
 // ----- GLOBAL VARIABLES ----- //
 
-extern PetscErrorCode RHSFunction(TS, PetscReal, Vec, Vec, void*);
-extern PetscErrorCode RHSJacobian(TS, PetscReal, Vec, Mat, Mat);
 extern PetscErrorCode setupPetsc1DMonitor(TS);
 extern PetscErrorCode setupPetsc2DMonitor(TS);
 extern PetscErrorCode setupPetsc3DMonitor(TS);
@@ -67,7 +65,7 @@ static inline int petscReturn() {
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "setupInitialConditions"
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver","setupInitialConditions")
 PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 
 	// Local Declarations
@@ -100,7 +98,7 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 /* ------------------------------------------------------------------- */
 
 #undef __FUNCT__
-#define __FUNCT__ "RHSFunction"
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "RHSFunction")
 /*
  RHSFunction - Evaluates the right-hand-side of the nonlinear function defining the ODE
 
@@ -152,7 +150,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "RHSJacobian"
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver","RHSJacobian")
 /*
  Compute the Jacobian entries based on IFunction() and insert them into the matrix
  */
