@@ -57,8 +57,8 @@ endif(EAVL_FOUND AND MESA_FOUND)
 
 #Add the library
 add_library(${LIBRARY_NAME} STATIC ${SRC})
-message('${SRC}')
-message('${HEADERS}')
+#message('${SRC}')
+#message('${HEADERS}')
 target_link_libraries(${LIBRARY_NAME} ${MAYBE_EAVL_MESA})
 
 #Install the xolotl header files
