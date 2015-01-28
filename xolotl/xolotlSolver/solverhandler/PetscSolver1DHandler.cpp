@@ -127,8 +127,8 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 		concOffset = concentrations[i];
 
 		// Loop on all the clusters to initialize at 0.0
-		for (int k = 0; k < dof; k++) {
-			concOffset[k] = 0.0;
+		for (int n = 0; n < dof; n++) {
+			concOffset[n] = 0.0;
 		}
 
 		// Initialize the vacancy concentration
@@ -192,7 +192,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 	ierr = DMDAVecGetArrayDOF(da, F, &updatedConcs);
 	checkPetscError(ierr);
 
-	//Get local grid boundaries
+	// Get local grid boundaries
 	PetscInt xs, xm;
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
 	checkPetscError(ierr);
@@ -221,8 +221,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 
 	// Loop over grid points computing ODE terms for each grid point
 	for (int xi = xs; xi < xs + xm; xi++) {
-
-//		xi = 1; // Uncomment this line for debugging in a single cell.
+		//xi = 1; // Uncomment this line for debugging in a single cell.
 
 		// Compute the old and new array offsets
 		concOffset = concs[xi];
@@ -290,8 +289,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 			updatedConcOffset[reactantIndex] += flux;
 		}
 
-		// Uncomment this line for debugging in a single cell.
-//		break;
+		//break; // Uncomment this line for debugging in a single cell.
 	}
 
 	/*
@@ -359,8 +357,7 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	 at each grid point
 	 */
 	for (int xi = xs; xi < xs + xm; xi++) {
-
-//			xi = 1; // Uncomment this line for debugging in a single cell
+		//xi = 1; // Uncomment this line for debugging in a single cell.
 
 		// Boundary conditions
 		if (xi == 0 || xi == Mx - 1) continue;
@@ -406,7 +403,7 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 			row.c = indices[i];
 
 			// Set grid coordinates and component numbers for the columns
-			// corresponding to the middle and left grid points
+			// corresponding to the middle and right grid points
 			cols[0].i = xi; // middle
 			cols[0].c = indices[i];
 			cols[1].i = xi + 1; // right
@@ -417,7 +414,7 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 			checkPetscError(ierr);
 		}
 
-//		break;   // Uncomment this line for debugging in a single cell.
+		//break; // Uncomment this line for debugging in a single cell.
 	}
 
 	return;
@@ -465,8 +462,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 
 	// Loop over the grid points
 	for (int xi = xs; xi < xs + xm; xi++) {
-
-//		xi = 1; // Uncomment this line for debugging in a single cell
+		//xi = 1; // Uncomment this line for debugging in a single cell.
 
 		// Boundary conditions
 		if (xi == 0 || xi == Mx - 1) continue;
@@ -510,8 +506,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 			checkPetscError(ierr);
 		}
 
-		// Uncomment this line for debugging in a single cell.
-//		break;
+		//break; // Uncomment this line for debugging in a single cell.
 	}
 
 	/*
