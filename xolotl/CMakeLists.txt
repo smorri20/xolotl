@@ -182,6 +182,19 @@ ENDIF()
 # Include the headers
 INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR})
 
+# Link against mpiP if desired and available.
+OPTION(USE_MPIP "link against the mpiP MPI profiling library")
+message(STATUS "USE_MPIP=${USE_MPIP}")
+if (USE_MPIP)
+    FIND_PACKAGE(MPIP REQUIRED)
+    IF (MPIP_FOUND)
+        message(STATUS "mpiP found.")
+        message(STATUS "MPIP_LIBRARIES=${MPIP_LIBRARIES}")
+    ENDIF()
+ENDIF()
+
+
+
 # Build the performance library first, so it can be used by other libraries.
 add_subdirectory(xolotlPerf)
 # Add the visualization directory
@@ -240,11 +253,28 @@ include_directories(${PETSC_INCLUDES})
 configure_file ("${CMAKE_SOURCE_DIR}/XolotlConfig.h.in" "${CMAKE_SOURCE_DIR}/XolotlConfig.h")
 
 # Setup the library list
-set(XOLOTL_LIBS xolotlReactants xolotlSolver xolotlIO xolotlPerf xolotlViz 
-xolotlFactory xolotlCL ${PETSC_LIBRARIES} ${HDF5_LIBRARIES})
+# We need to interpose mpiP between the XOLOTL libraries and PETSc/HDF5
+# libraries because the *_LIBRARIES variables for the latter may explicitly
+# include the MPI libraries, and we need the linker to see the
+# mpiP versions of the MPI functions before it sees those in the
+# "real" MPI library.
+set(XOLOTL_LIBS 
+    xolotlReactants 
+    xolotlSolver 
+    xolotlIO 
+    xolotlPerf 
+    xolotlViz 
+    xolotlFactory 
+    xolotlCL
+    ${MPIP_LIBRARIES}
+    ${PETSC_LIBRARIES}
+    ${HDF5_LIBRARIES}
+    )
+message(STATUS "XOLOTL_LIBS=${XOLOTL_LIBS}")
 
 # Add an executable for the main program
 ADD_EXECUTABLE (xolotl main.cpp)
 
 # Link the reactants library
 target_link_libraries(xolotl ${XOLOTL_LIBS})
+
