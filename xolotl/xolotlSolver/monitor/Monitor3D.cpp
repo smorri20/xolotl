@@ -4,6 +4,7 @@
 #include <VizHandlerRegistryFactory.h>
 #include <PlotType.h>
 #include <CvsXDataProvider.h>
+#include <CvsXYDataProvider.h>
 #include <LabelProvider.h>
 #include <petscts.h>
 #include <petscsys.h>
@@ -48,6 +49,10 @@ std::vector<int> heIndices3D;
 // Declare the vector that will store the weight of the helium clusters
 // (their He composition)
 std::vector<int> heWeights3D;
+//! The pointer to the 2D plot used in MonitorSurfaceXY3D.
+std::shared_ptr<xolotlViz::IPlot> surfacePlotXY3D;
+//! The pointer to the 2D plot used in MonitorSurfaceXZ3D.
+std::shared_ptr<xolotlViz::IPlot> surfacePlotXZ3D;
 
 /**
  * This is a monitoring method that will save an hdf5 file at each time step.
@@ -201,7 +206,7 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	PetscErrorCode ierr;
-	int xs, xm;
+	int xs, xm, ys, ym, zs, zm;
 
 	PetscFunctionBeginUser;
 
@@ -217,14 +222,14 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time
 	checkPetscError(ierr);
 
 	// Get the corners of the grid
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
+	ierr = DMDAGetCorners(da, &xs, &ys, &zs, &xm, &ym, &zm);
 	checkPetscError(ierr);
 
 	// Setup step size variable
 	double h = solverHandler->getStepSize();
 
 	// Get the array of concentration
-	PetscReal **solutionArray;
+	PetscReal ****solutionArray;
 	ierr = DMDAVecGetArrayDOF(da, solution, &solutionArray);
 	checkPetscError(ierr);
 
@@ -235,15 +240,20 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time
 	PetscReal *gridPointSolution;
 
 	// Loop on the grid
-	for (int xi = xs; xi < xs + xm; xi++) {
-		// Get the pointer to the beginning of the solution data for this grid point
-		gridPointSolution = solutionArray[xi];
+	for (int k = zs; k < zs + zm; k++) {
+		for (int j = ys; j < ys + ym; j++) {
+			for (int i = xs; i < xs + xm; i++) {
+				// Get the pointer to the beginning of the solution data for
+				// this grid point
+				gridPointSolution = solutionArray[k][j][i];
 
-		// Loop on all the indices
-		for (int i = 0; i < heIndices3D.size(); i++) {
-			// Add the current concentration times the number of helium in the cluster
-			// (from the weight vector)
-			heConcentration += gridPointSolution[heIndices3D[i]] * heWeights3D[i] * h;
+				// Loop on all the indices
+				for (int l = 0; l < heIndices3D.size(); l++) {
+					// Add the current concentration times the number of helium in the cluster
+					// (from the weight vector)
+					heConcentration += gridPointSolution[heIndices3D[l]] * heWeights3D[l] * h;
+				}
+			}
 		}
 	}
 
@@ -268,6 +278,20 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time
 			heConcentration += otherConcentration;
 		}
 
+		// Get the total size of the grid rescale the concentrations
+		int Mx, My, Mz;
+		ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, &Mz,
+		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+		PETSC_IGNORE);
+		checkPetscError(ierr);
+
+		// Compute the total surface irradiated by the helium flux
+		double surface = (My - 2) * h * (Mz - 2) * h;
+
+		// Rescale the concentration
+		heConcentration = heConcentration / surface;
+
 		// Get the fluence
 		double heliumFluence = fluxHandler->getHeFluence();
 
@@ -276,7 +300,7 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time
 		std::cout << "Helium retention = "
 				<< 100.0 * (heConcentration / heliumFluence) << " %"
 				<< std::endl;
-		std::cout << "Helium concentration = " << heConcentration << std::endl;
+		std::cout << "Helium mean concentration = " << heConcentration << std::endl;
 		std::cout << "Helium fluence = " << heliumFluence << "\n" << std::endl;
 
 //		// Uncomment to write the retention and the fluence in a file
@@ -296,6 +320,332 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time
 }
 
 /**
+ * This is a monitoring method that will save 2D plots of the concentration of
+ * a specific cluster at each grid point on the XY surface, integrating over Z.
+ */
+PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
+		Vec solution, void *ictx) {
+	PetscErrorCode ierr;
+	double ****solutionArray, *gridPointSolution, x, y, z;
+	Vec localSolution;
+	int xs, xm, Mx, ys, ym, My, zs, zm, Mz;
+
+	PetscFunctionBeginUser;
+
+	// Get the number of processes
+	int worldSize;
+	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
+
+	// Gets the process ID
+	int procId;
+	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+
+	// Get the da from ts
+	DM da;
+	ierr = TSGetDM(ts, &da);
+	checkPetscError(ierr);
+
+	// Get the local vector, which is capital when running in parallel,
+	// and put it into solutionArray
+	ierr = DMGetLocalVector(da, &localSolution);
+	checkPetscError(ierr);
+	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);
+	checkPetscError(ierr);
+	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);
+	checkPetscError(ierr);
+	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);
+	checkPetscError(ierr);
+
+	// Get the corners of the grid
+	ierr = DMDAGetCorners(da, &xs, &ys, &zs, &xm, &ym, &zm);
+	checkPetscError(ierr);
+	// Get the size of the total grid
+	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, &Mz,
+	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+	PETSC_IGNORE);
+	checkPetscError(ierr);
+
+	// Get the solver handler
+	auto solverHandler = PetscSolver::getSolverHandler();
+
+	// Get the network
+	auto network = solverHandler->getNetwork();
+
+	// Setup step size variable
+	double h = solverHandler->getStepSize();
+
+	// Choice of the cluster to be plotted
+	int iCluster = 0;
+
+	// Create a Point vector to store the data to give to the data provider
+	// for the visualization
+	auto myPoints = std::make_shared<std::vector<xolotlViz::Point> >();
+	// Create a point here so that it is not created and deleted in the loop
+	xolotlViz::Point thePoint;
+
+	// Loop on the full grid, Y and X first because they are the axis of the plot
+	for (int j = 0; j < My; j++) {
+		// Compute y
+		y = j * h;
+
+		for (int i = 0; i < Mx; i++) {
+			// Compute x
+			x = i * h;
+
+			// Initialize the value of the concentration to integrate over Z
+			double conc = 0.0;
+
+			for (int k = 0; k < Mz; k++) {
+				// Compute z
+				z = k * h;
+
+				// If it is the locally owned part of the grid
+				if (i >= xs && i < xs + xm && j >= ys && j < ys + ym
+						&& k >= zs && k < zs + zm) {
+					// Get the pointer to the beginning of the solution data for this grid point
+					gridPointSolution = solutionArray[k][j][i];
+
+					// If procId == 0 integrate over Z
+					if (procId == 0) {
+						conc += gridPointSolution[iCluster];
+					}
+					// Else send the values to procId == 0
+					else {
+						// Send the value of the concentration to the master process
+						MPI_Send(&gridPointSolution[iCluster], 1, MPI_DOUBLE, 0, 2,
+								MPI_COMM_WORLD);
+					}
+				}
+				// Else if it is NOT the locally owned part of the grid but still procId == 0,
+				// it should receive the values of the concentration to integrate them
+				else if (procId == 0) {
+					// Receive the concentration fron other processes
+					double tempConc = 0.0;
+					MPI_Recv(&tempConc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 2, MPI_COMM_WORLD,
+							MPI_STATUS_IGNORE);
+
+					// Add it to the integrated one
+					conc += tempConc;
+				}
+
+				// Wait for everybody at each grid point
+				MPI_Barrier(PETSC_COMM_WORLD);
+			} // End of the loop on Z
+
+			// If it is procId == 0 just store the integrated value in the myPoints vector
+			if (procId == 0) {
+				thePoint.value = conc;
+				thePoint.t = time;
+				thePoint.x = x;
+				thePoint.y = y;
+				myPoints->push_back(thePoint);
+			}
+		}
+	}
+
+	// Plot everything from procId == 0
+	if (procId == 0) {
+		// Get the data provider and give it the points
+		surfacePlotXY3D->getDataProvider()->setPoints(myPoints);
+
+		// Get the iCluster cluster to have access to its name
+		auto reactants = network->getAll();
+		auto cluster = (PSICluster *) reactants->at(iCluster);
+
+		// Change the title of the plot and the name of the data
+		std::stringstream title;
+		title << cluster->getName();
+		surfacePlotXY3D->getDataProvider()->setDataName(title.str());
+		title << " concentration";
+		surfacePlotXY3D->plotLabelProvider->titleLabel = title.str();
+		// Give the time to the label provider
+		std::stringstream timeLabel;
+		timeLabel << "time: " << std::setprecision(4) << time << "s";
+		surfacePlotXY3D->plotLabelProvider->timeLabel = timeLabel.str();
+		// Get the current time step
+		PetscReal currentTimeStep;
+		ierr = TSGetTimeStep(ts, &currentTimeStep);
+		checkPetscError(ierr);
+		// Give the timestep to the label provider
+		std::stringstream timeStepLabel;
+		timeStepLabel << "dt: " << std::setprecision(4) << currentTimeStep
+				<< "s";
+		surfacePlotXY3D->plotLabelProvider->timeStepLabel = timeStepLabel.str();
+
+		// Render and save in file
+		std::stringstream fileName;
+		fileName << cluster->getName() << "_surfaceXY_TS" << timestep << ".pnm";
+		surfacePlotXY3D->write(fileName.str());
+	}
+
+	PetscFunctionReturn(0);
+}
+
+/**
+ * This is a monitoring method that will save 2D plots of the concentration of
+ * a specific cluster at each grid point on the XZ surface, integrating over Y.
+ */
+PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
+		Vec solution, void *ictx) {
+	PetscErrorCode ierr;
+	double ****solutionArray, *gridPointSolution, x, y, z;
+	Vec localSolution;
+	int xs, xm, Mx, ys, ym, My, zs, zm, Mz;
+
+	PetscFunctionBeginUser;
+
+	// Get the number of processes
+	int worldSize;
+	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
+
+	// Gets the process ID
+	int procId;
+	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+
+	// Get the da from ts
+	DM da;
+	ierr = TSGetDM(ts, &da);
+	checkPetscError(ierr);
+
+	// Get the local vector, which is capital when running in parallel,
+	// and put it into solutionArray
+	ierr = DMGetLocalVector(da, &localSolution);
+	checkPetscError(ierr);
+	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);
+	checkPetscError(ierr);
+	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);
+	checkPetscError(ierr);
+	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);
+	checkPetscError(ierr);
+
+	// Get the corners of the grid
+	ierr = DMDAGetCorners(da, &xs, &ys, &zs, &xm, &ym, &zm);
+	checkPetscError(ierr);
+	// Get the size of the total grid
+	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, &Mz,
+	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+	PETSC_IGNORE);
+	checkPetscError(ierr);
+
+	// Get the solver handler
+	auto solverHandler = PetscSolver::getSolverHandler();
+
+	// Get the network
+	auto network = solverHandler->getNetwork();
+
+	// Setup step size variable
+	double h = solverHandler->getStepSize();
+
+	// Choice of the cluster to be plotted
+	int iCluster = 0;
+
+	// Create a Point vector to store the data to give to the data provider
+	// for the visualization
+	auto myPoints = std::make_shared<std::vector<xolotlViz::Point> >();
+	// Create a point here so that it is not created and deleted in the loop
+	xolotlViz::Point thePoint;
+
+	// Loop on the full grid, Y and X first because they are the axis of the plot
+	for (int k = 0; k < Mz; k++) {
+		// Compute z
+		z = k * h;
+
+		for (int i = 0; i < Mx; i++) {
+			// Compute x
+			x = i * h;
+
+			// Initialize the value of the concentration to integrate over Y
+			double conc = 0.0;
+
+			for (int j = 0; j < My; j++) {
+				// Compute y
+				y = j * h;
+
+				// If it is the locally owned part of the grid
+				if (i >= xs && i < xs + xm && j >= ys && j < ys + ym
+						&& k >= zs && k < zs + zm) {
+					// Get the pointer to the beginning of the solution data for this grid point
+					gridPointSolution = solutionArray[k][j][i];
+
+					// If procId == 0 integrate over Z
+					if (procId == 0) {
+						conc += gridPointSolution[iCluster];
+					}
+					// Else send the values to procId == 0
+					else {
+						// Send the value of the concentration to the master process
+						MPI_Send(&gridPointSolution[iCluster], 1, MPI_DOUBLE, 0, 2,
+								MPI_COMM_WORLD);
+					}
+				}
+				// Else if it is NOT the locally owned part of the grid but still procId == 0,
+				// it should receive the values of the concentration to integrate them
+				else if (procId == 0) {
+					// Receive the concentration fron other processes
+					double tempConc = 0.0;
+					MPI_Recv(&tempConc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 2, MPI_COMM_WORLD,
+							MPI_STATUS_IGNORE);
+
+					// Add it to the integrated one
+					conc += tempConc;
+				}
+
+				// Wait for everybody at each grid point
+				MPI_Barrier(PETSC_COMM_WORLD);
+			} // End of the loop on Y
+
+			// If it is procId == 0 just store the integrated value in the myPoints vector
+			if (procId == 0) {
+				thePoint.value = conc;
+				thePoint.t = time;
+				thePoint.x = x;
+				thePoint.y = z;
+				myPoints->push_back(thePoint);
+			}
+		}
+	}
+
+	// Plot everything from procId == 0
+	if (procId == 0) {
+		// Get the data provider and give it the points
+		surfacePlotXZ3D->getDataProvider()->setPoints(myPoints);
+
+		// Get the iCluster cluster to have access to its name
+		auto reactants = network->getAll();
+		auto cluster = (PSICluster *) reactants->at(iCluster);
+
+		// Change the title of the plot and the name of the data
+		std::stringstream title;
+		title << cluster->getName();
+		surfacePlotXZ3D->getDataProvider()->setDataName(title.str());
+		title << " concentration";
+		surfacePlotXZ3D->plotLabelProvider->titleLabel = title.str();
+		// Give the time to the label provider
+		std::stringstream timeLabel;
+		timeLabel << "time: " << std::setprecision(4) << time << "s";
+		surfacePlotXZ3D->plotLabelProvider->timeLabel = timeLabel.str();
+		// Get the current time step
+		PetscReal currentTimeStep;
+		ierr = TSGetTimeStep(ts, &currentTimeStep);
+		checkPetscError(ierr);
+		// Give the timestep to the label provider
+		std::stringstream timeStepLabel;
+		timeStepLabel << "dt: " << std::setprecision(4) << currentTimeStep
+				<< "s";
+		surfacePlotXZ3D->plotLabelProvider->timeStepLabel = timeStepLabel.str();
+
+		// Render and save in file
+		std::stringstream fileName;
+		fileName << cluster->getName() << "_surfaceXZ_TS" << timestep << ".pnm";
+		surfacePlotXZ3D->write(fileName.str());
+	}
+
+	PetscFunctionReturn(0);
+}
+
+/**
  * This operation sets up a monitor that will call monitorSolve
  * @param ts The time stepper
  * @return A standard PETSc error code
@@ -307,10 +657,18 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 	auto vizHandlerRegistry = xolotlFactory::getVizHandlerRegistry();
 
 	// Flags to launch the monitors or not
-	PetscBool flagPerf, flagRetention, flagStatus;
+	PetscBool flagPerf, flagRetention, flagStatus, flag2DXYPlot, flag2DXZPlot;
 
 	// Check the option -plot_perf
 	ierr = PetscOptionsHasName(NULL, "-plot_perf", &flagPerf);
+	checkPetscError(ierr);
+
+	// Check the option -plot_2d_xy
+	ierr = PetscOptionsHasName(NULL, "-plot_2d_xy", &flag2DXYPlot);
+	checkPetscError(ierr);
+
+	// Check the option -plot_2d_xz
+	ierr = PetscOptionsHasName(NULL, "-plot_2d_xz", &flag2DXZPlot);
 	checkPetscError(ierr);
 
 	// Check the option -helium_retention
@@ -455,6 +813,62 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 
 		// startStop3D will be called at each timestep
 		ierr = TSMonitorSet(ts, startStop3D, NULL, NULL);
+		checkPetscError(ierr);
+	}
+
+	// Set the monitor to save surface plots of clusters concentration
+	if (flag2DXYPlot) {
+		// Create a SurfacePlot
+		surfacePlotXY3D = vizHandlerRegistry->getPlot("surfacePlotXY3D",
+				xolotlViz::PlotType::SURFACE);
+
+		// Create and set the label provider
+		auto labelProvider = std::make_shared<xolotlViz::LabelProvider>(
+				"labelProvider");
+		labelProvider->axis1Label = "Depth (nm)";
+		labelProvider->axis2Label = "Y (nm)";
+		labelProvider->axis3Label = "Concentration";
+
+		// Give it to the plot
+		surfacePlotXY3D->setLabelProvider(labelProvider);
+
+		// Create the data provider
+		auto dataProvider = std::make_shared<xolotlViz::CvsXYDataProvider>(
+				"dataProvider");
+
+		// Give it to the plot
+		surfacePlotXY3D->setDataProvider(dataProvider);
+
+		// monitorSurface1D will be called at each timestep
+		ierr = TSMonitorSet(ts, monitorSurfaceXY3D, NULL, NULL);
+		checkPetscError(ierr);
+	}
+
+	// Set the monitor to save surface plots of clusters concentration
+	if (flag2DXZPlot) {
+		// Create a SurfacePlot
+		surfacePlotXZ3D = vizHandlerRegistry->getPlot("surfacePlotXZ3D",
+				xolotlViz::PlotType::SURFACE);
+
+		// Create and set the label provider
+		auto labelProvider = std::make_shared<xolotlViz::LabelProvider>(
+				"labelProvider");
+		labelProvider->axis1Label = "Depth (nm)";
+		labelProvider->axis2Label = "Z (nm)";
+		labelProvider->axis3Label = "Concentration";
+
+		// Give it to the plot
+		surfacePlotXZ3D->setLabelProvider(labelProvider);
+
+		// Create the data provider
+		auto dataProvider = std::make_shared<xolotlViz::CvsXYDataProvider>(
+				"dataProvider");
+
+		// Give it to the plot
+		surfacePlotXZ3D->setDataProvider(dataProvider);
+
+		// monitorSurface1D will be called at each timestep
+		ierr = TSMonitorSet(ts, monitorSurfaceXZ3D, NULL, NULL);
 		checkPetscError(ierr);
 	}
 
