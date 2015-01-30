@@ -221,8 +221,6 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 
 	// Loop over grid points computing ODE terms for each grid point
 	for (int xi = xs; xi < xs + xm; xi++) {
-		//xi = 1; // Uncomment this line for debugging in a single cell.
-
 		// Compute the old and new array offsets
 		concOffset = concs[xi];
 		updatedConcOffset = updatedConcs[xi];
@@ -241,11 +239,10 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 			continue;
 		}
 
-		double x = xi * h;
+		// Set the grid position
+		gridPosition[0] = xi * h;
 
-		// Vector representing the physical position
-		// Currently we are only in 1D
-		gridPosition[0] = x;
+		// Get the temperature from the temperature handler
 		auto temperature = temperatureHandler->getTemperature(gridPosition,
 				ftime);
 
@@ -253,6 +250,8 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 		if (!xolotlCore::equal(temperature, lastTemperature)) {
 			network->setTemperature(temperature);
 			lastTemperature = temperature;
+			// Set the boolean temperatureChanged to true to recompute the
+			// off-diagonal part of the Jacobian later
 			temperatureChanged = true;
 		}
 
@@ -288,8 +287,6 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 			reactantIndex = cluster->getId() - 1;
 			updatedConcOffset[reactantIndex] += flux;
 		}
-
-		//break; // Uncomment this line for debugging in a single cell.
 	}
 
 	/*
@@ -357,8 +354,6 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	 at each grid point
 	 */
 	for (int xi = xs; xi < xs + xm; xi++) {
-		//xi = 1; // Uncomment this line for debugging in a single cell.
-
 		// Boundary conditions
 		if (xi == 0 || xi == Mx - 1) continue;
 
@@ -413,8 +408,6 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 			ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals + (2 * i), ADD_VALUES);
 			checkPetscError(ierr);
 		}
-
-		//break; // Uncomment this line for debugging in a single cell.
 	}
 
 	return;
@@ -462,8 +455,6 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 
 	// Loop over the grid points
 	for (int xi = xs; xi < xs + xm; xi++) {
-		//xi = 1; // Uncomment this line for debugging in a single cell.
-
 		// Boundary conditions
 		if (xi == 0 || xi == Mx - 1) continue;
 
@@ -505,8 +496,6 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 					colIds, reactingPartialsForCluster.data(), ADD_VALUES);
 			checkPetscError(ierr);
 		}
-
-		//break; // Uncomment this line for debugging in a single cell.
 	}
 
 	/*

@@ -135,7 +135,8 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 				}
 
 				// Initialize the vacancy concentration
-				if (i > 0 && i < Mx - 1 && j > 0 && j < My - 1 && k > 0 && k < Mz - 1) {
+				if (i > 0 && i < Mx - 1 && j > 0 && j < My - 1
+						&& k > 0 && k < Mz - 1) {
 					concOffset[vacancyIndex] = initialVConc / h;
 				}
 			}
@@ -152,8 +153,10 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 					auto concVector = xolotlCore::HDF5Utils::readGridPoint(networkName,
 							tempTimeStep, i, j, k);
 
-					// Change the concentration only if we are on the locally owned part of the grid
-					if (i >= xs && i < xs + xm && j >= ys && j < ys + ym && k >= zs && k < zs + zm) {
+					// Change the concentration only if we are on the locally
+					// owned part of the grid
+					if (i >= xs && i < xs + xm && j >= ys && j < ys + ym
+							&& k >= zs && k < zs + zm) {
 						concOffset = concentrations[k][j][i];
 						// Loop on the concVector size
 						for (int l = 0; l < concVector.size(); l++) {
@@ -175,8 +178,8 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 	return;
 }
 
-void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, PetscReal ftime,
-		bool &temperatureChanged) {
+void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
+		PetscReal ftime, bool &temperatureChanged) {
 	PetscErrorCode ierr;
 
 	// Get the local data vector from petsc
@@ -230,17 +233,14 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 
 	// Loop over grid points computing ODE terms for each grid point
 	for (int zk = zs; zk < zs + zm; zk++) {
-		//zk = 1; // Uncomment this line for debugging in a single cell.
 		for (int yj = ys; yj < ys + ym; yj++) {
-			//yj = 1; // Uncomment this line for debugging in a single cell.
 			for (int xi = xs; xi < xs + xm; xi++) {
-				//xi = 1; // Uncomment this line for debugging in a single cell.
-
 				// Compute the old and new array offsets
 				concOffset = concs[zk][yj][xi];
 				updatedConcOffset = updatedConcs[zk][yj][xi];
 
-				// Fill the concVector with the pointer to the middle, left, right, bottom, top, front, and back grid points
+				// Fill the concVector with the pointer to the middle, left,
+				// right, bottom, top, front, and back grid points
 				concVector[0] = concOffset; // middle
 				concVector[1] = concs[zk][yj][xi - 1]; // left
 				concVector[2] = concs[zk][yj][xi + 1]; // right
@@ -250,7 +250,8 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 				concVector[6] = concs[zk + 1][yj][xi]; // back
 
 				// Boundary conditions
-				if (xi == 0 || xi == Mx - 1 || yj == 0 || yj == My - 1 || zk == 0 || zk == Mz - 1) {
+				if (xi == 0 || xi == Mx - 1 || yj == 0 || yj == My - 1
+						|| zk == 0 || zk == Mz - 1) {
 					for (int i = 0; i < dof; i++) {
 						updatedConcOffset[i] = 1.0 * concOffset[i];
 					}
@@ -258,14 +259,12 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 					continue;
 				}
 
-				double x = xi * h;
-				double y = yj * h;
-				double z = zk * h;
+				// Set the grid position
+				gridPosition[0] = xi * h;
+				gridPosition[1] = yj * h;
+				gridPosition[2] = zk * h;
 
-				// Vector representing the physical position
-				gridPosition[0] = x;
-				gridPosition[1] = y;
-				gridPosition[2] = z;
+				// Get the temperature from the temperature handler
 				auto temperature = temperatureHandler->getTemperature(gridPosition,
 						ftime);
 
@@ -273,6 +272,8 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 				if (!xolotlCore::equal(temperature, lastTemperature)) {
 					network->setTemperature(temperature);
 					lastTemperature = temperature;
+					// Set the boolean temperatureChanged to true to recompute the
+					// off-diagonal part of the Jacobian later
 					temperatureChanged = true;
 				}
 
@@ -308,12 +309,8 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F, Pets
 					reactantIndex = cluster->getId() - 1;
 					updatedConcOffset[reactantIndex] += flux;
 				}
-
-				//break; // Uncomment this line for debugging in a single cell.
 			}
-			//break; // Uncomment this line for debugging in a single cell.
 		}
-		//break; // Uncomment this line for debugging in a single cell.
 	}
 
 	/*
@@ -381,14 +378,11 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	 at each grid point
 	 */
 	for (int zk = zs; zk < zs + zm; zk++) {
-		//zk = 1; // Uncomment this line for debugging in a single cell.
 		for (int yj = ys; yj < ys + ym; yj++) {
-			//yj = 1; // Uncomment this line for debugging in a single cell.
 			for (int xi = xs; xi < xs + xm; xi++) {
-				//xi = 1; // Uncomment this line for debugging in a single cell.
-
 				// Boundary conditions
-				if (xi == 0 || xi == Mx - 1 || yj == 0 || yj == My - 1 || zk == 0 || zk == Mz - 1) continue;
+				if (xi == 0 || xi == Mx - 1 || yj == 0 || yj == My - 1
+						|| zk == 0 || zk == Mz - 1) continue;
 
 				// Set the grid position
 				gridPosition[0] = xi * h;
@@ -412,7 +406,8 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 					row.c = indices[i];
 
 					// Set grid coordinates and component numbers for the columns
-					// corresponding to the middle, left, right, bottom, top, front, and back grid points
+					// corresponding to the middle, left, right, bottom, top, front,
+					// and back grid points
 					cols[0].i = xi; // middle
 					cols[0].j = yj;
 					cols[0].k = zk;
@@ -473,12 +468,8 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 					ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals + (2 * i), ADD_VALUES);
 					checkPetscError(ierr);
 				}
-
-				//break; // Uncomment this line for debugging in a single cell.
 			}
-			//break; // Uncomment this line for debugging in a single cell.
 		}
-		//break; // Uncomment this line for debugging in a single cell.
 	}
 
 	return;
@@ -526,14 +517,11 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 
 	// Loop over the grid points
 	for (int zk = zs; zk < zs + zm; zk++) {
-		//zk = 1; // Uncomment this line for debugging in a single cell.
 		for (int yj = ys; yj < ys + ym; yj++) {
-			//yj = 1; // Uncomment this line for debugging in a single cell.
 			for (int xi = xs; xi < xs + xm; xi++) {
-				//xi = 1; // Uncomment this line for debugging in a single cell.
-
 				// Boundary conditions
-				if (xi == 0 || xi == Mx - 1 || yj == 0 || yj == My - 1 || zk == 0 || zk == Mz - 1) continue;
+				if (xi == 0 || xi == Mx - 1 || yj == 0 || yj == My - 1
+						|| zk == 0 || zk == Mz - 1) continue;
 
 				// Copy data into the PSIClusterReactionNetwork so that it can
 				// compute the new concentrations.
@@ -577,12 +565,8 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 							colIds, reactingPartialsForCluster.data(), ADD_VALUES);
 					checkPetscError(ierr);
 				}
-
-				//break; // Uncomment this line for debugging in a single cell.
 			}
-			//break; // Uncomment this line for debugging in a single cell.
 		}
-		//break; // Uncomment this line for debugging in a single cell.
 	}
 
 	/*

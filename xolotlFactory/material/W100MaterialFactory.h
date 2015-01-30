@@ -42,10 +42,8 @@ public:
 				theDiffusionHandler = std::make_shared<xolotlCore::Diffusion2DHandler>();
 				break;
 			case 3:
-				// To be implemented
-//				theDiffusionHandler = std::make_shared<xolotlCore::Diffusion3DHandler>();
-//				break;
-				throw std::string("\nxolotlFactory: 3D diffusion handler is not used yet.");
+				theDiffusionHandler = std::make_shared<xolotlCore::Diffusion3DHandler>();
+				break;
 			default:
 				// The asked dimension is not good (e.g. -1, 0, 4)
 				throw std::string("\nxolotlFactory: Bad dimension for the W100 material factory.");
