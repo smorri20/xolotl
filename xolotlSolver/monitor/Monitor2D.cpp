@@ -52,6 +52,8 @@ std::vector<int> heWeights2D;
 //! The pointer to the 2D plot used in MonitorSurface.
 std::shared_ptr<xolotlViz::IPlot> surfacePlot2D;
 
+#undef __FUNCT__
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "startStop2D")
 /**
  * This is a monitoring method that will save an hdf5 file at each time step.
  * HDF5 is handling the parallel part, so no call to MPI here.
@@ -79,29 +81,22 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 
 	// Get the da from ts
 	DM da;
-	ierr = TSGetDM(ts, &da);
-	checkPetscError(ierr);
+	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
 
 	// Get the local vector, which is capital when running in parallel,
 	// and put it into solutionArray
-	ierr = DMGetLocalVector(da, &localSolution);
-	checkPetscError(ierr);
-	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);
-	checkPetscError(ierr);
-	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);
-	checkPetscError(ierr);
-	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);
-	checkPetscError(ierr);
+	ierr = DMGetLocalVector(da, &localSolution);CHKERRQ(ierr);
+	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
+	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);CHKERRQ(ierr);
 
 	// Get the corners of the grid
-	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);
-	checkPetscError(ierr);
+	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);CHKERRQ(ierr);
 	// Get the size of the total grid
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
-	checkPetscError(ierr);
+	PETSC_IGNORE);CHKERRQ(ierr);
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -120,8 +115,7 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 
 	// Get the current time step
 	double currentTimeStep;
-	ierr = TSGetTimeStep(ts, &currentTimeStep);
-	checkPetscError(ierr);
+	ierr = TSGetTimeStep(ts, &currentTimeStep);CHKERRQ(ierr);
 
 	// Add a concentration sub group
 	xolotlCore::HDF5Utils::addConcentrationSubGroup(timestep, networkSize, time,
@@ -194,6 +188,8 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 	PetscFunctionReturn(0);
 }
 
+#undef __FUNCT__
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "computeHeliumRetention2D")
 /**
  * This is a monitoring method that will compute the total helium fluence
  */
@@ -212,20 +208,17 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 
 	// Get the da from ts
 	DM da;
-	ierr = TSGetDM(ts, &da);
-	checkPetscError(ierr);
+	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
 
 	// Get the corners of the grid
-	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);
-	checkPetscError(ierr);
+	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);CHKERRQ(ierr);
 
 	// Setup step size variable
 	double h = solverHandler->getStepSize();
 
 	// Get the array of concentration
 	PetscReal ***solutionArray;
-	ierr = DMDAVecGetArrayDOF(da, solution, &solutionArray);
-	checkPetscError(ierr);
+	ierr = DMDAVecGetArrayDOF(da, solution, &solutionArray);CHKERRQ(ierr);
 
 	// Store the concentration over the grid
 	double heConcentration = 0;
@@ -274,8 +267,7 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 		ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
 		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-		PETSC_IGNORE);
-		checkPetscError(ierr);
+		PETSC_IGNORE);CHKERRQ(ierr);
 
 		// Compute the total surface irradiated by the helium flux
 		double surface = (My - 2) * h;
@@ -310,6 +302,8 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 	PetscFunctionReturn(0);
 }
 
+#undef __FUNCT__
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "monitorSurface2D")
 /**
  * This is a monitoring method that will save 2D plots of the concentration of
  * a specific cluster at each grid point.
@@ -333,29 +327,22 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the da from ts
 	DM da;
-	ierr = TSGetDM(ts, &da);
-	checkPetscError(ierr);
+	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
 
 	// Get the local vector, which is capital when running in parallel,
 	// and put it into solutionArray
-	ierr = DMGetLocalVector(da, &localSolution);
-	checkPetscError(ierr);
-	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);
-	checkPetscError(ierr);
-	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);
-	checkPetscError(ierr);
-	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);
-	checkPetscError(ierr);
+	ierr = DMGetLocalVector(da, &localSolution);CHKERRQ(ierr);
+	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
+	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);CHKERRQ(ierr);
 
 	// Get the corners of the grid
-	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);
-	checkPetscError(ierr);
+	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);CHKERRQ(ierr);
 	// Get the size of the total grid
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
-	checkPetscError(ierr);
+	PETSC_IGNORE);CHKERRQ(ierr);
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -456,8 +443,7 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 		surfacePlot2D->plotLabelProvider->timeLabel = timeLabel.str();
 		// Get the current time step
 		PetscReal currentTimeStep;
-		ierr = TSGetTimeStep(ts, &currentTimeStep);
-		checkPetscError(ierr);
+		ierr = TSGetTimeStep(ts, &currentTimeStep);CHKERRQ(ierr);
 		// Give the timestep to the label provider
 		std::stringstream timeStepLabel;
 		timeStepLabel << "dt: " << std::setprecision(4) << currentTimeStep
