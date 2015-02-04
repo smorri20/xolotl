@@ -279,7 +279,7 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time
 		PETSC_IGNORE);CHKERRQ(ierr);
 
 		// Compute the total surface irradiated by the helium flux
-		double surface = (My - 2) * h * (Mz - 2) * h;
+		double surface = (double) (My * Mz) * h * h;
 
 		// Rescale the concentration
 		heConcentration = heConcentration / surface;
