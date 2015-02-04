@@ -1,17 +1,6 @@
 // Includes
 #include <PetscSolver.h>
-#include <xolotlPerf.h>
 #include <HDF5NetworkLoader.h>
-#include <MathUtils.h>
-#include <petscts.h>
-#include <petscsys.h>
-#include <sstream>
-#include <iostream>
-#include <vector>
-#include <memory>
-#include <fstream>
-#include <string>
-#include <unordered_map>
 #include <HDF5Utils.h>
 
 using namespace xolotlCore;
@@ -26,14 +15,11 @@ using namespace xolotlCore;
  D(C)    - dissociation terms (cluster breaking up)
 
  Sample Options:
- -ts_monitor_draw_solution               -- plot the solution for each concentration as a function of x each in a separate 1d graph
- -draw_fields_by_name 1-He-2-V,1-He 	 -- only plot the solution for these two concentrations
  -da_grid_x <nx>						 -- number of grid points in the x direction
  -ts_max_steps <maxsteps>                -- maximum number of time-steps to take
  -ts_final_time <time>                   -- maximum time to compute to
  -ts_dt <size>							 -- initial size of the time step
 
- Rules for maximum number of He allowed for V in cluster
  */
 
 namespace xolotlSolver {
@@ -50,93 +36,19 @@ static char help[] =
 
 // ----- GLOBAL VARIABLES ----- //
 
-// Allocate the static network
-std::shared_ptr<PSIClusterReactionNetwork> PetscSolver::network;
-// Allocate the static flux handler
-std::shared_ptr<IFluxHandler> PetscSolver::fluxHandler;
-// Allocate the static temperature handler
-std::shared_ptr<ITemperatureHandler> PetscSolver::temperatureHandler;
-// Allocate the static diffusion handler
-std::shared_ptr<IDiffusionHandler> PetscSolver::diffusionHandler;
-// Allocate the static advection handler
-std::shared_ptr<IAdvectionHandler> PetscSolver::advectionHandler;
-// Allocate the static step size
-double PetscSolver::hx;
-// Allocate the static initial vacancy concentration
-double PetscSolver::initialV;
-// Allocate the static surface position
-int PetscSolver::surfacePosition;
-
-extern PetscErrorCode RHSFunction(TS, PetscReal, Vec, Vec, void*);
-extern PetscErrorCode RHSJacobian(TS, PetscReal, Vec, Mat, Mat);
-extern PetscErrorCode setupPetscMonitor(TS);
-
-TS ts; /* nonlinear solver */
-Vec C; /* solution */
-PetscErrorCode ierr;
-DM da; /* manages the grid data */
-PetscInt *ofill, *dfill;
+extern PetscErrorCode setupPetsc1DMonitor(TS);
+extern PetscErrorCode setupPetsc2DMonitor(TS);
+extern PetscErrorCode setupPetsc3DMonitor(TS);
 
 /**
- * A map for storing the dfill configuration and accelerating the formation of
- * the Jacobian. Its keys are reactant/cluster ids and its values are integer
- * vectors of the column ids that are marked as connected for that cluster in
- * the dfill array.
- */
-static std::unordered_map<int, std::vector<int> > dFillMap;
-
-/**
- * A pointer to all of the reactants in the network. It is retrieved from the
- * network after it is set.
- */
-static std::shared_ptr<std::vector<Reactant *>> allReactants;
-
-/**
- * The last temperature on the grid. In the future this will have to be an
- * array or map, but for now the temperature is isotropic.
- */
-static double lastTemperature = 0.0;
-
-/**
- * A boolean that is true if the temperature has changed. It is set to true
- * in the RHSFunction, and back to false once the off-diagonal part of the
- * Jacobian is computed in the RHSJacobian method.
+ * A boolean that is true if the temperature has changed.
  */
 static bool temperatureChanged = false;
 
 /**
- * The last surface position on the grid.
- */
-static int lastSurfacePosition = 0;
-
-/**
- * A boolean that is true if the surface has moved. It is set to true
- * in the RHSJacobian, and back to false once the off-diagonal part of the
- * Jacobian is computed in the RHSJacobian method.
+ * A boolean that is true if the surface has moved.
  */
 static bool hasMoved = false;
-
-/**
- * A vector for holding the partial derivatives of one cluster. It is sized in
- * the solve() operation.
- *
- * The vector is used for every cluster and immediately reset to zero before
- * being used for the next. This allows the acquisition of the partial
- * derivatives to take up minimal memory and require no additional dynamic
- * allocations.
- */
-static std::vector<double> clusterPartials;
-
-/**
- * A vector for holding the partial derivatives for one cluster in the order
- * that PETSc expects. It is sized in the solve() operation.
- *
- * The vector is used for every cluster and immediately reset to zero before
- * being used for the next. This allows the acquisition of the partial
- * derivatives to take up minimal memory and require no additional dynamic
- * allocations.
- */
-static std::vector<double> reactingPartialsForCluster;
 
 /* ----- Error Handling Code ----- */
 
@@ -157,39 +69,20 @@ static inline int petscReturn() {
 	PetscFunctionReturn(0);
 }
 
-/* ------------------------------------------------------------------- */
 #undef __FUNCT__
-#define __FUNCT__ "setupInitialConditions"
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver","setupInitialConditions")
 PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 
-// Local Declarations
+	// Local Declarations
 	PetscErrorCode ierr;
-	PetscInt i, nI, nHe, nV, xs, xm, Mx, cnt = 0;
-	PetscScalar *concentrations;
+	PetscInt i, nI, nHe, nV, cnt = 0;
 	char string[16];
-	int size = allReactants->size();
-	double * concOffset;
+	auto allReactants = network->getAll();
+	int dof = allReactants->size();
 	std::map<std::string, int> composition;
 
-	PetscFunctionBeginUser;
-	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
-	checkPetscError(ierr);
-
-	// Get the step size
-	double hx = PetscSolver::getStepSize();
-
-	// Get the surface position
-	int surfacePos = PetscSolver::getSurfacePosition();
-
-	// Get the flux handler that will be used to compute fluxes.
-	auto fluxHandler = PetscSolver::getFluxHandler();
-	fluxHandler->initializeFluxHandler(Mx, hx, surfacePos);
-
 	/* Name each of the concentrations */
-	for (i = 0; i < size; i++) {
+	for (i = 0; i < dof; i++) {
 		composition = allReactants->at(i)->getComposition();
 		nHe = composition["He"];
 		nV = composition["V"];
@@ -200,91 +93,17 @@ PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 		checkPetscError(ierr);
 	}
 
-	/*
-	 Get pointer to vector data
-	 */
-	ierr = DMDAVecGetArray(da, C, &concentrations);
-	checkPetscError(ierr);
+	// Initialize the concentrations in the solution vector
+	auto solverHandler = PetscSolver::getSolverHandler();
+	solverHandler->initializeConcentration(da, C);
 
-	/*
-	 Get local grid boundaries
-	 */
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
-	checkPetscError(ierr);
-
-	// Get the handle to the network in order to find the single vacancy ID.
-	auto network = PetscSolver::getNetwork();
-	auto singleVacancyCluster = (PSICluster *) network->get(vType, 1);
-	int vacancyIndex = -1;
-	if (singleVacancyCluster) vacancyIndex = singleVacancyCluster->getId() - 1;
-
-	// Get the initial concentration for vacancies
-	double initialVConc = PetscSolver::getInitialV();
-
-	// Get the name of the HDF5 file to read the concentrations from
-	std::shared_ptr<HDF5NetworkLoader> HDF5Loader = std::dynamic_pointer_cast
-			< HDF5NetworkLoader > (networkLoader);
-	auto fileName = HDF5Loader->getFilename();
-
-	// Get the last time step written in the HDF5 file
-	int tempTimeStep = -2;
-	bool hasConcentrations = HDF5Utils::hasConcentrationGroup(fileName,
-			tempTimeStep);
-
-	// Loop on all the grid points
-	for (i = xs; i < xs + xm; i++) {
-		concOffset = concentrations + size * i;
-		// Loop on all the clusters to initialize at 0.0
-		for (int k = 0; k < size; k++) {
-			concOffset[k] = 0.0;
-		}
-
-		// Initialize the vacancy concentration
-		// The left side of the surface is empty
-		if (i > surfacePos && i < Mx - 1 && vacancyIndex > 0) {
-			concOffset[vacancyIndex] = initialVConc / hx;
-		}
-
-//		// Uncomment this for debugging
-//		if (i > 0) {
-//			for (int k = 0; k < size; k++) {
-//				concOffset[k] = 0.001;
-//			}
-//		}
-	}
-
-	// If the concentration must be set from the HDF5 file
-	if (hasConcentrations) {
-		// Loop on the full grid
-		for (int i = 0; i < Mx; i++) {
-			// Read the concentrations from the HDF5 file
-			auto concVector = HDF5Utils::readGridPoint(fileName, tempTimeStep,
-					i);
-
-			// Change the concentration only if we are on the locally owned part of the grid
-			if (i >= xs && i < xs + xm) {
-				concOffset = concentrations + size * i;
-				// Loop on the concVector size
-				for (int k = 0; k < concVector.size(); k++) {
-					concOffset[(int) concVector.at(k).at(0)] =
-							concVector.at(k).at(1);
-				}
-			}
-		}
-	}
-
-	/*
-	 Restore vectors
-	 */
-	ierr = DMDAVecRestoreArray(da, C, &concentrations);
-	checkPetscError(ierr);
 	PetscFunctionReturn(0);
 }
 
 /* ------------------------------------------------------------------- */
 
 #undef __FUNCT__
-#define __FUNCT__ "RHSFunction"
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "RHSFunction")
 /*
  RHSFunction - Evaluates the right-hand-side of the nonlinear function defining the ODE
 
@@ -302,52 +121,15 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	// Start the RHSFunction Timer
 	RHSFunctionTimer->start();
 
-	// Important petsc stuff (related to the grid mostly)
-	DM da;
 	PetscErrorCode ierr;
-	PetscInt xi, Mx, xs, xm;
-	PetscReal x;
-	// Pointers to the Petsc arrays that start at the beginning (xs) of the
-	// local array!
-	PetscReal *concs, *updatedConcs;
-	Vec localC;
-	// Loop variables
-	int size = 0, reactantIndex = 0;
-	// Handy pointers to keep the code clean
-	PSICluster * heCluster = NULL, *vCluster = NULL, *iCluster = NULL,
-			*cluster = NULL;
-	// The following pointers are set to the first position in the conc or
-	// updatedConc arrays that correspond to the beginning of the data for the
-	// current gridpoint. They are accessed just like regular arrays.
-	PetscScalar * concOffset, *leftConcOffset, *rightConcOffset,
-			*updatedConcOffset;
-	// Dummy variables to keep the code clean
-	double flux = 0.0;
-	// Get the handle to the network that will be used to compute fluxes.
-	auto network = PetscSolver::getNetwork();
-	// Get the temperature handler that will be used to compute fluxes.
-	auto temperatureHandler = PetscSolver::getTemperatureHandler();
-	// Get the flux handler that will be used to compute fluxes.
-	auto fluxHandler = PetscSolver::getFluxHandler();
 
 	// Get the local data vector from petsc
-	PetscFunctionBeginUser;
+	DM da;
 	ierr = TSGetDM(ts, &da);
 	checkPetscError(ierr);
+	Vec localC;
 	ierr = DMGetLocalVector(da, &localC);
 	checkPetscError(ierr);
-	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
-	checkPetscError(ierr);
-
-	// Setup some step size variables
-	double hx = PetscSolver::getStepSize();
-	double sx = 1.0 / (hx * hx);
-
-	// Get the position of the surface
-	int surfacePos = PetscSolver::getSurfacePosition();
 
 	// Scatter ghost points to local vector, using the 2-step process
 	// DMGlobalToLocalBegin(),DMGlobalToLocalEnd().
@@ -362,177 +144,39 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	ierr = VecSet(F, 0.0);
 	checkPetscError(ierr);
 
-	// Get pointers to vector data
-	ierr = DMDAVecGetArray(da, localC, &concs);
-	checkPetscError(ierr);
-	ierr = DMDAVecGetArray(da, F, &updatedConcs);
-	checkPetscError(ierr);
-
-	//Get local grid boundaries
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
-	checkPetscError(ierr);
-
-	// Get the incident flux vector
-	auto incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime,
-			surfacePos);
-
-	// Get the diffusion handler
-	auto diffusionHandler = PetscSolver::getDiffusionHandler();
-
-	// Get the advection handler
-	auto advectionHandler = PetscSolver::getAdvectionHandler();
-
-	// Loop over grid points computing ODE terms for each grid point
-	size = network->size();
-	for (xi = xs; xi < xs + xm; xi++) {
-
-//		xi = 1; // Uncomment this line for debugging in a single cell.
-
-		x = xi * hx;
-
-		// Vector representing the position at which the flux will be calculated
-		// Currently we are only in 1D
-		std::vector<double> gridPosition = { x, 0, 0 };
-		auto temperature = temperatureHandler->getTemperature(gridPosition,
-				ftime);
-
-		// Update the network if the temperature changed
-		if (!xolotlCore::equal(temperature, lastTemperature)) {
-			network->setTemperature(temperature);
-			lastTemperature = temperature;
-			temperatureChanged = true;
-		}
-
-		// Compute the middle, left, right and new array offsets
-		concOffset = concs + size * xi;
-		leftConcOffset = concs + size * (xi - 1);
-		rightConcOffset = concs + size * (xi + 1);
-		updatedConcOffset = updatedConcs + size * xi;
-
-		// Boundary conditions
-		// Everything to the left of the surface is empty
-		// It is important to do it after the check on the temperature so that the
-		// information on the change of temperature will be correct in the RHSJacobian
-		if (xi <= surfacePos || xi == Mx - 1) {
-			for (int i = 0; i < size; i++) {
-				updatedConcOffset[i] = 1.0 * concOffset[i];
-			}
-
-			continue;
-		}
-
-		// Copy data into the PSIClusterReactionNetwork so that it can
-		// compute the fluxes properly. The network is only used to compute the
-		// fluxes and hold the state data from the last time step. I'm reusing
-		// it because it cuts down on memory significantly (about 400MB per
-		// grid point) at the expense of being a little tricky to comprehend.
-		network->updateConcentrationsFromArray(concOffset);
-
-		// ----- Account for flux of incoming He by computing forcing that
-		// produces He of cluster size 1 -----
-		heCluster = (PSICluster *) network->get("He", 1);
-		if (heCluster) {
-			reactantIndex = heCluster->getId() - 1;
-			// Update the concentration of the cluster
-			updatedConcOffset[reactantIndex] += incidentFluxVector[xi];
-		}
-
-		// ---- Compute diffusion over the locally owned part of the grid -----
-		diffusionHandler->computeDiffusion(network, sx, concOffset,
-				leftConcOffset, rightConcOffset, updatedConcOffset);
-
-		// ---- Compute advection over the locally owned part of the grid -----
-		advectionHandler->computeAdvection(network, hx, xi, surfacePos,
-				concOffset, rightConcOffset, updatedConcOffset);
-
-		// ----- Compute all of the new fluxes -----
-		for (int i = 0; i < size; i++) {
-			cluster = (PSICluster *) allReactants->at(i);
-			// Compute the flux
-			flux = cluster->getTotalFlux();
-			// Update the concentration of the cluster
-			reactantIndex = cluster->getId() - 1;
-			updatedConcOffset[reactantIndex] += flux;
-//			std::cout << "New flux = " << flux << " "
-//					<< cluster->getConcentration() << std::endl;
-		}
-
-		// Uncomment this line for debugging in a single cell.
-//		break;
-	}
-
-	/*
-	 Restore vectors
-	 */
-	ierr = DMDAVecRestoreArray(da, localC, &concs);
-	checkPetscError(ierr);
-	ierr = DMDAVecRestoreArray(da, F, &updatedConcs);
-	checkPetscError(ierr);
-	ierr = DMRestoreLocalVector(da, &localC);
-	checkPetscError(ierr);
+	// Compute the new concentrations
+	auto solverHandler = PetscSolver::getSolverHandler();
+	solverHandler->updateConcentration(ts, localC, F, ftime,
+			temperatureChanged, hasMoved);
 
 	// Stop the RHSFunction Timer
 	RHSFunctionTimer->stop();
 
 	PetscFunctionReturn(0);
-
-}
-
-PetscErrorCode callRHSFunction(TS ts, PetscReal ftime, Vec C, Vec F,
-		void *ptr) {
-
-	PetscErrorCode ierr;
-	ierr = RHSFunction(ts, ftime, C, F, &ptr);
-
-	return ierr;
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "RHSJacobian"
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver","RHSJacobian")
 /*
- Compute the Jacobian entries based on IFuction() and insert them into the matrix
+ Compute the Jacobian entries based on IFunction() and insert them into the matrix
  */
 PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 		void *ptr) {
 	// Start the RHSJacobian timer
 	RHSJacobianTimer->start();
 
-	DM da;
 	PetscErrorCode ierr;
-	PetscInt xi, Mx, xs, xm, i;
-	PetscReal *concs, *updatedConcs;
-	double * concOffset;
-	Vec localC;
-	// Get the network
-	auto network = PetscSolver::getNetwork();
-	int reactantIndex = 0;
-	int size = 0;
 
 	// Get the matrix from PETSc
 	PetscFunctionBeginUser;
 	ierr = MatZeroEntries(J);
 	checkPetscError(ierr);
+	DM da;
 	ierr = TSGetDM(ts, &da);
 	checkPetscError(ierr);
+	Vec localC;
 	ierr = DMGetLocalVector(da, &localC);
 	checkPetscError(ierr);
-	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
-	checkPetscError(ierr);
-
-	// Setup some step size variables
-	double hx = PetscSolver::getStepSize();
-	double sx = 1.0 / (hx * hx);
-
-	// Get the position of the surface
-	int surfacePos = PetscSolver::getSurfacePosition();
-	// Compare it to the previous one to know is the surface has moved
-	if (surfacePos != lastSurfacePosition) {
-		hasMoved = true;
-		lastSurfacePosition = surfacePos;
-	}
 
 	// Get the complete data array
 	ierr = DMGlobalToLocalBegin(da, C, INSERT_VALUES, localC);
@@ -540,106 +184,14 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	ierr = DMGlobalToLocalEnd(da, C, INSERT_VALUES, localC);
 	checkPetscError(ierr);
 
-	/*
-	 The f[] is a dummy, values are never set into it. It is only used to
-	 determine the local row for the entries in the Jacobian
-	 */
-	ierr = DMDAVecGetArray(da, localC, &concs);
-	checkPetscError(ierr);
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
-	checkPetscError(ierr);
+	// Get the solver handler
+	auto solverHandler = PetscSolver::getSolverHandler();
 
-	// Store network size for both the linear and nonlinear parts of the
-	// computation.
-	size = network->size();
-
-	// Variable to represent the real, or current, time
-	PetscReal realTime;
-	// Get the current time
-	ierr = TSGetTime(ts, &realTime);
-	checkPetscError(ierr);
-
-	// Only compute the linear part of the Jacobian if the temperature has changed
+	// Only compute the off-diagonal part of the Jacobian if the temperature has changed
 	if (temperatureChanged || hasMoved) {
 
-		// Get the diffusion handler
-		auto diffusionHandler = PetscSolver::getDiffusionHandler();
-		// Get the total number of diffusing clusters
-		const int nDiff = diffusionHandler->getNumberOfDiffusing();
-
-		// Get the advection handler
-		auto advectionHandler = PetscSolver::getAdvectionHandler();
-		// Get the total number of advecting clusters
-		const int nAdvec = advectionHandler->getNumberOfAdvecting();
-
-		/*
-		 Loop over grid points computing Jacobian terms for diffusion and advection
-		 at each grid point
-		 */
-		for (xi = xs; xi < xs + xm; xi++) {
-
-//			xi = 1; // Uncomment this line for debugging in a single cell
-
-			// Boundary conditions
-			// Nothing happens on the left side of the surface
-			if (xi <= surfacePos || xi == Mx - 1) continue;
-
-			// Copy data into the PSIClusterReactionNetwork so that it can
-			// compute the new concentrations.
-			concOffset = concs + size * xi;
-			network->updateConcentrationsFromArray(concOffset);
-
-			// Initialize the rows, columns, and values to set in the Jacobian
-			PetscInt row[nDiff], col[3 * nDiff];
-			PetscReal val[3 * nDiff];
-			// Get the pointer on them for the compute diffusion method
-			PetscInt *rowPointer = &row[0];
-			PetscInt *colPointer = &col[0];
-			PetscReal *valPointer = &val[0];
-
-			/* -------------------------------------------------------------
-			 ---- Compute diffusion over the locally owned part of the grid
-			 */
-			diffusionHandler->computePartialsForDiffusion(network, sx,
-					valPointer, rowPointer, colPointer, xi, xs);
-
-			// Loop on the number of diffusion cluster to set the values in the Jacobian
-			for (int i = 0; i < nDiff; i++) {
-				rowPointer = &row[i];
-				colPointer = &col[3 * i];
-				valPointer = &val[3 * i];
-
-				ierr = MatSetValuesLocal(J, 1, rowPointer, 3, colPointer,
-						valPointer, ADD_VALUES);
-				checkPetscError(ierr);
-			}
-
-			// Get the pointer on them for the compute advection method
-			// This is safe to use the same arrays because there cannot be more advecting
-			// clusters than diffusing ones
-			rowPointer = &row[0];
-			colPointer = &col[0];
-			valPointer = &val[0];
-
-			/* -------------------------------------------------------------
-			 ---- Compute advection over the locally owned part of the grid
-			 */
-			advectionHandler->computePartialsForAdvection(network, hx,
-					valPointer, rowPointer, colPointer, xi, xs, surfacePos);
-
-			// Loop on the number of advecting cluster to set the values in the Jacobian
-			for (int i = 0; i < nAdvec; i++) {
-				rowPointer = &row[i];
-				colPointer = &col[2 * i];
-				valPointer = &val[2 * i];
-
-				ierr = MatSetValuesLocal(J, 1, rowPointer, 2, colPointer,
-						valPointer, ADD_VALUES);
-				checkPetscError(ierr);
-			}
-
-//			break;   // Uncomment this line for debugging in a single cell.
-		}
+		// Compute the off-diagonal part of the Jacobian
+		solverHandler->computeOffDiagonalJacobian(ts, localC, J);
 
 		ierr = MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);
 		checkPetscError(ierr);
@@ -667,71 +219,10 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 		ierr = MatRetrieveValues(J);
 		checkPetscError(ierr);
 	}
+	
+	/* ----- Compute the partial derivatives for the reaction term ----- */
+	solverHandler->computeDiagonalJacobian(ts, localC, J);
 
-	/* ----- Compute the partial derivatives for the reaction term at each
-	 * grid point ----- */
-
-	// Create a new row array of size n
-	PetscInt localPDColIds[size];
-	PetscInt rowId = 0;
-	int pdColIdsVectorSize = 0;
-
-	// Loop over the grid points
-	for (xi = xs; xi < xs + xm; xi++) {
-
-//		xi = 1; // Uncomment this line for debugging in a single cell
-
-		// Boundary conditions
-		// Nothing happens on the left side of the surface
-		if (xi <= surfacePos || xi == Mx - 1)
-			continue;
-
-		// Copy data into the PSIClusterReactionNetwork so that it can
-		// compute the new concentrations.
-		concOffset = concs + size * xi;
-		network->updateConcentrationsFromArray(concOffset);
-		// Update the column in the Jacobian that represents each reactant
-		for (int i = 0; i < size; i++) {
-			auto reactant = allReactants->at(i);
-			// Get the reactant index
-			reactantIndex = reactant->getId() - 1;
-			// Get the column id
-			rowId = (xi - xs + 1) * size + reactantIndex;
-			// Get the partial derivatives
-			reactant->getPartialDerivatives(clusterPartials);
-			// Get the list of column ids from the map
-			auto pdColIdsVector = dFillMap.at(reactantIndex);
-			//Number of partial derivatives
-			pdColIdsVectorSize = pdColIdsVector.size();
-			// Loop over the list of column ids
-			for (int j = 0; j < pdColIdsVectorSize; j++) {
-				// Calculate the appropriate index to match the dfill array
-				// configuration
-				localPDColIds[j] = (xi - xs + 1) * size + pdColIdsVector[j];
-				// Get the partial derivative from the array of all of the partials
-				reactingPartialsForCluster[j] =
-						clusterPartials[pdColIdsVector[j]];
-				// Reset the cluster partial value to zero. This is much faster
-				// than using memset.
-				clusterPartials[pdColIdsVector[j]] = 0.0;
-			}
-			// Update the matrix
-			ierr = MatSetValuesLocal(J, 1, &rowId, pdColIdsVectorSize,
-					localPDColIds, reactingPartialsForCluster.data(),
-					ADD_VALUES);
-			checkPetscError(ierr);
-		}
-		// Uncomment this line for debugging in a single cell.
-//		break;
-	}
-
-	/*
-	 Restore vectors
-	 */
-	ierr = DMDAVecRestoreArray(da, C, &concs);
-	checkPetscError(ierr);
-	ierr = DMRestoreLocalVector(da, &localC);
-	checkPetscError(ierr);
 	ierr = MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);
 	checkPetscError(ierr);
 	ierr = MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);
@@ -750,311 +241,65 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	PetscFunctionReturn(0);
 }
 
-PetscErrorCode callRHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
-		void *ptr) {
-
-	PetscErrorCode ierr;
-	ierr = RHSJacobian(ts, ftime, C, A, J, &ptr);
-
-	return ierr;
-}
-
-#undef __FUNCT__
-#define __FUNCT__ "getDiagonalFill"
-
-PetscErrorCode PetscSolver::getDiagonalFill(PetscInt *diagFill,
-		int diagFillSize) {
-
-	// Local Declarations
-	int i = 0, j = 0, numReactants = network->size(), index = 0, id = 0,
-			connectivityLength = 0, size = numReactants * numReactants;
-	std::vector<int> connectivity;
-
-	// Fill the diagonal block if the sizes match up
-	if (diagFillSize == size) {
-		// Get the connectivity for each reactant
-		for (i = 0; i < numReactants; i++) {
-			// Get the reactant and its connectivity
-			auto reactant = allReactants->at(i);
-			connectivity = reactant->getConnectivity();
-			connectivityLength = connectivity.size();
-			// Get the reactant id so that the connectivity can be lined up in
-			// the proper column
-			id = reactant->getId() - 1;
-			// Create the vector that will be inserted into the dFill map
-			std::vector<int> columnIds;
-			// Add it to the diagonal fill block
-			for (j = 0; j < connectivityLength; j++) {
-				// The id starts at j*connectivity length and is always offset
-				// by the id, which denotes the exact column.
-				index = id * connectivityLength + j;
-				diagFill[index] = connectivity[j];
-				// Add a column id if the connectivity is equal to 1.
-				if (connectivity[j] == 1) {
-					columnIds.push_back(j);
-				}
-			}
-			// Update the map
-			dFillMap[id] = columnIds;
-		}
-		// Debug output
-//		std::cout << "Number of degrees of freedom = " << numReactants
-//				<< std::endl;
-//		printf("\n");
-//		for (i = 0; i < numReactants; i++) {
-//			for (j = 0; j < numReactants; j++) {
-//				printf("%d ", dfill[i * numReactants + j]);
-//			}
-//			printf("\n");
-//		}
-//		printf("\n");
-	} else {
-		std::string err =
-				"PetscSolver Exception: Invalid diagonal block size!\n";
-		throw std::string(err);
-	}
-
-	return 0;
-}
-
-//! The Constructor
-PetscSolver::PetscSolver() {
-	numCLIArgs = 0;
-	CLIArgs = NULL;
-}
-
 PetscSolver::PetscSolver(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		handlerRegistry(registry) {
-	numCLIArgs = 0;
-	CLIArgs = NULL;
-
+	Solver(registry) {
 	RHSFunctionTimer = handlerRegistry->getTimer("RHSFunctionTimer");
 	RHSJacobianTimer = handlerRegistry->getTimer("RHSJacobianTimer");
 }
 
-//! The Destructor
 PetscSolver::~PetscSolver() {
-
-	// std::cerr << "Destroying a PetscSolver" << std::endl;
-
-	// Break "pointer" cycles so that network, clusters, reactants
-	// will deallocate when the std::shared_ptrs owning them 
-	// are destroyed.
-	network->askReactantsToReleaseNetwork();
 }
 
-/**
- * This operation transfers the input arguments passed to the program on
- * startup to the solver. These options are static options specified at
- * the start of the program whereas the options passed to setOptions() may
- * change.
- *
- * PETSc expects that it is given all of the program's command line arguments.
- * In particular, it expects that argv[0] is the program name.
- * We assume that our caller has ensured that argv[0] is the program name
- * (or is a fake one).
- *
- * @param argc The number of command line arguments
- * @param argv The array of command line arguments
- */
-void PetscSolver::setCommandLineOptions(int argc, char **argv) {
-
-	numCLIArgs = argc;
-	CLIArgs = argv;
-}
-
-/**
- * This operation sets the PSIClusterNetworkLoader that should be used by
- * the ISolver to load the ReactionNetwork.
- * @param networkLoader The PSIClusterNetworkLoader that will load the
- * network.
- */
-void PetscSolver::setNetworkLoader(
-		std::shared_ptr<PSIClusterNetworkLoader> networkLoader) {
-
-	// Store the loader and load the network
-	this->networkLoader = networkLoader;
-	network = networkLoader->load();
-
-	// Get all of the reactants
-	allReactants = network->getAll();
-
-	// Debug output
-	// Get the processor id
-	int procId;
-	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
-	if (procId == 0) {
-		std::cout << "\nPETScSolver Message: "
-				<< "Master loaded network of size " << network->size() << "."
-				<< std::endl;
-	}
-
-	return;
-}
-
-/**
- * This operation sets the run-time options of the solver. The map is a set
- * of key-value std::string pairs that are interpreted by the solver. These
- * options may change during execution, but it is up to Solvers to monitor
- * the map for changes and they may do so at their discretion.
- * @param options The set of options as key-value pairs with option names
- * for keys and associated values mapped to those keys. A relevant example
- * is "startTime" and "0.01" where both are of type std::string.
- */
 void PetscSolver::setOptions(std::map<std::string, std::string> options) {
 }
 
-/**
- * This operation sets up the mesh that will be used by the solver and
- * initializes the data on that mesh. This operation will throw an exception
- * of type std::string if the mesh can not be setup.
- */
 void PetscSolver::setupMesh() {
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "initialize"
-/**
- * This operation performs all necessary initialization for the solver
- * possibly including but not limited to setting up MPI and loading initial
- * conditions. If the solver can not be initialized, this operation will
- * throw an exception of type std::string.
- */
-void PetscSolver::initialize() {
+void PetscSolver::initialize(std::shared_ptr<ISolverHandler> solverHandler) {
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Initialize program
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	PetscInitialize(&numCLIArgs, &CLIArgs, (char*) 0, help);
 
+	// Set the solver handler
+	Solver::solverHandler = (ISolverHandler *) solverHandler.get();
+
 	return;
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "solve"
-/**
- * This operation directs the Solver to perform the solve. If the solve
- * fails, it will throw an exception of type std::string.
- */
-void PetscSolver::solve(
-		std::shared_ptr<xolotlFactory::IMaterialFactory> material,
-		std::shared_ptr<ITemperatureHandler> temperatureHandler,
-		Options &options) {
-
-	// Set the flux handler
-	PetscSolver::fluxHandler = material->getFluxHandler();
-
-	// Set the temperature handler
-	PetscSolver::temperatureHandler = temperatureHandler;
-
-	// Set the diffusion handler
-	PetscSolver::diffusionHandler = material->getDiffusionHandler();
-
-	// Set the advection handler
-	PetscSolver::advectionHandler = material->getAdvectionHandler();
-
-	// Set the grid step size
-	PetscSolver::hx = options.getStepSize();
-
-	// Set the initial vacancy concentration
-	PetscSolver::initialV = options.getInitialVConcentration();
-
-	// Degrees of freedom
-	int dof = network->size();
-
-	// Set the size of the partial derivatives vectors
-	clusterPartials.resize(dof, 0.0);
-	reactingPartialsForCluster.resize(dof, 0.0);
+void PetscSolver::solve() {
+	PetscErrorCode ierr;
 
 	// Check the network before getting busy.
 	if (!network) {
 		throw std::string("PetscSolver Exception: Network not set!");
 	}
 
-	// Set the output precision for std::out
-	std::cout.precision(16);
-
-	PetscFunctionBeginUser;
-
 	// Get the name of the HDF5 file to read the concentrations from
-	std::shared_ptr<HDF5NetworkLoader> HDF5Loader = std::dynamic_pointer_cast
-			< HDF5NetworkLoader > (networkLoader);
+	auto HDF5Loader = (HDF5NetworkLoader *) networkLoader;
 	auto fileName = HDF5Loader->getFilename();
 
 	// Get starting conditions from HDF5 file
-	int gridLength = 0;
-	double time = 0.0, deltaTime = 1.0e-12;
-	int tempTimeStep = -2;
-	HDF5Utils::readHeader(fileName, gridLength);
+	int nx = 0, ny = 0, nz = 0;
+	double hx = 0.0, hy = 0.0, hz = 0.0;
+	HDF5Utils::readHeader(fileName, nx, hx, ny, hy, nz, hz);
 
-	// Read the times if the information is in the HDF5 file
-	if (HDF5Utils::hasConcentrationGroup(fileName, tempTimeStep)) {
-		HDF5Utils::readTimes(fileName, tempTimeStep, time, deltaTime);
-	}
-
-	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	 Create distributed array (DMDA) to manage parallel grid and vectors
-	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, -8, dof, 1,
-	NULL, &da);
-	checkPetscError(ierr);
-
-	// Get the total number of grid points to then initialize the bubble bursting handler
-	int Mx;
-	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
-	checkPetscError(ierr);
-
-	// Get the void portion the user wants to use in the simulation
-	double portion = options.getVoidPortion();
-	// Set the surface position to the middle of the grid
-	PetscSolver::surfacePosition = (int) (Mx * portion / 100.0);
-
-	/*  The only spatial coupling in the Jacobian is due to diffusion.
-	 *  The ofill (thought of as a dof by dof 2d (row-oriented) array represents
-	 *  the nonzero coupling between degrees of freedom at one point with degrees
-	 *  of freedom on the adjacent point to the left or right. A 1 at i,j in the
-	 *  ofill array indicates that the degree of freedom i at a point is coupled
-	 *  to degree of freedom j at the adjacent point.
-	 *  In this case ofill has only a few diagonal entries since the only spatial
-	 *  coupling is regular diffusion.
-	 */
-	ierr = PetscMalloc(dof * dof * sizeof(PetscInt), &ofill);
-	checkPetscError(ierr);
-	ierr = PetscMalloc(dof * dof * sizeof(PetscInt), &dfill);
-	checkPetscError(ierr);
-	ierr = PetscMemzero(ofill, dof * dof * sizeof(PetscInt));
-	checkPetscError(ierr);
-	ierr = PetscMemzero(dfill, dof * dof * sizeof(PetscInt));
-	checkPetscError(ierr);
-
-	// Fill ofill, the matrix of "off-diagonal" elements that represents diffusion
-	PetscSolver::diffusionHandler->initializeOFill(network, ofill);
-
-	// Get the diagonal fill
-	ierr = getDiagonalFill(dfill, dof * dof);
-	checkPetscError(ierr);
-
-	// Load up the block fills
-	ierr = DMDASetBlockFills(da, dfill, ofill);
-
-	checkPetscError(ierr);
-	// Free the temporary fill arrays
-	ierr = PetscFree(ofill);
-	checkPetscError(ierr);
-	ierr = PetscFree(dfill);
-	checkPetscError(ierr);
+	// Create the solver context
+	DM da;
+	Solver::solverHandler->createSolverContext(da, nx, hx, ny, hy, nz, hz);
 
 	/*  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Extract global vector from DMDA to hold solution
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	Vec C;
 	ierr = DMCreateGlobalVector(da, &C);
 	checkPetscError(ierr);
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Create timestepping solver context
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	TS ts;
 	ierr = TSCreate(PETSC_COMM_WORLD, &ts);
 	checkPetscError(ierr);
 	ierr = TSSetType(ts, TSARKIMEX);
@@ -1065,9 +310,9 @@ void PetscSolver::solve(
 	checkPetscError(ierr);
 	ierr = TSSetProblemType(ts, TS_NONLINEAR);
 	checkPetscError(ierr);
-	ierr = TSSetRHSFunction(ts, NULL, callRHSFunction, NULL);
+	ierr = TSSetRHSFunction(ts, NULL, RHSFunction, NULL);
 	checkPetscError(ierr);
-	ierr = TSSetRHSJacobian(ts, NULL, NULL, callRHSJacobian, NULL);
+	ierr = TSSetRHSJacobian(ts, NULL, NULL, RHSJacobian, NULL);
 	checkPetscError(ierr);
 	ierr = TSSetSolution(ts, C);
 	checkPetscError(ierr);
@@ -1075,13 +320,43 @@ void PetscSolver::solve(
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Set solver options
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+	// Read the times if the information is in the HDF5 file
+	double time = 0.0, deltaTime = 1.0e-12;
+	int tempTimeStep = -2;
+	if (HDF5Utils::hasConcentrationGroup(fileName, tempTimeStep)) {
+		HDF5Utils::readTimes(fileName, tempTimeStep, time, deltaTime);
+	}
+
 	ierr = TSSetInitialTimeStep(ts, time, deltaTime);
 	checkPetscError(ierr);
 	ierr = TSSetFromOptions(ts);
 	checkPetscError(ierr);
 
-	ierr = setupPetscMonitor(ts);
-	checkPetscError(ierr);
+
+	// Switch on the number of dimensions to set the monitors
+	int dim = Solver::solverHandler->getDimension();
+	switch (dim) {
+		case 1:
+			// One dimension
+			ierr = setupPetsc1DMonitor(ts);
+			checkPetscError(ierr);
+			break;
+		case 2:
+			// Two dimensions
+			ierr = setupPetsc2DMonitor(ts);
+			checkPetscError(ierr);
+			break;
+		case 3:
+			// Three dimensions
+			ierr = setupPetsc3DMonitor(ts);
+			checkPetscError(ierr);
+			break;
+		default:
+			throw std::string(
+							"PetscSolver Exception: Wrong number of dimensions "
+							"to set the monitors.");
+	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Set initial conditions
@@ -1089,8 +364,8 @@ void PetscSolver::solve(
 	ierr = setupInitialConditions(da, C);
 	checkPetscError(ierr);
 
-	// Initialize the advection handler
-	PetscSolver::advectionHandler->initialize(network);
+	// Set the output precision for std::out
+	std::cout.precision(16);
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Solve the ODE system
@@ -1102,15 +377,6 @@ void PetscSolver::solve(
 		throw std::string(
 				"PetscSolver Exception: Unable to solve! Data not configured properly.");
 	}
-}
-
-/**
- * This operation performs all necessary finalization for the solver
- * including but not limited to cleaning up memory, finalizing MPI and
- * printing diagnostic information. If the solver can not be finalized,
- * this operation will throw an exception of type std::string.
- */
-void PetscSolver::finalize() {
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Free work space.
@@ -1121,11 +387,18 @@ void PetscSolver::finalize() {
 	checkPetscError(ierr);
 	ierr = DMDestroy(&da);
 	checkPetscError(ierr);
+
+	return;
+}
+
+void PetscSolver::finalize() {
+	PetscErrorCode ierr;
+
 	ierr = PetscFinalize();
+	checkPetscError(ierr);
 	if (petscReturn() != 0) {
 		throw std::string("PetscSolver Exception: Unable to finalize solve!");
 	}
-
 }
 
 } /* end namespace xolotlSolver */

@@ -16,6 +16,8 @@
 #include <TemperatureHandlerFactory.h>
 #include <VizHandlerRegistryFactory.h>
 #include <HDF5NetworkLoader.h>
+#include <SolverHandlerFactory.h>
+#include <ISolverHandler.h>
 #include <ctime>
 
 using namespace std;
@@ -34,7 +36,8 @@ void printStartMessage() {
 
 std::shared_ptr<xolotlFactory::IMaterialFactory> initMaterial(Options &options) {
 	// Create the material factory
-	auto materialFactory = xolotlFactory::IMaterialFactory::createMaterialFactory(options.getMaterial());
+	auto materialFactory = xolotlFactory::IMaterialFactory::createMaterialFactory(options.getMaterial(),
+			options.getDimensionNumber());
 
 	// Initialize it with the options
 	materialFactory->initializeMaterial(options);
@@ -68,24 +71,27 @@ bool initViz(bool opts) {
 
 std::shared_ptr<xolotlSolver::PetscSolver> setUpSolver(
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry, 
-        int argc, char **argv) {
+		std::shared_ptr<xolotlFactory::IMaterialFactory> material,
+		std::shared_ptr<xolotlCore::ITemperatureHandler> tempHandler,
+		std::shared_ptr<xolotlSolver::ISolverHandler> solvHandler,
+		Options &options) {
+	// Initialize the solver handler
+	solvHandler->initializeHandlers(material, tempHandler, options);
+
 	// Setup the solver
 	auto solverInitTimer = handlerRegistry->getTimer("initSolver");
 	solverInitTimer->start();
 	std::shared_ptr<xolotlSolver::PetscSolver> solver = std::make_shared<
 			xolotlSolver::PetscSolver>(handlerRegistry);
-	solver->setCommandLineOptions(argc, argv);
-	solver->initialize();
+	solver->setCommandLineOptions(options.getPetscArgc(), options.getPetscArgv());
+	solver->initialize(solvHandler);
 	solverInitTimer->stop();
 
 	return solver;
 }
 
 void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry,
-		std::shared_ptr<xolotlFactory::IMaterialFactory> material,
-		std::shared_ptr<xolotlCore::ITemperatureHandler> tempHandler,
-		Options &options) {
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry) {
 
     xperf::IHardwareCounter::SpecType hwctrSpec;
     hwctrSpec.push_back( xperf::IHardwareCounter::FPOps );
@@ -97,7 +103,7 @@ void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
     auto solverHwctr = handlerRegistry->getHardwareCounter( "solve", hwctrSpec );
 	solverTimer->start();
     solverHwctr->start();
-	solver->solve(material, tempHandler, options);
+	solver->solve();
     solverHwctr->stop();
 	solverTimer->stop();
 }
@@ -161,23 +167,26 @@ int main(int argc, char **argv) {
 		// Set up the material infrastructure that is used to calculate flux
 		auto material = initMaterial(opts);
 		// Set up the temperature infrastructure
-		auto tempInitOK = initTemp(opts);
+		bool tempInitOK = initTemp(opts);
 		// Set up the visualization infrastructure.
-		auto vizInitOK = initViz(opts.useVizStandardHandlers());
+		bool vizInitOK = initViz(opts.useVizStandardHandlers());
 
 		// Access the temperature handler registry to get the temperature
 		auto tempHandler = xolotlFactory::getTemperatureHandler();
 
 		// Access our performance handler registry to obtain a Timer
 		// measuring the runtime of the entire program.
-		// NOTE: these long template types could be replaced with 'auto'
 		auto handlerRegistry = xolotlPerf::getHandlerRegistry();
 		auto totalTimer = handlerRegistry->getTimer("total");
 		totalTimer->start();
 
+		// Initialize and get the solver handler
+		bool dimOK = xolotlFactory::initializeDimension(opts);
+		auto solvHandler = xolotlFactory::getSolverHandler();
+
 		// Setup the solver
-		auto solver = setUpSolver(handlerRegistry,
-                                    opts.getPetscArgc(), opts.getPetscArgv());
+		auto solver = setUpSolver(handlerRegistry, material,
+				tempHandler, solvHandler, opts);
 
 		// Load the network
 		auto networkLoadTimer = handlerRegistry->getTimer("loadNetwork");
@@ -192,8 +201,7 @@ int main(int argc, char **argv) {
 		networkLoadTimer->stop();
 
 		// Launch the PetscSolver
-		launchPetscSolver(solver, handlerRegistry, material,
-				tempHandler, opts);
+		launchPetscSolver(solver, handlerRegistry);
 
 		// Finalize our use of the solver.
 		auto solverFinalizeTimer = handlerRegistry->getTimer("solverFinalize");

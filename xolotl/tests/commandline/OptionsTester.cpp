@@ -124,9 +124,6 @@ BOOST_AUTO_TEST_CASE(goodParamFile)
     // Check the network filename
     BOOST_REQUIRE_EQUAL(opts.getNetworkFilename(), "tungsten.txt");
 
-    // Check the step size option
-    BOOST_REQUIRE_EQUAL(opts.getStepSize(), 2.0);
-
     // Check the temperature
     BOOST_REQUIRE_EQUAL(opts.useConstTemperatureHandlers(), true);
     BOOST_REQUIRE_EQUAL(opts.getConstTemperature(), 900.0);
@@ -150,8 +147,11 @@ BOOST_AUTO_TEST_CASE(goodParamFile)
     // Check the void portion option
     BOOST_REQUIRE_EQUAL(opts.getVoidPortion(), 60.0);
 
+    // Check the number of dimensions option
+    BOOST_REQUIRE_EQUAL(opts.getDimensionNumber(), 1);
+
     // Check the PETSc options
-    BOOST_REQUIRE_EQUAL(opts.getPetscArgc(), 21);
+    BOOST_REQUIRE_EQUAL(opts.getPetscArgc(), 16);
 }
 
 BOOST_AUTO_TEST_CASE(wrongPerfHandler)

@@ -101,18 +101,6 @@ public:
     virtual void setPetscArgv(char** argv) = 0;
 
     /**
-     * Get the value of the step size.
-     * @return the step size.
-     */
-    virtual double getStepSize() const = 0;
-
-    /**
-     * Set the value of the step size.
-     * @param value The value for the step size.
-     */
-    virtual void setStepSize(double value) = 0;
-
-    /**
      * Should we use const temperature handlers?
      * @return true if xolotl must use a constant temperature.
      */
@@ -251,6 +239,18 @@ public:
     virtual void setMaterial(std::string material) = 0;
 
     /**
+     * Obtain the value of the void portion for the simulation.
+     * @return The portion.
+     */
+    virtual double getVoidPortion() const = 0;
+
+    /**
+     * Set the value of the void portion for the surface to grow.
+     * @param portion The value for the portion.
+     */
+    virtual void setVoidPortion(double portion) = 0;
+
+    /**
      * Obtain the value of the concentration for the vacancies.
      * @return The concentration value.
      */
@@ -263,16 +263,16 @@ public:
     virtual void setInitialVConcentration(double conc) = 0;
 
     /**
-     * Obtain the value of the void portion for the simulation.
-     * @return The portion.
+     * Obtain the number of dimensions for the simulation.
+     * @return The number of dimensions.
      */
-    virtual double getVoidPortion() const = 0;
+    virtual int getDimensionNumber() const = 0;
 
     /**
-     * Set the value of the void portion for the surface to grow.
-     * @param portion The value for the portion.
+     * Set the number of dimensions for the simulation.
+     * @param number The number of dimensions.
      */
-    virtual void setVoidPortion(double portion) = 0;
+    virtual void setDimensionNumber(int number) = 0;
 
 };//end class IOptions
 

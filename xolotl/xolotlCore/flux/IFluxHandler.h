@@ -18,12 +18,15 @@ public:
 
 	/**
 	 * Function to calculate and store the incident flux values at each grid point
-	 * @param numGridpoints The total number of grid points that will be used
-	 * @param step The step size between grid points
 	 * @param surfacePos The current position of the surface
+	 * @param nx The total number of grid points that will be used on the x axis
+	 * @param hx The step size between grid points on the x axis
+	 * @param hy The step size between grid points on the y axis
+	 * @param hz The step size between grid points on the z axis
 	 */
-	virtual void initializeFluxHandler(int numGridpoints, double step, int surfacePos) = 0;
-
+	virtual void initializeFluxHandler(int surfacePos, int nx, double hx,
+			double hy = 1.0, double hz = 1.0) = 0;
+			
 	/**
 	 * This method reads the values on the time profile file and store them in the
 	 * time and amplitude vectors.

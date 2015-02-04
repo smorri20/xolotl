@@ -30,48 +30,38 @@ public:
 	 * @param ofill The pointer to the array that will contain the value 1 at the indices
 	 * of the diffusing clusters, 0 if they are not diffusing
 	 */
-	virtual void initializeOFill(std::shared_ptr<PSIClusterReactionNetwork> network,
+	virtual void initializeOFill(PSIClusterReactionNetwork *network,
 			int *ofill) = 0;
 
 	/**
 	 * Compute the flux due to the diffusion for all the cluster that are diffusing,
-	 * given the space parameter sx.
+	 * given the space parameter s.
 	 * This method is called by the RHSFunction from the PetscSolver.
 	 *
 	 * @param network The network
-	 * @param sx The space parameter, depending on the grid step size
-	 * @param concOffset The pointer to the array of concentration at the grid
-	 * point where the diffusion is computed
-	 * @param leftConcOffset The pointer to the array of concentration at the grid
-	 * point to the left of where the diffusion is computed
-	 * @param rightConcOffset The pointer to the array of concentration at the grid
-	 * point to the right of where the diffusion is computed
+	 * @param s The space parameter, depending on the grid step size
+	 * @param concVector The pointer to the pointer of arrays of concentration at middle/
+	 * left/right/bottom/top/front/back grid points
 	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
 	 * point where the diffusion is computed used to find the next solution
 	 */
-	virtual void computeDiffusion(std::shared_ptr<PSIClusterReactionNetwork> network, double sx,
-			double *concOffset, double *leftConcOffset,
-			double *rightConcOffset, double *updatedConcOffset) = 0;
+	virtual void computeDiffusion(PSIClusterReactionNetwork *network, double s,
+			double **concVector, double *updatedConcOffset) = 0;
 
 	/**
 	 * Compute the partials due to the diffusion of all the diffusing clusters given
-	 * the space parameter sx.
+	 * the space parameter s.
 	 * This method is called by the RHSJacobian from the PetscSolver.
 	 *
 	 * @param network The network
-	 * @param sx The space parameter, depending on the grid step size
+	 * @param s The space parameter, depending on the grid step size
 	 * @param val The pointer to the array that will contain the values of partials
 	 * for the diffusion
-	 * @param row The pointer to the array that will contain the indices of the row
-	 * for the Jacobian
-	 * @param col The pointer to the array that will contain the indices of the columns
-	 * for the Jacobian
-	 * @param xi The index of the grip point
-	 * @param xs The index of the first grid point on the locally owned grid
+	 * @param indices The pointer to the array that will contain the indices of the
+	 * diffusing clusters in the network
 	 */
-	virtual void computePartialsForDiffusion(std::shared_ptr<PSIClusterReactionNetwork> network,
-			double sx, double *val, int *row, int *col, int xi,
-			int xs) = 0;
+	virtual void computePartialsForDiffusion(PSIClusterReactionNetwork *network,
+			double s, double *val, int *indices) = 0;
 
 	/**
 	 * Get the total number of diffusing clusters in the network.

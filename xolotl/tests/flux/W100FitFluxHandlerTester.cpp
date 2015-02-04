@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(checkgetIncidentFlux) {
 
     auto testFitFlux = make_shared<W100FitFluxHandler>();
     // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(nGridpts, step, surfacePos);
+    testFitFlux->initializeFluxHandler(surfacePos, nGridpts, step);
 
 	// Create a composition vector
 	vector<int> compVec = {1, 0, 0};
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(checkHeFluence) {
 
     auto testFitFlux = make_shared<W100FitFluxHandler>();
     // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(nGridpts, step, surfacePos);
+    testFitFlux->initializeFluxHandler(surfacePos, nGridpts, step);
 
 	// Create the composition vector
 	vector<int> compVec = {1, 0, 0};
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(checkHeFlux) {
     // Set the factor to change the Helium flux
     testFitFlux->setHeFlux(2.5);
     // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(nGridpts, step, surfacePos);
+    testFitFlux->initializeFluxHandler(surfacePos, nGridpts, step);
 
     BOOST_REQUIRE_EQUAL(testFitFlux->getHeFlux(), 2.5);
 

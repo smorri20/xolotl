@@ -46,11 +46,6 @@ protected:
 	char **petscArgv;
 
 	/**
-	 * The value of the step size for the spatial grid.
-	 */
-	double stepSize;
-
-	/**
 	 * Use the constant temperature set of handlers?
 	 */
 	bool constTempFlag;
@@ -114,6 +109,11 @@ protected:
 	 * Value of the portion of the void on the grid at the start of the simulation.
 	 */
 	double voidPortion;
+
+	/**
+	 * Number of dimensions for the simulation.
+	 */
+	int dimensionNumber;
 
 public:
 
@@ -201,18 +201,6 @@ public:
      * \see IOptions.h
      */
     void setPetscArgv(char** argv) {petscArgv = argv;}
-
-    /**
-     * Get the value of the step size.
-     * \see IOptions.h
-     */
-    double getStepSize() const {return stepSize;}
-
-    /**
-     * Set the value of the step size.
-     * \see IOptions.h
-     */
-    void setStepSize(double value) {stepSize = value;}
 
     /**
      * Should we use const temperature handlers?
@@ -342,7 +330,7 @@ public:
      * \see IOptions.h
      */
     std::string getMaterial() const {return materialName;}
-
+    
     /**
      * Set the name of the material to be used for the flux profile.
      * \see IOptions.h
@@ -362,6 +350,18 @@ public:
     void setInitialVConcentration(double conc) {initialVConcentration = conc;}
 
     /**
+     * Obtain the number of dimensions for the simulation.
+     * \see IOptions.h
+     */
+    int getDimensionNumber() const {return dimensionNumber;}
+
+    /**
+     * Set the number of dimensions for the simulation.
+     * \see IOptions.h
+     */
+    void setDimensionNumber(int number) {dimensionNumber = number;}
+
+    /**
      * Obtain the value of the void portion for the simulation.
      * \see IOptions.h
      */
@@ -372,7 +372,6 @@ public:
      * \see IOptions.h
      */
     void setVoidPortion(double portion) {voidPortion = portion;}
-
 
 };//end class Options
 

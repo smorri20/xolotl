@@ -3,7 +3,6 @@
 #include <TokenizedLineReader.h>
 #include <NetworkOptionHandler.h>
 #include <PetscOptionHandler.h>
-#include <StepSizeOptionHandler.h>
 #include <ConstTempOptionHandler.h>
 #include <TempProfileOptionHandler.h>
 #include <FluxOptionHandler.h>
@@ -13,6 +12,7 @@
 #include <MaterialOptionHandler.h>
 #include <VConcentrationOptionHandler.h>
 #include <VoidPortionOptionHandler.h>
+#include <DimensionsOptionHandler.h>
 #include "Options.h"
 
 namespace xolotlCore {
@@ -22,7 +22,6 @@ Options::Options() :
 		exitCode(EXIT_SUCCESS),
 		petscArgc(0),
 		petscArgv(NULL),
-		stepSize(0.0),
 		constTempFlag(false),
 		tempProfileFlag(false),
 		constTemperature(1000.0),
@@ -32,14 +31,13 @@ Options::Options() :
 		vizStandardHandlersFlag(false),
 		materialName(""),
 		initialVConcentration(0.0),
-		voidPortion(50.0) {
+		voidPortion(50.0),
+		dimensionNumber(1) {
 
 	// Create the network option handler
 	auto networkHandler = new NetworkOptionHandler();
 	// Create the PETSc option handler
 	auto petscHandler = new PetscOptionHandler();
-	// Create the step size option option handler
-	auto stepHandler = new StepSizeOptionHandler();
 	// Create the constant temperature option handler
 	auto constTempHandler = new ConstTempOptionHandler();
 	// Create the temperature profile option handler
@@ -58,11 +56,12 @@ Options::Options() :
 	auto vConcHandler = new VConcentrationOptionHandler();
 	// Create the void portion option handler
 	auto voidHandler = new VoidPortionOptionHandler();
+	// Create the dimensions option handler
+	auto dimHandler = new DimensionsOptionHandler();
 
 	// Add our notion of which options we support.
 	optionsMap[networkHandler->key] = networkHandler;
 	optionsMap[petscHandler->key] = petscHandler;
-	optionsMap[stepHandler->key] = stepHandler;
 	optionsMap[constTempHandler->key] = constTempHandler;
 	optionsMap[tempProfileHandler->key] = tempProfileHandler;
 	optionsMap[fluxHandler->key] = fluxHandler;
@@ -72,6 +71,7 @@ Options::Options() :
 	optionsMap[materialHandler->key] = materialHandler;
 	optionsMap[vConcHandler->key] = vConcHandler;
 	optionsMap[voidHandler->key] = voidHandler;
+	optionsMap[dimHandler->key] = dimHandler;
 }
 
 Options::~Options(void) {

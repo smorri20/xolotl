@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(checkgetIncidentFlux) {
 
     auto testFitFlux = make_shared<W320FitFluxHandler>();
     // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(nGridpts, step, surfacePos);
+    testFitFlux->initializeFluxHandler(surfacePos, nGridpts, step);
 
 	// Create a composition vector
 	vector<int> compVec = {1, 0, 0};
