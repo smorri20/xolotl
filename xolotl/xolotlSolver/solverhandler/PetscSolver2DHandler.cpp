@@ -29,7 +29,7 @@ void PetscSolver2DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Create distributed array (DMDA) to manage parallel grid and vectors
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = DMDACreate2d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, DM_BOUNDARY_GHOSTED,
+	ierr = DMDACreate2d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, DM_BOUNDARY_PERIODIC,
 	DMDA_STENCIL_STAR, nx, ny, PETSC_DECIDE, PETSC_DECIDE, dof, 1, NULL, NULL, &da);
 	checkPetscError(ierr);
 
@@ -133,7 +133,7 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) const {
 			}
 
 			// Initialize the vacancy concentration
-			if (i > 0 && i < Mx - 1 && j > 0 && j < My - 1) {
+			if (i > 0 && i < Mx - 1) {
 				concOffset[vacancyIndex] = initialVConc / h;
 			}
 		}
@@ -238,7 +238,7 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			concVector[4] = concs[yj + 1][xi]; // top
 
 			// Boundary conditions
-			if (xi == 0 || xi == Mx - 1 || yj == 0 || yj == My - 1) {
+			if (xi == 0 || xi == Mx - 1) {
 				for (int i = 0; i < dof; i++) {
 					updatedConcOffset[i] = 1.0 * concOffset[i];
 				}
@@ -365,7 +365,7 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	for (int yj = ys; yj < ys + ym; yj++) {
 		for (int xi = xs; xi < xs + xm; xi++) {
 			// Boundary conditions
-			if (xi == 0 || xi == Mx - 1 || yj == 0 || yj == My - 1) continue;
+			if (xi == 0 || xi == Mx - 1) continue;
 
 			// Set the grid position
 			gridPosition[0] = xi * h;
@@ -482,7 +482,7 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	for (int yj = ys; yj < ys + ym; yj++) {
 		for (int xi = xs; xi < xs + xm; xi++) {
 			// Boundary conditions
-			if (xi == 0 || xi == Mx - 1 || yj == 0 || yj == My - 1) continue;
+			if (xi == 0 || xi == Mx - 1) continue;
 
 			// Copy data into the PSIClusterReactionNetwork so that it can
 			// compute the new concentrations.
