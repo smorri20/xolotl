@@ -117,9 +117,6 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 	// Network size
 	const int networkSize = network->size();
 
-	// Setup step size variable
-	double h = solverHandler->getStepSize();
-
 	// Open the already created HDF5 file
 	xolotlCore::HDF5Utils::openFile(hdf5OutputName1D);
 
@@ -222,7 +219,7 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
 
 	// Setup step size variable
-	double h = solverHandler->getStepSize();
+	double hx = solverHandler->getStepSizeX();
 
 	// Get the array of concentration
 	PetscReal **solutionArray;
@@ -243,7 +240,7 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 		for (int i = 0; i < heIndices1D.size(); i++) {
 			// Add the current concentration times the number of helium in the cluster
 			// (from the weight vector)
-			heConcentration += gridPointSolution[heIndices1D[i]] * heWeights1D[i] * h;
+			heConcentration += gridPointSolution[heIndices1D[i]] * heWeights1D[i] * hx;
 		}
 	}
 
@@ -338,7 +335,7 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 	auto network = solverHandler->getNetwork();
 
 	// Setup step size variable
-	double h = solverHandler->getStepSize();
+	double hx = solverHandler->getStepSizeX();
 
 	// Choice of the cluster to be plotted
 	int iCluster = 6;
@@ -351,7 +348,7 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 		// Loop on the grid
 		for (xi = xs; xi < xs + xm; xi++) {
 			// Dump x
-			x = xi * h;
+			x = xi * hx;
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[xi];
 
@@ -431,7 +428,7 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 		// Loop on the grid
 		for (xi = xs; xi < xs + xm; xi++) {
 			// Dump x
-			x = xi * h;
+			x = xi * hx;
 
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[xi];
@@ -492,7 +489,7 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 	const int networkSize = network->size();
 
 	// Setup step size variable
-	double h = solverHandler->getStepSize();
+	double hx = solverHandler->getStepSizeX();
 
 	// To plot a maximum of 18 clusters of the whole benchmark
 	const int loopSize = std::min(18, networkSize);
@@ -505,7 +502,7 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 		// Loop on the grid
 		for (xi = xs; xi < xs + xm; xi++) {
 			// Dump x
-			x = xi * h;
+			x = xi * hx;
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[xi];
 
@@ -592,7 +589,7 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 		// Loop on the grid
 		for (xi = xs; xi < xs + xm; xi++) {
 			// Dump x
-			x = xi * h;
+			x = xi * hx;
 
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[xi];
@@ -655,7 +652,7 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 	auto network = solverHandler->getNetwork();
 
 	// Setup step size variable
-	double h = solverHandler->getStepSize();
+	double hx = solverHandler->getStepSizeX();
 
 	// Get the maximum size of HeV clusters
 	auto psiNetwork = (PSIClusterReactionNetwork *) network;
@@ -729,7 +726,7 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 
 		// Change the title of the plot
 		std::stringstream title;
-		title << "Concentration at Depth: " << xi * h << " nm";
+		title << "Concentration at Depth: " << xi * hx << " nm";
 		surfacePlot1D->plotLabelProvider->titleLabel = title.str();
 		// Give the time to the label provider
 		std::stringstream timeLabel;
@@ -788,7 +785,7 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 	auto network = solverHandler->getNetwork();
 
 	// Setup step size variable
-	double h = solverHandler->getStepSize();
+	double hx = solverHandler->getStepSizeX();
 
 	// Get the maximum size of HeV clusters
 	auto psiNetwork = (PSIClusterReactionNetwork *) network;
@@ -809,7 +806,7 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 	// Check the concentration of the biggest cluster at each grid point
 	for (xi = xs; xi < xs + xm; xi++) {
 		// Position
-		x = xi * h;
+		x = xi * hx;
 
 		// Get the pointer to the beginning of the solution data for this grid point
 		gridPointSolution = solutionArray[xi];
@@ -918,9 +915,9 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network
 	auto network = solverHandler->getNetwork();
 
-	// Setup step size variable
-	double h = solverHandler->getStepSize();
-	double s = 1.0 / (h * h);
+	// Setup step size variables
+	double hx = solverHandler->getStepSizeX();
+	double s = 1.0 / (hx * hx);
 
 	// Get the concentrations at xi = 1
 	xi = 1;
@@ -1222,7 +1219,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		auto solverHandler = PetscSolver::getSolverHandler();
 
 		// Setup step size variable
-		double h = solverHandler->getStepSize();
+		double hx = solverHandler->getStepSizeX();
 
 		// Get the refinement of the grid
 		PetscInt refinement = 0;
@@ -1232,7 +1229,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 			refinement = 0;
 
 		// Save the header in the HDF5 file
-		xolotlCore::HDF5Utils::fillHeader(1, Mx, h);
+		xolotlCore::HDF5Utils::fillHeader(1, Mx, hx);
 
 		// Save the network in the HDF5 file
 		xolotlCore::HDF5Utils::fillNetwork(network);
