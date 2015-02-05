@@ -35,7 +35,9 @@ void PetscSolver3DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	checkPetscError(ierr);
 
 	// Set the step size
-	h = hx;
+	hX = hx;
+	hY = hy;
+	hZ = hz;
 
 	// Set the size of the partial derivatives vectors
 	clusterPartials.resize(dof, 0.0);
@@ -109,7 +111,7 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 	checkPetscError(ierr);
 
 	// Initialize the flux handler
-	fluxHandler->initializeFluxHandler(Mx, h, h, h);
+	fluxHandler->initializeFluxHandler(Mx, hX, hY, hZ);
 
 	// Initialize the advection handler
 	advectionHandler->initialize(network);
@@ -136,7 +138,7 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 
 				// Initialize the vacancy concentration
 				if (i > 0 && i < Mx - 1) {
-					concOffset[vacancyIndex] = initialVConc / h;
+					concOffset[vacancyIndex] = initialVConc / hX;
 				}
 			}
 		}
@@ -214,7 +216,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	PetscScalar *concOffset, *updatedConcOffset;
 
 	// Set some step size variable
-	double s = 1.0 / (h * h);
+	double s = 1.0 / (hX * hX);
 
 	// Get the incident flux vector
 	auto incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime);
@@ -258,9 +260,9 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				}
 
 				// Set the grid position
-				gridPosition[0] = xi * h;
-				gridPosition[1] = yj * h;
-				gridPosition[2] = zk * h;
+				gridPosition[0] = xi * hX;
+				gridPosition[1] = yj * hY;
+				gridPosition[2] = zk * hZ;
 
 				// Get the temperature from the temperature handler
 				auto temperature = temperatureHandler->getTemperature(gridPosition,
@@ -295,7 +297,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 						updatedConcOffset);
 
 				// ---- Compute advection over the locally owned part of the grid -----
-				advectionHandler->computeAdvection(network, h, gridPosition,
+				advectionHandler->computeAdvection(network, hX, gridPosition,
 						concVector, updatedConcOffset);
 
 				// ----- Compute all of the new fluxes -----
@@ -341,7 +343,7 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	checkPetscError(ierr);
 
 	// Setup some step size variables
-	double s = 1.0 / (h * h);
+	double s = 1.0 / (hX * hX);
 
 	// Get pointers to vector data
 	PetscScalar ****concs;
@@ -382,9 +384,9 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 				if (xi == 0 || xi == Mx - 1) continue;
 
 				// Set the grid position
-				gridPosition[0] = xi * h;
-				gridPosition[1] = yj * h;
-				gridPosition[2] = zk * h;
+				gridPosition[0] = xi * hX;
+				gridPosition[1] = yj * hY;
+				gridPosition[2] = zk * hZ;
 
 				// Copy data into the PSIClusterReactionNetwork so that it can
 				// compute the new concentrations.
@@ -439,7 +441,7 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 				}
 
 				// Get the partial derivatives for the advection
-				advectionHandler->computePartialsForAdvection(network, h, vals,
+				advectionHandler->computePartialsForAdvection(network, hX, vals,
 						indices, gridPosition);
 
 				// Loop on the number of advecting cluster to set the values in the Jacobian

@@ -109,9 +109,6 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 	// Network size
 	const int networkSize = network->size();
 
-	// Setup step size variable
-	double h = solverHandler->getStepSize();
-
 	// Open the already created HDF5 file
 	xolotlCore::HDF5Utils::openFile(hdf5OutputName3D);
 
@@ -219,8 +216,10 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time
 	// Get the corners of the grid
 	ierr = DMDAGetCorners(da, &xs, &ys, &zs, &xm, &ym, &zm);CHKERRQ(ierr);
 
-	// Setup step size variable
-	double h = solverHandler->getStepSize();
+	// Setup step size variables
+	double hx = solverHandler->getStepSizeX();
+	double hy = solverHandler->getStepSizeY();
+	double hz = solverHandler->getStepSizeZ();
 
 	// Get the array of concentration
 	PetscReal ****solutionArray;
@@ -244,7 +243,7 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time
 				for (int l = 0; l < heIndices3D.size(); l++) {
 					// Add the current concentration times the number of helium in the cluster
 					// (from the weight vector)
-					heConcentration += gridPointSolution[heIndices3D[l]] * heWeights3D[l] * h;
+					heConcentration += gridPointSolution[heIndices3D[l]] * heWeights3D[l] * hx;
 				}
 			}
 		}
@@ -279,7 +278,7 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time
 		PETSC_IGNORE);CHKERRQ(ierr);
 
 		// Compute the total surface irradiated by the helium flux
-		double surface = (double) (My * Mz) * h * h;
+		double surface = (double) (My * Mz) * hy * hz;
 
 		// Rescale the concentration
 		heConcentration = heConcentration / surface;
@@ -359,8 +358,10 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network
 	auto network = solverHandler->getNetwork();
 
-	// Setup step size variable
-	double h = solverHandler->getStepSize();
+	// Setup step size variables
+	double hx = solverHandler->getStepSizeX();
+	double hy = solverHandler->getStepSizeY();
+	double hz = solverHandler->getStepSizeZ();
 
 	// Choice of the cluster to be plotted
 	int iCluster = 0;
@@ -374,18 +375,18 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 	// Loop on the full grid, Y and X first because they are the axis of the plot
 	for (int j = 0; j < My; j++) {
 		// Compute y
-		y = j * h;
+		y = j * hy;
 
 		for (int i = 0; i < Mx; i++) {
 			// Compute x
-			x = i * h;
+			x = i * hx;
 
 			// Initialize the value of the concentration to integrate over Z
 			double conc = 0.0;
 
 			for (int k = 0; k < Mz; k++) {
 				// Compute z
-				z = k * h;
+				z = k * hz;
 
 				// If it is the locally owned part of the grid
 				if (i >= xs && i < xs + xm && j >= ys && j < ys + ym
@@ -516,8 +517,10 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network
 	auto network = solverHandler->getNetwork();
 
-	// Setup step size variable
-	double h = solverHandler->getStepSize();
+	// Setup step size variables
+	double hx = solverHandler->getStepSizeX();
+	double hy = solverHandler->getStepSizeY();
+	double hz = solverHandler->getStepSizeZ();
 
 	// Choice of the cluster to be plotted
 	int iCluster = 0;
@@ -531,18 +534,18 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 	// Loop on the full grid, Y and X first because they are the axis of the plot
 	for (int k = 0; k < Mz; k++) {
 		// Compute z
-		z = k * h;
+		z = k * hz;
 
 		for (int i = 0; i < Mx; i++) {
 			// Compute x
-			x = i * h;
+			x = i * hx;
 
 			// Initialize the value of the concentration to integrate over Y
 			double conc = 0.0;
 
 			for (int j = 0; j < My; j++) {
 				// Compute y
-				y = j * h;
+				y = j * hy;
 
 				// If it is the locally owned part of the grid
 				if (i >= xs && i < xs + xm && j >= ys && j < ys + ym
@@ -564,7 +567,7 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 				// Else if it is NOT the locally owned part of the grid but still procId == 0,
 				// it should receive the values of the concentration to integrate them
 				else if (procId == 0) {
-					// Receive the concentration fron other processes
+					// Receive the concentration from other processes
 					double tempConc = 0.0;
 					MPI_Recv(&tempConc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 2, MPI_COMM_WORLD,
 							MPI_STATUS_IGNORE);
@@ -772,8 +775,10 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 		// Get the solver handler
 		auto solverHandler = PetscSolver::getSolverHandler();
 
-		// Setup step size variable
-		double h = solverHandler->getStepSize();
+		// Setup step size variables
+		double hx = solverHandler->getStepSizeX();
+		double hy = solverHandler->getStepSizeY();
+		double hz = solverHandler->getStepSizeZ();
 
 		// Get the refinement of the grid
 		PetscInt refinement = 0;
@@ -783,7 +788,7 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 			refinement = 0;
 
 		// Save the header in the HDF5 file
-		xolotlCore::HDF5Utils::fillHeader(3, Mx, h, My, h, Mz, h);
+		xolotlCore::HDF5Utils::fillHeader(3, Mx, hx, My, hy, Mz, hz);
 
 		// Save the network in the HDF5 file
 		xolotlCore::HDF5Utils::fillNetwork(network);

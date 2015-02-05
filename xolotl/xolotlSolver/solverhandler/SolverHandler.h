@@ -19,8 +19,14 @@ protected:
 	//! The original network created from the network loader.
 	xolotlCore::PSIClusterReactionNetwork *network;
 
-	//! The grid step size.
-	double h;
+	//! The grid step size in the x direction.
+	double hX;
+
+	//! The grid step size in the y direction.
+	double hY;
+
+	//! The grid step size in the z direction.
+	double hZ;
 
 	//! The initial vacancy concentration.
 	double initialVConc;
@@ -88,10 +94,22 @@ public:
 	}
 
 	/**
-	 * Get the step size.
+	 * Get the step size in the x direction.
 	 * \see ISolverHandler.h
 	 */
-	double getStepSize() const {return h;}
+	double getStepSizeX() const {return hX;}
+
+	/**
+	 * Get the step size in the y direction.
+	 * \see ISolverHandler.h
+	 */
+	double getStepSizeY() const {return hY;}
+
+	/**
+	 * Get the step size in the z direction.
+	 * \see ISolverHandler.h
+	 */
+	double getStepSizeZ() const {return hZ;}
 
 	/**
 	 * Get the number of dimensions of the problem.

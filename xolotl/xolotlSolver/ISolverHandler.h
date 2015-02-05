@@ -110,11 +110,25 @@ public:
 	virtual void computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) = 0;
 
 	/**
-	 * Get the step size.
+	 * Get the step size in the x direction.
 	 *
-	 * @return The step size
+	 * @return The step size in the x direction
 	 */
-	virtual double getStepSize() const = 0;
+	virtual double getStepSizeX() const = 0;
+
+	/**
+	 * Get the step size in the y direction.
+	 *
+	 * @return The step size in the y direction
+	 */
+	virtual double getStepSizeY() const = 0;
+
+	/**
+	 * Get the step size in the z direction.
+	 *
+	 * @return The step size in the z direction
+	 */
+	virtual double getStepSizeZ() const = 0;
 
 	/**
 	 * Get the number of dimensions of the problem.

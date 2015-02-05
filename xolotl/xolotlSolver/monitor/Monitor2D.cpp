@@ -107,9 +107,6 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 	// Network size
 	const int networkSize = network->size();
 
-	// Setup step size variable
-	double h = solverHandler->getStepSize();
-
 	// Open the already created HDF5 file
 	xolotlCore::HDF5Utils::openFile(hdf5OutputName2D);
 
@@ -213,8 +210,9 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 	// Get the corners of the grid
 	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);CHKERRQ(ierr);
 
-	// Setup step size variable
-	double h = solverHandler->getStepSize();
+	// Setup step size variables
+	double hx = solverHandler->getStepSizeX();
+	double hy = solverHandler->getStepSizeY();
 
 	// Get the array of concentration
 	PetscReal ***solutionArray;
@@ -236,7 +234,7 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 			for (int l = 0; l < heIndices2D.size(); l++) {
 				// Add the current concentration times the number of helium in the cluster
 				// (from the weight vector)
-				heConcentration += gridPointSolution[heIndices2D[l]] * heWeights2D[l] * h;
+				heConcentration += gridPointSolution[heIndices2D[l]] * heWeights2D[l] * hx;
 			}
 		}
 	}
@@ -270,7 +268,7 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 		PETSC_IGNORE);CHKERRQ(ierr);
 
 		// Compute the total surface irradiated by the helium flux
-		double surface = (double) My * h;
+		double surface = (double) My * hy;
 
 		// Rescale the concentration
 		heConcentration = heConcentration / surface;
@@ -350,8 +348,9 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network
 	auto network = solverHandler->getNetwork();
 
-	// Setup step size variable
-	double h = solverHandler->getStepSize();
+	// Setup step size variables
+	double hx = solverHandler->getStepSizeX();
+	double hy = solverHandler->getStepSizeY();
 
 	// Choice of the cluster to be plotted
 	int iCluster = 0;
@@ -370,8 +369,8 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 				// Get the pointer to the beginning of the solution data for this grid point
 				gridPointSolution = solutionArray[j][i];
 				// Compute x and y
-				x = i * h;
-				y = j * h;
+				x = i * hx;
+				y = j * hy;
 
 				// If it is procId 0 just store the value in the myPoints vector
 				if (procId == 0) {
@@ -603,8 +602,9 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		// Get the solver handler
 		auto solverHandler = PetscSolver::getSolverHandler();
 
-		// Setup step size variable
-		double h = solverHandler->getStepSize();
+		// Setup step size variables
+		double hx = solverHandler->getStepSizeX();
+		double hy = solverHandler->getStepSizeY();
 
 		// Get the refinement of the grid
 		PetscInt refinement = 0;
@@ -614,7 +614,7 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 			refinement = 0;
 
 		// Save the header in the HDF5 file
-		xolotlCore::HDF5Utils::fillHeader(2, Mx, h, My, h);
+		xolotlCore::HDF5Utils::fillHeader(2, Mx, hx, My, hy);
 
 		// Save the network in the HDF5 file
 		xolotlCore::HDF5Utils::fillNetwork(network);
