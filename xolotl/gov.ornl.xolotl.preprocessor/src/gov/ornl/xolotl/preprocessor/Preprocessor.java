@@ -1058,7 +1058,7 @@ public class Preprocessor {
 	public double[][] readConcentration(String fromName, int lastTimeStep, int i, int j, int k) {
 		// The status of the previous HDF5 operation
 		int status;
-		// The array for the times
+		// The array for the concentrations
 		double[][] concentration = new double[0][0];
 		
 		try {
@@ -1074,16 +1074,16 @@ public class Preprocessor {
 			int datasetId = H5.H5Dopen(fileId, datasetName,
 					HDF5Constants.H5P_DEFAULT);
 
-			// Read the dataset length attribute
-			int[] length = { -1 };
-			int lengthAttributeId = H5.H5Aopen(datasetId,
-					"datasetLength", HDF5Constants.H5P_DEFAULT);
-			status = H5.H5Aread(lengthAttributeId,
-					HDF5Constants.H5T_STD_I32LE, length);
-			status = H5.H5Aclose(lengthAttributeId);
+			// Get the dataspace object
+			int dataspaceId = H5.H5Dget_space(datasetId);
+
+			// Get the dimensions of the dataset
+			long[] dims = new long[2];
+			status = H5.H5Sget_simple_extent_dims(dataspaceId, dims, 
+					null);
 
 			// Create the array that will receive the concentrations
-			concentration = new double[length[0]][2];
+			concentration = new double[(int) dims[0]][(int) dims[1]];
 
 			// Read the data set
 			status = H5.H5Dread(datasetId,
@@ -1202,20 +1202,7 @@ public class Preprocessor {
 					HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL,
 					HDF5Constants.H5P_DEFAULT, concentration);
 
-			// Create the attribute for the dataset length and write it
-			int[] length = { concentration.length };
-			int lengthDataSpaceId = H5
-					.H5Screate(HDF5Constants.H5S_SCALAR);
-			int lengthAttributeId = H5.H5Acreate(datasetId,
-					"datasetLength", HDF5Constants.H5T_STD_I32LE,
-					lengthDataSpaceId, HDF5Constants.H5P_DEFAULT,
-					HDF5Constants.H5P_DEFAULT);
-			status = H5.H5Awrite(lengthAttributeId,
-					HDF5Constants.H5T_STD_I32LE, length);
-
 			// Close everything
-			status = H5.H5Sclose(lengthDataSpaceId);
-			status = H5.H5Aclose(lengthAttributeId);
 			status = H5.H5Sclose(concDataspaceId);
 			status = H5.H5Dclose(datasetId);
 			status = H5.H5Fclose(fileId);
@@ -1270,8 +1257,8 @@ public class Preprocessor {
 				
 				// Loop on all the position to read and copy the values of the
 				// concentrations
-				for (int k = 0; k <= gridSize[2]; k++) {
-					for (int j = 0; j <= gridSize[1]; j++) {
+				for (int k = -1; k <= gridSize[2]; k++) {
+					for (int j = -1; j <= gridSize[1]; j++) {
 						for (int i = 0; i <= gridSize[0]; i++) {
 							if (!hasConcentrationDataset(fromName, lastTimeStep, i, j, k))
 								continue;
