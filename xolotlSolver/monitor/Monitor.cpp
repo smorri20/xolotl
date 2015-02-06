@@ -91,7 +91,7 @@ PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
 
     // Obtain the current value of the solve timer.
     //
-    // Note that the solve timer keeps a cumultive time,
+    // Note that the solve timer keeps a cumulative time,
     // not a per-timestep time.   If you need a per-timestep
     // time, you will want to keep a static or global variable
     // with the last known timer value, and subtract it from

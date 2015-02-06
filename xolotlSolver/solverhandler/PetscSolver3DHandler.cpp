@@ -7,9 +7,9 @@
 namespace xolotlSolver {
 
 /**
- * This operation checks a Petsc error code and converts it to a bool.
+ * This operation checks a PETSc error code and converts it to a bool.
  *
- * @param errorCode The Petsc error code.
+ * @param errorCode The PETSc error code.
  * @return True if everything is OK, false otherwise.
  */
 inline bool checkPetscError(PetscErrorCode errorCode) {
@@ -196,7 +196,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	PETSC_IGNORE);
 	checkPetscError(ierr);
 
-	// Pointers to the Petsc arrays that start at the beginning (xs, ys, zs) of the
+	// Pointers to the PETSc arrays that start at the beginning (xs, ys, zs) of the
 	// local array!
 	PetscScalar ****concs, ****updatedConcs;
 	// Get pointers to vector data

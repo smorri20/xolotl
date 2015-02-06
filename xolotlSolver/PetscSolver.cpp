@@ -48,8 +48,8 @@ static bool temperatureChanged = false;
 /* ----- Error Handling Code ----- */
 
 /**
- * This operation checks a Petsc error code and converts it to a bool.
- * @param errorCode The Petsc error code.
+ * This operation checks a PETSc error code and converts it to a bool.
+ * @param errorCode The PETSc error code.
  * @return True if everything is OK, false otherwise.
  */
 static inline bool checkPetscError(PetscErrorCode errorCode) {
@@ -57,8 +57,8 @@ static inline bool checkPetscError(PetscErrorCode errorCode) {
 }
 
 /**
- * This operation "returns" in a way that Petsc expects.
- * @return The return code from Petsc.
+ * This operation "returns" in a way that PETSc expects.
+ * @return The return code from PETSc.
  */
 static inline int petscReturn() {
 	PetscFunctionReturn(0);

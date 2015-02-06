@@ -8,7 +8,7 @@ namespace xolotlSolver {
 
 /**
  * This class realizes the ISolver interface to solve the
- * advection-diffusion-reaction problem with the Petsc solvers from Argonne
+ * advection-diffusion-reaction problem with the PETSc solvers from Argonne
  * National Laboratory.
  */
 class PetscSolver: public Solver {
@@ -16,7 +16,7 @@ private:
 
 	/**
 	 * This operation configures the initial conditions of the grid in Xolotl.
-	 * @param data The DM (data manager) created by Petsc
+	 * @param data The DM (data manager) created by PETSc
 	 * @param solutionVector The solution vector that contains the PDE
 	 * solution and which needs to be initialized.
 	 * @return The error code. 0 if there is no error.
