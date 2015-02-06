@@ -51,7 +51,7 @@ public:
 	/**
 	 * Create everything needed before starting to solve.
 	 *
-	 * @param da The PETSC distributed array
+	 * @param da The PETSc distributed array
 	 * @param nx The number of grid points in the x direction (depth)
 	 * @param hx The step size in the x direction
 	 * @param ny The number of grid points in the y direction
@@ -73,8 +73,8 @@ public:
 	/**
 	 * Initialize the concentration solution vector.
 	 *
-	 * @param da The PETSC distributed array
-	 * @param C The PETSC solution vector
+	 * @param da The PETSc distributed array
+	 * @param C The PETSc solution vector
 	 */
 	virtual void initializeConcentration(DM &da, Vec &C) const = 0;
 
@@ -83,8 +83,8 @@ public:
 	 * vector of concentrations.
 	 *
 	 * @param ts The PETSc time stepper
-	 * @param localC The PETSC local solution vector
-	 * @param F The updated PETSC solution vector
+	 * @param localC The PETSc local solution vector
+	 * @param F The updated PETSc solution vector
 	 * @param ftime The real time
 	 * @param temperatureChanged True is the temperature has changed at this time
 	 */
@@ -95,7 +95,7 @@ public:
 	 * Compute the off-diagonal part of the Jacobian which is related to cluster's motion.
 	 *
 	 * @param ts The PETSc time stepper
-	 * @param localC The PETSC local solution vector
+	 * @param localC The PETSc local solution vector
 	 * @param J The Jacobian
 	 */
 	virtual void computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J) const = 0;
@@ -104,7 +104,7 @@ public:
 	 * Compute the diagonal part of the Jacobian which is related to cluster reactions.
 	 *
 	 * @param ts The PETSc time stepper
-	 * @param localC The PETSC local solution vector
+	 * @param localC The PETSc local solution vector
 	 * @param J The Jacobian
 	 */
 	virtual void computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) = 0;

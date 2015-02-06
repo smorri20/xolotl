@@ -20,8 +20,8 @@ namespace xolotlSolver {
 /* ----- Error Handling Code ----- */
 
 /**
- * This operation checks a Petsc error code and converts it to a bool.
- * @param errorCode The Petsc error code.
+ * This operation checks a PETSc error code and converts it to a bool.
+ * @param errorCode The PETSc error code.
  * @return True if everything is OK, false otherwise.
  */
 static inline bool checkPetscError(PetscErrorCode errorCode) {
@@ -408,7 +408,7 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 				// Else if it is NOT the locally owned part of the grid but still procId == 0,
 				// it should receive the values of the concentration to integrate them
 				else if (procId == 0) {
-					// Receive the concentration fron other processes
+					// Receive the concentration from other processes
 					double tempConc = 0.0;
 					MPI_Recv(&tempConc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 2, MPI_COMM_WORLD,
 							MPI_STATUS_IGNORE);
@@ -531,7 +531,7 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 	// Create a point here so that it is not created and deleted in the loop
 	xolotlViz::Point thePoint;
 
-	// Loop on the full grid, Y and X first because they are the axis of the plot
+	// Loop on the full grid, Z and X first because they are the axis of the plot
 	for (int k = 0; k < Mz; k++) {
 		// Compute z
 		z = k * hz;

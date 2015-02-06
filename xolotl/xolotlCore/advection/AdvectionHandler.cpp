@@ -55,7 +55,7 @@ void AdvectionHandler::computePartialsForAdvection(
 		int index = cluster->getId() - 1;
 		// Get the diffusion coefficient of the cluster
 		double diffCoeff = cluster->getDiffusionCoefficient();
-		// Get the sink strenght value
+		// Get the sink strength value
 		double sinkStrength = sinkStrengthVector[i];
 
 		// Set the cluster index that will be used by PetscSolver
