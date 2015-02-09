@@ -39,14 +39,17 @@ public:
 	 * This method is called by the RHSFunction from the PetscSolver.
 	 *
 	 * @param network The network
-	 * @param s The space parameter, depending on the grid step size
 	 * @param concVector The pointer to the pointer of arrays of concentration at middle/
 	 * left/right/bottom/top/front/back grid points
 	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
 	 * point where the diffusion is computed used to find the next solution
+	 * @param sx The space parameter, depending on the grid step size in the x direction
+	 * @param sy The space parameter, depending on the grid step size in the y direction
+	 * @param sz The space parameter, depending on the grid step size in the z direction
 	 */
-	virtual void computeDiffusion(PSIClusterReactionNetwork *network, double s,
-			double **concVector, double *updatedConcOffset) = 0;
+	virtual void computeDiffusion(PSIClusterReactionNetwork *network,
+			double **concVector, double *updatedConcOffset,
+			double sx, double sy = 0.0, double sz = 0.0) = 0;
 
 	/**
 	 * Compute the partials due to the diffusion of all the diffusing clusters given
@@ -54,14 +57,16 @@ public:
 	 * This method is called by the RHSJacobian from the PetscSolver.
 	 *
 	 * @param network The network
-	 * @param s The space parameter, depending on the grid step size
 	 * @param val The pointer to the array that will contain the values of partials
 	 * for the diffusion
 	 * @param indices The pointer to the array that will contain the indices of the
 	 * diffusing clusters in the network
+	 * @param sx The space parameter, depending on the grid step size in the x direction
+	 * @param sy The space parameter, depending on the grid step size in the y direction
+	 * @param sz The space parameter, depending on the grid step size in the z direction
 	 */
 	virtual void computePartialsForDiffusion(PSIClusterReactionNetwork *network,
-			double s, double *val, int *indices) = 0;
+			double *val, int *indices, double sx, double sy = 0.0, double sz = 0.0) = 0;
 
 	/**
 	 * Get the total number of diffusing clusters in the network.

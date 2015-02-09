@@ -203,7 +203,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	PetscScalar *concOffset, *updatedConcOffset;
 
 	// Set some step size variable
-	double s = 1.0 / (hX * hX);
+	double sx = 1.0 / (hX * hX);
 
 	// Get the incident flux vector
 	auto incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime);
@@ -268,8 +268,8 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		}
 
 		// ---- Compute diffusion over the locally owned part of the grid -----
-		diffusionHandler->computeDiffusion(network, s, concVector,
-				updatedConcOffset);
+		diffusionHandler->computeDiffusion(network, concVector,
+				updatedConcOffset, sx);
 
 		// ---- Compute advection over the locally owned part of the grid -----
 		advectionHandler->computeAdvection(network, hX, gridPosition,
@@ -316,7 +316,7 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	checkPetscError(ierr);
 
 	// Setup some step size variables
-	double s = 1.0 / (hX * hX);
+	double sx = 1.0 / (hX * hX);
 
 	// Get pointers to vector data
 	PetscScalar **concs;
@@ -363,7 +363,7 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 		network->updateConcentrationsFromArray(concOffset);
 
 		// Get the partial derivatives for the diffusion
-		diffusionHandler->computePartialsForDiffusion(network, s, vals, indices);
+		diffusionHandler->computePartialsForDiffusion(network, vals, indices, sx);
 
 		// Loop on the number of diffusion cluster to set the values in the Jacobian
 		for (int i = 0; i < nDiff; i++) {

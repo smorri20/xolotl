@@ -483,8 +483,10 @@ public class Preprocessor {
 		int[] nxGrid = { Integer.parseInt(args.getNxGrid()) };
 		int[] nyGrid = { Integer.parseInt(args.getNyGrid()) };
 		int[] nzGrid = { Integer.parseInt(args.getNzGrid()) };
-		//Get the step size
-		double[] h = { Double.parseDouble(args.getStepSize()) };
+		//Get the step sizes
+		double[] hx = { Double.parseDouble(args.getXStepSize()) };
+		double[] hy = { Double.parseDouble(args.getYStepSize()) };
+		double[] hz = { Double.parseDouble(args.getZStepSize()) };
 
 		try {
 			// Open the HDF5 file
@@ -517,7 +519,7 @@ public class Preprocessor {
 					HDF5Constants.H5T_IEEE_F64LE, dataSpaceId,
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
 			status = H5.H5Awrite(attributeId, HDF5Constants.H5T_IEEE_F64LE,
-					h);
+					hx);
 			status = H5.H5Aclose(attributeId);
 			
 			// Create, write, and close the ny attribute (nyGrid)
@@ -532,7 +534,7 @@ public class Preprocessor {
 					HDF5Constants.H5T_IEEE_F64LE, dataSpaceId,
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
 			status = H5.H5Awrite(attributeId, HDF5Constants.H5T_IEEE_F64LE,
-					h);
+					hy);
 			status = H5.H5Aclose(attributeId);
 			
 			// Create, write, and close the nz attribute (nzGrid)
@@ -547,7 +549,7 @@ public class Preprocessor {
 					HDF5Constants.H5T_IEEE_F64LE, dataSpaceId,
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
 			status = H5.H5Awrite(attributeId, HDF5Constants.H5T_IEEE_F64LE,
-					h);
+					hz);
 			status = H5.H5Aclose(attributeId);
 
 			// Close everything
