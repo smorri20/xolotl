@@ -172,7 +172,7 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) const {
 }
 
 void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
-		PetscReal ftime, bool &temperatureChanged) {
+		PetscReal ftime) {
 	PetscErrorCode ierr;
 
 	// Get the local data vector from petsc
@@ -259,9 +259,6 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			if (!xolotlCore::equal(temperature, lastTemperature)) {
 				network->setTemperature(temperature);
 				lastTemperature = temperature;
-				// Set the boolean temperatureChanged to true to recompute the
-				// off-diagonal part of the Jacobian later
-				temperatureChanged = true;
 			}
 
 			// Copy data into the PSIClusterReactionNetwork so that it can
