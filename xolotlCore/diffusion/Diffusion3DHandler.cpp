@@ -4,7 +4,8 @@
 namespace xolotlCore {
 
 void Diffusion3DHandler::computeDiffusion(PSIClusterReactionNetwork *network,
-		double s, double **concVector, double *updatedConcOffset) {
+		double **concVector, double *updatedConcOffset,
+		double sx, double sy, double sz) {
 	// Get all the reactant
 	auto reactants = network->getAll();
 	// Get the number of diffusing cluster
@@ -31,8 +32,9 @@ void Diffusion3DHandler::computeDiffusion(PSIClusterReactionNetwork *network,
 
 		// Use a simple midpoint stencil to compute the concentration
 		double conc = cluster->getDiffusionCoefficient()
-						* (-6.0 * oldConc + oldLeftConc + oldRightConc + oldBottomConc
-								+ oldTopConc + oldFrontConc + oldBackConc) * s;
+						* (sx * (oldLeftConc + oldRightConc - 2.0 * oldConc)
+								+ sy * (oldBottomConc + oldTopConc - 2.0 * oldConc)
+								+ sz * (oldFrontConc + oldBackConc - 2.0 * oldConc));
 
 		// Update the concentration of the cluster
 		updatedConcOffset[index] += conc;
@@ -43,7 +45,8 @@ void Diffusion3DHandler::computeDiffusion(PSIClusterReactionNetwork *network,
 
 void Diffusion3DHandler::computePartialsForDiffusion(
 		PSIClusterReactionNetwork *network,
-		double s, double *val, int *indices) {
+		double *val, int *indices,
+		double sx, double sy, double sz) {
 	// Get all the reactant
 	auto reactants = network->getAll();
 	// And the size of the network
@@ -66,13 +69,13 @@ void Diffusion3DHandler::computePartialsForDiffusion(
 
 		// Compute the partial derivatives for diffusion of this cluster
 		// for the middle, left, right, bottom, top, front, and back grid point
-		val[i * 7] = -6.0 * diffCoeff * s; // middle
-		val[(i * 7) + 1] = diffCoeff * s; // left
-		val[(i * 7) + 2] = diffCoeff * s; // right
-		val[(i * 7) + 3] = diffCoeff * s; // bottom
-		val[(i * 7) + 4] = diffCoeff * s; // top
-		val[(i * 7) + 5] = diffCoeff * s; // front
-		val[(i * 7) + 6] = diffCoeff * s; // back
+		val[i * 7] = -2.0 * diffCoeff * (sx + sy + sz); // middle
+		val[(i * 7) + 1] = diffCoeff * sx; // left
+		val[(i * 7) + 2] = diffCoeff * sx; // right
+		val[(i * 7) + 3] = diffCoeff * sy; // bottom
+		val[(i * 7) + 4] = diffCoeff * sy; // top
+		val[(i * 7) + 5] = diffCoeff * sz; // front
+		val[(i * 7) + 6] = diffCoeff * sz; // back
 	}
 
 	return;

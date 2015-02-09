@@ -76,8 +76,14 @@ public class ArgumentsTest {
 			// Check that the default networkFile is networkInit.h5
 			assertEquals("networkInit.h5", args.getNetworkFile());
 
-			// Check that the default stepSize is 1.0
-			assertEquals("1.0", args.getStepSize());
+			// Check that the default xStepSize is 1.0
+			assertEquals("1.0", args.getXStepSize());
+
+			// Check that the default yStepSize is 0.0
+			assertEquals("0.0", args.getYStepSize());
+
+			// Check that the default zStepSize is 0.0
+			assertEquals("0.0", args.getZStepSize());
 
 			// Check the default petscArgs
 			assertEquals(
@@ -108,7 +114,7 @@ public class ArgumentsTest {
 					"--startTemp", "900", "--material", "W111", "--perfHandler",
 					"dummy", "--dimensions", "2", "--nyGrid", "50", "--maxHeSize", 
 					"7", "--maxVSize", "30", "--maxISize", "5", "--checkpoint", 
-					"xolotlStop.h5", "--stepSize", "3.0", "--initialV", "0.05"});
+					"xolotlStop.h5", "--xStepSize", "3.0", "--initialV", "0.05"});
 			
 			// Check that the maximum Helium cluster size is 7
 			assertEquals(7, args.getMaxHeSize());
@@ -155,11 +161,8 @@ public class ArgumentsTest {
 			// Check its value
 			assertEquals("0.05", args.getInitialV());
 
-			// Check that the default networkFile is networkInit.h5
-			assertEquals("networkInit.h5", args.getNetworkFile());
-
-			// Check that the default networkFile is networkInit.h5
-			assertEquals("3.0", args.getStepSize());
+			// Check that the xStepSize was set to 3.0
+			assertEquals("3.0", args.getXStepSize());
 
 			// Check the default petscArgs
 			assertEquals(

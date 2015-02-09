@@ -100,8 +100,8 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	concVector[2] = conc + 2 * size; // right
 
 	// Compute the diffusion at this grid point
-	diffusionHandler.computeDiffusion(network, s, concVector,
-			updatedConcOffset);
+	diffusionHandler.computeDiffusion(network, concVector,
+			updatedConcOffset, s);
 
 	// Check the new values of updatedConcOffset
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 1.0393e+12, 0.01);
@@ -123,8 +123,8 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	double *valPointer = &val[0];
 
 	// Compute the partial derivatives for the diffusion a the grid point 1
-	diffusionHandler.computePartialsForDiffusion(network, s, valPointer,
-			indicesPointer);
+	diffusionHandler.computePartialsForDiffusion(network, valPointer,
+			indicesPointer, s);
 
 	// Check the values for the indices
 	BOOST_REQUIRE_EQUAL(indices[0], 0);
