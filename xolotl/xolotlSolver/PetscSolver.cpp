@@ -40,11 +40,6 @@ extern PetscErrorCode setupPetsc1DMonitor(TS);
 extern PetscErrorCode setupPetsc2DMonitor(TS);
 extern PetscErrorCode setupPetsc3DMonitor(TS);
 
-/**
- * A boolean that is true if the temperature has changed.
- */
-static bool temperatureChanged = false;
-
 /* ----- Error Handling Code ----- */
 
 /**
@@ -134,7 +129,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 
 	// Compute the new concentrations
 	auto solverHandler = PetscSolver::getSolverHandler();
-	solverHandler->updateConcentration(ts, localC, F, ftime, temperatureChanged);
+	solverHandler->updateConcentration(ts, localC, F, ftime);
 
 	// Stop the RHSFunction Timer
 	RHSFunctionTimer->stop();
@@ -169,23 +164,11 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
 
-	// Only compute the off-diagonal part of the Jacobian if the temperature has changed
-	if (temperatureChanged) {
+	/* ----- Compute the off-diagonal part of the Jacobian ----- */
+	solverHandler->computeOffDiagonalJacobian(ts, localC, J);
 
-		// Compute the off-diagonal part of the Jacobian
-		solverHandler->computeOffDiagonalJacobian(ts, localC, J);
-
-		ierr = MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-		ierr = MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-		//ierr = MatSetOption(J, MAT_NEW_NONZERO_LOCATIONS, PETSC_FALSE);CHKERRQ(ierr);
-		ierr = MatStoreValues(J);CHKERRQ(ierr);
-//		MatSetFromOptions(J);
-		temperatureChanged = false;
-		// Debug line for viewing the matrix
-		//MatView(J, PETSC_VIEWER_STDOUT_WORLD);
-	} else {
-		ierr = MatRetrieveValues(J);CHKERRQ(ierr);
-	}
+	ierr = MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+	ierr = MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
 
 	/* ----- Compute the partial derivatives for the reaction term ----- */
 	solverHandler->computeDiagonalJacobian(ts, localC, J);

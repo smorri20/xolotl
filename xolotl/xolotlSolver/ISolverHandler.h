@@ -86,10 +86,8 @@ public:
 	 * @param localC The PETSc local solution vector
 	 * @param F The updated PETSc solution vector
 	 * @param ftime The real time
-	 * @param temperatureChanged True is the temperature has changed at this time
 	 */
-	virtual void updateConcentration(TS &ts, Vec &localC, Vec &F, PetscReal ftime,
-			bool &temperatureChanged) = 0;
+	virtual void updateConcentration(TS &ts, Vec &localC, Vec &F, PetscReal ftime) = 0;
 
 	/**
 	 * Compute the off-diagonal part of the Jacobian which is related to cluster's motion.
