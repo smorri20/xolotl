@@ -780,13 +780,6 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 		double hy = solverHandler->getStepSizeY();
 		double hz = solverHandler->getStepSizeZ();
 
-		// Get the refinement of the grid
-		PetscInt refinement = 0;
-		ierr = PetscOptionsGetInt(NULL, "-da_refine", &refinement, &flag);
-		checkPetscError(ierr);
-		if (!flag)
-			refinement = 0;
-
 		// Save the header in the HDF5 file
 		xolotlCore::HDF5Utils::fillHeader(3, Mx, hx, My, hy, Mz, hz);
 

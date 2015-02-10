@@ -606,13 +606,6 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		double hx = solverHandler->getStepSizeX();
 		double hy = solverHandler->getStepSizeY();
 
-		// Get the refinement of the grid
-		PetscInt refinement = 0;
-		ierr = PetscOptionsGetInt(NULL, "-da_refine", &refinement, &flag);
-		checkPetscError(ierr);
-		if (!flag)
-			refinement = 0;
-
 		// Save the header in the HDF5 file
 		xolotlCore::HDF5Utils::fillHeader(2, Mx, hx, My, hy);
 

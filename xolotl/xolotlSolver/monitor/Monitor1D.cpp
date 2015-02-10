@@ -1221,13 +1221,6 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		// Setup step size variable
 		double hx = solverHandler->getStepSizeX();
 
-		// Get the refinement of the grid
-		PetscInt refinement = 0;
-		ierr = PetscOptionsGetInt(NULL, "-da_refine", &refinement, &flag);
-		checkPetscError(ierr);
-		if (!flag)
-			refinement = 0;
-
 		// Save the header in the HDF5 file
 		xolotlCore::HDF5Utils::fillHeader(1, Mx, hx);
 

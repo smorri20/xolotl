@@ -19,9 +19,8 @@ private:
 	 * @param data The DM (data manager) created by PETSc
 	 * @param solutionVector The solution vector that contains the PDE
 	 * solution and which needs to be initialized.
-	 * @return The error code. 0 if there is no error.
 	 */
-	PetscErrorCode setupInitialConditions(DM data, Vec solutionVector);
+	void setupInitialConditions(DM data, Vec solutionVector);
 
 public:
 
