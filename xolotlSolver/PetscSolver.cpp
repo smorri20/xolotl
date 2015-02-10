@@ -59,33 +59,12 @@ static inline int petscReturn() {
 	PetscFunctionReturn(0);
 }
 
-PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
-
-	// Local Declarations
-	PetscErrorCode ierr;
-	PetscInt i, nI, nHe, nV, cnt = 0;
-	char string[16];
-	auto allReactants = network->getAll();
-	int dof = allReactants->size();
-	std::map<std::string, int> composition;
-
-	/* Name each of the concentrations */
-	for (i = 0; i < dof; i++) {
-		composition = allReactants->at(i)->getComposition();
-		nHe = composition["He"];
-		nV = composition["V"];
-		nI = composition["I"];
-		ierr = PetscSNPrintf(string, 16, "He-%d,V-%d,I-%d", nHe, nV, nI);
-		checkPetscError(ierr);
-		ierr = DMDASetFieldName(da, cnt++, string);
-		checkPetscError(ierr);
-	}
-
+void PetscSolver::setupInitialConditions(DM da, Vec C) {
 	// Initialize the concentrations in the solution vector
 	auto solverHandler = PetscSolver::getSolverHandler();
 	solverHandler->initializeConcentration(da, C);
 
-	PetscFunctionReturn(0);
+	return;
 }
 
 /* ------------------------------------------------------------------- */
@@ -307,8 +286,7 @@ void PetscSolver::solve() {
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Set initial conditions
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = setupInitialConditions(da, C);
-	checkPetscError(ierr);
+	setupInitialConditions(da, C);
 
 	// Set the output precision for std::out
 	std::cout.precision(16);
