@@ -63,8 +63,8 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	// Check the total number of diffusing clusters
 	BOOST_REQUIRE_EQUAL(diffusionHandler.getNumberOfDiffusing(), 7);
 
-	// The size parameter
-	double s = 1.0;
+	// The size parameter in the x direction
+	double sx = 1.0;
 
 	// The arrays of concentration
 	double concentration[3*size];
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 
 	// Compute the diffusion at this grid point
 	diffusionHandler.computeDiffusion(network, concVector,
-			updatedConcOffset, s);
+			updatedConcOffset, sx);
 
 	// Check the new values of updatedConcOffset
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 1.0393e+12, 0.01);
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 
 	// Compute the partial derivatives for the diffusion a the grid point 1
 	diffusionHandler.computePartialsForDiffusion(network, valPointer,
-			indicesPointer, s);
+			indicesPointer, sx);
 
 	// Check the values for the indices
 	BOOST_REQUIRE_EQUAL(indices[0], 0);
