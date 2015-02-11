@@ -90,7 +90,7 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 	ierr = DMGetLocalVector(da, &localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
-	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, localSolution, &solutionArray);CHKERRQ(ierr);
 
 	// Get the corners of the grid
 	ierr = DMDAGetCorners(da, &xs, &ys, &zs, &xm, &ym, &zm);CHKERRQ(ierr);
@@ -216,14 +216,16 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time
 	// Get the corners of the grid
 	ierr = DMDAGetCorners(da, &xs, &ys, &zs, &xm, &ym, &zm);CHKERRQ(ierr);
 
+	// Get the physical grid in the x direction
+	auto grid = solverHandler->getXGrid();
+
 	// Setup step size variables
-	double hx = solverHandler->getStepSizeX();
 	double hy = solverHandler->getStepSizeY();
 	double hz = solverHandler->getStepSizeZ();
 
 	// Get the array of concentration
 	PetscReal ****solutionArray;
-	ierr = DMDAVecGetArrayDOF(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
 
 	// Store the concentration over the grid
 	double heConcentration = 0;
@@ -243,7 +245,8 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time
 				for (int l = 0; l < heIndices3D.size(); l++) {
 					// Add the current concentration times the number of helium in the cluster
 					// (from the weight vector)
-					heConcentration += gridPointSolution[heIndices3D[l]] * heWeights3D[l] * hx;
+					heConcentration += gridPointSolution[heIndices3D[l]] * heWeights3D[l]
+					                                     * (grid[i] - grid[i-1]);
 				}
 			}
 		}
@@ -342,7 +345,7 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 	ierr = DMGetLocalVector(da, &localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
-	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, localSolution, &solutionArray);CHKERRQ(ierr);
 
 	// Get the corners of the grid
 	ierr = DMDAGetCorners(da, &xs, &ys, &zs, &xm, &ym, &zm);CHKERRQ(ierr);
@@ -358,8 +361,10 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network
 	auto network = solverHandler->getNetwork();
 
+	// Get the physical grid in the x direction
+	auto grid = solverHandler->getXGrid();
+
 	// Setup step size variables
-	double hx = solverHandler->getStepSizeX();
 	double hy = solverHandler->getStepSizeY();
 	double hz = solverHandler->getStepSizeZ();
 
@@ -379,7 +384,7 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 
 		for (int i = 0; i < Mx; i++) {
 			// Compute x
-			x = i * hx;
+			x = grid[i];
 
 			// Initialize the value of the concentration to integrate over Z
 			double conc = 0.0;
@@ -501,7 +506,7 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 	ierr = DMGetLocalVector(da, &localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
-	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, localSolution, &solutionArray);CHKERRQ(ierr);
 
 	// Get the corners of the grid
 	ierr = DMDAGetCorners(da, &xs, &ys, &zs, &xm, &ym, &zm);CHKERRQ(ierr);
@@ -517,8 +522,10 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network
 	auto network = solverHandler->getNetwork();
 
+	// Get the physical grid in the x direction
+	auto grid = solverHandler->getXGrid();
+
 	// Setup step size variables
-	double hx = solverHandler->getStepSizeX();
 	double hy = solverHandler->getStepSizeY();
 	double hz = solverHandler->getStepSizeZ();
 
@@ -538,7 +545,7 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 
 		for (int i = 0; i < Mx; i++) {
 			// Compute x
-			x = i * hx;
+			x = grid[i];
 
 			// Initialize the value of the concentration to integrate over Y
 			double conc = 0.0;
@@ -775,13 +782,16 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 		// Get the solver handler
 		auto solverHandler = PetscSolver::getSolverHandler();
 
+		// Get the physical grid in the x direction
+		auto grid = solverHandler->getXGrid();
+
 		// Setup step size variables
-		double hx = solverHandler->getStepSizeX();
 		double hy = solverHandler->getStepSizeY();
 		double hz = solverHandler->getStepSizeZ();
 
 		// Save the header in the HDF5 file
-		xolotlCore::HDF5Utils::fillHeader(3, Mx, hx, My, hy, Mz, hz);
+		xolotlCore::HDF5Utils::fillHeader(3, Mx, grid[1] - grid[0],
+				My, hy, Mz, hz);
 
 		// Save the network in the HDF5 file
 		xolotlCore::HDF5Utils::fillNetwork(network);

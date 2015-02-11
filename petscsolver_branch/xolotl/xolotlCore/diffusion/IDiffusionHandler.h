@@ -35,7 +35,7 @@ public:
 
 	/**
 	 * Compute the flux due to the diffusion for all the cluster that are diffusing,
-	 * given the space parameter s.
+	 * given the different space parameters.
 	 * This method is called by the RHSFunction from the PetscSolver.
 	 *
 	 * @param network The network
@@ -43,17 +43,18 @@ public:
 	 * left/right/bottom/top/front/back grid points
 	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
 	 * point where the diffusion is computed used to find the next solution
-	 * @param sx The space parameter, depending on the grid step size in the x direction
+	 * @param hxLeft The step size on the left side of the point in the x direction
+	 * @param hxRight The step size on the right side of the point in the x direction
 	 * @param sy The space parameter, depending on the grid step size in the y direction
 	 * @param sz The space parameter, depending on the grid step size in the z direction
 	 */
 	virtual void computeDiffusion(PSIClusterReactionNetwork *network,
 			double **concVector, double *updatedConcOffset,
-			double sx, double sy = 0.0, double sz = 0.0) = 0;
+			double hxLeft, double hxRight, double sy = 0.0, double sz = 0.0) = 0;
 
 	/**
 	 * Compute the partials due to the diffusion of all the diffusing clusters given
-	 * the space parameter s.
+	 * the different space parameters.
 	 * This method is called by the RHSJacobian from the PetscSolver.
 	 *
 	 * @param network The network
@@ -61,12 +62,14 @@ public:
 	 * for the diffusion
 	 * @param indices The pointer to the array that will contain the indices of the
 	 * diffusing clusters in the network
-	 * @param sx The space parameter, depending on the grid step size in the x direction
+	 * @param hxLeft The step size on the left side of the point in the x direction
+	 * @param hxRight The step size on the right side of the point in the x direction
 	 * @param sy The space parameter, depending on the grid step size in the y direction
 	 * @param sz The space parameter, depending on the grid step size in the z direction
 	 */
 	virtual void computePartialsForDiffusion(PSIClusterReactionNetwork *network,
-			double *val, int *indices, double sx, double sy = 0.0, double sz = 0.0) = 0;
+			double *val, int *indices, double hxLeft, double hxRight,
+			double sy = 0.0, double sz = 0.0) = 0;
 
 	/**
 	 * Get the total number of diffusing clusters in the network.

@@ -114,7 +114,8 @@ public class ArgumentsTest {
 					"--startTemp", "900", "--material", "W111", "--perfHandler",
 					"dummy", "--dimensions", "2", "--nyGrid", "50", "--maxHeSize", 
 					"7", "--maxVSize", "30", "--maxISize", "5", "--checkpoint", 
-					"xolotlStop.h5", "--xStepSize", "3.0", "--initialV", "0.05"});
+					"xolotlStop.h5", "--xStepSize", "3.0", "--initialV", "0.05",
+					"--regularGrid", "yes"});
 			
 			// Check that the maximum Helium cluster size is 7
 			assertEquals(7, args.getMaxHeSize());
@@ -163,6 +164,12 @@ public class ArgumentsTest {
 
 			// Check that the xStepSize was set to 3.0
 			assertEquals("3.0", args.getXStepSize());
+
+			// Check if there is a regular grid argument
+			assertEquals(true, args.isRegularGrid());
+
+			// Check its value
+			assertEquals("yes", args.getRegularGrid());
 
 			// Check the default petscArgs
 			assertEquals(

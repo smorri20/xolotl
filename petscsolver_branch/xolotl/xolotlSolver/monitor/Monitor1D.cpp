@@ -98,7 +98,7 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 	ierr = DMGetLocalVector(da, &localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
-	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, localSolution, &solutionArray);CHKERRQ(ierr);
 
 	// Get the corners of the grid
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
@@ -218,12 +218,12 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 	// Get the corners of the grid
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
 
-	// Setup step size variable
-	double hx = solverHandler->getStepSizeX();
+	// Get the physical grid
+	auto grid = solverHandler->getXGrid();
 
 	// Get the array of concentration
 	PetscReal **solutionArray;
-	ierr = DMDAVecGetArrayDOF(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
 
 	// Store the concentration over the grid
 	double heConcentration = 0;
@@ -240,7 +240,8 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 		for (int i = 0; i < heIndices1D.size(); i++) {
 			// Add the current concentration times the number of helium in the cluster
 			// (from the weight vector)
-			heConcentration += gridPointSolution[heIndices1D[i]] * heWeights1D[i] * hx;
+			heConcentration += gridPointSolution[heIndices1D[i]] * heWeights1D[i]
+			                                     * (grid[xi] - grid[xi-1]);
 		}
 	}
 
@@ -323,7 +324,7 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 	ierr = DMGetLocalVector(da, &localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
-	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, localSolution, &solutionArray);CHKERRQ(ierr);
 
 	// Get the corners of the grid
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
@@ -334,11 +335,11 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network
 	auto network = solverHandler->getNetwork();
 
-	// Setup step size variable
-	double hx = solverHandler->getStepSizeX();
+	// Get the physical grid
+	auto grid = solverHandler->getXGrid();
 
 	// Choice of the cluster to be plotted
-	int iCluster = 6;
+	int iCluster = 0;
 
 	if (procId == 0) {
 		// Create a Point vector to store the data to give to the data provider
@@ -348,7 +349,7 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 		// Loop on the grid
 		for (xi = xs; xi < xs + xm; xi++) {
 			// Dump x
-			x = xi * hx;
+			x = grid[xi];
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[xi];
 
@@ -428,7 +429,7 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 		// Loop on the grid
 		for (xi = xs; xi < xs + xm; xi++) {
 			// Dump x
-			x = xi * hx;
+			x = grid[xi];
 
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[xi];
@@ -476,7 +477,7 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 	ierr = DMGetLocalVector(da, &localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
-	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, localSolution, &solutionArray);CHKERRQ(ierr);
 
 	// Get the corners of the grid
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
@@ -488,8 +489,8 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 	auto network = solverHandler->getNetwork();
 	const int networkSize = network->size();
 
-	// Setup step size variable
-	double hx = solverHandler->getStepSizeX();
+	// Get the physical grid
+	auto grid = solverHandler->getXGrid();
 
 	// To plot a maximum of 18 clusters of the whole benchmark
 	const int loopSize = std::min(18, networkSize);
@@ -502,7 +503,7 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 		// Loop on the grid
 		for (xi = xs; xi < xs + xm; xi++) {
 			// Dump x
-			x = xi * hx;
+			x = grid[xi];
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[xi];
 
@@ -589,7 +590,7 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 		// Loop on the grid
 		for (xi = xs; xi < xs + xm; xi++) {
 			// Dump x
-			x = xi * hx;
+			x = grid[xi];
 
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[xi];
@@ -640,7 +641,7 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 	ierr = DMGetLocalVector(da, &localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
-	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, localSolution, &solutionArray);CHKERRQ(ierr);
 
 	// Get the corners of the grid
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
@@ -651,8 +652,8 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network
 	auto network = solverHandler->getNetwork();
 
-	// Setup step size variable
-	double hx = solverHandler->getStepSizeX();
+	// Get the physical grid
+	auto grid = solverHandler->getXGrid();
 
 	// Get the maximum size of HeV clusters
 	auto psiNetwork = (PSIClusterReactionNetwork *) network;
@@ -726,7 +727,7 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 
 		// Change the title of the plot
 		std::stringstream title;
-		title << "Concentration at Depth: " << xi * hx << " nm";
+		title << "Concentration at Depth: " << grid[xi] << " nm";
 		surfacePlot1D->plotLabelProvider->titleLabel = title.str();
 		// Give the time to the label provider
 		std::stringstream timeLabel;
@@ -773,7 +774,7 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 	ierr = DMGetLocalVector(da, &localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
-	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, localSolution, &solutionArray);CHKERRQ(ierr);
 
 	// Get the corners of the grid
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
@@ -784,8 +785,8 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network
 	auto network = solverHandler->getNetwork();
 
-	// Setup step size variable
-	double hx = solverHandler->getStepSizeX();
+	// Get the physical grid
+	auto grid = solverHandler->getXGrid();
 
 	// Get the maximum size of HeV clusters
 	auto psiNetwork = (PSIClusterReactionNetwork *) network;
@@ -806,7 +807,7 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 	// Check the concentration of the biggest cluster at each grid point
 	for (xi = xs; xi < xs + xm; xi++) {
 		// Position
-		x = xi * hx;
+		x = grid[x];
 
 		// Get the pointer to the beginning of the solution data for this grid point
 		gridPointSolution = solutionArray[xi];
@@ -901,7 +902,7 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt timestep, PetscReal time,
 	ierr = DMGetLocalVector(da, &localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
-	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, localSolution, &solutionArray);CHKERRQ(ierr);
 
 	// Get the corners of the grid
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
@@ -915,9 +916,8 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network
 	auto network = solverHandler->getNetwork();
 
-	// Setup step size variables
-	double hx = solverHandler->getStepSizeX();
-	double s = 1.0 / (hx * hx);
+	// Get the physical grid
+	auto grid = solverHandler->getXGrid();
 
 	// Get the concentrations at xi = 1
 	xi = 1;
@@ -953,8 +953,12 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt timestep, PetscReal time,
 		int size = cluster->getSize();
 		double coef = cluster->getDiffusionCoefficient();
 
-		// Compute the flux
-		newFlux += (double) size * s * coef * conc;
+		// Factor for finite difference
+		double hxLeft = grid[xi] - grid[xi-1];
+		double hxRight = grid[xi+1] - grid[xi];
+		double factor = 2.0 / (hxLeft * (hxLeft + hxRight));
+		// Compute the flux going to the left
+		newFlux += (double) size * factor * coef * conc;
 	}
 
 	previousIFlux1D = newFlux;
@@ -1218,11 +1222,11 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		// Get the solver handler
 		auto solverHandler = PetscSolver::getSolverHandler();
 
-		// Setup step size variable
-		double hx = solverHandler->getStepSizeX();
+		// Get the physical grid
+		auto grid = solverHandler->getXGrid();
 
 		// Save the header in the HDF5 file
-		xolotlCore::HDF5Utils::fillHeader(1, Mx, hx);
+		xolotlCore::HDF5Utils::fillHeader(1, Mx, grid[1] - grid[0]);
 
 		// Save the network in the HDF5 file
 		xolotlCore::HDF5Utils::fillNetwork(network);

@@ -211,7 +211,6 @@ public:
      */
     virtual void setPerfHandlerType(xolotlPerf::IHandlerRegistry::RegistryType rtype) = 0;
 
-
     /**
      * Should we use the "standard" set of handlers for the visualization?
      * If false, use dummy (stub) handlers.
@@ -261,6 +260,19 @@ public:
      * @param number The number of dimensions.
      */
     virtual void setDimensionNumber(int number) = 0;
+
+    /**
+     * Should we use a regular grid on the x direction?
+     * @return true if program should use a regular grid,
+     * false if not
+     */
+    virtual bool useRegularXGrid() const = 0;
+
+    /**
+     * Set the useRegularGridFlag.
+     * @param flag The value for the useRegularGridFlag.
+     */
+    virtual void setRegularXGrid(bool flag) = 0;
 
 };//end class IOptions
 

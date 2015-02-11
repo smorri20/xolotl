@@ -8,3 +8,4 @@ heFlux=1.5
 material=W100
 initialV=0.05
 dimensions=1
+regularGrid=no

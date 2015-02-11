@@ -110,6 +110,11 @@ protected:
 	 */
 	int dimensionNumber;
 
+	/**
+	 * Use a regular grid on the x direction?
+	 */
+	bool useRegularGridFlag;
+
 public:
 
 	/**
@@ -355,6 +360,18 @@ public:
      * \see IOptions.h
      */
     void setDimensionNumber(int number) {dimensionNumber = number;}
+
+    /**
+     * Should we use a regular grid on the x direction?
+     * \see IOptions.h
+     */
+    bool useRegularXGrid() const {return useRegularGridFlag;}
+
+    /**
+     * Set the useRegularGridFlag.
+     * \see IOptions.h
+     */
+    void setRegularXGrid(bool flag) {useRegularGridFlag = flag;}
 
 
 };//end class Options

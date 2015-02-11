@@ -88,7 +88,7 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 	ierr = DMGetLocalVector(da, &localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
-	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, localSolution, &solutionArray);CHKERRQ(ierr);
 
 	// Get the corners of the grid
 	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);CHKERRQ(ierr);
@@ -210,13 +210,15 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 	// Get the corners of the grid
 	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);CHKERRQ(ierr);
 
+	// Get the physical grid in the x direction
+	auto grid = solverHandler->getXGrid();
+
 	// Setup step size variables
-	double hx = solverHandler->getStepSizeX();
 	double hy = solverHandler->getStepSizeY();
 
 	// Get the array of concentration
 	PetscReal ***solutionArray;
-	ierr = DMDAVecGetArrayDOF(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
 
 	// Store the concentration over the grid
 	double heConcentration = 0;
@@ -234,7 +236,8 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 			for (int l = 0; l < heIndices2D.size(); l++) {
 				// Add the current concentration times the number of helium in the cluster
 				// (from the weight vector)
-				heConcentration += gridPointSolution[heIndices2D[l]] * heWeights2D[l] * hx;
+				heConcentration += gridPointSolution[heIndices2D[l]] * heWeights2D[l]
+				                                     * (grid[i] - grid[i-1]);
 			}
 		}
 	}
@@ -332,7 +335,7 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 	ierr = DMGetLocalVector(da, &localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
 	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
-	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, localSolution, &solutionArray);CHKERRQ(ierr);
 
 	// Get the corners of the grid
 	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);CHKERRQ(ierr);
@@ -348,8 +351,10 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network
 	auto network = solverHandler->getNetwork();
 
+	// Get the physical grid in the x direction
+	auto grid = solverHandler->getXGrid();
+
 	// Setup step size variables
-	double hx = solverHandler->getStepSizeX();
 	double hy = solverHandler->getStepSizeY();
 
 	// Choice of the cluster to be plotted
@@ -369,7 +374,7 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 				// Get the pointer to the beginning of the solution data for this grid point
 				gridPointSolution = solutionArray[j][i];
 				// Compute x and y
-				x = i * hx;
+				x = grid[i];
 				y = j * hy;
 
 				// If it is procId 0 just store the value in the myPoints vector
@@ -602,12 +607,14 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		// Get the solver handler
 		auto solverHandler = PetscSolver::getSolverHandler();
 
+		// Get the physical grid in the x direction
+		auto grid = solverHandler->getXGrid();
+
 		// Setup step size variables
-		double hx = solverHandler->getStepSizeX();
 		double hy = solverHandler->getStepSizeY();
 
 		// Save the header in the HDF5 file
-		xolotlCore::HDF5Utils::fillHeader(2, Mx, hx, My, hy);
+		xolotlCore::HDF5Utils::fillHeader(2, Mx, grid[1] - grid[0], My, hy);
 
 		// Save the network in the HDF5 file
 		xolotlCore::HDF5Utils::fillNetwork(network);

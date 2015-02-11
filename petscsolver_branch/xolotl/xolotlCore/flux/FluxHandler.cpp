@@ -9,7 +9,6 @@
 namespace xolotlCore {
 
 FluxHandler::FluxHandler() :
-		stepSize(0.0),
 		elementarySurfaceSize(0.0),
 		heFluence(0.0),
 		heFlux(1.0),
@@ -18,18 +17,18 @@ FluxHandler::FluxHandler() :
 
 }
 
-void FluxHandler::initializeFluxHandler(int nx, double hx, double hy,
+void FluxHandler::initializeFluxHandler(std::vector<double> grid, double hy,
 		double hz) {
 
-	// Set the step and elementary surface sizes
-	stepSize = hx;
+	// Set the elementary surface size and the grid
 	elementarySurfaceSize = hy * hz;
+	xGrid = grid;
 
 	normFactor = 0.0;
-	for (int i = 1; i < nx - 1; i++) {
-		double x = (double) i * stepSize;
+	for (int i = 1; i < xGrid.size() - 1; i++) {
+		double x = xGrid[i];
 
-		normFactor += FitFunction(x) * stepSize;
+		normFactor += FitFunction(x) * (xGrid[i] - xGrid[i-1]);
 	}
 
 	// Factor the incident flux will be multiplied by
@@ -39,8 +38,8 @@ void FluxHandler::initializeFluxHandler(int nx, double hx, double hy,
 	incidentFluxVec.push_back(0.0);
 
 	// Starts a i = 1 because the first value was already put in the vector
-	for (int i = 1; i < nx - 1; i++) {
-		auto x = i * stepSize;
+	for (int i = 1; i < xGrid.size() - 1; i++) {
+		auto x = xGrid[i];
 
 		auto incidentFlux = heFluxNormalized * FitFunction(x);
 
@@ -57,9 +56,6 @@ void FluxHandler::recomputeFluxHandler() {
 	// Factor the incident flux will be multiplied by
 	double heFluxNormalized = elementarySurfaceSize * heFlux / normFactor;
 
-	// Get the number of grid points
-	int numGridPoints = incidentFluxVec.size();
-
 	// Clear the flux vector
 	incidentFluxVec.clear();
 
@@ -67,13 +63,16 @@ void FluxHandler::recomputeFluxHandler() {
 	incidentFluxVec.push_back(0.0);
 
 	// Starts a i = 1 because the first value was already put in the vector
-	for (int i = 1; i < numGridPoints; i++) {
-		auto x = i * stepSize;
+	for (int i = 1; i < xGrid.size() - 1; i++) {
+		auto x = xGrid[i];
 
 		auto incidentFlux = heFluxNormalized * FitFunction(x);
 
 		incidentFluxVec.push_back(incidentFlux);
 	}
+
+	// The last value should always be 0.0 because of boundary conditions
+	incidentFluxVec.push_back(0.0);
 
 	return;
 }
@@ -122,22 +121,6 @@ double FluxHandler::getAmplitude(double currentTime) const {
 	}
 
 	return f;
-}
-
-double FluxHandler::getIncidentFlux(std::vector<int> compositionVec,
-		std::vector<double> position, double currentTime) {
-
-	// Recompute the flux vector if a time profile is used
-	if (useTimeProfile) {
-		heFlux = getAmplitude(currentTime);
-		recomputeFluxHandler();
-	}
-
-	// Get the index number from the position
-	int i = position[0] / stepSize;
-
-	// Return the corresponding value
-	return incidentFluxVec[i];
 }
 
 std::vector<double> FluxHandler::getIncidentFluxVec(double currentTime) {

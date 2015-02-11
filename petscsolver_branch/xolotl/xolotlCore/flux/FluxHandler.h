@@ -22,9 +22,10 @@ protected:
 	std::vector<double> incidentFluxVec;
 
 	/**
-	 * Step size between each grid point in the x direction
+	 * Vector to hold the position at each grid
+	 * point (x position)
 	 */
-	double stepSize;
+	std::vector<double> xGrid;
 
 	/**
 	 * Size of the surface (dy * dz) on which the flux is integrated
@@ -96,13 +97,11 @@ public:
 
 	/**
 	 * Function to calculate and store the incident flux values at each grid point
-	 * @param numGridpoints The total number of grid points that will be used
-	 * @param nx The total number of grid points that will be used on the x axis
-	 * @param hx The step size between grid points on the x axis
+	 * @param grid The grid on the x axis
 	 * @param hy The step size between grid points on the y axis
 	 * @param hz The step size between grid points on the z axis
 	 */
-	virtual void initializeFluxHandler(int nx, double hx, double hy = 1.0,
+	virtual void initializeFluxHandler(std::vector<double> grid, double hy = 1.0,
 			double hz = 1.0);
 
 	/**
@@ -111,18 +110,6 @@ public:
 	 * @param fileName The name of the file where the values are stored
 	 */
 	void initializeTimeProfile(std::string fileName);
-
-	/**
-	 * This operation returns the incident flux for a specific cluster composition,
-	 * position, and time.
-	 * @param compositionVec  The composition of the cluster
-	 * @param position        The position of the cluster
-	 * @param currentTime     The time
-	 * @return incidentFlux   The incident flux at the given position and time of the cluster with
-	 * the specified composition
-	 */
-	virtual double getIncidentFlux(std::vector<int> compositionVec,
-			std::vector<double> position, double currentTime);
 
 	/**
 	 * This operation returns the incident flux vector

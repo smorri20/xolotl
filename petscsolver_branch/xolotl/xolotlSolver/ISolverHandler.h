@@ -108,11 +108,11 @@ public:
 	virtual void computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) = 0;
 
 	/**
-	 * Get the step size in the x direction.
+	 * Get the grid in the x direction.
 	 *
-	 * @return The step size in the x direction
+	 * @return The grid in the x direction
 	 */
-	virtual double getStepSizeX() const = 0;
+	virtual std::vector<double> getXGrid() const = 0;
 
 	/**
 	 * Get the step size in the y direction.

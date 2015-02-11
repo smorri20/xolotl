@@ -491,6 +491,32 @@ public interface Arguments {
 	boolean isInitialV();
 
 	/**
+	 * This Option annotation corresponds to the optional '--regularGrid' option
+	 * and provides a brief description of the option.
+	 * 
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(description = "If the user wants to use a regular grid in the "
+			+ "x direction or not.")
+	
+	/**
+	 * This operation produces the optional command line option '--regularGrid' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return If the user wants to use a regular grid
+	 */
+	String getRegularGrid();
+
+	/**
+	 * This operation makes the command line option '--regularGrid' optional.
+	 * 
+	 * @return Returns true if the option has been specified and false if it has
+	 *         not
+	 */
+	boolean isRegularGrid();
+
+	/**
 	 * This produces the command line arguments '--help' or '-h' either of which
 	 * can be used to print usage help
 	 * 

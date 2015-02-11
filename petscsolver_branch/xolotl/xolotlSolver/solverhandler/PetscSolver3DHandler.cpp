@@ -34,8 +34,10 @@ void PetscSolver3DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 			PETSC_DECIDE, PETSC_DECIDE, dof, 1, NULL, NULL, NULL, &da);
 	checkPetscError(ierr);
 
+	// Generate the grid in the x direction
+	generateGrid(nx, hx);
+
 	// Set the step size
-	hX = hx;
 	hY = hy;
 	hZ = hz;
 
@@ -111,7 +113,7 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 	checkPetscError(ierr);
 
 	// Initialize the flux handler
-	fluxHandler->initializeFluxHandler(Mx, hX, hY, hZ);
+	fluxHandler->initializeFluxHandler(grid, hY, hZ);
 
 	// Initialize the advection handler
 	advectionHandler->initialize(network);
@@ -138,7 +140,8 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 
 				// Initialize the vacancy concentration
 				if (i > 0 && i < Mx - 1) {
-					concOffset[vacancyIndex] = initialVConc / hX;
+					concOffset[vacancyIndex] = initialVConc
+							/ ((grid[i] - grid[i-1]) * hY * hZ);
 				}
 			}
 		}
@@ -188,13 +191,8 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	ierr = TSGetDM(ts, &da);
 	checkPetscError(ierr);
 
-	// Get the total size of the grid for the boundary conditions
-	PetscInt Mx, My, Mz;
-	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, &Mz,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
-	checkPetscError(ierr);
+	// Get the total size of the grid in the x direction for the boundary conditions
+	int xSize = grid.size();
 
 	// Pointers to the PETSc arrays that start at the beginning (xs, ys, zs) of the
 	// local array!
@@ -216,7 +214,6 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	PetscScalar *concOffset, *updatedConcOffset;
 
 	// Set some step size variable
-	double sx = 1.0 / (hX * hX);
 	double sy = 1.0 / (hY * hY);
 	double sz = 1.0 / (hZ * hZ);
 
@@ -253,7 +250,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				concVector[6] = concs[zk + 1][yj][xi]; // back
 
 				// Boundary conditions
-				if (xi == 0 || xi == Mx - 1) {
+				if (xi == 0 || xi == xSize - 1) {
 					for (int i = 0; i < dof; i++) {
 						updatedConcOffset[i] = 1.0 * concOffset[i];
 					}
@@ -262,7 +259,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				}
 
 				// Set the grid position
-				gridPosition[0] = xi * hX;
+				gridPosition[0] = grid[xi];
 				gridPosition[1] = yj * hY;
 				gridPosition[2] = zk * hZ;
 
@@ -293,11 +290,12 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 				// ---- Compute diffusion over the locally owned part of the grid -----
 				diffusionHandler->computeDiffusion(network, concVector,
-						updatedConcOffset, sx, sy, sz);
+						updatedConcOffset, grid[xi] - grid[xi-1],
+						grid[xi+1] - grid[xi], sy, sz);
 
 				// ---- Compute advection over the locally owned part of the grid -----
-				advectionHandler->computeAdvection(network, hX, gridPosition,
-						concVector, updatedConcOffset);
+				advectionHandler->computeAdvection(network, grid[xi+1] - grid[xi],
+						gridPosition, concVector, updatedConcOffset);
 
 				// ----- Compute all of the new fluxes -----
 				for (int i = 0; i < dof; i++) {
@@ -333,16 +331,10 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	ierr = TSGetDM(ts, &da);
 	checkPetscError(ierr);
 
-	// Get the total size of the grid for the boundary conditions
-	PetscInt Mx, My, Mz;
-	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, &Mz,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
-	checkPetscError(ierr);
+	// Get the total size of the grid in the x direction for the boundary conditions
+	int xSize = grid.size();
 
 	// Setup some step size variables
-	double sx = 1.0 / (hX * hX);
 	double sy = 1.0 / (hY * hY);
 	double sz = 1.0 / (hZ * hZ);
 
@@ -382,10 +374,10 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 		for (int yj = ys; yj < ys + ym; yj++) {
 			for (int xi = xs; xi < xs + xm; xi++) {
 				// Boundary conditions
-				if (xi == 0 || xi == Mx - 1) continue;
+				if (xi == 0 || xi == xSize - 1) continue;
 
 				// Set the grid position
-				gridPosition[0] = xi * hX;
+				gridPosition[0] = grid[xi];
 				gridPosition[1] = yj * hY;
 				gridPosition[2] = zk * hZ;
 
@@ -396,7 +388,7 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 
 				// Get the partial derivatives for the diffusion
 				diffusionHandler->computePartialsForDiffusion(network, vals, indices,
-						sx, sy, sz);
+						grid[xi] - grid[xi-1], grid[xi+1] - grid[xi], sy, sz);
 
 				// Loop on the number of diffusion cluster to set the values in the Jacobian
 				for (int i = 0; i < nDiff; i++) {
@@ -443,8 +435,8 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 				}
 
 				// Get the partial derivatives for the advection
-				advectionHandler->computePartialsForAdvection(network, hX, vals,
-						indices, gridPosition);
+				advectionHandler->computePartialsForAdvection(network, grid[xi+1] - grid[xi],
+						vals, indices, gridPosition);
 
 				// Loop on the number of advecting cluster to set the values in the Jacobian
 				for (int i = 0; i < nAdvec; i++) {
@@ -484,13 +476,8 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	ierr = TSGetDM(ts, &da);
 	checkPetscError(ierr);
 
-	// Get the total size of the grid for the boundary conditions
-	PetscInt Mx, My, Mz;
-	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, &Mz,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
-	checkPetscError(ierr);
+	// Get the total size of the grid in the x direction for the boundary conditions
+	int xSize = grid.size();
 
 	// Get pointers to vector data
 	PetscScalar ****concs;
@@ -521,7 +508,7 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 		for (int yj = ys; yj < ys + ym; yj++) {
 			for (int xi = xs; xi < xs + xm; xi++) {
 				// Boundary conditions
-				if (xi == 0 || xi == Mx - 1) continue;
+				if (xi == 0 || xi == xSize - 1) continue;
 
 				// Copy data into the PSIClusterReactionNetwork so that it can
 				// compute the new concentrations.

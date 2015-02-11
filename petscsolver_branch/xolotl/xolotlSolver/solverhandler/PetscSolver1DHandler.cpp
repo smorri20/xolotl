@@ -33,8 +33,8 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	NULL, &da);
 	checkPetscError(ierr);
 
-	// Set the step size
-	hX = hx;
+	// Generate the grid in the x direction
+	generateGrid(nx, hx);
 
 	// Set the size of the partial derivatives vectors
 	clusterPartials.resize(dof, 0.0);
@@ -100,15 +100,10 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 			tempTimeStep);
 
 	// Get the total size of the grid for the boundary conditions
-	PetscInt Mx;
-	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
-	checkPetscError(ierr);
+	int xSize = grid.size();
 
 	// Initialize the flux handler
-	fluxHandler->initializeFluxHandler(Mx, hX);
+	fluxHandler->initializeFluxHandler(grid);
 
 	// Initialize the advection handler
 	advectionHandler->initialize(network);
@@ -132,15 +127,15 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 		}
 
 		// Initialize the vacancy concentration
-		if (i > 0 && i < Mx - 1) {
-			concOffset[vacancyIndex] = initialVConc / hX;
+		if (i > 0 && i < xSize - 1) {
+			concOffset[vacancyIndex] = initialVConc / (grid[i] - grid[i-1]);
 		}
 	}
 
 	// If the concentration must be set from the HDF5 file
 	if (hasConcentrations) {
 		// Loop on the full grid
-		for (int i = 0; i < Mx; i++) {
+		for (int i = 0; i < xSize; i++) {
 			// Read the concentrations from the HDF5 file
 			auto concVector = xolotlCore::HDF5Utils::readGridPoint(networkName,
 					tempTimeStep, i);
@@ -176,12 +171,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	checkPetscError(ierr);
 
 	// Get the total size of the grid for the boundary conditions
-	PetscInt Mx;
-	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
-	checkPetscError(ierr);
+	int xSize = grid.size();
 
 	// Pointers to the PETSc arrays that start at the beginning (xs) of the
 	// local array!
@@ -201,9 +191,6 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	// updatedConc arrays that correspond to the beginning of the data for the
 	// current grid point. They are accessed just like regular arrays.
 	PetscScalar *concOffset, *updatedConcOffset;
-
-	// Set some step size variable
-	double sx = 1.0 / (hX * hX);
 
 	// Get the incident flux vector
 	auto incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime);
@@ -231,7 +218,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		concVector[2] = concs[xi + 1]; // right
 
 		// Boundary conditions
-		if (xi == 0 || xi == Mx - 1) {
+		if (xi == 0 || xi == xSize - 1) {
 			for (int i = 0; i < dof; i++) {
 				updatedConcOffset[i] = 1.0 * concOffset[i];
 			}
@@ -240,7 +227,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		}
 
 		// Set the grid position
-		gridPosition[0] = xi * hX;
+		gridPosition[0] = grid[xi];
 
 		// Get the temperature from the temperature handler
 		auto temperature = temperatureHandler->getTemperature(gridPosition,
@@ -269,11 +256,11 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 		// ---- Compute diffusion over the locally owned part of the grid -----
 		diffusionHandler->computeDiffusion(network, concVector,
-				updatedConcOffset, sx);
+				updatedConcOffset, grid[xi] - grid[xi-1], grid[xi+1] - grid[xi]);
 
 		// ---- Compute advection over the locally owned part of the grid -----
-		advectionHandler->computeAdvection(network, hX, gridPosition,
-				concVector, updatedConcOffset);
+		advectionHandler->computeAdvection(network, grid[xi+1] - grid[xi],
+				gridPosition, concVector, updatedConcOffset);
 
 		// ----- Compute all of the new fluxes -----
 		for (int i = 0; i < dof; i++) {
@@ -308,15 +295,7 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	checkPetscError(ierr);
 
 	// Get the total size of the grid for the boundary conditions
-	PetscInt Mx;
-	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
-	checkPetscError(ierr);
-
-	// Setup some step size variables
-	double sx = 1.0 / (hX * hX);
+	int xSize = grid.size();
 
 	// Get pointers to vector data
 	PetscScalar **concs;
@@ -352,10 +331,10 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	 */
 	for (int xi = xs; xi < xs + xm; xi++) {
 		// Boundary conditions
-		if (xi == 0 || xi == Mx - 1) continue;
+		if (xi == 0 || xi == xSize - 1) continue;
 
 		// Set the grid position
-		gridPosition[0] = xi * hX;
+		gridPosition[0] = grid[xi];
 
 		// Copy data into the PSIClusterReactionNetwork so that it can
 		// compute the new concentrations.
@@ -363,7 +342,8 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 		network->updateConcentrationsFromArray(concOffset);
 
 		// Get the partial derivatives for the diffusion
-		diffusionHandler->computePartialsForDiffusion(network, vals, indices, sx);
+		diffusionHandler->computePartialsForDiffusion(network, vals, indices,
+				grid[xi] - grid[xi-1], grid[xi+1] - grid[xi]);
 
 		// Loop on the number of diffusion cluster to set the values in the Jacobian
 		for (int i = 0; i < nDiff; i++) {
@@ -385,8 +365,8 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 		}
 
 		// Get the partial derivatives for the advection
-		advectionHandler->computePartialsForAdvection(network, hX, vals,
-				indices, gridPosition);
+		advectionHandler->computePartialsForAdvection(network, grid[xi+1] - grid[xi],
+				vals, indices, gridPosition);
 
 		// Loop on the number of advecting cluster to set the values in the Jacobian
 		for (int i = 0; i < nAdvec; i++) {
@@ -419,12 +399,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	checkPetscError(ierr);
 
 	// Get the total size of the grid for the boundary conditions
-	PetscInt Mx;
-	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
-	checkPetscError(ierr);
+	int xSize = grid.size();
 
 	// Get pointers to vector data
 	PetscScalar **concs;
@@ -453,7 +428,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	// Loop over the grid points
 	for (int xi = xs; xi < xs + xm; xi++) {
 		// Boundary conditions
-		if (xi == 0 || xi == Mx - 1) continue;
+		if (xi == 0 || xi == xSize - 1) continue;
 
 		// Copy data into the PSIClusterReactionNetwork so that it can
 		// compute the new concentrations.
