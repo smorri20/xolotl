@@ -17,17 +17,6 @@
 
 namespace xolotlSolver {
 
-/* ----- Error Handling Code ----- */
-
-/**
- * This operation checks a PETSc error code and converts it to a bool.
- * @param errorCode The PETSc error code.
- * @return True if everything is OK, false otherwise.
- */
-static inline bool checkPetscError(PetscErrorCode errorCode) {
-	CHKERRQ(errorCode);
-}
-
 // Declaration of the functions defined in Monitor.cpp
 extern PetscErrorCode monitorTime(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx);

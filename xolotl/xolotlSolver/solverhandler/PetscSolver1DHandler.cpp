@@ -6,16 +6,6 @@
 
 namespace xolotlSolver {
 
-/**
- * This operation checks a PETSc error code and converts it to a bool.
- *
- * @param errorCode The PETSc error code.
- * @return True if everything is OK, false otherwise.
- */
-inline bool checkPetscError(PetscErrorCode errorCode) {
-	CHKERRQ(errorCode);
-}
-
 void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int ny,
 		double hy, int nz, double hz) {
 	PetscErrorCode ierr;

@@ -6,6 +6,19 @@
 
 namespace xolotlSolver {
 
+#ifndef CHECK_PETSC_ERROR
+#define CHECK_PETSC_ERROR
+/**
+ * This operation checks a PETSc error code and converts it to a bool.
+ *
+ * @param errorCode The PETSc error code.
+ * @return True if everything is OK, false otherwise.
+ */
+static inline bool checkPetscError(PetscErrorCode errorCode) {
+	CHKERRQ(errorCode);
+}
+#endif
+
 /**
  * This class realizes the ISolver interface to solve the
  * advection-diffusion-reaction problem with the PETSc solvers from Argonne
