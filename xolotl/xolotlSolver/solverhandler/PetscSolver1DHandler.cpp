@@ -109,8 +109,11 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = network->size();
 
-	// Get the single vacancy ID.
-	int vacancyIndex = (network->get(xolotlCore::vType, 1)->getId()) - 1;
+	// Get the single vacancy ID
+	auto singleVacancyCluster = network->get(xolotlCore::vType, 1);
+	int vacancyIndex = -1;
+	if (singleVacancyCluster)
+		vacancyIndex = singleVacancyCluster->getId() - 1;
 
 	// Loop on all the grid points
 	for (int i = xs; i < xs + xm; i++) {
@@ -122,7 +125,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 		}
 
 		// Initialize the vacancy concentration
-		if (i > 0 && i < Mx - 1) {
+		if (i > 0 && i < Mx - 1 && vacancyIndex > 0) {
 			concOffset[vacancyIndex] = initialVConc / hX;
 		}
 	}
@@ -199,9 +202,9 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	auto incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime);
 
 	// Declarations for variables used in the loop
-	int reactantIndex;
 	double flux;
 	auto heCluster = (xolotlCore::PSICluster *) network->get(xolotlCore::heType, 1);
+	int heliumIndex = heCluster->getId() - 1, reactantIndex;
 	xolotlCore::PSICluster *cluster = NULL;
 	double **concVector = new double*[3];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
@@ -252,9 +255,8 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		// ----- Account for flux of incoming He by computing forcing that
 		// produces He of cluster size 1 -----
 		if (heCluster) {
-			reactantIndex = heCluster->getId() - 1;
 			// Update the concentration of the cluster
-			updatedConcOffset[reactantIndex] += incidentFluxVector[xi];
+			updatedConcOffset[heliumIndex] += incidentFluxVector[xi];
 		}
 
 		// ---- Compute diffusion over the locally owned part of the grid -----

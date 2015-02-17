@@ -770,7 +770,7 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 		double hz = solverHandler->getStepSizeZ();
 
 		// Save the header in the HDF5 file
-		xolotlCore::HDF5Utils::fillHeader(3, Mx, hx, My, hy, Mz, hz);
+		xolotlCore::HDF5Utils::fillHeader(Mx, hx, My, hy, Mz, hz);
 
 		// Save the network in the HDF5 file
 		xolotlCore::HDF5Utils::fillNetwork(network);

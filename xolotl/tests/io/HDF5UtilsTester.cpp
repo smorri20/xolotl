@@ -54,15 +54,14 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 	// Initialize the HDF5 file
 	HDF5Utils::initializeFile("test.h5", networkSize);
 
-	// Set the number of dimension, number of grid points, and step size
-	int dimension = 1;
+	// Set the number of grid points and step size
 	int nGrid = 5;
 	double stepSize = 0.5;
 	// Set the time information
 	double currentTime = 0.0001;
 	double currentTimeStep = 0.000001;
 	// Write the header in the HDF5 file
-	HDF5Utils::fillHeader(dimension, nGrid, stepSize);
+	HDF5Utils::fillHeader(nGrid, stepSize);
 
 	// Write the network in the HDF5 file
 	HDF5Utils::fillNetwork(network);

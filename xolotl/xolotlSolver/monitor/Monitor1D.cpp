@@ -1211,7 +1211,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		double hx = solverHandler->getStepSizeX();
 
 		// Save the header in the HDF5 file
-		xolotlCore::HDF5Utils::fillHeader(1, Mx, hx);
+		xolotlCore::HDF5Utils::fillHeader(Mx, hx);
 
 		// Save the network in the HDF5 file
 		xolotlCore::HDF5Utils::fillNetwork(network);

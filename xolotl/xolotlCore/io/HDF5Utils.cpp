@@ -67,18 +67,11 @@ void HDF5Utils::openFile(std::string fileName) {
 	return;
 }
 
-void HDF5Utils::fillHeader(int dimension, int nx, double hx, int ny,
+void HDF5Utils::fillHeader(int nx, double hx, int ny,
 		double hy, int nz, double hz) {
-	// Create, write, and close the dimension attribute
-	hid_t dataspaceId = H5Screate(H5S_SCALAR);
-	hid_t attributeId = H5Acreate2(headerGroupId, "dimension", H5T_STD_I32LE,
-			dataspaceId,
-			H5P_DEFAULT, H5P_DEFAULT);
-	status = H5Awrite(attributeId, H5T_STD_I32LE, &dimension);
-	status = H5Aclose(attributeId);
-
 	// Create, write, and close the nx attribute
-	attributeId = H5Acreate2(headerGroupId, "nx", H5T_STD_I32LE,
+	hid_t dataspaceId = H5Screate(H5S_SCALAR);
+	hid_t attributeId = H5Acreate2(headerGroupId, "nx", H5T_STD_I32LE,
 			dataspaceId,
 			H5P_DEFAULT, H5P_DEFAULT);
 	status = H5Awrite(attributeId, H5T_STD_I32LE, &nx);
