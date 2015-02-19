@@ -463,19 +463,19 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 
 	// Check the option -plot_perf
 	ierr = PetscOptionsHasName(NULL, "-plot_perf", &flagPerf);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "setupPetsc2DMonitor: PetscOptionsHasName (-plot_perf) failed.");
 
 	// Check the option -plot_2d
 	ierr = PetscOptionsHasName(NULL, "-plot_2d", &flag2DPlot);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "setupPetsc2DMonitor: PetscOptionsHasName (-plot_2d) failed.");
 
 	// Check the option -helium_retention
 	ierr = PetscOptionsHasName(NULL, "-helium_retention", &flagRetention);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "setupPetsc2DMonitor: PetscOptionsHasName (-helium_retention) failed.");
 
 	// Check the option -start_stop
 	ierr = PetscOptionsHasName(NULL, "-start_stop", &flagStatus);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "setupPetsc2DMonitor: PetscOptionsHasName (-start_stop) failed.");
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -508,8 +508,7 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 
 		// monitorPerf will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorPerf, NULL, NULL);
-		checkPetscError(ierr);
-
+		checkPetscError(ierr, "setupPetsc2DMonitor: TSMonitorSet (monitorPerf) failed.");
 	}
 
 	// Set the monitor to compute the helium fluence for the retention calculation
@@ -549,11 +548,11 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 
 		// computeHeliumFluence will be called at each timestep
 		ierr = TSMonitorSet(ts, computeHeliumFluence, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc2DMonitor: TSMonitorSet (computeHeliumFluence) failed.");
 
 		// computeHeliumRetention2D will be called at each timestep
 		ierr = TSMonitorSet(ts, computeHeliumRetention2D, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc2DMonitor: TSMonitorSet (computeHeliumRetention2D) failed.");
 
 //		// Uncomment to clear the file where the retention will be written
 //		std::ofstream outputFile;
@@ -566,7 +565,7 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		// Find the stride to know how often the HDF5 file has to be written
 		PetscBool flag;
 		ierr = PetscOptionsGetInt(NULL, "-start_stop", &hdf5Stride2D, &flag);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc2DMonitor: PetscOptionsGetInt (-start_stop) failed.");
 		if (!flag)
 			hdf5Stride2D = 1;
 
@@ -576,14 +575,14 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		// Get the da from ts
 		DM da;
 		ierr = TSGetDM(ts, &da);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc2DMonitor: TSGetDM failed.");
 
 		// Get the size of the total grid
 		ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
 		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 		PETSC_IGNORE);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc2DMonitor: DMDAGetInfo failed.");
 
 		// Initialize the HDF5 file for all the processes
 		xolotlCore::HDF5Utils::initializeFile(hdf5OutputName2D, networkSize);
@@ -606,7 +605,7 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 
 		// startStop2D will be called at each timestep
 		ierr = TSMonitorSet(ts, startStop2D, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc2DMonitor: TSMonitorSet (startStop2D) failed.");
 	}
 
 	// Set the monitor to save surface plots of clusters concentration
@@ -632,16 +631,16 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		// Give it to the plot
 		surfacePlot2D->setDataProvider(dataProvider);
 
-		// monitorSurface1D will be called at each timestep
+		// monitorSurface2D will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorSurface2D, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc2DMonitor: TSMonitorSet (monitorSurface2D) failed.");
 	}
 
 	// Set the monitor to simply change the previous time to the new time
 	if (flagRetention) {
 		// monitorTime will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorTime, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc2DMonitor: TSMonitorSet (monitorTime) failed.");
 	}
 
 	PetscFunctionReturn(0);

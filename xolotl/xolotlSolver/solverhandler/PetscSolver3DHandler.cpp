@@ -22,7 +22,7 @@ void PetscSolver3DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	ierr = DMDACreate3d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, DM_BOUNDARY_PERIODIC,
 			DM_BOUNDARY_PERIODIC, DMDA_STENCIL_STAR, nx, ny, nz, PETSC_DECIDE,
 			PETSC_DECIDE, PETSC_DECIDE, dof, 1, NULL, NULL, NULL, &da);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::createSolverContext: DMDACreate3d failed.");
 
 	// Set the step size
 	hX = hx;
@@ -47,13 +47,13 @@ void PetscSolver3DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	 */
 	PetscInt *ofill, *dfill;
 	ierr = PetscMalloc(dof * dof * sizeof(PetscInt), &ofill);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::createSolverContext: PetscMalloc (ofill) failed.");
 	ierr = PetscMalloc(dof * dof * sizeof(PetscInt), &dfill);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::createSolverContext: PetscMalloc (dfill) failed.");
 	ierr = PetscMemzero(ofill, dof * dof * sizeof(PetscInt));
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::createSolverContext: PetscMemzero (ofill) failed.");
 	ierr = PetscMemzero(dfill, dof * dof * sizeof(PetscInt));
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::createSolverContext: PetscMemzero (dfill) failed.");
 
 	// Fill ofill, the matrix of "off-diagonal" elements that represents diffusion
 	diffusionHandler->initializeOFill(network, ofill);
@@ -63,13 +63,13 @@ void PetscSolver3DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 
 	// Load up the block fills
 	ierr = DMDASetBlockFills(da, dfill, ofill);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::createSolverContext: DMDASetBlockFills failed.");
 
 	// Free the temporary fill arrays
 	ierr = PetscFree(ofill);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::createSolverContext: PetscFree (ofill) failed.");
 	ierr = PetscFree(dfill);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::createSolverContext: PetscFree (dfill) failed.");
 
 	return;
 }
@@ -80,12 +80,12 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 	// Pointer for the concentration vector
 	PetscScalar ****concentrations;
 	ierr = DMDAVecGetArrayDOF(da, C, &concentrations);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::initializeConcentration: DMDAVecGetArrayDOF failed.");
 
 	// Get the local boundaries
 	PetscInt xs, xm, ys, ym, zs, zm;
 	ierr = DMDAGetCorners(da, &xs, &ys, &zs, &xm, &ym, &zm);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::initializeConcentration: DMDAGetCorners failed.");
 
 	// Get the last time step written in the HDF5 file
 	int tempTimeStep = -2;
@@ -98,7 +98,7 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::initializeConcentration: DMDAGetInfo failed.");
 
 	// Initialize the flux handler
 	fluxHandler->initializeFluxHandler(Mx, hX, hY, hZ);
@@ -167,7 +167,7 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 	 Restore vectors
 	 */
 	ierr = DMDAVecRestoreArrayDOF(da, C, &concentrations);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::initializeConcentration: DMDAVecRestoreArrayDOF failed.");
 
 	return;
 }
@@ -176,10 +176,10 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		PetscReal ftime) {
 	PetscErrorCode ierr;
 
-	// Get the local data vector from petsc
+	// Get the local data vector from PETSc
 	DM da;
 	ierr = TSGetDM(ts, &da);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::updateConcentration: TSGetDM failed.");
 
 	// Get the total size of the grid for the boundary conditions
 	PetscInt Mx, My, Mz;
@@ -187,21 +187,21 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::updateConcentration: DMDAGetInfo failed.");
 
 	// Pointers to the PETSc arrays that start at the beginning (xs, ys, zs) of the
 	// local array!
 	PetscScalar ****concs, ****updatedConcs;
 	// Get pointers to vector data
 	ierr = DMDAVecGetArrayDOF(da, localC, &concs);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::updateConcentration: DMDAVecGetArrayDOF (localC) failed.");
 	ierr = DMDAVecGetArrayDOF(da, F, &updatedConcs);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::updateConcentration: DMDAVecGetArrayDOF (F) failed.");
 
 	// Get local grid boundaries
 	PetscInt xs, xm, ys, ym, zs, zm;
 	ierr = DMDAGetCorners(da, &xs, &ys, &zs, &xm, &ym, &zm);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::updateConcentration: DMDAGetCorners failed.");
 
 	// The following pointers are set to the first position in the conc or
 	// updatedConc arrays that correspond to the beginning of the data for the
@@ -308,11 +308,11 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	 Restore vectors
 	 */
 	ierr = DMDAVecRestoreArrayDOF(da, localC, &concs);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::updateConcentration: DMDAVecRestoreArrayDOF (localC) failed.");
 	ierr = DMDAVecRestoreArrayDOF(da, F, &updatedConcs);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::updateConcentration: DMDAVecRestoreArrayDOF (F) failed.");
 	ierr = DMRestoreLocalVector(da, &localC);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::updateConcentration: DMRestoreLocalVector failed.");
 
 	return;
 }
@@ -323,7 +323,7 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	// Get the distributed array
 	DM da;
 	ierr = TSGetDM(ts, &da);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::computeOffDiagonalJacobian: TSGetDM failed.");
 
 	// Get the total size of the grid for the boundary conditions
 	PetscInt Mx, My, Mz;
@@ -331,7 +331,7 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::computeOffDiagonalJacobian: DMDAGetInfo failed.");
 
 	// Setup some step size variables
 	double sx = 1.0 / (hX * hX);
@@ -341,12 +341,12 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	// Get pointers to vector data
 	PetscScalar ****concs;
 	ierr = DMDAVecGetArrayDOF(da, localC, &concs);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::computeOffDiagonalJacobian: DMDAVecGetArrayDOF failed.");
 
 	// Get local grid boundaries
 	PetscInt xs, xm, ys, ym, zs, zm;
 	ierr = DMDAGetCorners(da, &xs, &ys, &zs, &xm, &ym, &zm);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::computeOffDiagonalJacobian: DMDAGetCorners failed.");
 
 	// The degree of freedom is the size of the network
 	const int dof = network->size();
@@ -431,7 +431,7 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 					cols[6].c = indices[i];
 
 					ierr = MatSetValuesStencil(J, 1, &row, 7, cols, vals + (7 * i), ADD_VALUES);
-					checkPetscError(ierr);
+					checkPetscError(ierr, "PetscSolver3DHandler::computeOffDiagonalJacobian: MatSetValuesStencil (diffusion) failed.");
 				}
 
 				// Get the partial derivatives for the advection
@@ -459,7 +459,7 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 
 					// Update the matrix
 					ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals + (2 * i), ADD_VALUES);
-					checkPetscError(ierr);
+					checkPetscError(ierr, "PetscSolver3DHandler::computeOffDiagonalJacobian: MatSetValuesStencil (advection) failed.");
 				}
 			}
 		}
@@ -474,7 +474,7 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	// Get the distributed array
 	DM da;
 	ierr = TSGetDM(ts, &da);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::computeDiagonalJacobian: TSGetDM failed.");
 
 	// Get the total size of the grid for the boundary conditions
 	PetscInt Mx, My, Mz;
@@ -482,17 +482,17 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::computeDiagonalJacobian: DMDAGetInfo failed.");
 
 	// Get pointers to vector data
 	PetscScalar ****concs;
 	ierr = DMDAVecGetArrayDOF(da, localC, &concs);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::computeDiagonalJacobian: DMDAVecGetArrayDOF failed.");
 
 	// Get local grid boundaries
 	PetscInt xs, xm, ys, ym, zs, zm;
 	ierr = DMDAGetCorners(da, &xs, &ys, &zs, &xm, &ym, &zm);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::computeDiagonalJacobian: DMDAGetCorners failed.");
 
 	// The degree of freedom is the size of the network
 	const int dof = network->size();
@@ -555,7 +555,7 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 					// Update the matrix
 					ierr = MatSetValuesStencil(J, 1, &rowId, pdColIdsVectorSize,
 							colIds, reactingPartialsForCluster.data(), ADD_VALUES);
-					checkPetscError(ierr);
+					checkPetscError(ierr, "PetscSolver3DHandler::computeDiagonalJacobian: MatSetValuesStencil failed.");
 				}
 			}
 		}
@@ -565,9 +565,9 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	 Restore vectors
 	 */
 	ierr = DMDAVecRestoreArrayDOF(da, localC, &concs);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::computeDiagonalJacobian: DMDAVecRestoreArrayDOF failed.");
 	ierr = DMRestoreLocalVector(da, &localC);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver3DHandler::computeDiagonalJacobian: DMRestoreLocalVector failed.");
 
 	return;
 }

@@ -9,13 +9,14 @@ namespace xolotlSolver {
 #ifndef CHECK_PETSC_ERROR
 #define CHECK_PETSC_ERROR
 /**
- * This operation checks a PETSc error code and converts it to a bool.
+ * This operation checks a PETSc error code and throws an exception with given error message.
  *
  * @param errorCode The PETSc error code.
- * @return True if everything is OK, false otherwise.
+ * @param errMsg The error message in the thrown exception.
  */
-inline bool checkPetscError(PetscErrorCode errorCode) {
-	CHKERRQ(errorCode);
+inline void checkPetscError(PetscErrorCode errorCode, const char* errorMsg) {
+	if (PetscUnlikely(errorCode))
+		throw std::string(errorMsg);
 }
 #endif
 

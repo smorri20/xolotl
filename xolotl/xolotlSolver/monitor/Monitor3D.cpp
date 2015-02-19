@@ -633,23 +633,23 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 
 	// Check the option -plot_perf
 	ierr = PetscOptionsHasName(NULL, "-plot_perf", &flagPerf);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "setupPetsc3DMonitor: PetscOptionsHasName (-plot_perf) failed.");
 
 	// Check the option -plot_2d_xy
 	ierr = PetscOptionsHasName(NULL, "-plot_2d_xy", &flag2DXYPlot);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "setupPetsc3DMonitor: PetscOptionsHasName (-plot_2d_xy) failed.");
 
 	// Check the option -plot_2d_xz
 	ierr = PetscOptionsHasName(NULL, "-plot_2d_xz", &flag2DXZPlot);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "setupPetsc3DMonitor: PetscOptionsHasName (-plot_2d_xz) failed.");
 
 	// Check the option -helium_retention
 	ierr = PetscOptionsHasName(NULL, "-helium_retention", &flagRetention);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "setupPetsc3DMonitor: PetscOptionsHasName (-helium_retention) failed.");
 
 	// Check the option -start_stop
 	ierr = PetscOptionsHasName(NULL, "-start_stop", &flagStatus);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "setupPetsc3DMonitor: PetscOptionsHasName (-start_stop) failed.");
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -682,8 +682,7 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 
 		// monitorPerf will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorPerf, NULL, NULL);
-		checkPetscError(ierr);
-
+		checkPetscError(ierr, "setupPetsc3DMonitor: TSMonitorSet (monitorPerf) failed.");
 	}
 
 	// Set the monitor to compute the helium fluence for the retention calculation
@@ -722,11 +721,11 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 
 		// computeHeliumFluence will be called at each timestep
 		ierr = TSMonitorSet(ts, computeHeliumFluence, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc3DMonitor: TSMonitorSet (computeHeliumFluence) failed.");
 
 		// computeHeliumRetention3D will be called at each timestep
 		ierr = TSMonitorSet(ts, computeHeliumRetention3D, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc3DMonitor: TSMonitorSet (computeHeliumRetention3D) failed.");
 
 //		// Uncomment to clear the file where the retention will be written
 //		std::ofstream outputFile;
@@ -739,7 +738,7 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 		// Find the stride to know how often the HDF5 file has to be written
 		PetscBool flag;
 		ierr = PetscOptionsGetInt(NULL, "-start_stop", &hdf5Stride3D, &flag);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc3DMonitor: PetscOptionsGetInt (-start_stop) failed.");
 		if (!flag)
 			hdf5Stride3D = 1;
 
@@ -749,14 +748,14 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 		// Get the da from ts
 		DM da;
 		ierr = TSGetDM(ts, &da);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc3DMonitor: TSGetDM failed.");
 
 		// Get the size of the total grid
 		ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, &Mz,
 		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 		PETSC_IGNORE);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc3DMonitor: DMDAGetInfo failed.");
 
 		// Initialize the HDF5 file for all the processes
 		xolotlCore::HDF5Utils::initializeFile(hdf5OutputName3D, networkSize);
@@ -780,7 +779,7 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 
 		// startStop3D will be called at each timestep
 		ierr = TSMonitorSet(ts, startStop3D, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc3DMonitor: TSMonitorSet (startStop3D) failed.");
 	}
 
 	// Set the monitor to save surface plots of clusters concentration
@@ -806,9 +805,9 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 		// Give it to the plot
 		surfacePlotXY3D->setDataProvider(dataProvider);
 
-		// monitorSurface1D will be called at each timestep
+		// monitorSurfaceXY3D will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorSurfaceXY3D, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc3DMonitor: TSMonitorSet (monitorSurfaceXY3D) failed.");
 	}
 
 	// Set the monitor to save surface plots of clusters concentration
@@ -834,16 +833,16 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 		// Give it to the plot
 		surfacePlotXZ3D->setDataProvider(dataProvider);
 
-		// monitorSurface1D will be called at each timestep
+		// monitorSurfaceXZ3D will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorSurfaceXZ3D, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc3DMonitor: TSMonitorSet (monitorSurfaceXZ3D) failed.");
 	}
 
 	// Set the monitor to simply change the previous time to the new time
 	if (flagRetention) {
 		// monitorTime will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorTime, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc3DMonitor: TSMonitorSet (monitorTime) failed.");
 	}
 
 	PetscFunctionReturn(0);

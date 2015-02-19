@@ -968,35 +968,35 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 	// Check the option -plot_perf
 	ierr = PetscOptionsHasName(NULL, "-plot_perf", &flagPerf);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-plot_perf) failed.");
 
 	// Check the option -plot_series
 	ierr = PetscOptionsHasName(NULL, "-plot_series", &flagSeries);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-plot_series) failed.");
 
 	// Check the option -plot_1d
 	ierr = PetscOptionsHasName(NULL, "-plot_1d", &flag1DPlot);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-plot_1d) failed.");
 
 	// Check the option -plot_2d
 	ierr = PetscOptionsHasName(NULL, "-plot_2d", &flag2DPlot);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-plot_2d) failed.");
 
 	// Check the option -helium_retention
 	ierr = PetscOptionsHasName(NULL, "-helium_retention", &flagRetention);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-helium_retention) failed.");
 
 	// Check the option -start_stop
 	ierr = PetscOptionsHasName(NULL, "-start_stop", &flagStatus);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-start_stop) failed.");
 
 	// Check the option -max_cluster_conc
 	ierr = PetscOptionsHasName(NULL, "-max_cluster_conc", &flagMaxClusterConc);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-max_cluster_conc) failed.");
 
 	// Check the option -interstitial_diff
 	ierr = PetscOptionsHasName(NULL, "-interstitial_diff", &flagInterstitial);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-interstitial_diff) failed.");
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -1029,7 +1029,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 		// monitorSolve will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorScatter1D, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorScatter1D) failed.");
 	}
 
 	// Set the monitor to save 1D plot of many concentrations
@@ -1068,7 +1068,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 		// monitorSeries1D will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorSeries1D, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorSeries1D) failed.");
 	}
 
 	// Set the monitor to save surface plots of clusters concentration
@@ -1097,7 +1097,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 		// monitorSurface1D will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorSurface1D, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorSurface1D) failed.");
 	}
 
 	// Set the monitor to save performance plots (has to be in parallel)
@@ -1124,8 +1124,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 		// monitorPerf will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorPerf, NULL, NULL);
-		checkPetscError(ierr);
-
+		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorPerf) failed.");
 	}
 
 	// Set the monitor to compute the helium fluence for the retention calculation
@@ -1165,11 +1164,11 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 		// computeHeliumFluence will be called at each timestep
 		ierr = TSMonitorSet(ts, computeHeliumFluence, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (computeHeliumFluence) failed.");
 
 		// computeHeliumRetention1D will be called at each timestep
 		ierr = TSMonitorSet(ts, computeHeliumRetention1D, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (computeHeliumRetention1D) failed.");
 
 //		// Uncomment to clear the file where the retention will be written
 //		std::ofstream outputFile;
@@ -1182,7 +1181,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		// Find the stride to know how often the HDF5 file has to be written
 		PetscBool flag;
 		ierr = PetscOptionsGetInt(NULL, "-start_stop", &hdf5Stride1D, &flag);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsGetInt (-start_stop) failed.");
 		if (!flag)
 			hdf5Stride1D = 1;
 
@@ -1192,14 +1191,14 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		// Get the da from ts
 		DM da;
 		ierr = TSGetDM(ts, &da);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc1DMonitor: TSGetDM failed.");
 
 		// Get the size of the total grid
 		ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
 		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 		PETSC_IGNORE);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc1DMonitor: DMDAGetInfo failed.");
 
 		// Initialize the HDF5 file for all the processes
 		xolotlCore::HDF5Utils::initializeFile(hdf5OutputName1D, networkSize);
@@ -1221,7 +1220,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 		// startStop1D will be called at each timestep
 		ierr = TSMonitorSet(ts, startStop1D, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (startStop1D) failed.");
 	}
 
 	// Set the monitor to output information about when the maximum stable HeV
@@ -1229,14 +1228,14 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 	if (flagMaxClusterConc) {
 		// monitorMaxClusterConc1D will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorMaxClusterConc1D, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorMaxClusterConc1D) failed.");
 	}
 
 	// Set the monitor on the outgoing flux of interstitials at the surface
 	if (flagInterstitial) {
 		// monitorInterstitial1D will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorInterstitial1D, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorInterstitial1D) failed.");
 
 //		// Uncomment to clear the file where the interstitial flux will be written
 //		std::ofstream outputFile;
@@ -1248,7 +1247,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 	if (flagRetention || flagInterstitial) {
 		// monitorTime will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorTime, NULL, NULL);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorTime) failed.");
 	}
 
 	PetscFunctionReturn(0);
