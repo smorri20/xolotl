@@ -42,18 +42,11 @@ PetscErrorCode monitorTime(TS ts, PetscInt timestep, PetscReal time, Vec solutio
  */
 PetscErrorCode computeHeliumFluence(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
-	//
-	PetscErrorCode ierr;
-
 	PetscFunctionBeginUser;
 
 	// Get the solver handler and the flux handler
 	auto solverHandler = PetscSolver::getSolverHandler();
 	auto fluxHandler = solverHandler->getFluxHandler();
-
-	// Get the da from ts
-	DM da;
-	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
 
 	// The length of the time step
 	double dt = time - previousTime;
@@ -71,6 +64,7 @@ PetscErrorCode computeHeliumFluence(TS ts, PetscInt timestep, PetscReal time,
  */
 PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
+	// To check PETSc errors
 	PetscInt ierr;
 
 	PetscFunctionBeginUser;
@@ -132,7 +126,7 @@ PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
         {
             xolotlViz::Point aPoint;
             aPoint.value = allTimerValues[i];
-            aPoint.x = cwRank;
+            aPoint.x = i;
             aPoint.t = time;
             allPoints->push_back(aPoint);
         }
