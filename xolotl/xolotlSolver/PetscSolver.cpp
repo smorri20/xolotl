@@ -72,6 +72,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 	PetscErrorCode ierr;
 
 	// Get the local data vector from PETSc
+	PetscFunctionBeginUser;
 	DM da;
 	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
 	Vec localC;
