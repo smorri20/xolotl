@@ -356,7 +356,6 @@ public:
      */
     void setDimensionNumber(int number) {dimensionNumber = number;}
 
-
 };//end class Options
 
 } /* namespace xolotlCore */
