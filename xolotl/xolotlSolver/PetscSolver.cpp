@@ -40,14 +40,6 @@ extern PetscErrorCode setupPetsc1DMonitor(TS);
 extern PetscErrorCode setupPetsc2DMonitor(TS);
 extern PetscErrorCode setupPetsc3DMonitor(TS);
 
-/**
- * This operation "returns" in a way that PETSc expects.
- * @return The return code from PETSc.
- */
-static inline int petscReturn() {
-	PetscFunctionReturn(0);
-}
-
 void PetscSolver::setupInitialConditions(DM da, Vec C) {
 	// Initialize the concentrations in the solution vector
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -308,9 +300,8 @@ void PetscSolver::finalize() {
 
 	ierr = PetscFinalize();
 	checkPetscError(ierr, "PetscSolver::finalize: PetscFinalize failed.");
-	if (petscReturn() != 0) {
-		throw std::string("PetscSolver Exception: Unable to finalize solve!");
-	}
+
+	return;
 }
 
 } /* end namespace xolotlSolver */
