@@ -137,6 +137,11 @@ protected:
 	double reactionRadius;
 
 	/**
+	 * The biggest rate for this cluster
+	 */
+	double biggestRate;
+
+	/**
 	 * A vector of ClusterPairs that represents reacting pairs of clusters
 	 * that produce this cluster. This vector should be populated early in the
 	 * cluster's lifecycle by subclasses. In the standard Xolotl clusters,
@@ -404,46 +409,12 @@ protected:
 			const PSICluster & productReactant) const;
 
 	/**
-	 * This operation signifies that the cluster with cluster Id should be
-	 * listed as connected with this cluster through forward reactions.
-	 * @param clusterId - The integer id of the cluster that is connected
-	 * to this cluster.
-	 */
-	virtual void setReactionConnectivity(int clusterId);
-
-	/**
-	 * This operation returns the connectivity array for this cluster for
-	 * forward reactions. An entry with value one means that this cluster
-	 * and the cluster with id = index + 1 are connected.
-	 * @return The connectivity array for "forward" (non-dissociating)
-	 * reactions.
-	 */
-	virtual std::vector<int> getReactionConnectivity() const;
-
-	/**
 	 * This operation returns a set that contains only the entries of the
 	 * reaction connectivity array that are non-zero.
 	 * @return The set of connected reactants. Each entry in the set is the id
 	 * of a connected cluster for forward reactions.
 	 */
 	std::set<int> getReactionConnectivitySet() const;
-
-	/**
-	 * This operation signifies that the cluster with cluster Id should be
-	 * listed as connected with this cluster through forward reactions.
-	 * @param clusterId - The integer id of the cluster that is connected
-	 * to this cluster.
-	 */
-	virtual void setDissociationConnectivity(int clusterId);
-
-	/**
-	 * This operation returns the connectivity array for this cluster for
-	 * forward reactions. An entry with value one means that this cluster
-	 * and the cluster with id = index + 1 are connected.
-	 * @return The connectivity array for "forward" (non-dissociating)
-	 * reactions.
-	 */
-	virtual std::vector<int> getDissociationConnectivity() const;
 
 	/**
 	 * This operation returns a set that contains only the entries of the
@@ -533,6 +504,40 @@ public:
 	 */
 	void setReactionNetwork(
 			const std::shared_ptr<ReactionNetwork> reactionNetwork);
+
+	/**
+	 * This operation signifies that the cluster with cluster Id should be
+	 * listed as connected with this cluster through forward reactions.
+	 * @param clusterId - The integer id of the cluster that is connected
+	 * to this cluster.
+	 */
+	virtual void setReactionConnectivity(int clusterId);
+
+	/**
+	 * This operation returns the connectivity array for this cluster for
+	 * forward reactions. An entry with value one means that this cluster
+	 * and the cluster with id = index + 1 are connected.
+	 * @return The connectivity array for "forward" (non-dissociating)
+	 * reactions.
+	 */
+	virtual std::vector<int> getReactionConnectivity() const;
+
+	/**
+	 * This operation signifies that the cluster with cluster Id should be
+	 * listed as connected with this cluster through forward reactions.
+	 * @param clusterId - The integer id of the cluster that is connected
+	 * to this cluster.
+	 */
+	virtual void setDissociationConnectivity(int clusterId);
+
+	/**
+	 * This operation returns the connectivity array for this cluster for
+	 * forward reactions. An entry with value one means that this cluster
+	 * and the cluster with id = index + 1 are connected.
+	 * @return The connectivity array for "forward" (non-dissociating)
+	 * reactions.
+	 */
+	virtual std::vector<int> getDissociationConnectivity() const;
 
 	/**
 	 * This operation returns the total flux of this cluster in the
@@ -696,6 +701,14 @@ public:
 	 * @return
 	 */
 	virtual double getReactionRadius() const;
+
+	/**
+	 * This operation returns the biggest rate for the
+	 * particular cluster.
+	 *
+	 * @return The biggest rate
+	 */
+	double getBiggestRate() const;
 
 	/**
 	 * This operation returns a list that represents the connectivity

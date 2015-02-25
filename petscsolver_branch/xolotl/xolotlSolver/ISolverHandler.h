@@ -9,6 +9,7 @@
 #include <ITemperatureHandler.h>
 #include <IDiffusionHandler.h>
 #include <IAdvectionHandler.h>
+#include <ITrapMutationHandler.h>
 #include <IMaterialFactory.h>
 
 namespace xolotlSolver {

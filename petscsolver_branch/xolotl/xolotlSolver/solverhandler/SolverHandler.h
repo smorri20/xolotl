@@ -43,6 +43,9 @@ protected:
 	//! The original advection handler created.
 	xolotlCore::IAdvectionHandler *advectionHandler;
 
+	//! The original modified trap-mutation handler created.
+	xolotlCore::ITrapMutationHandler *mutationHandler;
+
 	//! The number of dimensions for the problem.
 	int dimension;
 
@@ -120,6 +123,9 @@ public:
 
 		// Set the advection handler
 		advectionHandler = (xolotlCore::IAdvectionHandler *) material->getAdvectionHandler().get();
+
+		// Set the bubble bursting handler
+		mutationHandler = (xolotlCore::ITrapMutationHandler *) material->getTrapMutationHandler().get();
 
 		// Set the initial vacancy concentration
 		initialVConc = options.getInitialVConcentration();

@@ -22,6 +22,9 @@ protected:
 	//! The diffusion handler
 	std::shared_ptr<xolotlCore::IDiffusionHandler> theDiffusionHandler;
 
+	//! The modified trap-mutation handler
+	std::shared_ptr<xolotlCore::ITrapMutationHandler> theTrapMutationHandler;
+
 public:
 
 	/**
@@ -85,6 +88,15 @@ public:
 	 */
 	std::shared_ptr<xolotlCore::IDiffusionHandler> getDiffusionHandler() const {
 		return theDiffusionHandler;
+	}
+
+	/**
+	 * Return the modified trap-mutation handler.
+	 *
+	 *  @return The trap-mutation handler.
+	 */
+	std::shared_ptr<xolotlCore::ITrapMutationHandler> getTrapMutationHandler() const {
+		return theTrapMutationHandler;
 	}
 };
 

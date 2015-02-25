@@ -6,6 +6,7 @@
 #include <IFluxHandler.h>
 #include <IAdvectionHandler.h>
 #include <IDiffusionHandler.h>
+#include <ITrapMutationHandler.h>
 
 namespace xolotlFactory {
 
@@ -48,6 +49,13 @@ public:
 	 * @return The diffusion handler.
 	 */
 	virtual std::shared_ptr<xolotlCore::IDiffusionHandler> getDiffusionHandler() const = 0;
+
+	/**
+	 * Return the modified trap-mutation handler.
+	 *
+	 * @return The trap mutation handler.
+	 */
+	virtual std::shared_ptr<xolotlCore::ITrapMutationHandler> getTrapMutationHandler() const = 0;
 
 	/**
 	 * Function that create the wanted material factory depending on the given type.

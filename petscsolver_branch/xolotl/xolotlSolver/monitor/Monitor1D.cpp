@@ -196,7 +196,7 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 #undef __FUNCT__
 #define __FUNCT__ Actual__FUNCT__("xolotlSolver", "computeHeliumRetention1D")
 /**
- * This is a monitoring method that will compute the total helium fluence
+ * This is a monitoring method that will compute the helium retention
  */
 PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
@@ -288,6 +288,111 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 	else {
 		// Send the value of the timer to the master process
 		MPI_Send(&heConcentration, 1, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD);
+	}
+
+	PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "computeCumulativeHelium1D")
+/**
+ * This is a monitoring method that will compute the cumulative distribution of helium
+ */
+PetscErrorCode computeCumulativeHelium1D(TS ts, PetscInt timestep, PetscReal time,
+		Vec solution, void *ictx) {
+	PetscErrorCode ierr;
+	int xs, xm;
+
+	PetscFunctionBeginUser;
+
+	// Get the number of processes
+	int worldSize;
+	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
+
+	// Gets the process ID (important when it is running in parallel)
+	int procId;
+	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+
+	// Get the solver handler
+	auto solverHandler = PetscSolver::getSolverHandler();
+
+	// Get the flux handler that will be used to compute fluxes.
+	auto fluxHandler = solverHandler->getFluxHandler();
+
+	// Get the da from ts
+	DM da;
+	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
+
+	// Get the corners of the grid
+	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
+
+	// Get the physical grid and its length
+	auto grid = solverHandler->getXGrid();
+	int xSize = grid.size();
+
+	// Get the array of concentration
+	PetscReal **solutionArray;
+	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+
+	// Store the concentration over the grid
+	double heConcentration = 0.0;
+
+	// Declare the pointer for the concentrations at a specific grid point
+	PetscReal *gridPointSolution;
+
+	// Create the output file
+	std::ofstream outputFile;
+	if (procId == 0) {
+		std::stringstream name;
+		name << "heliumCumul_" << timestep << ".dat";
+		outputFile.open(name.str());
+	}
+
+	// Loop on the entire grid
+	for (int xi = 0; xi < xSize; xi++) {
+		// Wait for everybody at each grid point
+		MPI_Barrier(PETSC_COMM_WORLD);
+
+		// Set x
+		double x = grid[xi];
+
+		// Initialize the helium concentration at this grid point
+		double heLocalConc = 0.0;
+
+		// Check if this process is in charge of xi
+		if (xi >= xs && xi < xs + xm) {
+			// Get the pointer to the beginning of the solution data for this grid point
+			gridPointSolution = solutionArray[xi];
+			// Compute the total helium concentration at this grid point
+			// Loop on all the indices
+			for (int i = 0; i < heIndices1D.size(); i++) {
+				// Add the current concentration times the number of helium in the cluster
+				// (from the weight vector)
+				heLocalConc += gridPointSolution[heIndices1D[i]] * heWeights1D[i]
+						                                     * (grid[xi] - grid[xi-1]);
+			}
+
+			// If this is not the master process, send the value
+			if (procId != 0) {
+				MPI_Send(&heLocalConc, 1, MPI_DOUBLE, 0, 5, MPI_COMM_WORLD);
+			}
+		}
+		// If this process is not in charge of xi but is the master one, receive the value
+		else if (procId == 0) {
+			MPI_Recv(&heLocalConc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 5, MPI_COMM_WORLD,
+					MPI_STATUS_IGNORE);
+		}
+
+		// The master process writes computes the cumulative value and writes in the file
+		if (procId == 0) {
+			heConcentration += heLocalConc;
+			outputFile << x << " " << heConcentration << std::endl;
+		}
+	}
+
+	// Close the file
+	if (procId == 0) {
+		outputFile.close();
 	}
 
 	PetscFunctionReturn(0);
@@ -979,7 +1084,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 	// Flags to launch the monitors or not
 	PetscBool flag2DPlot, flag1DPlot, flagSeries, flagPerf, flagRetention,
-			flagStatus, flagMaxClusterConc, flagInterstitial;
+			flagStatus, flagMaxClusterConc, flagInterstitial, flagCumul;
 
 	// Check the option -plot_perf
 	ierr = PetscOptionsHasName(NULL, "-plot_perf", &flagPerf);
@@ -1011,6 +1116,10 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 	// Check the option -interstitial_diff
 	ierr = PetscOptionsHasName(NULL, "-interstitial_diff", &flagInterstitial);
+	checkPetscError(ierr);
+
+	// Check the option -helium_cumul
+	ierr = PetscOptionsHasName(NULL, "-helium_cumul", &flagCumul);
 	checkPetscError(ierr);
 
 	// Get the solver handler
@@ -1143,8 +1252,9 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 	}
 
-	// Set the monitor to compute the helium fluence for the retention calculation
-	if (flagRetention) {
+	// Initialize heIndices1D and heWeights1D if we want to compute the
+	// retention or the cumulative value
+	if (flagRetention || flagCumul) {
 		// Get all the helium clusters
 		auto heClusters = network->getAll(heType);
 
@@ -1171,11 +1281,15 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 			auto comp = cluster->getComposition();
 			heWeights1D.push_back(comp[heType]);
 		}
+	}
 
+	// Set the monitor to compute the helium fluence and the retention
+	// for the retention calculation
+	if (flagRetention) {
 		if (heIndices1D.size() == 0) {
 			throw std::string(
-					"PetscSolver Exception: Cannot compute the retention because there is no helium "
-					"or helium-vacancy cluster in the network.");
+					"PetscSolver Exception: Cannot compute the retention because "
+					"there is no helium or helium-vacancy cluster in the network.");
 		}
 
 		// computeHeliumFluence will be called at each timestep
@@ -1190,6 +1304,20 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 //		std::ofstream outputFile;
 //		outputFile.open("retentionOut.txt");
 //		outputFile.close();
+	}
+
+	// Set the monitor to compute the cumulative helium concentration
+	if (flagCumul) {
+		if (heIndices1D.size() == 0) {
+			throw std::string(
+					"PetscSolver Exception: Cannot compute the cumulative "
+					"concentration because there is no helium or helium-vacancy "
+					"cluster in the network.");
+		}
+
+		// computeCumulativeHelium1D will be called at each timestep
+		ierr = TSMonitorSet(ts, computeCumulativeHelium1D, NULL, NULL);
+		checkPetscError(ierr);
 	}
 
 	// Set the monitor to save the status of the simulation in hdf5 file

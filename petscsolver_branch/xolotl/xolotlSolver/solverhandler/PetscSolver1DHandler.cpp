@@ -108,6 +108,9 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 	// Initialize the advection handler
 	advectionHandler->initialize(network);
 
+	// Initialize the modified trap-mutation handler
+	mutationHandler->initialize(network, grid);
+
 	// Pointer for the concentration vector at a specific grid point
 	PetscScalar *concOffset;
 
@@ -236,6 +239,9 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		// Update the network if the temperature changed
 		if (!xolotlCore::equal(temperature, lastTemperature)) {
 			network->setTemperature(temperature);
+			// Update the modified trap-mutation rate that depends on the
+			// network reaction rates
+			mutationHandler->updateTrapMutationRate(network);
 			lastTemperature = temperature;
 		}
 
@@ -261,6 +267,10 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		// ---- Compute advection over the locally owned part of the grid -----
 		advectionHandler->computeAdvection(network, grid[xi+1] - grid[xi],
 				gridPosition, concVector, updatedConcOffset);
+
+		// ----- Compute the modified trap-mutation over the locally owned part of the grid -----
+		mutationHandler->computeTrapMutation(network, xi, concOffset,
+				updatedConcOffset);
 
 		// ----- Compute all of the new fluxes -----
 		for (int i = 0; i < dof; i++) {
@@ -422,6 +432,10 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	MatStencil colIds[dof];
 	int pdColIdsVectorSize = 0;
 
+	// Store the total number of He clusters in the network for the
+	// modified trap-mutation
+	int nHelium = network->getAll(xolotlCore::heType).size();
+
 	// Declarations for variables used in the loop
 	int reactantIndex;
 
@@ -466,6 +480,48 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 			// Update the matrix
 			ierr = MatSetValuesStencil(J, 1, &rowId, pdColIdsVectorSize,
 					colIds, reactingPartialsForCluster.data(), ADD_VALUES);
+			checkPetscError(ierr);
+		}
+
+		// ----- Take care of the modified trap-mutation for all the reactants -----
+
+		// Arguments for MatSetValuesStencil called below
+		MatStencil row, col;
+		PetscScalar mutationVals[3 * nHelium];
+		PetscInt mutationIndices[3 * nHelium];
+
+		// Compute the partial derivative from modified trap-mutation at this grid point
+		int nMutating = mutationHandler->computePartialsForTrapMutation(network,
+				mutationVals, mutationIndices, xi);
+
+		// Loop on the number of helium undergoing trap-mutation to set the values
+		// in the Jacobian
+		for (int i = 0; i < nMutating; i++) {
+			// Set grid coordinate and component number for the row and column
+			// corresponding to the helium cluster
+			row.i = xi;
+			row.c = mutationIndices[3 * i];
+			col.i = xi;
+			col.c = mutationIndices[3 * i];
+
+			ierr = MatSetValuesStencil(J, 1, &row, 1, &col,
+					mutationVals + (3 * i), ADD_VALUES);
+			checkPetscError(ierr);
+
+			// Set component number for the row
+			// corresponding to the HeV cluster created through trap-mutation
+			row.c = mutationIndices[(3 * i) + 1];
+
+			ierr = MatSetValuesStencil(J, 1, &row, 1, &col,
+					mutationVals + (3 * i) + 1, ADD_VALUES);
+			checkPetscError(ierr);
+
+			// Set component number for the row
+			// corresponding to the interstitial created through trap-mutation
+			row.c = mutationIndices[(3 * i) + 2];
+
+			ierr = MatSetValuesStencil(J, 1, &row, 1, &col,
+					mutationVals + (3 * i) + 2, ADD_VALUES);
 			checkPetscError(ierr);
 		}
 	}
