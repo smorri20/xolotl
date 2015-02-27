@@ -20,6 +20,8 @@ std::shared_ptr<xolotlViz::IPlot> perfPlot;
 //! The variable to store the time at the previous time step.
 double previousTime = 0.0;
 
+#undef __FUNCT__
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "monitorTime")
 /**
  * This is a monitoring method set the previous time to the time. This is needed here
  * because multiple monitors need the previous time value from the previous timestep.
@@ -42,18 +44,11 @@ PetscErrorCode monitorTime(TS ts, PetscInt timestep, PetscReal time, Vec solutio
  */
 PetscErrorCode computeHeliumFluence(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
-	//
-	PetscErrorCode ierr;
-
 	PetscFunctionBeginUser;
 
 	// Get the solver handler and the flux handler
 	auto solverHandler = PetscSolver::getSolverHandler();
 	auto fluxHandler = solverHandler->getFluxHandler();
-
-	// Get the da from ts
-	DM da;
-	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
 
 	// The length of the time step
 	double dt = time - previousTime;
@@ -71,6 +66,7 @@ PetscErrorCode computeHeliumFluence(TS ts, PetscInt timestep, PetscReal time,
  */
 PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
+	// To check PETSc errors
 	PetscInt ierr;
 
 	PetscFunctionBeginUser;
@@ -132,7 +128,7 @@ PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
         {
             xolotlViz::Point aPoint;
             aPoint.value = allTimerValues[i];
-            aPoint.x = cwRank;
+            aPoint.x = i;
             aPoint.t = time;
             allPoints->push_back(aPoint);
         }

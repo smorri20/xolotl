@@ -479,8 +479,6 @@ public class Preprocessor {
 		// The status of the previous HDF5 operation
 		int status;
 		
-		// Get the number of dimensions
-		int[] dim = { Integer.parseInt(args.getDimensions()) };
 		// Get the grid size
 		int[] nxGrid = { Integer.parseInt(args.getNxGrid()) };
 		int[] nyGrid = { Integer.parseInt(args.getNyGrid()) };
@@ -499,18 +497,10 @@ public class Preprocessor {
 			int headerGroupId = H5.H5Gcreate(fileId, "headerGroup",
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT,
 					HDF5Constants.H5P_DEFAULT);
-
-			// Create, write, and close the dimension attribute
-			int dataSpaceId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
-			int attributeId = H5.H5Acreate(headerGroupId, "dimension",
-					HDF5Constants.H5T_STD_I32LE, dataSpaceId,
-					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
-			status = H5.H5Awrite(attributeId, HDF5Constants.H5T_STD_I32LE,
-					dim);
-			status = H5.H5Aclose(attributeId);
 			
 			// Create, write, and close the nx attribute (nxGrid)
-			attributeId = H5.H5Acreate(headerGroupId, "nx",
+			int dataSpaceId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
+			int attributeId = H5.H5Acreate(headerGroupId, "nx",
 					HDF5Constants.H5T_STD_I32LE, dataSpaceId,
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
 			status = H5.H5Awrite(attributeId, HDF5Constants.H5T_STD_I32LE,
@@ -578,8 +568,7 @@ public class Preprocessor {
 	public int[] copyHeader(String fromName, String toName) {
 		// The status of the previous HDF5 operation
 		int status;
-		// The dimension and refinement
-		int[] dim = { 0 };
+		// The number of grid points and the step size
 		int[] n = { 0 };
 		double[] h = { 0 };
 		// The grid size to return
@@ -604,28 +593,14 @@ public class Preprocessor {
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT,
 					HDF5Constants.H5P_DEFAULT);
 
-			// Open, read, and close the dimension attribute
-			int attributeId = H5.H5Aopen(headerFromGroupId, "dimension",
-					HDF5Constants.H5P_DEFAULT);
-			status = H5.H5Aread(attributeId, HDF5Constants.H5T_STD_I32LE,
-					dim);
-			status = H5.H5Aclose(attributeId);
-			// Create, write, and close the dimension attribute
-			int dataSpaceId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
-			attributeId = H5.H5Acreate(headerToGroupId, "dimension",
-					HDF5Constants.H5T_STD_I32LE, dataSpaceId,
-					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
-			status = H5.H5Awrite(attributeId, HDF5Constants.H5T_STD_I32LE,
-					dim);
-			status = H5.H5Aclose(attributeId);
-
 			// Open, read, and close the nx attribute
-			attributeId = H5.H5Aopen(headerFromGroupId, "nx",
+			int attributeId = H5.H5Aopen(headerFromGroupId, "nx",
 					HDF5Constants.H5P_DEFAULT);
 			status = H5.H5Aread(attributeId, HDF5Constants.H5T_STD_I32LE,
 					n);
 			status = H5.H5Aclose(attributeId);
 			// Create, write, and close the nx attribute
+			int dataSpaceId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
 			attributeId = H5.H5Acreate(headerToGroupId, "nx",
 					HDF5Constants.H5T_STD_I32LE, dataSpaceId,
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);

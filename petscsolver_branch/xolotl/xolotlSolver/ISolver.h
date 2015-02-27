@@ -6,7 +6,6 @@
 #include <map>
 #include <ISolverHandler.h>
 #include <Options.h>
-#include <Options.h>
 
 using namespace xolotlCore;
 

@@ -373,7 +373,6 @@ public:
      */
     void setRegularXGrid(bool flag) {useRegularGridFlag = flag;}
 
-
 };//end class Options
 
 } /* namespace xolotlCore */

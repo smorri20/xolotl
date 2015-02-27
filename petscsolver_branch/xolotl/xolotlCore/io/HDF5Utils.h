@@ -27,7 +27,6 @@ namespace HDF5Utils {
 	 * Fill the header with the number of dimensions and the number of
 	 * points and step size for each of them.
 	 *
-	 * @param dimension The number of dimension used to solve the ADR equations
 	 * @param nx The number of grid points in the x direction (depth)
 	 * @param hx The step size in the x direction
 	 * @param ny The number of grid points in the y direction
@@ -35,7 +34,7 @@ namespace HDF5Utils {
 	 * @param nz The number of grid points in the z direction
 	 * @param hz The step size in the z direction
 	 */
-	void fillHeader(int dimension, int nx, double hx, int ny = 0,
+	void fillHeader(int nx, double hx, int ny = 0,
 			double hy = 0.0, int nz = 0, double hz = 0.0);
 
 	/**

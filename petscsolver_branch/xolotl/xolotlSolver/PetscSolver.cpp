@@ -40,25 +40,6 @@ extern PetscErrorCode setupPetsc1DMonitor(TS);
 extern PetscErrorCode setupPetsc2DMonitor(TS);
 extern PetscErrorCode setupPetsc3DMonitor(TS);
 
-/* ----- Error Handling Code ----- */
-
-/**
- * This operation checks a PETSc error code and converts it to a bool.
- * @param errorCode The PETSc error code.
- * @return True if everything is OK, false otherwise.
- */
-static inline bool checkPetscError(PetscErrorCode errorCode) {
-	CHKERRQ(errorCode);
-}
-
-/**
- * This operation "returns" in a way that PETSc expects.
- * @return The return code from PETSc.
- */
-static inline int petscReturn() {
-	PetscFunctionReturn(0);
-}
-
 void PetscSolver::setupInitialConditions(DM da, Vec C) {
 	// Initialize the concentrations in the solution vector
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -90,7 +71,8 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 
 	PetscErrorCode ierr;
 
-	// Get the local data vector from petsc
+	// Get the local data vector from PETSc
+	PetscFunctionBeginUser;
 	DM da;
 	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
 	Vec localC;
@@ -219,28 +201,28 @@ void PetscSolver::solve() {
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	Vec C;
 	ierr = DMCreateGlobalVector(da, &C);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver::solve: DMCreateGlobalVector failed.");
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Create timestepping solver context
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	TS ts;
 	ierr = TSCreate(PETSC_COMM_WORLD, &ts);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver::solve: TSCreate failed.");
 	ierr = TSSetType(ts, TSARKIMEX);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver::solve: TSSetType failed.");
 	ierr = TSARKIMEXSetFullyImplicit(ts, PETSC_TRUE);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver::solve: TSARKIMEXSetFullyImplicit failed.");
 	ierr = TSSetDM(ts, da);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver::solve: TSSetDM failed.");
 	ierr = TSSetProblemType(ts, TS_NONLINEAR);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver::solve: TSSetProblemType failed.");
 	ierr = TSSetRHSFunction(ts, NULL, RHSFunction, NULL);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver::solve: TSSetRHSFunction failed.");
 	ierr = TSSetRHSJacobian(ts, NULL, NULL, RHSJacobian, NULL);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver::solve: TSSetRHSJacobian failed.");
 	ierr = TSSetSolution(ts, C);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver::solve: TSSetSolution failed.");
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Set solver options
@@ -254,10 +236,9 @@ void PetscSolver::solve() {
 	}
 
 	ierr = TSSetInitialTimeStep(ts, time, deltaTime);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver::solve: TSSetInitialTimeStep failed.");
 	ierr = TSSetFromOptions(ts);
-	checkPetscError(ierr);
-
+	checkPetscError(ierr, "PetscSolver::solve: TSSetFromOptions failed.");
 
 	// Switch on the number of dimensions to set the monitors
 	int dim = Solver::solverHandler->getDimension();
@@ -265,17 +246,17 @@ void PetscSolver::solve() {
 		case 1:
 			// One dimension
 			ierr = setupPetsc1DMonitor(ts);
-			checkPetscError(ierr);
+			checkPetscError(ierr, "PetscSolver::solve: setupPetsc1DMonitor failed.");
 			break;
 		case 2:
 			// Two dimensions
 			ierr = setupPetsc2DMonitor(ts);
-			checkPetscError(ierr);
+			checkPetscError(ierr, "PetscSolver::solve: setupPetsc2DMonitor failed.");
 			break;
 		case 3:
 			// Three dimensions
 			ierr = setupPetsc3DMonitor(ts);
-			checkPetscError(ierr);
+			checkPetscError(ierr, "PetscSolver::solve: setupPetsc3DMonitor failed.");
 			break;
 		default:
 			throw std::string(
@@ -296,7 +277,7 @@ void PetscSolver::solve() {
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	if (ts != NULL && C != NULL) {
 		ierr = TSSolve(ts, C);
-		checkPetscError(ierr);
+		checkPetscError(ierr, "PetscSolver::solve: TSSolve failed.");
 	} else {
 		throw std::string(
 				"PetscSolver Exception: Unable to solve! Data not configured properly.");
@@ -306,11 +287,11 @@ void PetscSolver::solve() {
 	 Free work space.
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	ierr = VecDestroy(&C);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver::solve: VecDestroy failed.");
 	ierr = TSDestroy(&ts);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver::solve: TSDestroy failed.");
 	ierr = DMDestroy(&da);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver::solve: DMDestroy failed.");
 
 	return;
 }
@@ -319,10 +300,9 @@ void PetscSolver::finalize() {
 	PetscErrorCode ierr;
 
 	ierr = PetscFinalize();
-	checkPetscError(ierr);
-	if (petscReturn() != 0) {
-		throw std::string("PetscSolver Exception: Unable to finalize solve!");
-	}
+	checkPetscError(ierr, "PetscSolver::finalize: PetscFinalize failed.");
+
+	return;
 }
 
 } /* end namespace xolotlSolver */
