@@ -3,6 +3,7 @@
 #include <Constants.h>
 #include <iostream>
 #include <limits>
+#include <MathUtils.h>
 
 using namespace xolotlCore;
 
@@ -842,7 +843,7 @@ std::vector<int> PSICluster::getConnectivity() const {
 void PSICluster::recomputeDiffusionCoefficient(double temp) {
 
 	// Return zero if the diffusion factor is zero.
-	if (diffusionFactor == 0.0) {
+	if (xolotlCore::equal(diffusionFactor, 0.0)) {
 		diffusionCoefficient = 0.0;
 	} else {
 		// Otherwise use the Arrhenius equation to compute the diffusion
