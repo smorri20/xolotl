@@ -111,9 +111,9 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 
 	// Check some concentrations
     BOOST_REQUIRE_CLOSE(concs[0], 8.082e-17, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[1], 2.979e-29, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[2], 4.307e-42, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[7], 4.3715e-106, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[1], 3.0035e-29, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[2], 4.3294e-42, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[7], 4.4165e-106, 0.01);
     BOOST_REQUIRE_CLOSE(concs[8], 0.02500, 0.01);
 }
 
@@ -194,10 +194,10 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
  	network->fillConcentrationsArray(concs);
 
  	// Check some concentrations
-     BOOST_REQUIRE_CLOSE(concs[0], 9.508e-12, 0.01);
-     BOOST_REQUIRE_CLOSE(concs[1], 3.457e-22, 0.01);
-     BOOST_REQUIRE_CLOSE(concs[2], 1.7474e-32, 0.01);
-     BOOST_REQUIRE_CLOSE(concs[7], 8.775e-84, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[0], 5.531e-12, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[1], 4.877e-23, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[2], 6.294e-34, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[7], 1.7405e-87, 0.01);
      BOOST_REQUIRE_CLOSE(concs[8], 0.49948, 0.01);
  }
 
@@ -278,11 +278,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
  	network->fillConcentrationsArray(concs);
 
  	// Check some concentrations
-     BOOST_REQUIRE_CLOSE(concs[0], 1.4103e-92, 0.01);
-     BOOST_REQUIRE_CLOSE(concs[1], 1.015e-183, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[0], 1.5865e-42, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[1], 6.993e-83, 0.01);
      BOOST_REQUIRE_CLOSE(concs[6], 6.187e-12, 0.01);
      BOOST_REQUIRE_CLOSE(concs[14], 0.0, 0.01);
-     BOOST_REQUIRE_CLOSE(concs[23], 1.0002e-96, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[23], 8.1287e-97, 0.01);
  }
 
  /**
@@ -362,11 +362,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
  	network->fillConcentrationsArray(concs);
 
  	// Check some concentrations
-     BOOST_REQUIRE_CLOSE(concs[0], 5.756e-90, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[0], 3.8116e-41, 0.01);
      BOOST_REQUIRE_CLOSE(concs[6], 6.075e-11, 0.01);
      BOOST_REQUIRE_CLOSE(concs[14], 0.05000, 0.01);
      BOOST_REQUIRE_CLOSE(concs[15], 5.975e-12, 0.01);
-     BOOST_REQUIRE_CLOSE(concs[16], 7.699e-22, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[16], 7.818e-22, 0.01);
  }
 
 BOOST_AUTO_TEST_SUITE_END()

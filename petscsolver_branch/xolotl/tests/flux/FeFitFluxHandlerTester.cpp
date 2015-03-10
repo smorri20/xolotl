@@ -28,12 +28,14 @@ BOOST_AUTO_TEST_CASE(checkgetIncidentFlux) {
 	double currTime = 1.0;
 
 	// Get the flux vector
-	auto fluxVector = testFitFlux->getIncidentFluxVec(currTime);
+	auto testFluxVec = testFitFlux->getIncidentFluxVec(currTime);
 
-	// Check some values
-	BOOST_REQUIRE_CLOSE(fluxVector[1], 0.116361, 0.1);
-	BOOST_REQUIRE_CLOSE(fluxVector[10], 0.0467781, 0.1);
+	// Check the value at some grid points
+	BOOST_REQUIRE_CLOSE(testFluxVec[1], 0.116361, 0.01);
+	BOOST_REQUIRE_CLOSE(testFluxVec[5], 0.098120, 0.01);
+	BOOST_REQUIRE_CLOSE(testFluxVec[15], 0.0, 0.01);
 
+	return;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
