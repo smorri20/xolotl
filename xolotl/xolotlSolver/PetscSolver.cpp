@@ -35,7 +35,6 @@ static char help[] =
 		"Solves C_t =  -D*C_xx + A*C_x + F(C) + R(C) + D(C) from Brian Wirth's SciDAC project.\n";
 
 // ----- GLOBAL VARIABLES ----- //
-
 extern PetscErrorCode setupPetsc1DMonitor(TS);
 extern PetscErrorCode setupPetsc2DMonitor(TS);
 extern PetscErrorCode setupPetsc3DMonitor(TS);
