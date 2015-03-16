@@ -25,11 +25,11 @@ private:
 
 		int mean = 0;
 		// Compute the mean
-		for (int l = 1; l < size - 1; l++) {
-			mean += surfacePosition[l];
+		for (int j = 0; j < size; j++) {
+			mean += surfacePosition[j];
 		}
 
-		return mean / (size - 2);
+		return mean / size;
 	}
 
 public:

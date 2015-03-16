@@ -29,7 +29,7 @@ void PetscSolver2DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Create distributed array (DMDA) to manage parallel grid and vectors
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = DMDACreate2d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, DM_BOUNDARY_GHOSTED,
+	ierr = DMDACreate2d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, DM_BOUNDARY_PERIODIC,
 	DMDA_STENCIL_STAR, nx, ny, PETSC_DECIDE, PETSC_DECIDE, dof, 1, NULL, NULL, &da);
 	checkPetscError(ierr);
 
@@ -142,7 +142,7 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) const {
 			}
 
 			// Initialize the vacancy concentration
-			if (i > surfacePosition[j] && i < Mx - 1 && j > 0 && j < My - 1) {
+			if (i > surfacePosition[j] && i < Mx - 1) {
 				concOffset[vacancyIndex] = initialVConc / h;
 			}
 		}
@@ -196,7 +196,7 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	PETSC_IGNORE);
 	checkPetscError(ierr);
 
-	// Pointers to the Petsc arrays that start at the beginning (xs) of the
+	// Pointers to the Petsc arrays that start at the beginning (xs, ys) of the
 	// local array!
 	PetscScalar ***concs, ***updatedConcs;
 	// Get pointers to vector data
@@ -205,7 +205,7 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	ierr = DMDAVecGetArrayDOF(da, F, &updatedConcs);
 	checkPetscError(ierr);
 
-	//Get local grid boundaries
+	// Get local grid boundaries
 	PetscInt xs, xm, ys, ym;
 	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);
 	checkPetscError(ierr);
@@ -244,8 +244,6 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	// Loop over grid points computing ODE terms for each grid point
 	for (int yj = ys; yj < ys + ym; yj++) {
 		for (int xi = xs; xi < xs + xm; xi++) {
-			//xi = 1; // Uncomment this line for debugging in a single cell.
-
 			// Compute the old and new array offsets
 			concOffset = concs[yj][xi];
 			updatedConcOffset = updatedConcs[yj][xi];
@@ -259,7 +257,7 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 			// Boundary conditions
 			// Everything to the left of the surface is empty
-			if (xi <= surfacePosition[yj] || xi == Mx - 1 || yj == 0 || yj == My - 1) {
+			if (xi <= surfacePosition[yj] || xi == Mx - 1) {
 				for (int i = 0; i < dof; i++) {
 					updatedConcOffset[i] = 1.0 * concOffset[i];
 				}
@@ -267,12 +265,11 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				continue;
 			}
 
-			double x = xi * h;
-			double y = yj * h;
+			// Set the grid position
+			gridPosition[0] = xi * h;
+			gridPosition[1] = yj * h;
 
-			// Vector representing the physical position
-			gridPosition[0] = x;
-			gridPosition[1] = y;
+			// Get the temperature from the temperature handler
 			auto temperature = temperatureHandler->getTemperature(gridPosition,
 					ftime);
 
@@ -280,6 +277,8 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			if (!xolotlCore::equal(temperature, lastTemperature)) {
 				network->setTemperature(temperature);
 				lastTemperature = temperature;
+				// Set the boolean temperatureChanged to true to recompute the
+				// off-diagonal part of the Jacobian later
 				temperatureChanged = true;
 			}
 
@@ -315,9 +314,6 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				reactantIndex = cluster->getId() - 1;
 				updatedConcOffset[reactantIndex] += flux;
 			}
-
-			// Uncomment this line for debugging in a single cell.
-			//break;
 		}
 	}
 
@@ -387,11 +383,9 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	 */
 	for (int yj = ys; yj < ys + ym; yj++) {
 		for (int xi = xs; xi < xs + xm; xi++) {
-			//xi = 1; // Uncomment this line for debugging in a single cell
-
 			// Boundary conditions
 			// Everything to the left of the surface is empty
-			if (xi <= surfacePosition[yj] || xi == Mx - 1 || yj == 0 || yj == My - 1) continue;
+			if (xi <= surfacePosition[yj] || xi == Mx - 1) continue;
 
 			// Set the grid position
 			gridPosition[0] = xi * h;
@@ -413,7 +407,7 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 				row.c = indices[i];
 
 				// Set grid coordinates and component numbers for the columns
-				// corresponding to the middle, left, right, bottom and top grid points
+				// corresponding to the middle, left, right, bottom, and top grid points
 				cols[0].i = xi; // middle
 				cols[0].j = yj;
 				cols[0].c = indices[i];
@@ -458,8 +452,6 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 				ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals + (2 * i), ADD_VALUES);
 				checkPetscError(ierr);
 			}
-
-			//break;   // Uncomment this line for debugging in a single cell.
 		}
 	}
 
@@ -509,11 +501,9 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	// Loop over the grid points
 	for (int yj = ys; yj < ys + ym; yj++) {
 		for (int xi = xs; xi < xs + xm; xi++) {
-			//xi = 1; // Uncomment this line for debugging in a single cell
-
 			// Boundary conditions
 			// Everything to the left of the surface is empty
-			if (xi <= surfacePosition[yj] || xi == Mx - 1 || yj == 0 || yj == My - 1) continue;
+			if (xi <= surfacePosition[yj] || xi == Mx - 1) continue;
 
 			// Copy data into the PSIClusterReactionNetwork so that it can
 			// compute the new concentrations.
@@ -555,9 +545,6 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 						reactingPartialsForCluster.data(), ADD_VALUES);
 				checkPetscError(ierr);
 			}
-
-			// Uncomment this line for debugging in a single cell.
-			//break;
 		}
 	}
 

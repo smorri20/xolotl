@@ -17,17 +17,6 @@
 
 namespace xolotlSolver {
 
-/* ----- Error Handling Code ----- */
-
-/**
- * This operation checks a Petsc error code and converts it to a bool.
- * @param errorCode The Petsc error code.
- * @return True if everything is OK, false otherwise.
- */
-static inline bool checkPetscError(PetscErrorCode errorCode) {
-	CHKERRQ(errorCode);
-}
-
 // Declaration of the functions defined in Monitor.cpp
 extern PetscErrorCode monitorTime(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx);
@@ -56,6 +45,8 @@ std::vector<double> previousIFlux2D;
 //! The variable to store the total number of interstitials going through the surface.
 std::vector<double> nInterstitial2D;
 
+#undef __FUNCT__
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "startStop2D")
 /**
  * This is a monitoring method that will save an hdf5 file at each time step.
  * HDF5 is handling the parallel part, so no call to MPI here.
@@ -83,29 +74,22 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 
 	// Get the da from ts
 	DM da;
-	ierr = TSGetDM(ts, &da);
-	checkPetscError(ierr);
+	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
 
 	// Get the local vector, which is capital when running in parallel,
 	// and put it into solutionArray
-	ierr = DMGetLocalVector(da, &localSolution);
-	checkPetscError(ierr);
-	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);
-	checkPetscError(ierr);
-	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);
-	checkPetscError(ierr);
-	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);
-	checkPetscError(ierr);
+	ierr = DMGetLocalVector(da, &localSolution);CHKERRQ(ierr);
+	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
+	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);CHKERRQ(ierr);
 
 	// Get the corners of the grid
-	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);
-	checkPetscError(ierr);
+	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);CHKERRQ(ierr);
 	// Get the size of the total grid
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
-	checkPetscError(ierr);
+	PETSC_IGNORE);CHKERRQ(ierr);
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -124,8 +108,7 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 
 	// Get the current time step
 	double currentTimeStep;
-	ierr = TSGetTimeStep(ts, &currentTimeStep);
-	checkPetscError(ierr);
+	ierr = TSGetTimeStep(ts, &currentTimeStep);CHKERRQ(ierr);
 
 	// Add a concentration sub group
 	xolotlCore::HDF5Utils::addConcentrationSubGroup(timestep, networkSize, time,
@@ -198,6 +181,8 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 	PetscFunctionReturn(0);
 }
 
+#undef __FUNCT__
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "computeHeliumRetention2D")
 /**
  * This is a monitoring method that will compute the total helium fluence
  */
@@ -216,20 +201,17 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 
 	// Get the da from ts
 	DM da;
-	ierr = TSGetDM(ts, &da);
-	checkPetscError(ierr);
+	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
 
 	// Get the corners of the grid
-	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);
-	checkPetscError(ierr);
+	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);CHKERRQ(ierr);
 
 	// Setup step size variable
 	double h = solverHandler->getStepSize();
 
 	// Get the array of concentration
 	PetscReal ***solutionArray;
-	ierr = DMDAVecGetArrayDOF(da, solution, &solutionArray);
-	checkPetscError(ierr);
+	ierr = DMDAVecGetArrayDOF(da, solution, &solutionArray);CHKERRQ(ierr);
 
 	// Store the concentration over the grid
 	double heConcentration = 0;
@@ -278,11 +260,10 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 		ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
 		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-		PETSC_IGNORE);
-		checkPetscError(ierr);
+		PETSC_IGNORE);CHKERRQ(ierr);
 
 		// Compute the total surface irradiated by the helium flux
-		double surface = (My - 2) * h;
+		double surface = (double) My * h;
 
 		// Rescale the concentration
 		heConcentration = heConcentration / surface;
@@ -314,6 +295,8 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 	PetscFunctionReturn(0);
 }
 
+#undef __FUNCT__
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "monitorSurface2D")
 /**
  * This is a monitoring method that will save 2D plots of the concentration of
  * a specific cluster at each grid point.
@@ -337,29 +320,22 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the da from ts
 	DM da;
-	ierr = TSGetDM(ts, &da);
-	checkPetscError(ierr);
+	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
 
 	// Get the local vector, which is capital when running in parallel,
 	// and put it into solutionArray
-	ierr = DMGetLocalVector(da, &localSolution);
-	checkPetscError(ierr);
-	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);
-	checkPetscError(ierr);
-	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);
-	checkPetscError(ierr);
-	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);
-	checkPetscError(ierr);
+	ierr = DMGetLocalVector(da, &localSolution);CHKERRQ(ierr);
+	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
+	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);CHKERRQ(ierr);
 
 	// Get the corners of the grid
-	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);
-	checkPetscError(ierr);
+	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);CHKERRQ(ierr);
 	// Get the size of the total grid
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
-	checkPetscError(ierr);
+	PETSC_IGNORE);CHKERRQ(ierr);
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -460,8 +436,7 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 		surfacePlot2D->plotLabelProvider->timeLabel = timeLabel.str();
 		// Get the current time step
 		PetscReal currentTimeStep;
-		ierr = TSGetTimeStep(ts, &currentTimeStep);
-		checkPetscError(ierr);
+		ierr = TSGetTimeStep(ts, &currentTimeStep);CHKERRQ(ierr);
 		// Give the timestep to the label provider
 		std::stringstream timeStepLabel;
 		timeStepLabel << "dt: " << std::setprecision(4) << currentTimeStep
@@ -479,12 +454,12 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 
 /**
  * This is a monitoring method that will compute the flux of interstitials
- * at the surface
+ * at the surface and move the position of the surface if necessary.
  */
 PetscErrorCode monitorInterstitial2D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	PetscErrorCode ierr;
-	double ***solutionArray, *gridPointSolution, x;
+	double ***solutionArray, *gridPointSolution;
 	Vec localSolution;
 	int xs, xm, xi, ys, ym, yj, Mx, My;
 
@@ -500,29 +475,22 @@ PetscErrorCode monitorInterstitial2D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the da from ts
 	DM da;
-	ierr = TSGetDM(ts, &da);
-	checkPetscError(ierr);
+	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
 
 	// Get the local vector, which is capital when running in parallel,
 	// and put it into solutionArray
-	ierr = DMGetLocalVector(da, &localSolution);
-	checkPetscError(ierr);
-	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);
-	checkPetscError(ierr);
-	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);
-	checkPetscError(ierr);
-	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);
-	checkPetscError(ierr);
+	ierr = DMGetLocalVector(da, &localSolution);CHKERRQ(ierr);
+	ierr = DMGlobalToLocalBegin(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
+	ierr = DMGlobalToLocalEnd(da, solution, INSERT_VALUES, localSolution);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOF(da, localSolution, &solutionArray);CHKERRQ(ierr);
 
 	// Get the corners of the grid
-	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);
-	checkPetscError(ierr);
+	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);CHKERRQ(ierr);
 	// Get the size of the total grid
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
-	checkPetscError(ierr);
+	PETSC_IGNORE);CHKERRQ(ierr);
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -540,14 +508,14 @@ PetscErrorCode monitorInterstitial2D(TS ts, PetscInt timestep, PetscReal time,
 	bool initializeFlux = false;
 
 	// Loop on the possible yj
-	for (yj = 1; yj < My - 1; yj++) {
+	for (yj = 0; yj < My; yj++) {
 		// Get the position of the surface at yj
 		int surfacePos = solverHandler->getSurfacePosition(yj);
 		xi = surfacePos + 1;
 
 		// if xi, yj is on this process
 		if (xi >= xs && xi < xs + xm && yj >= ys && yj < ys + ym) {
-			// Get the concentrations at xi = surfacePos[0] + 1
+			// Get the concentrations at xi = surfacePos + 1
 			gridPointSolution = solutionArray[yj][xi];
 
 			// Get the delta time from the previous timestep to this timestep
@@ -556,7 +524,6 @@ PetscErrorCode monitorInterstitial2D(TS ts, PetscInt timestep, PetscReal time,
 			// Compute the total density of intersitials that escaped from the
 			// surface since last timestep using the stored flux
 			nInterstitial2D[yj] += previousIFlux2D[yj] * dt;
-
 
 			// Initialize the value for the flux
 			double newFlux = 0.0;
@@ -649,10 +616,10 @@ PetscErrorCode monitorInterstitial2D(TS ts, PetscInt timestep, PetscReal time,
 	if (initializeFlux) {
 		// Compute the mean value of the surface position
 		int meanPosition = 0;
-		for (int l = 1; l < My - 1; l++) {
-			meanPosition += solverHandler->getSurfacePosition(l);
+		for (int j = 0; j < My; j++) {
+			meanPosition += solverHandler->getSurfacePosition(j);
 		}
-		meanPosition =  meanPosition / (My - 2);
+		meanPosition =  meanPosition / My;
 
 		// Get the flux handler to reinitialize it
 		auto fluxHandler = solverHandler->getFluxHandler();
@@ -679,20 +646,16 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 	PetscBool flagPerf, flagRetention, flagStatus, flag2DPlot;
 
 	// Check the option -plot_perf
-	ierr = PetscOptionsHasName(NULL, "-plot_perf", &flagPerf);
-	checkPetscError(ierr);
+	ierr = PetscOptionsHasName(NULL, "-plot_perf", &flagPerf);CHKERRQ(ierr);
 
 	// Check the option -plot_2d
-	ierr = PetscOptionsHasName(NULL, "-plot_2d", &flag2DPlot);
-	checkPetscError(ierr);
+	ierr = PetscOptionsHasName(NULL, "-plot_2d", &flag2DPlot);CHKERRQ(ierr);
 
 	// Check the option -helium_retention
-	ierr = PetscOptionsHasName(NULL, "-helium_retention", &flagRetention);
-	checkPetscError(ierr);
+	ierr = PetscOptionsHasName(NULL, "-helium_retention", &flagRetention);CHKERRQ(ierr);
 
 	// Check the option -start_stop
-	ierr = PetscOptionsHasName(NULL, "-start_stop", &flagStatus);
-	checkPetscError(ierr);
+	ierr = PetscOptionsHasName(NULL, "-start_stop", &flagStatus);CHKERRQ(ierr);
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -703,16 +666,14 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 
 	// Get the da from ts
 	DM da;
-	ierr = TSGetDM(ts, &da);
-	checkPetscError(ierr);
+	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
 
 	// Get the total size of the grid
 	int Mx, My;
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);
-	checkPetscError(ierr);
+	PETSC_IGNORE);CHKERRQ(ierr);
 
 	// Set the monitor to save performance plots (has to be in parallel)
 	if (flagPerf) {
@@ -737,8 +698,7 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		perfPlot->setDataProvider(dataProvider);
 
 		// monitorPerf will be called at each timestep
-		ierr = TSMonitorSet(ts, monitorPerf, NULL, NULL);
-		checkPetscError(ierr);
+		ierr = TSMonitorSet(ts, monitorPerf, NULL, NULL);CHKERRQ(ierr);
 
 	}
 
@@ -778,12 +738,10 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		}
 
 		// computeHeliumFluence will be called at each timestep
-		ierr = TSMonitorSet(ts, computeHeliumFluence, NULL, NULL);
-		checkPetscError(ierr);
+		ierr = TSMonitorSet(ts, computeHeliumFluence, NULL, NULL);CHKERRQ(ierr);
 
 		// computeHeliumRetention2D will be called at each timestep
-		ierr = TSMonitorSet(ts, computeHeliumRetention2D, NULL, NULL);
-		checkPetscError(ierr);
+		ierr = TSMonitorSet(ts, computeHeliumRetention2D, NULL, NULL);CHKERRQ(ierr);
 
 //		// Uncomment to clear the file where the retention will be written
 //		std::ofstream outputFile;
@@ -795,8 +753,7 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 	if (flagStatus) {
 		// Find the stride to know how often the HDF5 file has to be written
 		PetscBool flag;
-		ierr = PetscOptionsGetInt(NULL, "-start_stop", &hdf5Stride2D, &flag);
-		checkPetscError(ierr);
+		ierr = PetscOptionsGetInt(NULL, "-start_stop", &hdf5Stride2D, &flag);CHKERRQ(ierr);
 		if (!flag)
 			hdf5Stride2D = 1;
 
@@ -809,13 +766,6 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		// Setup step size variable
 		double h = solverHandler->getStepSize();
 
-		// Get the refinement of the grid
-		PetscInt refinement = 0;
-		ierr = PetscOptionsGetInt(NULL, "-da_refine", &refinement, &flag);
-		checkPetscError(ierr);
-		if (!flag)
-			refinement = 0;
-
 		// Save the header in the HDF5 file
 		xolotlCore::HDF5Utils::fillHeader(2, Mx, h, My, h);
 
@@ -826,8 +776,7 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		xolotlCore::HDF5Utils::finalizeFile();
 
 		// startStop2D will be called at each timestep
-		ierr = TSMonitorSet(ts, startStop2D, NULL, NULL);
-		checkPetscError(ierr);
+		ierr = TSMonitorSet(ts, startStop2D, NULL, NULL);CHKERRQ(ierr);
 	}
 
 	// Set the monitor to save surface plots of clusters concentration
@@ -854,26 +803,23 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		surfacePlot2D->setDataProvider(dataProvider);
 
 		// monitorSurface2D will be called at each timestep
-		ierr = TSMonitorSet(ts, monitorSurface2D, NULL, NULL);
-		checkPetscError(ierr);
+		ierr = TSMonitorSet(ts, monitorSurface2D, NULL, NULL);CHKERRQ(ierr);
 	}
 
 	// Initialize nInterstitial2D and previousIFlux2D before monitoring the
 	// interstitial flux
-	for (int l = 0; l < My; l++) {
+	for (int j = 0; j < My; j++) {
 		nInterstitial2D.push_back(0.0);
 		previousIFlux2D.push_back(0.0);
 	}
 
 	// Set the monitor on the outgoing flux of interstitials at the surface
 	// monitorInterstitial2D will be called at each timestep
-	ierr = TSMonitorSet(ts, monitorInterstitial2D, NULL, NULL);
-	checkPetscError(ierr);
+	ierr = TSMonitorSet(ts, monitorInterstitial2D, NULL, NULL);CHKERRQ(ierr);
 
 	// Set the monitor to simply change the previous time to the new time
 	// monitorTime will be called at each timestep
-	ierr = TSMonitorSet(ts, monitorTime, NULL, NULL);
-	checkPetscError(ierr);
+	ierr = TSMonitorSet(ts, monitorTime, NULL, NULL);CHKERRQ(ierr);
 
 	PetscFunctionReturn(0);
 }

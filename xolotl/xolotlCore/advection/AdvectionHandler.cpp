@@ -30,8 +30,8 @@ void AdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 
 		// Compute the concentration as explained in the description of the method
 		double conc = (3.0 * sinkStrengthVector[i] * cluster->getDiffusionCoefficient())
-				/ (xolotlCore::kBoltzmann * cluster->getTemperature() * h)
-				* ((oldRightConc / pow(depth + h, 4)) - (oldConc / pow(depth, 4)));
+				* ((oldRightConc / pow(depth + h, 4)) - (oldConc / pow(depth, 4)))
+				/ (xolotlCore::kBoltzmann * cluster->getTemperature() * h);
 
 		// Update the concentration of the cluster
 		updatedConcOffset[index] += conc;

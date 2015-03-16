@@ -69,8 +69,6 @@ static inline int petscReturn() {
 	PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ Actual__FUNCT__("xolotlSolver","setupInitialConditions")
 PetscErrorCode PetscSolver::setupInitialConditions(DM da, Vec C) {
 
 	// Local Declarations
@@ -125,24 +123,19 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 
 	// Get the local data vector from petsc
 	DM da;
-	ierr = TSGetDM(ts, &da);
-	checkPetscError(ierr);
+	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
 	Vec localC;
-	ierr = DMGetLocalVector(da, &localC);
-	checkPetscError(ierr);
+	ierr = DMGetLocalVector(da, &localC);CHKERRQ(ierr);
 
 	// Scatter ghost points to local vector, using the 2-step process
 	// DMGlobalToLocalBegin(),DMGlobalToLocalEnd().
 	// By placing code between these two statements, computations can be
 	// done while messages are in transition.
-	ierr = DMGlobalToLocalBegin(da, C, INSERT_VALUES, localC);
-	checkPetscError(ierr);
-	ierr = DMGlobalToLocalEnd(da, C, INSERT_VALUES, localC);
-	checkPetscError(ierr);
+	ierr = DMGlobalToLocalBegin(da, C, INSERT_VALUES, localC);CHKERRQ(ierr);
+	ierr = DMGlobalToLocalEnd(da, C, INSERT_VALUES, localC);CHKERRQ(ierr);
 
 	// Set the initial values of F
-	ierr = VecSet(F, 0.0);
-	checkPetscError(ierr);
+	ierr = VecSet(F, 0.0);CHKERRQ(ierr);
 
 	// Compute the new concentrations
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -156,7 +149,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *ptr) {
 }
 
 #undef __FUNCT__
-#define __FUNCT__ Actual__FUNCT__("xolotlSolver","RHSJacobian")
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "RHSJacobian")
 /*
  Compute the Jacobian entries based on IFunction() and insert them into the matrix
  */
@@ -169,20 +162,15 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 
 	// Get the matrix from PETSc
 	PetscFunctionBeginUser;
-	ierr = MatZeroEntries(J);
-	checkPetscError(ierr);
+	ierr = MatZeroEntries(J);CHKERRQ(ierr);
 	DM da;
-	ierr = TSGetDM(ts, &da);
-	checkPetscError(ierr);
+	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
 	Vec localC;
-	ierr = DMGetLocalVector(da, &localC);
-	checkPetscError(ierr);
+	ierr = DMGetLocalVector(da, &localC);CHKERRQ(ierr);
 
 	// Get the complete data array
-	ierr = DMGlobalToLocalBegin(da, C, INSERT_VALUES, localC);
-	checkPetscError(ierr);
-	ierr = DMGlobalToLocalEnd(da, C, INSERT_VALUES, localC);
-	checkPetscError(ierr);
+	ierr = DMGlobalToLocalBegin(da, C, INSERT_VALUES, localC);CHKERRQ(ierr);
+	ierr = DMGlobalToLocalEnd(da, C, INSERT_VALUES, localC);CHKERRQ(ierr);
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -193,17 +181,10 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 		// Compute the off-diagonal part of the Jacobian
 		solverHandler->computeOffDiagonalJacobian(ts, localC, J);
 
-		ierr = MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);
-		checkPetscError(ierr);
-		ierr = MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);
-		checkPetscError(ierr);
-
-//		ierr = MatSetOption(J, MAT_NEW_NONZERO_LOCATIONS, PETSC_FALSE);
-//		checkPetscError(ierr);
-		// Store the J matrix for the off-diagonal part so that it can be retrieved
-		// as long as the temperature doesn't change
-		ierr = MatStoreValues(J);
-		checkPetscError(ierr);
+		ierr = MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+		ierr = MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+		//ierr = MatSetOption(J, MAT_NEW_NONZERO_LOCATIONS, PETSC_FALSE);CHKERRQ(ierr);
+		ierr = MatStoreValues(J);CHKERRQ(ierr);
 		MatSetFromOptions(J);
 
 		// Set the boolean to know when to recompute the off-diagonal part of the
@@ -216,23 +197,18 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 	}
 	else {
 		// Retrieve the matrix that was previously stored
-		ierr = MatRetrieveValues(J);
-		checkPetscError(ierr);
+		ierr = MatRetrieveValues(J);CHKERRQ(ierr);
 	}
 	
 	/* ----- Compute the partial derivatives for the reaction term ----- */
 	solverHandler->computeDiagonalJacobian(ts, localC, J);
 
-	ierr = MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);
-	checkPetscError(ierr);
-	ierr = MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);
-	checkPetscError(ierr);
+	ierr = MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+	ierr = MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
 
 	if (A != J) {
-		ierr = MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY);
-		checkPetscError(ierr);
-		ierr = MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY);
-		checkPetscError(ierr);
+		ierr = MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+		ierr = MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
 	}
 
 	// Stop the RHSJacobian timer

@@ -14,17 +14,6 @@
 
 namespace xolotlSolver {
 
-/* ----- Error Handling Code ----- */
-
-/**
- * This operation checks a Petsc error code and converts it to a bool.
- * @param errorCode The Petsc error code.
- * @return True if everything is OK, false otherwise.
- */
-static inline bool checkPetscError(PetscErrorCode errorCode) {
-	CHKERRQ(errorCode);
-}
-
 //! The pointer to the plot that will be used to visualize performance data.
 std::shared_ptr<xolotlViz::IPlot> perfPlot;
 
@@ -46,6 +35,8 @@ PetscErrorCode monitorTime(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 	PetscFunctionReturn(0);
 }
 
+#undef __FUNCT__
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "computeHeliumFluence")
 /**
  * This is a monitoring method that will compute the total helium fluence
  */
@@ -62,8 +53,7 @@ PetscErrorCode computeHeliumFluence(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the da from ts
 	DM da;
-	ierr = TSGetDM(ts, &da);
-	checkPetscError(ierr);
+	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
 
 	// The length of the time step
 	double dt = time - previousTime;
@@ -74,6 +64,8 @@ PetscErrorCode computeHeliumFluence(TS ts, PetscInt timestep, PetscReal time,
 	PetscFunctionReturn(0);
 }
 
+#undef __FUNCT__
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "monitorPerf")
 /**
  * This is a monitoring method that will save 1D plots of one performance timer
  */
@@ -159,8 +151,7 @@ PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
 		perfPlot->plotLabelProvider->timeLabel = timeLabel.str();
 		// Get the current time step
 		PetscReal currentTimeStep;
-		ierr = TSGetTimeStep(ts, &currentTimeStep);
-		checkPetscError(ierr);
+		ierr = TSGetTimeStep(ts, &currentTimeStep);CHKERRQ(ierr);
 		// Give the timestep to the label provider
 		std::ostringstream timeStepLabel;
 		timeStepLabel << "dt: " << std::setprecision(4) << currentTimeStep
