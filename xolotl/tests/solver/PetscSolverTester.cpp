@@ -49,8 +49,10 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 			<< "petscArgs=-fieldsplit_0_pc_type redundant "
 					"-ts_max_snes_failures 200 "
 					"-pc_fieldsplit_detect_coupling "
-					"-ts_adapt_dt_max 10 -pc_type fieldsplit "
-					"-fieldsplit_1_pc_type sor -ts_final_time 1000 "
+					"-ts_adapt_dt_max 10 "
+					"-pc_type fieldsplit "
+					"-fieldsplit_1_pc_type sor "
+					"-ts_final_time 1000 "
 					"-ts_max_steps 5" << std::endl
 			<< "startTemp=900" << std::endl
 			<< "perfHandler=dummy" << std::endl
@@ -154,8 +156,10 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 			<< "petscArgs=-fieldsplit_0_pc_type redundant "
 					"-ts_max_snes_failures 200 "
 					"-pc_fieldsplit_detect_coupling "
-					"-ts_adapt_dt_max 10 -pc_type fieldsplit "
-					"-fieldsplit_1_pc_type sor -ts_final_time 1000 "
+					"-ts_adapt_dt_max 10 "
+					"-pc_type fieldsplit "
+					"-fieldsplit_1_pc_type sor "
+					"-ts_final_time 1000 "
 					"-ts_max_steps 5" << std::endl
 			<< "startTemp=900" << std::endl
 			<< "perfHandler=dummy" << std::endl
@@ -259,15 +263,17 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 			<< "petscArgs=-fieldsplit_0_pc_type redundant "
 					"-ts_max_snes_failures 200 "
 					"-pc_fieldsplit_detect_coupling "
-					"-ts_adapt_dt_max 10 -pc_type fieldsplit "
-					"-fieldsplit_1_pc_type sor -ts_final_time 1000 "
-					"-ts_max_steps 5" << std::endl
+					"-ts_adapt_dt_max 10 "
+					"-pc_type fieldsplit "
+					"-fieldsplit_1_pc_type sor "
+					"-ts_final_time 1000 "
+					"-ts_max_steps 10" << std::endl
 			<< "startTemp=900" << std::endl
 			<< "perfHandler=dummy" << std::endl
 			<< "heFlux=4.0e5" << std::endl
 			<< "material=W100" << std::endl
 			<< "dimensions=3" << std::endl
-			<< "voidPortion=60.0" << std::endl;
+			<< "voidPortion=20.0" << std::endl;
 	paramFile.close();
 
 	// Create a fake command line to read the options
@@ -333,11 +339,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
  	network->fillConcentrationsArray(concs);
 
  	// Check some concentrations
-     BOOST_REQUIRE_CLOSE(concs[0], 0.0, 0.01);
-     BOOST_REQUIRE_CLOSE(concs[6], 0.0, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[0], 8.0759e-69, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[6], 8.8267e-11, 0.01);
      BOOST_REQUIRE_CLOSE(concs[14], 0.0, 0.01);
-     BOOST_REQUIRE_CLOSE(concs[15], 0.0, 0.01);
-     BOOST_REQUIRE_CLOSE(concs[16], 0.0, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[15], -1.7694e-103, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[16], -3.1132e-95, 0.01);
 
      // Remove the created file
      std::string tempFile = "param.txt";
