@@ -54,8 +54,10 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	// Check the total number of diffusing clusters
 	BOOST_REQUIRE_EQUAL(diffusionHandler.getNumberOfDiffusing(), 7);
 
-	// The size parameter
-	double s = 1.0;
+	// The size parameter in the x direction
+	double sx = 1.0;
+	// The size parameter in the y direction
+	double sy = 1.0;
 
 	// The arrays of concentration
 	double concentration[9*size];
@@ -67,7 +69,7 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 		newConcentration[i] = 0.0;
 	}
 
-	// Set the temperature to 1000 K to initialize the diffusion coefficients
+	// Set the temperature to 1000K to initialize the diffusion coefficients
 	auto reactants = network->getAll();
 	for (int i = 0; i < size; i++) {
 		auto cluster = (PSICluster *) reactants->at(i);
@@ -95,8 +97,8 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	concVector[4] = conc + 7 * size; // top
 
 	// Compute the diffusion at this grid point
-	diffusionHandler.computeDiffusion(network, s, concVector,
-			updatedConcOffset);
+	diffusionHandler.computeDiffusion(network, concVector,
+			updatedConcOffset, sx, sy);
 
 	// Check the new values of updatedConcOffset
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 1.0393e+13, 0.01);
@@ -118,8 +120,8 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	double *valPointer = &val[0];
 
 	// Compute the partial derivatives for the diffusion a the grid point 1
-	diffusionHandler.computePartialsForDiffusion(network, s, valPointer,
-			indicesPointer);
+	diffusionHandler.computePartialsForDiffusion(network, valPointer,
+			indicesPointer, sx, sy);
 
 	// Check the values for the indices
 	BOOST_REQUIRE_EQUAL(indices[0], 0);

@@ -10,7 +10,7 @@
 namespace xolotlCore {
 
 /**
- * PetscOptionHandler handles all the Petsc options.
+ * PetscOptionHandler handles all the PETSc options.
  */
 class PetscOptionHandler: public OptionHandler {
 public:

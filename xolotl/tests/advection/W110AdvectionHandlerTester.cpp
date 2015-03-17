@@ -40,21 +40,19 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	// Get its size
 	const int size = network->getAll()->size();
 
-	// Create the advection handler
+	// Create the advection handler and initialize it
 	W110AdvectionHandler advectionHandler;
-
-	// Initialize it
 	advectionHandler.initialize(network);
 
 	// Check the total number of advecting clusters
 	BOOST_REQUIRE_EQUAL(advectionHandler.getNumberOfAdvecting(), 6);
 
-	// The size parameter
-	double h = 1.0;
+	// Set the size parameter in the x direction
+	double hx = 1.0;
 	// The surface position
 	int surfacePos = 0;
 
-	// The arrays of concentration
+	// Create the arrays of concentration
 	double concentration[3*size];
 	double newConcentration[3*size];
 
@@ -64,7 +62,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 		newConcentration[i] = 0.0;
 	}
 
-	// Set the temperature to 1000 K to initialize the diffusion coefficients
+	// Set the temperature to 1000K to initialize the diffusion coefficients
 	auto reactants = network->getAll();
 	for (int i = 0; i < size; i++) {
 		auto cluster = (PSICluster *) reactants->at(i);
@@ -86,10 +84,10 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	concVector[2] = conc + 2 * size; // right
 
 	// Set the grid position
-	std::vector<double> gridPosition = { h, 0, 0 };
+	std::vector<double> gridPosition = { hx, 0, 0 };
 
 	// Compute the advection at this grid point
-	advectionHandler.computeAdvection(network, h, gridPosition, surfacePos,
+	advectionHandler.computeAdvection(network, hx, gridPosition, surfacePos,
 			concVector, updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
@@ -112,7 +110,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	double *valPointer = &val[0];
 
 	// Compute the partial derivatives for the advection a the grid point 1
-	advectionHandler.computePartialsForAdvection(network, h, valPointer,
+	advectionHandler.computePartialsForAdvection(network, hx, valPointer,
 			indicesPointer, gridPosition, surfacePos);
 
 	// Check the values for the indices

@@ -15,7 +15,7 @@ FluxHandler::FluxHandler() :
 		heFlux(1.0),
 		useTimeProfile(false),
 		normFactor(0.0){
-
+	return;
 }
 
 void FluxHandler::initializeFluxHandler(int surfacePos, int nx, double hx, double hy,
@@ -25,14 +25,20 @@ void FluxHandler::initializeFluxHandler(int surfacePos, int nx, double hx, doubl
 	stepSize = hx;
 	elementarySurfaceSize = hy * hz;
 
+	// Compute the norm factor because the fit function has an
+	// arbitrary amplitude
 	normFactor = 0.0;
+	// Loop on the x grid points skipping the first after the surface position and 
+	// last because of the boundary conditions
 	for (int i = surfacePos + 1; i < nx - 1; i++) {
 		double x = (double) (i - surfacePos) * stepSize;
 
+		// Add the the value of the function times the step size
 		normFactor += FitFunction(x) * stepSize;
 	}
 
-	// Factor the incident flux will be multiplied by
+	// Factor the incident flux will be multiplied by to get
+	// the wanted intensity
 	double heFluxNormalized = elementarySurfaceSize * heFlux / normFactor;
 
 	// The first values should always be 0.0 because it is on the left side of the surface
@@ -40,12 +46,14 @@ void FluxHandler::initializeFluxHandler(int surfacePos, int nx, double hx, doubl
 		incidentFluxVec.push_back(0.0);
 	}
 
-	// Starts a i = 1 because the first value was already put in the vector
+	// Starts a i = surfacePos + 1 because the first values were already put in the vector
 	for (int i = surfacePos + 1; i < nx - 1; i++) {
+		// Get the x position
 		auto x = (double) (i - surfacePos) * stepSize;
 
-		auto incidentFlux = heFluxNormalized * FitFunction(x);
-
+		// Compute the flux value
+		double incidentFlux = heFluxNormalized * FitFunction(x);
+		// Add it to the vector
 		incidentFluxVec.push_back(incidentFlux);
 	}
 
@@ -70,12 +78,14 @@ void FluxHandler::recomputeFluxHandler(int surfacePos) {
 		incidentFluxVec.push_back(0.0);
 	}
 
-	// Starts a i = 1 because the first value was already put in the vector
+	// Starts a i = surfacePos + 1 because the first values were already put in the vector
 	for (int i = surfacePos + 1; i < numGridPoints - 1; i++) {
+		// Get the x position
 		double x = (double) (i - surfacePos) * stepSize;
 
-		auto incidentFlux = heFluxNormalized * FitFunction(x);
-
+		// Compute the flux value
+		double incidentFlux = heFluxNormalized * FitFunction(x);
+		// Add it to the vector
 		incidentFluxVec.push_back(incidentFlux);
 	}
 
@@ -93,6 +103,7 @@ void FluxHandler::initializeTimeProfile(std::string fileName) {
 	std::ifstream inputFile(fileName.c_str());
 	std::string line;
 
+	// Read the file and store the values in the two vectors
 	while (getline(inputFile, line)) {
 		if (!line.length() || line[0] == '#')
 			continue;
@@ -106,22 +117,25 @@ void FluxHandler::initializeTimeProfile(std::string fileName) {
 }
 
 double FluxHandler::getAmplitude(double currentTime) const {
-
+	// Initialize the amplitude to return
 	double f = 0.0;
 
-	// if x is smaller than or equal to xi[0]
+	// If the time is smaller than or equal than the first stored time
 	if (currentTime <= time[0])
 		return f = amplitude[0];
 
-	// if x is greater than or equal to xi[n-1]
+	// If the time is larger or equal to the last stored time
 	if (currentTime >= time[time.size() - 1])
 		return f = amplitude[time.size() - 1];
 
-	// loop to determine the interval x falls in, ie x[k] < x < x[k+1]
+	// Else loop to determine the interval the time falls in
+	// i.e. time[k] < time < time[k + 1]
 	for (int k = 0; k < time.size() - 1; k++) {
 		if (currentTime < time[k]) continue;
 		if (currentTime > time[k + 1]) continue;
 
+		// Compute the amplitude following a linear interpolation between
+		// the two stored values
 		f = amplitude[k]
 				+ (amplitude[k + 1] - amplitude[k]) * (currentTime - time[k])
 						/ (time[k + 1] - time[k]);
@@ -131,24 +145,7 @@ double FluxHandler::getAmplitude(double currentTime) const {
 	return f;
 }
 
-double FluxHandler::getIncidentFlux(std::vector<int> compositionVec,
-		std::vector<double> position, double currentTime, int surfacePos) {
-
-	// Recompute the flux vector if a time profile is used
-	if (useTimeProfile) {
-		heFlux = getAmplitude(currentTime);
-		recomputeFluxHandler(surfacePos);
-	}
-
-	// Get the index number from the position
-	int i = position[0] / stepSize;
-
-	// Return the corresponding value
-	return incidentFluxVec[i];
-}
-
 std::vector<double> FluxHandler::getIncidentFluxVec(double currentTime, int surfacePos) {
-
 	// Recompute the flux vector if a time profile is used
 	if (useTimeProfile) {
 		heFlux = getAmplitude(currentTime);
@@ -158,14 +155,8 @@ std::vector<double> FluxHandler::getIncidentFluxVec(double currentTime, int surf
 	return incidentFluxVec;
 }
 
-void FluxHandler::setOutgoingFlux(std::vector<int> compositionVec,
-		std::vector<int> position, double time, double outgoingFlux) {
-
-	return;
-}
-
 void FluxHandler::incrementHeFluence(double dt) {
-	// the fluence is the flux times the time
+	// The fluence is the flux times the time
 	heFluence += heFlux * dt;
 
 	return;

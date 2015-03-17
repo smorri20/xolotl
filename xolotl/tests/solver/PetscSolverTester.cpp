@@ -43,10 +43,27 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 	// Local Declarations
 	string sourceDir(XolotlSourceDirectory);
 
+	// Create the parameter file
+	std::ofstream paramFile("param.txt");
+	paramFile << "vizHandler=dummy" << std::endl
+			<< "petscArgs=-fieldsplit_0_pc_type redundant "
+					"-ts_max_snes_failures 200 "
+					"-pc_fieldsplit_detect_coupling "
+					"-ts_adapt_dt_max 10 -pc_type fieldsplit "
+					"-fieldsplit_1_pc_type sor -ts_final_time 1000 "
+					"-ts_max_steps 5" << std::endl
+			<< "startTemp=900" << std::endl
+			<< "perfHandler=dummy" << std::endl
+			<< "heFlux=4.0e5" << std::endl
+			<< "material=W100" << std::endl
+			<< "dimensions=1" << std::endl
+			<< "voidPortion=60.0" << std::endl;
+	paramFile.close();
+
 	// Create a fake command line to read the options
 	argc = 1;
 	argv = new char*[2];
-	std::string parameterFile = sourceDir + "/tests/testfiles/param_good.txt";
+	std::string parameterFile = "param.txt";
 	argv[0] = new char[parameterFile.length() + 1];
 	strcpy(argv[0], parameterFile.c_str());
 	argv[1] = 0; // null-terminate the array
@@ -106,18 +123,22 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 	network->fillConcentrationsArray(concs);
 
 	// Check some concentrations
-    BOOST_REQUIRE_CLOSE(concs[0], 1.4788e-10, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[1], 3.5607e-18, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[2], 1.8205e-25, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[7], 3.1877e-52, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[8], 1.5783e-5, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[0], 1.5241e-10, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[1], 3.9313e-18, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[2], 1.4340e-25, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[7], 8.2025e-62, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[8], 0.0, 0.01);
+
+    // Remove the created file
+    std::string tempFile = "param.txt";
+    std::remove(tempFile.c_str());
 }
 
- /**
-  * This operation checks the concentration of clusters after solving a test case
-  * in 2D.
-  */
- BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
+/**
+ * This operation checks the concentration of clusters after solving a test case
+ * in 2D.
+ */
+BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 
  	// Initialize MPI for HDF5
  	int argc = 0;
@@ -127,13 +148,30 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
  	// Local Declarations
  	string sourceDir(XolotlSourceDirectory);
 
- 	// Create a fake command line to read the options
- 	argc = 1;
- 	argv = new char*[2];
- 	std::string parameterFile = sourceDir + "/tests/testfiles/param_good_2D.txt";
- 	argv[0] = new char[parameterFile.length() + 1];
- 	strcpy(argv[0], parameterFile.c_str());
- 	argv[1] = 0; // null-terminate the array
+	// Create the parameter file
+	std::ofstream paramFile("param.txt");
+	paramFile << "vizHandler=dummy" << std::endl
+			<< "petscArgs=-fieldsplit_0_pc_type redundant "
+					"-ts_max_snes_failures 200 "
+					"-pc_fieldsplit_detect_coupling "
+					"-ts_adapt_dt_max 10 -pc_type fieldsplit "
+					"-fieldsplit_1_pc_type sor -ts_final_time 1000 "
+					"-ts_max_steps 5" << std::endl
+			<< "startTemp=900" << std::endl
+			<< "perfHandler=dummy" << std::endl
+			<< "heFlux=4.0e5" << std::endl
+			<< "material=W100" << std::endl
+			<< "dimensions=2" << std::endl
+			<< "voidPortion=60.0" << std::endl;
+	paramFile.close();
+
+	// Create a fake command line to read the options
+	argc = 1;
+	argv = new char*[2];
+	std::string parameterFile = "param.txt";
+	argv[0] = new char[parameterFile.length() + 1];
+	strcpy(argv[0], parameterFile.c_str());
+	argv[1] = 0; // null-terminate the array
 
  	// Read the options
  	Options opts;
@@ -190,18 +228,22 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
  	network->fillConcentrationsArray(concs);
 
  	// Check some concentrations
-     BOOST_REQUIRE_CLOSE(concs[0], 1.465e-89, 0.01);
-     BOOST_REQUIRE_CLOSE(concs[1], 1.4182e-178, 0.01);
-     BOOST_REQUIRE_CLOSE(concs[6], 6.465e-11, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[0], -3.6705e-79, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[1], -6.1327e-156, 0.01);
+     BOOST_REQUIRE_CLOSE(concs[6], 8.8200e-11, 0.01);
      BOOST_REQUIRE_CLOSE(concs[14], 0.0, 0.01);
-     BOOST_REQUIRE_CLOSE(concs[23], 1.3004e-88, 0.01);
- }
+     BOOST_REQUIRE_CLOSE(concs[23], 1.7672e-76, 0.01);
 
- /**
-  * This operation checks the concentration of clusters after solving a test case
-  * in 3D.
-  */
- BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
+     // Remove the created file
+     std::string tempFile = "param.txt";
+     std::remove(tempFile.c_str());
+}
+
+/**
+ * This operation checks the concentration of clusters after solving a test case
+ * in 3D.
+ */
+BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 
  	// Initialize MPI for HDF5
  	int argc = 0;
@@ -211,13 +253,30 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
  	// Local Declarations
  	string sourceDir(XolotlSourceDirectory);
 
- 	// Create a fake command line to read the options
- 	argc = 1;
- 	argv = new char*[2];
- 	std::string parameterFile = sourceDir + "/tests/testfiles/param_good_3D.txt";
- 	argv[0] = new char[parameterFile.length() + 1];
- 	strcpy(argv[0], parameterFile.c_str());
- 	argv[1] = 0; // null-terminate the array
+	// Create the parameter file
+	std::ofstream paramFile("param.txt");
+	paramFile << "vizHandler=dummy" << std::endl
+			<< "petscArgs=-fieldsplit_0_pc_type redundant "
+					"-ts_max_snes_failures 200 "
+					"-pc_fieldsplit_detect_coupling "
+					"-ts_adapt_dt_max 10 -pc_type fieldsplit "
+					"-fieldsplit_1_pc_type sor -ts_final_time 1000 "
+					"-ts_max_steps 5" << std::endl
+			<< "startTemp=900" << std::endl
+			<< "perfHandler=dummy" << std::endl
+			<< "heFlux=4.0e5" << std::endl
+			<< "material=W100" << std::endl
+			<< "dimensions=3" << std::endl
+			<< "voidPortion=60.0" << std::endl;
+	paramFile.close();
+
+	// Create a fake command line to read the options
+	argc = 1;
+	argv = new char*[2];
+	std::string parameterFile = "param.txt";
+	argv[0] = new char[parameterFile.length() + 1];
+	strcpy(argv[0], parameterFile.c_str());
+	argv[1] = 0; // null-terminate the array
 
  	// Read the options
  	Options opts;
@@ -279,6 +338,10 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
      BOOST_REQUIRE_CLOSE(concs[14], 0.0, 0.01);
      BOOST_REQUIRE_CLOSE(concs[15], 0.0, 0.01);
      BOOST_REQUIRE_CLOSE(concs[16], 0.0, 0.01);
- }
+
+     // Remove the created file
+     std::string tempFile = "param.txt";
+     std::remove(tempFile.c_str());
+}
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -4,7 +4,7 @@
 namespace xolotlCore {
 
 void AdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
-		double h, std::vector<double> &pos, int surfacePos, double **concVector,
+		double hx, std::vector<double> &pos, int surfacePos, double **concVector,
 		double *updatedConcOffset) {
 	// Get all the reactant
 	auto reactants = network->getAll();
@@ -12,16 +12,12 @@ void AdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 	int nAdvec = indexVector.size();
 
 	// Compute the depth from the surface
-	double depth = pos[0] - (double) surfacePos * h;
+	double depth = pos[0] - (double) surfacePos * hx;
 
-	// Get the number of degrees of freedom which is the size of the network
-	int dof = reactants->size();
-
-	// Loop on them
+	// Loop on the advecting clusters
 	for (int i = 0; i < nAdvec; i++) {
-		// Get the advecting cluster
+		// Get a specific one and its index
 		auto cluster = (PSICluster *) reactants->at(indexVector[i]);
-		// Get the index of the cluster
 		int index = cluster->getId() - 1;
 
 		// Get the initial concentrations
@@ -30,8 +26,8 @@ void AdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 
 		// Compute the concentration as explained in the description of the method
 		double conc = (3.0 * sinkStrengthVector[i] * cluster->getDiffusionCoefficient())
-				* ((oldRightConc / pow(depth + h, 4)) - (oldConc / pow(depth, 4)))
-				/ (xolotlCore::kBoltzmann * cluster->getTemperature() * h);
+				* ((oldRightConc / pow(depth + hx, 4)) - (oldConc / pow(depth, 4)))
+				/ (xolotlCore::kBoltzmann * cluster->getTemperature() * hx);
 
 		// Update the concentration of the cluster
 		updatedConcOffset[index] += conc;
@@ -41,27 +37,24 @@ void AdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 }
 
 void AdvectionHandler::computePartialsForAdvection(
-		PSIClusterReactionNetwork *network, double h, double *val,
+		PSIClusterReactionNetwork *network, double hx, double *val,
 		int *indices, std::vector<double> &pos, int surfacePos) {
 	// Get all the reactant
 	auto reactants = network->getAll();
-	// And the size of the network
-	int size = reactants->size();
-	// Get the number of diffusing cluster
+	// Get the number of advecting cluster
 	int nAdvec = indexVector.size();
 
 	// Compute the depth from the surface
-	double depth = pos[0] - (double) surfacePos * h;
+	double depth = pos[0] - (double) surfacePos * hx;
 
-	// Loop on them
+	// Loop on the advecting clusters
 	for (int i = 0; i < nAdvec; i++) {
-		// Get the diffusing cluster
+		// Get a specific one and its index
 		auto cluster = (PSICluster *) reactants->at(indexVector[i]);
-		// Get the index of the cluster
 		int index = cluster->getId() - 1;
 		// Get the diffusion coefficient of the cluster
 		double diffCoeff = cluster->getDiffusionCoefficient();
-		// Get the sink strenght value
+		// Get the sink strength value
 		double sinkStrength = sinkStrengthVector[i];
 
 		// Set the cluster index that will be used by PetscSolver
@@ -72,10 +65,10 @@ void AdvectionHandler::computePartialsForAdvection(
 		// explained in the description of this method
 		val[i * 2] = -(3.0 * sinkStrength * diffCoeff)
 						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-								* h * pow(depth, 4)); // middle
+								* hx * pow(depth, 4)); // middle
 		val[(i * 2) + 1] = (3.0 * sinkStrength * diffCoeff)
 								/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-										* h * pow(depth + h, 4)); // right
+										* hx * pow(depth + hx, 4)); // right
 	}
 
 	return;

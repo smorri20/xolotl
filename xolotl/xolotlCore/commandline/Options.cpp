@@ -33,7 +33,6 @@ Options::Options() :
 		initialVConcentration(0.0),
 		voidPortion(50.0),
 		dimensionNumber(1) {
-
 	// Create the network option handler
 	auto networkHandler = new NetworkOptionHandler();
 	// Create the PETSc option handler
@@ -163,6 +162,7 @@ void Options::showHelp(std::ostream& os) const {
 			<< "See the Xolotl documentation for PETSc options. \n"
 			<< "Supported options:\n";
 
+	// Loop on each option help message
 	for (OptionsMap::const_iterator iter = optionsMap.begin();
 			iter != optionsMap.end(); iter++) {
 		os << "  " << iter->second->helpMessage << '\n';

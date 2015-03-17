@@ -6,16 +6,6 @@
 
 namespace xolotlSolver {
 
-/**
- * This operation checks a Petsc error code and converts it to a bool.
- *
- * @param errorCode The Petsc error code.
- * @return True if everything is OK, false otherwise.
- */
-inline bool checkPetscError(PetscErrorCode errorCode) {
-	CHKERRQ(errorCode);
-}
-
 void PetscSolver2DHandler::createSolverContext(DM &da, int nx, double hx, int ny,
 		double hy, int nz, double hz) {
 	PetscErrorCode ierr;
@@ -31,10 +21,11 @@ void PetscSolver2DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	ierr = DMDACreate2d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, DM_BOUNDARY_PERIODIC,
 	DMDA_STENCIL_STAR, nx, ny, PETSC_DECIDE, PETSC_DECIDE, dof, 1, NULL, NULL, &da);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::createSolverContext: DMDACreate2d failed.");
 
-	// Set the step size
-	h = hx;
+	// Set the step sizes
+	hX = hx;
+	hY = hy;
 
 	// Set the position of the surface
 	for (int j = 0; j < ny; j++) {
@@ -48,10 +39,6 @@ void PetscSolver2DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	// Set the last temperature to 0
 	lastTemperature = 0.0;
 
-	// Set the surfaceHasMoved boolean to true so that the off-diagonal part of
-	// the Jacobian is computed at the beginning
-	surfaceHasMoved = true;
-
 	/*  The only spatial coupling in the Jacobian is due to diffusion.
 	 *  The ofill (thought of as a dof by dof 2d (row-oriented) array represents
 	 *  the nonzero coupling between degrees of freedom at one point with degrees
@@ -63,13 +50,13 @@ void PetscSolver2DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	 */
 	PetscInt *ofill, *dfill;
 	ierr = PetscMalloc(dof * dof * sizeof(PetscInt), &ofill);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::createSolverContext: PetscMalloc (ofill) failed.");
 	ierr = PetscMalloc(dof * dof * sizeof(PetscInt), &dfill);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::createSolverContext: PetscMalloc (dfill) failed.");
 	ierr = PetscMemzero(ofill, dof * dof * sizeof(PetscInt));
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::createSolverContext: PetscMemzero (ofill) failed.");
 	ierr = PetscMemzero(dfill, dof * dof * sizeof(PetscInt));
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::createSolverContext: PetscMemzero (dfill) failed.");
 
 	// Fill ofill, the matrix of "off-diagonal" elements that represents diffusion
 	diffusionHandler->initializeOFill(network, ofill);
@@ -79,13 +66,13 @@ void PetscSolver2DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 
 	// Load up the block fills
 	ierr = DMDASetBlockFills(da, dfill, ofill);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::createSolverContext: DMDASetBlockFills failed.");
 
 	// Free the temporary fill arrays
 	ierr = PetscFree(ofill);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::createSolverContext: PetscFree (ofill) failed.");
 	ierr = PetscFree(dfill);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::createSolverContext: PetscFree (dfill) failed.");
 
 	return;
 }
@@ -96,12 +83,12 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) const {
 	// Pointer for the concentration vector
 	PetscScalar ***concentrations;
 	ierr = DMDAVecGetArrayDOF(da, C, &concentrations);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::initializeConcentration: DMDAVecGetArrayDOF failed.");
 
 	// Get the local boundaries
 	PetscInt xs, xm, ys, ym;
 	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::initializeConcentration: DMDAGetCorners failed.");
 
 	// Get the last time step written in the HDF5 file
 	int tempTimeStep = -2;
@@ -114,10 +101,10 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) const {
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::initializeConcentration: DMDAGetInfo failed.");
 
 	// Initialize the flux handler
-	fluxHandler->initializeFluxHandler(surfacePosition[0], Mx, h, h);
+	fluxHandler->initializeFluxHandler(surfacePosition[0], Mx, hX, hY);
 
 	// Initialize the advection handler
 	advectionHandler->initialize(network);
@@ -128,8 +115,11 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) const {
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = network->size();
 
-	// Get the single vacancy ID.
-	int vacancyIndex = (network->get(xolotlCore::vType, 1)->getId()) - 1;
+	// Get the single vacancy ID
+	auto singleVacancyCluster = network->get(xolotlCore::vType, 1);
+	int vacancyIndex = -1;
+	if (singleVacancyCluster)
+		vacancyIndex = singleVacancyCluster->getId() - 1;
 
 	// Loop on all the grid points
 	for (int j = ys; j < ys + ym; j++) {
@@ -142,8 +132,8 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) const {
 			}
 
 			// Initialize the vacancy concentration
-			if (i > surfacePosition[j] && i < Mx - 1) {
-				concOffset[vacancyIndex] = initialVConc / h;
+			if (i > surfacePosition[j] && i < Mx - 1 && vacancyIndex > 0) {
+				concOffset[vacancyIndex] = initialVConc / hX;
 			}
 		}
 	}
@@ -174,19 +164,19 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) const {
 	 Restore vectors
 	 */
 	ierr = DMDAVecRestoreArrayDOF(da, C, &concentrations);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::initializeConcentration: DMDAVecRestoreArrayDOF failed.");
 
 	return;
 }
 
 void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
-		PetscReal ftime, bool &temperatureChanged, bool &hasMoved) {
+		PetscReal ftime) {
 	PetscErrorCode ierr;
 
-	// Get the local data vector from petsc
+	// Get the local data vector from PETSc
 	DM da;
 	ierr = TSGetDM(ts, &da);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::updateConcentration: TSGetDM failed.");
 
 	// Get the total size of the grid for the boundary conditions
 	PetscInt Mx, My;
@@ -194,21 +184,21 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::updateConcentration: DMDAGetInfo failed.");
 
-	// Pointers to the Petsc arrays that start at the beginning (xs, ys) of the
+	// Pointers to the PETSc arrays that start at the beginning (xs, ys) of the
 	// local array!
 	PetscScalar ***concs, ***updatedConcs;
 	// Get pointers to vector data
 	ierr = DMDAVecGetArrayDOF(da, localC, &concs);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::updateConcentration: DMDAVecGetArrayDOF (localC) failed.");
 	ierr = DMDAVecGetArrayDOF(da, F, &updatedConcs);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::updateConcentration: DMDAVecGetArrayDOF (F) failed.");
 
 	// Get local grid boundaries
 	PetscInt xs, xm, ys, ym;
 	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::updateConcentration: DMDAGetCorners failed.");
 
 	// The following pointers are set to the first position in the conc or
 	// updatedConc arrays that correspond to the beginning of the data for the
@@ -216,13 +206,8 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	PetscScalar *concOffset, *updatedConcOffset;
 
 	// Set some step size variable
-	double s = 1.0 / (h * h);
-
-	// Check if the surface position has moved
-	if (surfaceHasMoved) {
-		hasMoved = true;
-		surfaceHasMoved = false;
-	}
+	double sx = 1.0 / (hX * hX);
+	double sy = 1.0 / (hY * hY);
 
 	// Get the mean value of the surface position
 	int meanPosition = getMeanSurfacePosition();
@@ -231,9 +216,9 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	auto incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime, meanPosition);
 
 	// Declarations for variables used in the loop
-	int reactantIndex;
 	double flux;
 	auto heCluster = (xolotlCore::PSICluster *) network->get(xolotlCore::heType, 1);
+	int heliumIndex = heCluster->getId() - 1, reactantIndex;
 	xolotlCore::PSICluster *cluster = NULL;
 	double **concVector = new double*[5];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
@@ -266,8 +251,8 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			}
 
 			// Set the grid position
-			gridPosition[0] = xi * h;
-			gridPosition[1] = yj * h;
+			gridPosition[0] = xi * hX;
+			gridPosition[1] = yj * hY;
 
 			// Get the temperature from the temperature handler
 			auto temperature = temperatureHandler->getTemperature(gridPosition,
@@ -277,9 +262,6 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			if (!xolotlCore::equal(temperature, lastTemperature)) {
 				network->setTemperature(temperature);
 				lastTemperature = temperature;
-				// Set the boolean temperatureChanged to true to recompute the
-				// off-diagonal part of the Jacobian later
-				temperatureChanged = true;
 			}
 
 			// Copy data into the PSIClusterReactionNetwork so that it can
@@ -292,17 +274,16 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			// ----- Account for flux of incoming He by computing forcing that
 			// produces He of cluster size 1 -----
 			if (heCluster) {
-				reactantIndex = heCluster->getId() - 1;
 				// Update the concentration of the cluster
-				updatedConcOffset[reactantIndex] += incidentFluxVector[xi];
+				updatedConcOffset[heliumIndex] += incidentFluxVector[xi];
 			}
 
 			// ---- Compute diffusion over the locally owned part of the grid -----
-			diffusionHandler->computeDiffusion(network, s, concVector,
-					updatedConcOffset);
+			diffusionHandler->computeDiffusion(network, concVector,
+					updatedConcOffset, sx, sy);
 
 			// ---- Compute advection over the locally owned part of the grid -----
-			advectionHandler->computeAdvection(network, h, gridPosition, surfacePosition[yj],
+			advectionHandler->computeAdvection(network, hX, gridPosition, surfacePosition[yj],
 					concVector, updatedConcOffset);
 
 			// ----- Compute all of the new fluxes -----
@@ -321,11 +302,11 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	 Restore vectors
 	 */
 	ierr = DMDAVecRestoreArrayDOF(da, localC, &concs);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::updateConcentration: DMDAVecRestoreArrayDOF (localC) failed.");
 	ierr = DMDAVecRestoreArrayDOF(da, F, &updatedConcs);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::updateConcentration: DMDAVecRestoreArrayDOF (F) failed.");
 	ierr = DMRestoreLocalVector(da, &localC);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::updateConcentration: DMRestoreLocalVector failed.");
 
 	return;
 }
@@ -336,7 +317,7 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	// Get the distributed array
 	DM da;
 	ierr = TSGetDM(ts, &da);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::computeOffDiagonalJacobian: TSGetDM failed.");
 
 	// Get the total size of the grid for the boundary conditions
 	PetscInt Mx, My;
@@ -344,20 +325,21 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::computeOffDiagonalJacobian: DMDAGetInfo failed.");
 
 	// Setup some step size variables
-	double s = 1.0 / (h * h);
+	double sx = 1.0 / (hX * hX);
+	double sy = 1.0 / (hY * hY);
 
 	// Get pointers to vector data
 	PetscScalar ***concs;
 	ierr = DMDAVecGetArrayDOF(da, localC, &concs);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::computeOffDiagonalJacobian: DMDAVecGetArrayDOF failed.");
 
 	// Get local grid boundaries
 	PetscInt xs, xm, ys, ym;
 	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::computeOffDiagonalJacobian: DMDAGetCorners failed.");
 
 	// The degree of freedom is the size of the network
 	const int dof = network->size();
@@ -388,8 +370,8 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 			if (xi <= surfacePosition[yj] || xi == Mx - 1) continue;
 
 			// Set the grid position
-			gridPosition[0] = xi * h;
-			gridPosition[1] = yj * h;
+			gridPosition[0] = xi * hX;
+			gridPosition[1] = yj * hY;
 
 			// Copy data into the PSIClusterReactionNetwork so that it can
 			// compute the new concentrations.
@@ -397,7 +379,7 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 			network->updateConcentrationsFromArray(concOffset);
 
 			// Get the partial derivatives for the diffusion
-			diffusionHandler->computePartialsForDiffusion(network, s, vals, indices);
+			diffusionHandler->computePartialsForDiffusion(network, vals, indices, sx, sy);
 
 			// Loop on the number of diffusion cluster to set the values in the Jacobian
 			for (int i = 0; i < nDiff; i++) {
@@ -425,11 +407,11 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 				cols[4].c = indices[i];
 
 				ierr = MatSetValuesStencil(J, 1, &row, 5, cols, vals + (5 * i), ADD_VALUES);
-				checkPetscError(ierr);
+				checkPetscError(ierr, "PetscSolver2DHandler::computeOffDiagonalJacobian: MatSetValuesStencil (diffusion) failed.");
 			}
 
 			// Get the partial derivatives for the advection
-			advectionHandler->computePartialsForAdvection(network, h, vals,
+			advectionHandler->computePartialsForAdvection(network, hX, vals,
 					indices, gridPosition, surfacePosition[yj]);
 
 			// Loop on the number of advecting cluster to set the values in the Jacobian
@@ -450,7 +432,7 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 
 				// Update the matrix
 				ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals + (2 * i), ADD_VALUES);
-				checkPetscError(ierr);
+				checkPetscError(ierr, "PetscSolver2DHandler::computeOffDiagonalJacobian: MatSetValuesStencil (advection) failed.");
 			}
 		}
 	}
@@ -464,7 +446,7 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	// Get the distributed array
 	DM da;
 	ierr = TSGetDM(ts, &da);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::computeDiagonalJacobian: TSGetDM failed.");
 
 	// Get the total size of the grid for the boundary conditions
 	PetscInt Mx, My;
@@ -472,17 +454,17 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::computeDiagonalJacobian: DMDAGetInfo failed.");
 
 	// Get pointers to vector data
 	PetscScalar ***concs;
 	ierr = DMDAVecGetArrayDOF(da, localC, &concs);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::computeDiagonalJacobian: DMDAVecGetArrayDOF failed.");
 
 	// Get local grid boundaries
 	PetscInt xs, xm, ys, ym;
 	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::computeDiagonalJacobian: DMDAGetCorners failed.");
 
 	// The degree of freedom is the size of the network
 	const int dof = network->size();
@@ -543,7 +525,7 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 				// Update the matrix
 				ierr = MatSetValuesStencil(J, 1, &rowId, pdColIdsVectorSize, colIds,
 						reactingPartialsForCluster.data(), ADD_VALUES);
-				checkPetscError(ierr);
+				checkPetscError(ierr, "PetscSolver2DHandler::computeDiagonalJacobian: MatSetValuesStencil failed.");
 			}
 		}
 	}
@@ -552,9 +534,9 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	 Restore vectors
 	 */
 	ierr = DMDAVecRestoreArrayDOF(da, localC, &concs);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::computeDiagonalJacobian: DMDAVecRestoreArrayDOF failed.");
 	ierr = DMRestoreLocalVector(da, &localC);
-	checkPetscError(ierr);
+	checkPetscError(ierr, "PetscSolver2DHandler::computeDiagonalJacobian: DMRestoreLocalVector failed.");
 
 	return;
 }

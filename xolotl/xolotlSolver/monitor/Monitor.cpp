@@ -20,6 +20,8 @@ std::shared_ptr<xolotlViz::IPlot> perfPlot;
 //! The variable to store the time at the previous time step.
 double previousTime = 0.0;
 
+#undef __FUNCT__
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "monitorTime")
 /**
  * This is a monitoring method set the previous time to the time. This is needed here
  * because multiple monitors need the previous time value from the previous timestep.
@@ -42,18 +44,11 @@ PetscErrorCode monitorTime(TS ts, PetscInt timestep, PetscReal time, Vec solutio
  */
 PetscErrorCode computeHeliumFluence(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
-	//
-	PetscErrorCode ierr;
-
 	PetscFunctionBeginUser;
 
 	// Get the solver handler and the flux handler
 	auto solverHandler = PetscSolver::getSolverHandler();
 	auto fluxHandler = solverHandler->getFluxHandler();
-
-	// Get the da from ts
-	DM da;
-	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
 
 	// The length of the time step
 	double dt = time - previousTime;
@@ -71,6 +66,7 @@ PetscErrorCode computeHeliumFluence(TS ts, PetscInt timestep, PetscReal time,
  */
 PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
+	// To check PETSc errors
 	PetscInt ierr;
 
 	PetscFunctionBeginUser;
@@ -91,7 +87,7 @@ PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
 
     // Obtain the current value of the solve timer.
     //
-    // Note that the solve timer keeps a cumultive time,
+    // Note that the solve timer keeps a cumulative time,
     // not a per-timestep time.   If you need a per-timestep
     // time, you will want to keep a static or global variable
     // with the last known timer value, and subtract it from
@@ -124,15 +120,13 @@ PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
                 0,                  // root of MPI collective operation
                 PETSC_COMM_WORLD ); // communicator defining processes involved in the operation
 
-    if( cwRank == 0 )
-    {
+    if(cwRank == 0) {
         auto allPoints = std::make_shared<std::vector<xolotlViz::Point> >();
 
-        for( unsigned int i = 0; i < cwSize; ++i )
-        {
+        for(unsigned int i = 0; i < cwSize; ++i) {
             xolotlViz::Point aPoint;
             aPoint.value = allTimerValues[i];
-            aPoint.x = cwRank;
+            aPoint.x = i;
             aPoint.t = time;
             allPoints->push_back(aPoint);
         }

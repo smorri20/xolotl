@@ -276,9 +276,9 @@ public interface Arguments {
 	String getNzGrid();
 
 	/**
-	 * This Option annotation corresponds to the '--stepSize' option which
-	 * defines a default step size and additionally provides a brief description 
-	 * of the option.
+	 * This Option annotation corresponds to the '--xStepSize' option which
+	 * defines a default step size in the x direction and additionally provides a 
+	 * brief description of the option.
 	 * 
 	 * @param defaultValue
 	 *            The default step size that will be used if this option
@@ -287,14 +287,59 @@ public interface Arguments {
 	 *            Brief description of this option
 	 */
 	@Option(defaultValue = "1.0", 
-			description = "<value>  The value of the step size in nm (default = 1.0)")
+			description = "<value>  The value of the step size in the x direction"
+					+ " in nm (default = 1.0)")
 	/**
-	 * This operation produces the required command line option '--stepSize' which 
+	 * This operation produces the required command line option '--xStepSize' which 
 	 * takes a single string value and is defined by the previous Option annotation
 	 * 
 	 * @return The value of the step size
 	 */
-	String getStepSize();
+	String getXStepSize();
+
+	/**
+	 * This Option annotation corresponds to the '--yStepSize' option which
+	 * defines a default step size in the y direction and additionally provides a 
+	 * brief description of the option.
+	 * 
+	 * @param defaultValue
+	 *            The default step size that will be used if this option
+	 *            is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "0.0", 
+			description = "<value>  The value of the step size in the y direction"
+					+ " in nm (default = 0.0)")
+	/**
+	 * This operation produces the required command line option '--yStepSize' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The value of the step size
+	 */
+	String getYStepSize();
+
+	/**
+	 * This Option annotation corresponds to the '--zStepSize' option which
+	 * defines a default step size in the z direction and additionally provides a 
+	 * brief description of the option.
+	 * 
+	 * @param defaultValue
+	 *            The default step size that will be used if this option
+	 *            is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "0.0", 
+			description = "<value>  The value of the step size in the z direction"
+					+ " in nm (default = 0.0)")
+	/**
+	 * This operation produces the required command line option '--zStepSize' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The value of the step size
+	 */
+	String getZStepSize();
 
 	/**
 	 * This Option annotation corresponds to the optional '--material' option

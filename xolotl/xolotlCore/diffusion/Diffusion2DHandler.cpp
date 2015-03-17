@@ -4,20 +4,17 @@
 namespace xolotlCore {
 
 void Diffusion2DHandler::computeDiffusion(PSIClusterReactionNetwork *network,
-		double s, double **concVector, double *updatedConcOffset) {
-	// Get all the reactant
+		double **concVector, double *updatedConcOffset,
+		double sx, double sy, double sz) {
+	// Get all the reactants
 	auto reactants = network->getAll();
-	// Get the number of diffusing cluster
+	// Get the number of diffusing clusters
 	int nDiff = indexVector.size();
-
-	// Get the number of degrees of freedom which is the size of the network
-	int dof = reactants->size();
 
 	// Loop on them
 	for (int i = 0; i < nDiff; i++) {
-		// Get the diffusing cluster
+		// Get the diffusing cluster and its index
 		auto cluster = (PSICluster *) reactants->at(indexVector[i]);
-		// Get the index of the cluster
 		int index = cluster->getId() - 1;
 
 		// Get the initial concentrations
@@ -29,8 +26,8 @@ void Diffusion2DHandler::computeDiffusion(PSIClusterReactionNetwork *network,
 
 		// Use a simple midpoint stencil to compute the concentration
 		double conc = cluster->getDiffusionCoefficient()
-				* (-4.0 * oldConc + oldLeftConc + oldRightConc + oldBottomConc
-						+ oldTopConc) * s;
+				* (sx * (oldLeftConc + oldRightConc - 2.0 * oldConc)
+						+ sy * (oldBottomConc + oldTopConc - 2.0 * oldConc));
 
 		// Update the concentration of the cluster
 		updatedConcOffset[index] += conc;
@@ -41,19 +38,17 @@ void Diffusion2DHandler::computeDiffusion(PSIClusterReactionNetwork *network,
 
 void Diffusion2DHandler::computePartialsForDiffusion(
 		PSIClusterReactionNetwork *network,
-		double s, double *val, int *indices) {
+		double *val, int *indices,
+		double sx, double sy, double sz) {
 	// Get all the reactant
 	auto reactants = network->getAll();
-	// And the size of the network
-	int size = reactants->size();
 	// Get the number of diffusing cluster
 	int nDiff = indexVector.size();
 
 	// Loop on them
 	for (int i = 0; i < nDiff; i++) {
-		// Get the diffusing cluster
+		// Get the diffusing cluster and its index
 		auto cluster = (PSICluster *) reactants->at(indexVector[i]);
-		// Get the index of the cluster
 		int index = cluster->getId() - 1;
 		// Get the diffusion coefficient of the cluster
 		double diffCoeff = cluster->getDiffusionCoefficient();
@@ -64,11 +59,11 @@ void Diffusion2DHandler::computePartialsForDiffusion(
 
 		// Compute the partial derivatives for diffusion of this cluster
 		// for the middle, left, right, bottom, and top grid point
-		val[i * 5] = -4.0 * diffCoeff * s; // middle
-		val[(i * 5) + 1] = diffCoeff * s; // left
-		val[(i * 5) + 2] = diffCoeff * s; // right
-		val[(i * 5) + 3] = diffCoeff * s; // bottom
-		val[(i * 5) + 4] = diffCoeff * s; // top
+		val[i * 5] = -2.0 * diffCoeff * (sx + sy); // middle
+		val[(i * 5) + 1] = diffCoeff * sx; // left
+		val[(i * 5) + 2] = diffCoeff * sx; // right
+		val[(i * 5) + 3] = diffCoeff * sy; // bottom
+		val[(i * 5) + 4] = diffCoeff * sy; // top
 	}
 
 	return;

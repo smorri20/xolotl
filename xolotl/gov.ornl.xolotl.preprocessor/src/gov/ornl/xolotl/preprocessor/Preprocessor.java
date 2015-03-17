@@ -479,14 +479,14 @@ public class Preprocessor {
 		// The status of the previous HDF5 operation
 		int status;
 		
-		// Get the number of dimensions
-		int[] dim = { Integer.parseInt(args.getDimensions()) };
 		// Get the grid size
 		int[] nxGrid = { Integer.parseInt(args.getNxGrid()) };
 		int[] nyGrid = { Integer.parseInt(args.getNyGrid()) };
 		int[] nzGrid = { Integer.parseInt(args.getNzGrid()) };
-		//Get the step size
-		double[] h = { Double.parseDouble(args.getStepSize()) };
+		//Get the step sizes
+		double[] hx = { Double.parseDouble(args.getXStepSize()) };
+		double[] hy = { Double.parseDouble(args.getYStepSize()) };
+		double[] hz = { Double.parseDouble(args.getZStepSize()) };
 
 		try {
 			// Open the HDF5 file
@@ -497,18 +497,10 @@ public class Preprocessor {
 			int headerGroupId = H5.H5Gcreate(fileId, "headerGroup",
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT,
 					HDF5Constants.H5P_DEFAULT);
-
-			// Create, write, and close the dimension attribute
-			int dataSpaceId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
-			int attributeId = H5.H5Acreate(headerGroupId, "dimension",
-					HDF5Constants.H5T_STD_I32LE, dataSpaceId,
-					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
-			status = H5.H5Awrite(attributeId, HDF5Constants.H5T_STD_I32LE,
-					dim);
-			status = H5.H5Aclose(attributeId);
 			
 			// Create, write, and close the nx attribute (nxGrid)
-			attributeId = H5.H5Acreate(headerGroupId, "nx",
+			int dataSpaceId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
+			int attributeId = H5.H5Acreate(headerGroupId, "nx",
 					HDF5Constants.H5T_STD_I32LE, dataSpaceId,
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
 			status = H5.H5Awrite(attributeId, HDF5Constants.H5T_STD_I32LE,
@@ -519,7 +511,7 @@ public class Preprocessor {
 					HDF5Constants.H5T_IEEE_F64LE, dataSpaceId,
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
 			status = H5.H5Awrite(attributeId, HDF5Constants.H5T_IEEE_F64LE,
-					h);
+					hx);
 			status = H5.H5Aclose(attributeId);
 			
 			// Create, write, and close the ny attribute (nyGrid)
@@ -534,7 +526,7 @@ public class Preprocessor {
 					HDF5Constants.H5T_IEEE_F64LE, dataSpaceId,
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
 			status = H5.H5Awrite(attributeId, HDF5Constants.H5T_IEEE_F64LE,
-					h);
+					hy);
 			status = H5.H5Aclose(attributeId);
 			
 			// Create, write, and close the nz attribute (nzGrid)
@@ -549,7 +541,7 @@ public class Preprocessor {
 					HDF5Constants.H5T_IEEE_F64LE, dataSpaceId,
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
 			status = H5.H5Awrite(attributeId, HDF5Constants.H5T_IEEE_F64LE,
-					h);
+					hz);
 			status = H5.H5Aclose(attributeId);
 
 			// Close everything
@@ -576,8 +568,7 @@ public class Preprocessor {
 	public int[] copyHeader(String fromName, String toName) {
 		// The status of the previous HDF5 operation
 		int status;
-		// The dimension and refinement
-		int[] dim = { 0 };
+		// The number of grid points and the step size
 		int[] n = { 0 };
 		double[] h = { 0 };
 		// The grid size to return
@@ -602,28 +593,14 @@ public class Preprocessor {
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT,
 					HDF5Constants.H5P_DEFAULT);
 
-			// Open, read, and close the dimension attribute
-			int attributeId = H5.H5Aopen(headerFromGroupId, "dimension",
-					HDF5Constants.H5P_DEFAULT);
-			status = H5.H5Aread(attributeId, HDF5Constants.H5T_STD_I32LE,
-					dim);
-			status = H5.H5Aclose(attributeId);
-			// Create, write, and close the dimension attribute
-			int dataSpaceId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
-			attributeId = H5.H5Acreate(headerToGroupId, "dimension",
-					HDF5Constants.H5T_STD_I32LE, dataSpaceId,
-					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
-			status = H5.H5Awrite(attributeId, HDF5Constants.H5T_STD_I32LE,
-					dim);
-			status = H5.H5Aclose(attributeId);
-
 			// Open, read, and close the nx attribute
-			attributeId = H5.H5Aopen(headerFromGroupId, "nx",
+			int attributeId = H5.H5Aopen(headerFromGroupId, "nx",
 					HDF5Constants.H5P_DEFAULT);
 			status = H5.H5Aread(attributeId, HDF5Constants.H5T_STD_I32LE,
 					n);
 			status = H5.H5Aclose(attributeId);
 			// Create, write, and close the nx attribute
+			int dataSpaceId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
 			attributeId = H5.H5Acreate(headerToGroupId, "nx",
 					HDF5Constants.H5T_STD_I32LE, dataSpaceId,
 					HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
@@ -1060,7 +1037,7 @@ public class Preprocessor {
 	public double[][] readConcentration(String fromName, int lastTimeStep, int i, int j, int k) {
 		// The status of the previous HDF5 operation
 		int status;
-		// The array for the times
+		// The array for the concentrations
 		double[][] concentration = new double[0][0];
 		
 		try {
@@ -1076,16 +1053,16 @@ public class Preprocessor {
 			int datasetId = H5.H5Dopen(fileId, datasetName,
 					HDF5Constants.H5P_DEFAULT);
 
-			// Read the dataset length attribute
-			int[] length = { -1 };
-			int lengthAttributeId = H5.H5Aopen(datasetId,
-					"datasetLength", HDF5Constants.H5P_DEFAULT);
-			status = H5.H5Aread(lengthAttributeId,
-					HDF5Constants.H5T_STD_I32LE, length);
-			status = H5.H5Aclose(lengthAttributeId);
+			// Get the dataspace object
+			int dataspaceId = H5.H5Dget_space(datasetId);
+
+			// Get the dimensions of the dataset
+			long[] dims = new long[2];
+			status = H5.H5Sget_simple_extent_dims(dataspaceId, dims, 
+					null);
 
 			// Create the array that will receive the concentrations
-			concentration = new double[length[0]][2];
+			concentration = new double[(int) dims[0]][(int) dims[1]];
 
 			// Read the data set
 			status = H5.H5Dread(datasetId,
@@ -1204,20 +1181,7 @@ public class Preprocessor {
 					HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL,
 					HDF5Constants.H5P_DEFAULT, concentration);
 
-			// Create the attribute for the dataset length and write it
-			int[] length = { concentration.length };
-			int lengthDataSpaceId = H5
-					.H5Screate(HDF5Constants.H5S_SCALAR);
-			int lengthAttributeId = H5.H5Acreate(datasetId,
-					"datasetLength", HDF5Constants.H5T_STD_I32LE,
-					lengthDataSpaceId, HDF5Constants.H5P_DEFAULT,
-					HDF5Constants.H5P_DEFAULT);
-			status = H5.H5Awrite(lengthAttributeId,
-					HDF5Constants.H5T_STD_I32LE, length);
-
 			// Close everything
-			status = H5.H5Sclose(lengthDataSpaceId);
-			status = H5.H5Aclose(lengthAttributeId);
 			status = H5.H5Sclose(concDataspaceId);
 			status = H5.H5Dclose(datasetId);
 			status = H5.H5Fclose(fileId);
@@ -1272,8 +1236,8 @@ public class Preprocessor {
 				
 				// Loop on all the position to read and copy the values of the
 				// concentrations
-				for (int k = 0; k <= gridSize[2]; k++) {
-					for (int j = 0; j <= gridSize[1]; j++) {
+				for (int k = -1; k <= gridSize[2]; k++) {
+					for (int j = -1; j <= gridSize[1]; j++) {
 						for (int i = 0; i <= gridSize[0]; i++) {
 							if (!hasConcentrationDataset(fromName, lastTimeStep, i, j, k))
 								continue;

@@ -19,8 +19,14 @@ protected:
 	//! The original network created from the network loader.
 	xolotlCore::PSIClusterReactionNetwork *network;
 
-	//! The grid step size.
-	double h;
+	//! The grid step size in the x direction.
+	double hX;
+
+	//! The grid step size in the y direction.
+	double hY;
+
+	//! The grid step size in the z direction.
+	double hZ;
 
 	//! The initial vacancy concentration.
 	double initialVConc;
@@ -42,9 +48,6 @@ protected:
 
 	//! The portion of void at the beginning of the problem.
 	double portion;
-
-	//! To know if the surface has moved.
-	bool surfaceHasMoved;
 
 public:
 
@@ -97,22 +100,28 @@ public:
 	}
 
 	/**
-	 * Get the step size.
+	 * Get the step size in the x direction.
 	 * \see ISolverHandler.h
 	 */
-	double getStepSize() const {return h;}
+	double getStepSizeX() const {return hX;}
+
+	/**
+	 * Get the step size in the y direction.
+	 * \see ISolverHandler.h
+	 */
+	double getStepSizeY() const {return hY;}
+
+	/**
+	 * Get the step size in the z direction.
+	 * \see ISolverHandler.h
+	 */
+	double getStepSizeZ() const {return hZ;}
 
 	/**
 	 * Get the number of dimensions of the problem.
 	 * \see ISolverHandler.h
 	 */
 	int getDimension() const {return dimension;}
-
-	/**
-	 * If the surface is moving, the corresponding boolean will be set
-	 * to true.
-	 */
-	void changeSurfacePosition() {surfaceHasMoved = true;}
 
 	/**
 	 * Get the flux handler.

@@ -51,7 +51,7 @@ public:
 	/**
 	 * Create everything needed before starting to solve.
 	 *
-	 * @param da The PETSC distributed array
+	 * @param da The PETSc distributed array
 	 * @param nx The number of grid points in the x direction (depth)
 	 * @param hx The step size in the x direction
 	 * @param ny The number of grid points in the y direction
@@ -73,8 +73,8 @@ public:
 	/**
 	 * Initialize the concentration solution vector.
 	 *
-	 * @param da The PETSC distributed array
-	 * @param C The PETSC solution vector
+	 * @param da The PETSc distributed array
+	 * @param C The PETSc solution vector
 	 */
 	virtual void initializeConcentration(DM &da, Vec &C) const = 0;
 
@@ -83,20 +83,17 @@ public:
 	 * vector of concentrations.
 	 *
 	 * @param ts The PETSc time stepper
-	 * @param localC The PETSC local solution vector
-	 * @param F The updated PETSC solution vector
+	 * @param localC The PETSc local solution vector
+	 * @param F The updated PETSc solution vector
 	 * @param ftime The real time
-	 * @param temperatureChanged True is the temperature has changed at this time
-	 * @param hasMoved True is the surface has moved at this time
 	 */
-	virtual void updateConcentration(TS &ts, Vec &localC, Vec &F, PetscReal ftime,
-			bool &temperatureChanged, bool &hasMoved) = 0;
+	virtual void updateConcentration(TS &ts, Vec &localC, Vec &F, PetscReal ftime) = 0;
 
 	/**
 	 * Compute the off-diagonal part of the Jacobian which is related to cluster's motion.
 	 *
 	 * @param ts The PETSc time stepper
-	 * @param localC The PETSC local solution vector
+	 * @param localC The PETSc local solution vector
 	 * @param J The Jacobian
 	 */
 	virtual void computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J) const = 0;
@@ -105,17 +102,31 @@ public:
 	 * Compute the diagonal part of the Jacobian which is related to cluster reactions.
 	 *
 	 * @param ts The PETSc time stepper
-	 * @param localC The PETSC local solution vector
+	 * @param localC The PETSc local solution vector
 	 * @param J The Jacobian
 	 */
 	virtual void computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) = 0;
 
 	/**
-	 * Get the step size.
+	 * Get the step size in the x direction.
 	 *
-	 * @return The step size
+	 * @return The step size in the x direction
 	 */
-	virtual double getStepSize() const = 0;
+	virtual double getStepSizeX() const = 0;
+
+	/**
+	 * Get the step size in the y direction.
+	 *
+	 * @return The step size in the y direction
+	 */
+	virtual double getStepSizeY() const = 0;
+
+	/**
+	 * Get the step size in the z direction.
+	 *
+	 * @return The step size in the z direction
+	 */
+	virtual double getStepSizeZ() const = 0;
 
 	/**
 	 * Get the number of dimensions of the problem.
@@ -141,12 +152,6 @@ public:
 	 * @param k The index on the grid in the z direction
 	 */
 	virtual void setSurfacePosition(int pos, int j = -1, int k = -1) = 0;
-
-	/**
-	 * If the surface is moving, the corresponding boolean will be set
-	 * to true.
-	 */
-	virtual void changeSurfacePosition() = 0;
 
 	/**
 	 * Get the flux handler.

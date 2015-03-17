@@ -6,9 +6,23 @@
 
 namespace xolotlSolver {
 
+#ifndef CHECK_PETSC_ERROR
+#define CHECK_PETSC_ERROR
+/**
+ * This operation checks a PETSc error code and throws an exception with given error message.
+ *
+ * @param errorCode The PETSc error code.
+ * @param errMsg The error message in the thrown exception.
+ */
+inline void checkPetscError(PetscErrorCode errorCode, const char* errorMsg) {
+	if (PetscUnlikely(errorCode))
+		throw std::string(errorMsg);
+}
+#endif
+
 /**
  * This class realizes the ISolver interface to solve the
- * advection-diffusion-reaction problem with the Petsc solvers from Argonne
+ * advection-diffusion-reaction problem with the PETSc solvers from Argonne
  * National Laboratory.
  */
 class PetscSolver: public Solver {
@@ -16,12 +30,11 @@ private:
 
 	/**
 	 * This operation configures the initial conditions of the grid in Xolotl.
-	 * @param data The DM (data manager) created by Petsc
+	 * @param data The DM (data manager) created by PETSc
 	 * @param solutionVector The solution vector that contains the PDE
 	 * solution and which needs to be initialized.
-	 * @return The error code. 0 if there is no error.
 	 */
-	PetscErrorCode setupInitialConditions(DM data, Vec solutionVector);
+	void setupInitialConditions(DM data, Vec solutionVector);
 
 public:
 

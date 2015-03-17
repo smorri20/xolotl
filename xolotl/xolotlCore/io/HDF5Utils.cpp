@@ -67,18 +67,11 @@ void HDF5Utils::openFile(std::string fileName) {
 	return;
 }
 
-void HDF5Utils::fillHeader(int dimension, int nx, double hx, int ny,
+void HDF5Utils::fillHeader(int nx, double hx, int ny,
 		double hy, int nz, double hz) {
-	// Create, write, and close the dimension attribute
-	hid_t dataspaceId = H5Screate(H5S_SCALAR);
-	hid_t attributeId = H5Acreate2(headerGroupId, "dimension", H5T_STD_I32LE,
-			dataspaceId,
-			H5P_DEFAULT, H5P_DEFAULT);
-	status = H5Awrite(attributeId, H5T_STD_I32LE, &dimension);
-	status = H5Aclose(attributeId);
-
 	// Create, write, and close the nx attribute
-	attributeId = H5Acreate2(headerGroupId, "nx", H5T_STD_I32LE,
+	hid_t dataspaceId = H5Screate(H5S_SCALAR);
+	hid_t attributeId = H5Acreate2(headerGroupId, "nx", H5T_STD_I32LE,
 			dataspaceId,
 			H5P_DEFAULT, H5P_DEFAULT);
 	status = H5Awrite(attributeId, H5T_STD_I32LE, &nx);
@@ -239,19 +232,11 @@ void HDF5Utils::addConcentrationDataset(int size, int i, int j, int k) {
 	H5T_IEEE_F64LE, concDataspaceId,
 	H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
-	// Create and write the attribute for length of the dataset
-	hid_t lengthDataspaceId = H5Screate(H5S_SCALAR);
-	hid_t lengthAttributeId = H5Acreate2(datasetId, "datasetLength", H5T_STD_I32LE, lengthDataspaceId,
-	H5P_DEFAULT, H5P_DEFAULT);
-	status = H5Awrite(lengthAttributeId, H5T_STD_I32LE, &size);
-
 	// Create property list for independent dataset write.
 	propertyListId = H5Pcreate(H5P_DATASET_XFER);
 	status = H5Pset_dxpl_mpio(propertyListId, H5FD_MPIO_INDEPENDENT);
 
 	// Close everything
-	status = H5Sclose(lengthDataspaceId);
-	status = H5Aclose(lengthAttributeId);
 	status = H5Sclose(concDataspaceId);
 	status = H5Dclose(datasetId);
 
@@ -510,21 +495,22 @@ std::vector< std::vector<double> > HDF5Utils::readGridPoint(std::string fileName
 		hid_t datasetId = H5Dopen(fileId, datasetName.str().c_str(),
 				H5P_DEFAULT);
 
-		// Read the dataset length attribute
-		int length = -1;
-		hid_t lengthAttributeId = H5Aopen(datasetId, "datasetLength", H5P_DEFAULT);
-		status = H5Aread(lengthAttributeId, H5T_STD_I32LE, &length);
-		status = H5Aclose(lengthAttributeId);
+		// Get the dataspace object
+		hid_t dataspaceId = H5Dget_space(datasetId);
+
+		// Get the dimensions of the dataset
+		hsize_t dims[2];
+		status = H5Sget_simple_extent_dims(dataspaceId, dims, H5P_DEFAULT);
 
 		// Create the array that will receive the concentrations
-		double conc[length][2];
+		double conc[dims[0]][dims[1]];
 
 		// Read the data set
 		status = H5Dread(datasetId, H5T_IEEE_F64LE, H5S_ALL, H5S_ALL,
 				H5P_DEFAULT, &conc);
 
 		// Loop on the length
-		for (int i = 0; i < length; i++) {
+		for (int i = 0; i < dims[0]; i++) {
 			// Create the concentration vector for this cluster
 			std::vector<double> tmp;
 			tmp.push_back(conc[i][0]);

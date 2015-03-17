@@ -58,8 +58,7 @@ public:
 	 * vector of concentrations. Apply the diffusion, advection and all the reactions.
      * \see ISolverHandler.h
 	 */
-	void updateConcentration(TS &ts, Vec &localC, Vec &F, PetscReal ftime,
-			bool &temperatureChanged, bool &hasMoved);
+	void updateConcentration(TS &ts, Vec &localC, Vec &F, PetscReal ftime);
 
 	/**
 	 * Compute the off-diagonal part of the Jacobian which is related to cluster's motion.
