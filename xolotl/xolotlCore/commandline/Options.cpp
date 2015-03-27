@@ -71,7 +71,7 @@ Options::Options() :
 
 Options::~Options(void) {
 	// Release the items in our map of potential options.
-	for (auto iter = optionsMap.begin(); iter != optionsMap.end(); iter++) {
+	for (auto iter = optionsMap.begin(); iter != optionsMap.end(); ++iter) {
 		auto currOpt = iter->second;
 		delete currOpt;
 	}
@@ -160,7 +160,7 @@ void Options::showHelp(std::ostream& os) const {
 
 	// Loop on each option help message
 	for (OptionsMap::const_iterator iter = optionsMap.begin();
-			iter != optionsMap.end(); iter++) {
+			iter != optionsMap.end(); ++iter) {
 		os << "  " << iter->second->helpMessage << '\n';
 	}
 	os << std::endl;
