@@ -14,6 +14,9 @@
 #include <vector>
 #include <memory>
 #include <HDF5Utils.h>
+#include <Bubble.h>
+#include <BubbleCollection.h>
+#include <Constants.h>
 
 namespace xolotlSolver {
 
@@ -48,6 +51,322 @@ std::vector<int> heWeights1D;
 // cluster in the network is higher than 1.0e-16 should be printed.
 // Becomes false once it is printed.
 bool printMaxClusterConc1D = true;
+
+#undef __FUNCT__
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "bubbles1D")
+/**
+ * This is a monitoring method for bubbles.
+ */
+PetscErrorCode bubbles1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
+		void *ictx) {
+	PetscErrorCode ierr;
+	const double **solutionArray, *gridPointSolution;
+	int xs, xm, Mx;
+
+	PetscFunctionBeginUser;
+
+	// Get the da from ts
+	DM da;
+	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
+
+	// Get the solutionArray
+	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+
+	// Get the corners of the grid
+	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
+	// Get the size of the total grid
+	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
+			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+			PETSC_IGNORE);CHKERRQ(ierr);
+
+	// Get the solver handler
+	auto solverHandler = PetscSolver::getSolverHandler();
+	// Get the network
+	auto network = solverHandler->getNetwork();
+	// Get the bubble collection
+	auto bubbleCol = solverHandler->getBubbleCollection();
+	// Setup step size variable
+	double hx = solverHandler->getStepSizeX();
+	double sx = 1.0 / (hx * hx);
+	// Get the flux handler and the flux vector
+	auto fluxHandler = solverHandler->getFluxHandler();
+	auto incidentFluxVector = fluxHandler->getIncidentFluxVec(time);
+	// The length of the time step
+	double dt = time - previousTime;
+	// Get the bubble list
+	auto bubbleList = bubbleCol->getBubbleList();
+	// Get all the helium clusters
+	auto heliums = network->getAll(heType);
+
+	//------    Receive flux part   ------//
+
+	// Loop on the bubbles
+	for (std::forward_list<xolotlCore::Bubble *>::iterator it = bubbleList->begin();
+			it != bubbleList->end(); it++) {
+		// Receive the incoming flux by computing it on each contained grid point
+		auto gridPointList = (*it)->getGridPointList();
+		double addedHelium = 0.0;
+		for (std::forward_list<int>::iterator pt = gridPointList->begin();
+				pt != gridPointList->end(); pt++) {
+			addedHelium += incidentFluxVector[(*pt)];
+		}
+
+		// Get the quantity since the last time step
+		addedHelium = addedHelium * dt * hx;
+		// Divide this quantity on all the interfaces
+		auto interfaceList = (*it)->getInterfaceList();
+		int nInter = std::distance(interfaceList->begin(), interfaceList->end());
+		addedHelium = addedHelium / (double) nInter;
+		// Loop on the interfaces
+		for (std::forward_list<xolotlCore::Bubble::Interface *>::iterator inter = interfaceList->begin();
+				inter != interfaceList->end(); inter++) {
+			// Add the helium quantity
+			(*inter)->heliumQuantity += addedHelium;
+
+			// Add the diffused helium since last time step using the stored flux
+			// (computed at the previous timestep)
+			(*inter)->heliumQuantity += (*inter)->heliumFlux * dt;
+
+			// Compute the diffusion of helium from the outside point of the interface
+			// Get the concentrations on the grid point outside the interface
+			gridPointSolution = solutionArray[(*inter)->outsidePoint];
+			// Initialize the value for the flux
+			double newFlux = 0.0;
+			// Loop on the helium clusters
+			for (int i = 0; i < heliums.size(); i++) {
+				// Get the cluster
+				auto cluster = (PSICluster *) heliums.at(i);
+				// Get its id and concentration
+				int id = cluster->getId() - 1;
+				double conc = gridPointSolution[id];
+				// Get its size and diffusion coefficient
+				int size = cluster->getSize();
+				double coef = cluster->getDiffusionCoefficient();
+				// Compute the flux at the interface
+				newFlux += (double) size * sx * coef * conc;
+			}
+
+			// Save the helium flux in the interface
+			(*inter)->heliumFlux = newFlux;
+		}
+	}
+
+	//------   Expend bubbles part   ------//
+
+	// A bubble expends when the quantity of helium that crossed its interface
+	// is 4 times bigger than the tungsten density.
+
+	// Loop on the bubbles
+	for (std::forward_list<xolotlCore::Bubble *>::iterator it = bubbleList->begin();
+			it != bubbleList->end(); it++) {
+		// We are ready to expend the bubble
+		// Loop on the interfaces
+		auto interfaceList = (*it)->getInterfaceList();
+		for (std::forward_list<xolotlCore::Bubble::Interface *>::iterator inter = interfaceList->begin();
+				inter != interfaceList->end(); inter++) {
+			// Skip if the outside point is already in a bubble
+			if (bubbleCol->isPointABubble((*inter)->outsidePoint)) continue;
+
+			// Check the helium quantity on the grid point outside the interface
+			gridPointSolution = solutionArray[(*inter)->outsidePoint];
+			// Initialize the helium quantity
+			double heliumQuantity = 0.0;
+			// Loop on all the indices
+			for (int i = 0; i < heIndices1D.size(); i++) {
+				// Add the current concentration times the number of helium in the cluster
+				// (from the weight vector)
+				heliumQuantity += gridPointSolution[heIndices1D[i]] * heWeights1D[i] * hx;
+			}
+
+			// If the helium quantity plus the interface helium quantity is bigger
+			// than the threshold, move the interface
+			if (heliumQuantity + (*inter)->heliumQuantity > tungstenDensity * 4.0 * hx) {
+				// Move the interface outside
+				int expendingPoint = (*inter)->outsidePoint;
+				(*inter)->outsidePoint = expendingPoint + (expendingPoint - (*inter)->insidePoint);
+				(*inter)->insidePoint = expendingPoint;
+				// Add the new grid point to the list of points
+				(*it)->addGridPoint(expendingPoint);
+				// Update the helium quantity
+				double tmpQuantity = heliumQuantity + (*inter)->heliumQuantity;
+				tmpQuantity -= tungstenDensity * 4.0 * hx;
+				(*inter)->heliumQuantity = tmpQuantity;
+			}
+		}
+	}
+
+	//------   Create bubbles part   ------//
+
+	// A bubble is created if the quantity of helium is 4 times bigger
+	// than the tungsten density at this grid point.
+
+	// Loop on the grid
+	for (int xi = xs; xi < xs + xm; xi++) {
+		// Skip the already existing bubbles
+		if (bubbleCol->isPointABubble(xi)) continue;
+
+		// Get the pointer to the beginning of the solution data for this grid point
+		gridPointSolution = solutionArray[xi];
+
+		// Initialize the helium quantity
+		double heliumQuantity = 0.0;
+
+		// Loop on all the indices
+		for (int i = 0; i < heIndices1D.size(); i++) {
+			// Add the current concentration times the number of helium in the cluster
+			// (from the weight vector)
+			heliumQuantity += gridPointSolution[heIndices1D[i]] * heWeights1D[i] * hx;
+		}
+
+		// Check the helium quantity
+		if (heliumQuantity > tungstenDensity * 4.0 * hx) {
+			// Create a bubble at this grid point
+			xolotlCore::Bubble * bubble = new xolotlCore::Bubble(xi, heliumQuantity, hx);
+			// Add it to the bubble collection
+			bubbleCol->addBubble(bubble);
+		}
+	}
+
+	//------    Merge bubbles part   ------//
+
+	// Loop on the bubbles
+	for (std::forward_list<xolotlCore::Bubble *>::iterator it = bubbleList->begin();
+			it != bubbleList->end(); it++) {
+		// Loop on the other bubbles
+		for (std::forward_list<xolotlCore::Bubble *>::iterator otherIt = it;
+				otherIt != bubbleList->end(); otherIt++) {
+			bool areNeighbors = false;
+			if (otherIt != it) areNeighbors = bubbleCol->getNeighbor((*it), (*otherIt));
+
+			// Merge them if they are neighbors
+			if (areNeighbors) {
+				// Get the helium quantity at the common interface
+				double interHeliumQuantity = 0.0;
+				auto interfaceList = (*it)->getInterfaceList();
+				auto otherInterfaceList = (*otherIt)->getInterfaceList();
+
+				// Loop on the first list
+				std::forward_list<xolotlCore::Bubble::Interface *>::iterator inter = interfaceList->begin();
+				while (inter != interfaceList->end()) {
+					if (inter == interfaceList->end()) break;
+
+					// Boolean to know if the inter iterator needs to be pushed or if it has already been done
+					bool push = true;
+
+					// Loop on the other list
+					std::forward_list<xolotlCore::Bubble::Interface *>::iterator otherInter = otherInterfaceList->begin();
+					while (otherInter != otherInterfaceList->end()) {
+						if (inter == interfaceList->end()) break;
+
+						if ((*inter)->insidePoint == (*otherInter)->outsidePoint
+								&& (*inter)->outsidePoint == (*otherInter)->insidePoint) {
+							// Get the helium quantity
+							interHeliumQuantity += (*inter)->heliumQuantity;
+							interHeliumQuantity += (*otherInter)->heliumQuantity;
+
+							// Remove the interfaces from the lists
+							auto temp = *inter;
+							++inter;
+							interfaceList->remove(temp);
+							temp = *otherInter;
+							++otherInter;
+							otherInterfaceList->remove(temp);
+							push = false;
+						}
+						// Move the iterator
+						else ++otherInter;
+					}
+
+					// Move the iterator
+					if (push) ++inter;
+				}
+
+				// Merge the two interface lists in the first bubble
+				// Loop on the other interface list
+				for (std::forward_list<xolotlCore::Bubble::Interface *>::iterator otherInter = otherInterfaceList->begin();
+											otherInter != otherInterfaceList->end(); otherInter++) {
+					interfaceList->emplace_front(*otherInter);
+				}
+
+				// Merge the two grid point lists in the first bubble
+				auto gridPointList = (*it)->getGridPointList();
+				auto otherGridPointList = (*otherIt)->getGridPointList();
+				// Loop on the other grid point list
+				for (std::forward_list<int>::iterator otherPt = otherGridPointList->begin();
+						otherPt != otherGridPointList->end(); otherPt++) {
+					gridPointList->emplace_front(*otherPt);
+				}
+
+				// Spread the helium quantity on all the interfaces
+				int nInter = std::distance(interfaceList->begin(), interfaceList->end());
+				interHeliumQuantity = interHeliumQuantity / (double) nInter;
+				// Loop on the interfaces
+				for (std::forward_list<xolotlCore::Bubble::Interface *>::iterator inter = interfaceList->begin();
+						inter != interfaceList->end(); inter++) {
+					// Add the helium quantity
+					(*inter)->heliumQuantity += interHeliumQuantity;
+				}
+
+				// Remove the other bubble
+				bubbleList->remove(*otherIt);
+			}
+		}
+	}
+
+	//------    Compute flux from diffusion part   ------//
+
+	// Loop on the bubbles
+	for (std::forward_list<xolotlCore::Bubble *>::iterator it = bubbleList->begin();
+			it != bubbleList->end(); it++) {
+		// Get the interfaces
+		auto interfaceList = (*it)->getInterfaceList();
+		// Loop on the interfaces
+		for (std::forward_list<xolotlCore::Bubble::Interface *>::iterator inter = interfaceList->begin();
+				inter != interfaceList->end(); inter++) {
+			// Compute the diffusion of helium from the outside point of the interface
+			// Get the concentrations on the grid point outside the interface
+			gridPointSolution = solutionArray[(*inter)->outsidePoint];
+			// Initialize the value for the flux
+			double newFlux = 0.0;
+			// Loop on the helium clusters
+			for (int i = 0; i < heliums.size(); i++) {
+				// Get the cluster
+				auto cluster = (PSICluster *) heliums.at(i);
+				// Get its id and concentration
+				int id = cluster->getId() - 1;
+				double conc = gridPointSolution[id];
+				// Get its size and diffusion coefficient
+				int size = cluster->getSize();
+				double coef = cluster->getDiffusionCoefficient();
+				// Compute the flux at the interface
+				newFlux += (double) size * sx * coef * conc;
+			}
+
+			// Save the helium flux in the interface
+			(*inter)->heliumFlux = newFlux;
+		}
+	}
+
+//	// Print the bubbles for check
+//	int i = 0;
+//	for (std::forward_list<xolotlCore::Bubble *>::iterator it = bubbleList->begin();
+//				it != bubbleList->end(); it++) {
+//		std::cout << "Bubble " << i << std::endl;
+//		auto gridPointList = (*it)->getGridPointList();
+//		for (std::forward_list<int>::iterator pt = gridPointList->begin();
+//				pt != gridPointList->end(); pt++) {
+//			std::cout << (*pt) << " ";
+//		}
+//		std::cout << std::endl;
+//		i++;
+//	}
+
+	// Restore the solutionArray
+	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+
+	PetscFunctionReturn(0);
+}
 
 #undef __FUNCT__
 #define __FUNCT__ Actual__FUNCT__("xolotlSolver", "startStop1D")
@@ -197,6 +516,9 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 	// Get the flux handler that will be used to compute fluxes.
 	auto fluxHandler = solverHandler->getFluxHandler();
 
+	// Get the bubble collection
+	auto bubbleCol = solverHandler->getBubbleCollection();
+
 	// Get the da from ts
 	DM da;
 	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
@@ -219,6 +541,9 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 
 	// Loop on the grid
 	for (int xi = xs; xi < xs + xm; xi++) {
+		// Skip the already existing bubbles
+		if (bubbleCol->isPointABubble(xi)) continue;
+
 		// Get the pointer to the beginning of the solution data for this grid point
 		gridPointSolution = solutionArray[xi];
 
@@ -251,6 +576,9 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 			heConcentration += otherConcentration;
 		}
 
+		// Get the helium quantity from the bubbles
+		heConcentration += bubbleCol->getHeliumQuantity();
+
 		// Get the fluence
 		double heliumFluence = fluxHandler->getHeFluence();
 
@@ -262,12 +590,12 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 		std::cout << "Helium concentration = " << heConcentration << std::endl;
 		std::cout << "Helium fluence = " << heliumFluence << "\n" << std::endl;
 
-//		// Uncomment to write the retention and the fluence in a file
-//		std::ofstream outputFile;
-//		outputFile.open("retentionOut.txt", ios::app);
-//		outputFile << heliumFluence << " "
-//				<< 100.0 * (heConcentration / heliumFluence) << std::endl;
-//		outputFile.close();
+		// Uncomment to write the retention and the fluence in a file
+		std::ofstream outputFile;
+		outputFile.open("retentionOut.txt", ios::app);
+		outputFile << heliumFluence << " "
+				<< 100.0 * (heConcentration / heliumFluence) << std::endl;
+		outputFile.close();
 	}
 
 	else {
@@ -336,10 +664,18 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 			// this grid point
 			gridPointSolution = solutionArray[xi];
 
+			double heConcentration = 0.0;
+			// Loop on all the indices
+			for (int i = 0; i < heIndices1D.size(); i++) {
+				// Add the current concentration times the number of helium in the cluster
+				// (from the weight vector)
+				heConcentration += gridPointSolution[heIndices1D[i]] * heWeights1D[i];
+			}
+
 			// Create a Point with the concentration[iCluster] as the value
 			// and add it to myPoints
 			xolotlViz::Point aPoint;
-			aPoint.value = gridPointSolution[iCluster];
+			aPoint.value = heConcentration;
 			aPoint.t = time;
 			aPoint.x = xi * hx;
 			myPoints->push_back(aPoint);
@@ -418,11 +754,19 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 			// this grid point
 			gridPointSolution = solutionArray[xi];
 
+			double heConcentration = 0.0;
+			// Loop on all the indices
+			for (int i = 0; i < heIndices1D.size(); i++) {
+				// Add the current concentration times the number of helium in the cluster
+				// (from the weight vector)
+				heConcentration += gridPointSolution[heIndices1D[i]] * heWeights1D[i];
+			}
+
 			// Send the value of the local position to the master process
 			MPI_Send(&x, 1, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
 
 			// Send the value of the concentration to the master process
-			MPI_Send(&gridPointSolution[iCluster], 1, MPI_DOUBLE, 0, 2,
+			MPI_Send(&heConcentration, 1, MPI_DOUBLE, 0, 2,
 					MPI_COMM_WORLD);
 		}
 	}
@@ -900,6 +1244,30 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 	auto network = solverHandler->getNetwork();
 	const int networkSize = network->size();
 
+	// Get all the helium clusters
+	auto heClusters = network->getAll(heType);
+	// Get all the helium-vacancy clusters
+	auto heVClusters = network->getAll(heVType);
+	// Loop on the helium clusters
+	for (int i = 0; i < heClusters.size(); i++) {
+		auto cluster = (PSICluster *) heClusters[i];
+		int id = cluster->getId() - 1;
+		// Add the Id to the vector
+		heIndices1D.push_back(id);
+		// Add the number of heliums of this cluster to the weight
+		heWeights1D.push_back(cluster->getSize());
+	}
+	// Loop on the helium-vacancy clusters
+	for (int i = 0; i < heVClusters.size(); i++) {
+		auto cluster = (PSICluster *) heVClusters[i];
+		int id = cluster->getId() - 1;
+		// Add the Id to the vector
+		heIndices1D.push_back(id);
+		// Add the number of heliums of this cluster to the weight
+		auto comp = cluster->getComposition();
+		heWeights1D.push_back(comp[heType]);
+	}
+
 	// Set the monitor to save 1D plot of one concentration
 	if (flag1DPlot) {
 		// Only the master process will create the plot
@@ -1027,35 +1395,11 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		ierr = TSMonitorSet(ts, monitorPerf, NULL, NULL);CHKERRQ(ierr);
 	}
 
+	// Set the bubbles monitor
+	ierr = TSMonitorSet(ts, bubbles1D, NULL, NULL);CHKERRQ(ierr);
+
 	// Set the monitors to compute the helium fluence for the retention calculation
 	if (flagRetention) {
-		// Get all the helium clusters
-		auto heClusters = network->getAll(heType);
-
-		// Get all the helium-vacancy clusters
-		auto heVClusters = network->getAll(heVType);
-
-		// Loop on the helium clusters
-		for (int i = 0; i < heClusters.size(); i++) {
-			auto cluster = (PSICluster *) heClusters[i];
-			int id = cluster->getId() - 1;
-			// Add the Id to the vector
-			heIndices1D.push_back(id);
-			// Add the number of heliums of this cluster to the weight
-			heWeights1D.push_back(cluster->getSize());
-		}
-
-		// Loop on the helium-vacancy clusters
-		for (int i = 0; i < heVClusters.size(); i++) {
-			auto cluster = (PSICluster *) heVClusters[i];
-			int id = cluster->getId() - 1;
-			// Add the Id to the vector
-			heIndices1D.push_back(id);
-			// Add the number of heliums of this cluster to the weight
-			auto comp = cluster->getComposition();
-			heWeights1D.push_back(comp[heType]);
-		}
-
 		if (heIndices1D.size() == 0) {
 			throw std::string(
 					"PetscSolver Exception: Cannot compute the retention "
@@ -1069,10 +1413,10 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		// computeHeliumRetention1D will be called at each timestep
 		ierr = TSMonitorSet(ts, computeHeliumRetention1D, NULL, NULL);CHKERRQ(ierr);
 
-//		// Uncomment to clear the file where the retention will be written
-//		std::ofstream outputFile;
-//		outputFile.open("retentionOut.txt");
-//		outputFile.close();
+		// Uncomment to clear the file where the retention will be written
+		std::ofstream outputFile;
+		outputFile.open("retentionOut.txt");
+		outputFile.close();
 	}
 
 	// Set the monitor to save the status of the simulation in hdf5 file
@@ -1126,10 +1470,8 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 	}
 
 	// Set the monitor to simply change the previous time to the new time
-	if (flagRetention) {
-		// monitorTime will be called at each timestep
-		ierr = TSMonitorSet(ts, monitorTime, NULL, NULL);CHKERRQ(ierr);
-	}
+	// monitorTime will be called at each timestep
+	ierr = TSMonitorSet(ts, monitorTime, NULL, NULL);CHKERRQ(ierr);
 
 	PetscFunctionReturn(0);
 }

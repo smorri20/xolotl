@@ -10,6 +10,7 @@
 #include <IDiffusionHandler.h>
 #include <IAdvectionHandler.h>
 #include <IMaterialFactory.h>
+#include <BubbleCollection.h>
 
 namespace xolotlSolver {
 
@@ -148,6 +149,13 @@ public:
 	 * @return The network
 	 */
 	virtual xolotlCore::PSIClusterReactionNetwork *getNetwork() const = 0;
+
+	/**
+	 * Get the bubble collection.
+	 *
+	 * @return The bubble collection
+	 */
+	virtual xolotlCore::BubbleCollection *getBubbleCollection() const = 0;
 
 }; //end class ISolverHandler
 

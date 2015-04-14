@@ -79,7 +79,7 @@ public:
 	PetscSolverHandler() {}
 
 	//! The Destructor
-	~PetscSolverHandler() {}
+	~PetscSolverHandler();
 
 	/**
 	 * Get the diagonal fill for the Jacobian, corresponding to the reactions.

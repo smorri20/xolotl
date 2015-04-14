@@ -23,6 +23,10 @@ std::vector<double> clusterPartials;
  */
 std::vector<double> reactingPartialsForCluster;
 
+PetscSolverHandler::~PetscSolverHandler () {
+	delete bubbleCol;
+}
+
 void PetscSolverHandler::getDiagonalFill(PetscInt *diagFill,
 		int diagFillSize) {
 

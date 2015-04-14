@@ -43,6 +43,9 @@ protected:
 	//! The original advection handler created.
 	xolotlCore::IAdvectionHandler *advectionHandler;
 
+	//! The bubble collection.
+	xolotlCore::BubbleCollection *bubbleCol;
+
 	//! The number of dimensions for the problem.
 	int dimension;
 
@@ -73,6 +76,9 @@ public:
 
 		// Set the number of dimension
 		dimension = options.getDimensionNumber();
+
+		// Create the bubble collection
+		bubbleCol = new xolotlCore::BubbleCollection();
 
 		return;
 	}
@@ -128,6 +134,12 @@ public:
 	 * \see ISolverHandler.h
 	 */
 	xolotlCore::PSIClusterReactionNetwork *getNetwork() const {return network;}
+
+	/**
+	 * Get the bubble collection.
+	 * \see ISolverHandler.h
+	 */
+	xolotlCore::BubbleCollection *getBubbleCollection() const {return bubbleCol;}
 
 }; //end class SolverHandler
 

@@ -25,6 +25,9 @@ static const double pi = 3.1415926535897932;
 //! Journal of Nuclear Materials 403 (2010) 75–88. Given in units here of nm.
 static const double latticeConstant = 0.31700000000000000;
 
+//! The tungsten density in atom/nm^3 (Computed by Sophie)
+static const double tungstenDensity = 62.8000000000000000;
+
 /**
  * Statically defined type names. This are used to optimize the lookup
  * calls in the maps so that new strings are not constantly created

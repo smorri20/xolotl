@@ -231,6 +231,15 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 			continue;
 		}
+		// If it is in a bubble
+		if (bubbleCol->isPointABubble(xi)) {
+			for (int i = 0; i < dof; i++) {
+				concOffset[i] = 0.0;
+				updatedConcOffset[i] = 1.0 * concOffset[i];
+			}
+
+			continue;
+		}
 
 		// Set the grid position
 		gridPosition[0] = xi * hX;
@@ -345,6 +354,8 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	for (int xi = xs; xi < xs + xm; xi++) {
 		// Boundary conditions
 		if (xi == 0 || xi == Mx - 1) continue;
+		// If it is in a bubble
+		if (bubbleCol->isPointABubble(xi)) continue;
 
 		// Set the grid position
 		gridPosition[0] = xi * hX;
@@ -446,6 +457,8 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	for (int xi = xs; xi < xs + xm; xi++) {
 		// Boundary conditions
 		if (xi == 0 || xi == Mx - 1) continue;
+		// If it is in a bubble
+		if (bubbleCol->isPointABubble(xi)) continue;
 
 		// Copy data into the PSIClusterReactionNetwork so that it can
 		// compute the new concentrations.

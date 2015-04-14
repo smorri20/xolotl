@@ -79,6 +79,7 @@ include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants/psiclusters)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/temperature)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/flux)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/bubbles)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlFactory/material)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlFactory/vizHandler)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlFactory/temperatureHandler)
@@ -92,7 +93,7 @@ configure_file ("${CMAKE_SOURCE_DIR}/XolotlConfig.h.in" "${CMAKE_SOURCE_DIR}/Xol
 
 # Setup the library list
 set(XOLOTL_LIBS xolotlReactants xolotlSolver xolotlIO xolotlPerf xolotlViz 
-xolotlFactory xolotlCL ${PETSC_LIBRARIES} ${HDF5_LIBRARIES})
+xolotlFactory xolotlCL xolotlBubbles ${PETSC_LIBRARIES} ${HDF5_LIBRARIES})
 
 # Add an executable for the main program
 ADD_EXECUTABLE (xolotl main.cpp)
