@@ -50,6 +50,11 @@ std::vector<double> CvsXYDataProvider::getAxis2Vector() const {
 			almostMax = max;
 			max = (*it).y;
 		}
+		// Find the max and almostMax
+		if ((*it).y > max) {
+			almostMax = max;
+			max = (*it).y;
+		}
 
 		// Fill the yVector
 		addValue(yVector, (*it).y);
