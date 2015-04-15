@@ -113,6 +113,7 @@ protected:
 	 * Number of dimensions for the simulation.
 	 */
 	int dimensionNumber;
+	
 public:
 
 	/**

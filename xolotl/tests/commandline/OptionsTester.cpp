@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(goodParamFile)
 
     // Check the number of dimensions option
     BOOST_REQUIRE_EQUAL(opts.getDimensionNumber(), 1);
-
+    
     // Check the PETSc options
     BOOST_REQUIRE_EQUAL(opts.getPetscArgc(), 16);
 

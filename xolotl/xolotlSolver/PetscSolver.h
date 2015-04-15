@@ -84,7 +84,7 @@ public:
 	 * this operation will throw an exception of type std::string.
 	 */
 	void finalize();
-
+	
 }; //end class PetscSolver
 
 } /* end namespace xolotlSolver */
