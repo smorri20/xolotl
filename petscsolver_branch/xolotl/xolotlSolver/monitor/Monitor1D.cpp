@@ -264,12 +264,12 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 		std::cout << "Helium concentration = " << heConcentration << std::endl;
 		std::cout << "Helium fluence = " << heliumFluence << "\n" << std::endl;
 
-//		// Uncomment to write the retention and the fluence in a file
-//		std::ofstream outputFile;
-//		outputFile.open("retentionOut.txt", ios::app);
-//		outputFile << heliumFluence << " "
-//				<< 100.0 * (heConcentration / heliumFluence) << std::endl;
-//		outputFile.close();
+		// Uncomment to write the retention and the fluence in a file
+		std::ofstream outputFile;
+		outputFile.open("retentionOut.txt", ios::app);
+		outputFile << heliumFluence << " "
+				<< 100.0 * (heConcentration / heliumFluence) << std::endl;
+		outputFile.close();
 	}
 
 	else {
@@ -364,12 +364,12 @@ PetscErrorCode computeCumulativeHelium1D(TS ts, PetscInt timestep, PetscReal tim
 
 			// If this is not the master process, send the value
 			if (procId != 0) {
-				MPI_Send(&heLocalConc, 1, MPI_DOUBLE, 0, 5, MPI_COMM_WORLD);
+				MPI_Send(&heLocalConc, 1, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
 			}
 		}
 		// If this process is not in charge of xi but is the master one, receive the value
 		else if (procId == 0) {
-			MPI_Recv(&heLocalConc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 5, MPI_COMM_WORLD,
+			MPI_Recv(&heLocalConc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 2, MPI_COMM_WORLD,
 					MPI_STATUS_IGNORE);
 		}
 
@@ -458,18 +458,18 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 		for (int i = 1; i < worldSize; i++) {
 			// Get the size of the local grid of that process
 			int localSize = 0;
-			MPI_Recv(&localSize, 1, MPI_INT, i, 2, MPI_COMM_WORLD,
+			MPI_Recv(&localSize, 1, MPI_INT, i, 3, MPI_COMM_WORLD,
 					MPI_STATUS_IGNORE);
 
 			// Loop on their grid
 			for (int k = 0; k < localSize; k++) {
 				// Get the position
-				MPI_Recv(&x, 1, MPI_DOUBLE, i, 2, MPI_COMM_WORLD,
+				MPI_Recv(&x, 1, MPI_DOUBLE, i, 3, MPI_COMM_WORLD,
 						MPI_STATUS_IGNORE);
 
 				// and the concentration
 				double conc = 0.0;
-				MPI_Recv(&conc, 1, MPI_DOUBLE, i, 2, MPI_COMM_WORLD,
+				MPI_Recv(&conc, 1, MPI_DOUBLE, i, 3, MPI_COMM_WORLD,
 						MPI_STATUS_IGNORE);
 
 				// Create a Point with the concentration[iCluster] as the value
@@ -516,7 +516,7 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 
 	else {
 		// Send the value of the local grid size to the master process
-		MPI_Send(&xm, 1, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
+		MPI_Send(&xm, 1, MPI_DOUBLE, 0, 3, MPI_COMM_WORLD);
 
 		// Loop on the grid
 		for (xi = xs; xi < xs + xm; xi++) {
@@ -527,10 +527,10 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 			gridPointSolution = solutionArray[xi];
 
 			// Send the value of the local position to the master process
-			MPI_Send(&x, 1, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
+			MPI_Send(&x, 1, MPI_DOUBLE, 0, 3, MPI_COMM_WORLD);
 
 			// Send the value of the concentration to the master process
-			MPI_Send(&gridPointSolution[iCluster], 1, MPI_DOUBLE, 0, 2,
+			MPI_Send(&gridPointSolution[iCluster], 1, MPI_DOUBLE, 0, 3,
 					MPI_COMM_WORLD);
 		}
 	}
@@ -611,19 +611,19 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 		for (int i = 1; i < worldSize; i++) {
 			// Get the size of the local grid of that process
 			int localSize = 0;
-			MPI_Recv(&localSize, 1, MPI_INT, i, 3, MPI_COMM_WORLD,
+			MPI_Recv(&localSize, 1, MPI_INT, i, 4, MPI_COMM_WORLD,
 					MPI_STATUS_IGNORE);
 
 			// Loop on their grid
 			for (int k = 0; k < localSize; k++) {
 				// Get the position
-				MPI_Recv(&x, 1, MPI_DOUBLE, i, 3, MPI_COMM_WORLD,
+				MPI_Recv(&x, 1, MPI_DOUBLE, i, 4, MPI_COMM_WORLD,
 						MPI_STATUS_IGNORE);
 
 				for (int j = 0; j < loopSize; j++) {
 					// and the concentrations
 					double conc;
-					MPI_Recv(&conc, 1, MPI_DOUBLE, i, 3, MPI_COMM_WORLD,
+					MPI_Recv(&conc, 1, MPI_DOUBLE, i, 4, MPI_COMM_WORLD,
 							MPI_STATUS_IGNORE);
 
 					// Create a Point with the concentration[iCluster] as the value
@@ -674,7 +674,7 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 
 	else {
 		// Send the value of the local grid size to the master process
-		MPI_Send(&xm, 1, MPI_DOUBLE, 0, 3, MPI_COMM_WORLD);
+		MPI_Send(&xm, 1, MPI_DOUBLE, 0, 4, MPI_COMM_WORLD);
 
 		// Loop on the grid
 		for (xi = xs; xi < xs + xm; xi++) {
@@ -685,11 +685,11 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 			gridPointSolution = solutionArray[xi];
 
 			// Send the value of the local position to the master process
-			MPI_Send(&x, 1, MPI_DOUBLE, 0, 3, MPI_COMM_WORLD);
+			MPI_Send(&x, 1, MPI_DOUBLE, 0, 4, MPI_COMM_WORLD);
 
 			for (int i = 0; i < loopSize; i++) {
 				// Send the value of the concentrations to the master process
-				MPI_Send(&gridPointSolution[i], 1, MPI_DOUBLE, 0, 3,
+				MPI_Send(&gridPointSolution[i], 1, MPI_DOUBLE, 0, 4,
 						MPI_COMM_WORLD);
 			}
 		}
@@ -842,6 +842,134 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 }
 
 #undef __FUNCT__
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "monitorMeanSize1D")
+/**
+ * This is a monitoring method that will create files with the mean
+ * helium size as a function of depth at each time step.
+ */
+PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
+		Vec solution, void *ictx) {
+	PetscErrorCode ierr;
+	const double **solutionArray, *gridPointSolution;
+	int xs, xm, xi;
+	double x = 0.0;
+
+	PetscFunctionBeginUser;
+
+	// Get the number of processes
+	int worldSize;
+	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
+
+	// Gets the process ID
+	int procId;
+	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+
+	// Get the da from ts
+	DM da;
+	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
+
+	// Get the solutionArray
+	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+
+	// Get the corners of the grid
+	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
+
+	// Get the solver handler
+	auto solverHandler = PetscSolver::getSolverHandler();
+
+	// Get the network
+	auto network = solverHandler->getNetwork();
+
+	// Get the physical grid
+	auto grid = solverHandler->getXGrid();
+
+	// Create the output file
+	std::ofstream outputFile;
+	if (procId == 0) {
+		std::stringstream name;
+		name << "heliumSizeMeanBis_" << timestep << ".dat";
+		outputFile.open(name.str());
+	}
+
+	// Loop on the full grid
+	for (xi = 0; xi < grid.size(); xi++) {
+		// Wait for everybody at each grid point
+		MPI_Barrier(PETSC_COMM_WORLD);
+
+		// Get the x position
+		x = grid[xi];
+
+		// Initialize the values to write in the file
+		double heliumMean = 0.0, standardDev = 0.0;
+
+		// If this is the locally owned part of the grid
+		if (xi >= xs && xi < xs + xm) {
+			// Compute the mean and standard deviation of helium cluster size
+
+			// Get the pointer to the beginning of the solution data for this grid point
+			gridPointSolution = solutionArray[xi];
+
+			// A pointer for the clusters used below
+			PSICluster * cluster;
+			// Initialize the total helium and concentration before looping
+			double concTot = 0.0, heliumTot = 0.0;
+
+			// Loop on all the indices to compute the mean
+			for (int i = 0; i < heIndices1D.size(); i++) {
+				concTot += gridPointSolution[heIndices1D[i]];
+				heliumTot += gridPointSolution[heIndices1D[i]] * heWeights1D[i];
+			}
+
+			// Compute the mean size of helium at this depth
+			heliumMean = heliumTot / concTot;
+
+			// Initialize the standard deviation
+			standardDev = 0.0;
+			double deviation = 0.0;
+
+			// Loop on all the indices to compute the standard deviation
+			for (int i = 0; i < heIndices1D.size(); i++) {
+				deviation = (heWeights1D[i] - heliumMean);
+				standardDev += deviation * deviation * gridPointSolution[heIndices1D[i]];
+			}
+
+			// Compute the standard deviation at this depth
+			standardDev = standardDev / concTot;
+			standardDev = sqrt(standardDev);
+
+			// If this is not the master process, send the values
+			if (procId != 0) {
+				MPI_Send(&heliumMean, 1, MPI_DOUBLE, 0, 5, MPI_COMM_WORLD);
+				MPI_Send(&standardDev, 1, MPI_DOUBLE, 0, 5, MPI_COMM_WORLD);
+			}
+		}
+		// If this process is not in charge of xi but is the master one, receive the value
+		else if (procId == 0) {
+			MPI_Recv(&heliumMean, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 5, MPI_COMM_WORLD,
+					MPI_STATUS_IGNORE);
+			MPI_Recv(&standardDev, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 5, MPI_COMM_WORLD,
+					MPI_STATUS_IGNORE);
+		}
+
+		// The master process writes computes the cumulative value and writes in the file
+		if (procId == 0) {
+			outputFile << x << " " << heliumMean << " "
+					<< standardDev << std::endl;
+		}
+	}
+
+	// Close the file
+	if (procId == 0) {
+		outputFile.close();
+	}
+
+	// Restore the solutionArray
+	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+
+	PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ Actual__FUNCT__("xolotlSolver", "monitorMaxClusterConc1D")
 PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
@@ -913,7 +1041,7 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 		// Loop on the other processes
 		for (int i = 1; i < worldSize; i++) {
 			int otherBool;
-			MPI_Recv(&otherBool, 1, MPI_INT, i, 5, MPI_COMM_WORLD,
+			MPI_Recv(&otherBool, 1, MPI_INT, i, 6, MPI_COMM_WORLD,
 					MPI_STATUS_IGNORE);
 
 			// Update maxHeVTooBig
@@ -935,17 +1063,17 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 		// Send this information to the other processes
 		for (int i = 1; i < worldSize; i++) {
 			int printMaxClusterConcInt = (int) printMaxClusterConc1D;
-			MPI_Send(&printMaxClusterConcInt, 1, MPI_INT, i, 5, MPI_COMM_WORLD);
+			MPI_Send(&printMaxClusterConcInt, 1, MPI_INT, i, 6, MPI_COMM_WORLD);
 		}
 	}
 	// Other processes
 	else {
 		// Send the maxHeVTooBig value
 		int maxHeVTooBigInt = (int) maxHeVTooBig;
-		MPI_Send(&maxHeVTooBigInt, 1, MPI_INT, 0, 5, MPI_COMM_WORLD);
+		MPI_Send(&maxHeVTooBigInt, 1, MPI_INT, 0, 6, MPI_COMM_WORLD);
 
 		// Receive the printMaxClusterConc1D value
-		MPI_Recv(&printMaxClusterConc1D, 1, MPI_INT, 0, 5, MPI_COMM_WORLD,
+		MPI_Recv(&printMaxClusterConc1D, 1, MPI_INT, 0, 6, MPI_COMM_WORLD,
 				MPI_STATUS_IGNORE);
 	}
 
@@ -1066,7 +1194,8 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 	// Flags to launch the monitors or not
 	PetscBool flag2DPlot, flag1DPlot, flagSeries, flagPerf, flagRetention,
-			flagStatus, flagMaxClusterConc, flagInterstitial, flagCumul;
+			flagStatus, flagMaxClusterConc, flagInterstitial, flagCumul,
+			flagMeanSize;
 
 	// Check the option -plot_perf
 	ierr = PetscOptionsHasName(NULL, "-plot_perf", &flagPerf);
@@ -1103,6 +1232,10 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 	// Check the option -helium_cumul
 	ierr = PetscOptionsHasName(NULL, "-helium_cumul", &flagCumul);
 	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-helium_cumul) failed.");
+
+	// Check the option -mean_size
+	ierr = PetscOptionsHasName(NULL, "-mean_size", &flagMeanSize);
+	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-mean_size) failed.");
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -1244,7 +1377,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 	// Initialize heIndices1D and heWeights1D if we want to compute the
 	// retention or the cumulative value
-	if (flagRetention || flagCumul) {
+	if (flagRetention || flagCumul || flagMeanSize) {
 		// Get all the helium clusters
 		auto heClusters = network->getAll(heType);
 
@@ -1290,10 +1423,10 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		ierr = TSMonitorSet(ts, computeHeliumRetention1D, NULL, NULL);
 		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (computeHeliumRetention1D) failed.");
 
-//		// Uncomment to clear the file where the retention will be written
-//		std::ofstream outputFile;
-//		outputFile.open("retentionOut.txt");
-//		outputFile.close();
+		// Uncomment to clear the file where the retention will be written
+		std::ofstream outputFile;
+		outputFile.open("retentionOut.txt");
+		outputFile.close();
 	}
 
 	// Set the monitor to compute the cumulative helium concentration
@@ -1308,6 +1441,13 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		// computeCumulativeHelium1D will be called at each timestep
 		ierr = TSMonitorSet(ts, computeCumulativeHelium1D, NULL, NULL);
 		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (computeCumulativeHelium1D) failed.");
+	}
+
+	// Set the monitor to save text file of the mean helium size
+	if (flagMeanSize) {
+		// monitorMeanSize1D will be called at each timestep
+		ierr = TSMonitorSet(ts, monitorMeanSize1D, NULL, NULL);
+		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorMeanSize1D) failed.");
 	}
 
 	// Set the monitor to save the status of the simulation in hdf5 file

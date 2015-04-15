@@ -1,5 +1,6 @@
 // Includes
 #include <TrapMutationHandler.h>
+#include <MathUtils.h>
 
 namespace xolotlCore {
 
@@ -14,6 +15,20 @@ void TrapMutationHandler::initialize(PSIClusterReactionNetwork *network,
 	auto bubbles = network->getAll(heVType);
 	// Get the single interstitial cluster
 	auto singleInterstitial = (PSICluster *) network->get(iType, 1);
+
+	// If the single I cluster is not in the network,
+	// there is no trap-mutation
+	if (!singleInterstitial) {
+		// Loop on the grid points
+		for (int i = 0; i < grid.size(); i++) {
+			// Create the list (vector) of indices at this grid point
+			std::vector<int> indices;
+			// And give it empty to the index vector
+			indexVector.push_back(indices);
+		}
+
+		return;
+	}
 
 	// Loop on the He clusters
 	for (int i = 0; i < heClusters.size(); i++) {
@@ -49,6 +64,8 @@ void TrapMutationHandler::initialize(PSIClusterReactionNetwork *network,
 	// that depth.
 	std::vector<double> depthVec = {0.0, 0.2, 0.5, 0.7, 1.0, 1.2, 1.5, 1.7, 2.0};
 	std::vector<int> sizeVec = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+//	std::vector<double> depthVec = {-0.1, 0.6, 0.7, 0.8, 0.9};
+//	std::vector<int> sizeVec = {1, 2, 3, 4, 8};
 
 	// Clear the vector of HeV indices created by He undergoing trap-mutation
 	// at each grid point
@@ -131,8 +148,13 @@ void TrapMutationHandler::computeTrapMutation(PSIClusterReactionNetwork *network
 	// Get all the HeV bubbles
 	auto bubbles = network->getAll(heVType);
 
-	// Get the single interstitial cluster and its ID
+	// Get the single interstitial cluster
 	auto singleInterstitial = (PSICluster *) network->get(iType, 1);
+
+	// Don't do anything if I is not in the network
+	if (!singleInterstitial) return;
+
+	// Get its ID
 	int interstitialIndex = singleInterstitial->getId() - 1;
 
 	// Get the pointer to list of indices at this grid point
@@ -151,9 +173,6 @@ void TrapMutationHandler::computeTrapMutation(PSIClusterReactionNetwork *network
 		// Get the initial concentration of helium
 		double oldConc = concOffset[heIndex];
 
-		// Go to the next bubble if this concentration is 0.0
-		if (oldConc == 0.0) continue;
-
 		// Update the concentrations (the bubble loses its concentration)
 		updatedConcOffset[heIndex] -= kMutation * oldConc;
 		updatedConcOffset[bubbleIndex] += kMutation * oldConc;
@@ -169,8 +188,13 @@ int TrapMutationHandler::computePartialsForTrapMutation(
 	// Get all the HeV bubbles
 	auto bubbles = network->getAll(heVType);
 
-	// Get the single interstitial cluster and its ID
+	// Get the single interstitial cluster
 	auto singleInterstitial = (PSICluster *) network->get(iType, 1);
+
+	// Don't do anything if I is not in the network
+	if (!singleInterstitial) return 0;
+
+	// Get its ID
 	int interstitialIndex = singleInterstitial->getId() - 1;
 
 	// Get the pointer to list of indices at this grid point
