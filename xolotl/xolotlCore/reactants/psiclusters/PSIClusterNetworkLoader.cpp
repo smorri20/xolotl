@@ -28,7 +28,7 @@ using namespace xolotlCore;
  * @param inString the string to be converted
  * @return the string as a double
  */
-static inline double convertStrToDouble(const std::string inString) {
+static inline double convertStrToDouble(const std::string& inString) {
 	return (inString.compare("infinite") == 0) ?
 			std::numeric_limits<double>::infinity() :
 			strtod(inString.c_str(), NULL);

@@ -5,7 +5,7 @@
 
 using namespace xolotlViz;
 
-CvsXYDataProvider::CvsXYDataProvider(std::string name) : DataProvider(name) {
+CvsXYDataProvider::CvsXYDataProvider(const std::string& name) : DataProvider(name) {
 }
 
 CvsXYDataProvider::~CvsXYDataProvider() {

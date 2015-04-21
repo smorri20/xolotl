@@ -21,7 +21,7 @@ namespace xolotlCore {
  * @param subline the subline to load in the data.
  * @param data the reference to the data to be loaded.
  */
-static void loadData(std::string subline, std::string &data) {
+static void loadData(const std::string& subline, std::string &data) {
 	data = subline;
 
 	return;
@@ -33,7 +33,7 @@ static void loadData(std::string subline, std::string &data) {
  * @param subline the subline to load in the data.
  * @param data the reference to the data to be loaded.
  */
-static void loadData(std::string subline, char &data) {
+static void loadData(const std::string& subline, char &data) {
 	std::istringstream dataStream;
 	dataStream.str(subline);
 	dataStream >> data;
@@ -47,7 +47,7 @@ static void loadData(std::string subline, char &data) {
  * @param subline the subline to load in the data.
  * @param data the reference to the data to be loaded.
  */
-static void loadData(std::string subline, bool &data) {
+static void loadData(const std::string& subline, bool &data) {
 	std::istringstream dataStream;
 	dataStream.str(subline);
 	dataStream >> data;
@@ -61,7 +61,7 @@ static void loadData(std::string subline, bool &data) {
  * @param subline the subline to load in the data.
  * @param data the reference to the data to be loaded.
  */
-static void loadData(std::string subline, double &data) {
+static void loadData(const std::string& subline, double &data) {
 	std::istringstream dataStream;
 	dataStream.str(subline);
 	dataStream >> data;
@@ -75,7 +75,7 @@ static void loadData(std::string subline, double &data) {
  * @param subline the subline to load in the data.
  * @param data the reference to the data to be loaded.
  */
-static void loadData(std::string subline, int &data) {
+static void loadData(const std::string& subline, int &data) {
 	std::istringstream dataStream;
 	dataStream.str(subline);
 	dataStream >> data;
@@ -125,7 +125,7 @@ public:
 	 *
 	 * @param delitmiter The delimiter
 	 */
-	void setDelimiter(std::string delimiter) {
+	void setDelimiter(const std::string& delimiter) {
 
 		dataDelimiter = delimiter;
 
@@ -138,7 +138,7 @@ public:
 	 * @param cdelitmiter The comment delimiter
 	 *
 	 */
-	void setCommentDelimiter(std::string cdelimiter) {
+	void setCommentDelimiter(const std::string& cdelimiter) {
 
 		commentDelimiter = cdelimiter;
 
