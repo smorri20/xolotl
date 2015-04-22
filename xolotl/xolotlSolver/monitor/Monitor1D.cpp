@@ -880,9 +880,6 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the corners of the grid
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
 
-	// Return if the grid point 1 is not on this process
-	if (xs > 1) PetscFunctionReturn(0);
-
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
 
@@ -963,7 +960,7 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt timestep, PetscReal time,
 	double threshold = 62.8 * hx;
 	if (nInterstitial1D > threshold) {
 		// Compute the number of grid points to move the surface of
-		int nGridPoints = (int) nInterstitial1D / threshold;
+		int nGridPoints = (int) (nInterstitial1D / threshold);
 		// Remove the number of interstitials we just transformed in new material
 		// from nInterstitial1D
 		nInterstitial1D = nInterstitial1D - threshold * (double) nGridPoints;

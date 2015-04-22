@@ -41,6 +41,9 @@ void FluxHandler::initializeFluxHandler(int surfacePos, int nx, double hx, doubl
 	// the wanted intensity
 	double heFluxNormalized = elementarySurfaceSize * heFlux / normFactor;
 
+	// Clear the flux vector
+	incidentFluxVec.clear();
+
 	// The first values should always be 0.0 because it is on the left side of the surface
 	for (int i = 0; i <= surfacePos; i++) {
 		incidentFluxVec.push_back(0.0);
