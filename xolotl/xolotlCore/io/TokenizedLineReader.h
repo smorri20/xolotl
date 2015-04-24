@@ -123,7 +123,7 @@ public:
 	 * This operation sets the string (delimiter) that represents the delimiter
 	 * separating the different data elements in the line.
 	 *
-	 * @param delitmiter The delimiter
+	 * @param delimiter The delimiter
 	 */
 	void setDelimiter(const std::string& delimiter) {
 
@@ -135,7 +135,7 @@ public:
 	/**
 	 * This operation sets the character that represents the comment character.
 	 *
-	 * @param cdelitmiter The comment delimiter
+	 * @param cdelimiter The comment delimiter
 	 *
 	 */
 	void setCommentDelimiter(const std::string& cdelimiter) {
