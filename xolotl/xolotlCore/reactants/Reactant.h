@@ -239,7 +239,7 @@ public:
 	 *
 	 * @return A serialized version of this reactant as a string.
 	 */
-	virtual const std::string toString();
+	//virtual const std::string toString();
 
 	/**
 	 * This operation returns the name of the reactant.

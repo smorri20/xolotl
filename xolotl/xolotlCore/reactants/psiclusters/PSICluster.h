@@ -385,9 +385,11 @@ protected:
 	 * @param secondReactant - The second reactant in the reaction, B.
 	 * @param thirdReactant - The third reactant in the reaction, C.
 	 */
+/*
 	void printReaction(const PSICluster & firstReactant,
 			const PSICluster & secondReactant,
 			const PSICluster & productReactant) const;
+*/
 
 	/**
 	 * This operation prints a backward reaction given the three reactants in
@@ -397,9 +399,11 @@ protected:
 	 * @param secondReactant - The second reactant in the reaction, B.
 	 * @param thirdReactant - The third reactant in the reaction, C.
 	 */
+/*
 	void printDissociation(const PSICluster & firstReactant,
 			const PSICluster & secondReactant,
 			const PSICluster & productReactant) const;
+*/
 
 	/**
 	 * This operation signifies that the cluster with cluster Id should be
@@ -427,7 +431,7 @@ protected:
 	 * @return The set of connected reactants. Each entry in the set is the id
 	 * of a connected cluster for forward reactions.
 	 */
-	std::set<int> getReactionConnectivitySet() const;
+	//std::set<int> getReactionConnectivitySet() const;
 
 	/**
 	 * This operation signifies that the cluster with cluster Id should be
@@ -455,7 +459,7 @@ protected:
 	 * @return The set of connected reactants. Each entry in the set is the id
 	 * of a connected cluster for dissociation reactions
 	 */
-	const std::set<int> & getDissociationConnectivitySet() const;
+	//const std::set<int> & getDissociationConnectivitySet() const;
 
 	/**
 	 * This operation recomputes the diffusion coefficient. It is called

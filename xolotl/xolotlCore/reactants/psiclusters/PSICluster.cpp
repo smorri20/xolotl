@@ -398,6 +398,7 @@ void PSICluster::fillVWithI(const std::string& secondClusterName,
 	return;
 }
 
+/*
 void PSICluster::printReaction(const PSICluster & firstReactant,
 		const PSICluster & secondReactant,
 		const PSICluster & productReactant) const {
@@ -433,6 +434,7 @@ void PSICluster::printDissociation(const PSICluster & firstReactant,
 
 	return;
 }
+*/
 
 static std::vector<int> getFullConnectivityVector(std::set<int> connectivitySet,
 		int size) {
@@ -460,9 +462,11 @@ std::vector<int> PSICluster::getReactionConnectivity() const {
 	return getFullConnectivityVector(reactionConnectivitySet, network->size());
 }
 
+/*
 std::set<int> PSICluster::getReactionConnectivitySet() const {
 	return std::set<int>(reactionConnectivitySet);
 }
+*/
 
 void PSICluster::setDissociationConnectivity(int clusterId) {
 	// Add the cluster to the set.
@@ -477,9 +481,11 @@ std::vector<int> PSICluster::getDissociationConnectivity() const {
 			network->size());
 }
 
+/*
 const std::set<int> & PSICluster::getDissociationConnectivitySet() const {
 	return dissociationConnectivitySet;
 }
+*/
 
 int PSICluster::getSize() const {
 	// Return this cluster's size
