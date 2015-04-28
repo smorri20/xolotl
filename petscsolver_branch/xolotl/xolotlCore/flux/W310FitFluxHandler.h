@@ -20,7 +20,7 @@ private:
 	 * @param x The position where to evaluate the fit
 	 * @return The evaluated value
 	 */
-	double FitFunction(double x) {
+	double fitFunction(double x) {
 		// Value at which the flux goes to 0
 		double x1 = 10.0;
 

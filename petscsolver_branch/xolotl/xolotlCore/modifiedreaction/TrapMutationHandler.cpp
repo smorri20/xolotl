@@ -62,10 +62,7 @@ void TrapMutationHandler::initialize(PSIClusterReactionNetwork *network,
 	// depth up to which the modified trap-mutation is valid, and the second
 	// one is the minimum size of helium cluster undergoing trap-mutation at
 	// that depth.
-	std::vector<double> depthVec = {0.0, 0.2, 0.5, 0.7, 1.0, 1.2, 1.5, 1.7, 2.0};
-	std::vector<int> sizeVec = {0, 1, 2, 3, 4, 5, 6, 7, 8};
-//	std::vector<double> depthVec = {-0.1, 0.6, 0.7, 0.8, 0.9};
-//	std::vector<int> sizeVec = {1, 2, 3, 4, 8};
+	initializeDepthSize();
 
 	// Clear the vector of HeV indices created by He undergoing trap-mutation
 	// at each grid point

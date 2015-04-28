@@ -13,6 +13,15 @@ namespace xolotlCore {
 class TrapMutationHandler: public ITrapMutationHandler {
 protected:
 
+	//! The vector containing the different depths for the modified trap mutation
+	std::vector<double> depthVec;
+
+	/**
+	 * The vector containing the size of the smallest cluster undergoing
+	 * trap-mutation for each given depth
+	 */
+	std::vector<int> sizeVec;
+
 	//! The trap-mutation rate
 	double kMutation;
 
@@ -21,6 +30,12 @@ protected:
 	 * trap-mutation for each grid point
 	 */
 	std::vector<std::vector<int> > indexVector;
+
+	/**
+	 * Method initializing the depth and size vectors.
+	 * It needs to be implemented by the daughter classes.
+	 */
+	virtual void initializeDepthSize() {return;}
 
 public:
 

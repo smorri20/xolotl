@@ -2,7 +2,7 @@
 #define BOOST_TEST_MODULE Regression
 
 #include <boost/test/included/unit_test.hpp>
-#include <TrapMutationHandler.h>
+#include <W110TrapMutationHandler.h>
 #include <HDF5NetworkLoader.h>
 #include <XolotlConfig.h>
 #include <DummyHandlerRegistry.h>
@@ -12,9 +12,9 @@ using namespace std;
 using namespace xolotlCore;
 
 /**
- * This suite is responsible for testing the TrapMutationHandler.
+ * This suite is responsible for testing the W110TrapMutationHandler.
  */
-BOOST_AUTO_TEST_SUITE(TrapMutationHandler_testSuite)
+BOOST_AUTO_TEST_SUITE(W110TrapMutationHandler_testSuite)
 
 /**
  * Method checking the initialization and the compute modified trap-mutation methods.
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	}
 
 	// Create the modified trap-mutation handler
-	TrapMutationHandler trapMutationHandler;
+	W110TrapMutationHandler trapMutationHandler;
 
 	// Initialize it
 	trapMutationHandler.initialize(network, grid);
@@ -78,9 +78,9 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 			concOffset, updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 3.33712e+21, 0.01); // Create I
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[6], -4.15735e+20, 0.01); // He
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[15], 4.15735e+20, 0.01); // Create HeV
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 2.50525e+21, 0.01); // Create I
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[8], -4.16537e+20, 0.01); // He3
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[17], 4.16537e+20, 0.01); // Create He3V
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[10], -4.17341e+20, 0.01); // He5
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[19], 4.17341e+20, 0.01); // Create He5V
 
@@ -93,9 +93,9 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 			concOffset, updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 2.06886e+23, 0.01); // Create I
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[6], 0.0, 0.01); // He
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[15], 0.0, 0.01); // Doesn't create HeV
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 8.27664e+22, 0.01); // Create I
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[8], 0.0, 0.01); // He3
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[17], 0.0, 0.01); // Doesn't create He3V
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[13], -4.13852e+22, 0.01); // He8
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[22], 4.13852e+22, 0.01); // Create He8V
 
@@ -112,12 +112,12 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 			indicesPointer, 1);
 
 	// Check the values for the indices
-	BOOST_REQUIRE_EQUAL(indices[0], 6);
-	BOOST_REQUIRE_EQUAL(indices[1], 15);
+	BOOST_REQUIRE_EQUAL(indices[0], 8);
+	BOOST_REQUIRE_EQUAL(indices[1], 17);
 	BOOST_REQUIRE_EQUAL(indices[2], 0);
-	BOOST_REQUIRE_EQUAL(indices[21], 13);
-	BOOST_REQUIRE_EQUAL(indices[22], 22);
-	BOOST_REQUIRE_EQUAL(indices[23], 0);
+	BOOST_REQUIRE_EQUAL(indices[9], 11);
+	BOOST_REQUIRE_EQUAL(indices[10], 20);
+	BOOST_REQUIRE_EQUAL(indices[11], 0);
 
 	// Check values
 	BOOST_REQUIRE_CLOSE(val[0], -9.67426e+13, 0.01);

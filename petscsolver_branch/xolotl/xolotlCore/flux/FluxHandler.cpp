@@ -33,7 +33,7 @@ void FluxHandler::initializeFluxHandler(std::vector<double> grid, double hy,
 		double x = xGrid[i];
 
 		// Add the the value of the function times the step size
-		normFactor += FitFunction(x) * (xGrid[i] - xGrid[i-1]);
+		normFactor += fitFunction(x) * (xGrid[i] - xGrid[i-1]);
 	}
 
 	// Factor the incident flux will be multiplied by to get
@@ -49,7 +49,7 @@ void FluxHandler::initializeFluxHandler(std::vector<double> grid, double hy,
 		auto x = xGrid[i];
 
 		// Compute the flux value
-		double incidentFlux = heFluxNormalized * FitFunction(x);
+		double incidentFlux = heFluxNormalized * fitFunction(x);
 		// Add it to the vector
 		incidentFluxVec.push_back(incidentFlux);
 	}
@@ -76,7 +76,7 @@ void FluxHandler::recomputeFluxHandler() {
 		auto x = xGrid[i];
 
 		// Compute the flux value
-		double incidentFlux = heFluxNormalized * FitFunction(x);
+		double incidentFlux = heFluxNormalized * fitFunction(x);
 		// Add it to the vector
 		incidentFluxVec.push_back(incidentFlux);
 	}
