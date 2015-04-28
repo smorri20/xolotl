@@ -3,6 +3,9 @@
 
 #include <memory>
 #include <IMaterialFactory.h>
+#include <DummyAdvectionHandler.h>
+#include <DummyDiffusionHandler.h>
+#include <DummyTrapMutationHandler.h>
 
 namespace xolotlFactory {
 
@@ -59,6 +62,16 @@ public:
 			// Initialize the time profile
 			theFluxHandler->initializeTimeProfile(options.getFluxProfileName());
 		}
+
+		// Get the process map
+		auto map = options.getProcesses();
+		// Set dummy handlers when needed
+		if (!map["diff"])
+			theDiffusionHandler = std::make_shared<xolotlCore::DummyDiffusionHandler>();
+		if (!map["advec"])
+			theAdvectionHandler = std::make_shared<xolotlCore::DummyAdvectionHandler>();
+		if (!map["modifiedTM"])
+			theTrapMutationHandler = std::make_shared<xolotlCore::DummyTrapMutationHandler>();
 
 		return;
 	}

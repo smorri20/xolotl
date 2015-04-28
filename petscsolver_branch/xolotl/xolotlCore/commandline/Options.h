@@ -114,6 +114,11 @@ protected:
 	 */
 	bool useRegularGridFlag;
 
+	/**
+	 * The map of physical processes to use in the simulation.
+	 */
+	std::map<std::string, bool> processMap;
+
 public:
 
 	/**
@@ -368,6 +373,20 @@ public:
      * \see IOptions.h
      */
     void setRegularXGrid(bool flag) {useRegularGridFlag = flag;}
+
+    /**
+     * Obtain the physical process map.
+     *
+     * @return The map
+     */
+    std::map<std::string, bool> getProcesses() const {return processMap;}
+
+    /**
+     * Set the physical process map.
+     *
+     * @param map The map
+     */
+    void setProcesses(std::map<std::string, bool> map) {processMap = map;}
 
 };//end class Options
 

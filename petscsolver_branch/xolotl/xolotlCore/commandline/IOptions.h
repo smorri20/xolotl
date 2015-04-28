@@ -309,6 +309,20 @@ public:
      */
     virtual void setRegularXGrid(bool flag) = 0;
 
+    /**
+     * Obtain the physical process map.
+     *
+     * @return The map
+     */
+    virtual std::map<std::string, bool> getProcesses() const = 0;
+
+    /**
+     * Set the physical process map.
+     *
+     * @param map The map
+     */
+    virtual void setProcesses(std::map<std::string, bool> map) = 0;
+
 };//end class IOptions
 
 } /* namespace xolotlCore */

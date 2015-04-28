@@ -21,6 +21,7 @@ std::shared_ptr<IMaterialFactory> IMaterialFactory::createMaterialFactory(std::s
 				"\nThe material type is not known: \"" + materialType
 				+ "\"");
 	}
+
 	return theMaterialFactory;
 }
 

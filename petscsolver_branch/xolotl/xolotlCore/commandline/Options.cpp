@@ -13,6 +13,7 @@
 #include <VConcentrationOptionHandler.h>
 #include <DimensionsOptionHandler.h>
 #include <RegularGridOptionHandler.h>
+#include <ProcessOptionHandler.h>
 #include "Options.h"
 
 namespace xolotlCore {
@@ -59,6 +60,8 @@ Options::Options() :
 	auto dimHandler = new DimensionsOptionHandler();
 	// Create the regular grid option handler
 	auto gridHandler = new RegularGridOptionHandler();
+	// Create the physical processes option handler
+	auto procHandler = new ProcessOptionHandler();
 
 	// Add our notion of which options we support.
 	optionsMap[networkHandler->key] = networkHandler;
@@ -73,6 +76,7 @@ Options::Options() :
 	optionsMap[vConcHandler->key] = vConcHandler;
 	optionsMap[dimHandler->key] = dimHandler;
 	optionsMap[gridHandler->key] = gridHandler;
+	optionsMap[procHandler->key] = procHandler;
 }
 
 Options::~Options(void) {

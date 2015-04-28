@@ -58,7 +58,8 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 			<< "perfHandler=dummy" << std::endl
 			<< "heFlux=4.0e5" << std::endl
 			<< "material=W100" << std::endl
-			<< "dimensions=1" << std::endl;
+			<< "dimensions=1" << std::endl
+			<< "process=diff advec" << std::endl;
 	paramFile.close();
 
 	// Create a fake command line to read the options
@@ -128,11 +129,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 	network->fillConcentrationsArray(concs);
 
 	// Check some concentrations
-	BOOST_REQUIRE_CLOSE(concs[0], 8.082e-17, 0.01);
-	BOOST_REQUIRE_CLOSE(concs[1], 3.0035e-29, 0.01);
-	BOOST_REQUIRE_CLOSE(concs[2], 4.3294e-42, 0.01);
-	BOOST_REQUIRE_CLOSE(concs[7], 4.4165e-106, 0.01);
-	BOOST_REQUIRE_CLOSE(concs[8], 0.02500, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[0], 3.9559e-11, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[1], 2.2999e-18, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[2], 4.1979e-26, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[7], -1.3576e-62, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[8], 0.0, 0.01);
 
 	// Remove the created file
 	std::string tempFile = "param.txt";
@@ -168,7 +169,8 @@ BOOST_AUTO_TEST_CASE(checkIrregularPetscSolver1DHandler) {
 			<< "heFlux=4.0e5" << std::endl
 			<< "material=W100" << std::endl
 			<< "dimensions=1" << std::endl
-			<< "regularGrid=no" << std::endl;
+			<< "regularGrid=no" << std::endl
+			<< "process=diff advec modifiedTM" << std::endl;
 	paramFile.close();
 
 	// Create a fake command line to read the options
@@ -234,11 +236,11 @@ BOOST_AUTO_TEST_CASE(checkIrregularPetscSolver1DHandler) {
 	network->fillConcentrationsArray(concs);
 
 	// Check some concentrations
-	BOOST_REQUIRE_CLOSE(concs[0], 5.531e-12, 0.01);
-	BOOST_REQUIRE_CLOSE(concs[1], 4.877e-23, 0.01);
-	BOOST_REQUIRE_CLOSE(concs[2], 6.294e-34, 0.01);
-	BOOST_REQUIRE_CLOSE(concs[7], 1.7405e-87, 0.01);
-	BOOST_REQUIRE_CLOSE(concs[8], 0.49948, 0.01);
+	BOOST_REQUIRE_CLOSE(concs[0], 5.419e-12, 0.01);
+	BOOST_REQUIRE_CLOSE(concs[1], 4.604e-23, 0.01);
+	BOOST_REQUIRE_CLOSE(concs[2], 7.676e-34, 0.01);
+	BOOST_REQUIRE_CLOSE(concs[7], 2.221e-82, 0.01);
+	BOOST_REQUIRE_CLOSE(concs[8], 0.0, 0.01);
 
 	// Remove the created file
 	std::string tempFile = "param.txt";
@@ -273,7 +275,8 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 			<< "perfHandler=dummy" << std::endl
 			<< "heFlux=4.0e5" << std::endl
 			<< "material=W100" << std::endl
-			<< "dimensions=2" << std::endl;
+			<< "dimensions=2" << std::endl
+			<< "process=diff advec" << std::endl;
 	paramFile.close();
 
 	// Create a fake command line to read the options
@@ -340,11 +343,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 	network->fillConcentrationsArray(concs);
 
 	// Check some concentrations
-	BOOST_REQUIRE_CLOSE(concs[0], 1.5865e-42, 0.01);
-	BOOST_REQUIRE_CLOSE(concs[1], 6.993e-83, 0.01);
-	BOOST_REQUIRE_CLOSE(concs[6], 6.187e-12, 0.01);
-	BOOST_REQUIRE_CLOSE(concs[14], 0.0, 0.01);
-	BOOST_REQUIRE_CLOSE(concs[23], 8.1287e-97, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[0], 2.7841e-74, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[1], 1.6807e-146, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[6], 6.5151e-11, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[14], 0.0, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[23], 2.1984e-72, 0.01);
 
 	// Remove the created file
 	std::string tempFile = "param.txt";
@@ -379,7 +382,8 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 			<< "perfHandler=dummy" << std::endl
 			<< "heFlux=4.0e5" << std::endl
 			<< "material=W100" << std::endl
-			<< "dimensions=3" << std::endl;
+			<< "dimensions=3" << std::endl
+			<< "process=diff advec" << std::endl;
 	paramFile.close();
 
 	// Create a fake command line to read the options
@@ -445,11 +449,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 	network->fillConcentrationsArray(concs);
 
 	// Check some concentrations
-	BOOST_REQUIRE_CLOSE(concs[0], 3.8116e-41, 0.01);
-	BOOST_REQUIRE_CLOSE(concs[6], 6.075e-11, 0.01);
-	BOOST_REQUIRE_CLOSE(concs[14], 0.05000, 0.01);
-	BOOST_REQUIRE_CLOSE(concs[15], 5.975e-12, 0.01);
-	BOOST_REQUIRE_CLOSE(concs[16], 7.818e-22, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[0], -7.4983e-79, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[6], 8.8196e-11, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[14], 0.0, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[15], -3.0887e-157, 0.01);
+    BOOST_REQUIRE_CLOSE(concs[16], -5.5119e-144, 0.01);
 
 	// Remove the created file
 	std::string tempFile = "param.txt";
