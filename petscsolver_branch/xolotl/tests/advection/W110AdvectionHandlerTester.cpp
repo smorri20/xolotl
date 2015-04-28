@@ -40,12 +40,24 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	// Get its size
 	const int size = network->getAll()->size();
 
+	// Create ofill
+	int mat[size*size];
+	int *ofill = &mat[0];
+
 	// Create the advection handler and initialize it
 	W110AdvectionHandler advectionHandler;
-	advectionHandler.initialize(network);
+	advectionHandler.initialize(network, ofill);
 
 	// Check the total number of advecting clusters
 	BOOST_REQUIRE_EQUAL(advectionHandler.getNumberOfAdvecting(), 6);
+
+	// Check the clusters in ofill
+	BOOST_REQUIRE_EQUAL(ofill[0], 1);
+	BOOST_REQUIRE_EQUAL(ofill[10], 1);
+	BOOST_REQUIRE_EQUAL(ofill[20], 1);
+	BOOST_REQUIRE_EQUAL(ofill[30], 1);
+	BOOST_REQUIRE_EQUAL(ofill[40], 1);
+	BOOST_REQUIRE_EQUAL(ofill[50], 1);
 
 	// Set the size parameter in the x direction
 	double hx = 1.0;

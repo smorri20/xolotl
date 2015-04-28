@@ -26,8 +26,10 @@ public:
 	 * (111) tungsten material.
 	 *
 	 * @param network The network
+	 * @param ofill The pointer to the array that will contain the value 1 at the indices
+	 * of the advecting clusters
 	 */
-	void initialize(PSIClusterReactionNetwork *network) {
+	void initialize(PSIClusterReactionNetwork *network, int *ofill) {
 		// Get all the reactants and their number
 		auto reactants = network->getAll();
 		int size = reactants->size();
@@ -86,6 +88,12 @@ public:
 
 			// Add the sink strength to the vector
 			sinkStrengthVector.push_back(sinkStrength);
+
+			// Set the off-diagonal part for the Jacobian to 1
+			// Get its id
+			int index = cluster->getId() - 1;
+			// Set the ofill value to 1 for this cluster
+			ofill[index * size + index] = 1;
 		}
 
 		return;

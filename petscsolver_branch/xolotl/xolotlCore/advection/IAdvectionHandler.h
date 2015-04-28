@@ -27,8 +27,10 @@ public:
 	 * and their corresponding sink strength (or driving forces).
 	 *
 	 * @param network The network
+	 * @param ofill The pointer to the array that will contain the value 1 at the indices
+	 * of the advecting clusters
 	 */
-	virtual void initialize(PSIClusterReactionNetwork *network) = 0;
+	virtual void initialize(PSIClusterReactionNetwork *network, int *ofill) = 0;
 
 	/**
 	 * Compute the flux due to the advection for all the helium clusters,

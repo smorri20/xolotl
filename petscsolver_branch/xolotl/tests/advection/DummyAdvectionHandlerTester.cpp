@@ -2,7 +2,7 @@
 #define BOOST_TEST_MODULE Regression
 
 #include <boost/test/included/unit_test.hpp>
-#include <W111AdvectionHandler.h>
+#include <DummyAdvectionHandler.h>
 #include <HDF5NetworkLoader.h>
 #include <XolotlConfig.h>
 #include <DummyHandlerRegistry.h>
@@ -12,9 +12,9 @@ using namespace std;
 using namespace xolotlCore;
 
 /**
- * This suite is responsible for testing the W111AdvectionHandler.
+ * This suite is responsible for testing the DummyAdvectionHandler.
  */
-BOOST_AUTO_TEST_SUITE(W111AdvectionHandler_testSuite)
+BOOST_AUTO_TEST_SUITE(DummyAdvectionHandler_testSuite)
 
 /**
  * Method checking the initialization and the compute advection methods.
@@ -40,29 +40,23 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	// Get its size
 	const int size = network->getAll()->size();
 
+	// Create the advection handler
+	DummyAdvectionHandler advectionHandler;
+
 	// Create ofill
 	int mat[size*size];
 	int *ofill = &mat[0];
 
-	// Create the advection handler and initialize it
-	W111AdvectionHandler advectionHandler;
+	// Initialize it
 	advectionHandler.initialize(network, ofill);
 
-	// Check the total number of advecting clusters
-	BOOST_REQUIRE_EQUAL(advectionHandler.getNumberOfAdvecting(), 6);
+	// Check the total number of advecting clusters, it should be 0 here
+	BOOST_REQUIRE_EQUAL(advectionHandler.getNumberOfAdvecting(), 0);
 
-	// Check the clusters in ofill
-	BOOST_REQUIRE_EQUAL(ofill[0], 1);
-	BOOST_REQUIRE_EQUAL(ofill[10], 1);
-	BOOST_REQUIRE_EQUAL(ofill[20], 1);
-	BOOST_REQUIRE_EQUAL(ofill[30], 1);
-	BOOST_REQUIRE_EQUAL(ofill[40], 1);
-	BOOST_REQUIRE_EQUAL(ofill[50], 1);
-
-	// Set the size parameter in the x direction
+	// The size parameter
 	double hx = 1.0;
 
-	// Create the arrays of concentration
+	// The arrays of concentration
 	double concentration[3*size];
 	double newConcentration[3*size];
 
@@ -72,7 +66,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 		newConcentration[i] = 0.0;
 	}
 
-	// Set the temperature to 1000K to initialize the diffusion coefficients
+	// Set the temperature to 1000 K to initialize the diffusion coefficients
 	auto reactants = network->getAll();
 	for (int i = 0; i < size; i++) {
 		auto cluster = (PSICluster *) reactants->at(i);
@@ -101,44 +95,18 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 			concVector, updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], -4.95238e+10, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], -5.42093e+10, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], -6.92017e+10, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], -6.65778e+10, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], -2.66416e+11, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[5], -9.09579e+09, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[6], 0.0, 0.01); // Does not advect
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[7], 0.0, 0.01); // Does not advect
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[8], 0.0, 0.01); // Does not advect
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 0.0, 0.01); // Does not advect
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], 0.0, 0.01); // Does not advect
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], 0.0, 0.01); // Does not advect
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], 0.0, 0.01); // Does not advect
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], 0.0, 0.01); // Does not advect
 
-	// Initialize the rows, columns, and values to set in the Jacobian
-	int nAdvec = advectionHandler.getNumberOfAdvecting();
-	int indices[nAdvec];
-	double val[2*nAdvec];
-	// Get the pointer on them for the compute advection method
-	int *indicesPointer = &indices[0];
-	double *valPointer = &val[0];
-
-	// Compute the partial derivatives for the advection a the grid point 1
-	advectionHandler.computePartialsForAdvection(network, hx, valPointer,
-			indicesPointer, gridPosition);
-
-	// Check the values for the indices
-	BOOST_REQUIRE_EQUAL(indices[0], 0);
-	BOOST_REQUIRE_EQUAL(indices[1], 1);
-	BOOST_REQUIRE_EQUAL(indices[2], 2);
-	BOOST_REQUIRE_EQUAL(indices[3], 3);
-	BOOST_REQUIRE_EQUAL(indices[4], 4);
-	BOOST_REQUIRE_EQUAL(indices[5], 5);
-
-	// Check values
-	BOOST_REQUIRE_CLOSE(val[0], -815207266.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[1], 50950454.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[2], -700039625.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[3], 43752477.0, 0.01);
+	// Don't even test the Jacobian because there is no advecting cluster
 
 	// Finalize MPI
 	MPI_Finalize();
+
+	return;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

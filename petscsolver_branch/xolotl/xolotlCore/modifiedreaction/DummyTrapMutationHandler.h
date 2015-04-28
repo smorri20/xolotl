@@ -1,0 +1,45 @@
+#ifndef DUMMYTRAPMUTATIONHANDLER_H
+#define DUMMYTRAPMUTATIONHANDLER_H
+
+#include "TrapMutationHandler.h"
+
+namespace xolotlCore {
+
+/**
+ * This class realizes the ITrapMutationHandler interface responsible for the modified
+ * trap-mutation of small helium clusters close to the surface. Here it is a dummy class,
+ * meaning that it should not do anything.
+ */
+class DummyTrapMutationHandler: public TrapMutationHandler {
+private:
+
+	/**
+	 * Method initializing the depth and size vectors.
+	 */
+	void initializeDepthSize() {
+		// Initialize the vectors
+		depthVec = {-1.0};
+		sizeVec = {-1};
+
+		// And don't do anything else
+		return;
+	}
+
+public:
+
+	/**
+	 * The constructor
+	 */
+	DummyTrapMutationHandler() {}
+
+	/**
+	 * The Destructor
+	 */
+	~DummyTrapMutationHandler() {}
+
+};
+//end class DummyTrapMutationHandler
+
+}
+
+#endif
