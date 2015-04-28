@@ -77,8 +77,8 @@ std::shared_ptr<PSICluster> PSIClusterNetworkLoader::createCluster(int numHe,
 
 PSIClusterNetworkLoader::PSIClusterNetworkLoader(
 		const std::shared_ptr<std::istream> stream,
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
-	handlerRegistry = registry;
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
+	handlerRegistry(registry) {
 	setInputstream(stream);
 
 	return;

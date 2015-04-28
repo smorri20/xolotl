@@ -77,14 +77,12 @@ PSIClusterReactionNetwork::PSIClusterReactionNetwork(
 
 PSIClusterReactionNetwork::PSIClusterReactionNetwork(
 		const PSIClusterReactionNetwork &other) :
-		ReactionNetwork(other) {
+		ReactionNetwork(other),
+		names(other.getNames()),
+		compoundNames(other.getCompoundNames()) {
 	// The size and ids do not need to be copied. They will be fixed when the
 	// reactants are added.
 
-	// Copy the names
-	names = other.getNames();
-	// Copy the compound names
-	compoundNames = other.getCompoundNames();
 	// Reset the properties table so that it can be properly updated when the
 	// network is filled.
 	setDefaultPropsAndNames();
