@@ -91,6 +91,9 @@ public class ArgumentsTest {
 			// Check the default material argument
 			assertEquals("W100", args.getMaterial());
 
+			// Check the default physical process argumen
+			assertEquals("diff advec", args.getProcess());
+
 			// Check if there is a tempFile argument
 			assertEquals(false, args.isTempFile());
 
@@ -133,9 +136,10 @@ public class ArgumentsTest {
 				"--petscArgs=-plot", "--networkFile", "net.h5",
 				"--dimensions", "2", "--nxGrid", "50", "--nyGrid", "10", "--nzGrid", "30", 
 				"--xStepSize", "0.2", "--yStepSize", "1.5", "--zStepSize", "10.0", 
-				"--material", "W111", "--tempFile", "temp.dat", "--heFlux", "5.0e5", 
-				"--fluxFile", "flux.dat", "--checkpoint", "xolotlStop.h5", 
-				"--initialV", "0.05", "--regularGrid", "yes"});
+				"--material", "W111", "--process", "diff", "--tempFile", "temp.dat", 
+				"--heFlux", "5.0e5", "--fluxFile", "flux.dat", 
+				"--checkpoint", "xolotlStop.h5", "--initialV", "0.05", 
+				"--regularGrid", "yes"});
 			
 			// Check that the maximum Helium cluster size is 7
 			assertEquals(7, args.getMaxHeSize());
@@ -184,6 +188,9 @@ public class ArgumentsTest {
 		
 			// Check that the material is W111
 			assertEquals("W111", args.getMaterial());
+		
+			// Check that the only physical process is diff
+			assertEquals("diff", args.getProcess());
 
 			// Check if there is a tempFile argument
 			assertEquals(true, args.isTempFile());

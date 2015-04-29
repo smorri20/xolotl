@@ -220,6 +220,7 @@ public class Preprocessor {
 		xolotlParams.setProperty("vizHandler", args.getVizHandler());
 		xolotlParams.setProperty("petscArgs",
 				generatePetscArgs(args.getPetscArgs()));
+		xolotlParams.setProperty("process", args.getProcess());
 
 		// The following parameter options are optional and will only
 		// be set if they are specified via the command line

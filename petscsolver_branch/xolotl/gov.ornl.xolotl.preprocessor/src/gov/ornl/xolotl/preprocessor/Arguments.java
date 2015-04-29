@@ -350,8 +350,8 @@ public interface Arguments {
 	 */
 	@Option(defaultValue = "W100",
 			description = "{W100, W110, W111} "
-			+ "The option declaring which material will be used "
-			+ "(W is for tungsten and the numbers correspond to the surface orientation)")
+					+ "The option declaring which material will be used "
+					+ "(W is for tungsten and the numbers correspond to the surface orientation)")
 	/**
 	 * This operation produces the optional command line option '--material' which 
 	 * takes a single string value and is defined by the previous Option annotation
@@ -359,6 +359,28 @@ public interface Arguments {
 	 * @return The material
 	 */
 	String getMaterial();
+
+	/**
+	 * This Option annotation corresponds to the '--process' option which
+	 * defines the default value to be the single string of physical processes and
+	 * additionally provides a brief description of the option.
+	 * 
+	 * @param defaultValue
+	 *            The single string of physical processes that will be used if this
+	 *            option is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "diff advec", 
+			description = "List of physical processes for the simulation "
+					+ "(diff, advec, modifiedTM)")
+	/**
+	 * This operation produces the required command line option '--petscArgs' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The single string of processes
+	 */
+	String getProcess();
 
 	/**
 	 * This Option annotation corresponds to the optional '--tempFile' option
