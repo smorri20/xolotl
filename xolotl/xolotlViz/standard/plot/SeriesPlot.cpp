@@ -13,7 +13,7 @@ using namespace xolotlViz;
 #define W_WIDTH 1024
 #define W_HEIGHT 1024
 
-SeriesPlot::SeriesPlot(const std::string& name) : Plot(name) :
+SeriesPlot::SeriesPlot(const std::string& name) : Plot(name),
 	plotDataProviders(std::make_shared< std::vector< std::shared_ptr<IDataProvider> > > ()) {}
 
 SeriesPlot::~SeriesPlot() {
