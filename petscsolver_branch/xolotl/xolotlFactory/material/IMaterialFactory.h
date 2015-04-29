@@ -64,7 +64,7 @@ public:
 	 * @param dimension The number of dimensions of the problem.
 	 * @return The material factory.
 	 */
-	static std::shared_ptr<IMaterialFactory> createMaterialFactory(std::string materialType,
+	static std::shared_ptr<IMaterialFactory> createMaterialFactory(const std::string& materialType,
 			int dimension);
 
 };

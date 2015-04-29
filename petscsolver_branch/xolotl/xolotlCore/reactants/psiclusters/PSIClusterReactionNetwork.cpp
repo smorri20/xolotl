@@ -77,14 +77,12 @@ PSIClusterReactionNetwork::PSIClusterReactionNetwork(
 
 PSIClusterReactionNetwork::PSIClusterReactionNetwork(
 		const PSIClusterReactionNetwork &other) :
-		ReactionNetwork(other) {
+		ReactionNetwork(other),
+		names(other.getNames()),
+		compoundNames(other.getCompoundNames()) {
 	// The size and ids do not need to be copied. They will be fixed when the
 	// reactants are added.
 
-	// Copy the names
-	names = other.getNames();
-	// Copy the compound names
-	compoundNames = other.getCompoundNames();
 	// Reset the properties table so that it can be properly updated when the
 	// network is filled.
 	setDefaultPropsAndNames();
@@ -134,7 +132,7 @@ double PSIClusterReactionNetwork::getTemperature() const {
 	return temperature;
 }
 
-Reactant * PSIClusterReactionNetwork::get(const std::string type,
+Reactant * PSIClusterReactionNetwork::get(const std::string& type,
 		const int size) const {
 	// Local Declarations
 	static std::map<std::string, int> composition = { { heType, 0 },
@@ -159,8 +157,8 @@ Reactant * PSIClusterReactionNetwork::get(const std::string type,
 	return (Reactant *) retReactant.get();
 }
 
-Reactant * PSIClusterReactionNetwork::getCompound(const std::string type,
-		const std::vector<int> sizes) const {
+Reactant * PSIClusterReactionNetwork::getCompound(const std::string& type,
+		const std::vector<int>& sizes) const {
 	// Local Declarations
 	static std::map<std::string, int> composition = { { heType, 0 },
 			{ vType, 0 }, { iType, 0 } };
@@ -191,7 +189,7 @@ const std::shared_ptr<std::vector<Reactant *>> & PSIClusterReactionNetwork::getA
 }
 
 std::vector<Reactant *> PSIClusterReactionNetwork::getAll(
-		std::string name) const {
+		const std::string& name) const {
 	// Local Declarations
 	std::vector<Reactant *> reactants;
 
@@ -303,8 +301,8 @@ const std::map<std::string, std::string> & PSIClusterReactionNetwork::getPropert
 	return *properties;
 }
 
-void PSIClusterReactionNetwork::setProperty(std::string key,
-		std::string value) {
+void PSIClusterReactionNetwork::setProperty(const std::string& key,
+		const std::string& value) {
 	// Check the keys and value before trying to set the property
 	if (!key.empty() && !value.empty() && key != "numHeClusters"
 			&& key != "numVClusters" && key != "numIClusters"

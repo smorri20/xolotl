@@ -109,7 +109,7 @@ void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
 }
 
 std::shared_ptr<PSIClusterNetworkLoader> setUpNetworkLoader(int rank,
-		MPI_Comm comm, std::string networkFilename,
+		MPI_Comm comm, const std::string& networkFilename,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
 
 	// Create a HDF5NetworkLoader

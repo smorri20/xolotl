@@ -243,7 +243,7 @@ void PSICluster::emitClusters(PSICluster * firstEmittedCluster,
 }
 
 void PSICluster::combineClusters(std::vector<Reactant *> & reactants,
-		std::string productName) {
+		const std::string& productName) {
 	// Initial declarations
 	std::map<std::string, int> myComposition = getComposition(),
 			secondComposition;
@@ -296,7 +296,7 @@ void PSICluster::combineClusters(std::vector<Reactant *> & reactants,
 }
 
 void PSICluster::replaceInCompound(std::vector<Reactant *> & reactants,
-		std::string oldComponentName, std::string newComponentName) {
+		const std::string& oldComponentName, const std::string& newComponentName) {
 	// Local Declarations
 	std::map<std::string, int> secondReactantComp, productReactantComp;
 	int numReactants = reactants.size();
@@ -335,7 +335,7 @@ void PSICluster::replaceInCompound(std::vector<Reactant *> & reactants,
 	return;
 }
 
-void PSICluster::fillVWithI(std::string secondClusterName,
+void PSICluster::fillVWithI(const std::string& secondClusterName,
 		std::vector<Reactant *> & reactants) {
 	// Local Declarations
 	std::string productClusterName;

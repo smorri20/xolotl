@@ -35,7 +35,7 @@ public:
 	 * @param opt The pointer to the option that will be modified.
 	 * @param arg The list of processes.
 	 */
-	bool handler(IOptions *opt, std::string arg) {
+	bool handler(IOptions *opt, const std::string& arg) {
 		// Initialize the map of processes
 		std::map<std::string, bool> processMap;
 		processMap["diff"] = false;
