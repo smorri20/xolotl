@@ -128,9 +128,7 @@ void SeriesPlot::render(const std::string& fileName) {
     window->Paint();
 
     // Save the final buffer as an image
-    char fn[25];
-    sprintf(fn, (fileName).c_str());
-    window->SaveWindowAsPNM(fn);
+    window->SaveWindowAsPNM(fileName);
 
 	return;
 }
