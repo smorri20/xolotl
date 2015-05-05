@@ -39,14 +39,14 @@ public:
 	 *
 	 * @param network The network
 	 * @param hx The space parameter, here the grid step size in the x direction
-	 * @param pos The position on the grid
+	 * @param depth The depth from the surface
 	 * @param concVector The pointer to the pointer of arrays of concentration at middle,
 	 * left, and right grid points
 	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
 	 * point where the advection is computed used to find the next solution
 	 */
 	virtual void computeAdvection(PSIClusterReactionNetwork *network, double hx,
-			std::vector<double> &pos, double **concVector, double *updatedConcOffset) = 0;
+			double depth, double **concVector, double *updatedConcOffset) = 0;
 
 	/**
 	 * Compute the partial derivatives due to the advection of all the helium clusters given
@@ -59,10 +59,10 @@ public:
 	 * for the advection
 	 * @param indices The pointer to the array that will contain the indices of the
 	 * advecting cluster in the network
-	 * @param pos The position on the grid
+	 * @param depth The depth from the surface
 	 */
 	virtual void computePartialsForAdvection(PSIClusterReactionNetwork *network,
-			double hx, double *val, int *indices, std::vector<double> &pos) = 0;
+			double hx, double *val, int *indices, double depth) = 0;
 
 	/**
 	 * Get the total number of advecting clusters in the network.

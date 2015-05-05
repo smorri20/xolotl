@@ -25,13 +25,24 @@ public:
 	/**
 	 * The initialize method has to add connectivity between the He clusters and
 	 * HeV clusters of same number of He, and I. It must also initialize the
-	 * rates of the reactions and define which trap-mutation is allowed at
-	 * each grid point.
+	 * rates of the reactions and call initializeIndex to define which trap-mutation
+	 * is allowed at each grid point.
 	 *
+	 * @param surfacePos The index of the position of the surface
 	 * @param network The network
 	 * @param grid The grid on the x axis
 	 */
-	virtual void initialize(PSIClusterReactionNetwork *network,
+	virtual void initialize(int surfacePos, PSIClusterReactionNetwork *network,
+			std::vector<double> grid) = 0;
+
+	/**
+	 * This method defines which trap-mutation is allowed at each grid point.
+	 *
+	 * @param surfacePos The index of the position of the surface
+	 * @param network The network
+	 * @param grid The grid on the x axis
+	 */
+	virtual void initializeIndex(int surfacePos, PSIClusterReactionNetwork *network,
 			std::vector<double> grid) = 0;
 
 	/**

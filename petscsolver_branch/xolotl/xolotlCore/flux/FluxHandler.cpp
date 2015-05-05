@@ -17,7 +17,7 @@ FluxHandler::FluxHandler() :
 	return;
 }
 
-void FluxHandler::initializeFluxHandler(std::vector<double> grid, double hy,
+void FluxHandler::initializeFluxHandler(int surfacePos, std::vector<double> grid, double hy,
 		double hz) {
 	// Set the elementary surface size and the grid
 	elementarySurfaceSize = hy * hz;
@@ -26,11 +26,11 @@ void FluxHandler::initializeFluxHandler(std::vector<double> grid, double hy,
 	// Compute the norm factor because the fit function has an
 	// arbitrary amplitude
 	normFactor = 0.0;
-	// Loop on the x grid points skipping the first and last because
-	// of the boundary conditions
-	for (int i = 1; i < xGrid.size() - 1; i++) {
+	// Loop on the x grid points skipping the first after the surface position
+	// and last because of the boundary conditions
+	for (int i = surfacePos + 1; i < xGrid.size() - 1; i++) {
 		// Get the x position
-		double x = xGrid[i];
+		double x = xGrid[i] - xGrid[surfacePos];
 
 		// Add the the value of the function times the step size
 		normFactor += fitFunction(x) * (xGrid[i] - xGrid[i-1]);
@@ -40,13 +40,18 @@ void FluxHandler::initializeFluxHandler(std::vector<double> grid, double hy,
 	// the wanted intensity
 	double heFluxNormalized = elementarySurfaceSize * heFlux / normFactor;
 
-	// The first value should always be 0.0 because of boundary conditions
-	incidentFluxVec.push_back(0.0);
+	// Clear the flux vector
+	incidentFluxVec.clear();
 
-	// Starts a i = 1 because the first value was already put in the vector
-	for (int i = 1; i < xGrid.size() - 1; i++) {
+	// The first values should always be 0.0 because it is on the left side of the surface
+	for (int i = 0; i <= surfacePos; i++) {
+		incidentFluxVec.push_back(0.0);
+	}
+
+	// Starts a i = surfacePos + 1 because the first values were already put in the vector
+	for (int i = surfacePos + 1; i < xGrid.size() - 1; i++) {
 		// Get the x position
-		auto x = xGrid[i];
+		auto x = xGrid[i] - xGrid[surfacePos];
 
 		// Compute the flux value
 		double incidentFlux = heFluxNormalized * fitFunction(x);
@@ -60,20 +65,22 @@ void FluxHandler::initializeFluxHandler(std::vector<double> grid, double hy,
 	return;
 }
 
-void FluxHandler::recomputeFluxHandler() {
+void FluxHandler::recomputeFluxHandler(int surfacePos) {
 	// Factor the incident flux will be multiplied by
 	double heFluxNormalized = elementarySurfaceSize * heFlux / normFactor;
 
 	// Clear the flux vector
 	incidentFluxVec.clear();
 
-	// The first value should always be 0.0 because of boundary conditions
-	incidentFluxVec.push_back(0.0);
+	// The first values should always be 0.0 because it is on the left side of the surface
+	for (int i = 0; i <= surfacePos; i++) {
+		incidentFluxVec.push_back(0.0);
+	}
 
-	// Starts a i = 1 because the first value was already put in the vector
-	for (int i = 1; i < xGrid.size() - 1; i++) {
+	// Starts a i = surfacePos + 1 because the first values were already put in the vector
+	for (int i = surfacePos + 1; i < xGrid.size() - 1; i++) {
 		// Get the x position
-		auto x = xGrid[i];
+		auto x = xGrid[i] - xGrid[surfacePos];
 
 		// Compute the flux value
 		double incidentFlux = heFluxNormalized * fitFunction(x);
@@ -137,11 +144,11 @@ double FluxHandler::getAmplitude(double currentTime) const {
 	return f;
 }
 
-std::vector<double> FluxHandler::getIncidentFluxVec(double currentTime) {
+std::vector<double> FluxHandler::getIncidentFluxVec(double currentTime, int surfacePos) {
 	// Recompute the flux vector if a time profile is used
 	if (useTimeProfile) {
 		heFlux = getAmplitude(currentTime);
-		recomputeFluxHandler();
+		recomputeFluxHandler(surfacePos);
 	}
 
 	return incidentFluxVec;

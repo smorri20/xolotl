@@ -86,8 +86,10 @@ protected:
 	/**
 	 * This method recomputes the values of the incident flux vector when
 	 * a time profile is given.
+	 *
+	 * @param surfacePos The current position of the surface
 	 */
-	void recomputeFluxHandler();
+	void recomputeFluxHandler(int surfacePos);
 
 public:
 
@@ -100,7 +102,7 @@ public:
 	 * Compute and store the incident flux values at each grid point.
      * \see IFluxHandler.h
 	 */
-	virtual void initializeFluxHandler(std::vector<double> grid, double hy = 1.0,
+	virtual void initializeFluxHandler(int surfacePos, std::vector<double> grid, double hy = 1.0,
 			double hz = 1.0);
 
 	/**
@@ -114,7 +116,7 @@ public:
 	 * This operation returns the incident flux vector.
      * \see IFluxHandler.h
 	 */
-	virtual std::vector<double> getIncidentFluxVec(double currentTime);
+	virtual std::vector<double> getIncidentFluxVec(double currentTime, int surfacePos);
 
 	/**
 	 * This operation increments the helium fluence at the current time step.

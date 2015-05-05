@@ -18,17 +18,19 @@ BOOST_AUTO_TEST_CASE(checkGetIncidentFlux) {
 	for (int l = 0; l < 5; l++) {
 		grid.push_back((double) l * 1.25);
 	}
+	// Specify the surface position
+	int surfacePos = 0;
 
 	// Create the W100 flux handler
     auto testFitFlux = make_shared<W100FitFluxHandler>();
     // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(grid);
+    testFitFlux->initializeFluxHandler(surfacePos, grid);
 
 	// Create a time
 	double currTime = 1.0;
 
 	// Get the flux vector
-	auto testFluxVec = testFitFlux->getIncidentFluxVec(currTime);
+	auto testFluxVec = testFitFlux->getIncidentFluxVec(currTime, surfacePos);
 
 	// Check the value at some grid points
 	BOOST_REQUIRE_CLOSE(testFluxVec[1], 0.476819, 0.01);
@@ -44,11 +46,13 @@ BOOST_AUTO_TEST_CASE(checkHeFluence) {
 	for (int l = 0; l < 5; l++) {
 		grid.push_back((double) l * 1.25);
 	}
+	// Specify the surface position
+	int surfacePos = 0;
 
 	// Create the W100 flux handler
     auto testFitFlux = make_shared<W100FitFluxHandler>();
     // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(grid);
+    testFitFlux->initializeFluxHandler(surfacePos, grid);
     
 	// Check that the fluence is 0.0 at the beginning
 	BOOST_REQUIRE_EQUAL(testFitFlux->getHeFluence(), 0.0);
@@ -68,6 +72,8 @@ BOOST_AUTO_TEST_CASE(checkHeFlux) {
 	for (int l = 0; l < 5; l++) {
 		grid.push_back((double) l * 1.25);
 	}
+	// Specify the surface position
+	int surfacePos = 0;
 
 	// Create the W100 flux handler
     auto testFitFlux = make_shared<W100FitFluxHandler>();
@@ -75,7 +81,7 @@ BOOST_AUTO_TEST_CASE(checkHeFlux) {
     // Set the factor to change the helium flux
     testFitFlux->setHeFlux(2.5);
     // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(grid);
+    testFitFlux->initializeFluxHandler(surfacePos, grid);
 
     // Check the value of the helium flux
     BOOST_REQUIRE_EQUAL(testFitFlux->getHeFlux(), 2.5);
@@ -84,7 +90,7 @@ BOOST_AUTO_TEST_CASE(checkHeFlux) {
 	double currTime = 1.0;
 
 	// Get the flux vector
-	auto testFluxVec = testFitFlux->getIncidentFluxVec(currTime);
+	auto testFluxVec = testFitFlux->getIncidentFluxVec(currTime, surfacePos);
 
 	// Check the value at some grid points
 	BOOST_REQUIRE_CLOSE(testFluxVec[1], 1.192047, 0.01);
@@ -100,6 +106,8 @@ BOOST_AUTO_TEST_CASE(checkTimeProfileFlux) {
 	for (int l = 0; l < 5; l++) {
 		grid.push_back((double) l * 1.25);
 	}
+	// Specify the surface position
+	int surfacePos = 0;
 
 	// Create a file with a time profile for the flux
 	// First column with the time and the second with
@@ -116,13 +124,13 @@ BOOST_AUTO_TEST_CASE(checkTimeProfileFlux) {
     // Initialize the time profile for the flux handler
     testFitFlux->initializeTimeProfile("fluxFile.dat");
     // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(grid);
+    testFitFlux->initializeFluxHandler(surfacePos, grid);
 
 	// Create a time
 	double currTime = 0.5;
 
 	// Get the flux vector
-	auto testFluxVec = testFitFlux->getIncidentFluxVec(currTime);
+	auto testFluxVec = testFitFlux->getIncidentFluxVec(currTime, surfacePos);
 
 	// Check the value at some grid points
 	BOOST_REQUIRE_CLOSE(testFluxVec[1], 1192.047, 0.01);
@@ -135,7 +143,7 @@ BOOST_AUTO_TEST_CASE(checkTimeProfileFlux) {
     currTime = 3.5;
 
 	// Get the flux vector
-	testFluxVec = testFitFlux->getIncidentFluxVec(currTime);
+	testFluxVec = testFitFlux->getIncidentFluxVec(currTime, surfacePos);
 
 	// Check the value at some grid points
 	BOOST_REQUIRE_CLOSE(testFluxVec[1], 715.228, 0.01);

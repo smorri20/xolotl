@@ -11,6 +11,10 @@ namespace xolotlSolver {
  * to solve the ADR equations in 1D using PETSc from Argonne National Laboratory.
  */
 class PetscSolver1DHandler: public PetscSolverHandler {
+private:
+	//! The position of the surface
+	int surfacePosition;
+
 public:
 
 	//! The Constructor
@@ -50,6 +54,22 @@ public:
      * \see ISolverHandler.h
 	 */
 	void computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J);
+
+	/**
+	 * Get the position of the surface.
+     * \see ISolverHandler.h
+	 */
+	int getSurfacePosition(int j = -1, int k = -1) const {
+		return surfacePosition;
+	}
+
+	/**
+	 * Set the position of the surface.
+     * \see ISolverHandler.h
+	 */
+	void setSurfacePosition(int pos, int j = -1, int k = -1) {
+		surfacePosition = pos;
+	}
 
 }; //end class PetscSolver1DHandler
 

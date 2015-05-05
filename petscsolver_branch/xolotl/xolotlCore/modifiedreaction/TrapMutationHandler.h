@@ -55,10 +55,21 @@ public:
 	 * rates of the reactions and define which trap-mutation is allowed at
 	 * each grid point.
 	 *
+	 * @param surfacePos The index of the position of the surface
 	 * @param network The network
 	 * @param grid The grid on the x axis
 	 */
-	virtual void initialize(PSIClusterReactionNetwork *network,
+	void initialize(int surfacePos, PSIClusterReactionNetwork *network,
+			std::vector<double> grid);
+
+	/**
+	 * This method defines which trap-mutation is allowed at each grid point.
+	 *
+	 * @param surfacePos The index of the position of the surface
+	 * @param network The network
+	 * @param grid The grid on the x axis
+	 */
+	void initializeIndex(int surfacePos, PSIClusterReactionNetwork *network,
 			std::vector<double> grid);
 
 	/**
@@ -68,7 +79,7 @@ public:
 	 *
 	 * @param network The network
 	 */
-	virtual void updateTrapMutationRate(PSIClusterReactionNetwork *network);
+	void updateTrapMutationRate(PSIClusterReactionNetwork *network);
 
 	/**
 	 * Compute the flux due to the modified trap-mutation for all the cluster,
@@ -87,7 +98,7 @@ public:
 	 * at the grid point where the trap-mutation is computed used to find the
 	 * next solution
 	 */
-	virtual void computeTrapMutation(PSIClusterReactionNetwork *network,
+	void computeTrapMutation(PSIClusterReactionNetwork *network,
 			int xi, double *concOffset, double *updatedConcOffset);
 
 	/**
@@ -111,7 +122,7 @@ public:
 	 * @return The number of helium clusters that go through modified trap-mutation
 	 * at this grid point
 	 */
-	virtual int computePartialsForTrapMutation(PSIClusterReactionNetwork *network,
+	int computePartialsForTrapMutation(PSIClusterReactionNetwork *network,
 			double *val, int *indices, int xi);
 
 };

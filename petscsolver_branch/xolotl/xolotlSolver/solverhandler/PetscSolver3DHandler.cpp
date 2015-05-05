@@ -25,8 +25,24 @@ void PetscSolver3DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	checkPetscError(ierr, "PetscSolver3DHandler::createSolverContext: "
 			"DMDACreate3d failed.");
 
+	// Set the position of the surface
+	// Loop on Y
+	for (int j = 0; j < ny; j++) {
+		// Create a one dimensional vector to store the surface indices
+		// for a given Y position
+		std::vector<int> tempPosition;
+
+		// Loop on Z
+		for (int k = 0; k < nz; k++) {
+			tempPosition.push_back((int) (nx * portion / 100.0));
+		}
+
+		// Add tempPosition to the surfacePosition
+		surfacePosition.push_back(tempPosition);
+	}
+
 	// Generate the grid in the x direction
-	generateGrid(nx, hx);
+	generateGrid(nx, hx, surfacePosition[0][0]);
 
 	// Set the step size
 	hY = hy;
@@ -115,10 +131,10 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 			"DMDAGetInfo failed.");
 
 	// Initialize the flux handler
-	fluxHandler->initializeFluxHandler(grid, hY, hZ);
+	fluxHandler->initializeFluxHandler(surfacePosition[0][0], grid, hY, hZ);
 
 	// Initialize the modified trap-mutation handler
-	mutationHandler->initialize(network, grid);
+	mutationHandler->initialize(surfacePosition[0][0], network, grid);
 
 	// Pointer for the concentration vector at a specific grid point
 	PetscScalar *concOffset;
@@ -144,9 +160,8 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 				}
 
 				// Initialize the vacancy concentration
-				if (i > 0 && i < Mx - 1 && vacancyIndex > 0) {
-					concOffset[vacancyIndex] = initialVConc
-							/ ((grid[i] - grid[i-1]) * hY * hZ);
+				if (i > surfacePosition[j][k] && i < Mx - 1 && vacancyIndex > 0) {
+					concOffset[vacancyIndex] = initialVConc;
 				}
 			}
 		}
@@ -227,8 +242,11 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	double sy = 1.0 / (hY * hY);
 	double sz = 1.0 / (hZ * hZ);
 
+	// Get the mean value of the surface position
+	int meanPosition = getMeanSurfacePosition();
+
 	// Get the incident flux vector
-	auto incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime);
+	auto incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime, meanPosition);
 
 	// Declarations for variables used in the loop
 	double flux;
@@ -260,7 +278,8 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				concVector[6] = concs[zk + 1][yj][xi]; // back
 
 				// Boundary conditions
-				if (xi == 0 || xi == xSize - 1) {
+				// Everything to the left of the surface is empty
+				if (xi <= surfacePosition[yj][zk] || xi == xSize - 1) {
 					for (int i = 0; i < dof; i++) {
 						updatedConcOffset[i] = 1.0 * concOffset[i];
 					}
@@ -307,7 +326,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 				// ---- Compute advection over the locally owned part of the grid -----
 				advectionHandler->computeAdvection(network, grid[xi+1] - grid[xi],
-						gridPosition, concVector, updatedConcOffset);
+						grid[xi] - grid[surfacePosition[yj][zk]], concVector, updatedConcOffset);
 
 				// ----- Compute the modified trap-mutation over the locally owned part of the grid -----
 				mutationHandler->computeTrapMutation(network, xi, concOffset,
@@ -398,7 +417,8 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 		for (int yj = ys; yj < ys + ym; yj++) {
 			for (int xi = xs; xi < xs + xm; xi++) {
 				// Boundary conditions
-				if (xi == 0 || xi == xSize - 1) continue;
+				// Everything to the left of the surface is empty
+				if (xi <= surfacePosition[yj][zk] || xi == xSize - 1) continue;
 
 				// Set the grid position
 				gridPosition[0] = grid[xi];
@@ -461,7 +481,7 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 
 				// Get the partial derivatives for the advection
 				advectionHandler->computePartialsForAdvection(network, grid[xi+1] - grid[xi],
-						advecVals, advecIndices, gridPosition);
+						advecVals, advecIndices, grid[xi] - grid[surfacePosition[yj][zk]]);
 
 				// Loop on the number of advecting cluster to set the values in the Jacobian
 				for (int i = 0; i < nAdvec; i++) {
@@ -541,7 +561,8 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 		for (int yj = ys; yj < ys + ym; yj++) {
 			for (int xi = xs; xi < xs + xm; xi++) {
 				// Boundary conditions
-				if (xi == 0 || xi == xSize - 1) continue;
+				// Everything to the left of the surface is empty
+				if (xi <= surfacePosition[yj][zk] || xi == xSize - 1) continue;
 
 				// Copy data into the PSIClusterReactionNetwork so that it can
 				// compute the new concentrations.

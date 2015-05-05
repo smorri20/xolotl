@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	std::vector<double> gridPosition = { hx, 0, 0 };
 
 	// Compute the advection at this grid point
-	advectionHandler.computeAdvection(network, hx, gridPosition,
+	advectionHandler.computeAdvection(network, hx, gridPosition[0],
 			concVector, updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 
 	// Compute the partial derivatives for the advection a the grid point 1
 	advectionHandler.computePartialsForAdvection(network, hx, valPointer,
-			indicesPointer, gridPosition);
+			indicesPointer, gridPosition[0]);
 
 	// Check the values for the indices
 	BOOST_REQUIRE_EQUAL(indices[0], 0);

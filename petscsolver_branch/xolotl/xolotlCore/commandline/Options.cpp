@@ -11,6 +11,7 @@
 #include <VizOptionHandler.h>
 #include <MaterialOptionHandler.h>
 #include <VConcentrationOptionHandler.h>
+#include <VoidPortionOptionHandler.h>
 #include <DimensionsOptionHandler.h>
 #include <RegularGridOptionHandler.h>
 #include <ProcessOptionHandler.h>
@@ -33,6 +34,7 @@ Options::Options() :
 		vizStandardHandlersFlag(false),
 		materialName(""),
 		initialVConcentration(0.0),
+		voidPortion(50.0),
 		dimensionNumber(1),
 		useRegularGridFlag(true) {
 
@@ -56,6 +58,8 @@ Options::Options() :
 	auto materialHandler = new MaterialOptionHandler();
 	// Create the initial vacancy concentration option handler
 	auto vConcHandler = new VConcentrationOptionHandler();
+	// Create the void portion option handler
+	auto voidHandler = new VoidPortionOptionHandler();
 	// Create the dimensions option handler
 	auto dimHandler = new DimensionsOptionHandler();
 	// Create the regular grid option handler
@@ -74,6 +78,7 @@ Options::Options() :
 	optionsMap[vizHandler->key] = vizHandler;
 	optionsMap[materialHandler->key] = materialHandler;
 	optionsMap[vConcHandler->key] = vConcHandler;
+	optionsMap[voidHandler->key] = voidHandler;
 	optionsMap[dimHandler->key] = dimHandler;
 	optionsMap[gridHandler->key] = gridHandler;
 	optionsMap[procHandler->key] = procHandler;

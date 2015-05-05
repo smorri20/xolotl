@@ -121,6 +121,7 @@ BOOST_AUTO_TEST_CASE(goodParamFile)
 			<< "material=W100" << std::endl
 			<< "initialV=0.05" << std::endl
 			<< "dimensions=1" << std::endl
+			<< "voidPortion=60.0" << std::endl
 			<< "regularGrid=no" << std::endl
 			<< "process=diff" << std::endl;
 	goodParamFile.close();
@@ -171,6 +172,9 @@ BOOST_AUTO_TEST_CASE(goodParamFile)
 
     // Check the number of dimensions option
     BOOST_REQUIRE_EQUAL(opts.getDimensionNumber(), 1);
+
+    // Check the void portion option
+    BOOST_REQUIRE_EQUAL(opts.getVoidPortion(), 60.0);
 
     // Check the regular grid option
     BOOST_REQUIRE_EQUAL(opts.useRegularXGrid(), false);

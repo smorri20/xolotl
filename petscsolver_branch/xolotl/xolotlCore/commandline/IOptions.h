@@ -269,6 +269,18 @@ public:
     virtual void setMaterial(const std::string& material) = 0;
 
     /**
+     * Obtain the value of the void portion for the simulation.
+     * @return The portion.
+     */
+    virtual double getVoidPortion() const = 0;
+
+    /**
+     * Set the value of the void portion for the surface to grow.
+     * @param portion The value for the portion.
+     */
+    virtual void setVoidPortion(double portion) = 0;
+
+    /**
      * Obtain the value of the concentration for the vacancies.
      *
      * @return The concentration value

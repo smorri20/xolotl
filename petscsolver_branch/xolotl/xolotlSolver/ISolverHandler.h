@@ -137,11 +137,43 @@ public:
 	virtual int getDimension() const = 0;
 
 	/**
+	 * Get the position of the surface.
+	 *
+	 * @param j The index on the grid in the y direction
+	 * @param k The index on the grid in the z direction
+	 * @return The position of the surface at this y,z coordinates
+	 */
+	virtual int getSurfacePosition(int j = -1, int k = -1) const = 0;
+
+	/**
+	 * Set the position of the surface.
+	 *
+	 * @param pos The index of the position
+	 * @param j The index on the grid in the y direction
+	 * @param k The index on the grid in the z direction
+	 */
+	virtual void setSurfacePosition(int pos, int j = -1, int k = -1) = 0;
+
+	/**
+	 * Get the initial vacancy concentration.
+	 *
+	 * @return The initial vacancy concentration
+	 */
+	virtual double getInitialVConc() const = 0;
+
+	/**
 	 * Get the flux handler.
 	 *
 	 * @return The flux handler
 	 */
 	virtual xolotlCore::IFluxHandler *getFluxHandler() const = 0;
+
+	/**
+	 * Get the modified trap-mutation handler.
+	 *
+	 * @return The modified trap-mutation handler
+	 */
+	virtual xolotlCore::ITrapMutationHandler *getMutationHandler() const = 0;
 
 	/**
 	 * Get the network.

@@ -49,11 +49,14 @@ protected:
 	//! The number of dimensions for the problem.
 	int dimension;
 
+	//! The portion of void at the beginning of the problem.
+	double portion;
+
 	//! If the user wants to use a regular grid.
 	bool useRegularGrid;
 
 	//! Method generating the grid in the x direction
-	void generateGrid(int nx, double hx) {
+	void generateGrid(int nx, double hx, int surfacePos) {
 		// Clear the grid
 		grid.clear();
 
@@ -76,17 +79,17 @@ protected:
 			// already added to the grid vector
 			for (int l = 1; l < nx; l++) {
 				// 0.1nm step near the surface (x < 2.5nm)
-				if (l < 26) {
+				if (l < surfacePos + 26) {
 					grid.push_back(previousPoint + 0.1);
 					previousPoint += 0.1;
 				}
 				// Then 0.25nm (2.5nm < x < 5.0nm)
-				else if (l < 36) {
+				else if (l < surfacePos + 36) {
 					grid.push_back(previousPoint + 0.25);
 					previousPoint += 0.25;
 				}
 				// Then 0.5nm (5.0nm < x < 7.5nm)
-				else if (l < 41) {
+				else if (l < surfacePos + 41) {
 					grid.push_back(previousPoint + 0.5);
 					previousPoint += 0.5;
 				}
@@ -132,6 +135,9 @@ public:
 
 		// Set the number of dimension
 		dimension = options.getDimensionNumber();
+
+		// Set the void portion
+		portion = options.getVoidPortion();
 
 		// Look at if the user wants to use a regular grid in the x direction
 		useRegularGrid = options.useRegularXGrid();
@@ -180,10 +186,22 @@ public:
 	int getDimension() const {return dimension;}
 
 	/**
+	 * Get the initial vacancy concentration.
+	 * \see ISolverHandler.h
+	 */
+	double getInitialVConc() const {return initialVConc;}
+
+	/**
 	 * Get the flux handler.
 	 * \see ISolverHandler.h
 	 */
 	xolotlCore::IFluxHandler *getFluxHandler() const {return fluxHandler;}
+
+	/**
+	 * Get the modified trap-mutation handler.
+	 * \see ISolverHandler.h
+	 */
+	xolotlCore::ITrapMutationHandler *getMutationHandler() const {return mutationHandler;}
 
 	/**
 	 * Get the network.

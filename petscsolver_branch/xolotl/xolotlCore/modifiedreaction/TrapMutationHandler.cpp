@@ -4,7 +4,7 @@
 
 namespace xolotlCore {
 
-void TrapMutationHandler::initialize(PSIClusterReactionNetwork *network,
+void TrapMutationHandler::initialize(int surfacePos, PSIClusterReactionNetwork *network,
 		std::vector<double> grid) {
 	// Add the needed reaction connectivity
 	// Each (He_i)(V) cluster and I clusters are connected to He_i
@@ -64,15 +64,40 @@ void TrapMutationHandler::initialize(PSIClusterReactionNetwork *network,
 	// that depth.
 	initializeDepthSize();
 
+	// Method that will fill the index vector
+	initializeIndex(surfacePos, network, grid);
+
+	// Update the bubble bursting rate
+	updateTrapMutationRate(network);
+
+	return;
+}
+
+void TrapMutationHandler::initializeIndex(int surfacePos, PSIClusterReactionNetwork *network,
+		std::vector<double> grid) {
 	// Clear the vector of HeV indices created by He undergoing trap-mutation
 	// at each grid point
 	indexVector.clear();
+
+	// Get all the He clusters from the network
+	auto heClusters = network->getAll(heType);
+	// Get all the HeV bubbles from the network
+	auto bubbles = network->getAll(heVType);
+
 	// Loop on the grid points
 	for (int i = 0; i < grid.size(); i++) {
-		// Get the depth
-		double depth = grid[i];
 		// Create the list (vector) of indices at this grid point
 		std::vector<int> indices;
+
+		// If we are on the left side of the surface there is no
+		// modified trap-mutation
+		if (i < surfacePos) {
+			indexVector.push_back(indices);
+			continue;
+		}
+
+		// Get the depth
+		double depth = grid[i] - grid[surfacePos];
 
 		// If the depth is greater than the last depth stored in depthVec
 		// there is no modified trap-mutation
@@ -112,9 +137,6 @@ void TrapMutationHandler::initialize(PSIClusterReactionNetwork *network,
 		// Add indices to the index vector
 		indexVector.push_back(indices);
 	}
-
-	// Update the bubble bursting rate
-	updateTrapMutationRate(network);
 
 	return;
 }

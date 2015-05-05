@@ -11,6 +11,27 @@ namespace xolotlSolver {
  * to solve the ADR equations in 2D using PETSc from Argonne National Laboratory.
  */
 class PetscSolver2DHandler: public PetscSolverHandler {
+private:
+	//! The position of the surface
+	std::vector<int> surfacePosition;
+
+	/**
+	 * Get the mean position of the surface.
+     *
+     * @return The mean position of the surface
+	 */
+	int getMeanSurfacePosition() {
+		int size = surfacePosition.size();
+
+		int mean = 0;
+		// Compute the mean
+		for (int j = 0; j < size; j++) {
+			mean += surfacePosition[j];
+		}
+
+		return mean / size;
+	}
+
 public:
 
 	//! The Constructor
@@ -50,6 +71,22 @@ public:
      * \see ISolverHandler.h
 	 */
 	void computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J);
+
+	/**
+	 * Get the position of the surface.
+     * \see ISolverHandler.h
+	 */
+	int getSurfacePosition(int j = -1, int k = -1) const {
+		return surfacePosition[j];
+	}
+
+	/**
+	 * Set the position of the surface.
+     * \see ISolverHandler.h
+	 */
+	void setSurfacePosition(int pos, int j = -1, int k = -1) {
+		surfacePosition[j] = pos;
+	}
 
 }; //end class PetscSolver2DHandler
 

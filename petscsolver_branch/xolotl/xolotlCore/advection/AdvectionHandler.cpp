@@ -4,7 +4,7 @@
 namespace xolotlCore {
 
 void AdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
-		double hx, std::vector<double> &pos, double **concVector,
+		double hx, double depth, double **concVector,
 		double *updatedConcOffset) {
 	// Get all the reactant
 	auto reactants = network->getAll();
@@ -23,7 +23,7 @@ void AdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 
 		// Compute the concentration as explained in the description of the method
 		double conc = (3.0 * sinkStrengthVector[i] * cluster->getDiffusionCoefficient())
-				* ((oldRightConc / pow(pos[0] + hx, 4)) - (oldConc / pow(pos[0], 4)))
+				* ((oldRightConc / pow(depth + hx, 4)) - (oldConc / pow(depth, 4)))
 				/ (xolotlCore::kBoltzmann * cluster->getTemperature() * hx);
 
 		// Update the concentration of the cluster
@@ -35,7 +35,7 @@ void AdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 
 void AdvectionHandler::computePartialsForAdvection(
 		PSIClusterReactionNetwork *network,
-		double hx, double *val, int *indices, std::vector<double> &pos) {
+		double hx, double *val, int *indices, double depth) {
 	// Get all the reactant
 	auto reactants = network->getAll();
 	// Get the number of advecting cluster
@@ -59,10 +59,10 @@ void AdvectionHandler::computePartialsForAdvection(
 		// explained in the description of this method
 		val[i * 2] = -(3.0 * sinkStrength * diffCoeff)
 				/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-						* hx * pow(pos[0], 4)); // middle
+						* hx * pow(depth, 4)); // middle
 		val[(i * 2) + 1] = (3.0 * sinkStrength * diffCoeff)
 				/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-						* hx * pow(pos[0] + hx, 4)); // right
+						* hx * pow(depth + hx, 4)); // right
 	}
 
 	return;

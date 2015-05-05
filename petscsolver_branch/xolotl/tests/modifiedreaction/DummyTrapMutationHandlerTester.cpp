@@ -48,12 +48,14 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	for (int l = 0; l < 13; l++) {
 		grid.push_back((double) l * 0.1);
 	}
+	// Set the surface position
+	int surfacePos = 0;
 
 	// Create the modified trap-mutation handler
 	DummyTrapMutationHandler trapMutationHandler;
 
 	// Initialize it
-	trapMutationHandler.initialize(network, grid);
+	trapMutationHandler.initialize(surfacePos, network, grid);
 
 	// The arrays of concentration
 	double concentration[13*size];

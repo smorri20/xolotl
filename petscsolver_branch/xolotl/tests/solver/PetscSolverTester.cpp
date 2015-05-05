@@ -59,7 +59,8 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 			<< "heFlux=4.0e5" << std::endl
 			<< "material=W100" << std::endl
 			<< "dimensions=1" << std::endl
-			<< "process=diff advec" << std::endl;
+			<< "process=diff advec" << std::endl
+			<< "voidPortion=0.0" << std::endl;
 	paramFile.close();
 
 	// Create a fake command line to read the options
@@ -170,7 +171,8 @@ BOOST_AUTO_TEST_CASE(checkIrregularPetscSolver1DHandler) {
 			<< "material=W100" << std::endl
 			<< "dimensions=1" << std::endl
 			<< "regularGrid=no" << std::endl
-			<< "process=diff advec modifiedTM" << std::endl;
+			<< "process=diff advec modifiedTM" << std::endl
+			<< "voidPortion=0.0" << std::endl;
 	paramFile.close();
 
 	// Create a fake command line to read the options
@@ -276,7 +278,8 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 			<< "heFlux=4.0e5" << std::endl
 			<< "material=W100" << std::endl
 			<< "dimensions=2" << std::endl
-			<< "process=diff advec" << std::endl;
+			<< "process=diff advec" << std::endl
+			<< "voidPortion=0.0" << std::endl;
 	paramFile.close();
 
 	// Create a fake command line to read the options
@@ -383,7 +386,8 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 			<< "heFlux=4.0e5" << std::endl
 			<< "material=W100" << std::endl
 			<< "dimensions=3" << std::endl
-			<< "process=diff advec" << std::endl;
+			<< "process=diff advec" << std::endl
+			<< "voidPortion=0.0" << std::endl;
 	paramFile.close();
 
 	// Create a fake command line to read the options

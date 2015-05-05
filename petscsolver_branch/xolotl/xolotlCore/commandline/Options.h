@@ -105,6 +105,11 @@ protected:
 	double initialVConcentration;
 
 	/**
+	 * Value of the portion of the void on the grid at the start of the simulation.
+	 */
+	double voidPortion;
+
+	/**
 	 * Number of dimensions for the simulation.
 	 */
 	int dimensionNumber;
@@ -361,6 +366,18 @@ public:
      * \see IOptions.h
      */
     void setDimensionNumber(int number) {dimensionNumber = number;}
+
+    /**
+     * Obtain the value of the void portion for the simulation.
+     * \see IOptions.h
+     */
+    double getVoidPortion() const {return voidPortion;}
+
+    /**
+     * Set the value of the void portion for the surface to grow.
+     * \see IOptions.h
+     */
+    void setVoidPortion(double portion) {voidPortion = portion;}
 
     /**
      * Should we use a regular grid on the x direction?
