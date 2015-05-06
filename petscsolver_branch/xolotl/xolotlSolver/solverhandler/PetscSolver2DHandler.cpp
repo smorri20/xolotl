@@ -246,13 +246,6 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			concOffset = concs[yj][xi];
 			updatedConcOffset = updatedConcs[yj][xi];
 
-			// Fill the concVector with the pointer to the middle, left, right, bottom, and top grid points
-			concVector[0] = concOffset; // middle
-			concVector[1] = concs[yj][xi - 1]; // left
-			concVector[2] = concs[yj][xi + 1]; // right
-			concVector[3] = concs[yj - 1][xi]; // bottom
-			concVector[4] = concs[yj + 1][xi]; // top
-
 			// Boundary conditions
 			// Everything to the left of the surface is empty
 			if (xi <= surfacePosition[yj] || xi == xSize - 1) {
@@ -266,6 +259,13 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			// Set the grid position
 			gridPosition[0] = grid[xi];
 			gridPosition[1] = yj * hY;
+
+			// Fill the concVector with the pointer to the middle, left, right, bottom, and top grid points
+			concVector[0] = concOffset; // middle
+			concVector[1] = concs[yj][xi - 1]; // left
+			concVector[2] = concs[yj][xi + 1]; // right
+			concVector[3] = concs[yj - 1][xi]; // bottom
+			concVector[4] = concs[yj + 1][xi]; // top
 
 			// Get the temperature from the temperature handler
 			auto temperature = temperatureHandler->getTemperature(gridPosition,
@@ -291,7 +291,7 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			// produces He of cluster size 1 -----
 			if (heCluster) {
 				// Update the concentration of the cluster
-				updatedConcOffset[heliumIndex] += incidentFluxVector[xi];
+				updatedConcOffset[heliumIndex] += incidentFluxVector[xi - meanPosition];
 			}
 
 			// ---- Compute diffusion over the locally owned part of the grid -----

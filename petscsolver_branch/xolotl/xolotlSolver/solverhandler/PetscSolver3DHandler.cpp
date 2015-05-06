@@ -268,16 +268,6 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				concOffset = concs[zk][yj][xi];
 				updatedConcOffset = updatedConcs[zk][yj][xi];
 
-				// Fill the concVector with the pointer to the middle, left,
-				// right, bottom, top, front, and back grid points
-				concVector[0] = concOffset; // middle
-				concVector[1] = concs[zk][yj][xi - 1]; // left
-				concVector[2] = concs[zk][yj][xi + 1]; // right
-				concVector[3] = concs[zk][yj - 1][xi]; // bottom
-				concVector[4] = concs[zk][yj + 1][xi]; // top
-				concVector[5] = concs[zk - 1][yj][xi]; // front
-				concVector[6] = concs[zk + 1][yj][xi]; // back
-
 				// Boundary conditions
 				// Everything to the left of the surface is empty
 				if (xi <= surfacePosition[yj][zk] || xi == xSize - 1) {
@@ -292,6 +282,16 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				gridPosition[0] = grid[xi];
 				gridPosition[1] = yj * hY;
 				gridPosition[2] = zk * hZ;
+
+				// Fill the concVector with the pointer to the middle, left,
+				// right, bottom, top, front, and back grid points
+				concVector[0] = concOffset; // middle
+				concVector[1] = concs[zk][yj][xi - 1]; // left
+				concVector[2] = concs[zk][yj][xi + 1]; // right
+				concVector[3] = concs[zk][yj - 1][xi]; // bottom
+				concVector[4] = concs[zk][yj + 1][xi]; // top
+				concVector[5] = concs[zk - 1][yj][xi]; // front
+				concVector[6] = concs[zk + 1][yj][xi]; // back
 
 				// Get the temperature from the temperature handler
 				auto temperature = temperatureHandler->getTemperature(gridPosition,
@@ -317,7 +317,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				// produces He of cluster size 1 -----
 				if (heCluster) {
 					// Update the concentration of the cluster
-					updatedConcOffset[heliumIndex] += incidentFluxVector[xi];
+					updatedConcOffset[heliumIndex] += incidentFluxVector[xi - meanPosition];
 				}
 
 				// ---- Compute diffusion over the locally owned part of the grid -----

@@ -42,13 +42,10 @@ void FluxHandler::initializeFluxHandler(int surfacePos, std::vector<double> grid
 
 	// Clear the flux vector
 	incidentFluxVec.clear();
+	// The first value corresponding to the surface position should always be 0.0
+	incidentFluxVec.push_back(0.0);
 
-	// The first values should always be 0.0 because it is on the left side of the surface
-	for (int i = 0; i <= surfacePos; i++) {
-		incidentFluxVec.push_back(0.0);
-	}
-
-	// Starts a i = surfacePos + 1 because the first values were already put in the vector
+	// Starts a i = surfacePos + 1 because the first value was already put in the vector
 	for (int i = surfacePos + 1; i < xGrid.size() - 1; i++) {
 		// Get the x position
 		auto x = xGrid[i] - xGrid[surfacePos];
@@ -69,14 +66,6 @@ void FluxHandler::recomputeFluxHandler(int surfacePos) {
 	// Factor the incident flux will be multiplied by
 	double heFluxNormalized = elementarySurfaceSize * heFlux / normFactor;
 
-	// Clear the flux vector
-	incidentFluxVec.clear();
-
-	// The first values should always be 0.0 because it is on the left side of the surface
-	for (int i = 0; i <= surfacePos; i++) {
-		incidentFluxVec.push_back(0.0);
-	}
-
 	// Starts a i = surfacePos + 1 because the first values were already put in the vector
 	for (int i = surfacePos + 1; i < xGrid.size() - 1; i++) {
 		// Get the x position
@@ -85,11 +74,8 @@ void FluxHandler::recomputeFluxHandler(int surfacePos) {
 		// Compute the flux value
 		double incidentFlux = heFluxNormalized * fitFunction(x);
 		// Add it to the vector
-		incidentFluxVec.push_back(incidentFlux);
+		incidentFluxVec[i - surfacePos] = incidentFlux;
 	}
-
-	// The last value should always be 0.0 because of boundary conditions
-	incidentFluxVec.push_back(0.0);
 
 	return;
 }
