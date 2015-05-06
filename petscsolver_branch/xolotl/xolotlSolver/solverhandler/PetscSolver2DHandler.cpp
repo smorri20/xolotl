@@ -26,7 +26,8 @@ void PetscSolver2DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 
 	// Set the position of the surface
 	for (int j = 0; j < ny; j++) {
-		surfacePosition.push_back((int) (nx * portion / 100.0));
+		surfacePosition.push_back(0);
+		if (movingSurface) surfacePosition[j] = (int) (nx * portion / 100.0);
 	}
 
 	// Generate the grid in the x direction

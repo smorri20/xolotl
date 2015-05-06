@@ -1074,24 +1074,27 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 		checkPetscError(ierr, "setupPetsc3DMonitor: TSMonitorSet (monitorSurfaceXZ3D) failed.");
 	}
 
-	// Initialize nInterstitial3D and previousIFlux3D before monitoring the
-	// interstitial flux
-	for (int j = 0; j < My; j++) {
-		// Create a one dimensional vector of double
-		std::vector<double> tempVector;
-		for (int k = 0; k < Mz; k++) {
-			tempVector.push_back(0.0);
+	// If the user wants the surface to be able to move
+	if (solverHandler->moveSurface()) {
+		// Initialize nInterstitial3D and previousIFlux3D before monitoring the
+		// interstitial flux
+		for (int j = 0; j < My; j++) {
+			// Create a one dimensional vector of double
+			std::vector<double> tempVector;
+			for (int k = 0; k < Mz; k++) {
+				tempVector.push_back(0.0);
+			}
+			// Add the tempVector to nInterstitial3D and previousIFlux3D
+			// to create their initial structure
+			nInterstitial3D.push_back(tempVector);
+			previousIFlux3D.push_back(tempVector);
 		}
-		// Add the tempVector to nInterstitial3D and previousIFlux3D
-		// to create their initial structure
-		nInterstitial3D.push_back(tempVector);
-		previousIFlux3D.push_back(tempVector);
-	}
 
-	// Set the monitor on the outgoing flux of interstitials at the surface
-	// monitorInterstitial3D will be called at each timestep
-	ierr = TSMonitorSet(ts, monitorInterstitial3D, NULL, NULL);
-	checkPetscError(ierr, "setupPetsc3DMonitor: TSMonitorSet (monitorInterstitial3D) failed.");
+		// Set the monitor on the outgoing flux of interstitials at the surface
+		// monitorInterstitial3D will be called at each timestep
+		ierr = TSMonitorSet(ts, monitorInterstitial3D, NULL, NULL);
+		checkPetscError(ierr, "setupPetsc3DMonitor: TSMonitorSet (monitorInterstitial3D) failed.");
+	}
 
 	// Set the monitor to simply change the previous time to the new time
 	// monitorTime will be called at each timestep

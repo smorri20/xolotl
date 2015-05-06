@@ -861,17 +861,20 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		checkPetscError(ierr, "setupPetsc2DMonitor: TSMonitorSet (monitorSurface2D) failed.");
 	}
 
-	// Initialize nInterstitial2D and previousIFlux2D before monitoring the
-	// interstitial flux
-	for (int j = 0; j < My; j++) {
-		nInterstitial2D.push_back(0.0);
-		previousIFlux2D.push_back(0.0);
-	}
+	// If the user wants the surface to be able to move
+	if (solverHandler->moveSurface()) {
+		// Initialize nInterstitial2D and previousIFlux2D before monitoring the
+		// interstitial flux
+		for (int j = 0; j < My; j++) {
+			nInterstitial2D.push_back(0.0);
+			previousIFlux2D.push_back(0.0);
+		}
 
-	// Set the monitor on the outgoing flux of interstitials at the surface
-	// monitorInterstitial2D will be called at each timestep
-	ierr = TSMonitorSet(ts, monitorInterstitial2D, NULL, NULL);
-	checkPetscError(ierr, "setupPetsc2DMonitor: TSMonitorSet (monitorInterstitial2D) failed.");
+		// Set the monitor on the outgoing flux of interstitials at the surface
+		// monitorInterstitial2D will be called at each timestep
+		ierr = TSMonitorSet(ts, monitorInterstitial2D, NULL, NULL);
+		checkPetscError(ierr, "setupPetsc2DMonitor: TSMonitorSet (monitorInterstitial2D) failed.");
+	}
 
 	// Set the monitor to simply change the previous time to the new time
 	// monitorTime will be called at each timestep

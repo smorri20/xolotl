@@ -184,6 +184,7 @@ BOOST_AUTO_TEST_CASE(goodParamFile)
     BOOST_REQUIRE_EQUAL(map["diff"], true);
     BOOST_REQUIRE_EQUAL(map["advec"], false);
     BOOST_REQUIRE_EQUAL(map["modifiedTM"], false);
+    BOOST_REQUIRE_EQUAL(map["movingSurface"], false);
 
     // Check the PETSc options
     BOOST_REQUIRE_EQUAL(opts.getPetscArgc(), 16);

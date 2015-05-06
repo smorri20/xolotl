@@ -55,6 +55,9 @@ protected:
 	//! If the user wants to use a regular grid.
 	bool useRegularGrid;
 
+	//! If the user wants to move the surface.
+	bool movingSurface;
+
 	//! Method generating the grid in the x direction
 	void generateGrid(int nx, double hx, int surfacePos) {
 		// Clear the grid
@@ -114,7 +117,6 @@ public:
 	void initializeHandlers(std::shared_ptr<xolotlFactory::IMaterialFactory> material,
 			std::shared_ptr<xolotlCore::ITemperatureHandler> tempHandler,
 			xolotlCore::Options &options) {
-
 		// Set the flux handler
 		fluxHandler = (xolotlCore::IFluxHandler *) material->getFluxHandler().get();
 
@@ -142,6 +144,10 @@ public:
 		// Look at if the user wants to use a regular grid in the x direction
 		useRegularGrid = options.useRegularXGrid();
 
+		// Should we be able to move the surface?
+		auto map = options.getProcesses();
+		movingSurface = map["movingSurface"];
+
 		return;
 	}
 
@@ -151,7 +157,6 @@ public:
 	 */
 	void initializeNetwork(const std::string& fileName,
 			xolotlCore::PSIClusterReactionNetwork *net) {
-
 		// Set the network loader
 		networkName = fileName;
 
@@ -190,6 +195,12 @@ public:
 	 * \see ISolverHandler.h
 	 */
 	double getInitialVConc() const {return initialVConc;}
+
+	/**
+	 * To know if the surface should be able to move.
+	 * \see ISolverHandler.h
+	 */
+	bool moveSurface() const {return movingSurface;}
 
 	/**
 	 * Get the flux handler.

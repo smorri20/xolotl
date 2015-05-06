@@ -25,7 +25,8 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 			"DMDACreate1d failed.");
 
 	// Set the position of the surface
-	surfacePosition = (int) (nx * portion / 100.0);
+	surfacePosition = 0;
+	if (movingSurface) surfacePosition = (int) (nx * portion / 100.0);
 
 	// Generate the grid in the x direction
 	generateGrid(nx, hx, surfacePosition);

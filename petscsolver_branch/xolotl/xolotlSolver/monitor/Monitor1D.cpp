@@ -1587,10 +1587,13 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorMaxClusterConc1D) failed.");
 	}
 
-	// Set the monitor on the outgoing flux of interstitials at the surface
-	// monitorInterstitial1D will be called at each timestep
-	ierr = TSMonitorSet(ts, monitorInterstitial1D, NULL, NULL);
-	checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorInterstitial1D) failed.");
+	// If the user wants the surface to be able to move
+	if (solverHandler->moveSurface()) {
+		// Set the monitor on the outgoing flux of interstitials at the surface
+		// monitorInterstitial1D will be called at each timestep
+		ierr = TSMonitorSet(ts, monitorInterstitial1D, NULL, NULL);
+		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorInterstitial1D) failed.");
+	}
 
 	// Set the monitor to simply change the previous time to the new time
 	// monitorTime will be called at each timestep

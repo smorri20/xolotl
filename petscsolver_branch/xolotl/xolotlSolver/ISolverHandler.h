@@ -162,6 +162,13 @@ public:
 	virtual double getInitialVConc() const = 0;
 
 	/**
+	 * To know if the surface should be able to move.
+	 *
+	 * @return True if the surface should be able to move.
+	 */
+	virtual bool moveSurface() const = 0;
+
+	/**
 	 * Get the flux handler.
 	 *
 	 * @return The flux handler

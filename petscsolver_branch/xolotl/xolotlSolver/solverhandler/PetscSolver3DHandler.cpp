@@ -34,7 +34,8 @@ void PetscSolver3DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 
 		// Loop on Z
 		for (int k = 0; k < nz; k++) {
-			tempPosition.push_back((int) (nx * portion / 100.0));
+			tempPosition.push_back(0);
+			if (movingSurface) tempPosition[k] = (int) (nx * portion / 100.0);
 		}
 
 		// Add tempPosition to the surfacePosition

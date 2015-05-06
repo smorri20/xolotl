@@ -21,7 +21,7 @@ public:
 	ProcessOptionHandler() :
 		OptionHandler("process",
 				"process                         "
-				"List of all the processes to use in the simulation (diff, advec, modifiedTP).\n") {}
+				"List of all the processes to use in the simulation (diff, advec, modifiedTM, movingSurface).\n") {}
 
 	/**
 	 * The destructor
@@ -41,6 +41,7 @@ public:
 		processMap["diff"] = false;
 		processMap["advec"] = false;
 		processMap["modifiedTM"] = false;
+		processMap["movingSurface"] = false;
 
 		// Build an input stream from the argument string.
 		xolotlCore::TokenizedLineReader<std::string> reader;
