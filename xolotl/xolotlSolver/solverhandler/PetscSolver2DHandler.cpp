@@ -332,9 +332,6 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);
 	checkPetscError(ierr, "PetscSolver2DHandler::computeOffDiagonalJacobian: DMDAGetCorners failed.");
 
-	// The degree of freedom is the size of the network
-	const int dof = network->size();
-
 	// Pointer to the concentrations at a given grid point
 	PetscScalar *concOffset;
 

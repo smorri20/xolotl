@@ -211,12 +211,10 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<Reactant> reactant) {
 	// Local Declarations
 	int numHe = 0, numV = 0, numI = 0;
 	bool isMixed = false;
-	std::string numClusterKey, clusterSizeKey, name;
+	std::string numClusterKey, clusterSizeKey;
 
 	// Only add a complete reactant
 	if (reactant != NULL) {
-		// Check the type... but call it name... whatever.
-		name = reactant->getName();
 		// Get the composition
 		auto composition = reactant->getComposition();
 		// Get the species sizes

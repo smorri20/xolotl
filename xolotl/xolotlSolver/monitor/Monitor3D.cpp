@@ -410,6 +410,7 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 				thePoint.t = time;
 				thePoint.x = x;
 				thePoint.y = y;
+				thePoint.z = z;
 				myPoints->push_back(thePoint);
 			}
 		}
@@ -567,7 +568,8 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 				thePoint.value = conc;
 				thePoint.t = time;
 				thePoint.x = x;
-				thePoint.y = z;
+				thePoint.y = y;
+				thePoint.z = z;
 				myPoints->push_back(thePoint);
 			}
 		}

@@ -761,9 +761,6 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network
 	auto network = solverHandler->getNetwork();
 
-	// Setup step size variable
-	double hx = solverHandler->getStepSizeX();
-
 	// Get the maximum size of HeV clusters
 	auto psiNetwork = (PSIClusterReactionNetwork *) network;
 	std::map<std::string, std::string> props = psiNetwork->getProperties();
@@ -896,11 +893,11 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt timestep, PetscReal time,
 	gridPointSolution = solutionArray[xi];
 
 	// Get the delta time from the previous timestep to this timestep
-	double dt = time - previousTime;
+	//double dt = time - previousTime;
 
 	// Compute the total density of intersitials that escaped from the
 	// surface since last timestep using the stored flux
-	double nInterstitial = previousIFlux1D * dt;
+	//double nInterstitial = previousIFlux1D * dt;
 
 //	// Uncomment to write the interstitial flux in a file
 //	std::ofstream outputFile;

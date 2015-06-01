@@ -499,7 +499,6 @@ void PSICluster::setReactionNetwork(
 
 	// Extract properties from the network
 	auto properties = network->getProperties();
-	int connectivityLength = network->size();
 
 	// Get the enabled reaction type flags
 	bool reactionsEnabled = (properties["reactionsEnabled"] == "true");
