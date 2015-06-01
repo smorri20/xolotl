@@ -50,15 +50,15 @@ public class Preprocessor {
 	private int maxHe;
 
 	// The maximum size of a mobile He cluster.
-	private int maxHeDiffusionSize = 6;
+	private int maxHeDiffusionSize = 7;
 
 	// The diffusion factors for single species Helium clusters.
 	private double[] heDiffusionFactors = { 0.0, 2.9e+10, 3.2e+10, 2.3e+10,
-			1.7e+10, 5.0e+09, 1.0e+09 };
+			1.7e+10, 5.0e+09, 1.0e+09, 5.0e+08 };
 
 	// The migration energies for single species Helium clusters.
 	private double[] heMigrationEnergies = { Double.POSITIVE_INFINITY, 0.13,
-			0.20, 0.25, 0.20, 0.12, 0.3 };
+			0.20, 0.25, 0.20, 0.12, 0.3, 0.4 };
 
 	// The maximum size of a vacancy cluster in the network.
 	private int maxV;
