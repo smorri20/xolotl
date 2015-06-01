@@ -308,7 +308,7 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 	PetscErrorCode ierr;
 	const double ****solutionArray, *gridPointSolution;
 	int xs, xm, Mx, ys, ym, My, zs, zm, Mz;
-	double x, y, z;
+	double x, y;
 
 	PetscFunctionBeginUser;
 
@@ -344,7 +344,6 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 	// Setup step size variables
 	double hx = solverHandler->getStepSizeX();
 	double hy = solverHandler->getStepSizeY();
-	double hz = solverHandler->getStepSizeZ();
 
 	// Choice of the cluster to be plotted
 	int iCluster = 0;
@@ -368,9 +367,6 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 			double conc = 0.0;
 
 			for (int k = 0; k < Mz; k++) {
-				// Compute z
-				z = k * hz;
-
 				// If it is the locally owned part of the grid
 				if (i >= xs && i < xs + xm && j >= ys && j < ys + ym
 						&& k >= zs && k < zs + zm) {
@@ -410,7 +406,6 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 				thePoint.t = time;
 				thePoint.x = x;
 				thePoint.y = y;
-				thePoint.z = z;
 				myPoints->push_back(thePoint);
 			}
 		}
@@ -467,7 +462,7 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 	PetscErrorCode ierr;
 	const double ****solutionArray, *gridPointSolution;
 	int xs, xm, Mx, ys, ym, My, zs, zm, Mz;
-	double x, y, z;
+	double x, z;
 
 	PetscFunctionBeginUser;
 
@@ -502,7 +497,6 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Setup step size variables
 	double hx = solverHandler->getStepSizeX();
-	double hy = solverHandler->getStepSizeY();
 	double hz = solverHandler->getStepSizeZ();
 
 	// Choice of the cluster to be plotted
@@ -527,9 +521,6 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 			double conc = 0.0;
 
 			for (int j = 0; j < My; j++) {
-				// Compute y
-				y = j * hy;
-
 				// If it is the locally owned part of the grid
 				if (i >= xs && i < xs + xm && j >= ys && j < ys + ym
 						&& k >= zs && k < zs + zm) {
@@ -568,8 +559,7 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 				thePoint.value = conc;
 				thePoint.t = time;
 				thePoint.x = x;
-				thePoint.y = y;
-				thePoint.z = z;
+				thePoint.y = z;
 				myPoints->push_back(thePoint);
 			}
 		}
