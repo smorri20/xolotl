@@ -14,12 +14,11 @@ class DummyTrapMutationHandler: public TrapMutationHandler {
 private:
 
 	/**
-	 * Method initializing the depth and size vectors.
+	 * Method initializing the depth vector.
 	 */
 	void initializeDepthSize() {
 		// Initialize the vectors
-		depthVec = {-1.0};
-		sizeVec = {-1};
+		depthVec = {-0.1, -0.1, -0.1, -0.1, -0.1, -0.1, -0.1};
 
 		// And don't do anything else
 		return;

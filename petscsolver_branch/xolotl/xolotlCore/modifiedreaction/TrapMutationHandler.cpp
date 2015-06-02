@@ -58,10 +58,9 @@ void TrapMutationHandler::initialize(int surfacePos, PSIClusterReactionNetwork *
 		}
 	}
 
-	// Two vectors to define the modified trap-mutation: the first one is the
-	// depth up to which the modified trap-mutation is valid, and the second
-	// one is the minimum size of helium cluster undergoing trap-mutation at
-	// that depth.
+	// One vector to define the modified trap-mutation: the first value correspond to the depth
+	// at which the He1 cluster undergo trap-mutation (if the value is negative it means that
+	// it doesn't TM), the second value correspond to He2, etc.
 	initializeDepthSize();
 
 	// Method that will fill the index vector
@@ -99,37 +98,21 @@ void TrapMutationHandler::initializeIndex(int surfacePos, PSIClusterReactionNetw
 		// Get the depth
 		double depth = grid[i] - grid[surfacePos];
 
-		// If the depth is greater than the last depth stored in depthVec
-		// there is no modified trap-mutation
-		if (depth > depthVec[depthVec.size() - 1]) {
-			indexVector.push_back(indices);
-			continue;
-		}
-
-		// Loop to determine at which depth interval we are
-		int l = 0;
-		for (l = 0; l < depthVec.size() - 1; l++) {
-			if (depth > depthVec[l] && depth <= depthVec[l+1]) break;
-		}
-
-		// Loop on the helium clusters
-		for (int j = 0; j < heClusters.size(); j++) {
-			// Get the cluster and its size
-			auto cluster = (PSICluster *) heClusters[j];
-			int heSize = cluster->getSize();
-
-			// Skip if the helium cluster is too small for this depth
-			if (heSize <= sizeVec[l]) continue;
-
-			// Loop on the bubbles
-			for (int k = 0; k < bubbles.size(); k++) {
-				// Get the bubble and its composition
-				auto bubble =  (PSICluster *) bubbles[k];
-				auto comp = bubble->getComposition();
-				if (comp[vType] > 1) continue;
-				if (comp[heType] == heSize) {
-					// Add this bubble to the indices
-					indices.push_back(k);
+		// Loop on the depth vector
+		for (int j = 0; j < depthVec.size(); j++) {
+			// Check if a helium cluster undergo TM at this depth
+			if (std::fabs(depth - depthVec[j])  < 1.0e-15) {
+				// Add the bubble of size j+1 to the indices
+				// Loop on the bubbles
+				for (int k = 0; k < bubbles.size(); k++) {
+					// Get the bubble and its composition
+					auto bubble =  (PSICluster *) bubbles[k];
+					auto comp = bubble->getComposition();
+					if (comp[vType] > 1) continue;
+					if (comp[heType] == j+1) {
+						// Add this bubble to the indices
+						indices.push_back(k);
+					}
 				}
 			}
 		}

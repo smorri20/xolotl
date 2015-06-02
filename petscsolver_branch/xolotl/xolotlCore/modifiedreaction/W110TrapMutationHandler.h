@@ -14,11 +14,10 @@ class W110TrapMutationHandler: public TrapMutationHandler {
 private:
 
 	/**
-	 * Method initializing the depth and size vectors.
+	 * Method initializing the depth vector.
 	 */
 	void initializeDepthSize() {
-		depthVec = {-0.1, 0.5, 0.7, 0.8, 0.9, 1.0, 1.1};
-		sizeVec = {2, 3, 4, 5, 6, 7, 8};
+		depthVec = {-0.1, 0.7, 0.9, 0.9, 0.9, 1.1, 1.1};
 
 		return;
 	}
