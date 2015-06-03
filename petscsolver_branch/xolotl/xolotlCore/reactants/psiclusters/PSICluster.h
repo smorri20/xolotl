@@ -725,12 +725,23 @@ public:
 	virtual double getReactionRadius() const;
 
 	/**
-	 * This operation returns the biggest rate for the
+	 * This operation returns the biggest rate for this
 	 * particular cluster.
 	 *
 	 * @return The biggest rate
 	 */
 	double getBiggestRate() const;
+
+	/**
+	 * This operation returns the sum of combination rate and emission rate
+	 * (where this cluster is on the left side of the reaction) for this
+	 * particular cluster.
+	 * This is used to computed the desorption rate in the
+	 * modified trap-mutation handler.
+	 *
+	 * @return The rate
+	 */
+	double getLeftSideRate() const;
 
 	/**
 	 * This operation returns a list that represents the connectivity

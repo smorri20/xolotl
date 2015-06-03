@@ -800,6 +800,28 @@ double PSICluster::getBiggestRate() const {
 	return biggestRate; // Computed by computeRateConstants
 }
 
+double PSICluster::getLeftSideRate() const {
+	// Initialize the rate and the cluster pointer
+	double totalRate = 0.0;
+	PSICluster *cluster;
+
+	// Loop on the combining reactants
+	for (int i = 0; i < effCombiningReactants.size(); i++) {
+		cluster = (PSICluster *) effCombiningReactants[i]->combining;
+		// Add the rate to the total rate
+		totalRate += effCombiningReactants[i]->kConstant
+				* cluster->concentration;
+	}
+
+	// Loop on the emission pairs
+	for (int i = 0; i < effEmissionPairs.size(); i++) {
+		// Add the rate to the total rate
+		totalRate += effEmissionPairs[i]->kConstant;
+	}
+
+	return totalRate;
+}
+
 std::vector<int> PSICluster::getConnectivity() const {
 	int connectivityLength = network->size();
 	std::vector<int> connectivity = std::vector<int>(connectivityLength, 0);

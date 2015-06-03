@@ -6,7 +6,7 @@ namespace xolotlCore {
 
 void TrapMutationHandler::initialize(int surfacePos, PSIClusterReactionNetwork *network,
 		std::vector<double> grid) {
-	// Add the needed reaction connectivity
+	// Add the needed reaction (dissociation) connectivity
 	// Each (He_i)(V) cluster and I clusters are connected to He_i
 
 	// Get all the He clusters from the network
@@ -58,12 +58,12 @@ void TrapMutationHandler::initialize(int surfacePos, PSIClusterReactionNetwork *
 		}
 	}
 
-	// One vector to define the modified trap-mutation: the first value correspond to the depth
-	// at which the He1 cluster undergo trap-mutation (if the value is negative it means that
-	// it doesn't TM), the second value correspond to He2, etc.
+	// This method fills one vector to define the modified trap-mutation: the first value
+	// correspond to the depth at which the He1 cluster undergo trap-mutation (if the value
+	// is negative it means that it doesn't TM), the second value correspond to He2, etc.
 	initializeDepthSize();
 
-	// Method that will fill the index vector
+	// Method that will fill the index vector that is actually used during the solving steps
 	initializeIndex(surfacePos, network, grid);
 
 	// Update the bubble bursting rate
@@ -108,6 +108,7 @@ void TrapMutationHandler::initializeIndex(int surfacePos, PSIClusterReactionNetw
 					// Get the bubble and its composition
 					auto bubble =  (PSICluster *) bubbles[k];
 					auto comp = bubble->getComposition();
+					// We are interested in bubbles with only one vacancy
 					if (comp[vType] > 1) continue;
 					if (comp[heType] == j+1) {
 						// Add this bubble to the indices
@@ -139,7 +140,7 @@ void TrapMutationHandler::updateTrapMutationRate(PSIClusterReactionNetwork *netw
 		// Compare it to the bursting rate
 		if (kMutation < rate) kMutation = rate;
 	}
-	// Multiply it by 1000.0
+	// Multiply it by 1000.0 so that trap-mutation overcomes any other reaction
 	kMutation = 1000.0 * kMutation;
 
 	return;
@@ -149,7 +150,6 @@ void TrapMutationHandler::computeTrapMutation(PSIClusterReactionNetwork *network
 		int xi, double *concOffset, double *updatedConcOffset) {
 	// Get all the HeV bubbles
 	auto bubbles = network->getAll(heVType);
-
 	// Get the single interstitial cluster
 	auto singleInterstitial = (PSICluster *) network->get(iType, 1);
 
@@ -159,6 +159,8 @@ void TrapMutationHandler::computeTrapMutation(PSIClusterReactionNetwork *network
 	// Get its ID
 	int interstitialIndex = singleInterstitial->getId() - 1;
 
+	// Initialize the rate of the reaction
+	double rate = 0.0;
 	// Get the pointer to list of indices at this grid point
 	std::vector<int> * indices = &indexVector[xi];
 	// Loop on the list
@@ -175,10 +177,21 @@ void TrapMutationHandler::computeTrapMutation(PSIClusterReactionNetwork *network
 		// Get the initial concentration of helium
 		double oldConc = concOffset[heIndex];
 
-		// Update the concentrations (the bubble loses its concentration)
-		updatedConcOffset[heIndex] -= kMutation * oldConc;
-		updatedConcOffset[bubbleIndex] += kMutation * oldConc;
-		updatedConcOffset[interstitialIndex] += kMutation * oldConc;
+		// Check the desorption
+		if (comp[heType] == desorp.size) {
+			// Get the left side rate (combination + emission)
+			double totalRate = heCluster->getLeftSideRate();
+			// Define the trap-mutation rate taking into account the desorption
+			rate = totalRate * (1.0 - desorp.portion) / desorp.portion;
+		}
+		else {
+			rate = kMutation;
+		}
+
+		// Update the concentrations (the helium cluster loses its concentration)
+		updatedConcOffset[heIndex] -= rate * oldConc;
+		updatedConcOffset[bubbleIndex] += rate * oldConc;
+		updatedConcOffset[interstitialIndex] += rate * oldConc;
 	}
 
 	return;
@@ -201,6 +214,8 @@ int TrapMutationHandler::computePartialsForTrapMutation(
 
 	// Get the pointer to list of indices at this grid point
 	std::vector<int> * clusterIndices = &indexVector[xi];
+	// Initialize the rate of the reaction
+	double rate = 0.0;
 	// Loop on the list
 	for (int i = 0; i < clusterIndices->size(); i++) {
 		// Get the stored bubble and its ID
@@ -212,17 +227,28 @@ int TrapMutationHandler::computePartialsForTrapMutation(
 		auto heCluster = (PSICluster *) network->get(heType, comp[heType]);
 		int heIndex = heCluster->getId() - 1;
 
+		// Check the desorption
+		if (comp[heType] == desorp.size) {
+			// Get the left side rate (combination + emission)
+			double totalRate = heCluster->getLeftSideRate();
+			// Define the trap-mutation rate taking into account the desorption
+			rate = totalRate * (1.0 - desorp.portion) / desorp.portion;
+		}
+		else {
+			rate = kMutation;
+		}
+
 		// Set the helium cluster partial derivative
 		indices[i * 3] = heIndex;
-		val[i * 3] = -kMutation;
+		val[i * 3] = -rate;
 
 		// Set the bubble cluster partial derivative
 		indices[(i * 3) + 1] = bubbleIndex;
-		val[(i * 3) + 1] = kMutation;
+		val[(i * 3) + 1] = rate;
 
 		// Set the interstitial cluster partial derivative
 		indices[(i * 3) + 2] = interstitialIndex;
-		val[(i * 3) + 2] = kMutation;
+		val[(i * 3) + 2] = rate;
 	}
 
 	return clusterIndices->size();

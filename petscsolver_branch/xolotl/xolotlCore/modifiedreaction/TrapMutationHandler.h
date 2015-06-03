@@ -13,6 +13,28 @@ namespace xolotlCore {
 class TrapMutationHandler: public ITrapMutationHandler {
 protected:
 
+	/**
+	 * This is a protected class used to store information about helium
+	 * desorption.
+	 */
+	class Desorption {
+	public:
+
+		/**
+		 * The size of the helium cluster that desorpts
+		 */
+		int size;
+
+		/**
+		 * The portion of the reactions that is desorption and NOT trap-mutation
+		 */
+		double portion;
+
+		//! The constructor
+		Desorption(int s, double p)
+		: size(s), portion(p) {}
+	};
+
 	//! The vector containing the different depths for the modified trap mutation
 	std::vector<double> depthVec;
 
@@ -21,12 +43,19 @@ protected:
 
 	/**
 	 * The vector containing the indices of the bubbles created through modified
-	 * trap-mutation for each grid point
+	 * trap-mutation for each grid point. The difference between this vector and depthVec
+	 * is that this one is used for the actual computation whereas the other one is
+	 * defined by the user. indexVector is created with the depthVec information.
 	 */
 	std::vector<std::vector<int> > indexVector;
 
 	/**
-	 * Method initializing the depth vector.
+	 * The desorption information
+	 */
+	Desorption desorp;
+
+	/**
+	 * Method initializing the depth vector and desorption information.
 	 * It needs to be implemented by the daughter classes.
 	 */
 	virtual void initializeDepthSize() {return;}
@@ -36,7 +65,8 @@ public:
 	/**
 	 * The constructor
 	 */
-	TrapMutationHandler() : kMutation(0.0){}
+	TrapMutationHandler() : kMutation(0.0),
+		desorp(0, 0.0) {}
 
 	/**
 	 * The destructor
@@ -58,6 +88,8 @@ public:
 
 	/**
 	 * This method defines which trap-mutation is allowed at each grid point.
+	 * The stored indices correspond to the HeV bubbles, and more precisely to their
+	 * rank in the bubbles vector obtained with bubbles = network->getAll(heVType).
 	 *
 	 * @param surfacePos The index of the position of the surface
 	 * @param network The network

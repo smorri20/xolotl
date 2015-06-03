@@ -71,22 +71,30 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	double *conc = &concentration[0];
 	double *updatedConc = &newConcentration[0];
 
-	// Get the offset for the second grid point
+	// Get the offset for the eighth grid point
 	double *concOffset = conc + 7 * size;
 	double *updatedConcOffset = updatedConc + 7 * size;
+
+	// Putting the concentrations in the network so that the rate for
+	// desorption is computed correctly
+	network->updateConcentrationsFromArray(concOffset);
 
 	// Compute the modified trap mutation at the eighth grid point
 	trapMutationHandler.computeTrapMutation(network, 7,
 			concOffset, updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 2.02728e+22, 0.01); // Create I
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[7], -2.02728e+22, 0.01); // He2
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[16], 2.02728e+22, 0.01); // Create He2V
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 6.26006e+30, 0.01); // Create I
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[7], -6.26006e+30, 0.01); // He2
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[16], 6.26006e+30, 0.01); // Create He2V
 
-	// Get the offset for the eleventh grid point
+	// Get the offset for the tenth grid point
 	concOffset = conc + 9 * size;
 	updatedConcOffset = updatedConc + 9 * size;
+
+	// Putting the concentrations in the network so that the rate for
+	// desorption is computed correctly
+	network->updateConcentrationsFromArray(concOffset);
 
 	// Compute the modified trap mutation at the tenth grid point
 	trapMutationHandler.computeTrapMutation(network, 9,
