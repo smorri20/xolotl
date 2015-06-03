@@ -138,7 +138,7 @@ void SurfacePlot::render(std::string fileName) {
     eavlPlot *plot;
     plot = new eavlPlot(data, data->GetCellSet(0)->GetName());
     plot->SetField(plotDataProvider->getDataName());
-    plot->SetColorTableName("temperature");
+    plot->SetColorTableByName("temperature");
     scene->plots.push_back(plot);
 
     // Set the view
@@ -151,7 +151,7 @@ void SurfacePlot::render(std::string fileName) {
     char fn[25];
     sprintf(fn, "%s", (fileName).c_str());
     ///\todo: file extension currently hard-coded by caller
-    surface->SaveAs(fn, OpenGL_Mode ? eavlRenderSurface::PNM : eavlRenderSurface::EPS);
+    surface->SaveAs(fn, OpenGL_Mode ? eavlRenderSurface::PNG : eavlRenderSurface::EPS);
 
 	return;
 }

@@ -491,7 +491,7 @@ PetscErrorCode monitorScatter(TS ts, PetscInt timestep, PetscReal time,
 
 		// Render and save in file
 		std::stringstream fileName;
-		fileName << cluster->getName() << "_scatter_TS" << timestep << ".pnm";
+		fileName << cluster->getName() << "_scatter_TS" << timestep;
 		plot->write(fileName.str());
 	}
 
@@ -668,7 +668,7 @@ PetscErrorCode monitorSeries(TS ts, PetscInt timestep, PetscReal time,
 
 		// Render and save in file
 		std::stringstream fileName;
-		fileName << "log_series_TS" << timestep << ".pnm";
+		fileName << "log_series_TS" << timestep;
 		seriesPlot->write(fileName.str());
 	}
 
@@ -851,7 +851,7 @@ PetscErrorCode monitorSurface(TS ts, PetscInt timestep, PetscReal time,
 
 		// Render and save in file
 		std::stringstream fileName;
-		fileName << "Brian_TS" << timestep << "_D" << xi << ".pnm";
+		fileName << "Brian_TS" << timestep << "_D" << xi;
 		surfacePlot->write(fileName.str());
 	}
 
@@ -953,7 +953,7 @@ PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
 
 		// Render and save in file
 		std::ostringstream fileName;
-		fileName << "timer_TS" << timestep << ".pnm";
+		fileName << "timer_TS" << timestep;
 		perfPlot->write(fileName.str());
     }
 

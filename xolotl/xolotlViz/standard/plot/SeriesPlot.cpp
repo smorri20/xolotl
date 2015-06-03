@@ -165,7 +165,7 @@ void SeriesPlot::render(std::string fileName) {
     char fn[25];
     sprintf(fn, "%s", (fileName).c_str());
     ///\todo: file extension currently hard-coded by caller
-    surface->SaveAs(fn, OpenGL_Mode ? eavlRenderSurface::PNM : eavlRenderSurface::EPS);
+    surface->SaveAs(fn, OpenGL_Mode ? eavlRenderSurface::PNG : eavlRenderSurface::EPS);
 
 	return;
 }
