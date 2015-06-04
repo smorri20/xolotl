@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(goodParamFile)
     BOOST_REQUIRE_EQUAL(opts.getPerfHandlerType(), xolotlPerf::IHandlerRegistry::std);
 
     // Check the performance handler
-    BOOST_REQUIRE_EQUAL(opts.useVizStandardHandlers(), true);
+    BOOST_REQUIRE_EQUAL(opts.getVizHandlerType(), xolotlViz::IVizHandlerRegistry::std);
 
     // Check the material option
     BOOST_REQUIRE_EQUAL(opts.useMaterial(), true);
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(goodParamFileWithProfiles)
     BOOST_REQUIRE_EQUAL(opts.getPerfHandlerType(), xolotlPerf::IHandlerRegistry::std);
 
     // Check the performance handler
-    BOOST_REQUIRE_EQUAL(opts.useVizStandardHandlers(), true);
+    BOOST_REQUIRE_EQUAL(opts.getVizHandlerType(), xolotlViz::IVizHandlerRegistry::std);
 
     // Check the material option
     BOOST_REQUIRE_EQUAL(opts.useMaterial(), true);

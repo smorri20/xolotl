@@ -54,16 +54,16 @@ bool initTemp(Options &options) {
 }
 
 
-bool initViz(bool opts) {
+bool initViz(xolotlViz::IVizHandlerRegistry::RegistryType rtype) {
 
-	bool vizInitOK = xolotlFactory::initializeVizHandler(opts);
-	if (!vizInitOK) {
-		std::cerr
-				<< "Unable to initialize requested visualization infrastructure. "
-				<< "Aborting" << std::endl;
-		return EXIT_FAILURE;
-	} else
-		return vizInitOK;
+    bool vizInitOK = xolotlFactory::initializeVizHandler(rtype);
+    if (!vizInitOK) {
+        std::cerr
+            << "Unable to initialize requested visualization infrastructure. "
+            << "Aborting" << std::endl;
+        return EXIT_FAILURE;
+    } else
+        return vizInitOK;
 }
 
 std::shared_ptr<xolotlSolver::PetscSolver> setUpSolver(
@@ -182,7 +182,7 @@ int main(int argc, char **argv) {
 		// Set up the temperature infrastructure
 		auto tempInitOK = initTemp(opts);
 		// Set up the visualization infrastructure.
-		auto vizInitOK = initViz(opts.useVizStandardHandlers());
+		auto vizInitOK = initViz(opts.getVizHandlerType());
 
 		// Access the temperature handler registry to get the temperature
 		auto tempHandler = xolotlFactory::getTemperatureHandler();

@@ -26,7 +26,7 @@ public:
 	/**
 	 * The default constructor
 	 */
-	ScatterPlot(std::string name);
+    ScatterPlot(std::string name, bool raster);
 
 	/**
 	 * The destructor

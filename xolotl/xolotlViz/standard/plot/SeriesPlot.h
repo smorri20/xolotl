@@ -33,7 +33,7 @@ public:
 	/**
 	 * The default constructor
 	 */
-	SeriesPlot(std::string name);
+    SeriesPlot(std::string name, bool raster);
 
 	/**
 	 * The destructor

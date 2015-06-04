@@ -22,7 +22,7 @@ using namespace xolotlViz;
 #define W_WIDTH 1024
 #define W_HEIGHT 1024
 
-SeriesPlot::SeriesPlot(std::string name) : Plot(name) {
+SeriesPlot::SeriesPlot(std::string name, bool raster) : Plot(name, raster) {
 	plotDataProviders = std::make_shared< std::vector< std::shared_ptr<IDataProvider> > > ();
 }
 
@@ -57,8 +57,7 @@ void SeriesPlot::render(std::string fileName) {
     // Create a window
     eavlScene *scene = new eavl1DScene();
 #ifdef HAVE_OSMESA
-    ///\todo: get OpenGL mode set some proper way
-    bool OpenGL_Mode = true;
+    bool OpenGL_Mode = enableRaster;
 #else
     bool OpenGL_Mode = false;
 #endif

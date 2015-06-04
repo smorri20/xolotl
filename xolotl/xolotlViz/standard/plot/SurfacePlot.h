@@ -27,7 +27,7 @@ public:
 	/**
 	 * The default constructor
 	 */
-	SurfacePlot(std::string name);
+    SurfacePlot(std::string name, bool raster);
 
 	/**
 	 * The destructor

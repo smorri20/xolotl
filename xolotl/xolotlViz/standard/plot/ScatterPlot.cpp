@@ -3,6 +3,12 @@
 #include "eavl.h"
 #include "eavlDataSet.h"
 #include "eavlColor.h"
+#include "eavlRenderSurface.h"
+#include "eavlSceneRenderer.h"
+#include "eavlWorldAnnotator.h"
+#include "eavlScene.h"
+#include "eavl1DWindow.h"
+
 #include "XolotlConfigViz.h"
 #ifdef HAVE_OSMESA
 #include <GL/gl_mangle.h>
@@ -13,8 +19,7 @@
 #include "eavlRenderSurfacePS.h"
 #include "eavlSceneRendererPS.h"
 #include "eavlWorldAnnotatorPS.h"
-#include "eavlScene.h"
-#include "eavl1DWindow.h"
+
 #include <iostream>
 
 using namespace xolotlViz;
@@ -22,7 +27,7 @@ using namespace xolotlViz;
 #define W_WIDTH 1024
 #define W_HEIGHT 1024
 
-ScatterPlot::ScatterPlot(std::string name) : Plot(name) {
+ScatterPlot::ScatterPlot(std::string name, bool raster) : Plot(name, raster) {
 }
 
 ScatterPlot::~ScatterPlot() {
@@ -74,12 +79,11 @@ void ScatterPlot::render(std::string fileName) {
     // Create a window
     eavlScene *scene = new eavl1DScene();
 #ifdef HAVE_OSMESA
-    ///\todo: get OpenGL mode set some proper way
-    bool OpenGL_Mode = true;
+    bool OpenGL_Mode = enableRaster;
 #else
     bool OpenGL_Mode = false;
 #endif
-    eavlRenderSurface *surface;
+    eavlRenderSurface *surface = NULL;
     eavlSceneRenderer *renderer = NULL;
     eavlWorldAnnotator *annotator = NULL;
 #ifdef HAVE_OSMESA

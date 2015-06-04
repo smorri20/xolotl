@@ -35,7 +35,7 @@ public:
 	/**
 	 * The default constructor
 	 */
-	VideoPlot(std::string name);
+    VideoPlot(std::string name, bool raster);
 
 	/**
 	 * The destructor

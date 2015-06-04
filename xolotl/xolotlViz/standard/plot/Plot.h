@@ -37,6 +37,11 @@ protected:
 	bool enableLogScale = false;
 
 	/**
+	 * If it is equal to True, a raster format will be used instead of vector.
+	 */
+	bool enableRaster = false;
+
+	/**
 	 * Data provider used for the plot.
 	 */
 	std::shared_ptr<IDataProvider> plotDataProvider;
@@ -46,7 +51,7 @@ public:
 	/**
 	 * The default constructor
 	 */
-	Plot(std::string name);
+	Plot(std::string name, bool raster);
 
 	/**
 	 * The destructor.

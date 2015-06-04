@@ -3,7 +3,9 @@
 
 using namespace xolotlViz;
 
-Plot::Plot(std::string name) : xolotlCore::Identifiable(name) {
+Plot::Plot(std::string name, bool raster)
+    : xolotlCore::Identifiable(name),
+      enableRaster(raster) {
 }
 
 Plot::~Plot() {

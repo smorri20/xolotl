@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(Plot_testSuite)
 BOOST_AUTO_TEST_CASE(checkName) {
 
 	// Create myScatterPlot
-	auto myScatterPlot = make_shared<ScatterPlot>("myScatterPlot");
+	auto myScatterPlot = make_shared<ScatterPlot>("myScatterPlot", true);
 
 	BOOST_REQUIRE_EQUAL("myScatterPlot", myScatterPlot->getName());
 }
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(checkName) {
 BOOST_AUTO_TEST_CASE(checkPlottingStyle) {
 
 	// Create myScatterPlot
-	auto myScatterPlot = make_shared<ScatterPlot>("myScatterPlot");
+	auto myScatterPlot = make_shared<ScatterPlot>("myScatterPlot", true);
 
 	PlottingStyle thePlottingStyle = LINE;
 
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(checkPlottingStyle) {
 BOOST_AUTO_TEST_CASE(checkDataProvider) {
 
 	// Create myScatterPlot
-	auto myScatterPlot = make_shared<ScatterPlot>("myScatterPlot");
+	auto myScatterPlot = make_shared<ScatterPlot>("myScatterPlot", true);
 
 	// Create myDataProvider
 	auto myDataProvider = make_shared<DataProvider>("myDataProvider");

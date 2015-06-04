@@ -9,19 +9,23 @@
 
 namespace xolotlViz {
 
-StandardHandlerRegistry::StandardHandlerRegistry() {
+StandardHandlerRegistry::StandardHandlerRegistry(OutputType otype)
+    : outputType(otype)
+{
 }
 
 StandardHandlerRegistry::~StandardHandlerRegistry() {
 }
 
 std::shared_ptr<IPlot> StandardHandlerRegistry::getPlot(std::string name, PlotType type) {
+    bool isRaster = (outputType==png);
+    std::cerr << "isRaster="<<isRaster<<std::endl;
 	switch(type) {
-	case PlotType::SCATTER: return std::make_shared <ScatterPlot> (name);
-	case PlotType::SERIES: return std::make_shared <SeriesPlot> (name);
-	case PlotType::SURFACE: return std::make_shared <SurfacePlot> (name);
-	case PlotType::VIDEO: return std::make_shared <VideoPlot> (name);
-	default: return std::make_shared <Plot> (name);
+        case PlotType::SCATTER: return std::make_shared <ScatterPlot> (name, isRaster);
+        case PlotType::SERIES: return std::make_shared <SeriesPlot> (name, isRaster);
+        case PlotType::SURFACE: return std::make_shared <SurfacePlot> (name, isRaster);
+        case PlotType::VIDEO: return std::make_shared <VideoPlot> (name, isRaster);
+        default: return std::make_shared <Plot> (name, isRaster);
 	}
 }
 

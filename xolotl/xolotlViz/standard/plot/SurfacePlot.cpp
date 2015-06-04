@@ -22,7 +22,7 @@ using namespace xolotlViz;
 #define W_WIDTH 1024
 #define W_HEIGHT 1024
 
-SurfacePlot::SurfacePlot(std::string name) : Plot(name) {
+SurfacePlot::SurfacePlot(std::string name, bool raster) : Plot(name, raster) {
 }
 
 SurfacePlot::~SurfacePlot() {
@@ -78,8 +78,7 @@ void SurfacePlot::render(std::string fileName) {
     // Create a window
     eavlScene *scene = new eavl2DScene();
 #ifdef HAVE_OSMESA
-    ///\todo: get OpenGL mode set some proper way
-    bool OpenGL_Mode = true;
+    bool OpenGL_Mode = enableRaster;
 #else
     bool OpenGL_Mode = false;
 #endif

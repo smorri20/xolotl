@@ -6,7 +6,7 @@
 #include <string>
 #include <map>
 #include <xolotlPerf.h>
-
+#include <IVizHandlerRegistry.h>
 
 namespace xolotlCore {
 
@@ -251,18 +251,16 @@ public:
 
 
     /**
-     * Should we use the "standard" set of handlers for the visualization?
-     * If false, use dummy (stub) handlers.
-     * @return true if program should use standard handlers, false if
-     * should use dummy handlers.
+     * Which type of visualization handlers should we use?
+     * @return The type of visualization handler registry to use.
      */
-    virtual bool useVizStandardHandlers() const = 0;
+    virtual xolotlViz::IVizHandlerRegistry::RegistryType getVizHandlerType(void) const = 0;
 
     /**
-     * Set the vizStandardHandlersFlag.
-     * @param flag The value for the vizStandardHandlersFlag.
+     * Set the type of visualization handlers to use.
+     * @param rtype The type of visualization handler registry to use.
      */
-    virtual void setVizStandardHandlers(bool flag) = 0;
+    virtual void setVizHandlerType(xolotlViz::IVizHandlerRegistry::RegistryType rtype) = 0;
 
     /**
      * Should we use a specific material for the helium flux profile?

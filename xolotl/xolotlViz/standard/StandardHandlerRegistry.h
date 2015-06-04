@@ -17,11 +17,17 @@ namespace xolotlViz {
 class StandardHandlerRegistry : public IVizHandlerRegistry
 {
 public:
+    /// possible rendering/output types
+    enum OutputType
+    {
+        png,  ///< Raster, with PNG output
+        eps   ///< Vector, with EPS output
+    };
 
     /**
      * Construct a StandardHandlerRegistry.
      */
-    StandardHandlerRegistry();
+    StandardHandlerRegistry(OutputType otype);
 
     /**
      * Clean up a StandardHandlerRegistry.
@@ -36,6 +42,9 @@ public:
      * @return A shared pointer to the newly-created Plot.
      */
     virtual std::shared_ptr<IPlot> getPlot(std::string name, PlotType type);
+
+protected:
+    OutputType outputType;
 
 };  //end class StandardHandlerRegistry
 

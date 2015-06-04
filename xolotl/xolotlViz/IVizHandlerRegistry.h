@@ -18,6 +18,15 @@ class IVizHandlerRegistry {
 
 public:
 
+    /// Possible types of visualization handler registries.
+    enum RegistryType
+    {
+        dummy,      //< Use stub classes that do nothing
+        std,        //< Use the best available API.
+        png,        //< Use raster based rendering and output to raster PNG file
+        eps         //< Use vector based rendering and output to vector EPS file
+    };
+
 	/**
 	 * The destructor
 	 */

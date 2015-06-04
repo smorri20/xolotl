@@ -106,9 +106,9 @@ protected:
 	xolotlPerf::IHandlerRegistry::RegistryType perfRegistryType;
 
 	/**
-	 * Use the "standard" set of handlers for the visualization infrastructure?
+	 * Which type of visualization infrastructure should we use?
 	 */
-	bool vizStandardHandlersFlag;
+	xolotlViz::IVizHandlerRegistry::RegistryType vizRegistryType;
 
 	/**
 	 * Use the material option?
@@ -355,17 +355,16 @@ public:
     void setPerfHandlerType(xolotlPerf::IHandlerRegistry::RegistryType rtype) { perfRegistryType = rtype; }
 
     /**
-     * Should we use the "standard" set of handlers for the visualization?
-     * If false, use dummy (stub) handlers.
-     * \see IOptions.h
+     * Which type of visualization handlers should we use?
+     * @return The type of visualization handler registry to use.
      */
-    bool useVizStandardHandlers() const {return vizStandardHandlersFlag;}
+    xolotlViz::IVizHandlerRegistry::RegistryType getVizHandlerType(void) const { return vizRegistryType; }
 
     /**
-     * Set the vizStandardHandlersFlag.
-     * \see IOptions.h
+     * Set the type of visualization handlers to use.
+     * @param rtype The type of visualization handler registry to use.
      */
-    void setVizStandardHandlers(bool flag) {vizStandardHandlersFlag = flag;}
+    void setVizHandlerType(xolotlViz::IVizHandlerRegistry::RegistryType rtype) { vizRegistryType = rtype; }
 
     /**
      * Should we use a specific material for the helium flux profile?

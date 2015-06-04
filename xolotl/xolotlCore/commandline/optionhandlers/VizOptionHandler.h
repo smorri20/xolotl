@@ -3,6 +3,7 @@
 
 // Includes
 #include "OptionHandler.h"
+#include "IVizHandlerRegistry.h"
 
 namespace xolotlCore {
 
@@ -17,7 +18,7 @@ public:
 	 */
 	VizOptionHandler() :
 		OptionHandler("vizHandler",
-				"vizHandler {std,dummy}      "
+				"vizHandler {std,dummy,png,eps}      "
 				"Which set of handlers to use for the visualization. (default = dummy)") {}
 
 	/**
@@ -36,10 +37,16 @@ public:
 	bool handler(IOptions *opt, std::string arg) {
 		// Determine the type of handlers we are being asked to use
 		if (arg == "std") {
-			opt->setVizStandardHandlers(true);
+			opt->setVizHandlerType(xolotlViz::IVizHandlerRegistry::std);
 		}
 		else if (arg == "dummy") {
-			opt->setVizStandardHandlers(false);
+			opt->setVizHandlerType(xolotlViz::IVizHandlerRegistry::dummy);
+		}
+		else if (arg == "png") {
+			opt->setVizHandlerType(xolotlViz::IVizHandlerRegistry::png);
+		}
+		else if (arg == "eps") {
+			opt->setVizHandlerType(xolotlViz::IVizHandlerRegistry::eps);
 		}
 		else {
 			std::cerr << "Options: unrecognized argument in the visualization option handler: " << arg << std::endl;

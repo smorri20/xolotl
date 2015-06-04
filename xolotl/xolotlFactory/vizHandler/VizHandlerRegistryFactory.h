@@ -13,7 +13,7 @@ namespace xolotlFactory
  * Build the desired type of handler registry.
  * @return True iff the handler registry was created successfully.
  */
-bool initializeVizHandler(bool useStdRegistry);
+bool initializeVizHandler(xolotlViz::IVizHandlerRegistry::RegistryType);
 
 /**
  * Access the handler registry.

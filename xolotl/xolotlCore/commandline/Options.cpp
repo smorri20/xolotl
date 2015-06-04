@@ -29,7 +29,7 @@ Options::Options() :
 		heliumFluxFlag(false),
 		fluxProfileFlag(false),
         perfRegistryType( xolotlPerf::IHandlerRegistry::std ),
-		vizStandardHandlersFlag(false),
+        vizRegistryType( xolotlViz::IVizHandlerRegistry::std ),
 		materialFlag(false) {
 
 	// Create the network option handler
