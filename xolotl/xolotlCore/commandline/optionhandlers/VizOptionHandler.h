@@ -18,7 +18,7 @@ public:
 	 */
 	VizOptionHandler() :
 		OptionHandler("vizHandler",
-				"vizHandler {std,dummy,png,eps}      "
+				"vizHandler {std,dummy,png,eps}    "
 				"Which set of handlers to use for the visualization. (default = dummy)") {}
 
 	/**

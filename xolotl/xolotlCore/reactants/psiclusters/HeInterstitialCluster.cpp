@@ -9,7 +9,6 @@ using namespace xolotlCore;
 HeInterstitialCluster::HeInterstitialCluster(int numHelium, int numInterstitial,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		PSICluster(1, registry), numHe(numHelium), numI(numInterstitial) {
-
 	// Set the cluster size as the sum of
 	// the number of Helium and Interstitials
 	size = numHe + numI;
@@ -43,9 +42,6 @@ HeInterstitialCluster::HeInterstitialCluster(const HeInterstitialCluster &other)
 	numI = other.numI;
 
 	return;
-}
-
-HeInterstitialCluster::~HeInterstitialCluster() {
 }
 
 std::shared_ptr<Reactant> HeInterstitialCluster::clone() {
@@ -106,7 +102,7 @@ void HeInterstitialCluster::createReactionConnectivity() {
 	auto reactants = network->getAll(heType);
 	for (int i = 0; i < reactants.size(); i++) {
 		auto heliumReactant = (PSICluster *) reactants[i];
-		auto heliumReactantSize = heliumReactant->getSize();
+		int heliumReactantSize = heliumReactant->getSize();
 		// Get the second reactant, i.e. HeI cluster with He number smaller
 		// by the size of the helium reactant
 		auto comp = getComposition();
@@ -174,7 +170,7 @@ void HeInterstitialCluster::createReactionConnectivity() {
 	reactants = network->getAll(vType);
 	for (int i = 0; i < reactants.size(); i++) {
 		auto vacancyReactant = (PSICluster *) reactants[i];
-		auto vacancyReactantSize = vacancyReactant->getSize();
+		int vacancyReactantSize = vacancyReactant->getSize();
 		// Get the second reactant, i.e. HeI cluster with I number bigger
 		// by the size of the vacancy reactant
 		auto comp = getComposition();
@@ -226,7 +222,6 @@ void HeInterstitialCluster::createReactionConnectivity() {
 }
 
 void HeInterstitialCluster::createDissociationConnectivity() {
-
 	// This cluster is always (He_a)(I_b)
 
 	// He Dissociation

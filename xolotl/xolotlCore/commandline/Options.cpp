@@ -3,15 +3,15 @@
 #include <TokenizedLineReader.h>
 #include <NetworkOptionHandler.h>
 #include <PetscOptionHandler.h>
-#include <StepSizeOptionHandler.h>
 #include <ConstTempOptionHandler.h>
 #include <TempProfileOptionHandler.h>
-#include <FluenceOptionHandler.h>
 #include <FluxOptionHandler.h>
 #include <FluxProfileOptionHandler.h>
 #include <PerfOptionHandler.h>
 #include <VizOptionHandler.h>
 #include <MaterialOptionHandler.h>
+#include <VConcentrationOptionHandler.h>
+#include <DimensionsOptionHandler.h>
 #include "Options.h"
 
 namespace xolotlCore {
@@ -21,29 +21,26 @@ Options::Options() :
 		exitCode(EXIT_SUCCESS),
 		petscArgc(0),
 		petscArgv(NULL),
-		stepSize(0.0),
 		constTempFlag(false),
 		tempProfileFlag(false),
 		constTemperature(1000.0),
-		heliumFluenceFlag(false),
 		heliumFluxFlag(false),
+		heliumFlux(0.0),
 		fluxProfileFlag(false),
-        perfRegistryType( xolotlPerf::IHandlerRegistry::std ),
+		perfRegistryType(xolotlPerf::IHandlerRegistry::std),
         vizRegistryType( xolotlViz::IVizHandlerRegistry::std ),
-		materialFlag(false) {
+		materialName(""),
+		initialVConcentration(0.0),
+		dimensionNumber(1) {
 
 	// Create the network option handler
 	auto networkHandler = new NetworkOptionHandler();
 	// Create the PETSc option handler
 	auto petscHandler = new PetscOptionHandler();
-	// Create the step size option option handler
-	auto stepHandler = new StepSizeOptionHandler();
 	// Create the constant temperature option handler
 	auto constTempHandler = new ConstTempOptionHandler();
 	// Create the temperature profile option handler
 	auto tempProfileHandler = new TempProfileOptionHandler();
-	// Create the maximum fluence option handler
-	auto fluenceHandler = new FluenceOptionHandler();
 	// Create the flux option handler
 	auto fluxHandler = new FluxOptionHandler();
 	// Create the flux time profile option handler
@@ -54,24 +51,28 @@ Options::Options() :
 	auto vizHandler = new VizOptionHandler();
 	// Create the material option handler
 	auto materialHandler = new MaterialOptionHandler();
+	// Create the initial vacancy concentration option handler
+	auto vConcHandler = new VConcentrationOptionHandler();
+	// Create the dimensions option handler
+	auto dimHandler = new DimensionsOptionHandler();
 
 	// Add our notion of which options we support.
 	optionsMap[networkHandler->key] = networkHandler;
 	optionsMap[petscHandler->key] = petscHandler;
-	optionsMap[stepHandler->key] = stepHandler;
 	optionsMap[constTempHandler->key] = constTempHandler;
 	optionsMap[tempProfileHandler->key] = tempProfileHandler;
-	optionsMap[fluenceHandler->key] = fluenceHandler;
 	optionsMap[fluxHandler->key] = fluxHandler;
 	optionsMap[fluxProfileHandler->key] = fluxProfileHandler;
 	optionsMap[perfHandler->key] = perfHandler;
 	optionsMap[vizHandler->key] = vizHandler;
 	optionsMap[materialHandler->key] = materialHandler;
+	optionsMap[vConcHandler->key] = vConcHandler;
+	optionsMap[dimHandler->key] = dimHandler;
 }
 
 Options::~Options(void) {
 	// Release the items in our map of potential options.
-	for (auto iter = optionsMap.begin(); iter != optionsMap.end(); iter++) {
+	for (auto iter = optionsMap.begin(); iter != optionsMap.end(); ++iter) {
 		auto currOpt = iter->second;
 		delete currOpt;
 	}
@@ -158,8 +159,9 @@ void Options::showHelp(std::ostream& os) const {
 			<< "See the Xolotl documentation for PETSc options. \n"
 			<< "Supported options:\n";
 
+	// Loop on each option help message
 	for (OptionsMap::const_iterator iter = optionsMap.begin();
-			iter != optionsMap.end(); iter++) {
+			iter != optionsMap.end(); ++iter) {
 		os << "  " << iter->second->helpMessage << '\n';
 	}
 	os << std::endl;

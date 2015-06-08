@@ -68,7 +68,7 @@ void SurfacePlot::render(std::string fileName) {
 	}
 
 	// Add the axisValues to a field of the data set
-	eavlField *field = new eavlField(1, axisValues, eavlField::ASSOC_POINTS);
+	eavlField *field = new eavlField(0, axisValues, eavlField::ASSOC_CELL_SET, "RectilinearGridCells");
 	data->AddField(field);
 
     // Pick a background color
@@ -111,7 +111,7 @@ void SurfacePlot::render(std::string fileName) {
 
     // Print the axis labels
     auto axis1Annotation = new eavlScreenTextAnnotation(window, plotLabelProvider->axis1Label,
-    		eavlColor::white, 0.05, 0.0, -0.35);
+    		eavlColor::white, 0.05, 0.0, -0.9);
     axis1Annotation->SetAlignment(eavlTextAnnotation::HCenter, eavlTextAnnotation::VCenter);
     window->AddAnnotation(axis1Annotation);
     auto axis2Annotation = new eavlScreenTextAnnotation(window, plotLabelProvider->axis2Label,

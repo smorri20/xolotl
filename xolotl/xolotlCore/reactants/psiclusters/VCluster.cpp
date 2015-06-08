@@ -8,7 +8,6 @@ using namespace xolotlCore;
 
 VCluster::VCluster(int nV, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		PSICluster(nV, registry) {
-
 	// Set the reactant name appropriately
 	std::stringstream nameStream;
 	nameStream << "V_" << size;
@@ -28,9 +27,6 @@ VCluster::VCluster(int nV, std::shared_ptr<xolotlPerf::IHandlerRegistry> registr
 			- pow(
 					(3.0 * pow(xolotlCore::latticeConstant, 3.0))
 							/ (8.0 * xolotlCore::pi), (1.0 / 3.0));
-}
-
-VCluster::~VCluster() {
 }
 
 std::shared_ptr<Reactant> VCluster::clone() {
@@ -76,7 +72,7 @@ void VCluster::createReactionConnectivity() {
 	// Vacancy-Interstitial annihilation producing this cluster
 	// I_b + V_(a+b) --> V_a
 	// All the I clusters are already in reactants
-	auto reactantsSize = reactants.size();
+	int reactantsSize = reactants.size();
 	for (int i = 0; i < reactantsSize; i++) {
 		auto firstReactant = (PSICluster *) reactants[i];
 		// Get the vacancy cluster that is bigger than the interstitial

@@ -9,7 +9,6 @@ using namespace xolotlCore;
 HeVCluster::HeVCluster(int numHe, int numV,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		PSICluster(1, registry), numHe(numHe), numV(numV) {
-
 	// Set the cluster size as the sum of
 	// the number of Helium and Vacancies
 	size = numHe + numV;
@@ -45,9 +44,6 @@ HeVCluster::HeVCluster(const HeVCluster &other) :
 	return;
 }
 
-HeVCluster::~HeVCluster() {
-}
-
 std::shared_ptr<Reactant> HeVCluster::clone() {
 	std::shared_ptr<Reactant> reactant(new HeVCluster(*this));
 
@@ -66,7 +62,7 @@ void HeVCluster::replaceInCompound(std::vector<Reactant *> & reactants,
 	for (int i = 0; i < reactants.size(); i++) {
 		// Get the second reactant and its size
 		auto secondReactant = (PSICluster *) reactants[i];
-		auto secondReactantSize = secondReactant->getSize();
+		int secondReactantSize = secondReactant->getSize();
 		// Create the composition vector
 		productReactantComp = myComp;
 		// Updated the modified components
@@ -168,7 +164,7 @@ void HeVCluster::createReactionConnectivity() {
 	auto reactants = network->getAll(heType);
 	for (int i = 0; i < reactants.size(); i++) {
 		auto heliumReactant = (PSICluster *) reactants[i];
-		auto heliumReactantSize = heliumReactant->getSize();
+		int heliumReactantSize = heliumReactant->getSize();
 		// Get the second reactant, i.e. HeV cluster with He number smaller
 		// by the size of the helium reactant
 		auto comp = getComposition();
@@ -238,7 +234,7 @@ void HeVCluster::createReactionConnectivity() {
 	comp = getComposition();
 	for (int i = 0; i < reactants.size(); i++) {
 		auto interstitialReactant = (PSICluster *) reactants[i];
-		auto interstitialReactantSize = interstitialReactant->getSize();
+		int interstitialReactantSize = interstitialReactant->getSize();
 		// Get the second reactant, i.e. HeV cluster with V number bigger
 		// by the size of the interstitial reactant
 		std::vector<int> compositionVec = { comp[heType],
@@ -379,7 +375,6 @@ void HeVCluster::createReactionConnectivity() {
 }
 
 void HeVCluster::createDissociationConnectivity() {
-
 	// This cluster is always (He_a)(V_b)
 
 	// He Dissociation
