@@ -101,11 +101,11 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 			concOffset, updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 2.50286e+23, 0.01); // Create I
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 2.00220e+23, 0.01); // Create I
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[7], 0.0, 0.01); // He2
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[16], 0.0, 0.01); // Doesn't create He2V
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[12], -5.00660e+22, 0.01); // He7
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[21], 5.00660e+22, 0.01); // Create He7V
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[31], 5.00660e+22, 0.01); // Create He7V2
 
 	// Initialize the indices and values to set in the Jacobian
 	int nHelium = network->getAll(heType).size();

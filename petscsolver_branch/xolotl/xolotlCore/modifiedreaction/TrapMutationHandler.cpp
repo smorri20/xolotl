@@ -15,10 +15,12 @@ void TrapMutationHandler::initialize(int surfacePos, PSIClusterReactionNetwork *
 	auto bubbles = network->getAll(heVType);
 	// Get the single interstitial cluster
 	auto singleInterstitial = (PSICluster *) network->get(iType, 1);
+	// Get the double interstitial cluster
+	auto doubleInterstitial = (PSICluster *) network->get(iType, 2);
 
-	// If the single I cluster is not in the network,
+	// If the I clusters are not in the network,
 	// there is no trap-mutation
-	if (!singleInterstitial) {
+	if (!singleInterstitial || !doubleInterstitial) {
 		// Loop on the grid points
 		for (int i = 0; i < grid.size(); i++) {
 			// Create the list (vector) of indices at this grid point
@@ -39,8 +41,9 @@ void TrapMutationHandler::initialize(int surfacePos, PSIClusterReactionNetwork *
 		// The helium cluster is connected to itself
 		cluster->setDissociationConnectivity(cluster->getId());
 
-		// The single interstitial cluster is connected to He
+		// The single and double interstitial clusters are connected to He
 		singleInterstitial->setDissociationConnectivity(cluster->getId());
+		doubleInterstitial->setDissociationConnectivity(cluster->getId());
 
 		// Loop on the bubbles
 		for (int j = 0; j < bubbles.size(); j++) {
@@ -48,8 +51,8 @@ void TrapMutationHandler::initialize(int surfacePos, PSIClusterReactionNetwork *
 			auto bubble =  (PSICluster *) bubbles[j];
 			auto comp = bubble->getComposition();
 
-			// We are only interested in bubbles with one vacancy
-			if (comp[vType] > 1) continue;
+			// We are only interested in bubbles with one or two vacancy
+			if (comp[vType] > 2) continue;
 
 			// Connect with He if the number of helium in the bubble is the same
 			if (comp[heType] == heSize) {
@@ -58,9 +61,11 @@ void TrapMutationHandler::initialize(int surfacePos, PSIClusterReactionNetwork *
 		}
 	}
 
-	// This method fills one vector to define the modified trap-mutation: the first value
-	// correspond to the depth at which the He1 cluster undergo trap-mutation (if the value
-	// is negative it means that it doesn't TM), the second value correspond to He2, etc.
+	// This method fills two vectors to define the modified trap-mutation: for the first one,
+	// the first value corresponds to the depth at which the He1 cluster undergo trap-mutation
+	// (if the value is negative it means that it doesn't TM), the second value correspond
+	// to He2, etc.; the second vector gives the size of the vacancies into which He
+	// trap-mutates. Information about desorption is also initialized here.
 	initializeDepthSize();
 
 	// Method that will fill the index vector that is actually used during the solving steps
@@ -108,9 +113,8 @@ void TrapMutationHandler::initializeIndex(int surfacePos, PSIClusterReactionNetw
 					// Get the bubble and its composition
 					auto bubble =  (PSICluster *) bubbles[k];
 					auto comp = bubble->getComposition();
-					// We are interested in bubbles with only one vacancy
-					if (comp[vType] > 1) continue;
-					if (comp[heType] == j+1) {
+					// Get the correct bubble
+					if (comp[heType] == j+1 && comp[vType] == sizeVec[j]) {
 						// Add this bubble to the indices
 						indices.push_back(k);
 					}
@@ -156,29 +160,30 @@ void TrapMutationHandler::computeTrapMutation(PSIClusterReactionNetwork *network
 		int xi, double *concOffset, double *updatedConcOffset) {
 	// Get all the HeV bubbles
 	auto bubbles = network->getAll(heVType);
-	// Get the single interstitial cluster
-	auto singleInterstitial = (PSICluster *) network->get(iType, 1);
-
-	// Don't do anything if I is not in the network
-	if (!singleInterstitial) return;
-
-	// Get its ID
-	int interstitialIndex = singleInterstitial->getId() - 1;
+	// Initialyze the pointers to interstitial and helium clusters and their ID
+	PSICluster * iCluster, * heCluster, * bubble;
+	int iIndex, heIndex, bubbleIndex;
 
 	// Initialize the rate of the reaction
 	double rate = 0.0;
+
 	// Get the pointer to list of indices at this grid point
 	std::vector<int> * indices = &indexVector[xi];
 	// Loop on the list
 	for (int i = 0; i < indices->size(); i++) {
 		// Get the stored bubble and its ID
-		auto bubble = (PSICluster *) bubbles[indices->at(i)];
-		int bubbleIndex = bubble->getId() - 1;
+		bubble = (PSICluster *) bubbles[indices->at(i)];
+		bubbleIndex = bubble->getId() - 1;
 
 		// Get the helium cluster with the same number of He and its ID
 		auto comp = bubble->getComposition();
-		auto heCluster = (PSICluster *) network->get(heType, comp[heType]);
-		int heIndex = heCluster->getId() - 1;
+		heCluster = (PSICluster *) network->get(heType, comp[heType]);
+		heIndex = heCluster->getId() - 1;
+
+		// Get the interstitial cluster with the same number of I as the number
+		// of vacancies in the bubble and its ID
+		iCluster = (PSICluster *) network->get(iType, comp[vType]);
+		iIndex = iCluster->getId() - 1;
 
 		// Get the initial concentration of helium
 		double oldConc = concOffset[heIndex];
@@ -197,7 +202,7 @@ void TrapMutationHandler::computeTrapMutation(PSIClusterReactionNetwork *network
 		// Update the concentrations (the helium cluster loses its concentration)
 		updatedConcOffset[heIndex] -= rate * oldConc;
 		updatedConcOffset[bubbleIndex] += rate * oldConc;
-		updatedConcOffset[interstitialIndex] += rate * oldConc;
+		updatedConcOffset[iIndex] += rate * oldConc;
 	}
 
 	return;
@@ -208,30 +213,30 @@ int TrapMutationHandler::computePartialsForTrapMutation(
 		int *indices, int xi) {
 	// Get all the HeV bubbles
 	auto bubbles = network->getAll(heVType);
+	// Initialyze the pointers to interstitial and helium clusters and their ID
+	PSICluster * iCluster, * heCluster, * bubble;
+	int iIndex, heIndex, bubbleIndex;
 
-	// Get the single interstitial cluster
-	auto singleInterstitial = (PSICluster *) network->get(iType, 1);
-
-	// Don't do anything if I is not in the network
-	if (!singleInterstitial) return 0;
-
-	// Get its ID
-	int interstitialIndex = singleInterstitial->getId() - 1;
+	// Initialize the rate of the reaction
+	double rate = 0.0;
 
 	// Get the pointer to list of indices at this grid point
 	std::vector<int> * clusterIndices = &indexVector[xi];
-	// Initialize the rate of the reaction
-	double rate = 0.0;
 	// Loop on the list
 	for (int i = 0; i < clusterIndices->size(); i++) {
 		// Get the stored bubble and its ID
-		auto bubble = (PSICluster *) bubbles[clusterIndices->at(i)];
-		int bubbleIndex = bubble->getId() - 1;
+		bubble = (PSICluster *) bubbles[clusterIndices->at(i)];
+		bubbleIndex = bubble->getId() - 1;
 
 		// Get the helium cluster with the same number of He and its ID
 		auto comp = bubble->getComposition();
-		auto heCluster = (PSICluster *) network->get(heType, comp[heType]);
-		int heIndex = heCluster->getId() - 1;
+		heCluster = (PSICluster *) network->get(heType, comp[heType]);
+		heIndex = heCluster->getId() - 1;
+
+		// Get the interstitial cluster with the same number of I as the number
+		// of vacancies in the bubble and its ID
+		iCluster = (PSICluster *) network->get(iType, comp[vType]);
+		iIndex = iCluster->getId() - 1;
 
 		// Check the desorption
 		if (comp[heType] == desorp.size) {
@@ -253,7 +258,7 @@ int TrapMutationHandler::computePartialsForTrapMutation(
 		val[(i * 3) + 1] = rate;
 
 		// Set the interstitial cluster partial derivative
-		indices[(i * 3) + 2] = interstitialIndex;
+		indices[(i * 3) + 2] = iIndex;
 		val[(i * 3) + 2] = rate;
 	}
 

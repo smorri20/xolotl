@@ -14,10 +14,12 @@ class W111TrapMutationHandler: public TrapMutationHandler {
 private:
 
 	/**
-	 * Method initializing the depth vector and desorption information.
+	 * Method initializing the depth vector, the size vector,
+	 * and desorption information.
 	 */
 	void initializeDepthSize() {
 		depthVec = {0.6, 0.8, 1.1, 1.1, 1.1, 1.1, 1.1};
+		sizeVec = {1, 1, 1, 1, 1, 1, 2};
 
 		// He1 desorpts with 35%
 		desorp = Desorption(1, 0.35);

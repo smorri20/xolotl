@@ -35,8 +35,11 @@ protected:
 		: size(s), portion(p) {}
 	};
 
-	//! The vector containing the different depths for the modified trap mutation
+	//! The vector containing the different depths for the modified trap-mutation
 	std::vector<double> depthVec;
+
+	//! The vector containing the different vacancy size for the modified trap-mutation
+	std::vector<int> sizeVec;
 
 	//! The trap-mutation rate
 	double kMutation;
@@ -55,7 +58,11 @@ protected:
 	Desorption desorp;
 
 	/**
-	 * Method initializing the depth vector and desorption information.
+	 * This method fills two vectors to define the modified trap-mutation: for the first one,
+	 * the first value corresponds to the depth at which the He1 cluster undergo trap-mutation
+	 * (if the value is negative it means that it doesn't TM), the second value correspond
+	 * to He2, etc.; the second vector gives the size of the vacancies into which He
+	 * trap-mutates. Information about desorption is also initialized here.
 	 * It needs to be implemented by the daughter classes.
 	 */
 	virtual void initializeDepthSize() {return;}
@@ -75,9 +82,9 @@ public:
 
 	/**
 	 * The initialize method has to add connectivity between the He clusters and
-	 * HeV clusters of same number of He, and I. It must also initialize the
-	 * rates of the reactions and define which trap-mutation is allowed at
-	 * each grid point.
+	 * HeV_i clusters of same number of He, and I_i, with i = 1, 2. It must also
+	 * initialize the rates of the reactions and define which trap-mutation is allowed
+	 * at each grid point.
 	 *
 	 * @param surfacePos The index of the position of the surface
 	 * @param network The network
