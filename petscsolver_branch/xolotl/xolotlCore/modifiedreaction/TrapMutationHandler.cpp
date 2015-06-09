@@ -101,7 +101,7 @@ void TrapMutationHandler::initializeIndex(int surfacePos, PSIClusterReactionNetw
 		// Loop on the depth vector
 		for (int j = 0; j < depthVec.size(); j++) {
 			// Check if a helium cluster undergo TM at this depth
-			if (std::fabs(depth - depthVec[j])  < 1.0e-15) {
+			if (std::fabs(depth - depthVec[j])  < 0.01) {
 				// Add the bubble of size j+1 to the indices
 				// Loop on the bubbles
 				for (int k = 0; k < bubbles.size(); k++) {
@@ -117,6 +117,12 @@ void TrapMutationHandler::initializeIndex(int surfacePos, PSIClusterReactionNetw
 				}
 			}
 		}
+
+//		std::cout << "Depth " << depth << " at i " << i << ": ";
+//		for (int j = 0; j < indices.size(); j++) {
+//			std::cout << indices[j] << " ";
+//		}
+//		std::cout << std::endl;
 
 		// Add indices to the index vector
 		indexVector.push_back(indices);
