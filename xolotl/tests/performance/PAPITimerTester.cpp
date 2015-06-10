@@ -81,8 +81,8 @@ BOOST_AUTO_TEST_CASE(checkTiming)
 			  << PAPI_VERSION_MINOR(PAPI_VERSION) << "." << PAPI_VERSION_REVISION(PAPI_VERSION) << "\n");
 
 
-	double wall, usr, sys;
-	double wallStart, wallStop;
+	//double wall, usr, sys;
+	//double wallStart, wallStop;
 
     // Simulate some computation/communication with a sleep of known duration.
     // Time the duration of the operation.

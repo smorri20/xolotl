@@ -33,8 +33,8 @@ BOOST_AUTO_TEST_CASE(checkTiming) {
 	double sleepSeconds = 2.0;
 
 
-	double wall, usr, sys;
-	double wallStart, wallStop;
+	//double wall, usr, sys;
+	//double wallStart, wallStop;
 
     // Simulate some computation/communication with a sleep of known duration.
     // Time the duration of the operation.
