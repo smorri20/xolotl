@@ -22,11 +22,11 @@ Reactant::Reactant(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 Reactant::Reactant(const Reactant &other) :
 		concentration(other.concentration),
 		name(other.name),
+		typeName(other.typeName),
 		id(other.id),
-		compositionMap(other.compositionMap),
 		temperature(0.0),
-		handlerRegistry(other.handlerRegistry),
-		typeName(other.typeName)  {}
+		compositionMap(other.compositionMap),
+		handlerRegistry(other.handlerRegistry) {}
 
 std::shared_ptr<Reactant> Reactant::clone() {
 	std::shared_ptr<Reactant> reactant(new Reactant(*this));
