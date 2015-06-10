@@ -101,11 +101,11 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 			concVector, updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], -2.03523e+10, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], -3.15092e+10, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], -2.02166e+10, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], -3.12551e+10, 0.01);
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], -5.21336e+10, 0.01);
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], -9.54688e+10, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], -1.62910e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], -1.14847e+11, 0.01);
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[5], -6.24245e+09, 0.01);
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[6], 0.0, 0.01); // Does not advect
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[7], 0.0, 0.01); // Does not advect
@@ -132,10 +132,10 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	BOOST_REQUIRE_EQUAL(indices[5], 5);
 
 	// Check values
-	BOOST_REQUIRE_CLOSE(val[0],-335016685.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[1], 20938543.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[2], -406898032.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[3], 25431127.0, 0.01);
+	BOOST_REQUIRE_CLOSE(val[0],-332783240.0, 0.01);
+	BOOST_REQUIRE_CLOSE(val[1], 20798953.0, 0.01);
+	BOOST_REQUIRE_CLOSE(val[2], -403616596.0, 0.01);
+	BOOST_REQUIRE_CLOSE(val[3], 25226037.0, 0.01);
 
 	// Finalize MPI
 	MPI_Finalize();

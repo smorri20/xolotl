@@ -58,10 +58,10 @@ public:
 			double sinkStrength = 0.0;
 			switch (heSize) {
 				case 1:
-					sinkStrength = 1.50e-3;
+					sinkStrength = 1.49e-3;
 					break;
 				case 2:
-					sinkStrength = 3.72e-3;
+					sinkStrength = 3.69e-3;
 					break;
 				case 3:
 					sinkStrength = 12.34e-3;
@@ -70,7 +70,7 @@ public:
 					sinkStrength = 14.11e-3;
 					break;
 				case 5:
-					sinkStrength = 27.15e-3;
+					sinkStrength = 19.14e-3;
 					break;
 				case 6:
 					sinkStrength = 35.77e-3;
