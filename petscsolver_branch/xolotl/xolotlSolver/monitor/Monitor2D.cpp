@@ -104,7 +104,7 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 
 	// Add a concentration sub group
 	xolotlCore::HDF5Utils::addConcentrationSubGroup(timestep, networkSize, time,
-			currentTimeStep);
+			currentTimeStep, 0);
 
 	// Loop on the full grid
 	for (int j = 0; j < My; j++) {

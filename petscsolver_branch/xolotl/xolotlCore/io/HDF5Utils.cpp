@@ -172,7 +172,7 @@ void HDF5Utils::fillNetwork(PSIClusterReactionNetwork *network) {
 }
 
 void HDF5Utils::addConcentrationSubGroup(int timeStep, int networkSize,
-		double time, double deltaTime) {
+		double time, double deltaTime, int iSurface) {
 	// Set the name of the sub group
 	std::stringstream subGroupName;
 	subGroupName << "concentration_" << timeStep;
@@ -183,28 +183,31 @@ void HDF5Utils::addConcentrationSubGroup(int timeStep, int networkSize,
 			H5P_DEFAULT, H5P_DEFAULT);
 
 	// Create, write, and close the absolute time attribute
-	hid_t timeDataspaceId = H5Screate(H5S_SCALAR);
+	hid_t dataspaceId = H5Screate(H5S_SCALAR);
 	hid_t timeAttributeId = H5Acreate2(subConcGroupId, "absoluteTime", H5T_IEEE_F64LE,
-			timeDataspaceId,
+			dataspaceId,
 			H5P_DEFAULT, H5P_DEFAULT);
 	status = H5Awrite(timeAttributeId, H5T_IEEE_F64LE, &time);
-	status = H5Sclose(timeDataspaceId);
 	status = H5Aclose(timeAttributeId);
 
 	// Create, write, and close the timestep time attribute
-	hid_t deltaDataspaceId = H5Screate(H5S_SCALAR);
 	hid_t deltaAttributeId = H5Acreate2(subConcGroupId, "deltaTime", H5T_IEEE_F64LE,
-			deltaDataspaceId,
+			dataspaceId,
 			H5P_DEFAULT, H5P_DEFAULT);
 	status = H5Awrite(deltaAttributeId, H5T_IEEE_F64LE, &deltaTime);
-	status = H5Sclose(deltaDataspaceId);
 	status = H5Aclose(deltaAttributeId);
 
+	// Create, write, and close the surface position attribute
+	hid_t surfaceAttributeId = H5Acreate2(subConcGroupId, "iSurface", H5T_STD_I32LE,
+			dataspaceId,
+			H5P_DEFAULT, H5P_DEFAULT);
+	status = H5Awrite(surfaceAttributeId, H5T_STD_I32LE, &iSurface);
+	status = H5Aclose(surfaceAttributeId);
+	status = H5Sclose(dataspaceId);
+
 	// Overwrite the last time step attribute of the concentration group
-	hid_t lastDataspaceId = H5Screate(H5S_SCALAR);
 	hid_t lastAttributeId = H5Aopen(concentrationGroupId, "lastTimeStep", H5P_DEFAULT);
 	status = H5Awrite(lastAttributeId, H5T_STD_I32LE, &timeStep);
-	status = H5Sclose(lastDataspaceId);
 	status = H5Aclose(lastAttributeId);
 
 	// Create property list for independent dataset write
@@ -418,6 +421,39 @@ void HDF5Utils::readTimes(const std::string& fileName, int lastTimeStep, double 
 	status = H5Fclose(fileId);
 
 	return;
+}
+
+int HDF5Utils::readSurface(const std::string& fileName, int lastTimeStep) {
+	// Initialize the surface position
+	int iSurface = 0;
+
+	// Set up file access property list with parallel I/O access
+	propertyListId = H5Pcreate(H5P_FILE_ACCESS);
+	H5Pset_fapl_mpio(propertyListId, MPI_COMM_WORLD, MPI_INFO_NULL);
+
+	// Open the given HDF5 file with read only access
+	fileId = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, propertyListId);
+
+	// Close the property list
+	status = H5Pclose(propertyListId);
+
+	// Set the name of the sub group
+	std::stringstream subGroupName;
+	subGroupName << "concentrationsGroup/concentration_" << lastTimeStep;
+
+	// Open this specific concentration sub group
+	subConcGroupId = H5Gopen(fileId, subGroupName.str().c_str(), H5P_DEFAULT);
+
+	// Open and read the iSurface attribute
+	hid_t attributeId = H5Aopen(subConcGroupId, "iSurface", H5P_DEFAULT);
+	status = H5Aread(attributeId, H5T_STD_I32LE, &iSurface);
+	status = H5Aclose(attributeId);
+
+	// Close everything
+	status = H5Gclose(subConcGroupId);
+	status = H5Fclose(fileId);
+
+	return iSurface;
 }
 
 std::vector<std::vector<double> > HDF5Utils::readNetwork(const std::string& fileName) {

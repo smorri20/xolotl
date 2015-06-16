@@ -60,6 +60,8 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 	// Set the time information
 	double currentTime = 0.0001;
 	double currentTimeStep = 0.000001;
+	// Set the surface information
+	int iSurface = 0;
 	// Write the header in the HDF5 file
 	HDF5Utils::fillHeader(nGrid, stepSize);
 
@@ -73,7 +75,7 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 	HDF5Utils::openFile("test.h5");
 
 	// Add the concentration sub group
-	HDF5Utils::addConcentrationSubGroup(timeStep, networkSize, currentTime, currentTimeStep);
+	HDF5Utils::addConcentrationSubGroup(timeStep, networkSize, currentTime, currentTimeStep, iSurface);
 
 	// Add the concentration dataset
 	int length = 5;
@@ -114,8 +116,12 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 	// Read the times
 	double t = 0.0, dt = 0.0;
 	HDF5Utils::readTimes("test.h5", 0, t, dt);
-	BOOST_REQUIRE_EQUAL(t, currentTime);
-	BOOST_REQUIRE_EQUAL(dt, currentTimeStep);
+	BOOST_REQUIRE_CLOSE(t, currentTime, 0.0001);
+	BOOST_REQUIRE_CLOSE(dt, currentTimeStep, 0.0001);
+
+	// Read the surface position
+	int surfacePos = HDF5Utils::readSurface("test.h5", 0);
+	BOOST_REQUIRE_EQUAL(surfacePos, iSurface);
 
 	// Read the network of the written file
 	auto networkVector = HDF5Utils::readNetwork("test.h5");

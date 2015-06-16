@@ -89,7 +89,7 @@ void PetscSolver2DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	return;
 }
 
-void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) const {
+void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) {
 	PetscErrorCode ierr;
 
 	// Pointer for the concentration vector

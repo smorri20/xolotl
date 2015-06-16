@@ -77,7 +77,7 @@ public:
 	 * @param da The PETSc distributed array
 	 * @param C The PETSc solution vector
 	 */
-	virtual void initializeConcentration(DM &da, Vec &C) const = 0;
+	virtual void initializeConcentration(DM &da, Vec &C) = 0;
 
 	/**
 	 * Compute the new concentrations for the RHS function given an initial

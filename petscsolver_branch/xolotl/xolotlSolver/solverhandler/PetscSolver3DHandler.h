@@ -53,7 +53,7 @@ public:
 	 * Initialize the concentration solution vector.
      * \see ISolverHandler.h
 	 */
-	void initializeConcentration(DM &da, Vec &C) const;
+	void initializeConcentration(DM &da, Vec &C);
 
 	/**
 	 * Compute the new concentrations for the RHS function given an initial

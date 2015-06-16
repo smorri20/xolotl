@@ -84,7 +84,7 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	return;
 }
 
-void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
+void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) {
 	PetscErrorCode ierr;
 
 	// Pointer for the concentration vector
@@ -103,6 +103,10 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 	int tempTimeStep = -2;
 	bool hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(networkName,
 			tempTimeStep);
+
+	// Get the actual surface position if concentrations were stored
+	if (hasConcentrations)
+		surfacePosition = xolotlCore::HDF5Utils::readSurface(networkName, tempTimeStep);
 
 	// Get the total size of the grid for the boundary conditions
 	int xSize = grid.size();

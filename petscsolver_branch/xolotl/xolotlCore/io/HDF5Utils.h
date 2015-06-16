@@ -51,9 +51,10 @@ namespace HDF5Utils {
 	 * @param networkSize The total number of cluster in the network
 	 * @param time The physical time at this time step
 	 * @param deltaTime The physical length of the time step
+	 * @param iSurface The current position of the surface
 	 */
 	void addConcentrationSubGroup(int timeStep, int networkSize, double time,
-			double deltaTime);
+			double deltaTime, int iSurface);
 
 	/**
 	 * Add the concentration dataset at a specific grid point.
@@ -119,6 +120,15 @@ namespace HDF5Utils {
 	 */
 	void readTimes(const std::string& fileName, int lastTimeStep, double &time,
 			double &deltaTime);
+
+	/**
+	 * Read the surface position from the concentration group of a HDF5 file.
+	 *
+	 * @param fileName The name of the file to read from
+	 * @param lastTimeStep The value of the last written time step
+	 * @return The index of the surface position
+	 */
+	int readSurface(const std::string& fileName, int lastTimeStep);
 
 	/**
 	 * Read the network from a HDF5 file.
