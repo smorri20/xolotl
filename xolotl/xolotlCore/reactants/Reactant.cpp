@@ -10,13 +10,16 @@ using namespace xolotlCore;
 Reactant::Reactant() :
 		concentration(0.0),
 		name(""), id(0),
-		temperature(0.0) {}
+		temperature(0.0),
+		network(nullptr),
+		handlerRegistry(nullptr) {}
 
 Reactant::Reactant(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		concentration(0.0),
 		name(""),
 		id(0),
 		temperature(0.0),
+		network(nullptr),
 		handlerRegistry(registry) {}
 
 Reactant::Reactant(const Reactant &other) :
@@ -24,7 +27,8 @@ Reactant::Reactant(const Reactant &other) :
 		name(other.name),
 		typeName(other.typeName),
 		id(other.id),
-		temperature(0.0),
+		temperature(other.temperature),
+		network(other.network),
 		compositionMap(other.compositionMap),
 		handlerRegistry(other.handlerRegistry) {}
 
@@ -38,6 +42,7 @@ Reactant::Reactant(double conc, std::shared_ptr<xolotlPerf::IHandlerRegistry> re
 		name(""),
 		id(0),
 		temperature(0.0),
+		network(nullptr),
 		handlerRegistry(registry) {}
 
 double Reactant::getConcentration() const {

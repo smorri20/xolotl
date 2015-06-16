@@ -26,6 +26,8 @@ PSICluster::PSICluster() :
 	compositionMap[iType] = 0;
 	// Set the default reaction radius to 0. (Doesn't react.)
 	reactionRadius = 0.0;
+	// Set the initial index/id to -1
+	thisNetworkIndex = -1;
 
 	return;
 }
@@ -49,6 +51,8 @@ PSICluster::PSICluster(const int clusterSize,
 	compositionMap[iType] = 0;
 	// Set the default reaction radius to 0. (Doesn't react.)
 	reactionRadius = 0.0;
+	// Set the initial index/id to -1
+	thisNetworkIndex = -1;
 
 	return;
 }
@@ -513,7 +517,7 @@ void PSICluster::setReactionNetwork(
 	// Get the index/id of this cluster in the reaction network.
 	thisNetworkIndex = id - 1;
 
-	// ----- Handle the connectivty for PSIClusters -----
+	// ----- Handle the connectivity for PSIClusters -----
 
 	// Generate the reactant and dissociation connectivity arrays.
 	// This only must be done once since the arrays are stored as
