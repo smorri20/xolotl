@@ -228,13 +228,12 @@ int main(int argc, char **argv) {
                                                 hwCtrStats );
         }
 
-    } catch (std::exception& e ) {
-
+    } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
         std::cerr << "Aborting." << std::endl;
         return EXIT_FAILURE;
 
-	} catch (std::string & error) {
+	} catch (const std::string& error) {
 		std::cout << error << std::endl;
 		std::cout << "Aborting." << std::endl;
 		return EXIT_FAILURE;
