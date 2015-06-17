@@ -29,8 +29,6 @@ BOOST_AUTO_TEST_CASE(checkTemperature) {
 	BOOST_REQUIRE_CLOSE(1000.0, reactant.getTemperature(), 0.0001);
 
 	return;
-
-	return;
 }
 
 BOOST_AUTO_TEST_CASE(checkComposition) {
