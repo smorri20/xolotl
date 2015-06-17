@@ -95,6 +95,12 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 	// Network size
 	const int networkSize = network->size();
 
+	// Get the vector of positions of the surface
+	std::vector<int> surfaceIndices;
+	for (int i = 0; i < My; i++) {
+		surfaceIndices.push_back(solverHandler->getSurfacePosition(i));
+	}
+
 	// Open the already created HDF5 file
 	xolotlCore::HDF5Utils::openFile(hdf5OutputName2D);
 
@@ -104,7 +110,10 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 
 	// Add a concentration sub group
 	xolotlCore::HDF5Utils::addConcentrationSubGroup(timestep, networkSize, time,
-			currentTimeStep, 0);
+			currentTimeStep);
+
+	// Write the surface positions in the concentration sub group
+	xolotlCore::HDF5Utils::writeSurface2D(timestep, surfaceIndices);
 
 	// Loop on the full grid
 	for (int j = 0; j < My; j++) {
@@ -817,7 +826,7 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		double hy = solverHandler->getStepSizeY();
 
 		// Save the header in the HDF5 file
-		xolotlCore::HDF5Utils::fillHeader(2, Mx, grid[1] - grid[0], My, hy);
+		xolotlCore::HDF5Utils::fillHeader(Mx, grid[1] - grid[0], My, hy);
 
 		// Save the network in the HDF5 file
 		xolotlCore::HDF5Utils::fillNetwork(network);

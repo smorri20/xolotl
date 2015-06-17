@@ -31,6 +31,11 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	// Generate the grid in the x direction
 	generateGrid(nx, hx, surfacePosition);
 
+//	for (int i = 0; i < grid.size(); i++) {
+//		std::cout << grid[i] - grid[surfacePosition] << " ";
+//	}
+//	std::cout << std::endl;
+
 	// Set the size of the partial derivatives vectors
 	clusterPartials.resize(dof, 0.0);
 	reactingPartialsForCluster.resize(dof, 0.0);
@@ -106,7 +111,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) {
 
 	// Get the actual surface position if concentrations were stored
 	if (hasConcentrations)
-		surfacePosition = xolotlCore::HDF5Utils::readSurface(networkName, tempTimeStep);
+		surfacePosition = xolotlCore::HDF5Utils::readSurface1D(networkName, tempTimeStep);
 
 	// Get the total size of the grid for the boundary conditions
 	int xSize = grid.size();

@@ -115,7 +115,10 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 
 	// Add a concentration sub group
 	xolotlCore::HDF5Utils::addConcentrationSubGroup(timestep, networkSize, time,
-			currentTimeStep, surfacePos);
+			currentTimeStep);
+
+	// Write the surface position in the concentration sub group
+	xolotlCore::HDF5Utils::writeSurface1D(timestep, surfacePos);
 
 	// Loop on the full grid
 	for (int i = 0; i < Mx; i++) {
@@ -778,6 +781,9 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 						// Get the ID of the cluster
 						int id = cluster->getId() - 1;
 						conc = gridPointSolution[id];
+
+//						if (conc > 1.0e-16)
+//							std::cout << "0 " << i << " " << conc << std::endl;
 					}
 				}
 				// He clusters
@@ -788,6 +794,9 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 						// Get the ID of the cluster
 						int id = cluster->getId() - 1;
 						conc = gridPointSolution[id];
+
+//						if (conc > 1.0e-16)
+//							std::cout << j << " 0 " << conc << std::endl;
 					}
 				}
 				// HeV clusters
@@ -799,6 +808,9 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 						// Get the ID of the cluster
 						int id = cluster->getId() - 1;
 						conc = gridPointSolution[id];
+
+//						if (conc > 1.0e-16)
+//							std::cout << j << " " << i << " " << conc << std::endl;
 					}
 				}
 

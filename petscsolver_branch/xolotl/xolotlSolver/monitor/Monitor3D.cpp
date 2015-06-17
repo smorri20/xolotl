@@ -97,6 +97,18 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 	// Network size
 	const int networkSize = network->size();
 
+	// Get the vector of positions of the surface
+	std::vector< std::vector<int> > surfaceIndices;
+	for (int i = 0; i < My; i++) {
+		// Create a temporary vector
+		std::vector<int> temp;
+		for (int j = 0; j < Mz; j++) {
+			temp.push_back(solverHandler->getSurfacePosition(i, j));
+		}
+		// Add the temporary vector to the vector of surface indices
+		surfaceIndices.push_back(temp);
+	}
+
 	// Open the already created HDF5 file
 	xolotlCore::HDF5Utils::openFile(hdf5OutputName3D);
 
@@ -106,7 +118,10 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 
 	// Add a concentration sub group
 	xolotlCore::HDF5Utils::addConcentrationSubGroup(timestep, networkSize, time,
-			currentTimeStep, 0);
+			currentTimeStep);
+
+	// Write the surface positions in the concentration sub group
+	xolotlCore::HDF5Utils::writeSurface3D(timestep, surfaceIndices);
 
 	// Loop on the full grid
 	for (int k = 0; k < Mz; k++) {

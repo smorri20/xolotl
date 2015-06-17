@@ -109,6 +109,19 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) {
 	bool hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
 			networkName, tempTimeStep);
 
+	// Get the actual surface position if concentrations were stored
+	if (hasConcentrations) {
+		auto surfaceIndices = xolotlCore::HDF5Utils::readSurface2D(networkName, tempTimeStep);
+
+		// Set the actual surface positions
+		for (int i = 0; i < surfaceIndices.size(); i++) {
+			surfacePosition[i] = surfaceIndices[i];
+		}
+	}
+
+	// Get the mean value of the surface position
+	int meanPosition = getMeanSurfacePosition();
+
 	// Get the total size of the grid for the boundary conditions
 	PetscInt Mx, My;
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
@@ -119,10 +132,10 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) {
 			"DMDAGetInfo failed.");
 
 	// Initialize the flux handler
-	fluxHandler->initializeFluxHandler(surfacePosition[0], grid, hY);
+	fluxHandler->initializeFluxHandler(meanPosition, grid, hY);
 
 	// Initialize the modified trap-mutation handler
-	mutationHandler->initialize(surfacePosition[0], network, grid);
+	mutationHandler->initialize(meanPosition, network, grid);
 
 	// Pointer for the concentration vector at a specific grid point
 	PetscScalar *concOffset;

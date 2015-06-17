@@ -914,6 +914,194 @@ public class Preprocessor {
 	}
 	
 	/**
+	 * This operation copies the surface position information from the already 
+	 * existing file to the concentration subgroup of the newly created file
+	 * 
+	 * @param fromName
+	 *            The name of the HDF5 file from which the surface position 
+	 *            information will be read
+	 * @param lastTimeStep
+	 *            The value of the last time step to know which concentration 
+	 *            group to look at
+	 * @param toName
+	 *            The name of the created HDF5 file
+	 */
+	public void copySurface(String fromName, int lastTimeStep, String toName) {
+		// The status of the previous HDF5 operation
+		int status;
+		
+		try {
+			// Open the file
+			int fileId = H5.H5Fopen(fromName, HDF5Constants.H5F_ACC_RDONLY,
+					HDF5Constants.H5P_DEFAULT);
+			
+			// Open the corresponding sub group
+			// Set the name of the sub group
+			String subGroupName = "concentrationsGroup/concentration_"
+					+ lastTimeStep;
+
+			// Open this specific concentration sub group
+			int concentrationGroupId = H5.H5Gopen(fileId, subGroupName,
+					HDF5Constants.H5P_DEFAULT);
+			
+			// Check if the surface position is an attribute 
+			// (thus the Xolotl was ran in 1D)
+			if (H5.H5Aexists(concentrationGroupId, "iSurface")) {
+				// Read the attribute
+				int[] iSurface = {-1};
+				int attributeId = H5.H5Aopen(concentrationGroupId,
+						"iSurface", HDF5Constants.H5P_DEFAULT);
+				status = H5.H5Aread(attributeId,
+						HDF5Constants.H5T_STD_I32LE, iSurface);
+				
+				// Close everything from the old file
+				status = H5.H5Aclose(attributeId);
+				status = H5.H5Gclose(concentrationGroupId);
+				status = H5.H5Fclose(fileId);
+				
+				// And write the surface attribute in the new file
+				// Open the created HDF5 file 
+				fileId = H5.H5Fopen(toName, HDF5Constants.H5F_ACC_RDWR,
+						HDF5Constants.H5P_DEFAULT);
+				// Open the new concentration subgroup
+				concentrationGroupId = H5.H5Gopen(fileId, 
+						"concentrationsGroup/concentration_0",
+						HDF5Constants.H5P_DEFAULT);
+				// Create and write the surface position attribute
+				int dataspaceId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
+				attributeId = H5.H5Acreate(concentrationGroupId, "iSurface",
+						HDF5Constants.H5T_STD_I32LE, dataspaceId,
+						HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
+				status = H5.H5Awrite(attributeId,
+						HDF5Constants.H5T_STD_I32LE, iSurface);
+				
+				// Close everything from the new file
+				status = H5.H5Aclose(attributeId);
+				status = H5.H5Sclose(dataspaceId);
+				status = H5.H5Gclose(concentrationGroupId);
+				status = H5.H5Fclose(fileId);
+			}
+			// If the surface position information is not an attribute, it is a dataset
+			else {
+				// Open the dataset
+				int datasetId = H5.H5Dopen(concentrationGroupId, "iSurface", 
+						HDF5Constants.H5P_DEFAULT);
+				// Get the dataspace from it
+				int dataspaceId = H5.H5Dget_space(datasetId);
+				// Determine the dimensionality
+				int n = H5.H5Sget_simple_extent_ndims(dataspaceId);
+				
+				// Two possibilities now: either the dataset is a one dimension one or 
+				// a two dimensions one, the former case corresponding to Xolotl running in 2D,
+				// the latter in 3D
+				if (n == 1) {
+					// We are in the Xolotl 2D case
+					// Initialize the dimensions of the dataset
+					long[] dims = { 0 };
+					// Get the dimension of the dataset
+					status = H5.H5Sget_simple_extent_dims(dataspaceId, dims, 
+							null);
+					// Create the array that will receive the surface positions information
+					int[] surfaceArray = new int[(int) dims[0]];
+
+					// Read the dataset
+					status = H5.H5Dread(datasetId, HDF5Constants.H5T_STD_I32LE, HDF5Constants.H5S_ALL, 
+							HDF5Constants.H5S_ALL, HDF5Constants.H5P_DEFAULT, surfaceArray);
+					
+					// Close everything from the old file
+					status = H5.H5Dclose(datasetId);
+					status = H5.H5Sclose(dataspaceId);
+					status = H5.H5Gclose(concentrationGroupId);
+					status = H5.H5Fclose(fileId);
+					
+					// Write this surface position dataset into the new file
+					// Open the created HDF5 file 
+					fileId = H5.H5Fopen(toName, HDF5Constants.H5F_ACC_RDWR,
+							HDF5Constants.H5P_DEFAULT);
+					// Open the new concentration subgroup
+					concentrationGroupId = H5.H5Gopen(fileId, 
+							"concentrationsGroup/concentration_0",
+							HDF5Constants.H5P_DEFAULT);
+					// Create the dataspace 
+					dataspaceId = H5.H5Screate_simple(1, dims, null);
+					// Create the dataset for the concentrations
+					datasetId = H5.H5Dcreate(concentrationGroupId, "iSurface",
+							HDF5Constants.H5T_STD_I32LE, dataspaceId,
+							HDF5Constants.H5P_DEFAULT,
+							HDF5Constants.H5P_DEFAULT,
+							HDF5Constants.H5P_DEFAULT);
+					// Write the surface position array in the dataset
+					status = H5.H5Dwrite(datasetId,
+							HDF5Constants.H5T_STD_I32LE,
+							HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL,
+							HDF5Constants.H5P_DEFAULT, surfaceArray);
+					
+					// Close everything from the new file
+					status = H5.H5Dclose(datasetId);
+					status = H5.H5Sclose(dataspaceId);
+					status = H5.H5Gclose(concentrationGroupId);
+					status = H5.H5Fclose(fileId);
+				}
+				else if (n == 2) {
+					// We are in the Xolotl 3D case
+					// Initialize the dimensions of the dataset
+					long[] dims = { 0, 0 };
+					// Get the dimension of the dataset
+					status = H5.H5Sget_simple_extent_dims(dataspaceId, dims, 
+							null);
+					// Create the array that will receive the surface positions information
+					int[][] surfaceArray = new int[(int) dims[0]][(int) dims[1]];
+
+					// Read the dataset
+					status = H5.H5Dread(datasetId, HDF5Constants.H5T_STD_I32LE, HDF5Constants.H5S_ALL, 
+							HDF5Constants.H5S_ALL, HDF5Constants.H5P_DEFAULT, surfaceArray);
+					
+					// Close everything from the old file
+					status = H5.H5Dclose(datasetId);
+					status = H5.H5Sclose(dataspaceId);
+					status = H5.H5Gclose(concentrationGroupId);
+					status = H5.H5Fclose(fileId);
+					
+					// Write this surface position dataset into the new file
+					// Open the created HDF5 file 
+					fileId = H5.H5Fopen(toName, HDF5Constants.H5F_ACC_RDWR,
+							HDF5Constants.H5P_DEFAULT);
+					// Open the new concentration subgroup
+					concentrationGroupId = H5.H5Gopen(fileId, 
+							"concentrationsGroup/concentration_0",
+							HDF5Constants.H5P_DEFAULT);
+					// Create the dataspace 
+					dataspaceId = H5.H5Screate_simple(2, dims, null);
+					// Create the dataset for the concentrations
+					datasetId = H5.H5Dcreate(concentrationGroupId, "iSurface",
+							HDF5Constants.H5T_STD_I32LE, dataspaceId,
+							HDF5Constants.H5P_DEFAULT,
+							HDF5Constants.H5P_DEFAULT,
+							HDF5Constants.H5P_DEFAULT);
+					// Write the surface position array in the dataset
+					status = H5.H5Dwrite(datasetId,
+							HDF5Constants.H5T_STD_I32LE,
+							HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL,
+							HDF5Constants.H5P_DEFAULT, surfaceArray);
+					
+					// Close everything from the new file
+					status = H5.H5Dclose(datasetId);
+					status = H5.H5Sclose(dataspaceId);
+					status = H5.H5Gclose(concentrationGroupId);
+					status = H5.H5Fclose(fileId);
+				}
+			}
+			
+		} catch (Exception e) {
+			// Complain
+			e.printStackTrace();
+		}
+		
+		return;
+		
+	}
+	
+	/**
 	 * This operation reads the network of an already existing file and create 
 	 * a map of the index and composition of the clusters 
 	 * 
@@ -1231,6 +1419,9 @@ public class Preprocessor {
 				// Create the concentration subgroup in the new file and store
 				// the times
 				createConcentrationSubGroup(toName, times);
+				
+				// Copy the surface position information 
+				copySurface(fromName, lastTimeStep, toName);
 				
 				// Create a map of the index and composition of the network present 
 				// in the given HDF5 file
