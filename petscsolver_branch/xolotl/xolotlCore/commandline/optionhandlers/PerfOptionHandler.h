@@ -43,7 +43,7 @@ public:
             xolotlPerf::IHandlerRegistry::RegistryType rtype = xolotlPerf::toPerfRegistryType(arg);
             opt->setPerfHandlerType( rtype );
         }
-        catch( std::invalid_argument& e )
+        catch (const std::invalid_argument& e)
         {
             std::cerr << e.what() << std::endl;
             opt->showHelp(std::cerr);

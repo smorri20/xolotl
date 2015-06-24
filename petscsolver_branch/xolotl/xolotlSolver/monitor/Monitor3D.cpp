@@ -255,26 +255,16 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time
 		}
 	}
 
-	// Get the number of processes
-	int worldSize;
-	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
 	// Get the current process ID
 	int procId;
 	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
 
+	// Sum all the concentrations through MPI reduce
+	double totalHeConcentration = 0.0;
+	MPI_Reduce(&heConcentration, &totalHeConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
 	// Master process
 	if (procId == 0) {
-		// Loop on all the other processes
-		for (int i = 1; i < worldSize; i++) {
-			double otherConcentration = 0.0;
-
-			// Receive the value from the other processes
-			MPI_Recv(&otherConcentration, 1, MPI_DOUBLE, i, 1, MPI_COMM_WORLD,
-					MPI_STATUS_IGNORE);
-
-			// Add them to the master one
-			heConcentration += otherConcentration;
-		}
 
 		// Get the total size of the grid rescale the concentrations
 		int Mx, My, Mz;
@@ -287,7 +277,7 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time
 		double surface = (double) (My * Mz) * hy * hz;
 
 		// Rescale the concentration
-		heConcentration = heConcentration / surface;
+		totalHeConcentration = totalHeConcentration / surface;
 
 		// Get the fluence
 		double heliumFluence = fluxHandler->getHeFluence();
@@ -295,22 +285,17 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time
 		// Print the result
 		std::cout << "\nTime: " << time << std::endl;
 		std::cout << "Helium retention = "
-				<< 100.0 * (heConcentration / heliumFluence) << " %"
+				<< 100.0 * (totalHeConcentration / heliumFluence) << " %"
 				<< std::endl;
-		std::cout << "Helium mean concentration = " << heConcentration << std::endl;
+		std::cout << "Helium mean concentration = " << totalHeConcentration << std::endl;
 		std::cout << "Helium fluence = " << heliumFluence << "\n" << std::endl;
 
 //		// Uncomment to write the retention and the fluence in a file
 //		std::ofstream outputFile;
 //		outputFile.open("retentionOut.txt", ios::app);
 //		outputFile << heliumFluence << " "
-//				<< 100.0 * (heConcentration / heliumFluence) << std::endl;
+//				<< 100.0 * (totalHeConcentration / heliumFluence) << std::endl;
 //		outputFile.close();
-	}
-
-	else {
-		// Send the value of the timer to the master process
-		MPI_Send(&heConcentration, 1, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD);
 	}
 
 	// Restore the solutionArray
@@ -330,13 +315,9 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 	PetscErrorCode ierr;
 	const double ****solutionArray, *gridPointSolution;
 	int xs, xm, Mx, ys, ym, My, zs, zm, Mz;
-	double x, y, z;
+	double x, y;
 
 	PetscFunctionBeginUser;
-
-	// Get the number of processes
-	int worldSize;
-	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
 
 	// Gets the process ID
 	int procId;
@@ -368,7 +349,6 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Setup step size variables
 	double hy = solverHandler->getStepSizeY();
-	double hz = solverHandler->getStepSizeZ();
 
 	// Choice of the cluster to be plotted
 	int iCluster = 0;
@@ -382,7 +362,7 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 	// Loop on the full grid, Y and X first because they are the axis of the plot
 	for (int j = 0; j < My; j++) {
 		// Compute y
-		y = j * hy;
+		y = (double) j * hy;
 
 		for (int i = 0; i < Mx; i++) {
 			// Compute x
@@ -392,45 +372,24 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 			double conc = 0.0;
 
 			for (int k = 0; k < Mz; k++) {
-				// Compute z
-				z = k * hz;
-
 				// If it is the locally owned part of the grid
 				if (i >= xs && i < xs + xm && j >= ys && j < ys + ym
 						&& k >= zs && k < zs + zm) {
 					// Get the pointer to the beginning of the solution data for this grid point
 					gridPointSolution = solutionArray[k][j][i];
 
-					// If procId == 0 integrate over Z
-					if (procId == 0) {
-						conc += gridPointSolution[iCluster];
-					}
-					// Else send the values to procId == 0
-					else {
-						// Send the value of the concentration to the master process
-						MPI_Send(&gridPointSolution[iCluster], 1, MPI_DOUBLE, 0, 2,
-								MPI_COMM_WORLD);
-					}
+					// Integrate over Z
+					conc += gridPointSolution[iCluster];
 				}
-				// Else if it is NOT the locally owned part of the grid but still procId == 0,
-				// it should receive the values of the concentration to integrate them
-				else if (procId == 0) {
-					// Receive the concentration from other processes
-					double tempConc = 0.0;
-					MPI_Recv(&tempConc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 2, MPI_COMM_WORLD,
-							MPI_STATUS_IGNORE);
-
-					// Add it to the integrated one
-					conc += tempConc;
-				}
-
-				// Wait for everybody at each grid point
-				MPI_Barrier(PETSC_COMM_WORLD);
 			} // End of the loop on Z
+
+			// Sum all the concentration on Z
+			double totalConc = 0.0;
+			MPI_Reduce(&conc, &totalConc, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
 			// If it is procId == 0 just store the integrated value in the myPoints vector
 			if (procId == 0) {
-				thePoint.value = conc;
+				thePoint.value = totalConc;
 				thePoint.t = time;
 				thePoint.x = x;
 				thePoint.y = y;
@@ -490,13 +449,9 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 	PetscErrorCode ierr;
 	const double ****solutionArray, *gridPointSolution;
 	int xs, xm, Mx, ys, ym, My, zs, zm, Mz;
-	double x, y, z;
+	double x, z;
 
 	PetscFunctionBeginUser;
-
-	// Get the number of processes
-	int worldSize;
-	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
 
 	// Gets the process ID
 	int procId;
@@ -527,7 +482,6 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 	auto grid = solverHandler->getXGrid();
 
 	// Setup step size variables
-	double hy = solverHandler->getStepSizeY();
 	double hz = solverHandler->getStepSizeZ();
 
 	// Choice of the cluster to be plotted
@@ -542,7 +496,7 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 	// Loop on the full grid, Z and X first because they are the axis of the plot
 	for (int k = 0; k < Mz; k++) {
 		// Compute z
-		z = k * hz;
+		z = (double) k * hz;
 
 		for (int i = 0; i < Mx; i++) {
 			// Compute x
@@ -552,45 +506,24 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 			double conc = 0.0;
 
 			for (int j = 0; j < My; j++) {
-				// Compute y
-				y = j * hy;
-
 				// If it is the locally owned part of the grid
 				if (i >= xs && i < xs + xm && j >= ys && j < ys + ym
 						&& k >= zs && k < zs + zm) {
 					// Get the pointer to the beginning of the solution data for this grid point
 					gridPointSolution = solutionArray[k][j][i];
 
-					// If procId == 0 integrate over Z
-					if (procId == 0) {
-						conc += gridPointSolution[iCluster];
-					}
-					// Else send the values to procId == 0
-					else {
-						// Send the value of the concentration to the master process
-						MPI_Send(&gridPointSolution[iCluster], 1, MPI_DOUBLE, 0, 2,
-								MPI_COMM_WORLD);
-					}
+					// Integrate over Y
+					conc += gridPointSolution[iCluster];
 				}
-				// Else if it is NOT the locally owned part of the grid but still procId == 0,
-				// it should receive the values of the concentration to integrate them
-				else if (procId == 0) {
-					// Receive the concentration from other processes
-					double tempConc = 0.0;
-					MPI_Recv(&tempConc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 2, MPI_COMM_WORLD,
-							MPI_STATUS_IGNORE);
-
-					// Add it to the integrated one
-					conc += tempConc;
-				}
-
-				// Wait for everybody at each grid point
-				MPI_Barrier(PETSC_COMM_WORLD);
 			} // End of the loop on Y
+
+			// Sum all the concentration on Y
+			double totalConc = 0.0;
+			MPI_Reduce(&conc, &totalConc, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
 			// If it is procId == 0 just store the integrated value in the myPoints vector
 			if (procId == 0) {
-				thePoint.value = conc;
+				thePoint.value = totalConc;
 				thePoint.t = time;
 				thePoint.x = x;
 				thePoint.y = z;
@@ -711,6 +644,10 @@ PetscErrorCode monitorInterstitial3D(TS ts, PetscInt timestep, PetscReal time,
 			int surfacePos = solverHandler->getSurfacePosition(yj, zk);
 			xi = surfacePos + 1;
 
+			// Value to now on which processor is the location of the surface,
+			// for MPI usage
+			int surfaceProc = 0;
+
 			// if xi, yj, zk is on this process
 			if (xi >= xs && xi < xs + xm && yj >= ys && yj < ys + ym
 					&& zk >= zs && zk < zs + zm) {
@@ -746,32 +683,18 @@ PetscErrorCode monitorInterstitial3D(TS ts, PetscInt timestep, PetscReal time,
 				// Update the previous flux at this position
 				previousIFlux3D[yj][zk] = newFlux;
 
-				// Send the information about nInterstitial3D and previousFlux3D
-				// to the other processes
-				// Loop on all the processes
-				for (int i = 0; i < worldSize; i++) {
-					// Skip this process
-					if (i == procId) continue;
-
-					// Send nInterstitial
-					MPI_Send(&nInterstitial3D[yj][zk], 1, MPI_DOUBLE, i, 4, MPI_COMM_WORLD);
-					// Send previousFlux
-					MPI_Send(&previousIFlux3D[yj][zk], 1, MPI_DOUBLE, i, 4, MPI_COMM_WORLD);
-				}
-			}
-			// xi, yj, zk is not on this process, but the process needs to know what is the
-			// flux and interstitial value from the other process
-			else {
-				// Receive nInterstitial
-				MPI_Recv(&nInterstitial3D[yj][zk], 1, MPI_DOUBLE, MPI_ANY_SOURCE, 4, MPI_COMM_WORLD,
-						MPI_STATUS_IGNORE);
-				// Receive previousFlux
-				MPI_Recv(&previousIFlux3D[yj][zk], 1, MPI_DOUBLE, MPI_ANY_SOURCE, 4, MPI_COMM_WORLD,
-						MPI_STATUS_IGNORE);
+				// Set the surface processor
+				surfaceProc = procId;
 			}
 
-			// Wait for everybody at each grid point
-			MPI_Barrier(PETSC_COMM_WORLD);
+			// Get which processor will send the information
+			int surfaceId = 0;
+			MPI_Allreduce(&surfaceProc, &surfaceId, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+			// Send the information about nInterstitial2D and previousFlux2D
+			// to the other processes
+			MPI_Bcast(&nInterstitial3D[yj][zk], 1, MPI_DOUBLE, surfaceId, MPI_COMM_WORLD);
+			MPI_Bcast(&previousIFlux3D[yj][zk], 1, MPI_DOUBLE, surfaceId, MPI_COMM_WORLD);
 
 			// Now that all the processes have the same value of nInterstitials, compare
 			// it to the threshold to now if we should move the surface

@@ -21,6 +21,7 @@
 #include <IMaterialFactory.h>
 #include <TemperatureHandlerFactory.h>
 #include <VizHandlerRegistryFactory.h>
+#include <cassert>
 
 using namespace std;
 using namespace xolotlCore;
@@ -211,6 +212,7 @@ BOOST_AUTO_TEST_CASE(checkIrregularPetscSolver1DHandler) {
 
 	// Initialize and get the temperature handler
 	bool tempInitOK = xolotlFactory::initializeTempHandler(opts);
+	assert(tempInitOK);
 	auto tempHandler = xolotlFactory::getTemperatureHandler();
 
 	// Set up our dummy performance and visualization infrastructures
@@ -319,6 +321,7 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 
 	// Initialize and get the temperature handler
 	bool tempInitOK = xolotlFactory::initializeTempHandler(opts);
+	assert(tempInitOK);
 	auto tempHandler = xolotlFactory::getTemperatureHandler();
 
 	// Set up our dummy performance and visualization infrastructures
@@ -426,6 +429,7 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 
 	// Initialize and get the temperature handler
 	bool tempInitOK = xolotlFactory::initializeTempHandler(opts);
+	assert(tempInitOK);
 	auto tempHandler = xolotlFactory::getTemperatureHandler();
 
 	// Set up our dummy performance and visualization infrastructures

@@ -3,7 +3,7 @@
 
 using namespace xolotlViz;
 
-VideoPlot::VideoPlot(const std::string& name) : Plot(name) {
+VideoPlot::VideoPlot(const std::string& name) : Plot(name), frameRate(0.0) {
 }
 
 VideoPlot::~VideoPlot() {

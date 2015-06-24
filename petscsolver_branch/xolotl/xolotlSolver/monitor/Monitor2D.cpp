@@ -239,27 +239,16 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 		}
 	}
 
-	// Get the number of processes
-	int worldSize;
-	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
 	// Get the current process ID
 	int procId;
 	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
 
+	// Sum all the concentrations through MPI reduce
+	double totalHeConcentration = 0.0;
+	MPI_Reduce(&heConcentration, &totalHeConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
 	// Master process
 	if (procId == 0) {
-		// Loop on all the other processes
-		for (int i = 1; i < worldSize; i++) {
-			double otherConcentration = 0.0;
-
-			// Receive the value from the other processes
-			MPI_Recv(&otherConcentration, 1, MPI_DOUBLE, i, 1, MPI_COMM_WORLD,
-					MPI_STATUS_IGNORE);
-
-			// Add them to the master one
-			heConcentration += otherConcentration;
-		}
-
 		// Get the total size of the grid rescale the concentrations
 		int Mx, My;
 		ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
@@ -271,7 +260,7 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 		double surface = (double) My * hy;
 
 		// Rescale the concentration
-		heConcentration = heConcentration / surface;
+		totalHeConcentration = totalHeConcentration / surface;
 
 		// Get the fluence
 		double heliumFluence = fluxHandler->getHeFluence();
@@ -279,22 +268,17 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 		// Print the result
 		std::cout << "\nTime: " << time << std::endl;
 		std::cout << "Helium retention = "
-				<< 100.0 * (heConcentration / heliumFluence) << " %"
+				<< 100.0 * (totalHeConcentration / heliumFluence) << " %"
 				<< std::endl;
-		std::cout << "Helium mean concentration = " << heConcentration << std::endl;
+		std::cout << "Helium mean concentration = " << totalHeConcentration << std::endl;
 		std::cout << "Helium fluence = " << heliumFluence << "\n" << std::endl;
 
 //		// Uncomment to write the retention and the fluence in a file
 //		std::ofstream outputFile;
 //		outputFile.open("retentionOut.txt", ios::app);
 //		outputFile << heliumFluence << " "
-//				<< 100.0 * (heConcentration / heliumFluence) << std::endl;
+//				<< 100.0 * (totalHeConcentration / heliumFluence) << std::endl;
 //		outputFile.close();
-	}
-
-	else {
-		// Send the value of the timer to the master process
-		MPI_Send(&heConcentration, 1, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD);
 	}
 
 	// Restore the solutionArray
@@ -317,10 +301,6 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 	double x, y;
 
 	PetscFunctionBeginUser;
-
-	// Get the number of processes
-	int worldSize;
-	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
 
 	// Gets the process ID
 	int procId;
@@ -371,7 +351,7 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 				gridPointSolution = solutionArray[j][i];
 				// Compute x and y
 				x = grid[i];
-				y = j * hy;
+				y = (double) j * hy;
 
 				// If it is procId 0 just store the value in the myPoints vector
 				if (procId == 0) {
@@ -386,12 +366,12 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 				// Else, the values must be sent to procId 0
 				else {
 					// Send the value of the local position to the master process
-					MPI_Send(&x, 1, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
+					MPI_Send(&x, 1, MPI_DOUBLE, 0, 10, MPI_COMM_WORLD);
 					// Send the value of the local position to the master process
-					MPI_Send(&y, 1, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
+					MPI_Send(&y, 1, MPI_DOUBLE, 0, 11, MPI_COMM_WORLD);
 
 					// Send the value of the concentration to the master process
-					MPI_Send(&gridPointSolution[iCluster], 1, MPI_DOUBLE, 0, 2,
+					MPI_Send(&gridPointSolution[iCluster], 1, MPI_DOUBLE, 0, 12,
 							MPI_COMM_WORLD);
 				}
 			}
@@ -399,14 +379,14 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 			// it should receive the values for the point and add them to myPoint
 			else if (procId == 0) {
 				// Get the position
-				MPI_Recv(&x, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 2, MPI_COMM_WORLD,
+				MPI_Recv(&x, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 10, MPI_COMM_WORLD,
 						MPI_STATUS_IGNORE);
-				MPI_Recv(&y, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 2, MPI_COMM_WORLD,
+				MPI_Recv(&y, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 11, MPI_COMM_WORLD,
 						MPI_STATUS_IGNORE);
 
 				// and the concentration
 				double conc = 0.0;
-				MPI_Recv(&conc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 2, MPI_COMM_WORLD,
+				MPI_Recv(&conc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 12, MPI_COMM_WORLD,
 						MPI_STATUS_IGNORE);
 
 				// Modify the Point with the received values and add it to myPoints
@@ -532,6 +512,10 @@ PetscErrorCode monitorInterstitial2D(TS ts, PetscInt timestep, PetscReal time,
 		int surfacePos = solverHandler->getSurfacePosition(yj);
 		xi = surfacePos + 1;
 
+		// Value to now on which processor is the location of the surface,
+		// for MPI usage
+		int surfaceProc = 0;
+
 		// if xi, yj is on this process
 		if (xi >= xs && xi < xs + xm && yj >= ys && yj < ys + ym) {
 			// Get the concentrations at xi = surfacePos + 1
@@ -566,32 +550,18 @@ PetscErrorCode monitorInterstitial2D(TS ts, PetscInt timestep, PetscReal time,
 			// Update the previous flux at this position
 			previousIFlux2D[yj] = newFlux;
 
-			// Send the information about nInterstitial2D and previousFlux2D
-			// to the other processes
-			// Loop on all the processes
-			for (int i = 0; i < worldSize; i++) {
-				// Skip this process
-				if (i == procId) continue;
-
-				// Send nInterstitial
-				MPI_Send(&nInterstitial2D[yj], 1, MPI_DOUBLE, i, 4, MPI_COMM_WORLD);
-				// Send previousFlux
-				MPI_Send(&previousIFlux2D[yj], 1, MPI_DOUBLE, i, 4, MPI_COMM_WORLD);
-			}
-		}
-		// xi, yj is not on this process, but the process needs to know what is the
-		// flux and interstitial value from the other process
-		else {
-			// Receive nInterstitial
-			MPI_Recv(&nInterstitial2D[yj], 1, MPI_DOUBLE, MPI_ANY_SOURCE, 4, MPI_COMM_WORLD,
-					MPI_STATUS_IGNORE);
-			// Receive previousFlux
-			MPI_Recv(&previousIFlux2D[yj], 1, MPI_DOUBLE, MPI_ANY_SOURCE, 4, MPI_COMM_WORLD,
-					MPI_STATUS_IGNORE);
+			// Set the surface processor
+			surfaceProc = procId;
 		}
 
-		// Wait for everybody at each grid point
-		MPI_Barrier(PETSC_COMM_WORLD);
+		// Get which processor will send the information
+		int surfaceId = 0;
+		MPI_Allreduce(&surfaceProc, &surfaceId, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+		// Send the information about nInterstitial2D and previousFlux2D
+		// to the other processes
+		MPI_Bcast(&nInterstitial2D[yj], 1, MPI_DOUBLE, surfaceId, MPI_COMM_WORLD);
+		MPI_Bcast(&previousIFlux2D[yj], 1, MPI_DOUBLE, surfaceId, MPI_COMM_WORLD);
 
 		// Now that all the processes have the same value of nInterstitials, compare
 		// it to the threshold to now if we should move the surface
