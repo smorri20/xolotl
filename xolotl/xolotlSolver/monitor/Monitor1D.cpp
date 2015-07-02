@@ -61,7 +61,7 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 		void *ictx) {
 	PetscErrorCode ierr;
 	const double **solutionArray, *gridPointSolution;
-	int xs, xm, Mx;
+	PetscInt xs, xm, Mx;
 
 	PetscFunctionBeginUser;
 
@@ -188,7 +188,7 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	PetscErrorCode ierr;
-	int xs, xm;
+	PetscInt xs, xm;
 
 	PetscFunctionBeginUser;
 
@@ -275,7 +275,7 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	PetscErrorCode ierr;
 	const double **solutionArray, *gridPointSolution;
-	int xs, xm, xi;
+	PetscInt xs, xm, xi;
 	double x;
 
 	PetscFunctionBeginUser;
@@ -425,7 +425,7 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	PetscErrorCode ierr;
 	const double **solutionArray, *gridPointSolution;
-	int xs, xm, xi;
+	PetscInt xs, xm, xi;
 	double x;
 
 	PetscFunctionBeginUser;
@@ -586,7 +586,7 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	PetscErrorCode ierr;
 	const double **solutionArray, *gridPointSolution;
-	int xs, xm, xi;
+	PetscInt xs, xm, xi;
 
 	PetscFunctionBeginUser;
 
@@ -714,7 +714,7 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	PetscErrorCode ierr;
 	const double **solutionArray, *gridPointSolution;
-	int xs, xm, xi;
+	PetscInt xs, xm, xi;
 
 	PetscFunctionBeginUser;
 
@@ -806,7 +806,7 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	PetscErrorCode ierr;
 	const double **solutionArray, *gridPointSolution;
-	int xs, xm, xi;
+	PetscInt xs, xm, xi;
 
 	PetscFunctionBeginUser;
 

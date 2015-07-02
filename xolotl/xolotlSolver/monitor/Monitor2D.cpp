@@ -51,7 +51,7 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 		void *ictx) {
 	PetscErrorCode ierr;
 	const double ***solutionArray, *gridPointSolution;
-	int xs, xm, Mx, ys, ym, My;
+	PetscInt xs, xm, Mx, ys, ym, My;
 
 	PetscFunctionBeginUser;
 
@@ -180,7 +180,7 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	PetscErrorCode ierr;
-	int xs, xm, ys, ym;
+	PetscInt xs, xm, ys, ym;
 
 	PetscFunctionBeginUser;
 
@@ -234,7 +234,7 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 	// Master process
 	if (procId == 0) {
 		// Get the total size of the grid rescale the concentrations
-		int Mx, My;
+		PetscInt Mx, My;
 		ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
 		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
@@ -281,7 +281,7 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	PetscErrorCode ierr;
 	const double ***solutionArray, *gridPointSolution;
-	int xs, xm, Mx, ys, ym, My;
+	PetscInt xs, xm, Mx, ys, ym, My;
 	double x, y;
 
 	PetscFunctionBeginUser;
