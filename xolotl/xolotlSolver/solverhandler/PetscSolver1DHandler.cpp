@@ -332,7 +332,7 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	// Arguments for MatSetValuesStencil called below
 	MatStencil row, cols[3];
 	PetscScalar vals[3 * nDiff];
-	PetscInt indices[nDiff];
+	int indices[nDiff];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
 
 	/*
