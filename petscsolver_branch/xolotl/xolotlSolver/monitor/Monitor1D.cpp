@@ -425,7 +425,7 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 	auto grid = solverHandler->getXGrid();
 
 	// Choice of the cluster to be plotted
-	int iCluster = 0;
+	int iCluster = 15;
 
 	if (procId == 0) {
 		// Create a Point vector to store the data to give to the data provider
@@ -437,10 +437,16 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[xi];
 
+			double value = gridPointSolution[iCluster] + gridPointSolution[iCluster + 1]
+			               + gridPointSolution[iCluster + 2] + gridPointSolution[iCluster + 3]
+			               + gridPointSolution[iCluster + 4] + gridPointSolution[iCluster + 5]
+			               + gridPointSolution[iCluster + 6] + gridPointSolution[iCluster + 7]
+			               + gridPointSolution[iCluster + 8];
+
 			// Create a Point with the concentration[iCluster] as the value
 			// and add it to myPoints
 			xolotlViz::Point aPoint;
-			aPoint.value = gridPointSolution[iCluster];
+			aPoint.value = value;
 			aPoint.t = time;
 			aPoint.x = grid[xi];
 			myPoints->push_back(aPoint);
@@ -521,8 +527,14 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 			// Send the value of the local position to the master process
 			MPI_Send(&x, 1, MPI_DOUBLE, 0, 11, MPI_COMM_WORLD);
 
+			double value = gridPointSolution[iCluster] + gridPointSolution[iCluster + 1]
+			               + gridPointSolution[iCluster + 2] + gridPointSolution[iCluster + 3]
+			               + gridPointSolution[iCluster + 4] + gridPointSolution[iCluster + 5]
+			               + gridPointSolution[iCluster + 6] + gridPointSolution[iCluster + 7]
+			               + gridPointSolution[iCluster + 8];
+
 			// Send the value of the concentration to the master process
-			MPI_Send(&gridPointSolution[iCluster], 1, MPI_DOUBLE, 0, 12,
+			MPI_Send(&value, 1, MPI_DOUBLE, 0, 12,
 					MPI_COMM_WORLD);
 		}
 	}
@@ -1188,6 +1200,10 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt timestep, PetscReal time,
 		auto mutationHandler = solverHandler->getMutationHandler();
 		mutationHandler->initializeIndex(surfacePos, network, grid);
 
+		// Get the bubble bursting handler to reinitialize it
+		auto burstingHandler = solverHandler->getBurstingHandler();
+		burstingHandler->initializeIndex(surfacePos, network, grid);
+
 		// Initialize the vacancy concentration on the new grid points
 		// Get the single vacancy ID
 		auto singleVacancyCluster = network->get(xolotlCore::vType, 1);
@@ -1287,6 +1303,8 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 			// Create a ScatterPlot
 			scatterPlot1D = vizHandlerRegistry->getPlot("scatterPlot1D",
 					xolotlViz::PlotType::SCATTER);
+
+			scatterPlot1D->setLogScale();
 
 			// Create and set the label provider
 			auto labelProvider = std::make_shared<xolotlViz::LabelProvider>(

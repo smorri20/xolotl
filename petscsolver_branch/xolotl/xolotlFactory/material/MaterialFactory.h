@@ -6,6 +6,7 @@
 #include <DummyAdvectionHandler.h>
 #include <DummyDiffusionHandler.h>
 #include <DummyTrapMutationHandler.h>
+#include <DummyBubbleBurstingHandler.h>
 
 namespace xolotlFactory {
 
@@ -27,6 +28,9 @@ protected:
 
 	//! The modified trap-mutation handler
 	std::shared_ptr<xolotlCore::ITrapMutationHandler> theTrapMutationHandler;
+
+	//! The bubble bursting handler
+	std::shared_ptr<xolotlCore::IBubbleBurstingHandler> theBubbleBurstingHandler;
 
 public:
 
@@ -72,6 +76,8 @@ public:
 			theAdvectionHandler = std::make_shared<xolotlCore::DummyAdvectionHandler>();
 		if (!map["modifiedTM"])
 			theTrapMutationHandler = std::make_shared<xolotlCore::DummyTrapMutationHandler>();
+		if (!map["bursting"])
+			theBubbleBurstingHandler = std::make_shared<xolotlCore::DummyBubbleBurstingHandler>();
 
 		return;
 	}
@@ -110,6 +116,15 @@ public:
 	 */
 	std::shared_ptr<xolotlCore::ITrapMutationHandler> getTrapMutationHandler() const {
 		return theTrapMutationHandler;
+	}
+
+	/**
+	 * Return the bubble bursting handler.
+	 *
+	 *  @return The bubble bursting handler.
+	 */
+	std::shared_ptr<xolotlCore::IBubbleBurstingHandler> getBubbleBurstingHandler() const {
+		return theBubbleBurstingHandler;
 	}
 };
 

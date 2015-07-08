@@ -83,7 +83,7 @@ public class ArgumentsTest {
 			assertEquals("W100", args.getMaterial());
 
 			// Check the default physical process argumen
-			assertEquals("diff advec", args.getProcess());
+			assertEquals("diff advec movingSurface", args.getProcess());
 
 			// Check if there is a tempFile argument
 			assertEquals(false, args.isTempFile());

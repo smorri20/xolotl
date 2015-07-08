@@ -21,6 +21,10 @@ void TrapMutationHandler::initialize(int surfacePos, PSIClusterReactionNetwork *
 	// If the I clusters are not in the network,
 	// there is no trap-mutation
 	if (!singleInterstitial || !doubleInterstitial) {
+		// Clear the vector of HeV indices created by He undergoing trap-mutation
+		// at each grid point
+		indexVector.clear();
+
 		// Loop on the grid points
 		for (int i = 0; i < grid.size(); i++) {
 			// Create the list (vector) of indices at this grid point
@@ -95,7 +99,7 @@ void TrapMutationHandler::initializeIndex(int surfacePos, PSIClusterReactionNetw
 
 		// If we are on the left side of the surface there is no
 		// modified trap-mutation
-		if (i < surfacePos) {
+		if (i <= surfacePos) {
 			indexVector.push_back(indices);
 			continue;
 		}
@@ -121,12 +125,6 @@ void TrapMutationHandler::initializeIndex(int surfacePos, PSIClusterReactionNetw
 				}
 			}
 		}
-
-//		std::cout << "Depth " << depth << " at i " << i << ": ";
-//		for (int j = 0; j < indices.size(); j++) {
-//			std::cout << indices[j] << " ";
-//		}
-//		std::cout << std::endl;
 
 		// Add indices to the index vector
 		indexVector.push_back(indices);

@@ -70,6 +70,11 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	diffusionHandler->initializeOFill(network, ofill);
 	advectionHandler->initialize(network, ofill);
 
+	// Initialize the modified trap-mutation handler and the bubble bursting one here
+	// because they add connectivity
+	mutationHandler->initialize(surfacePosition, network, grid);
+	burstingHandler->initialize(surfacePosition, network, grid);
+
 	// Get the diagonal fill
 	getDiagonalFill(dfill, dof * dof);
 
@@ -118,9 +123,6 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) {
 
 	// Initialize the flux handler
 	fluxHandler->initializeFluxHandler(surfacePosition, grid);
-
-	// Initialize the modified trap-mutation handler
-	mutationHandler->initialize(surfacePosition, network, grid);
 
 	// Pointer for the concentration vector at a specific grid point
 	PetscScalar *concOffset;
@@ -259,9 +261,10 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		// Update the network if the temperature changed
 		if (!xolotlCore::equal(temperature, lastTemperature)) {
 			network->setTemperature(temperature);
-			// Update the modified trap-mutation rate that depends on the
-			// network reaction rates
+			// Update the modified trap-mutation rate and the bubble bursting rate
+			// that depends on the network reaction rates
 			mutationHandler->updateTrapMutationRate(network);
+			burstingHandler->updateBurstingRate(network);
 			lastTemperature = temperature;
 		}
 
@@ -289,6 +292,10 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 		// ----- Compute the modified trap-mutation over the locally owned part of the grid -----
 		mutationHandler->computeTrapMutation(network, xi, concOffset,
+				updatedConcOffset);
+
+		// ----- Compute the bubble bursting over the locally owned part of the grid -----
+		burstingHandler->computeBursting(network, xi, concOffset,
 				updatedConcOffset);
 
 		// ----- Compute all of the new fluxes -----
@@ -466,6 +473,10 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	// modified trap-mutation
 	int nHelium = network->getAll(xolotlCore::heType).size();
 
+	// Store the total number of HeV bubbles in the network for the
+	// bubble bursting
+	int nBubble = network->getAll(xolotlCore::heVType).size();
+
 	// Declarations for variables used in the loop
 	int reactantIndex;
 
@@ -558,6 +569,41 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 					mutationVals + (3 * i) + 2, ADD_VALUES);
 			checkPetscError(ierr, "PetscSolver1DHandler::computeDiagonalJacobian: "
 					"MatSetValuesStencil (I trap-mutation) failed.");
+		}
+
+		// ----- Take care of the bubble bursting for all the reactants -----
+
+		// Arguments for MatSetValuesStencil called below
+		PetscScalar burstingVals[2 * nBubble];
+		PetscInt burstingIndices[2 * nBubble];
+
+		// Compute the partial derivative from bubble bursting at this grid point
+		int nBursting = burstingHandler->computePartialsForBursting(network,
+				burstingVals, burstingIndices, xi);
+
+		// Loop on the number of bubbles bursting to set the values
+		// in the Jacobian
+		for (int i = 0; i < nBursting; i++) {
+			// Set grid coordinate and component number for the row and column
+			// corresponding to the bursting cluster (bubble)
+			row.i = xi;
+			row.c = burstingIndices[2 * i];
+			col.i = xi;
+			col.c = burstingIndices[2 * i];
+
+			ierr = MatSetValuesStencil(J, 1, &row, 1, &col,
+					burstingVals + (2 * i), ADD_VALUES);
+			checkPetscError(ierr, "PetscSolver1DHandler::computeDiagonalJacobian: "
+					"MatSetValuesStencil (HeV bursting) failed.");
+
+			// Set component number for the row
+			// corresponding to the V cluster created by bursting a bubble
+			row.c = burstingIndices[(2 * i) + 1];
+
+			ierr = MatSetValuesStencil(J, 1, &row, 1, &col,
+					burstingVals + (2 * i) + 1, ADD_VALUES);
+			checkPetscError(ierr, "PetscSolver1DHandler::computeDiagonalJacobian: "
+					"MatSetValuesStencil (V bursting) failed.");
 		}
 	}
 

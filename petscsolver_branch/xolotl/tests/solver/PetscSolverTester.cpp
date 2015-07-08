@@ -131,10 +131,10 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 	network->fillConcentrationsArray(concs);
 
 	// Check some concentrations
-    BOOST_REQUIRE_CLOSE(concs[0], 3.9559e-11, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[1], 2.2999e-18, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[2], 4.1979e-26, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[7], -1.3576e-62, 0.01);
+    BOOST_REQUIRE_SMALL(concs[0], 1.0e-10);
+    BOOST_REQUIRE_SMALL(concs[1], 1.0e-17);
+    BOOST_REQUIRE_SMALL(concs[2], 1.0e-25);
+    BOOST_REQUIRE_SMALL(concs[7], 1.0e-61);
     BOOST_REQUIRE_CLOSE(concs[8], 0.0, 0.01);
 
 	// Remove the created file
@@ -240,10 +240,10 @@ BOOST_AUTO_TEST_CASE(checkIrregularPetscSolver1DHandler) {
 	network->fillConcentrationsArray(concs);
 
 	// Check some concentrations
-	BOOST_REQUIRE_CLOSE(concs[0], 5.419e-12, 0.01);
-	BOOST_REQUIRE_CLOSE(concs[1], 4.604e-23, 0.01);
-	BOOST_REQUIRE_CLOSE(concs[2], 7.676e-34, 0.01);
-	BOOST_REQUIRE_CLOSE(concs[7], 2.221e-82, 0.01);
+	BOOST_REQUIRE_SMALL(concs[0], 1.0e-11);
+	BOOST_REQUIRE_SMALL(concs[1], 1.0e-22);
+	BOOST_REQUIRE_SMALL(concs[2], 1.0e-33);
+	BOOST_REQUIRE_SMALL(concs[7], 1.0e-81);
 	BOOST_REQUIRE_CLOSE(concs[8], 0.0, 0.01);
 
 	// Remove the created file
@@ -349,11 +349,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 	network->fillConcentrationsArray(concs);
 
 	// Check some concentrations
-    BOOST_REQUIRE_CLOSE(concs[0], 2.7841e-74, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[1], 1.6807e-146, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[6], 6.5151e-11, 0.01);
+    BOOST_REQUIRE_SMALL(concs[0], 1.0e-73);
+    BOOST_REQUIRE_SMALL(concs[1], 1.0e-145);
+    BOOST_REQUIRE_SMALL(concs[6], 1.0e-10);
     BOOST_REQUIRE_CLOSE(concs[14], 0.0, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[23], 2.1984e-72, 0.01);
+    BOOST_REQUIRE_SMALL(concs[23], 1.0e-71);
 
 	// Remove the created file
 	std::string tempFile = "param.txt";
@@ -457,11 +457,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 	network->fillConcentrationsArray(concs);
 
 	// Check some concentrations
-    BOOST_REQUIRE_CLOSE(concs[0], -7.4983e-79, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[6], 8.8196e-11, 0.01);
+    BOOST_REQUIRE_SMALL(concs[0], 1.0e-78);
+    BOOST_REQUIRE_SMALL(concs[6], 1.0e-10);
     BOOST_REQUIRE_CLOSE(concs[14], 0.0, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[15], -3.0887e-157, 0.01);
-    BOOST_REQUIRE_CLOSE(concs[16], -5.5119e-144, 0.01);
+    BOOST_REQUIRE_SMALL(concs[15], 1.0e-156);
+    BOOST_REQUIRE_SMALL(concs[16], 1.0e-143);
 
 	// Remove the created file
 	std::string tempFile = "param.txt";

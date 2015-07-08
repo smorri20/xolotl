@@ -10,6 +10,7 @@
 #include <IDiffusionHandler.h>
 #include <IAdvectionHandler.h>
 #include <ITrapMutationHandler.h>
+#include <IBubbleBurstingHandler.h>
 #include <IMaterialFactory.h>
 
 namespace xolotlSolver {
@@ -181,6 +182,13 @@ public:
 	 * @return The modified trap-mutation handler
 	 */
 	virtual xolotlCore::ITrapMutationHandler *getMutationHandler() const = 0;
+
+	/**
+	 * Get the bubble bursting handler.
+	 *
+	 * @return The bubble bursting handler
+	 */
+	virtual xolotlCore::IBubbleBurstingHandler *getBurstingHandler() const = 0;
 
 	/**
 	 * Get the network.

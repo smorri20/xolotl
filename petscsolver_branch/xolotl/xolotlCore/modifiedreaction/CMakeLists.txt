@@ -7,14 +7,15 @@ SET(LIBRARY_NAME "xolotlModified")
 
 #Collect all header filenames in this project 
 #and glob them in HEADERS
-file(GLOB HEADERS *.h)
+file(GLOB HEADERS trapmutation/*.h bubblebursting/*.h)
 
 #Grab all of the source files
-file(GLOB SRC *.cpp)
+file(GLOB SRC trapmutation/*.cpp bubblebursting/*.cpp)
 
 #Include directories
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore)
-include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/modifiedreaction)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/modifiedreaction/trapmutation)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/modifiedreaction/bubblebursting)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants/psiclusters)
 
