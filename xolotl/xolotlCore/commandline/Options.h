@@ -14,8 +14,7 @@ class Options : public IOptions {
 
 protected:
 	/**
-	 * Map of options we support, keyed by option switch string
-	 * (including leading dashes)
+	 * Map of options we support, keyed by option switch string.
 	 */
 	typedef std::map<std::string, IOptionHandler*> OptionsMap;
 	OptionsMap optionsMap;
@@ -46,11 +45,6 @@ protected:
 	char **petscArgv;
 
 	/**
-	 * The value of the step size for the spatial grid.
-	 */
-	double stepSize;
-
-	/**
 	 * Use the constant temperature set of handlers?
 	 */
 	bool constTempFlag;
@@ -69,16 +63,6 @@ protected:
 	 * Name of the input temperature profile file.
 	 */
 	std::string tempProfileFilename;
-
-	/**
-	 * Use the helium fluence option?
-	 */
-	bool heliumFluenceFlag;
-
-	/**
-	 * Value for the maximum fluence.
-	 */
-	double maxHeliumFluence;
 	
 	/**
 	 * Use the helium flux option?
@@ -111,14 +95,19 @@ protected:
 	bool vizStandardHandlersFlag;
 
 	/**
-	 * Use the material option?
-	 */
-	bool materialFlag;
-
-	/**
 	 * Name of the material.
 	 */
 	std::string materialName;
+
+	/**
+	 * Value of the initial vacancy concentration.
+	 */
+	double initialVConcentration;
+
+	/**
+	 * Number of dimensions for the simulation.
+	 */
+	int dimensionNumber;
 
 public:
 
@@ -146,9 +135,7 @@ public:
     void showHelp(std::ostream& os) const;
 
     /**
-     * Should the program run after parsing the command line?
-     * (Or did parsing the command line suggest the program
-     * shouldn't/couldn't run?)
+     * Should the program run after parsing the parameter file?
      * \see IOptions.h
      */
     bool shouldRun() const {return shouldRunFlag;}
@@ -166,7 +153,7 @@ public:
     int getExitCode() const {return exitCode;}
 
     /**
-     * Set the value for the exit code
+     * Set the value for the exit code.
      * \see IOptions.h
      */
     void setExitCode(int code) {exitCode = code;}
@@ -181,7 +168,7 @@ public:
      * Set the name of the network file.
      * \see IOptions.h
      */
-    void setNetworkFilename(std::string name) {networkFilename = name;}
+    void setNetworkFilename(const std::string& name) {networkFilename = name;}
 
     /**
      * Get the Argc for PETSc.
@@ -206,18 +193,6 @@ public:
      * \see IOptions.h
      */
     void setPetscArgv(char** argv) {petscArgv = argv;}
-
-    /**
-     * Get the value of the step size.
-     * \see IOptions.h
-     */
-    double getStepSize() const {return stepSize;}
-
-    /**
-     * Set the value of the step size.
-     * \see IOptions.h
-     */
-    void setStepSize(double value) {stepSize = value;}
 
     /**
      * Should we use const temperature handlers?
@@ -265,36 +240,10 @@ public:
      * Set the name of the profile file to use.
      * \see IOptions.h
      */
-    void setTempProfileFilename(std::string name) {tempProfileFilename = name;}
+    void setTempProfileFilename(const std::string& name) {tempProfileFilename = name;}
 
     /**
-     * Should we use the Helium fluence option?
-	 * If false, it will not be used.
-     * \see IOptions.h
-     */
-    bool useMaxHeliumFluence() const {return heliumFluenceFlag;}
-
-    /**
-     * Set the heliumFluenceFlag.
-     * \see IOptions.h
-     */
-    void setHeliumFluenceFlag(bool flag) {heliumFluenceFlag = flag;}
-
-    /**
-     * Obtain the value of the Helium fluence to be used.
-     * \see IOptions.h
-     */
-    double getMaxHeliumFluence() const {return maxHeliumFluence;}
-
-    /**
-     * Set the value for the maximum fluence to which we want to integrate.
-     * \see IOptions.h
-     */
-    void setMaxHeliumFluence(double fluence) {maxHeliumFluence = fluence;}
-
-    /**
-     * Should we use the Helium flux option?
-	 * If false, it will not be used.
+     * Should we use the helium flux option?
      * \see IOptions.h
      */
     bool useHeliumFlux() const {return heliumFluxFlag;};
@@ -306,13 +255,13 @@ public:
     void setHeliumFluxFlag(bool flag) {heliumFluxFlag = flag;}
 
     /**
-     * Obtain the value of the Helium flux to be used.
+     * Obtain the value of the helium flux intensity to be used.
      * \see IOptions.h
      */
     double getHeliumFlux() const {return heliumFlux;}
 
     /**
-     * Set the value for the flux to use.
+     * Set the value for the flux intensity to use.
      * \see IOptions.h
      */
     void setHeliumFlux(double flux) {heliumFlux = flux;}
@@ -340,7 +289,7 @@ public:
      * Set the name of the time profile file to use.
      * \see IOptions.h
      */
-    void setFluxProfileName(std::string name) {fluxProfileFilename = name;}
+    void setFluxProfileName(const std::string& name) {fluxProfileFilename = name;}
 
     /**
      * Which type of performance handlers should we use?
@@ -368,29 +317,40 @@ public:
     void setVizStandardHandlers(bool flag) {vizStandardHandlersFlag = flag;}
 
     /**
-     * Should we use a specific material for the helium flux profile?
-     * \see IOptions.h
-     */
-    bool useMaterial() const {return materialFlag;}
-
-    /**
-     * Set the materialFlag.
-     * \see IOptions.h
-     */
-    void setMaterialFlag(bool flag) {materialFlag = flag;}
-
-    /**
-     * Obtain the name of the material to be used for the flux profile.
+     * Obtain the name of the material to be used for simulation.
      * \see IOptions.h
      */
     std::string getMaterial() const {return materialName;}
 
     /**
-     * Set the name of the material to be used for the flux profile.
+     * Set the name of the material to be used for the simulation.
      * \see IOptions.h
      */
-    void setMaterial(std::string material) {materialName = material;}
+    void setMaterial(const std::string& material) {materialName = material;}
 
+    /**
+     * Obtain the value of the concentration for the vacancies.
+     * \see IOptions.h
+     */
+    double getInitialVConcentration() const {return initialVConcentration;}
+
+    /**
+     * Set the value of the concentration for the vacancies.
+     * \see IOptions.h
+     */
+    void setInitialVConcentration(double conc) {initialVConcentration = conc;}
+
+    /**
+     * Obtain the number of dimensions for the simulation.
+     * \see IOptions.h
+     */
+    int getDimensionNumber() const {return dimensionNumber;}
+
+    /**
+     * Set the number of dimensions for the simulation.
+     * \see IOptions.h
+     */
+    void setDimensionNumber(int number) {dimensionNumber = number;}
 
 };//end class Options
 

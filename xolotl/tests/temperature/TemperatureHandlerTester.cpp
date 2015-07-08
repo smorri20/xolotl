@@ -13,7 +13,7 @@ using namespace xolotlCore;
 BOOST_AUTO_TEST_SUITE (TemperatureHandlerTester_testSuite)
 
 BOOST_AUTO_TEST_CASE(check_getTemperature) {
-
+	// Create the temperature handler
 	auto testTemp = make_shared<TemperatureHandler>(1000);
 
 	// Create a time
@@ -21,9 +21,9 @@ BOOST_AUTO_TEST_CASE(check_getTemperature) {
 
 	std::vector<double> x = {1.142857142857143, 0.0, 0.0};
 	// x is a gridpoint in PetscSolver, RHSFunction
-	//x=1.142857142857143=8/7 where x = xi * hx with xi=1, hx=1.142857142857143
+	//x=1.142857142857143=8/7 where x = xi * h with xi=1, h=1.142857142857143
 
-	auto temp = testTemp->getTemperature(x, 1);
+	double temp = testTemp->getTemperature(x, 1);
 
 	BOOST_TEST_MESSAGE( "\n" << "\nTemperatureHandlerTester Message: \n"
 						<< "temperature = " << temp << " at "
@@ -31,6 +31,7 @@ BOOST_AUTO_TEST_CASE(check_getTemperature) {
 						<< "at time = " << currTime << "\n");
 	BOOST_REQUIRE_EQUAL(temp, 1000.0);
 
+	return;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

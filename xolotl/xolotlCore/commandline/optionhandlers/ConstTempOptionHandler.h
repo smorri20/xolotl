@@ -2,6 +2,7 @@
 #define CONSTTEMPOPTIONHANDLER_H
 
 // Includes
+#include <stdlib.h>
 #include "OptionHandler.h"
 
 namespace xolotlCore {
@@ -17,10 +18,10 @@ public:
 	 */
 	ConstTempOptionHandler() :
 			OptionHandler("startTemp",
-					"startTemp <value>           "
+					"startTemp <value>                 "
 							"The temperature (in Kelvin) will be the constant floating point value specified. "
 							"(default = 1000)"
-							"\n	                      (NOTE: Use only ONE temperature option)") {
+							"\n	                            (NOTE: Use only ONE temperature option)\n") {
 	}
 
 	/**
@@ -36,7 +37,7 @@ public:
 	 * @param opt The pointer to the option that will be modified.
 	 * @param arg The value for the temperature.
 	 */
-	bool handler(IOptions *opt, std::string arg) {
+	bool handler(IOptions *opt, const std::string& arg) {
 
 		// Set the flag to use constant temperature to true
 		opt->setConstTempFlag(true);

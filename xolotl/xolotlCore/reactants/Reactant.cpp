@@ -8,22 +8,29 @@
 using namespace xolotlCore;
 
 Reactant::Reactant() :
-		concentration(0.0), name(""), id(0), temperature(0.0) {
-
-}
+		concentration(0.0),
+		name(""), id(0),
+		temperature(0.0),
+		network(nullptr),
+		handlerRegistry(nullptr) {}
 
 Reactant::Reactant(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		concentration(0.0), name(""), id(0), temperature(0.0), handlerRegistry(registry) {
-
-}
+		concentration(0.0),
+		name(""),
+		id(0),
+		temperature(0.0),
+		network(nullptr),
+		handlerRegistry(registry) {}
 
 Reactant::Reactant(const Reactant &other) :
-		concentration(other.concentration), name(other.name), id(other.id),
-		compositionMap(other.compositionMap), temperature(0.0), handlerRegistry(other.handlerRegistry), typeName(other.typeName)  {
-}
-
-Reactant::~Reactant() {
-}
+		concentration(other.concentration),
+		name(other.name),
+		typeName(other.typeName),
+		id(other.id),
+		temperature(other.temperature),
+		network(other.network),
+		compositionMap(other.compositionMap),
+		handlerRegistry(other.handlerRegistry) {}
 
 std::shared_ptr<Reactant> Reactant::clone() {
 	std::shared_ptr<Reactant> reactant(new Reactant(*this));
@@ -31,8 +38,12 @@ std::shared_ptr<Reactant> Reactant::clone() {
 }
 
 Reactant::Reactant(double conc, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		concentration(conc), name(""), id(0), temperature(0.0), handlerRegistry(registry) {
-}
+		concentration(conc),
+		name(""),
+		id(0),
+		temperature(0.0),
+		network(nullptr),
+		handlerRegistry(registry) {}
 
 double Reactant::getConcentration() const {
 	return concentration;
@@ -40,22 +51,25 @@ double Reactant::getConcentration() const {
 
 void Reactant::increaseConcentration(double deltaConc) {
 	concentration += deltaConc;
-	std::cout << "Conc = " << concentration << ", delta = " << deltaConc << std::endl;
+
 	return;
 }
 
 void Reactant::decreaseConcentration(double deltaConc) {
 	concentration -= deltaConc;
+
 	return;
 }
 
 void Reactant::setConcentration(double conc) {
 	concentration = conc;
+
 	return;
 }
 
 void Reactant::zero() {
 	concentration = 0.0;
+
 	return;
 }
 
@@ -65,14 +79,15 @@ double Reactant::getTotalFlux() {
 
 void Reactant::setReactionNetwork(
 	std::shared_ptr<ReactionNetwork> reactionNetwork) {
-	
 	network = reactionNetwork;
+	
+	return;
 }
 
 
 std::vector<int> Reactant::getConnectivity() const {
 	// The connectivity array by default is filled with
-	// zeroes.
+	// zeros.
 	int connectivityLength = network->size();
 	std::vector<int> connectivity = std::vector<int>(connectivityLength, 0);
 
@@ -81,7 +96,7 @@ std::vector<int> Reactant::getConnectivity() const {
 
 std::vector<double> Reactant::getPartialDerivatives() const {
 	// The partial derivatives array by default is filled with
-	// zeroes.
+	// zeros.
 	int length = network->size();
 	std::vector<double> partial_derivatives = std::vector<double>(length, 0.0);
 
@@ -93,20 +108,12 @@ void Reactant::getPartialDerivatives(std::vector<double> & partials) const {
 	return;
 }
 
-/**
- * This operation returns the name of the reactant.
- * @return the name
- */
 const std::string Reactant::getName() const {
 	return name;
 }
 
 std::string Reactant::getType() const {
 	return typeName;
-}
-
-const std::string Reactant::toString() {
-	throw std::string("Reactant::toString() is unimplemented");
 }
 
 const std::map<std::string, int> & Reactant::getComposition() const {
@@ -116,10 +123,10 @@ const std::map<std::string, int> & Reactant::getComposition() const {
 
 namespace xolotlCore {
 std::ostream& operator<< (std::ostream& out, const Reactant& reactant) {
-
 	// Output the name and Id of the reactant
 	out << reactant.name << "  Reactant Id: " << reactant.id-1;
 
 	return out;
 }
+
 };

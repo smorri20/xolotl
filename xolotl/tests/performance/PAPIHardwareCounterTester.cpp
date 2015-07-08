@@ -90,7 +90,6 @@ BOOST_AUTO_TEST_CASE(check_getValues)
     BOOST_REQUIRE_EQUAL(papiInitialized, true);
 
     PAPIHardwareCounter tester( "test", test_ctrSpec );
-    std::string testName = tester.getName();
 
     const unsigned int nMultiplies = 1000;
     tester.start();
@@ -140,7 +139,7 @@ BOOST_AUTO_TEST_CASE(check_getValues)
         << XOLOTL_HWCTR_EXPVAL
         << " FP ops +/-"
         << XOLOTL_HWCTR_TOL
-        << "\%\n  when executing a multiplication statement "
+        << "%\nwhen executing a multiplication statement "
         << nMultiplies
         << " times in a loop.";
     BOOST_TEST_MESSAGE( vstr.str() );

@@ -3,7 +3,7 @@
 
 using namespace xolotlViz;
 
-DataProvider::DataProvider(std::string name) : xolotlCore::Identifiable(name) {
+DataProvider::DataProvider(const std::string& name) : xolotlCore::Identifiable(name) {
 }
 
 DataProvider::~DataProvider() {
@@ -27,7 +27,7 @@ double DataProvider::getDataMean() const {
 
 	// Loop on all the points in the data vector
 	for (auto it = dataPoints->begin();
-			it != dataPoints->end(); it++) {
+			it != dataPoints->end(); ++it) {
 
 		// Add the current value to the sum
 		valueSum += (*it).value;

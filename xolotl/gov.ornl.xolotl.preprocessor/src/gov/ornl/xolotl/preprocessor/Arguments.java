@@ -81,6 +81,23 @@ public interface Arguments {
 	int getMaxISize();
 
 	/**
+	 * This Option annotation corresponds to the '--phaseCut' option which doesn't have 
+	 * a default value because it is used as a flag.
+	 * 
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(description = "Should the network be reduced with the phase-cut "
+					+ "method?")
+	/**
+	 * This operation produces the required command line option '--phaseCut' which 
+	 * doesn't take a value and is defined by the previous Option annotation
+	 * 
+	 * @return Whether we use the phase cut or not
+	 */
+	boolean isPhaseCut();
+
+	/**
 	 * This Option annotation corresponds to the '--startTemp' option which
 	 * defines a default value of 1000 and additionally provides a brief
 	 * description of this option.
@@ -114,7 +131,7 @@ public interface Arguments {
 	 *            Brief description of this option
 	 */
 	@Option(defaultValue = "std", 
-			description = "{dummy, std}  Which set of performance handlers to use (default = std)")
+			description = "{dummy, std, io, papi}  Which set of performance handlers to use (default = std)")
 	/**
 	 * This operation produces the required command line option '--perfHandler' which 
 	 * takes a single string value and is defined by the previous Option annotation
@@ -155,7 +172,7 @@ public interface Arguments {
 	 * @param description
 	 *            Brief description of this option
 	 */
-	@Option(defaultValue = "-da_grid_x 10 -ts_final_time 50 -ts_dt 1.0e-12 "
+	@Option(defaultValue = "-ts_final_time 50 -ts_dt 1.0e-12 "
 			+ "-ts_max_steps 100 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
 			+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant "
 			+ "-fieldsplit_1_pc_type sor -snes_monitor -ksp_monitor -ts_monitor", description = "List of arguments to be passed to PETSc")
@@ -189,9 +206,96 @@ public interface Arguments {
 	String getNetworkFile();
 
 	/**
-	 * This Option annotation corresponds to the '--stepSize' option which
-	 * defines a default step size and additionally provides a brief description 
-	 * of the option.
+	 * This Option annotation corresponds to the '--dimensions' option which
+	 * defines a default 1D and additionally provides a brief description of 
+	 * the option.
+	 * 
+	 * @param defaultValue
+	 *            The default number of dimensions that will be used if this option
+	 *            is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "1", 
+			description = "<dimensionNumber> The number of dimensions for the simulation (default = 1)")
+	/**
+	 * This operation produces the required command line option '--dimensions' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The number of dimensions
+	 */
+	String getDimensions();
+
+	/**
+	 * This Option annotation corresponds to the '--nxGrid' option which defines a 
+	 * default number of grid points in the x directions and additionally provides a 
+	 * brief description of the option.
+	 * 
+	 * @param defaultValue
+	 *            The default number of grid points that will be used if this option
+	 *            is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "20", 
+			description = "<nxGrid> The number of grid points in the x direction "
+					+ "(default = 20)")
+	/**
+	 * This operation produces the required command line option '--nxGrid' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The number of grid points in the x direction
+	 */
+	int getNxGrid();
+
+	/**
+	 * This Option annotation corresponds to the '--nyGrid' option which defines a 
+	 * default number of grid points in the y directions and additionally provides a 
+	 * brief description of the option.
+	 * 
+	 * @param defaultValue
+	 *            The default number of grid points that will be used if this option
+	 *            is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "0", 
+			description = "<nyGrid> The number of grid points in the y direction "
+					+ "(default = 0)")
+	/**
+	 * This operation produces the required command line option '--nyGrid' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The number of grid points in the y direction
+	 */
+	int getNyGrid();
+
+	/**
+	 * This Option annotation corresponds to the '--nzGrid' option which defines a 
+	 * default number of grid points in the z directions and additionally provides a 
+	 * brief description of the option.
+	 * 
+	 * @param defaultValue
+	 *            The default number of grid points that will be used if this option
+	 *            is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "0", 
+			description = "<nzGrid> The number of grid points in the z direction "
+					+ "(default = 0)")
+	/**
+	 * This operation produces the required command line option '--nzGrid' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The number of grid points in the z direction
+	 */
+	int getNzGrid();
+
+	/**
+	 * This Option annotation corresponds to the '--xStepSize' option which
+	 * defines a default step size in the x direction and additionally provides a 
+	 * brief description of the option.
 	 * 
 	 * @param defaultValue
 	 *            The default step size that will be used if this option
@@ -200,14 +304,59 @@ public interface Arguments {
 	 *            Brief description of this option
 	 */
 	@Option(defaultValue = "1.0", 
-			description = "<value>  The value of the step size in nm (default = 1.0)")
+			description = "<value>  The value of the step size in the x direction"
+					+ " in nm (default = 1.0)")
 	/**
-	 * This operation produces the required command line option '--stepSize' which 
+	 * This operation produces the required command line option '--xStepSize' which 
 	 * takes a single string value and is defined by the previous Option annotation
 	 * 
 	 * @return The value of the step size
 	 */
-	String getStepSize();
+	double getXStepSize();
+
+	/**
+	 * This Option annotation corresponds to the '--yStepSize' option which
+	 * defines a default step size in the y direction and additionally provides a 
+	 * brief description of the option.
+	 * 
+	 * @param defaultValue
+	 *            The default step size that will be used if this option
+	 *            is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "0.0", 
+			description = "<value>  The value of the step size in the y direction"
+					+ " in nm (default = 0.0)")
+	/**
+	 * This operation produces the required command line option '--yStepSize' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The value of the step size
+	 */
+	double getYStepSize();
+
+	/**
+	 * This Option annotation corresponds to the '--zStepSize' option which
+	 * defines a default step size in the z direction and additionally provides a 
+	 * brief description of the option.
+	 * 
+	 * @param defaultValue
+	 *            The default step size that will be used if this option
+	 *            is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "0.0", 
+			description = "<value>  The value of the step size in the z direction"
+					+ " in nm (default = 0.0)")
+	/**
+	 * This operation produces the required command line option '--zStepSize' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The value of the step size
+	 */
+	double getZStepSize();
 
 	/**
 	 * This Option annotation corresponds to the optional '--material' option
@@ -306,32 +455,14 @@ public interface Arguments {
 	 *         not
 	 */
 	boolean isFluxFile();
-
+	
 	/**
-	 * This Option annotation corresponds to the optional '--maxHeFluence' option
+	 * This Option annotation corresponds to the optional '--checkpoint' option
 	 * and provides a brief description of the option.
 	 * 
 	 * @param description
 	 *            Brief description of this option
 	 */
-	@Option(description = "The maxium Helium fluence value (in nm) that will be used")
-	
-	/**
-	 * This operation produces the optional command line option '--maxHeFluence' which 
-	 * takes a single string value and is defined by the previous Option annotation
-	 * 
-	 * @return The maximum Helium fluence value
-	 */
-	String getMaxHeFluence();
-
-	/**
-	 * This operation makes the command line option '--maxHeFluence' optional.
-	 * 
-	 * @return Returns true if the option has been specified and false if it has
-	 *         not
-	 */
-	boolean isMaxHeFluence();
-
 	@Option(description = "<HDF5FileName>  Start the solver with the concentrations, time, "
 			+ "and step size present in the HDF5 file")
 	/**
@@ -349,6 +480,32 @@ public interface Arguments {
 	 *         not
 	 */
 	boolean isCheckpoint();
+
+	/**
+	 * This Option annotation corresponds to the optional '--initialV' option
+	 * and provides a brief description of the option.
+	 * 
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(description = "The initial concentration of vacancies in the material (in #/nm3) "
+			+ "that will be used.")
+	
+	/**
+	 * This operation produces the optional command line option '--initialV' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The initial vacancy concentration of the material
+	 */
+	String getInitialV();
+
+	/**
+	 * This operation makes the command line option '--initialV' optional.
+	 * 
+	 * @return Returns true if the option has been specified and false if it has
+	 *         not
+	 */
+	boolean isInitialV();
 
 	/**
 	 * This produces the command line arguments '--help' or '-h' either of which

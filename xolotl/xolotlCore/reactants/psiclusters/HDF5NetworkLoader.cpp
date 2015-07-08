@@ -54,6 +54,7 @@ std::shared_ptr<PSIClusterReactionNetwork> HDF5NetworkLoader::load() {
 		reactants.push_back(nextCluster);
 	}
 
+	// Set the reaction network for each reactant
 	for (auto reactantsIt = reactants.begin(); reactantsIt != reactants.end();
 			++reactantsIt) {
 		(*reactantsIt)->setReactionNetwork(network);
@@ -62,8 +63,9 @@ std::shared_ptr<PSIClusterReactionNetwork> HDF5NetworkLoader::load() {
 	return network;
 }
 
-void HDF5NetworkLoader::setFilename (std::string name) {
+void HDF5NetworkLoader::setFilename (const std::string& name) {
 	fileName = name;
+
 	return;
 }
 

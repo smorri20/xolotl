@@ -13,13 +13,13 @@ using namespace xolotlViz;
 #define W_WIDTH 1024
 #define W_HEIGHT 1024
 
-SurfacePlot::SurfacePlot(std::string name) : Plot(name) {
+SurfacePlot::SurfacePlot(const std::string& name) : Plot(name) {
 }
 
 SurfacePlot::~SurfacePlot() {
 }
 
-void SurfacePlot::render(std::string fileName) {
+void SurfacePlot::render(const std::string& fileName) {
 
 	// Check if the label provider is set
 	if (!plotLabelProvider){
@@ -59,7 +59,7 @@ void SurfacePlot::render(std::string fileName) {
 	}
 
 	// Add the axisValues to a field of the data set
-	eavlField *field = new eavlField(1, axisValues, eavlField::ASSOC_POINTS);
+	eavlField *field = new eavlField(0, axisValues, eavlField::ASSOC_CELL_SET, "RectilinearGridCells");
 	data->AddField(field);
 
     // Create an offscreen render surface
@@ -84,7 +84,7 @@ void SurfacePlot::render(std::string fileName) {
 
     // Print the axis labels
     auto axis1Annotation = new eavlScreenTextAnnotation(window, plotLabelProvider->axis1Label,
-    		eavlColor::white, 0.05, 0.0, -0.35);
+    		eavlColor::white, 0.05, 0.0, -0.9);
     window->AddAnnotation(axis1Annotation);
     auto axis2Annotation = new eavlScreenTextAnnotation(window, plotLabelProvider->axis2Label,
     		eavlColor::white, 0.05, -0.9, 0.0, 90.0);
@@ -117,9 +117,7 @@ void SurfacePlot::render(std::string fileName) {
     window->Paint();
 
     // Save the final buffer as an image
-    char fn[25];
-    sprintf(fn, (fileName).c_str());
-    window->SaveWindowAsPNM(fn);
+    window->SaveWindowAsPNM(fileName);
 
 	return;
 }

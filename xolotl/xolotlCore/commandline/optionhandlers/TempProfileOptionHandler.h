@@ -18,11 +18,11 @@ public:
 	 */
 	TempProfileOptionHandler() :
 			OptionHandler("tempFile",
-					"tempFile <filename>         "
+					"tempFile <filename>               "
 							"A temperature profile is given by the specified file, "
 							"then linear interpolation is used to fit the data."
-							"\n	                      (NOTE: If a temperature file is given, "
-							"a constant temperature should NOT be given)") {
+							"\n	                            (NOTE: If a temperature file is given, "
+							"a constant temperature should NOT be given)\n") {
 	}
 
 	/**
@@ -38,7 +38,7 @@ public:
 	 * @param opt The pointer to the option that will be modified.
 	 * @param arg The name of the file where the profile is stored.
 	 */
-	bool handler(IOptions *opt, std::string arg) {
+	bool handler(IOptions *opt, const std::string& arg) {
 		bool ret = true;
 
 		// Check that the profile file exists

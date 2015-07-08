@@ -21,7 +21,7 @@ namespace xolotlCore {
  * @param subline the subline to load in the data.
  * @param data the reference to the data to be loaded.
  */
-static void loadData(std::string subline, std::string &data) {
+static void loadData(const std::string& subline, std::string &data) {
 	data = subline;
 
 	return;
@@ -33,7 +33,7 @@ static void loadData(std::string subline, std::string &data) {
  * @param subline the subline to load in the data.
  * @param data the reference to the data to be loaded.
  */
-static void loadData(std::string subline, char &data) {
+static void loadData(const std::string& subline, char &data) {
 	std::istringstream dataStream;
 	dataStream.str(subline);
 	dataStream >> data;
@@ -47,7 +47,7 @@ static void loadData(std::string subline, char &data) {
  * @param subline the subline to load in the data.
  * @param data the reference to the data to be loaded.
  */
-static void loadData(std::string subline, bool &data) {
+static void loadData(const std::string& subline, bool &data) {
 	std::istringstream dataStream;
 	dataStream.str(subline);
 	dataStream >> data;
@@ -61,7 +61,7 @@ static void loadData(std::string subline, bool &data) {
  * @param subline the subline to load in the data.
  * @param data the reference to the data to be loaded.
  */
-static void loadData(std::string subline, double &data) {
+static void loadData(const std::string& subline, double &data) {
 	std::istringstream dataStream;
 	dataStream.str(subline);
 	dataStream >> data;
@@ -75,7 +75,7 @@ static void loadData(std::string subline, double &data) {
  * @param subline the subline to load in the data.
  * @param data the reference to the data to be loaded.
  */
-static void loadData(std::string subline, int &data) {
+static void loadData(const std::string& subline, int &data) {
 	std::istringstream dataStream;
 	dataStream.str(subline);
 	dataStream >> data;
@@ -120,10 +120,12 @@ public:
 	}
 
 	/**
-	 * This operation sets the string (delimiter) that represents the delimiter separating the different data elements in the line.
+	 * This operation sets the string (delimiter) that represents the delimiter
+	 * separating the different data elements in the line.
 	 *
+	 * @param delimiter The delimiter
 	 */
-	void setDelimiter(std::string delimiter) {
+	void setDelimiter(const std::string& delimiter) {
 
 		dataDelimiter = delimiter;
 
@@ -131,10 +133,12 @@ public:
 	}
 
 	/**
-	 * This operation sets the character (delimiter) that represents the comment character.
+	 * This operation sets the character that represents the comment character.
+	 *
+	 * @param cdelimiter The comment delimiter
 	 *
 	 */
-	void setCommentDelimiter(std::string cdelimiter) {
+	void setCommentDelimiter(const std::string& cdelimiter) {
 
 		commentDelimiter = cdelimiter;
 
@@ -143,6 +147,8 @@ public:
 
 	/**
 	 * This operation sets the input stream that should be parsed.
+	 *
+	 * @param stream The input stream
 	 */
 	void setInputStream(std::shared_ptr<std::istream> stream) {
 		inputstream = stream;
@@ -155,7 +161,6 @@ public:
 	 * if there are no more lines in the stream.
 	 */
 	std::vector<dataType> loadLine() {
-
 		// Local Declarations
 		size_t lastDelimiterPos = 0, nextDelimiterPos = 0, finalDelimiterPos =
 				std::string::npos;
@@ -169,10 +174,12 @@ public:
 			// Get the line
 			std::string line;
 			std::getline(*inputstream, line);
+
 			// Handle the case where there is a carriage return (\r) before
 			// the newline (\n)
 			if (line[line.size() - 1] == '\r')
 				line.resize(line.size() - 1);
+
 			// Split it if it is not empty and does not start with the comment
 			// character
 			if (!line.empty()) {
@@ -181,15 +188,18 @@ public:
 				// std::string.front()!
 				if (line.find(commentDelimiter) == 0)
 					return loadLine();
+
 				// Remove delimiters at the beginning of the string
 				if (line.find(dataDelimiter) == 0)
 					line = line.substr(1);
+
 				// Remove delimiters at the end of the string
 				if (line.find(dataDelimiter, line.size() - 2)
 						== line.size() - 1)
 					line = line.erase(line.size() - 1);
 				// Find the first instance of the delimiter
 				nextDelimiterPos = line.find(dataDelimiter);
+
 				// Only split the line if it contains the delimiter
 				if (nextDelimiterPos != finalDelimiterPos) {
 					// Walk across each piece of data in the line stopping only

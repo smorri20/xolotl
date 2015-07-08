@@ -18,11 +18,11 @@ public:
 	 */
 	FluxProfileOptionHandler() :
 			OptionHandler("fluxFile",
-					"fluxFile <filename>         "
+					"fluxFile <filename>               "
 							"A time profile for the flux is given by the specified file, "
 							"then linear interpolation is used to fit the data."
-							"\n	                      (NOTE: If a flux profile file is given, "
-							"a constant helium flux should NOT be given)") {
+							"\n	                            (NOTE: If a flux profile file is given, "
+							"a constant helium flux should NOT be given)\n") {
 	}
 
 	/**
@@ -38,7 +38,7 @@ public:
 	 * @param opt The pointer to the option that will be modified.
 	 * @param arg The name of the file where the profile is stored.
 	 */
-	bool handler(IOptions *opt, std::string arg) {
+	bool handler(IOptions *opt, const std::string& arg) {
 		bool ret = true;
 
 		// Check that the profile file exists
