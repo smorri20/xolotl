@@ -214,6 +214,7 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	xolotlCore::PSICluster *cluster = NULL;
 	double **concVector = new double*[5];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
+	double h[3] = {hX, hY, 0.0};
 
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = network->size();
@@ -274,7 +275,7 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 					updatedConcOffset, sx, sy);
 
 			// ---- Compute advection over the locally owned part of the grid -----
-			advectionHandler->computeAdvection(network, hX, gridPosition, concVector,
+			advectionHandler->computeAdvection(network, h, gridPosition, concVector,
 					updatedConcOffset);
 
 			// ----- Compute all of the new fluxes -----
@@ -346,6 +347,7 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	PetscScalar vals[5 * nDiff];
 	int indices[nDiff];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
+	double h[3] = {hX, hY, 0.0};
 
 	/*
 	 Loop over grid points computing Jacobian terms for diffusion and advection
@@ -398,8 +400,11 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 			}
 
 			// Get the partial derivatives for the advection
-			advectionHandler->computePartialsForAdvection(network, hX, vals,
+			advectionHandler->computePartialsForAdvection(network, h, vals,
 					indices, gridPosition);
+
+			// Get the stencil indices to know where to put the partial derivatives in the Jacobian
+			auto advecStencil = advectionHandler->getStencilForAdvection(gridPosition);
 
 			// Loop on the number of advecting cluster to set the values in the Jacobian
 			for (int i = 0; i < nAdvec; i++) {
@@ -413,8 +418,8 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 				cols[0].i = xi; // middle
 				cols[0].j = yj;
 				cols[0].c = indices[i];
-				cols[1].i = xi + 1; // right
-				cols[1].j = yj;
+				cols[1].i = xi + advecStencil[0]; // left or right
+				cols[1].j = yj + advecStencil[1]; // top or bottom
 				cols[1].c = indices[i];
 
 				// Update the matrix
