@@ -3,6 +3,10 @@
 
 namespace xolotlCore {
 
+void SurfaceAdvectionHandler::setPosition(double pos) {
+	return;
+}
+
 void SurfaceAdvectionHandler::computeAdvection(
 		PSIClusterReactionNetwork *network, double *h, std::vector<double> &pos,
 		double **concVector, double *updatedConcOffset) {
@@ -74,6 +78,11 @@ std::vector<int> SurfaceAdvectionHandler::getStencilForAdvection(
 		std::vector<double> &pos) {
 	// Always return (1, 0, 0)
 	return {1, 0, 0};
+}
+
+bool SurfaceAdvectionHandler::isPointOnSink(std::vector<double> &pos) {
+	// Always return false
+	return false;
 }
 
 }/* end namespace xolotlCore */

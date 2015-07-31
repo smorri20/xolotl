@@ -236,6 +236,15 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				concOffset = concs[zk][yj][xi];
 				updatedConcOffset = updatedConcs[zk][yj][xi];
 
+				// Boundary conditions
+				if (xi == 0 || xi == Mx - 1) {
+					for (int i = 0; i < dof; i++) {
+						updatedConcOffset[i] = 1.0 * concOffset[i];
+					}
+
+					continue;
+				}
+
 				// Fill the concVector with the pointer to the middle, left,
 				// right, bottom, top, front, and back grid points
 				concVector[0] = concOffset; // middle
@@ -245,15 +254,6 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				concVector[4] = concs[zk][yj + 1][xi]; // top
 				concVector[5] = concs[zk - 1][yj][xi]; // front
 				concVector[6] = concs[zk + 1][yj][xi]; // back
-
-				// Boundary conditions
-				if (xi == 0 || xi == Mx - 1) {
-					for (int i = 0; i < dof; i++) {
-						updatedConcOffset[i] = 1.0 * concOffset[i];
-					}
-
-					continue;
-				}
 
 				// Set the grid position
 				gridPosition[0] = xi * hX;
@@ -448,16 +448,30 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 					row.k = zk;
 					row.c = indices[i];
 
-					// Set grid coordinates and component numbers for the columns
-					// corresponding to the middle and right grid points
-					cols[0].i = xi; // middle
-					cols[0].j = yj;
-					cols[0].k = zk;
-					cols[0].c = indices[i];
-					cols[1].i = xi + advecStencil[0]; // left or right
-					cols[1].j = yj + advecStencil[1]; // top or bottom;
-					cols[1].k = zk + advecStencil[2]; // front or back;
-					cols[1].c = indices[i];
+					// If we are on the sink, the partial derivatives are not the same
+					// Both sides are giving their concentrations to the center
+					if (advectionHandler->isPointOnSink(gridPosition)) {
+						cols[0].i = xi - advecStencil[0]; // left?
+						cols[0].j = yj - advecStencil[1]; // bottom?
+						cols[0].k = zk - advecStencil[2]; // back?
+						cols[0].c = indices[i];
+						cols[1].i = xi + advecStencil[0]; // right?
+						cols[1].j = yj + advecStencil[1]; // top?
+						cols[0].k = zk + advecStencil[2]; // front?
+						cols[1].c = indices[i];
+					}
+					else {
+						// Set grid coordinates and component numbers for the columns
+						// corresponding to the middle and the other grid points
+						cols[0].i = xi; // middle
+						cols[0].j = yj;
+						cols[0].k = zk;
+						cols[0].c = indices[i];
+						cols[1].i = xi + advecStencil[0]; // left or right
+						cols[1].j = yj + advecStencil[1]; // top or bottom;
+						cols[1].k = zk + advecStencil[2]; // front or back;
+						cols[1].c = indices[i];
+					}
 
 					// Update the matrix
 					ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals + (2 * i), ADD_VALUES);
@@ -554,6 +568,7 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 						// than using memset.
 						clusterPartials[pdColIdsVector[j]] = 0.0;
 					}
+
 					// Update the matrix
 					ierr = MatSetValuesStencil(J, 1, &rowId, pdColIdsVectorSize,
 							colIds, reactingPartialsForCluster.data(), ADD_VALUES);

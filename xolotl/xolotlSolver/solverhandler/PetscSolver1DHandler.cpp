@@ -219,11 +219,6 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		concOffset = concs[xi];
 		updatedConcOffset = updatedConcs[xi];
 
-		// Fill the concVector with the pointer to the middle, left, and right grid points
-		concVector[0] = concOffset; // middle
-		concVector[1] = concs[xi - 1]; // left
-		concVector[2] = concs[xi + 1]; // right
-
 		// Boundary conditions
 		if (xi == 0 || xi == Mx - 1) {
 			for (int i = 0; i < dof; i++) {
@@ -232,6 +227,11 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 			continue;
 		}
+
+		// Fill the concVector with the pointer to the middle, left, and right grid points
+		concVector[0] = concOffset; // middle
+		concVector[1] = concs[xi - 1]; // left
+		concVector[2] = concs[xi + 1]; // right
 
 		// Set the grid position
 		gridPosition[0] = xi * hX;
@@ -388,12 +388,22 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 			row.i = xi;
 			row.c = indices[i];
 
-			// Set grid coordinates and component numbers for the columns
-			// corresponding to the middle and right grid points
-			cols[0].i = xi; // middle
-			cols[0].c = indices[i];
-			cols[1].i = xi + advecStencil[0]; // left or right
-			cols[1].c = indices[i];
+			// If we are on the sink, the partial derivatives are not the same
+			// Both sides are giving their concentrations to the center
+			if (advectionHandler->isPointOnSink(gridPosition)) {
+				cols[0].i = xi - advecStencil[0]; // left?
+				cols[0].c = indices[i];
+				cols[1].i = xi + advecStencil[0]; // right?
+				cols[1].c = indices[i];
+			}
+			else {
+				// Set grid coordinates and component numbers for the columns
+				// corresponding to the middle and the other grid points
+				cols[0].i = xi; // middle
+				cols[0].c = indices[i];
+				cols[1].i = xi + advecStencil[0]; // left or right
+				cols[1].c = indices[i];
+			}
 
 			// Update the matrix
 			ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals + (2 * i), ADD_VALUES);
@@ -482,6 +492,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 				// than using memset.
 				clusterPartials[pdColIdsVector[j]] = 0.0;
 			}
+
 			// Update the matrix
 			ierr = MatSetValuesStencil(J, 1, &rowId, pdColIdsVectorSize,
 					colIds, reactingPartialsForCluster.data(), ADD_VALUES);

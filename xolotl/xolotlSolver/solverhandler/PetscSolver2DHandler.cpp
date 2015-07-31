@@ -226,13 +226,6 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			concOffset = concs[yj][xi];
 			updatedConcOffset = updatedConcs[yj][xi];
 
-			// Fill the concVector with the pointer to the middle, left, right, bottom, and top grid points
-			concVector[0] = concOffset; // middle
-			concVector[1] = concs[yj][xi - 1]; // left
-			concVector[2] = concs[yj][xi + 1]; // right
-			concVector[3] = concs[yj - 1][xi]; // bottom
-			concVector[4] = concs[yj + 1][xi]; // top
-
 			// Boundary conditions
 			if (xi == 0 || xi == Mx - 1) {
 				for (int i = 0; i < dof; i++) {
@@ -241,6 +234,13 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 				continue;
 			}
+
+			// Fill the concVector with the pointer to the middle, left, right, bottom, and top grid points
+			concVector[0] = concOffset; // middle
+			concVector[1] = concs[yj][xi - 1]; // left
+			concVector[2] = concs[yj][xi + 1]; // right
+			concVector[3] = concs[yj - 1][xi]; // bottom
+			concVector[4] = concs[yj + 1][xi]; // top
 
 			// Set the grid position
 			gridPosition[0] = xi * hX;
@@ -355,12 +355,12 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	 */
 	for (int yj = ys; yj < ys + ym; yj++) {
 		for (int xi = xs; xi < xs + xm; xi++) {
-			// Boundary conditions
-			if (xi == 0 || xi == Mx - 1) continue;
-
 			// Set the grid position
 			gridPosition[0] = xi * hX;
 			gridPosition[1] = yj * hY;
+
+			// Boundary conditions
+			if (xi == 0 || xi == Mx - 1) continue;
 
 			// Copy data into the PSIClusterReactionNetwork so that it can
 			// compute the new concentrations.
@@ -413,14 +413,26 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 				row.j = yj;
 				row.c = indices[i];
 
-				// Set grid coordinates and component numbers for the columns
-				// corresponding to the middle and right grid points
-				cols[0].i = xi; // middle
-				cols[0].j = yj;
-				cols[0].c = indices[i];
-				cols[1].i = xi + advecStencil[0]; // left or right
-				cols[1].j = yj + advecStencil[1]; // top or bottom
-				cols[1].c = indices[i];
+				// If we are on the sink, the partial derivatives are not the same
+				// Both sides are giving their concentrations to the center
+				if (advectionHandler->isPointOnSink(gridPosition)) {
+					cols[0].i = xi - advecStencil[0]; // left?
+					cols[0].j = yj - advecStencil[1]; // bottom?
+					cols[0].c = indices[i];
+					cols[1].i = xi + advecStencil[0]; // right?
+					cols[1].j = yj + advecStencil[1]; // top?
+					cols[1].c = indices[i];
+				}
+				else {
+					// Set grid coordinates and component numbers for the columns
+					// corresponding to the middle and the other grid points
+					cols[0].i = xi; // middle
+					cols[0].j = yj;
+					cols[0].c = indices[i];
+					cols[1].i = xi + advecStencil[0]; // left or right
+					cols[1].j = yj + advecStencil[1]; // top or bottom
+					cols[1].c = indices[i];
+				}
 
 				// Update the matrix
 				ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals + (2 * i), ADD_VALUES);
@@ -513,6 +525,7 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 					// than using memset.
 					clusterPartials[pdColIdsVector[j]] = 0.0;
 				}
+
 				// Update the matrix
 				ierr = MatSetValuesStencil(J, 1, &rowId, pdColIdsVectorSize, colIds,
 						reactingPartialsForCluster.data(), ADD_VALUES);

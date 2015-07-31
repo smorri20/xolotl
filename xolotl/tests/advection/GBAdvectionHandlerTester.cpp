@@ -40,9 +40,17 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	// Get its size
 	const int size = network->getAll()->size();
 
-	// Create the advection handler and initialize it
+	// Create the advection handler and initialize it with a sink at
+	// 2nm in the Y direction
 	GBAdvectionHandler advectionHandler;
 	advectionHandler.initialize(network);
+	advectionHandler.setPosition(2.0);
+
+	// Check if grid points are on the sink
+	std::vector<double> pos0 = { 0.1, 3.0, 0.0 };
+	std::vector<double> pos1 = { 5.0, 2.0, 0.0 };
+	BOOST_REQUIRE_EQUAL(advectionHandler.isPointOnSink(pos0), false);
+	BOOST_REQUIRE_EQUAL(advectionHandler.isPointOnSink(pos1), true);
 
 	// Check the total number of advecting clusters
 	BOOST_REQUIRE_EQUAL(advectionHandler.getNumberOfAdvecting(), 6);
@@ -90,7 +98,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	concVector[4] = conc + 7 * size; // top
 
 	// Set the grid position
-	std::vector<double> gridPosition = { hx, hy, 0 };
+	std::vector<double> gridPosition = { hx, hy, 0.0 };
 	double h[3] = {hx, hy, hz};
 
 	// Compute the advection at this grid point
@@ -98,12 +106,12 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 			concVector, updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
-//	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], -1.54376e+11, 0.01);
-//	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], -1.49058e+11, 0.01);
-//	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], -1.89362e+11, 0.01);
-//	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], -6.65778e+10, 0.01);
-//	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], -2.66416e+11, 0.01);
-//	BOOST_REQUIRE_CLOSE(updatedConcOffset[5], -9.09579e+09, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], -3.08751e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], -2.98116e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], -3.78724e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], -6.81702e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], -9.81017e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[5], -3.80645e+10, 0.01);
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[6], 0.0, 0.01); // Does not advect
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[7], 0.0, 0.01); // Does not advect
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[8], 0.0, 0.01); // Does not advect
@@ -129,10 +137,10 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	BOOST_REQUIRE_EQUAL(indices[5], 5);
 
 	// Check values
-//	BOOST_REQUIRE_CLOSE(val[0], -815207266.0, 0.01);
-//	BOOST_REQUIRE_CLOSE(val[1], 50950454.0, 0.01);
-//	BOOST_REQUIRE_CLOSE(val[2], -700039625.0, 0.01);
-//	BOOST_REQUIRE_CLOSE(val[3], 43752477.0, 0.01);
+	BOOST_REQUIRE_CLOSE(val[0], -2.41212e+08, 0.01);
+	BOOST_REQUIRE_CLOSE(val[1], 4.76468e+07, 0.01);
+	BOOST_REQUIRE_CLOSE(val[2], -2.20950e+08, 0.01);
+	BOOST_REQUIRE_CLOSE(val[3], 4.36444e+07, 0.01);
 
 	// Get the stencil
 	auto stencil = advectionHandler.getStencilForAdvection(gridPosition);

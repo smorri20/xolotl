@@ -23,6 +23,13 @@ public:
 	~SurfaceAdvectionHandler() {}
 
 	/**
+	 * Set the position of the sink. Here it does nothing.
+	 *
+	 * @param pos The position of the sink
+	 */
+	void setPosition(double pos);
+
+	/**
 	 * Compute the flux due to the advection for all the helium clusters,
 	 * given the space parameter hx and the position.
 	 * This method is called by the RHSFunction from the PetscSolver.
@@ -84,6 +91,14 @@ public:
 	 * @return The indices for the position in the Jacobian
 	 */
 	std::vector<int> getStencilForAdvection(std::vector<double> &pos);
+
+	/**
+	 * Check whether the grid point is located on the sink surface or not.
+	 *
+	 * @param pos The position on the grid
+	 * @return True if the point is on the sink
+	 */
+	bool isPointOnSink(std::vector<double> &pos);
 
 };
 //end class SurfaceAdvectionHandler

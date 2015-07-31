@@ -31,6 +31,13 @@ public:
 	virtual void initialize(PSIClusterReactionNetwork *network) = 0;
 
 	/**
+	 * Set the position of the sink.
+	 *
+	 * @param pos The position of the sink
+	 */
+	virtual void setPosition(double pos) = 0;
+
+	/**
 	 * Compute the flux due to the advection for all the helium clusters,
 	 * given the space parameters and the position.
 	 * This method is called by the RHSFunction from the PetscSolver.
@@ -71,6 +78,14 @@ public:
 	 * @return The indices for the position in the Jacobian
 	 */
 	virtual std::vector<int> getStencilForAdvection(std::vector<double> &pos) = 0;
+
+	/**
+	 * Check whether the grid point is located on the sink surface or not.
+	 *
+	 * @param pos The position on the grid
+	 * @return True if the point is on the sink
+	 */
+	virtual bool isPointOnSink(std::vector<double> &pos) = 0;
 
 	/**
 	 * Get the total number of advecting clusters in the network.
