@@ -1,5 +1,5 @@
-#ifndef GBADVECTIONHANDLER_H
-#define GBADVECTIONHANDLER_H
+#ifndef XGBADVECTIONHANDLER_H
+#define XGBADVECTIONHANDLER_H
 
 // Includes
 #include "AdvectionHandler.h"
@@ -11,19 +11,19 @@ namespace xolotlCore {
  * This class realizes the IAdvectionHandler interface responsible for all
  * the physical parts for the advection of mobile helium cluster.
  */
-class GBAdvectionHandler: public AdvectionHandler {
+class XGBAdvectionHandler: public AdvectionHandler {
 private:
 
-	//! The location of the GB along the Y axis
+	//! The location of the GB along the X axis
 	double location;
 
 public:
 
 	//! The Constructor
-	GBAdvectionHandler() : location(0.0) {}
+	XGBAdvectionHandler() : location(0.0) {}
 
 	//! The Destructor
-	~GBAdvectionHandler() {}
+	~XGBAdvectionHandler() {}
 
 	/**
 	 * This function initialize the list of clusters that will move through advection for
@@ -135,12 +135,12 @@ public:
 			// If we are on the sink, the behavior is not the same
 			// Both sides are giving their concentrations to the center
 			if (isPointOnSink(pos)) {
-				double oldBottomConc = concVector[3][index]; // bottom
-				double oldTopConc = concVector[4][index]; // top
+				double oldLeftConc = concVector[1][index]; // left
+				double oldRightConc = concVector[2][index]; // right
 
 				double conc = (3.0 * sinkStrengthVector[i] * cluster->getDiffusionCoefficient())
-							* ((oldBottomConc / pow(h[1], 4)) + (oldTopConc / pow(h[1], 4)))
-							/ (xolotlCore::kBoltzmann * cluster->getTemperature() * h[1]);
+							* ((oldLeftConc / pow(h[0], 4)) + (oldRightConc / pow(h[0], 4)))
+							/ (xolotlCore::kBoltzmann * cluster->getTemperature() * h[0]);
 
 				// Update the concentration of the cluster
 				updatedConcOffset[index] += conc;
@@ -148,16 +148,16 @@ public:
 			else {
 				// Get the initial concentrations
 				double oldConc = concVector[0][index]; // middle
-				double oldRightConc = concVector[4*(pos[1] > location) + 3*(pos[1] < location)][index]; // top or bottom
+				double oldRightConc = concVector[2*(pos[0] > location) + 1*(pos[0] < location)][index]; // left or right
 
 				// Get the a=y and b=y+h positions
-				double a = abs(location - pos[1]);
-				double b = abs(location - pos[1]) + h[1];
+				double a = abs(location - pos[0]);
+				double b = abs(location - pos[0]) + h[0];
 
 				// Compute the concentration as explained in the description of the method
 				double conc = (3.0 * sinkStrengthVector[i] * cluster->getDiffusionCoefficient())
 							* ((oldRightConc / pow(b, 4)) - (oldConc / pow(a, 4)))
-							/ (xolotlCore::kBoltzmann * cluster->getTemperature() * h[1]);
+							/ (xolotlCore::kBoltzmann * cluster->getTemperature() * h[0]);
 
 				// Update the concentration of the cluster
 				updatedConcOffset[index] += conc;
@@ -206,22 +206,22 @@ public:
 			if (isPointOnSink(pos)) {
 				val[i * 2] = (3.0 * sinkStrength * diffCoeff)
 							/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-									* h[1] * pow(h[1], 4)); // top or bottom
-				val[(i * 2) + 1] = val[i * 2]; // top or bottom
+									* h[0] * pow(h[0], 4)); // left or right
+				val[(i * 2) + 1] = val[i * 2]; // left or right
 			}
 			else {
 				// Get the a=y and b=y+h positions
-				double a = abs(location - pos[1]);
-				double b = abs(location - pos[1]) + h[1];
+				double a = abs(location - pos[0]);
+				double b = abs(location - pos[0]) + h[0];
 
 				// Compute the partial derivatives for advection of this cluster as
 				// explained in the description of this method
 				val[i * 2] = -(3.0 * sinkStrength * diffCoeff)
 							/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-									* h[1] * pow(a, 4)); // middle
+									* h[0] * pow(a, 4)); // middle
 				val[(i * 2) + 1] = (3.0 * sinkStrength * diffCoeff)
 							/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-									* h[1] * pow(b, 4)); // top or bottom
+									* h[0] * pow(b, 4)); // left or right
 			}
 		}
 
@@ -233,15 +233,15 @@ public:
 	 * be put in the Jacobian.
 	 * This method is called by the RHSJacobian from the PetscSolver.
 	 *
-	 * Here we consider GB in the Y direction.
+	 * Here we consider GB in the X direction.
 	 *
 	 * @param pos The position on the grid
 	 * @return The indices for the position in the Jacobian
 	 */
 	std::vector<int> getStencilForAdvection(std::vector<double> &pos) {
-		// The second index is positive if pos[1] > location
-		// negative if pos[1] < location
-		return {0, (pos[1] > location) - (pos[1] < location) + isPointOnSink(pos), 0};
+		// The first index is positive if pos[0] > location
+		// negative if pos[0] < location
+		return {(pos[0] > location) - (pos[0] < location) + isPointOnSink(pos), 0, 0};
 	}
 
 	/**
@@ -251,12 +251,12 @@ public:
 	 * @return True if the point is on the sink
 	 */
 	bool isPointOnSink(std::vector<double> &pos) {
-		// Return true if pos[1] is equal to location
-		return abs(location - pos[1]) < 0.001;
+		// Return true if pos[0] is equal to location
+		return abs(location - pos[0]) < 0.001;
 	}
 
 };
-//end class GBAdvectionHandler
+//end class XGBAdvectionHandler
 
 } /* end namespace xolotlCore */
 #endif

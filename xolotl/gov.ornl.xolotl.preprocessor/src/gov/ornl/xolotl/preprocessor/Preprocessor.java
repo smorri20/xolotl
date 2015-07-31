@@ -237,6 +237,8 @@ public class Preprocessor {
 			xolotlParams.setProperty("fluxFile", args.getTempFile());
 		if (args.isInitialV())
 			xolotlParams.setProperty("initialV", args.getInitialV());
+		if (args.isGrain())
+			xolotlParams.setProperty("grain", args.getGrain());
 
 	}
 

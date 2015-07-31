@@ -2,7 +2,7 @@
 #define BOOST_TEST_MODULE Regression
 
 #include <boost/test/included/unit_test.hpp>
-#include <GBAdvectionHandler.h>
+#include <XGBAdvectionHandler.h>
 #include <HDF5NetworkLoader.h>
 #include <XolotlConfig.h>
 #include <DummyHandlerRegistry.h>
@@ -12,9 +12,9 @@ using namespace std;
 using namespace xolotlCore;
 
 /**
- * This suite is responsible for testing the GBAdvectionHandler.
+ * This suite is responsible for testing the XGBAdvectionHandler.
  */
-BOOST_AUTO_TEST_SUITE(GBAdvectionHandler_testSuite)
+BOOST_AUTO_TEST_SUITE(XGBAdvectionHandler_testSuite)
 
 /**
  * Method checking the initialization and the compute advection methods.
@@ -41,14 +41,14 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	const int size = network->getAll()->size();
 
 	// Create the advection handler and initialize it with a sink at
-	// 2nm in the Y direction
-	GBAdvectionHandler advectionHandler;
+	// 2nm in the X direction
+	XGBAdvectionHandler advectionHandler;
 	advectionHandler.initialize(network);
 	advectionHandler.setPosition(2.0);
 
 	// Check if grid points are on the sink
 	std::vector<double> pos0 = { 0.1, 3.0, 0.0 };
-	std::vector<double> pos1 = { 5.0, 2.0, 0.0 };
+	std::vector<double> pos1 = { 2.0, 2.0, 0.0 };
 	BOOST_REQUIRE_EQUAL(advectionHandler.isPointOnSink(pos0), false);
 	BOOST_REQUIRE_EQUAL(advectionHandler.isPointOnSink(pos1), true);
 
@@ -106,12 +106,12 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 			concVector, updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], -3.08751e+11, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], -2.98116e+11, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], -3.78724e+11, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], -6.81702e+11, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], -9.81017e+11, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[5], -3.80645e+10, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], -1.50810e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], -1.45827e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], -1.85540e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], -3.34501e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], -4.82155e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[5], -1.87392e+10, 0.01);
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[6], 0.0, 0.01); // Does not advect
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[7], 0.0, 0.01); // Does not advect
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[8], 0.0, 0.01); // Does not advect
@@ -137,17 +137,17 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	BOOST_REQUIRE_EQUAL(indices[5], 5);
 
 	// Check values
-	BOOST_REQUIRE_CLOSE(val[0], -2.41212e+08, 0.01);
-	BOOST_REQUIRE_CLOSE(val[1], 4.76468e+07, 0.01);
-	BOOST_REQUIRE_CLOSE(val[2], -2.20950e+08, 0.01);
-	BOOST_REQUIRE_CLOSE(val[3], 4.36444e+07, 0.01);
+	BOOST_REQUIRE_CLOSE(val[0], -1.20606e+08, 0.01);
+	BOOST_REQUIRE_CLOSE(val[1], 7.53788e+06, 0.01);
+	BOOST_REQUIRE_CLOSE(val[2], -1.10475e+08, 0.01);
+	BOOST_REQUIRE_CLOSE(val[3], 6.90469e+06, 0.01);
 
 	// Get the stencil
 	auto stencil = advectionHandler.getStencilForAdvection(gridPosition);
 
 	// Check the value of the stencil
-	BOOST_REQUIRE_EQUAL(stencil[0], 0);
-	BOOST_REQUIRE_EQUAL(stencil[1], -1); //y
+	BOOST_REQUIRE_EQUAL(stencil[0], -1); // x
+	BOOST_REQUIRE_EQUAL(stencil[1], 0);
 	BOOST_REQUIRE_EQUAL(stencil[2], 0);
 
 	// Finalize MPI

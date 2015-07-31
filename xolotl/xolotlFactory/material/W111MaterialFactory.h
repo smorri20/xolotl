@@ -31,7 +31,7 @@ public:
 	 */
 	W111MaterialFactory(int dim) {
 		theFluxHandler = std::make_shared<xolotlCore::W111FitFluxHandler>();
-		theAdvectionHandler = std::make_shared<xolotlCore::W111AdvectionHandler>();
+		theAdvectionHandler.push_back(std::make_shared<xolotlCore::W111AdvectionHandler>());
 
 		// Switch on the dimension for the diffusion handler
 		switch (dim) {

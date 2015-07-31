@@ -96,6 +96,9 @@ public class ArgumentsTest {
 
 			// Check if there is a initial vacancy concentration argument
 			assertEquals(false, args.isInitialV());
+
+			// Check if there is a grain boundary argument
+			assertEquals(false, args.isGrain());
 		}
 		catch (ArgumentValidationException e) {
 			// Complain and fail
@@ -126,7 +129,7 @@ public class ArgumentsTest {
 				"--xStepSize", "0.2", "--yStepSize", "1.5", "--zStepSize", "10.0", 
 				"--material", "W111", "--tempFile", "temp.dat", "--heFlux", "5.0e5", 
 				"--fluxFile", "flux.dat", "--checkpoint", "xolotlStop.h5", 
-				"--initialV", "0.05" });
+				"--initialV", "0.05", "--grain=Y 3.0" });
 			
 			// Check that the maximum Helium cluster size is 7
 			assertEquals(7, args.getMaxHeSize());
@@ -208,6 +211,12 @@ public class ArgumentsTest {
 
 			// Check its value
 			assertEquals("0.05", args.getInitialV());
+			
+			// Check if there is a grain boundary argument
+			assertEquals(true, args.isGrain());
+
+			// Check its value
+			assertEquals("Y 3.0", args.getGrain());
 		} 
 		catch (ArgumentValidationException e) {
 			// Complain and fail

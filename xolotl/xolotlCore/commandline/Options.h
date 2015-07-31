@@ -109,6 +109,11 @@ protected:
 	 */
 	int dimensionNumber;
 
+	/**
+	 * String of the list of wanted GB.
+	 */
+	std::string gbList;
+
 public:
 
 	/**
@@ -351,6 +356,18 @@ public:
      * \see IOptions.h
      */
     void setDimensionNumber(int number) {dimensionNumber = number;}
+
+    /**
+     * Obtain the string listing the wanted GB.
+     * \see IOptions.h
+     */
+    std::string getGbString() const {return gbList;}
+
+    /**
+     * Set the string listing the wanted GB.
+     * \see IOptions.h
+     */
+    void setGbString(const std::string& gbString) {gbList = gbString;}
 
 };//end class Options
 

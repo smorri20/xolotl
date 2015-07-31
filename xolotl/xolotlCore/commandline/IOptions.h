@@ -297,6 +297,20 @@ public:
      */
     virtual void setDimensionNumber(int number) = 0;
 
+    /**
+     * Obtain the string listing the wanted GB.
+     *
+     * @return The string of GB
+     */
+    virtual std::string getGbString() const = 0;
+
+    /**
+     * Set the string listing the wanted GB.
+     *
+     * @param gbString The string of GB
+     */
+    virtual void setGbString(const std::string& gbString) = 0;
+
 };//end class IOptions
 
 } /* namespace xolotlCore */

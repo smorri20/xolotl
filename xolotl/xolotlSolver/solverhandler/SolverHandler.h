@@ -40,8 +40,8 @@ protected:
 	//! The original diffusion handler created.
 	xolotlCore::IDiffusionHandler *diffusionHandler;
 
-	//! The original advection handler created.
-	xolotlCore::IAdvectionHandler *advectionHandler;
+	//! The vector of advection handlers.
+	std::vector<xolotlCore::IAdvectionHandler *> advectionHandlers;
 
 	//! The number of dimensions for the problem.
 	int dimension;
@@ -65,8 +65,11 @@ public:
 		// Set the diffusion handler
 		diffusionHandler = (xolotlCore::IDiffusionHandler *) material->getDiffusionHandler().get();
 
-		// Set the advection handler
-		advectionHandler = (xolotlCore::IAdvectionHandler *) material->getAdvectionHandler().get();
+		// Set the advection handlers
+		auto handlers = material->getAdvectionHandler();
+		for (int i = 0; i < handlers.size(); i++) {
+			advectionHandlers.push_back((xolotlCore::IAdvectionHandler *) handlers[i].get());
+		}
 
 		// Set the initial vacancy concentration
 		initialVConc = options.getInitialVConcentration();

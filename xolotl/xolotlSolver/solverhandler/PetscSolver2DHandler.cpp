@@ -101,8 +101,10 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) const {
 	// Initialize the flux handler
 	fluxHandler->initializeFluxHandler(Mx, hX, hY);
 
-	// Initialize the advection handler
-	advectionHandler->initialize(network);
+	// Initialize the advection handlers
+	for (int i = 0; i < advectionHandlers.size(); i++) {
+		advectionHandlers[i]->initialize(network);
+	}
 
 	// Pointer for the concentration vector at a specific grid point
 	PetscScalar *concOffset;
@@ -275,8 +277,10 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 					updatedConcOffset, sx, sy);
 
 			// ---- Compute advection over the locally owned part of the grid -----
-			advectionHandler->computeAdvection(network, h, gridPosition, concVector,
-					updatedConcOffset);
+			for (int i = 0; i < advectionHandlers.size(); i++) {
+				advectionHandlers[i]->computeAdvection(network, h, gridPosition, concVector,
+						updatedConcOffset);
+			}
 
 			// ----- Compute all of the new fluxes -----
 			for (int i = 0; i < dof; i++) {
@@ -339,9 +343,6 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	// Get the total number of diffusing clusters
 	const int nDiff = diffusionHandler->getNumberOfDiffusing();
 
-	// Get the total number of advecting clusters
-	const int nAdvec = advectionHandler->getNumberOfAdvecting();
-
 	// Arguments for MatSetValuesStencil called below
 	MatStencil row, cols[5];
 	PetscScalar vals[5 * nDiff];
@@ -399,44 +400,50 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 				checkPetscError(ierr, "PetscSolver2DHandler::computeOffDiagonalJacobian: MatSetValuesStencil (diffusion) failed.");
 			}
 
-			// Get the partial derivatives for the advection
-			advectionHandler->computePartialsForAdvection(network, h, vals,
-					indices, gridPosition);
+			// Loop over the advection handlers
+			for (int l = 0; l < advectionHandlers.size(); l++) {
+				// Get the partial derivatives for the advection
+				advectionHandlers[l]->computePartialsForAdvection(network, h, vals,
+						indices, gridPosition);
 
-			// Get the stencil indices to know where to put the partial derivatives in the Jacobian
-			auto advecStencil = advectionHandler->getStencilForAdvection(gridPosition);
+				// Get the stencil indices to know where to put the partial derivatives in the Jacobian
+				auto advecStencil = advectionHandlers[l]->getStencilForAdvection(gridPosition);
 
-			// Loop on the number of advecting cluster to set the values in the Jacobian
-			for (int i = 0; i < nAdvec; i++) {
-				// Set grid coordinate and component number for the row
-				row.i = xi;
-				row.j = yj;
-				row.c = indices[i];
+				// Get the number of advecting clusters
+				const int nAdvec = advectionHandlers[l]->getNumberOfAdvecting();
 
-				// If we are on the sink, the partial derivatives are not the same
-				// Both sides are giving their concentrations to the center
-				if (advectionHandler->isPointOnSink(gridPosition)) {
-					cols[0].i = xi - advecStencil[0]; // left?
-					cols[0].j = yj - advecStencil[1]; // bottom?
-					cols[0].c = indices[i];
-					cols[1].i = xi + advecStencil[0]; // right?
-					cols[1].j = yj + advecStencil[1]; // top?
-					cols[1].c = indices[i];
+				// Loop on the number of advecting cluster to set the values in the Jacobian
+				for (int i = 0; i < nAdvec; i++) {
+					// Set grid coordinate and component number for the row
+					row.i = xi;
+					row.j = yj;
+					row.c = indices[i];
+
+					// If we are on the sink, the partial derivatives are not the same
+					// Both sides are giving their concentrations to the center
+					if (advectionHandlers[l]->isPointOnSink(gridPosition)) {
+						cols[0].i = xi - advecStencil[0]; // left?
+						cols[0].j = yj - advecStencil[1]; // bottom?
+						cols[0].c = indices[i];
+						cols[1].i = xi + advecStencil[0]; // right?
+						cols[1].j = yj + advecStencil[1]; // top?
+						cols[1].c = indices[i];
+					}
+					else {
+						// Set grid coordinates and component numbers for the columns
+						// corresponding to the middle and the other grid points
+						cols[0].i = xi; // middle
+						cols[0].j = yj;
+						cols[0].c = indices[i];
+						cols[1].i = xi + advecStencil[0]; // left or right
+						cols[1].j = yj + advecStencil[1]; // top or bottom
+						cols[1].c = indices[i];
+					}
+
+					// Update the matrix
+					ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals + (2 * i), ADD_VALUES);
+					checkPetscError(ierr, "PetscSolver2DHandler::computeOffDiagonalJacobian: MatSetValuesStencil (advection) failed.");
 				}
-				else {
-					// Set grid coordinates and component numbers for the columns
-					// corresponding to the middle and the other grid points
-					cols[0].i = xi; // middle
-					cols[0].j = yj;
-					cols[0].c = indices[i];
-					cols[1].i = xi + advecStencil[0]; // left or right
-					cols[1].j = yj + advecStencil[1]; // top or bottom
-					cols[1].c = indices[i];
-				}
-
-				// Update the matrix
-				ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals + (2 * i), ADD_VALUES);
-				checkPetscError(ierr, "PetscSolver2DHandler::computeOffDiagonalJacobian: MatSetValuesStencil (advection) failed.");
 			}
 		}
 	}
