@@ -582,6 +582,31 @@ public interface Arguments {
 	boolean isRegularGrid();
 
 	/**
+	 * This Option annotation corresponds to the optional '--grain' option 
+	 * provides a brief description of the option.
+	 * 
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(description = "List of arguments for the grain boundaries.")
+	
+	/**
+	 * This operation produces the optional command line option '--grain' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The single string of grain boundaries
+	 */
+	String getGrain();
+
+	/**
+	 * This operation makes the command line option '--grain' optional.
+	 * 
+	 * @return Returns true if the option has been specified and false if it has
+	 *         not
+	 */
+	boolean isGrain();
+
+	/**
 	 * This produces the command line arguments '--help' or '-h' either of which
 	 * can be used to print usage help
 	 * 

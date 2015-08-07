@@ -242,6 +242,9 @@ public class Preprocessor {
 			xolotlParams.setProperty("voidPortion", args.getVoidPortion());
 		if (args.isRegularGrid())
 			xolotlParams.setProperty("regularGrid", args.getRegularGrid());
+		if (args.isGrain())
+			xolotlParams.setProperty("grain", args.getGrain());
+
 	}
 
 	/**

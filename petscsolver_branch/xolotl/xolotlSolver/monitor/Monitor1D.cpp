@@ -1192,6 +1192,10 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt timestep, PetscReal time,
 		// Set it in the solver
 		solverHandler->setSurfacePosition(surfacePos);
 
+		// Set the new surface location in the surface advection handler
+		auto advecHandler = solverHandler->getAdvectionHandler();
+		advecHandler->setLocation(grid[surfacePos]);
+
 		// Get the flux handler to reinitialize it
 		auto fluxHandler = solverHandler->getFluxHandler();
 		fluxHandler->initializeFluxHandler(surfacePos, grid);

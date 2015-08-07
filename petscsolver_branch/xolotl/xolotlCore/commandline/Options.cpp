@@ -15,6 +15,7 @@
 #include <DimensionsOptionHandler.h>
 #include <RegularGridOptionHandler.h>
 #include <ProcessOptionHandler.h>
+#include <GrainBoundariesOptionHandler.h>
 #include "Options.h"
 
 namespace xolotlCore {
@@ -36,7 +37,8 @@ Options::Options() :
 		initialVConcentration(0.0),
 		voidPortion(50.0),
 		dimensionNumber(1),
-		useRegularGridFlag(true) {
+		useRegularGridFlag(true), 
+		gbList("") {
 
 	// Create the network option handler
 	auto networkHandler = new NetworkOptionHandler();
@@ -66,6 +68,7 @@ Options::Options() :
 	auto gridHandler = new RegularGridOptionHandler();
 	// Create the physical processes option handler
 	auto procHandler = new ProcessOptionHandler();
+	auto gbHandler = new GrainBoundariesOptionHandler();
 
 	// Add our notion of which options we support.
 	optionsMap[networkHandler->key] = networkHandler;
@@ -82,6 +85,7 @@ Options::Options() :
 	optionsMap[dimHandler->key] = dimHandler;
 	optionsMap[gridHandler->key] = gridHandler;
 	optionsMap[procHandler->key] = procHandler;
+	optionsMap[gbHandler->key] = gbHandler;
 }
 
 Options::~Options(void) {

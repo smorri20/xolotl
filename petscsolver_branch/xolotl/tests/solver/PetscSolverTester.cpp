@@ -457,7 +457,7 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 	network->fillConcentrationsArray(concs);
 
 	// Check some concentrations
-    BOOST_REQUIRE_SMALL(concs[0], 1.0e-78);
+    BOOST_REQUIRE_SMALL(concs[0], 1.0e-77);
     BOOST_REQUIRE_SMALL(concs[6], 1.0e-10);
     BOOST_REQUIRE_CLOSE(concs[14], 0.0, 0.01);
     BOOST_REQUIRE_SMALL(concs[15], 1.0e-156);

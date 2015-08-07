@@ -2,7 +2,7 @@
 #define BOOST_TEST_MODULE Regression
 
 #include <boost/test/included/unit_test.hpp>
-#include <W110AdvectionHandler.h>
+#include <YGBAdvectionHandler.h>
 #include <HDF5NetworkLoader.h>
 #include <XolotlConfig.h>
 #include <DummyHandlerRegistry.h>
@@ -12,9 +12,9 @@ using namespace std;
 using namespace xolotlCore;
 
 /**
- * This suite is responsible for testing the W110AdvectionHandler.
+ * This suite is responsible for testing the YGBAdvectionHandler.
  */
-BOOST_AUTO_TEST_SUITE(W110AdvectionHandler_testSuite)
+BOOST_AUTO_TEST_SUITE(YGBAdvectionHandler_testSuite)
 
 /**
  * Method checking the initialization and the compute advection methods.
@@ -44,30 +44,32 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	int mat[size*size];
 	int *ofill = &mat[0];
 
-	// Create the advection handler and initialize it
-	W110AdvectionHandler advectionHandler;
+	// Create the advection handler and initialize it with a sink at
+	// 2nm in the Y direction
+	YGBAdvectionHandler advectionHandler;
 	advectionHandler.initialize(network, ofill);
+	advectionHandler.setLocation(2.0);
+
+	// Check if grid points are on the sink
+	std::vector<double> pos0 = { 0.1, 3.0, 0.0 };
+	std::vector<double> pos1 = { 5.0, 2.0, 0.0 };
+	BOOST_REQUIRE_EQUAL(advectionHandler.isPointOnSink(pos0), false);
+	BOOST_REQUIRE_EQUAL(advectionHandler.isPointOnSink(pos1), true);
 
 	// Check the total number of advecting clusters
 	BOOST_REQUIRE_EQUAL(advectionHandler.getNumberOfAdvecting(), 6);
 
-	// Check the clusters in ofill
-	BOOST_REQUIRE_EQUAL(ofill[0], 1);
-	BOOST_REQUIRE_EQUAL(ofill[10], 1);
-	BOOST_REQUIRE_EQUAL(ofill[20], 1);
-	BOOST_REQUIRE_EQUAL(ofill[30], 1);
-	BOOST_REQUIRE_EQUAL(ofill[40], 1);
-	BOOST_REQUIRE_EQUAL(ofill[50], 1);
-
-	// Set the size parameter in the x direction
+	// Set the size parameters
 	double hx = 1.0;
+	double hy = 0.5;
+	double hz = 2.0;
 
-	// Create the arrays of concentration
-	double concentration[3*size];
-	double newConcentration[3*size];
+	// The arrays of concentration
+	double concentration[9*size];
+	double newConcentration[9*size];
 
 	// Initialize their values
-	for (int i = 0; i < 3*size; i++) {
+	for (int i = 0; i < 9*size; i++) {
 		concentration[i] = (double) i * i;
 		newConcentration[i] = 0.0;
 	}
@@ -84,29 +86,35 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	double *updatedConc = &newConcentration[0];
 
 	// Get the offset for the grid point in the middle
-	double *concOffset = conc + size;
-	double *updatedConcOffset = updatedConc + size;
+	// Supposing the 9 grid points are laid-out as follow:
+	// 6 | 7 | 8
+	// 3 | 4 | 5
+	// 0 | 1 | 2
+	double *concOffset = conc + 4 * size;
+	double *updatedConcOffset = updatedConc + 4 * size;
 
-	// Fill the concVector with the pointer to the middle, left, and right grid points
-	double **concVector = new double*[3];
+	// Fill the concVector with the pointer to the middle, left, right, bottom, and top grid points
+	double **concVector = new double*[5];
 	concVector[0] = concOffset; // middle
-	concVector[1] = conc; // left
-	concVector[2] = conc + 2 * size; // right
+	concVector[1] = conc + 3 * size; // left
+	concVector[2] = conc + 5 * size; // right
+	concVector[3] = conc + 1 * size; // bottom
+	concVector[4] = conc + 7 * size; // top
 
 	// Set the grid position
-	std::vector<double> gridPosition = { hx, 0.0, 0.0 };
+	std::vector<double> gridPosition = { hx, hy, 0.0 };
 
 	// Compute the advection at this grid point
 	advectionHandler.computeAdvection(network, gridPosition,
-			concVector, updatedConcOffset, hx, hx);
+			concVector, updatedConcOffset, hx, hx, hy, hz);
 
 	// Check the new values of updatedConcOffset
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], -1.24827e+10, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], -1.25359e+10, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], -2.84327e+10, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], -4.18141e+10, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], -2.01672e+11, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[5], -6.55832e+09, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], -3.08751e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], -2.98116e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], -3.78724e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], -6.81702e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], -9.81017e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[5], -3.80645e+10, 0.01);
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[6], 0.0, 0.01); // Does not advect
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[7], 0.0, 0.01); // Does not advect
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[8], 0.0, 0.01); // Does not advect
@@ -121,7 +129,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 
 	// Compute the partial derivatives for the advection a the grid point 1
 	advectionHandler.computePartialsForAdvection(network, valPointer,
-			indicesPointer, gridPosition, hx, hx);
+			indicesPointer, gridPosition, hx, hx, hy, hz);
 
 	// Check the values for the indices
 	BOOST_REQUIRE_EQUAL(indices[0], 0);
@@ -132,17 +140,17 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	BOOST_REQUIRE_EQUAL(indices[5], 5);
 
 	// Check values
-	BOOST_REQUIRE_CLOSE(val[0], -205476899.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[1], 12842306.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[2], -161884163.0, 0.01);
-	BOOST_REQUIRE_CLOSE(val[3], 10117760.0, 0.01);
+	BOOST_REQUIRE_CLOSE(val[0], -2.41212e+08, 0.01);
+	BOOST_REQUIRE_CLOSE(val[1], 4.76468e+07, 0.01);
+	BOOST_REQUIRE_CLOSE(val[2], -2.20950e+08, 0.01);
+	BOOST_REQUIRE_CLOSE(val[3], 4.36444e+07, 0.01);
 
 	// Get the stencil
 	auto stencil = advectionHandler.getStencilForAdvection(gridPosition);
 
 	// Check the value of the stencil
-	BOOST_REQUIRE_EQUAL(stencil[0], 1); //x
-	BOOST_REQUIRE_EQUAL(stencil[1], 0);
+	BOOST_REQUIRE_EQUAL(stencil[0], 0);
+	BOOST_REQUIRE_EQUAL(stencil[1], -1); //y
 	BOOST_REQUIRE_EQUAL(stencil[2], 0);
 
 	// Finalize MPI

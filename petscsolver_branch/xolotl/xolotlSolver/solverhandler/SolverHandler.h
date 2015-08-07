@@ -40,8 +40,8 @@ protected:
 	//! The original diffusion handler created.
 	xolotlCore::IDiffusionHandler *diffusionHandler;
 
-	//! The original advection handler created.
-	xolotlCore::IAdvectionHandler *advectionHandler;
+	//! The vector of advection handlers.
+	std::vector<xolotlCore::IAdvectionHandler *> advectionHandlers;
 
 	//! The original modified trap-mutation handler created.
 	xolotlCore::ITrapMutationHandler *mutationHandler;
@@ -129,8 +129,12 @@ public:
 		// Set the diffusion handler
 		diffusionHandler = (xolotlCore::IDiffusionHandler *) material->getDiffusionHandler().get();
 
-		// Set the advection handler
-		advectionHandler = (xolotlCore::IAdvectionHandler *) material->getAdvectionHandler().get();
+		// Set the advection handlers
+		auto handlers = material->getAdvectionHandler();
+		for (int i = 0; i < handlers.size(); i++) {
+			advectionHandlers.push_back((xolotlCore::IAdvectionHandler *) handlers[i].get());
+		}
+
 
 		// Set the modified trap-mutation handler
 		mutationHandler = (xolotlCore::ITrapMutationHandler *) material->getTrapMutationHandler().get();
@@ -213,6 +217,12 @@ public:
 	 * \see ISolverHandler.h
 	 */
 	xolotlCore::IFluxHandler *getFluxHandler() const {return fluxHandler;}
+
+	/**
+	 * Get the advection handler.
+	 * \see ISolverHandler.h
+	 */
+	xolotlCore::IAdvectionHandler *getAdvectionHandler() const {return advectionHandlers[0];};
 
 	/**
 	 * Get the modified trap-mutation handler.

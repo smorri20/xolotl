@@ -762,6 +762,10 @@ PetscErrorCode monitorInterstitial3D(TS ts, PetscInt timestep, PetscReal time,
 		}
 		meanPosition = meanPosition / (My * Mz);
 
+		// Set the new surface location in the surface advection handler
+		auto advecHandler = solverHandler->getAdvectionHandler();
+		advecHandler->setLocation(grid[meanPosition]);
+
 		// Get the flux handler to reinitialize it
 		auto fluxHandler = solverHandler->getFluxHandler();
 		fluxHandler->initializeFluxHandler(meanPosition, grid);

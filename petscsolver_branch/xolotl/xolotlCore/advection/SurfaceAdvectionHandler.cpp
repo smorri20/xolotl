@@ -1,11 +1,18 @@
 // Includes
-#include "AdvectionHandler.h"
+#include "SurfaceAdvectionHandler.h"
 
 namespace xolotlCore {
 
-void AdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
-		double hx, double depth, double **concVector,
-		double *updatedConcOffset) {
+void SurfaceAdvectionHandler::setPosition(double pos) {
+	location = pos;
+
+	return;
+}
+
+void SurfaceAdvectionHandler::computeAdvection(
+		PSIClusterReactionNetwork *network, std::vector<double> &pos,
+		double **concVector, double *updatedConcOffset,
+		double hxLeft, double hxRight, double hy, double hz) {
 	// Get all the reactant
 	auto reactants = network->getAll();
 	// Get the number of advecting cluster
@@ -22,9 +29,11 @@ void AdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 		double oldRightConc = concVector[2][index]; // right
 
 		// Compute the concentration as explained in the description of the method
-		double conc = (3.0 * sinkStrengthVector[i] * cluster->getDiffusionCoefficient())
-				* ((oldRightConc / pow(depth + hx, 4)) - (oldConc / pow(depth, 4)))
-				/ (xolotlCore::kBoltzmann * cluster->getTemperature() * hx);
+		double conc = (3.0 * sinkStrengthVector[i]
+				* cluster->getDiffusionCoefficient())
+				* ((oldRightConc / pow(pos[0] - location + hxRight, 4))
+						- (oldConc / pow(pos[0] - location, 4)))
+				/ (xolotlCore::kBoltzmann * cluster->getTemperature() * hxRight);
 
 		// Update the concentration of the cluster
 		updatedConcOffset[index] += conc;
@@ -33,9 +42,10 @@ void AdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 	return;
 }
 
-void AdvectionHandler::computePartialsForAdvection(
-		PSIClusterReactionNetwork *network,
-		double hx, double *val, int *indices, double depth) {
+void SurfaceAdvectionHandler::computePartialsForAdvection(
+		PSIClusterReactionNetwork *network, double *val,
+		int *indices, std::vector<double> &pos,
+		double hxLeft, double hxRight, double hy, double hz) {
 	// Get all the reactant
 	auto reactants = network->getAll();
 	// Get the number of advecting cluster
@@ -58,14 +68,25 @@ void AdvectionHandler::computePartialsForAdvection(
 		// Compute the partial derivatives for advection of this cluster as
 		// explained in the description of this method
 		val[i * 2] = -(3.0 * sinkStrength * diffCoeff)
-				/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-						* hx * pow(depth, 4)); // middle
+				/ (xolotlCore::kBoltzmann * cluster->getTemperature() * hxRight
+						* pow(pos[0] - location, 4)); // middle
 		val[(i * 2) + 1] = (3.0 * sinkStrength * diffCoeff)
-				/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-						* hx * pow(depth + hx, 4)); // right
+				/ (xolotlCore::kBoltzmann * cluster->getTemperature() * hxRight
+						* pow(pos[0] - location + hxRight, 4)); // right
 	}
 
 	return;
+}
+
+std::vector<int> SurfaceAdvectionHandler::getStencilForAdvection(
+		std::vector<double> &pos) {
+	// Always return (1, 0, 0)
+	return {1, 0, 0};
+}
+
+bool SurfaceAdvectionHandler::isPointOnSink(std::vector<double> &pos) {
+	// Always return false
+	return false;
 }
 
 }/* end namespace xolotlCore */

@@ -33,7 +33,7 @@ public:
 	 */
 	W111MaterialFactory(int dim) {
 		theFluxHandler = std::make_shared<xolotlCore::W111FitFluxHandler>();
-		theAdvectionHandler = std::make_shared<xolotlCore::W111AdvectionHandler>();
+		theAdvectionHandler.push_back(std::make_shared<xolotlCore::W111AdvectionHandler>());
 		theTrapMutationHandler = std::make_shared<xolotlCore::W111TrapMutationHandler>();
 		theBubbleBurstingHandler = std::make_shared<xolotlCore::BubbleBurstingHandler>();
 

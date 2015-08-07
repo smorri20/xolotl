@@ -124,6 +124,11 @@ protected:
 	 */
 	std::map<std::string, bool> processMap;
 
+	/**
+	 * String of the list of wanted GB.
+	 */
+	std::string gbList;
+
 public:
 
 	/**
@@ -343,6 +348,7 @@ public:
      */
     void setMaterial(const std::string& material) {materialName = material;}
 
+
     /**
      * Obtain the value of the concentration for the vacancies.
      * \see IOptions.h
@@ -404,6 +410,18 @@ public:
      * @param map The map
      */
     void setProcesses(std::map<std::string, bool> map) {processMap = map;}
+
+    /**
+     * Obtain the string listing the wanted GB.
+     * \see IOptions.h
+     */
+    std::string getGbString() const {return gbList;}
+
+    /**
+     * Set the string listing the wanted GB.
+     * \see IOptions.h
+     */
+    void setGbString(const std::string& gbString) {gbList = gbString;}
 
 };//end class Options
 

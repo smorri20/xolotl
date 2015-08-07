@@ -102,6 +102,9 @@ public class ArgumentsTest {
 
 			// Check if there is a void portion argument
 			assertEquals(false, args.isVoidPortion());
+
+			// Check if there is a grain boundary argument
+			assertEquals(false, args.isGrain());
 		}
 		catch (ArgumentValidationException e) {
 			// Complain and fail
@@ -133,7 +136,7 @@ public class ArgumentsTest {
 				"--material", "W111", "--process", "diff", "--tempFile", "temp.dat", 
 				"--heFlux", "5.0e5", "--fluxFile", "flux.dat", 
 				"--checkpoint", "xolotlStop.h5", "--initialV", "0.05", 
-				"--regularGrid", "yes", "--voidPortion", "60.0"});
+				"--regularGrid", "yes", "--voidPortion", "60.0", "--grain=Y 3.0" });
 			
 			// Check that the maximum Helium cluster size is 7
 			assertEquals(7, args.getMaxHeSize());
@@ -219,17 +222,20 @@ public class ArgumentsTest {
 			// Check its value
 			assertEquals("0.05", args.getInitialV());
 
+			// Check if there is an void portion argument
+			assertEquals(true, args.isVoidPortion());
+
+			// Check its value
+			assertEquals("60.0", args.getVoidPortion());
+
 			// Check if there is a regular grid argument
 			assertEquals(true, args.isRegularGrid());
 
 			// Check its value
 			assertEquals("yes", args.getRegularGrid());
 
-			// Check if there is an void portion argument
-			assertEquals(true, args.isVoidPortion());
-
-			// Check its value
-			assertEquals("60.0", args.getVoidPortion());
+			// Check if there is a grain boundary argument
+			assertEquals(true, args.isGrain());
 		} 
 		catch (ArgumentValidationException e) {
 			// Complain and fail

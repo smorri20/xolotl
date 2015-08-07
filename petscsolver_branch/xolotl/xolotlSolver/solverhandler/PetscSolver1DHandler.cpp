@@ -31,6 +31,10 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	// Generate the grid in the x direction
 	generateGrid(nx, hx, surfacePosition);
 
+	// Initialize the surface of the first advection handler corresponding to the
+	// advection toward the surface (or a dummy one if it is deactivated)
+	advectionHandlers[0]->setLocation(grid[surfacePosition]);
+
 //	for (int i = 0; i < grid.size(); i++) {
 //		std::cout << grid[i] - grid[surfacePosition] << " ";
 //	}
@@ -68,7 +72,10 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 
 	// Fill ofill, the matrix of "off-diagonal" elements that represents diffusion
 	diffusionHandler->initializeOFill(network, ofill);
-	advectionHandler->initialize(network, ofill);
+	// Loop on the advection handlers to account the other "off-diagonal" elements
+	for (int i = 0; i < advectionHandlers.size(); i++) {
+		advectionHandlers[i]->initialize(network, ofill);
+	}
 
 	// Initialize the modified trap-mutation handler and the bubble bursting one here
 	// because they add connectivity
@@ -287,8 +294,10 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				updatedConcOffset, grid[xi] - grid[xi-1], grid[xi+1] - grid[xi]);
 
 		// ---- Compute advection over the locally owned part of the grid -----
-		advectionHandler->computeAdvection(network, grid[xi+1] - grid[xi],
-				grid[xi] - grid[surfacePosition], concVector, updatedConcOffset);
+		for (int i = 0; i < advectionHandlers.size(); i++) {
+			advectionHandlers[i]->computeAdvection(network, gridPosition,
+					concVector, updatedConcOffset, grid[xi] - grid[xi-1], grid[xi+1] - grid[xi]);
+		}
 
 		// ----- Compute the modified trap-mutation over the locally owned part of the grid -----
 		mutationHandler->computeTrapMutation(network, xi, concOffset,
@@ -356,7 +365,11 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	const int nDiff = diffusionHandler->getNumberOfDiffusing();
 
 	// Get the total number of advecting clusters
-	const int nAdvec = advectionHandler->getNumberOfAdvecting();
+	int nAdvec = 0;
+	for (int l = 0; l < advectionHandlers.size(); l++) {
+		int n = advectionHandlers[l]->getNumberOfAdvecting();
+		if (n > nAdvec) nAdvec = n;
+	}
 
 	// Arguments for MatSetValuesStencil called below
 	MatStencil row, cols[3];
@@ -408,26 +421,44 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 		}
 
 		// Get the partial derivatives for the advection
-		advectionHandler->computePartialsForAdvection(network, grid[xi+1] - grid[xi],
-				advecVals, advecIndices, grid[xi] - grid[surfacePosition]);
+		for (int l = 0; l < advectionHandlers.size(); l++) {
+			advectionHandlers[l]->computePartialsForAdvection(network, advecVals,
+					advecIndices, gridPosition, grid[xi] - grid[xi-1], grid[xi+1] - grid[xi]);
 
-		// Loop on the number of advecting cluster to set the values in the Jacobian
-		for (int i = 0; i < nAdvec; i++) {
-			// Set grid coordinate and component number for the row
-			row.i = xi;
-			row.c = advecIndices[i];
+			// Get the stencil indices to know where to put the partial derivatives in the Jacobian
+			auto advecStencil = advectionHandlers[l]->getStencilForAdvection(gridPosition);
 
-			// Set grid coordinates and component numbers for the columns
-			// corresponding to the middle and right grid points
-			cols[0].i = xi; // middle
-			cols[0].c = advecIndices[i];
-			cols[1].i = xi + 1; // right
-			cols[1].c = advecIndices[i];
+			// Get the number of advecting clusters
+			nAdvec = advectionHandlers[l]->getNumberOfAdvecting();
 
-			// Update the matrix
-			ierr = MatSetValuesStencil(J, 1, &row, 2, cols, advecVals + (2 * i), ADD_VALUES);
-			checkPetscError(ierr, "PetscSolver1DHandler::computeOffDiagonalJacobian: "
-					"MatSetValuesStencil (advection) failed.");
+			// Loop on the number of advecting cluster to set the values in the Jacobian
+			for (int i = 0; i < nAdvec; i++) {
+				// Set grid coordinate and component number for the row
+				row.i = xi;
+				row.c = advecIndices[i];
+
+				// If we are on the sink, the partial derivatives are not the same
+				// Both sides are giving their concentrations to the center
+				if (advectionHandlers[l]->isPointOnSink(gridPosition)) {
+					cols[0].i = xi - advecStencil[0]; // left?
+					cols[0].c = advecIndices[i];
+					cols[1].i = xi + advecStencil[0]; // right?
+					cols[1].c = advecIndices[i];
+				}
+				else {
+					// Set grid coordinates and component numbers for the columns
+					// corresponding to the middle and other grid points
+					cols[0].i = xi; // middle
+					cols[0].c = advecIndices[i];
+					cols[1].i = xi + advecStencil[0]; // left or right
+					cols[1].c = advecIndices[i];
+				}
+
+				// Update the matrix
+				ierr = MatSetValuesStencil(J, 1, &row, 2, cols, advecVals + (2 * i), ADD_VALUES);
+				checkPetscError(ierr, "PetscSolver1DHandler::computeOffDiagonalJacobian: "
+						"MatSetValuesStencil (advection) failed.");
+			}
 		}
 	}
 

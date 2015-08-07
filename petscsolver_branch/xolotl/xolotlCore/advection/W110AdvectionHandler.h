@@ -2,7 +2,7 @@
 #define W110ADVECTIONHANDLER_H
 
 // Includes
-#include "AdvectionHandler.h"
+#include "SurfaceAdvectionHandler.h"
 #include <MathUtils.h>
 
 namespace xolotlCore {
@@ -11,7 +11,7 @@ namespace xolotlCore {
  * This class realizes the IAdvectionHandler interface responsible for all
  * the physical parts for the advection of mobile helium cluster.
  */
-class W110AdvectionHandler: public AdvectionHandler {
+class W110AdvectionHandler: public SurfaceAdvectionHandler {
 
 public:
 

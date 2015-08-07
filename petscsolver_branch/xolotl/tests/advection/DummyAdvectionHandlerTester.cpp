@@ -91,8 +91,8 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	std::vector<double> gridPosition = { hx, 0, 0 };
 
 	// Compute the advection at this grid point
-	advectionHandler.computeAdvection(network, hx, gridPosition[0],
-			concVector, updatedConcOffset);
+	advectionHandler.computeAdvection(network, gridPosition,
+			concVector, updatedConcOffset, hx, hx);
 
 	// Check the new values of updatedConcOffset
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 0.0, 0.01); // Does not advect

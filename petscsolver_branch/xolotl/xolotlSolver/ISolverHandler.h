@@ -177,6 +177,13 @@ public:
 	virtual xolotlCore::IFluxHandler *getFluxHandler() const = 0;
 
 	/**
+	 * Get the advection handler.
+	 *
+	 * @return The first advection handler
+	 */
+	virtual xolotlCore::IAdvectionHandler *getAdvectionHandler() const = 0;
+
+	/**
 	 * Get the modified trap-mutation handler.
 	 *
 	 * @return The modified trap-mutation handler

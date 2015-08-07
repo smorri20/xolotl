@@ -2,7 +2,7 @@
 #define DUMMYADVECTIONHANDLER_H
 
 // Includes
-#include "AdvectionHandler.h"
+#include "SurfaceAdvectionHandler.h"
 
 namespace xolotlCore {
 
@@ -11,7 +11,7 @@ namespace xolotlCore {
  * the physical parts for the advection of mobile cluster. Here it is a dummy
  * class which means that it is not actually doing anything.
  */
-class DummyAdvectionHandler: public AdvectionHandler {
+class DummyAdvectionHandler: public SurfaceAdvectionHandler {
 
 public:
 
