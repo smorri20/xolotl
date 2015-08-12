@@ -648,7 +648,7 @@ PetscErrorCode monitorInterstitial3D(TS ts, PetscInt timestep, PetscReal time,
 			// for MPI usage
 			int surfaceProc = 0;
 
-			// if xi, yj, zk is on this process
+			// if xi, yj, zk are on this process
 			if (xi >= xs && xi < xs + xm && yj >= ys && yj < ys + ym
 					&& zk >= zs && zk < zs + zm) {
 				// Get the concentrations at xi = surfacePos + 1
@@ -733,8 +733,9 @@ PetscErrorCode monitorInterstitial3D(TS ts, PetscInt timestep, PetscReal time,
 					// Position of the newly created grid point
 					xi = surfacePos + nGridPoints;
 
-					// If xi is on this process
-					if (xi >= xs && xi < xs + xm && vacancyIndex > 0) {
+					// If xi, yj, and zk are on this process
+					if (xi >= xs && xi < xs + xm && yj >= ys && yj < ys + ym
+							&& zk >= zs && zk < zs + zm && vacancyIndex > 0) {
 						// Get the concentrations
 						gridPointSolution = solutionArray[zk][yj][xi];
 						// Initialize the vacancy concentration
