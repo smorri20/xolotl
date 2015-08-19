@@ -154,7 +154,7 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) {
 			"DMDAGetInfo failed.");
 
 	// Initialize the flux handler
-	fluxHandler->initializeFluxHandler(meanPosition, grid, hY, hZ);
+	fluxHandler->initializeFluxHandler(meanPosition, grid);
 
 	// Initialize the modified trap-mutation handler
 	mutationHandler->initialize(meanPosition, network, grid);

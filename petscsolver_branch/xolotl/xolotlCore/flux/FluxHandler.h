@@ -28,12 +28,6 @@ protected:
 	std::vector<double> xGrid;
 
 	/**
-	 * Size of the surface (dy * dz) on which the flux is integrated.
-	 * Needed to scale the flux amplitude.
-	 */
-	double elementarySurfaceSize;
-
-	/**
 	 * Helium fluence.
 	 */
 	double heFluence;
@@ -102,8 +96,7 @@ public:
 	 * Compute and store the incident flux values at each grid point.
      * \see IFluxHandler.h
 	 */
-	virtual void initializeFluxHandler(int surfacePos, std::vector<double> grid, double hy = 1.0,
-			double hz = 1.0);
+	virtual void initializeFluxHandler(int surfacePos, std::vector<double> grid);
 
 	/**
 	 * This method reads the values on the time profile file and store them in the

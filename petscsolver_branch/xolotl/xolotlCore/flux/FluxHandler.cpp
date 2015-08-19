@@ -9,7 +9,6 @@
 namespace xolotlCore {
 
 FluxHandler::FluxHandler() :
-		elementarySurfaceSize(0.0),
 		heFluence(0.0),
 		heFlux(1.0),
 		useTimeProfile(false),
@@ -17,10 +16,8 @@ FluxHandler::FluxHandler() :
 	return;
 }
 
-void FluxHandler::initializeFluxHandler(int surfacePos, std::vector<double> grid, double hy,
-		double hz) {
-	// Set the elementary surface size and the grid
-	elementarySurfaceSize = hy * hz;
+void FluxHandler::initializeFluxHandler(int surfacePos, std::vector<double> grid) {
+	// Set the grid
 	xGrid = grid;
 
 	// Compute the norm factor because the fit function has an
@@ -38,7 +35,7 @@ void FluxHandler::initializeFluxHandler(int surfacePos, std::vector<double> grid
 
 	// Factor the incident flux will be multiplied by to get
 	// the wanted intensity
-	double heFluxNormalized = elementarySurfaceSize * heFlux / normFactor;
+	double heFluxNormalized = heFlux / normFactor;
 
 	// Clear the flux vector
 	incidentFluxVec.clear();
@@ -64,7 +61,7 @@ void FluxHandler::initializeFluxHandler(int surfacePos, std::vector<double> grid
 
 void FluxHandler::recomputeFluxHandler(int surfacePos) {
 	// Factor the incident flux will be multiplied by
-	double heFluxNormalized = elementarySurfaceSize * heFlux / normFactor;
+	double heFluxNormalized = heFlux / normFactor;
 
 	// Starts a i = surfacePos + 1 because the first values were already put in the vector
 	for (int i = surfacePos + 1; i < xGrid.size() - 1; i++) {

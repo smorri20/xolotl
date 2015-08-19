@@ -234,7 +234,7 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 				// Add the current concentration times the number of helium in the cluster
 				// (from the weight vector)
 				heConcentration += gridPointSolution[heIndices2D[l]] * heWeights2D[l]
-				                                     * (grid[i] - grid[i-1]);
+				                                     * (grid[i] - grid[i-1]) * hy;
 			}
 		}
 	}
