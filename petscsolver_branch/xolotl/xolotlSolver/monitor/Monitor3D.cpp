@@ -700,7 +700,7 @@ PetscErrorCode monitorInterstitial3D(TS ts, PetscInt timestep, PetscReal time,
 			// it to the threshold to now if we should move the surface
 
 			// The density of tungsten is 62.8 atoms/nm3, thus the threshold is
-			double threshold = (62.8 - initialVConc) * (grid[xi] - grid[xi-1]) * hy * hz;
+			double threshold = (62.8 - initialVConc) * (grid[xi] - grid[xi-1]);
 			if (nInterstitial3D[yj][zk] > threshold) {
 				// Compute the number of grid points to move the surface of
 				int nGridPoints = (int) (nInterstitial3D[yj][zk] / threshold);
