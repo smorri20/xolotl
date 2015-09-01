@@ -18,11 +18,11 @@ private:
 	 * and desorption information.
 	 */
 	void initializeDepthSize() {
-		depthVec = {0.6, 0.8, 1.1, 1.1, 1.1, 1.1, 1.1};
-		sizeVec = {1, 1, 1, 1, 1, 1, 2};
+		depthVec = {0.5, 0.8, 1.0, 1.0, 1.3, 1.3, 1.2};
+		sizeVec = {1, 1, 1, 2, 1, 2, 3};
 
-		// He1 desorpts with 35%
-		desorp = Desorption(1, 0.35);
+		// He1 desorpts with 59%
+		desorp = Desorption(1, 0.59);
 
 		return;
 	}

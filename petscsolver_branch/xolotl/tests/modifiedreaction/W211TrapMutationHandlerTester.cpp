@@ -71,41 +71,41 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	double *conc = &concentration[0];
 	double *updatedConc = &newConcentration[0];
 
-	// Get the offset for the seventh grid point
-	double *concOffset = conc + 6 * size;
-	double *updatedConcOffset = updatedConc + 6 * size;
+	// Get the offset for the sixth grid point
+	double *concOffset = conc + 5 * size;
+	double *updatedConcOffset = updatedConc + 5 * size;
 
 	// Putting the concentrations in the network so that the rate for
 	// desorption is computed correctly
 	network->updateConcentrationsFromArray(concOffset);
 
-	// Compute the modified trap mutation at the seventh grid point
-	trapMutationHandler.computeTrapMutation(network, 6,
+	// Compute the modified trap mutation at the sixth grid point
+	trapMutationHandler.computeTrapMutation(network, 5,
 			concOffset, updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 5.96757e+30, 0.01); // Create I
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[6], -5.96757e+30, 0.01); // He
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[15], 5.96757e+30, 0.01); // Create HeV
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 1.11279e+30, 0.01); // Create I
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[6], -1.11279e+30, 0.01); // He
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[15], 1.11279e+30, 0.01); // Create HeV
 
-	// Get the offset for the twelfth grid point
-	concOffset = conc + 11 * size;
-	updatedConcOffset = updatedConc + 11 * size;
+	// Get the offset for the eleventh grid point
+	concOffset = conc + 10 * size;
+	updatedConcOffset = updatedConc + 10 * size;
 
 	// Putting the concentrations in the network so that the rate for
 	// desorption is computed correctly
 	network->updateConcentrationsFromArray(concOffset);
 
-	// Compute the modified trap mutation at the twelfth grid point
-	trapMutationHandler.computeTrapMutation(network, 11,
+	// Compute the modified trap mutation at the eleventh grid point
+	trapMutationHandler.computeTrapMutation(network, 10,
 			concOffset, updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 2.00220e+23, 0.01); // Create I
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 4.13652e+22, 0.01); // Create I
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[7], 0.0, 0.01); // He2
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[16], 0.0, 0.01); // Doesn't create He2V
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[12], -5.00660e+22, 0.01); // He7
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[31], 5.00660e+22, 0.01); // Create He7V2
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[9], -4.13652e+22, 0.01); // He4
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[28], 4.13652e+22, 0.01); // Create He4V2
 
 	// Initialize the indices and values to set in the Jacobian
 	int nHelium = network->getAll(heType).size();
@@ -115,17 +115,17 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	int *indicesPointer = &indices[0];
 	double *valPointer = &val[0];
 
-	// Compute the partial derivatives for the modified trap-mutation at the grid point 11
+	// Compute the partial derivatives for the modified trap-mutation at the grid point 10
 	int nMutating = trapMutationHandler.computePartialsForTrapMutation(network, valPointer,
-			indicesPointer, 11);
+			indicesPointer, 10);
 
 	// Check the values for the indices
 	BOOST_REQUIRE_EQUAL(indices[0], 8); // He3
 	BOOST_REQUIRE_EQUAL(indices[1], 17); // He3V
 	BOOST_REQUIRE_EQUAL(indices[2], 0); // I
 	BOOST_REQUIRE_EQUAL(indices[3], 9); // He4
-	BOOST_REQUIRE_EQUAL(indices[4], 18); // He4V
-	BOOST_REQUIRE_EQUAL(indices[5], 0); // I
+	BOOST_REQUIRE_EQUAL(indices[4], 28); // He4V2
+	BOOST_REQUIRE_EQUAL(indices[5], 1); // I2
 
 	// Check values
 	BOOST_REQUIRE_CLOSE(val[0], -9.67426e+13, 0.01);
@@ -141,9 +141,9 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	// Update the bursting rate
 	trapMutationHandler.updateTrapMutationRate(network);
 
-	// Compute the partial derivatives for the bursting a the grid point 1
+	// Compute the partial derivatives for the bursting a the grid point 10
 	nMutating = trapMutationHandler.computePartialsForTrapMutation(network, valPointer,
-			indicesPointer, 11);
+			indicesPointer, 10);
 
 	// Check values
 	BOOST_REQUIRE_CLOSE(val[0], -2.14016e+13, 0.01);

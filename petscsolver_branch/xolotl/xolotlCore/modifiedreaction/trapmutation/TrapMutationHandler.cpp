@@ -17,10 +17,12 @@ void TrapMutationHandler::initialize(int surfacePos, PSIClusterReactionNetwork *
 	auto singleInterstitial = (PSICluster *) network->get(iType, 1);
 	// Get the double interstitial cluster
 	auto doubleInterstitial = (PSICluster *) network->get(iType, 2);
+	// Get the triple interstitial cluster
+	auto tripleInterstitial = (PSICluster *) network->get(iType, 3);
 
 	// If the I clusters are not in the network,
 	// there is no trap-mutation
-	if (!singleInterstitial || !doubleInterstitial) {
+	if (!singleInterstitial || !doubleInterstitial || !tripleInterstitial) {
 		// Clear the vector of HeV indices created by He undergoing trap-mutation
 		// at each grid point
 		indexVector.clear();
@@ -32,6 +34,10 @@ void TrapMutationHandler::initialize(int surfacePos, PSIClusterReactionNetwork *
 			// And give it empty to the index vector
 			indexVector.push_back(indices);
 		}
+
+		// Inform the user
+		std::cout << "The modified trap-mutation won't happen because "
+				"the interstitial clusters are missing." << std::endl;
 
 		return;
 	}
@@ -48,6 +54,7 @@ void TrapMutationHandler::initialize(int surfacePos, PSIClusterReactionNetwork *
 		// The single and double interstitial clusters are connected to He
 		singleInterstitial->setDissociationConnectivity(cluster->getId());
 		doubleInterstitial->setDissociationConnectivity(cluster->getId());
+		tripleInterstitial->setDissociationConnectivity(cluster->getId());
 
 		// Loop on the bubbles
 		for (int j = 0; j < bubbles.size(); j++) {
@@ -55,8 +62,8 @@ void TrapMutationHandler::initialize(int surfacePos, PSIClusterReactionNetwork *
 			auto bubble =  (PSICluster *) bubbles[j];
 			auto comp = bubble->getComposition();
 
-			// We are only interested in bubbles with one or two vacancy
-			if (comp[vType] > 2) continue;
+			// We are only interested in bubbles with one, two, or three vacancies
+			if (comp[vType] > 3) continue;
 
 			// Connect with He if the number of helium in the bubble is the same
 			if (comp[heType] == heSize) {
