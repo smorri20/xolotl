@@ -194,9 +194,8 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
-
-	// Get the flux handler that will be used to compute fluxes.
-	auto fluxHandler = solverHandler->getFluxHandler();
+	// Get the material factory
+	auto materialFactory = solverHandler->getMaterialFactory();
 
 	// Get the da from ts
 	DM da;
@@ -241,8 +240,10 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 
 	// Master process
 	if (procId == 0) {
-		// Get the fluence
-		double heliumFluence = fluxHandler->getFluence();
+		// Get the medium handlers
+		auto mediumHandlers = materialFactory->getMaterial();
+		// Get the fluence, because we are in 1D there is only one medium
+		double heliumFluence = mediumHandlers[0]->getFluxHandler()->getFluence();
 
 		// Print the result
 		std::cout << "\nTime: " << time << std::endl;

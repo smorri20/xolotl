@@ -54,7 +54,10 @@ void PetscSolver2DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	checkPetscError(ierr, "PetscSolver2DHandler::createSolverContext: PetscMemzero (dfill) failed.");
 
 	// Fill ofill, the matrix of "off-diagonal" elements that represents diffusion
-	diffusionHandler->initializeOFill(network, ofill);
+	auto mediumHandlers = materialFactory->getMaterial();
+	for (int i = 0; i < mediumHandlers.size(); i++) {
+		mediumHandlers[i]->getDiffusionHandler()->initializeOFill(network, ofill);
+	}
 
 	// Get the diagonal fill
 	getDiagonalFill(dfill, dof * dof);
@@ -98,12 +101,16 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) const {
 	PETSC_IGNORE);
 	checkPetscError(ierr, "PetscSolver2DHandler::initializeConcentration: DMDAGetInfo failed.");
 
-	// Initialize the flux handler
-	fluxHandler->initializeFluxHandler(network, Mx, hX);
+	// Initialize the flux handlers and the advection handlers
+	auto mediumHandlers = materialFactory->getMaterial();
+	for (int i = 0; i < mediumHandlers.size(); i++) {
+		mediumHandlers[i]->getFluxHandler()->initializeFluxHandler(network, Mx, hX);
 
-	// Initialize the advection handlers
-	for (int i = 0; i < advectionHandlers.size(); i++) {
-		advectionHandlers[i]->initialize(network);
+		// Get the advection handlers
+		auto advectionHandlers = mediumHandlers[i]->getAdvectionHandler();
+		for (int j = 0; j < advectionHandlers.size(); j++) {
+			advectionHandlers[j]->initialize(network);
+		}
 	}
 
 	// Pointer for the concentration vector at a specific grid point
@@ -206,12 +213,10 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	double sx = 1.0 / (hX * hX);
 	double sy = 1.0 / (hY * hY);
 
-	// Get the incident flux vector
-	auto incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime);
-
 	// Declarations for variables used in the loop
 	double flux;
-	int fluxIndex = fluxHandler->getIncidentFluxClusterIndex(), reactantIndex;
+	auto mediumHandlers = materialFactory->getMaterial();
+	int fluxIndex = mediumHandlers[0]->getFluxHandler()->getIncidentFluxClusterIndex(), reactantIndex;
 	xolotlCore::PSICluster *cluster = NULL;
 	double **concVector = new double*[5];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
@@ -222,6 +227,16 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 	// Loop over grid points computing ODE terms for each grid point
 	for (int yj = ys; yj < ys + ym; yj++) {
+		// Set the grid position
+		gridPosition[1] = yj * hY;
+
+		// Get the medium at this position
+		auto medium = materialFactory->getMediumFactory(gridPosition);
+
+		// Get the incident flux vector
+		auto incidentFluxVector = medium->getFluxHandler()->getIncidentFluxVec(ftime);
+
+		// Loop on the x grid points
 		for (int xi = xs; xi < xs + xm; xi++) {
 			// Compute the old and new array offsets
 			concOffset = concs[yj][xi];
@@ -245,7 +260,6 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 			// Set the grid position
 			gridPosition[0] = xi * hX;
-			gridPosition[1] = yj * hY;
 
 			// Get the temperature from the temperature handler
 			auto temperature = temperatureHandler->getTemperature(gridPosition,
@@ -265,16 +279,17 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			network->updateConcentrationsFromArray(concOffset);
 
 			// ----- Account for flux of incoming He of cluster size 1 -----
-				updatedConcOffset[fluxIndex] += incidentFluxVector[xi];
+			updatedConcOffset[fluxIndex] += incidentFluxVector[xi];
 
 			// ---- Compute diffusion over the locally owned part of the grid -----
-			diffusionHandler->computeDiffusion(network, concVector,
-					updatedConcOffset, sx, sy);
+			medium->getDiffusionHandler()->computeDiffusion(network, concVector,
+						updatedConcOffset, sx, sy);
 
 			// ---- Compute advection over the locally owned part of the grid -----
+			auto advectionHandlers = medium->getAdvectionHandler();
 			for (int i = 0; i < advectionHandlers.size(); i++) {
-				advectionHandlers[i]->computeAdvection(network, h, gridPosition, concVector,
-						updatedConcOffset);
+				advectionHandlers[i]->computeAdvection(network, h, gridPosition,
+						concVector, updatedConcOffset);
 			}
 
 			// ----- Compute all of the new fluxes -----
@@ -288,6 +303,8 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			}
 		}
 	}
+
+
 
 	/*
 	 Restore vectors
@@ -336,7 +353,12 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	PetscScalar *concOffset;
 
 	// Get the total number of diffusing clusters
-	const int nDiff = diffusionHandler->getNumberOfDiffusing();
+	int nDiff = 0;
+	auto mediumHandlers = materialFactory->getMaterial();
+	for (int i = 0; i < mediumHandlers.size(); i++) {
+		int n = mediumHandlers[i]->getDiffusionHandler()->getNumberOfDiffusing();
+		if (n > nDiff) nDiff = n;
+	}
 
 	// Arguments for MatSetValuesStencil called below
 	MatStencil row, cols[5];
@@ -350,10 +372,16 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	 at each grid point
 	 */
 	for (int yj = ys; yj < ys + ym; yj++) {
+		// Set the grid position
+		gridPosition[1] = yj * hY;
+
+		// Get the medium at this position
+		auto medium = materialFactory->getMediumFactory(gridPosition);
+
+		// Loop on the x grid points
 		for (int xi = xs; xi < xs + xm; xi++) {
 			// Set the grid position
 			gridPosition[0] = xi * hX;
-			gridPosition[1] = yj * hY;
 
 			// Boundary conditions
 			if (xi == 0 || xi == Mx - 1) continue;
@@ -364,7 +392,7 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 			network->updateConcentrationsFromArray(concOffset);
 
 			// Get the partial derivatives for the diffusion
-			diffusionHandler->computePartialsForDiffusion(network, vals, indices, sx, sy);
+			medium->getDiffusionHandler()->computePartialsForDiffusion(network, vals, indices, sx, sy);
 
 			// Loop on the number of diffusion cluster to set the values in the Jacobian
 			for (int i = 0; i < nDiff; i++) {
@@ -396,6 +424,7 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 			}
 
 			// Loop over the advection handlers
+			auto advectionHandlers = medium->getAdvectionHandler();
 			for (int l = 0; l < advectionHandlers.size(); l++) {
 				// Get the partial derivatives for the advection
 				advectionHandlers[l]->computePartialsForAdvection(network, h, vals,

@@ -46,15 +46,18 @@ PetscErrorCode computeHeliumFluence(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	PetscFunctionBeginUser;
 
-	// Get the solver handler and the flux handler
+	// Get the solver handler and the material factory
 	auto solverHandler = PetscSolver::getSolverHandler();
-	auto fluxHandler = solverHandler->getFluxHandler();
+	auto materialFactory = solverHandler->getMaterialFactory();
 
 	// The length of the time step
 	double dt = time - previousTime;
 
 	// Increment the fluence with the value at this current timestep
-	fluxHandler->incrementFluence(dt);
+	auto mediumHandlers = materialFactory->getMaterial();
+	for (int i = 0; i < mediumHandlers.size(); i++) {
+		mediumHandlers[i]->getFluxHandler()->incrementFluence(dt);
+	}
 
 	PetscFunctionReturn(0);
 }

@@ -1,10 +1,10 @@
-#ifndef W100MATERIALHANDLERFACTORY_H
-#define W100MATERIALHANDLERFACTORY_H
+#ifndef W111MEDIUMFACTORY_H
+#define W111MEDIUMFACTORY_H
 
 #include <memory>
-#include <MaterialFactory.h>
-#include <W100FitFluxHandler.h>
-#include <W100AdvectionHandler.h>
+#include <MediumFactory.h>
+#include <W111FitFluxHandler.h>
+#include <W111AdvectionHandler.h>
 #include <Diffusion1DHandler.h>
 #include <Diffusion2DHandler.h>
 #include <Diffusion3DHandler.h>
@@ -12,15 +12,15 @@
 namespace xolotlFactory {
 
 /**
- * Subclass of MaterialFactory for a (100) oriented tungsten material.
+ * Subclass of MediumFactory for a (111) oriented tungsten medium.
  */
-class W100MaterialFactory : public MaterialFactory {
+class W111MediumFactory : public MediumFactory {
 private:
 
 	/**
 	 * The default constructor is private.
 	 */
-	W100MaterialFactory() {}
+	W111MediumFactory() {}
 
 public:
 
@@ -29,9 +29,9 @@ public:
 	 *
 	 * @param dim The number of dimensions for the problem
 	 */
-	W100MaterialFactory(int dim) {
-		theFluxHandler = std::make_shared<xolotlCore::W100FitFluxHandler>();
-		theAdvectionHandler.push_back(std::make_shared<xolotlCore::W100AdvectionHandler>());
+	W111MediumFactory(int dim) {
+		theFluxHandler = std::make_shared<xolotlCore::W111FitFluxHandler>();
+		theAdvectionHandler.push_back(std::make_shared<xolotlCore::W111AdvectionHandler>());
 
 		// Switch on the dimension for the diffusion handler
 		switch (dim) {
@@ -46,7 +46,7 @@ public:
 				break;
 			default:
 				// The asked dimension is not good (e.g. -1, 0, 4)
-				throw std::string("\nxolotlFactory: Bad dimension for the W100 material factory.");
+				throw std::string("\nxolotlFactory: Bad dimension for the W111 medium factory.");
 		}
 
 		return;
@@ -55,9 +55,9 @@ public:
 	/**
 	 * The destructor
 	 */
-	~W100MaterialFactory() {}
+	~W111MediumFactory() {}
 };
 
 } // end namespace xolotlFactory
 
-#endif // W100MATERIALHANDLERFACTORY_H
+#endif // W111MEDIUMFACTORY_H

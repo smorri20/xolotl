@@ -192,9 +192,8 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
-
-	// Get the flux handler that will be used to compute fluxes.
-	auto fluxHandler = solverHandler->getFluxHandler();
+	// Get the material factory
+	auto materialFactory = solverHandler->getMaterialFactory();
 
 	// Get the da from ts
 	DM da;
@@ -258,8 +257,11 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time
 		// Rescale the concentration
 		totalHeConcentration = totalHeConcentration / surface;
 
-		// Get the fluence
-		double heliumFluence = fluxHandler->getFluence();
+		// Get the medium handlers
+		auto mediumHandlers = materialFactory->getMaterial();
+		// Get the fluence, the fluence is the same for all the media because
+		// the flux amplitude is the same for all of them
+		double heliumFluence = mediumHandlers[0]->getFluxHandler()->getFluence();
 
 		// Print the result
 		std::cout << "\nTime: " << time << std::endl;

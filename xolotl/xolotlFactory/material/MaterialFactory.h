@@ -1,37 +1,72 @@
-#ifndef MATERIALHANDLERFACTORY_H
-#define MATERIALHANDLERFACTORY_H
+#ifndef MATERIALFACTORY_H
+#define MATERIALFACTORY_H
 
 #include <memory>
 #include <IMaterialFactory.h>
-#include <TokenizedLineReader.h>
-#include <XGBAdvectionHandler.h>
-#include <YGBAdvectionHandler.h>
-#include <ZGBAdvectionHandler.h>
+#include <W100MediumFactory.h>
+#include <W110MediumFactory.h>
+#include <W111MediumFactory.h>
 
 namespace xolotlFactory {
 
 /**
- * Realizes the IMaterialFactory interface. Handles the flux and the advection
- * for a specific material.
+ * Realizes the IMaterialFactory interface.
  */
 class MaterialFactory: public IMaterialFactory {
-protected:
+private:
 
-	//! The flux handler
-	std::shared_ptr<xolotlCore::IFluxHandler> theFluxHandler;
+	// The vector of medium factories
+	std::vector<std::shared_ptr<xolotlFactory::IMediumFactory> > theMediumFactories;
 
-	//! The advection handler
-	std::vector<std::shared_ptr<xolotlCore::IAdvectionHandler> > theAdvectionHandler;
+	// The vector of Y separations
+	std::vector<double> theYSeparations;
 
-	//! The diffusion handler
-	std::shared_ptr<xolotlCore::IDiffusionHandler> theDiffusionHandler;
+	/**
+	 * The constructor creates the handlers.
+	 */
+	MaterialFactory() {
+	}
 
 public:
 
 	/**
 	 * The constructor creates the handlers.
 	 */
-	MaterialFactory() {
+	MaterialFactory(xolotlCore::Options &options) {
+		// Set-up the material from the options
+		std::string materialString = options.getMaterial();
+		// Build an input stream from the material string.
+		xolotlCore::TokenizedLineReader<std::string> reader;
+		auto argSS = std::make_shared < std::istringstream > (materialString);
+		reader.setInputStream(argSS);
+		// Break the string into tokens.
+		auto tokens = reader.loadLine();
+		// Get the total number of tokens
+		int tokenSize = tokens.size();
+
+		// The option is wrong if the number of token is even
+		if (tokenSize % 2 == 0) {
+			throw std::string(
+					"\nThe format for the material is wrong, there is an even number of tokens!");
+		}
+
+		// There should be at list one material listed
+		theMediumFactories.push_back(
+				IMediumFactory::createMediumFactory(tokens[0],
+						options.getDimensionNumber()));
+		// Loop on the rest of the token
+		for (int i = 1; i < tokens.size(); i++) {
+			// Get where is the separation
+			theYSeparations.push_back(strtod(tokens[i].c_str(), NULL));
+			// Create the next medium
+			theMediumFactories.push_back(
+					IMediumFactory::createMediumFactory(tokens[i + 1],
+							options.getDimensionNumber()));
+			// Increment i
+			i++;
+		}
+
+		return;
 	}
 
 	/**
@@ -41,106 +76,56 @@ public:
 	}
 
 	/**
-	 * Initialize the material conditions with the different given options.
+	 * Initialize the material conditions.
 	 *
-	 * @param options The Xolotl options.
+	 * @param options The Xolotl options
 	 */
 	void initializeMaterial(xolotlCore::Options &options) {
-		// Wrong if both he flux and time profile options are used
-		if (options.useFluxAmplitude() && options.useFluxTimeProfile()) {
-			// A constant flux value AND a time profile cannot both be given.
-			throw std::string(
-					"\nA constant flux value AND a time profile cannot both be given.");
-		}
-		else if (options.useFluxAmplitude()) {
-			// Set the constant value of the flux
-			theFluxHandler->setFluxAmplitude(options.getFluxAmplitude());
-		}
-		else if (options.useFluxTimeProfile()) {
-			// Initialize the time profile
-			theFluxHandler->initializeTimeProfile(options.getFluxProfileName());
-		}
-
-		// Get the number of dimensions
-		int dim = options.getDimensionNumber();
-
-		// Set-up the grain boundaries from the options
-		std::string gbString = options.getGbString();
-		// Build an input stream from the GB string.
-		xolotlCore::TokenizedLineReader<std::string> reader;
-		auto argSS = std::make_shared < std::istringstream > (gbString);
-		reader.setInputStream(argSS);
-		// Break the string into tokens.
-		auto tokens = reader.loadLine();
-		// Loop on them
-		for (int i = 0; i < tokens.size(); i++) {
-			// Switch on the type of grain boundaries
-			if (tokens[i] == "X") {
-				auto GBAdvecHandler = std::make_shared<xolotlCore::XGBAdvectionHandler>();
-				GBAdvecHandler->setPosition(strtod(tokens[i+1].c_str(), NULL));
-				theAdvectionHandler.push_back(GBAdvecHandler);
-			}
-			else if (tokens[i] == "Y") {
-				if (dim < 2)
-					// A Y grain boundary cannot be used in 1D.
-					throw std::string(
-							"\nA Y grain boundary CANNOT be used in 1D. Switch to 2D or 3D or remove it.");
-
-				auto GBAdvecHandler = std::make_shared<xolotlCore::YGBAdvectionHandler>();
-				GBAdvecHandler->setPosition(strtod(tokens[i+1].c_str(), NULL));
-				theAdvectionHandler.push_back(GBAdvecHandler);
-			}
-			else if (tokens[i] == "Z") {
-				if (dim < 3)
-					// A Z grain boundary cannot be used in 1D/2D.
-					throw std::string(
-							"\nA Z grain boundary CANNOT be used in 1D/2D. Switch to 3D or remove it.");
-
-				auto GBAdvecHandler = std::make_shared<xolotlCore::ZGBAdvectionHandler>();
-				GBAdvecHandler->setPosition(strtod(tokens[i+1].c_str(), NULL));
-				theAdvectionHandler.push_back(GBAdvecHandler);
-			}
-			else {
-				// Wrong GB type
-				throw std::string(
-						"\nThe type of grain boundary is not known: \"" + tokens[i]
-						+ "\"");
-			}
-
-			i++;
+		// Loop on all the medium factories
+		for (int i = 0; i < theMediumFactories.size(); i++) {
+			theMediumFactories[i]->initializeMedium(options);
 		}
 
 		return;
 	}
 
 	/**
-	 * Return the flux handler.
+	 * Return the medium factory at a specific position.
 	 *
-	 *  @return The flux handler.
+	 * @return The medium factory
 	 */
-	std::shared_ptr<xolotlCore::IFluxHandler> getFluxHandler() const {
-		return theFluxHandler;
+	std::shared_ptr<xolotlFactory::IMediumFactory> getMediumFactory(
+			std::vector<double> position) const {
+		// Return the first one if there is only one factory
+		if (theMediumFactories.size() == 1) return theMediumFactories[0];
+
+		// Return the first one if the Y position is lower than the first
+		// stored separation
+		if (position[1] < theYSeparations[0]) return theMediumFactories[0];
+
+		// Find where the Y position is in the Y separations
+		int indice = 0;
+		for (int i = 0; i < theYSeparations.size(); i++) {
+			if (position[1] < theYSeparations[i]) break;
+			indice++;
+		}
+
+		// Return the corresponding medium factory
+		return theMediumFactories[indice];
 	}
 
 	/**
-	 * Return the advection handler.
+	 * Return all the medium factories.
 	 *
-	 *  @return The advection handler.
+	 * @return The medium factories.
 	 */
-	std::vector<std::shared_ptr<xolotlCore::IAdvectionHandler> > getAdvectionHandler() const {
-		return theAdvectionHandler;
+	std::vector<std::shared_ptr<IMediumFactory> > getMaterial() const {
+		return theMediumFactories;
 	}
 
-	/**
-	 * Return the diffusion handler.
-	 *
-	 *  @return The diffusion handler.
-	 */
-	std::shared_ptr<xolotlCore::IDiffusionHandler> getDiffusionHandler() const {
-		return theDiffusionHandler;
-	}
-};
+}
+;
 
 } // end namespace xolotlFactory
 
-#endif // MATERIALHANDLERFACTORY_H
+#endif // MATERIALFACTORY_H

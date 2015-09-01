@@ -136,11 +136,11 @@ public:
 	virtual int getDimension() const = 0;
 
 	/**
-	 * Get the flux handler.
+	 * Get the material factory.
 	 *
-	 * @return The flux handler
+	 * @return The material factory
 	 */
-	virtual xolotlCore::IFluxHandler *getFluxHandler() const = 0;
+	virtual xolotlFactory::IMaterialFactory *getMaterialFactory() const = 0;
 
 	/**
 	 * Get the network.

@@ -31,17 +31,11 @@ protected:
 	//! The initial vacancy concentration.
 	double initialVConc;
 
-	//! The original flux handler created.
-	xolotlCore::IFluxHandler *fluxHandler;
+	//! The original material factory.
+	xolotlFactory::IMaterialFactory *materialFactory;
 
 	//! The original temperature handler created.
 	xolotlCore::ITemperatureHandler *temperatureHandler;
-
-	//! The original diffusion handler created.
-	xolotlCore::IDiffusionHandler *diffusionHandler;
-
-	//! The vector of advection handlers.
-	std::vector<xolotlCore::IAdvectionHandler *> advectionHandlers;
 
 	//! The number of dimensions for the problem.
 	int dimension;
@@ -55,21 +49,11 @@ public:
 	void initializeHandlers(std::shared_ptr<xolotlFactory::IMaterialFactory> material,
 			std::shared_ptr<xolotlCore::ITemperatureHandler> tempHandler,
 			xolotlCore::Options &options) {
-
 		// Set the flux handler
-		fluxHandler = (xolotlCore::IFluxHandler *) material->getFluxHandler().get();
+		materialFactory = (xolotlFactory::IMaterialFactory *) material.get();
 
 		// Set the temperature handler
 		temperatureHandler = (xolotlCore::ITemperatureHandler *) tempHandler.get();
-
-		// Set the diffusion handler
-		diffusionHandler = (xolotlCore::IDiffusionHandler *) material->getDiffusionHandler().get();
-
-		// Set the advection handlers
-		auto handlers = material->getAdvectionHandler();
-		for (int i = 0; i < handlers.size(); i++) {
-			advectionHandlers.push_back((xolotlCore::IAdvectionHandler *) handlers[i].get());
-		}
 
 		// Set the initial vacancy concentration
 		initialVConc = options.getInitialVConcentration();
@@ -86,7 +70,6 @@ public:
 	 */
 	void initializeNetwork(const std::string& fileName,
 			xolotlCore::PSIClusterReactionNetwork *net) {
-
 		// Set the network loader
 		networkName = fileName;
 
@@ -121,10 +104,10 @@ public:
 	int getDimension() const {return dimension;}
 
 	/**
-	 * Get the flux handler.
+	 * Get the material factory.
 	 * \see ISolverHandler.h
 	 */
-	xolotlCore::IFluxHandler *getFluxHandler() const {return fluxHandler;}
+	xolotlFactory::IMaterialFactory *getMaterialFactory() const {return materialFactory;}
 
 	/**
 	 * Get the network.

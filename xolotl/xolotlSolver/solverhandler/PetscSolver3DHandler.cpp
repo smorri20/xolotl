@@ -56,7 +56,10 @@ void PetscSolver3DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	checkPetscError(ierr, "PetscSolver3DHandler::createSolverContext: PetscMemzero (dfill) failed.");
 
 	// Fill ofill, the matrix of "off-diagonal" elements that represents diffusion
-	diffusionHandler->initializeOFill(network, ofill);
+	auto mediumHandlers = materialFactory->getMaterial();
+	for (int i = 0; i < mediumHandlers.size(); i++) {
+		mediumHandlers[i]->getDiffusionHandler()->initializeOFill(network, ofill);
+	}
 
 	// Get the diagonal fill
 	getDiagonalFill(dfill, dof * dof);
@@ -100,12 +103,16 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 	PETSC_IGNORE);
 	checkPetscError(ierr, "PetscSolver3DHandler::initializeConcentration: DMDAGetInfo failed.");
 
-	// Initialize the flux handler
-	fluxHandler->initializeFluxHandler(network, Mx, hX);
+	// Initialize the flux handlers and the advection handlers
+	auto mediumHandlers = materialFactory->getMaterial();
+	for (int i = 0; i < mediumHandlers.size(); i++) {
+		mediumHandlers[i]->getFluxHandler()->initializeFluxHandler(network, Mx, hX);
 
-	// Initialize the advection handlers
-	for (int i = 0; i < advectionHandlers.size(); i++) {
-		advectionHandlers[i]->initialize(network);
+		// Get the advection handlers
+		auto advectionHandlers = mediumHandlers[i]->getAdvectionHandler();
+		for (int j = 0; j < advectionHandlers.size(); j++) {
+			advectionHandlers[j]->initialize(network);
+		}
 	}
 
 	// Pointer for the concentration vector at a specific grid point
@@ -215,13 +222,11 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	double sy = 1.0 / (hY * hY);
 	double sz = 1.0 / (hZ * hZ);
 
-	// Get the incident flux vector
-	auto incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime);
-
 	// Declarations for variables used in the loop
 	double flux;
 	auto heCluster = (xolotlCore::PSICluster *) network->get(xolotlCore::heType, 1);
-	int fluxIndex = fluxHandler->getIncidentFluxClusterIndex(), reactantIndex;
+	auto mediumHandlers = materialFactory->getMaterial();
+	int fluxIndex = mediumHandlers[0]->getFluxHandler()->getIncidentFluxClusterIndex(), reactantIndex;
 	xolotlCore::PSICluster *cluster = NULL;
 	double **concVector = new double*[7];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
@@ -232,7 +237,21 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 	// Loop over grid points computing ODE terms for each grid point
 	for (int zk = zs; zk < zs + zm; zk++) {
+		// Set the grid position
+		gridPosition[2] = zk * hZ;
+
+		// Loop over y grid points
 		for (int yj = ys; yj < ys + ym; yj++) {
+			// Set the grid position
+			gridPosition[1] = yj * hY;
+
+			// Get the medium at this position
+			auto medium = materialFactory->getMediumFactory(gridPosition);
+
+			// Get the incident flux vector
+			auto incidentFluxVector = medium->getFluxHandler()->getIncidentFluxVec(ftime);
+
+			// Loop over x grid points
 			for (int xi = xs; xi < xs + xm; xi++) {
 				// Compute the old and new array offsets
 				concOffset = concs[zk][yj][xi];
@@ -259,8 +278,6 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 				// Set the grid position
 				gridPosition[0] = xi * hX;
-				gridPosition[1] = yj * hY;
-				gridPosition[2] = zk * hZ;
 
 				// Get the temperature from the temperature handler
 				auto temperature = temperatureHandler->getTemperature(gridPosition,
@@ -280,13 +297,14 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				network->updateConcentrationsFromArray(concOffset);
 
 				// ----- Account for flux of incoming He of cluster size 1 -----
-					updatedConcOffset[fluxIndex] += incidentFluxVector[xi];
+				updatedConcOffset[fluxIndex] += incidentFluxVector[xi];
 
 				// ---- Compute diffusion over the locally owned part of the grid -----
-				diffusionHandler->computeDiffusion(network, concVector,
-						updatedConcOffset, sx, sy, sz);
+				medium->getDiffusionHandler()->computeDiffusion(network, concVector,
+							updatedConcOffset, sx, sy, sz);
 
 				// ---- Compute advection over the locally owned part of the grid -----
+				auto advectionHandlers = medium->getAdvectionHandler();
 				for (int i = 0; i < advectionHandlers.size(); i++) {
 					advectionHandlers[i]->computeAdvection(network, h, gridPosition,
 							concVector, updatedConcOffset);
@@ -353,7 +371,12 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	PetscScalar *concOffset;
 
 	// Get the total number of diffusing clusters
-	const int nDiff = diffusionHandler->getNumberOfDiffusing();
+	int nDiff = 0;
+	auto mediumHandlers = materialFactory->getMaterial();
+	for (int i = 0; i < mediumHandlers.size(); i++) {
+		int n = mediumHandlers[i]->getDiffusionHandler()->getNumberOfDiffusing();
+		if (n > nDiff) nDiff = n;
+	}
 
 	// Arguments for MatSetValuesStencil called below
 	MatStencil row, cols[7];
@@ -367,15 +390,24 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	 at each grid point
 	 */
 	for (int zk = zs; zk < zs + zm; zk++) {
+		// Set the grid position
+		gridPosition[2] = zk * hZ;
+
+		// Loop on the y grid points
 		for (int yj = ys; yj < ys + ym; yj++) {
+			// Set the grid position
+			gridPosition[1] = yj * hY;
+
+			// Get the medium at this position
+			auto medium = materialFactory->getMediumFactory(gridPosition);
+
+			// Loop on the x grid points
 			for (int xi = xs; xi < xs + xm; xi++) {
 				// Boundary conditions
 				if (xi == 0 || xi == Mx - 1) continue;
 
 				// Set the grid position
 				gridPosition[0] = xi * hX;
-				gridPosition[1] = yj * hY;
-				gridPosition[2] = zk * hZ;
 
 				// Copy data into the PSIClusterReactionNetwork so that it can
 				// compute the new concentrations.
@@ -383,7 +415,7 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 				network->updateConcentrationsFromArray(concOffset);
 
 				// Get the partial derivatives for the diffusion
-				diffusionHandler->computePartialsForDiffusion(network, vals, indices,
+				medium->getDiffusionHandler()->computePartialsForDiffusion(network, vals, indices,
 						sx, sy, sz);
 
 				// Loop on the number of diffusion cluster to set the values in the Jacobian
@@ -431,6 +463,7 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 				}
 
 				// Loop over the advection handlers
+				auto advectionHandlers = medium->getAdvectionHandler();
 				for (int l = 0; l < advectionHandlers.size(); l++) {
 					// Get the partial derivatives for the advection
 					advectionHandlers[l]->computePartialsForAdvection(network, h, vals,

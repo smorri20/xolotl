@@ -1,8 +1,8 @@
-#ifndef W110MATERIALHANDLERFACTORY_H
-#define W110MATERIALHANDLERFACTORY_H
+#ifndef W110MEDIUMFACTORY_H
+#define W110MEDIUMFACTORY_H
 
 #include <memory>
-#include <MaterialFactory.h>
+#include <MediumFactory.h>
 #include <W110FitFluxHandler.h>
 #include <W110AdvectionHandler.h>
 #include <Diffusion1DHandler.h>
@@ -12,15 +12,15 @@
 namespace xolotlFactory {
 
 /**
- * Subclass of MaterialFactory for a (110) oriented tungsten material.
+ * Subclass of MediumFactory for a (110) oriented tungsten medium.
  */
-class W110MaterialFactory : public MaterialFactory {
+class W110MediumFactory : public MediumFactory {
 private:
 
 	/**
 	 * The default constructor is private.
 	 */
-	W110MaterialFactory() {}
+	W110MediumFactory() {}
 
 public:
 
@@ -29,7 +29,7 @@ public:
 	 *
 	 * @param dim The number of dimensions for the problem
 	 */
-	W110MaterialFactory(int dim) {
+	W110MediumFactory(int dim) {
 		theFluxHandler = std::make_shared<xolotlCore::W110FitFluxHandler>();
 		theAdvectionHandler.push_back(std::make_shared<xolotlCore::W110AdvectionHandler>());
 
@@ -46,7 +46,7 @@ public:
 				break;
 			default:
 				// The asked dimension is not good (e.g. -1, 0, 4)
-				throw std::string("\nxolotlFactory: Bad dimension for the W110 material factory.");
+				throw std::string("\nxolotlFactory: Bad dimension for the W110 medium factory.");
 		}
 
 		return;
@@ -55,9 +55,9 @@ public:
 	/**
 	 * The destructor
 	 */
-	~W110MaterialFactory() {}
+	~W110MediumFactory() {}
 };
 
 } // end namespace xolotlFactory
 
-#endif // W110MATERIALHANDLERFACTORY_H
+#endif // W110MEDIUMFACTORY_H

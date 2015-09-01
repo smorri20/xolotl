@@ -368,7 +368,10 @@ public interface Arguments {
 	@Option(defaultValue = "W100",
 			description = "{W100, W110, W111} "
 			+ "The option declaring which material will be used "
-			+ "(W is for tungsten and the numbers correspond to the surface orientation)")
+			+ "(W is for tungsten and the numbers correspond to the surface orientation).\n "
+			+ "        To obtain different media (in 2D or 3D) in the Y direction, simply add the "
+			+ "distance (in nm) and the following wanted medium, \n        for instance: W100 5.0 W111 "
+			+ "will set a W100 medium from Y = 0.0 to Y = 5.0, and W111 for Y > 5.0 nm.")
 	/**
 	 * This operation produces the optional command line option '--material' which 
 	 * takes a single string value and is defined by the previous Option annotation
@@ -385,7 +388,7 @@ public interface Arguments {
 	 *            Brief description of this option
 	 */
 	@Option(description = "<tempFileName>  A temperature profile is given "
-			+ "by the specified file, then linear interpolation is used to fit the data")
+			+ "by the specified file, then linear interpolation is used to fit the data.")
 	/**
 	 * This operation produces the optional command line option '--tempFile' which 
 	 * takes a single string value and is defined by the previous Option annotation.

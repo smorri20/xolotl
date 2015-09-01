@@ -1,17 +1,14 @@
-#ifndef IMATERIALHANDLERFACTORY_H
-#define IMATERIALHANDLERFACTORY_H
+#ifndef IMATERIALFACTORY_H
+#define IMATERIALFACTORY_H
 
 #include <memory>
-#include <Options.h>
-#include <IFluxHandler.h>
-#include <IAdvectionHandler.h>
-#include <IDiffusionHandler.h>
+#include <IMediumFactory.h>
 
 namespace xolotlFactory {
 
 /**
- * Realizations of this interface are responsible for handling the flux and the advection.
- * they are both dependent on the type of material under study.
+ * Realizations of this interface are responsible for creating different medium factories
+ * that will represent the whole material under consideration.
  */
 class IMaterialFactory {
 public:
@@ -19,48 +16,43 @@ public:
 	/**
 	 * The destructor
 	 */
-	~IMaterialFactory() {}
+	~IMaterialFactory() {
+	}
 
 	/**
-	 * Initialize the material conditions with the different given options.
+	 * Initialize the material conditions.
 	 *
-	 * @param options The Xolotl options.
+	 * @param options The Xolotl options
 	 */
 	virtual void initializeMaterial(xolotlCore::Options &options) = 0;
 
 	/**
-	 * Return the flux handler.
+	 * Return the medium factory at a specific position.
 	 *
-	 * @return The flux handler.
+	 * @param position The position on the grid
+	 * @return The medium factory
 	 */
-	virtual std::shared_ptr<xolotlCore::IFluxHandler> getFluxHandler() const = 0;
+	virtual std::shared_ptr<IMediumFactory> getMediumFactory(
+			std::vector<double> position) const = 0;
 
 	/**
-	 * Return the advection handlers.
+	 * Return all the medium factories.
 	 *
-	 * @return The advection handlers.
+	 * @return The medium factories
 	 */
-	virtual std::vector<std::shared_ptr<xolotlCore::IAdvectionHandler> > getAdvectionHandler() const = 0;
+	virtual std::vector<std::shared_ptr<IMediumFactory> > getMaterial() const = 0;
 
 	/**
-	 * Return the diffusion handler.
+	 * Function that creates and returns the wanted material factory depending on the
+	 * given options.
 	 *
-	 * @return The diffusion handler.
+	 * @param options The Xolotl option
+	 * @return The material factory
 	 */
-	virtual std::shared_ptr<xolotlCore::IDiffusionHandler> getDiffusionHandler() const = 0;
-
-	/**
-	 * Function that create the wanted material factory depending on the given type.
-	 *
-	 * @param materialType The type of wanted material.
-	 * @param dimension The number of dimensions of the problem.
-	 * @return The material factory.
-	 */
-	static std::shared_ptr<IMaterialFactory> createMaterialFactory(const std::string& materialType,
-			int dimension);
+	static std::shared_ptr<IMaterialFactory> createMaterialFactory(xolotlCore::Options &options);
 
 };
 
 } // end namespace xolotlFactory
 
-#endif // IMATERIALHANDLERFACTORY_H
+#endif // IMATERIALFACTORY_H

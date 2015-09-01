@@ -24,29 +24,30 @@ using namespace std;
 using std::shared_ptr;
 namespace xperf = xolotlPerf;
 
-
 //! This operation prints the start message
 void printStartMessage() {
-	std::cout << "Starting Xolotl Plasma-Surface Interactions Simulator" << std::endl;
+	std::cout << "Starting Xolotl Plasma-Surface Interactions Simulator"
+			<< std::endl;
 	// TODO! Print copyright message
 	// Print date and time
 	std::time_t currentTime = std::time(NULL);
 	std::cout << std::asctime(std::localtime(&currentTime)); // << std::endl;
 }
 
-std::shared_ptr<xolotlFactory::IMaterialFactory> initMaterial(Options &options) {
+std::shared_ptr<xolotlFactory::IMaterialFactory> initMaterial(
+		Options &options) {
 	// Create the material factory
-	auto materialFactory = xolotlFactory::IMaterialFactory::createMaterialFactory(options.getMaterial(),
-			options.getDimensionNumber());
+	auto theMaterialFactory = xolotlFactory::IMaterialFactory::createMaterialFactory(
+			options);
 
-	// Initialize it with the options
-	materialFactory->initializeMaterial(options);
+	// Initialize it
+	theMaterialFactory->initializeMaterial(options);
 
-	return materialFactory;
+	return theMaterialFactory;
 }
 
 bool initTemp(Options &options) {
-
+	// Initialize the temperature handler
 	bool tempInitOK = xolotlFactory::initializeTempHandler(options);
 	if (!tempInitOK) {
 		std::cerr << "Unable to initialize requested temperature.  Aborting"
@@ -56,9 +57,8 @@ bool initTemp(Options &options) {
 		return tempInitOK;
 }
 
-
 bool initViz(bool opts) {
-
+	// Initialize the visualization handler
 	bool vizInitOK = xolotlFactory::initializeVizHandler(opts);
 	if (!vizInitOK) {
 		std::cerr
@@ -70,7 +70,7 @@ bool initViz(bool opts) {
 }
 
 std::shared_ptr<xolotlSolver::PetscSolver> setUpSolver(
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry, 
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry,
 		std::shared_ptr<xolotlFactory::IMaterialFactory> material,
 		std::shared_ptr<xolotlCore::ITemperatureHandler> tempHandler,
 		std::shared_ptr<xolotlSolver::ISolverHandler> solvHandler,
@@ -81,9 +81,10 @@ std::shared_ptr<xolotlSolver::PetscSolver> setUpSolver(
 	// Setup the solver
 	auto solverInitTimer = handlerRegistry->getTimer("initSolver");
 	solverInitTimer->start();
-	std::shared_ptr<xolotlSolver::PetscSolver> solver = std::make_shared<
-			xolotlSolver::PetscSolver>(handlerRegistry);
-	solver->setCommandLineOptions(options.getPetscArgc(), options.getPetscArgv());
+	std::shared_ptr<xolotlSolver::PetscSolver> solver = std::make_shared
+			< xolotlSolver::PetscSolver > (handlerRegistry);
+	solver->setCommandLineOptions(options.getPetscArgc(),
+			options.getPetscArgv());
 	solver->initialize(solvHandler);
 	solverInitTimer->stop();
 
@@ -92,39 +93,37 @@ std::shared_ptr<xolotlSolver::PetscSolver> setUpSolver(
 
 void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry) {
-
-    xperf::IHardwareCounter::SpecType hwctrSpec;
-    hwctrSpec.push_back( xperf::IHardwareCounter::FPOps );
-    hwctrSpec.push_back( xperf::IHardwareCounter::Cycles );
-    hwctrSpec.push_back( xperf::IHardwareCounter::L3CacheMisses );
+	// Initialize the hardware counters
+	xperf::IHardwareCounter::SpecType hwctrSpec;
+	hwctrSpec.push_back(xperf::IHardwareCounter::FPOps);
+	hwctrSpec.push_back(xperf::IHardwareCounter::Cycles);
+	hwctrSpec.push_back(xperf::IHardwareCounter::L3CacheMisses);
 
 	// Launch the PetscSolver
 	auto solverTimer = handlerRegistry->getTimer("solve");
-    auto solverHwctr = handlerRegistry->getHardwareCounter( "solve", hwctrSpec );
+	auto solverHwctr = handlerRegistry->getHardwareCounter("solve", hwctrSpec);
 	solverTimer->start();
-    solverHwctr->start();
+	solverHwctr->start();
 	solver->solve();
-    solverHwctr->stop();
+	solverHwctr->stop();
 	solverTimer->stop();
+
+	return;
 }
 
 std::shared_ptr<PSIClusterNetworkLoader> setUpNetworkLoader(int rank,
 		MPI_Comm comm, const std::string& networkFilename,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
-
 	// Create a HDF5NetworkLoader
 	std::shared_ptr<HDF5NetworkLoader> networkLoader;
-	networkLoader = std::make_shared<HDF5NetworkLoader>(registry);
+	networkLoader = std::make_shared < HDF5NetworkLoader > (registry);
 	// Give the networkFilename to the network loader
 	networkLoader->setFilename(networkFilename);
 
 	return networkLoader;
 }
 
-
-//! Main program
 int main(int argc, char **argv) {
-
 	// Local Declarations
 	int rank;
 
@@ -149,7 +148,7 @@ int main(int argc, char **argv) {
 
 	try {
 		// Set up our performance data infrastructure.
-        xperf::initialize(opts.getPerfHandlerType());
+		xperf::initialize(opts.getPerfHandlerType());
 
 		// Initialize MPI. We do this instead of leaving it to some
 		// other package (e.g., PETSc), because we want to avoid problems
@@ -164,8 +163,9 @@ int main(int argc, char **argv) {
 			printStartMessage();
 		}
 
-		// Set up the material infrastructure that is used to calculate flux
-		auto material = initMaterial(opts);
+		// Set up the material infrastructure that is used to calculate
+		// the flux and advection
+		auto materialFactory = initMaterial(opts);
 		// Set up the temperature infrastructure
 		bool tempInitOK = initTemp(opts);
 		assert(tempInitOK);
@@ -188,8 +188,8 @@ int main(int argc, char **argv) {
 		auto solvHandler = xolotlFactory::getSolverHandler();
 
 		// Setup the solver
-		auto solver = setUpSolver(handlerRegistry, material,
-				tempHandler, solvHandler, opts);
+		auto solver = setUpSolver(handlerRegistry, materialFactory, tempHandler,
+				solvHandler, opts);
 
 		// Load the network
 		auto networkLoadTimer = handlerRegistry->getTimer("loadNetwork");
@@ -214,24 +214,22 @@ int main(int argc, char **argv) {
 
 		totalTimer->stop();
 
-        // Report statistics about the performance data collected during
-        // the run we just completed.
-        xperf::PerfObjStatsMap<xperf::ITimer::ValType> timerStats;
-        xperf::PerfObjStatsMap<xperf::IEventCounter::ValType> counterStats;
-        xperf::PerfObjStatsMap<xperf::IHardwareCounter::CounterType> hwCtrStats;
-        handlerRegistry->collectStatistics( timerStats, counterStats, hwCtrStats );
-        if( rank == 0 )
-        {
-            handlerRegistry->reportStatistics( std::cout, 
-                                                timerStats, 
-                                                counterStats, 
-                                                hwCtrStats );
-        }
+		// Report statistics about the performance data collected during
+		// the run we just completed.
+		xperf::PerfObjStatsMap<xperf::ITimer::ValType> timerStats;
+		xperf::PerfObjStatsMap<xperf::IEventCounter::ValType> counterStats;
+		xperf::PerfObjStatsMap<xperf::IHardwareCounter::CounterType> hwCtrStats;
+		handlerRegistry->collectStatistics(timerStats, counterStats,
+				hwCtrStats);
+		if (rank == 0) {
+			handlerRegistry->reportStatistics(std::cout, timerStats,
+					counterStats, hwCtrStats);
+		}
 
-    } catch (const std::exception& e) {
-        std::cerr << e.what() << std::endl;
-        std::cerr << "Aborting." << std::endl;
-        return EXIT_FAILURE;
+	} catch (const std::exception& e) {
+		std::cerr << e.what() << std::endl;
+		std::cerr << "Aborting." << std::endl;
+		return EXIT_FAILURE;
 
 	} catch (const std::string& error) {
 		std::cout << error << std::endl;
