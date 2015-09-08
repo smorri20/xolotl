@@ -104,6 +104,11 @@ public class Preprocessor {
 	private FormationEnergyEngine formationEnergyEngine = new FormationEnergyEngine();
 
 	/**
+	 * The number of spacial dimensions.
+	 */
+	private int dim;
+	
+	/**
 	 * The list of parameters that will be passed to Xolotl
 	 */
 	public Properties xolotlParams = new Properties();
@@ -131,8 +136,8 @@ public class Preprocessor {
 		petscOptions.put("-ts_max_snes_failures", "200");
 		petscOptions.put("-pc_type", "fieldsplit");
 		petscOptions.put("-pc_fieldsplit_detect_coupling", "");
-		petscOptions.put("-fieldsplit_0_pc_type", "redundant");
-		petscOptions.put("-fieldsplit_1_pc_type", "sor");
+		petscOptions.put("-fieldsplit_0_pc_type", "sor");
+		petscOptions.put("-fieldsplit_1_pc_type", "redundant");
 		petscOptions.put("-snes_monitor", "");
 		petscOptions.put("-ksp_monitor", "");
 		petscOptions.put("-ts_monitor", "");
@@ -142,6 +147,13 @@ public class Preprocessor {
 		List<String> petscList = new ArrayList<String>();
 		for (String str : petscArgs.split(" ")) {
 			petscList.add(str);
+		}
+
+		// Change the default preconditionner if we are not in 1D
+		if (dim > 1) {
+			petscList.add("-fieldsplit_1_pc_type"); petscList.add("gamg");
+			petscList.add("-fieldsplit_1_ksp_type"); petscList.add("gmres");
+			petscList.add("-ksp_type"); petscList.add("fgmres");
 		}
 
 		// Create the dash character
@@ -216,6 +228,9 @@ public class Preprocessor {
 		
 		// Whether the phase-cut method will be used or not
 		usePhaseCut = args.isPhaseCut();
+		
+		// The number of dimension for the problem to solve
+		dim = Integer.parseInt(args.getDimensions());
 
 		// Set the parameter options that will be passed to Xolotl
 		xolotlParams.setProperty("dimensions", args.getDimensions());

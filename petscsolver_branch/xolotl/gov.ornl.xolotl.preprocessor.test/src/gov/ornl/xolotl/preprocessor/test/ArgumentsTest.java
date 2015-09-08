@@ -51,8 +51,8 @@ public class ArgumentsTest {
 			// Check the default petscArgs
 			assertEquals("-ts_final_time 50 -ts_dt 1.0e-12 "
 					+ "-ts_max_steps 100 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
-					+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant "
-					+ "-fieldsplit_1_pc_type sor -snes_monitor -ksp_monitor -ts_monitor",
+					+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type sor "
+					+ "-fieldsplit_1_pc_type redundant -ts_monitor",
 					args.getPetscArgs());
 
 			// Check that the default networkFile is networkInit.h5
