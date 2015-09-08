@@ -15,23 +15,6 @@ private:
 	//! The position of the surface
 	std::vector<int> surfacePosition;
 
-	/**
-	 * Get the mean position of the surface.
-     *
-     * @return The mean position of the surface
-	 */
-	int getMeanSurfacePosition() {
-		int size = surfacePosition.size();
-
-		int mean = 0;
-		// Compute the mean
-		for (int j = 0; j < size; j++) {
-			mean += surfacePosition[j];
-		}
-
-		return mean / size;
-	}
-
 public:
 
 	//! The Constructor

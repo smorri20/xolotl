@@ -126,9 +126,6 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) {
 		}
 	}
 
-	// Get the mean value of the surface position
-	int meanPosition = getMeanSurfacePosition();
-
 	// Get the total size of the grid for the boundary conditions
 	PetscInt Mx, My;
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
@@ -138,11 +135,8 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) {
 	checkPetscError(ierr, "PetscSolver2DHandler::initializeConcentration: "
 			"DMDAGetInfo failed.");
 
-	// Initialize the flux handler
-	fluxHandler->initializeFluxHandler(meanPosition, grid);
-
 	// Initialize the modified trap-mutation handler
-	mutationHandler->initialize(meanPosition, network, grid);
+	mutationHandler->initialize(surfacePosition[0], network, grid);
 
 	// Pointer for the concentration vector at a specific grid point
 	PetscScalar *concOffset;
@@ -242,25 +236,31 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	// Set some step size variable
 	double sy = 1.0 / (hY * hY);
 
-	// Get the mean value of the surface position
-	int meanPosition = getMeanSurfacePosition();
-
-	// Get the incident flux vector
-	auto incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime, meanPosition);
-
 	// Declarations for variables used in the loop
 	double flux;
 	auto heCluster = (xolotlCore::PSICluster *) network->get(xolotlCore::heType, 1);
 	int heliumIndex = heCluster->getId() - 1, reactantIndex;
 	xolotlCore::PSICluster *cluster = NULL;
 	double **concVector = new double*[5];
-	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
+	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 }, incidentFluxVector;
 
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = network->size();
 
 	// Loop over grid points computing ODE terms for each grid point
 	for (int yj = ys; yj < ys + ym; yj++) {
+		// Set the grid position
+		gridPosition[1] = yj * hY;
+
+		// Initialize the flux, advection, and trap-mutation handlers which depend
+		// on the surface position at Y
+		fluxHandler->initializeFluxHandler(surfacePosition[yj], grid);
+		advectionHandlers[0]->setLocation(grid[surfacePosition[yj]]);
+		mutationHandler->initializeIndex(surfacePosition[yj], network, grid);
+
+		// Get the flux vector which can be different at each Y position
+		incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime, surfacePosition[yj]);
+
 		for (int xi = xs; xi < xs + xm; xi++) {
 			// Compute the old and new array offsets
 			concOffset = concs[yj][xi];
@@ -278,7 +278,6 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 			// Set the grid position
 			gridPosition[0] = grid[xi];
-			gridPosition[1] = yj * hY;
 
 			// Fill the concVector with the pointer to the middle, left, right, bottom, and top grid points
 			concVector[0] = concOffset; // middle
@@ -311,7 +310,7 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			// produces He of cluster size 1 -----
 			if (heCluster) {
 				// Update the concentration of the cluster
-				updatedConcOffset[heliumIndex] += incidentFluxVector[xi - meanPosition];
+				updatedConcOffset[heliumIndex] += incidentFluxVector[xi - surfacePosition[yj]];
 			}
 
 			// ---- Compute diffusion over the locally owned part of the grid -----
@@ -410,6 +409,13 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	 at each grid point
 	 */
 	for (int yj = ys; yj < ys + ym; yj++) {
+		// Set the grid position
+		gridPosition[1] = yj * hY;
+
+		// Initialize the advection handler which depends
+		// on the surface position at Y
+		advectionHandlers[0]->setLocation(grid[surfacePosition[yj]]);
+
 		for (int xi = xs; xi < xs + xm; xi++) {
 			// Boundary conditions
 			// Everything to the left of the surface is empty
@@ -417,7 +423,6 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 
 			// Set the grid position
 			gridPosition[0] = grid[xi];
-			gridPosition[1] = yj * hY;
 
 			// Copy data into the PSIClusterReactionNetwork so that it can
 			// compute the new concentrations.
@@ -554,6 +559,10 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 
 	// Loop over the grid points
 	for (int yj = ys; yj < ys + ym; yj++) {
+		// Initialize the trap-mutation handler which depends
+		// on the surface position at Y
+		mutationHandler->initializeIndex(surfacePosition[yj], network, grid);
+
 		for (int xi = xs; xi < xs + xm; xi++) {
 			// Boundary conditions
 			// Everything to the left of the surface is empty

@@ -634,9 +634,6 @@ PetscErrorCode monitorInterstitial3D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the delta time from the previous timestep to this timestep
 	double dt = time - previousTime;
 
-	// Initialize the boolean to know if the flux need to be reinitialized
-	bool reinitialize = false;
-
 	// Loop on the possible yj and zk
 	for (yj = 0; yj < My; yj++) {
 		for (zk = 0; zk < Mz; zk++) {
@@ -745,35 +742,8 @@ PetscErrorCode monitorInterstitial3D(TS ts, PetscInt timestep, PetscReal time,
 					// Decrease the number of grid points
 					--nGridPoints;
 				}
-
-				// The flux will need to be initialized
-				reinitialize = true;
 			}
 		}
-	}
-
-	// If we need to initialize the flux
-	if (reinitialize) {
-		// Compute the mean value of the surface position
-		int meanPosition = 0;
-		for (int j = 0; j < My; j++) {
-			for (int k = 0; k < Mz; k++) {
-				meanPosition += solverHandler->getSurfacePosition(j, k);
-			}
-		}
-		meanPosition = meanPosition / (My * Mz);
-
-		// Set the new surface location in the surface advection handler
-		auto advecHandler = solverHandler->getAdvectionHandler();
-		advecHandler->setLocation(grid[meanPosition]);
-
-		// Get the flux handler to reinitialize it
-		auto fluxHandler = solverHandler->getFluxHandler();
-		fluxHandler->initializeFluxHandler(meanPosition, grid);
-
-		// Get the modified trap-mutation handler to reinitialize it
-		auto mutationHandler = solverHandler->getMutationHandler();
-		mutationHandler->initializeIndex(meanPosition, network, grid);
 	}
 
 	// Restore the solutionArray
