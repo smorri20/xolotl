@@ -452,6 +452,19 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 						cols[1].i = xi + advecStencil[0]; // right?
 						cols[1].j = yj + advecStencil[1]; // top?
 						cols[1].c = indices[i];
+						cols[2].i = xi; // middle
+						cols[2].j = yj;
+						cols[2].c = indices[i];
+						cols[3].i = xi - advecStencil[1]; // flip
+						cols[3].j = yj - advecStencil[0];
+						cols[3].c = indices[i];
+						cols[4].i = xi + advecStencil[1]; // flip
+						cols[4].j = yj + advecStencil[0];
+						cols[4].c = indices[i];
+
+						// Update the matrix
+						ierr = MatSetValuesStencil(J, 1, &row, 5, cols, vals + (5 * i), ADD_VALUES);
+						checkPetscError(ierr, "PetscSolver2DHandler::computeOffDiagonalJacobian: MatSetValuesStencil (advection) failed.");
 					}
 					else {
 						// Set grid coordinates and component numbers for the columns
@@ -462,11 +475,32 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 						cols[1].i = xi + advecStencil[0]; // left or right
 						cols[1].j = yj + advecStencil[1]; // top or bottom
 						cols[1].c = indices[i];
-					}
 
-					// Update the matrix
-					ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals + (2 * i), ADD_VALUES);
-					checkPetscError(ierr, "PetscSolver2DHandler::computeOffDiagonalJacobian: MatSetValuesStencil (advection) failed.");
+						// The advection is different for grid points just next to the sink location
+						// because the diffusion has to be cancelled
+						std::vector<double> newPosA = { 0.0, 0.0, 0.0 };
+						newPosA[0] = gridPosition[0] - h[0];
+						newPosA[1] = gridPosition[1] - h[1];
+						std::vector<double> newPosB = { 0.0, 0.0, 0.0 };
+						newPosB[0] = gridPosition[0] + h[0];
+						newPosB[1] = gridPosition[1] + h[1];
+						if (advectionHandlers[l]->isPointOnSink(newPosA)
+								|| advectionHandlers[l]->isPointOnSink(newPosB)) {
+							// Set grid coordinate for the opposite grid point
+							cols[2].i = xi - advecStencil[0]; // left or right
+							cols[2].j = yj - advecStencil[1]; // top or bottom
+							cols[2].c = indices[i];
+
+							// Update the matrix
+							ierr = MatSetValuesStencil(J, 1, &row, 3, cols, vals + (3 * i), ADD_VALUES);
+							checkPetscError(ierr, "PetscSolver1DHandler::computeOffDiagonalJacobian: MatSetValuesStencil (advection) failed.");
+						}
+						else {
+							// Update the matrix
+							ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals + (2 * i), ADD_VALUES);
+							checkPetscError(ierr, "PetscSolver2DHandler::computeOffDiagonalJacobian: MatSetValuesStencil (advection) failed.");
+						}
+					}
 				}
 			}
 		}

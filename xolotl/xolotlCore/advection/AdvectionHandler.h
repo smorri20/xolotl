@@ -20,6 +20,9 @@ protected:
 	//! The vector containing the value of the sink strength (called A) of the advecting clusters
 	std::vector<double> sinkStrengthVector;
 
+	//! The number of dimensions
+	int dimension;
+
 public:
 
 	//! The Constructor
@@ -27,6 +30,13 @@ public:
 
 	//! The Destructor
 	~AdvectionHandler() {}
+
+	/**
+	 * Set the number of dimension
+	 *
+	 * @param dim The number of dimensions of the problem
+	 */
+	void setDimension(int dim) {dimension = dim;}
 
 	/**
 	 * Get the total number of advecting clusters in the network.

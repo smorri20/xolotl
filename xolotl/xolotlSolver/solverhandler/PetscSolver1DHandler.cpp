@@ -417,6 +417,12 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 					cols[0].c = indices[i];
 					cols[1].i = xi + advecStencil[0]; // right?
 					cols[1].c = indices[i];
+					cols[2].i = xi; // middle
+					cols[2].c = indices[i];
+
+					// Update the matrix
+					ierr = MatSetValuesStencil(J, 1, &row, 3, cols, vals + (3 * i), ADD_VALUES);
+					checkPetscError(ierr, "PetscSolver1DHandler::computeOffDiagonalJacobian: MatSetValuesStencil (advection) failed.");
 				}
 				else {
 					// Set grid coordinates and component numbers for the columns
@@ -425,11 +431,29 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 					cols[0].c = indices[i];
 					cols[1].i = xi + advecStencil[0]; // left or right
 					cols[1].c = indices[i];
-				}
 
-				// Update the matrix
-				ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals + (2 * i), ADD_VALUES);
-				checkPetscError(ierr, "PetscSolver1DHandler::computeOffDiagonalJacobian: MatSetValuesStencil (advection) failed.");
+					// The advection is different for grid points just next to the sink location
+					// because the diffusion has to be cancelled
+					std::vector<double> newPosA = { 0.0, 0.0, 0.0 };
+					newPosA[0] = gridPosition[0] - h[0];
+					std::vector<double> newPosB = { 0.0, 0.0, 0.0 };
+					newPosB[0] = gridPosition[0] + h[0];
+					if (advectionHandlers[l]->isPointOnSink(newPosA)
+							|| advectionHandlers[l]->isPointOnSink(newPosB)) {
+						// Set grid coordinate for the opposite grid point
+						cols[2].i = xi - advecStencil[0]; // left or right
+						cols[2].c = indices[i];
+
+						// Update the matrix
+						ierr = MatSetValuesStencil(J, 1, &row, 3, cols, vals + (3 * i), ADD_VALUES);
+						checkPetscError(ierr, "PetscSolver1DHandler::computeOffDiagonalJacobian: MatSetValuesStencil (advection) failed.");
+					}
+					else {
+						// Update the matrix
+						ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals + (2 * i), ADD_VALUES);
+						checkPetscError(ierr, "PetscSolver1DHandler::computeOffDiagonalJacobian: MatSetValuesStencil (advection) failed.");
+					}
+				}
 			}
 		}
 	}

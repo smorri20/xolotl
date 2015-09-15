@@ -45,6 +45,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	XGBAdvectionHandler advectionHandler;
 	advectionHandler.initialize(network);
 	advectionHandler.setPosition(2.0);
+	advectionHandler.setDimension(2);
 
 	// Check if grid points are on the sink
 	std::vector<double> pos0 = { 0.1, 3.0, 0.0 };
@@ -106,12 +107,12 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 			concVector, updatedConcOffset);
 
 	// Check the new values of updatedConcOffset
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], -1.50810e+11, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], -1.45827e+11, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], -1.85540e+11, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], -3.34501e+11, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], -4.82155e+11, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[5], -1.87392e+10, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], -1.31421e+13, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], -6.79412e+12, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], -2.97795e+12, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], -4.18020e+12, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], -3.46471e+12, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[5], -9.56534e+10, 0.01);
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[6], 0.0, 0.01); // Does not advect
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[7], 0.0, 0.01); // Does not advect
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[8], 0.0, 0.01); // Does not advect
@@ -119,7 +120,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	// Initialize the rows, columns, and values to set in the Jacobian
 	int nAdvec = advectionHandler.getNumberOfAdvecting();
 	int indices[nAdvec];
-	double val[2*nAdvec];
+	double val[3*nAdvec];
 	// Get the pointer on them for the compute advection method
 	int *indicesPointer = &indices[0];
 	double *valPointer = &val[0];
@@ -139,8 +140,10 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	// Check values
 	BOOST_REQUIRE_CLOSE(val[0], -1.20606e+08, 0.01);
 	BOOST_REQUIRE_CLOSE(val[1], 7.53788e+06, 0.01);
-	BOOST_REQUIRE_CLOSE(val[2], -1.10475e+08, 0.01);
-	BOOST_REQUIRE_CLOSE(val[3], 6.90469e+06, 0.01);
+	BOOST_REQUIRE_CLOSE(val[2], -6.41544e+09, 0.01);
+	BOOST_REQUIRE_CLOSE(val[3], -1.10475e+08, 0.01);
+	BOOST_REQUIRE_CLOSE(val[4], 6.90469e+06, 0.01);
+	BOOST_REQUIRE_CLOSE(val[5], -3.14191e+09, 0.01);
 
 	// Get the stencil
 	auto stencil = advectionHandler.getStencilForAdvection(gridPosition);

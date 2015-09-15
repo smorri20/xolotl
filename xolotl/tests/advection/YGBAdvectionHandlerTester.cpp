@@ -45,6 +45,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	YGBAdvectionHandler advectionHandler;
 	advectionHandler.initialize(network);
 	advectionHandler.setPosition(2.0);
+	advectionHandler.setDimension(2);
 
 	// Check if grid points are on the sink
 	std::vector<double> pos0 = { 0.1, 3.0, 0.0 };

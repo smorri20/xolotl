@@ -78,6 +78,7 @@ public:
 						xolotlCore::XGBAdvectionHandler>();
 				GBAdvecHandler->setPosition(
 						strtod(tokens[i + 1].c_str(), NULL));
+				GBAdvecHandler->setDimension(dim);
 				theAdvectionHandler.push_back(GBAdvecHandler);
 			} else if (tokens[i] == "Y") {
 				if (dim < 2)
@@ -89,6 +90,7 @@ public:
 						xolotlCore::YGBAdvectionHandler>();
 				GBAdvecHandler->setPosition(
 						strtod(tokens[i + 1].c_str(), NULL));
+				GBAdvecHandler->setDimension(dim);
 				theAdvectionHandler.push_back(GBAdvecHandler);
 			} else if (tokens[i] == "Z") {
 				if (dim < 3)
@@ -100,6 +102,7 @@ public:
 						xolotlCore::ZGBAdvectionHandler>();
 				GBAdvecHandler->setPosition(
 						strtod(tokens[i + 1].c_str(), NULL));
+				GBAdvecHandler->setDimension(dim);
 				theAdvectionHandler.push_back(GBAdvecHandler);
 			} else {
 				// Wrong GB type

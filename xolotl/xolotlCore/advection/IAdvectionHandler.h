@@ -31,6 +31,13 @@ public:
 	virtual void initialize(PSIClusterReactionNetwork *network) = 0;
 
 	/**
+	 * Set the number of dimension
+	 *
+	 * @param dim The number of dimensions of the problem
+	 */
+	virtual void setDimension(int dim) = 0;
+
+	/**
 	 * Set the position of the sink.
 	 *
 	 * @param pos The position of the sink
