@@ -104,6 +104,7 @@ public:
 			if (tokens[i] == "X") {
 				auto GBAdvecHandler = std::make_shared<xolotlCore::XGBAdvectionHandler>();
 				GBAdvecHandler->setLocation(strtod(tokens[i+1].c_str(), NULL));
+				GBAdvecHandler->setDimension(dim);
 				theAdvectionHandler.push_back(GBAdvecHandler);
 			}
 			else if (tokens[i] == "Y") {
@@ -114,6 +115,7 @@ public:
 
 				auto GBAdvecHandler = std::make_shared<xolotlCore::YGBAdvectionHandler>();
 				GBAdvecHandler->setLocation(strtod(tokens[i+1].c_str(), NULL));
+				GBAdvecHandler->setDimension(dim);
 				theAdvectionHandler.push_back(GBAdvecHandler);
 			}
 			else if (tokens[i] == "Z") {
@@ -124,6 +126,7 @@ public:
 
 				auto GBAdvecHandler = std::make_shared<xolotlCore::ZGBAdvectionHandler>();
 				GBAdvecHandler->setLocation(strtod(tokens[i+1].c_str(), NULL));
+				GBAdvecHandler->setDimension(dim);
 				theAdvectionHandler.push_back(GBAdvecHandler);
 			}
 			else {

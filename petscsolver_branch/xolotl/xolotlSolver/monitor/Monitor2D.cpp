@@ -288,6 +288,124 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 }
 
 #undef __FUNCT__
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "computeHeliumConc2D")
+/**
+ * This is a monitoring method that will compute the helium concentrations
+ */
+PetscErrorCode computeHeliumConc2D(TS ts, PetscInt timestep, PetscReal time,
+		Vec solution, void *ictx) {
+	PetscErrorCode ierr;
+	int xs, xm, ys, ym;
+
+	PetscFunctionBeginUser;
+
+	// Get the number of processes
+	int worldSize;
+	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
+
+	// Gets the process ID (important when it is running in parallel)
+	int procId;
+	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+
+	// Get the solver handler
+	auto solverHandler = PetscSolver::getSolverHandler();
+
+	// Get the da from ts
+	DM da;
+	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
+
+	// Get the corners of the grid
+	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);CHKERRQ(ierr);
+
+	// Get the physical grid in the x direction
+	auto grid = solverHandler->getXGrid();
+
+	// Setup step size variables
+	double hy = solverHandler->getStepSizeY();
+
+	// Get the total size of the grid rescale the concentrations
+	int Mx, My;
+	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
+	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+	PETSC_IGNORE);CHKERRQ(ierr);
+
+	// Get the array of concentration
+	const double ***solutionArray, *gridPointSolution;
+	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+
+	// Store the concentration over the grid
+	std::vector<double> heConcLocal;
+	std::vector<double> heConcentrations;
+	// Initialize
+	for (int i = 0; i < 1001; i++) {
+		heConcLocal.push_back(0.0);
+		heConcentrations.push_back(0.0);
+	}
+
+	// Open the file
+	std::ofstream outputFile;
+	if (procId == 0) {
+		std::stringstream name;
+		name << "heliumConc_" << timestep << ".dat";
+		outputFile.open(name.str());
+	}
+
+	// Loop on the full grid
+	for (int xi = 0; xi < Mx; xi++) {
+		// Wait for everybody at each grid point
+		MPI_Barrier(PETSC_COMM_WORLD);
+
+		// Set x
+		double x = grid[xi];
+
+		// Loop on Y to integrate
+		for (int yj = 0; yj < My; yj++) {
+			// If we are on the right process
+			if (xi >= xs && xi < xs + xm && yj >= ys && yj < ys + ym) {
+				// Get the pointer to the beginning of the solution data for this grid point
+				gridPointSolution = solutionArray[yj][xi];
+
+				// Loop on all the indices
+				for (int l = 0; l < heIndices2D.size(); l++) {
+					// Add the current concentration
+					heConcLocal[heWeights2D[l]] += gridPointSolution[heIndices2D[l]]
+																		  * (grid[xi] - grid[xi-1]) * hy;
+				}
+			}
+		}
+
+		// Gather all the data
+		for (int i = 0; i < 1001; i++) {
+			MPI_Reduce(&heConcLocal[i], &heConcentrations[i], 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+		}
+
+		// Print it from the main proc
+		if (procId == 0) {
+			for (int i = 0; i < 1001; i++) {
+				if (heConcentrations[i] > 1.0e-16) {
+					outputFile << x << " " << i << " " << heConcentrations[i] << std::endl;
+				}
+			}
+		}
+
+		// Reinitialize the concentrations
+		for (int i = 0; i < 1001; i++) {
+			heConcLocal[i] = 0.0;
+			heConcentrations[i] = 0.0;
+		}
+	}
+
+	// Close the file
+	outputFile.close();
+
+	// Restore the solutionArray
+	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+
+	PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ Actual__FUNCT__("xolotlSolver", "monitorSurface2D")
 /**
  * This is a monitoring method that will save 2D plots of the concentration of
@@ -633,7 +751,7 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 	auto vizHandlerRegistry = xolotlFactory::getVizHandlerRegistry();
 
 	// Flags to launch the monitors or not
-	PetscBool flagPerf, flagRetention, flagStatus, flag2DPlot;
+	PetscBool flagPerf, flagRetention, flagStatus, flag2DPlot, flagConc;
 
 	// Check the option -plot_perf
 	ierr = PetscOptionsHasName(NULL, "-plot_perf", &flagPerf);
@@ -650,6 +768,10 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 	// Check the option -start_stop
 	ierr = PetscOptionsHasName(NULL, "-start_stop", &flagStatus);
 	checkPetscError(ierr, "setupPetsc2DMonitor: PetscOptionsHasName (-start_stop) failed.");
+
+	// Check the option -helium_conc
+	ierr = PetscOptionsHasName(NULL, "-helium_conc", &flagConc);
+	checkPetscError(ierr, "setupPetsc2DMonitor: PetscOptionsHasName (-helium_conc) failed.");
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -814,6 +936,13 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		// monitorSurface2D will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorSurface2D, NULL, NULL);
 		checkPetscError(ierr, "setupPetsc2DMonitor: TSMonitorSet (monitorSurface2D) failed.");
+	}
+
+	// Set the monitor to compute the helium concentrations
+	if (flagConc) {
+		// computeHeliumConc2D will be called at each timestep
+		ierr = TSMonitorSet(ts, computeHeliumConc2D, NULL, NULL);
+		checkPetscError(ierr, "setupPetsc2DMonitor: TSMonitorSet (computeHeliumConc2D) failed.");
 	}
 
 	// If the user wants the surface to be able to move

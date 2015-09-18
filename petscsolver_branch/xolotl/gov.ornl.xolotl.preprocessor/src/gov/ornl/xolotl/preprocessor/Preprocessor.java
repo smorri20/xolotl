@@ -129,17 +129,15 @@ public class Preprocessor {
 		// Create a map of the default Petsc options and their corresponding
 		// arguments, if any, where the key is the option and the value is
 		// the argument
-		petscOptions.put("-ts_final_time", "50");
+		petscOptions.put("-ts_final_time", "1.0");
 		petscOptions.put("-ts_dt", "1.0e-12");
 		petscOptions.put("-ts_max_steps", "100");
-		petscOptions.put("-ts_adapt_dt_max", "10");
+		petscOptions.put("-ts_adapt_dt_max", "1.0e-6");
 		petscOptions.put("-ts_max_snes_failures", "200");
 		petscOptions.put("-pc_type", "fieldsplit");
 		petscOptions.put("-pc_fieldsplit_detect_coupling", "");
 		petscOptions.put("-fieldsplit_0_pc_type", "sor");
 		petscOptions.put("-fieldsplit_1_pc_type", "redundant");
-		petscOptions.put("-snes_monitor", "");
-		petscOptions.put("-ksp_monitor", "");
 		petscOptions.put("-ts_monitor", "");
 
 		// Get the string of Petsc arguments from the command line
