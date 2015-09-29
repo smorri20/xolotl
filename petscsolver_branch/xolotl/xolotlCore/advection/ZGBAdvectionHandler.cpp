@@ -132,8 +132,8 @@ void ZGBAdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 					+ 5 * (pos[2] < location)][index]; // back or front
 
 			// Get the a=d and b=d+h positions
-			double a = abs(location - pos[2]);
-			double b = abs(location - pos[2]) + hz;
+			double a = fabs(location - pos[2]);
+			double b = fabs(location - pos[2]) + hz;
 
 			// Compute the concentration as explained in the description of the method
 			double conc = (3.0 * sinkStrengthVector[i]
@@ -218,8 +218,8 @@ void ZGBAdvectionHandler::computePartialsForAdvection(
 		// Here we are NOT on the GB sink
 		else {
 			// Get the a=d and b=d+h positions
-			double a = abs(location - pos[2]);
-			double b = abs(location - pos[2]) + hz;
+			double a = fabs(location - pos[2]);
+			double b = fabs(location - pos[2]) + hz;
 
 			// If we are on a grid point just next to the sink location
 			// We have to remove the diffusion received from the sink location
@@ -268,7 +268,7 @@ std::vector<int> ZGBAdvectionHandler::getStencilForAdvection(
 
 bool ZGBAdvectionHandler::isPointOnSink(std::vector<double> &pos) {
 	// Return true if pos[2] is equal to location
-	return abs(location - pos[2]) < 0.001;
+	return fabs(location - pos[2]) < 0.001;
 }
 
 }/* end namespace xolotlCore */

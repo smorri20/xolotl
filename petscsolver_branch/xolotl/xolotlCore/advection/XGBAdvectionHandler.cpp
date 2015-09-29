@@ -145,8 +145,8 @@ void XGBAdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 					+ 1 * (pos[0] < location)][index]; // left or right
 
 			// Get the a=d and b=d+h positions
-			double a = abs(location - pos[0]);
-			double b = abs(location - pos[0]) + hxRight * (pos[0] > location)
+			double a = fabs(location - pos[0]);
+			double b = fabs(location - pos[0]) + hxRight * (pos[0] > location)
 					+ hxLeft * (pos[0] < location);
 
 			// Compute the concentration as explained in the description of the method
@@ -266,8 +266,8 @@ void XGBAdvectionHandler::computePartialsForAdvection(
 		// Here we are NOT on the GB sink
 		else {
 			// Get the a=d and b=d+h positions
-			double a = abs(location - pos[0]);
-			double b = abs(location - pos[0]) + hxRight * (pos[0] > location)
+			double a = fabs(location - pos[0]);
+			double b = fabs(location - pos[0]) + hxRight * (pos[0] > location)
 					+ hxLeft * (pos[0] < location);
 
 			// If the position is next to the advection sink location
@@ -330,7 +330,7 @@ std::vector<int> XGBAdvectionHandler::getStencilForAdvection(
 
 bool XGBAdvectionHandler::isPointOnSink(std::vector<double> &pos) {
 	// Return true if pos[0] is equal to location
-	return abs(location - pos[0]) < 0.001;
+	return fabs(location - pos[0]) < 0.001;
 }
 
 }/* end namespace xolotlCore */
