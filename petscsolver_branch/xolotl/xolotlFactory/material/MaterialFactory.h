@@ -86,6 +86,8 @@ public:
 			theTrapMutationHandler = std::make_shared<xolotlCore::DummyTrapMutationHandler>();
 		if (!map["bursting"])
 			theBubbleBurstingHandler = std::make_shared<xolotlCore::DummyBubbleBurstingHandler>();
+		if (!map["attenuation"])
+			theTrapMutationHandler->setAttenuation(false);
 
 		// Get the number of dimensions
 		int dim = options.getDimensionNumber();

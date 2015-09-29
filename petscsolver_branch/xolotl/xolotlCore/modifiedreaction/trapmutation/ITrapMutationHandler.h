@@ -55,6 +55,21 @@ public:
 	virtual void updateTrapMutationRate(PSIClusterReactionNetwork *network) = 0;
 
 	/**
+	 * This method set the boolean to remember if we want attenuation or not.
+	 *
+	 * @param isAttenuation True if we want attenuation
+	 */
+	virtual void setAttenuation(bool isAttenuation) = 0;
+
+	/**
+	 * This method update the rate that makes the modified trap-mutation inefficient
+	 * with time, depending on the total helium concentration.
+	 *
+	 * @param conc The concentration of helium
+	 */
+	virtual void updateDisappearingRate(double conc) = 0;
+
+	/**
 	 * Compute the flux due to the modified trap-mutation for all the cluster,
 	 * given the position index xi.
 	 * This method is called by the RHSFunction from the PetscSolver.

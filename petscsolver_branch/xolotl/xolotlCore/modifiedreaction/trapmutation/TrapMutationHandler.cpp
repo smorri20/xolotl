@@ -161,6 +161,19 @@ void TrapMutationHandler::updateTrapMutationRate(PSIClusterReactionNetwork *netw
 	return;
 }
 
+void TrapMutationHandler::setAttenuation(bool isAttenuation) {
+	attenuation = isAttenuation;
+
+	return;
+}
+
+void TrapMutationHandler::updateDisappearingRate(double conc) {
+	// Set the rate to have an exponential decrease
+	if (attenuation) kDis = exp(-4.0 * conc);
+
+	return;
+}
+
 void TrapMutationHandler::computeTrapMutation(PSIClusterReactionNetwork *network,
 		int xi, double *concOffset, double *updatedConcOffset) {
 	// Get all the HeV bubbles
@@ -198,10 +211,10 @@ void TrapMutationHandler::computeTrapMutation(PSIClusterReactionNetwork *network
 			// Get the left side rate (combination + emission)
 			double totalRate = heCluster->getLeftSideRate();
 			// Define the trap-mutation rate taking into account the desorption
-			rate = totalRate * (1.0 - desorp.portion) / desorp.portion;
+			rate = kDis * totalRate * (1.0 - desorp.portion) / desorp.portion;
 		}
 		else {
-			rate = kMutation;
+			rate = kDis * kMutation;
 		}
 
 		// Update the concentrations (the helium cluster loses its concentration)
@@ -248,10 +261,10 @@ int TrapMutationHandler::computePartialsForTrapMutation(
 			// Get the left side rate (combination + emission)
 			double totalRate = heCluster->getLeftSideRate();
 			// Define the trap-mutation rate taking into account the desorption
-			rate = totalRate * (1.0 - desorp.portion) / desorp.portion;
+			rate = kDis * totalRate * (1.0 - desorp.portion) / desorp.portion;
 		}
 		else {
-			rate = kMutation;
+			rate = kDis * kMutation;
 		}
 
 		// Set the helium cluster partial derivative

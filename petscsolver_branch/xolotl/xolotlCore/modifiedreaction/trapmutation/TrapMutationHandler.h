@@ -44,6 +44,12 @@ protected:
 	//! The trap-mutation rate
 	double kMutation;
 
+	//! The disappearing rate
+	double kDis;
+
+	//! To know if we want attenuation or not
+	bool attenuation;
+
 	/**
 	 * The vector containing the indices of the bubbles created through modified
 	 * trap-mutation for each grid point. The difference between this vector and depthVec
@@ -73,6 +79,8 @@ public:
 	 * The constructor
 	 */
 	TrapMutationHandler() : kMutation(0.0),
+		kDis(1.0),
+		attenuation(true),
 		desorp(0, 0.0) {}
 
 	/**
@@ -113,6 +121,21 @@ public:
 	 * @param network The network
 	 */
 	void updateTrapMutationRate(PSIClusterReactionNetwork *network);
+
+	/**
+	 * This method set the boolean to remember if we want attenuation or not.
+	 *
+	 * @param isAttenuation True if we want attenuation
+	 */
+	void setAttenuation(bool isAttenuation);
+
+	/**
+	 * This method update the rate that makes the modified trap-mutation inefficient
+	 * with time, depending on the total helium concentration.
+	 *
+	 * @param conc The concentration of helium
+	 */
+	void updateDisappearingRate(double conc);
 
 	/**
 	 * Compute the flux due to the modified trap-mutation for all the cluster,

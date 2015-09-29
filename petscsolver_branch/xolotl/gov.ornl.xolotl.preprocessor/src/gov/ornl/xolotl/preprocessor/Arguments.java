@@ -391,7 +391,7 @@ public interface Arguments {
 	 */
 	@Option(defaultValue = "diff advec movingSurface", 
 			description = "List of physical processes for the simulation "
-					+ "(diff, advec, modifiedTM, movingSurface, bursting)")
+					+ "(diff, advec, modifiedTM, movingSurface, bursting, attenuation)")
 	/**
 	 * This operation produces the required command line option '--petscArgs' which 
 	 * takes a single string value and is defined by the previous Option annotation

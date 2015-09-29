@@ -250,10 +250,62 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	checkPetscError(ierr, "PetscSolver3DHandler::updateConcentration: "
 			"DMDAGetCorners failed.");
 
+	// Get the total size of the grid
+	int Mx, My, Mz;
+	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, &Mz,
+			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+			PETSC_IGNORE);
+	checkPetscError(ierr, "PetscSolver3DHandler::updateConcentration: "
+			"DMDAGetInfo failed.");
+
 	// The following pointers are set to the first position in the conc or
 	// updatedConc arrays that correspond to the beginning of the data for the
 	// current grid point. They are accessed just like regular arrays.
 	PetscScalar *concOffset, *updatedConcOffset;
+
+	// Compute the total concentration of helium contained in HeV bubbles
+	double heConc = 0.0;
+	// Get all the HeV clusters in the network
+	auto bubbles = network->getAll(xolotlCore::heVType);
+	// Initialize for the loop
+	xolotlCore::PSICluster * bubble;
+	int index = 0;
+	int heComp = 0;
+	// Loop on the bubbles
+	for (int i = 0; i < bubbles.size(); i++) {
+		// Get the bubble, its id, and its helium composition
+		bubble = (xolotlCore::PSICluster *) bubbles.at(i);
+		index = bubble->getId() - 1;
+		auto comp = bubble->getComposition();
+		heComp = comp[xolotlCore::heType];
+
+		// Loop over grid points
+		for (int zk = zs; zk < zs + zm; zk++) {
+			for (int yj = ys; yj < ys + ym; yj++) {
+				for (int xi = xs; xi < xs + xm; xi++) {
+					// We are only interested in the helium near the surface
+					if (grid[xi] - grid[surfacePosition[yj][zk]] > 2.0) continue;
+
+					// Get the concentrations at this grid point
+					concOffset = concs[zk][yj][xi];
+
+					// Sum the helium concentration
+					heConc += concOffset[index] * (double) heComp * (grid[xi] - grid[xi-1]);
+				}
+			}
+		}
+	}
+
+	// Share the concentration with all the processes
+	double totalHeConc = 0.0;
+	MPI_Allreduce(&heConc, &totalHeConc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+	// Rescale the helium concentration not to depend on the Y and Z dimension
+	totalHeConc = totalHeConc / ((double) My * (double) Mz);
+
+	// Set the disappearing rate in the modified TM handler
+	mutationHandler->updateDisappearingRate(totalHeConc);
 
 	// Set some step size variable
 	double sy = 1.0 / (hY * hY);
@@ -648,11 +700,63 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	checkPetscError(ierr, "PetscSolver3DHandler::computeDiagonalJacobian: "
 			"DMDAGetCorners failed.");
 
+	// Get the total size of the grid
+	int Mx, My, Mz;
+	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, &Mz,
+			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+			PETSC_IGNORE);
+	checkPetscError(ierr, "PetscSolver3DHandler::computeDiagonalJacobian: "
+			"DMDAGetInfo failed.");
+
 	// The degree of freedom is the size of the network
 	const int dof = network->size();
 
 	// Pointer to the concentrations at a given grid point
 	PetscScalar *concOffset;
+
+	// Compute the total concentration of helium contained in HeV bubbles
+	double heConc = 0.0;
+	// Get all the HeV clusters in the network
+	auto bubbles = network->getAll(xolotlCore::heVType);
+	// Initialize for the loop
+	xolotlCore::PSICluster * bubble;
+	int index = 0;
+	int heComp = 0;
+	// Loop on the bubbles
+	for (int i = 0; i < bubbles.size(); i++) {
+		// Get the bubble, its id, and its helium composition
+		bubble = (xolotlCore::PSICluster *) bubbles.at(i);
+		index = bubble->getId() - 1;
+		auto comp = bubble->getComposition();
+		heComp = comp[xolotlCore::heType];
+
+		// Loop over grid points
+		for (int zk = zs; zk < zs + zm; zk++) {
+			for (int yj = ys; yj < ys + ym; yj++) {
+				for (int xi = xs; xi < xs + xm; xi++) {
+					// We are only interested in the helium near the surface
+					if (grid[xi] - grid[surfacePosition[yj][zk]] > 2.0) continue;
+
+					// Get the concentrations at this grid point
+					concOffset = concs[zk][yj][xi];
+
+					// Sum the helium concentration
+					heConc += concOffset[index] * (double) heComp * (grid[xi] - grid[xi-1]);
+				}
+			}
+		}
+	}
+
+	// Share the concentration with all the processes
+	double totalHeConc = 0.0;
+	MPI_Allreduce(&heConc, &totalHeConc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+	// Rescale the helium concentration not to depend on the Y and Z dimension
+	totalHeConc = totalHeConc / ((double) My * (double) Mz);
+
+	// Set the disappearing rate in the modified TM handler
+	mutationHandler->updateDisappearingRate(totalHeConc);
 
 	// Arguments for MatSetValuesStencil called below
 	MatStencil rowId;
