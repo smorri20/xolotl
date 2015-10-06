@@ -314,7 +314,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	// Declarations for variables used in the loop
 	double flux;
 	auto heCluster = (xolotlCore::PSICluster *) network->get(xolotlCore::heType, 1);
-	int heliumIndex = heCluster->getId() - 1, reactantIndex;
+	int fluxIndex = fluxHandler->getIncidentFluxClusterIndex(), reactantIndex;
 	xolotlCore::PSICluster *cluster = NULL;
 	double **concVector = new double*[7];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 }, incidentFluxVector;
@@ -332,7 +332,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 			// Initialize the flux, advection, and trap-mutation handlers which depend
 			// on the surface position at Y
-			fluxHandler->initializeFluxHandler(surfacePosition[yj][zk], grid);
+			fluxHandler->initializeFluxHandler(network, surfacePosition[yj][zk], grid);
 			advectionHandlers[0]->setLocation(grid[surfacePosition[yj][zk]]);
 			mutationHandler->initializeIndex(surfacePosition[yj][zk], network, grid);
 
@@ -387,12 +387,8 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				// grid point) at the expense of being a little tricky to comprehend.
 				network->updateConcentrationsFromArray(concOffset);
 
-				// ----- Account for flux of incoming He by computing forcing that
-				// produces He of cluster size 1 -----
-				if (heCluster) {
-					// Update the concentration of the cluster
-					updatedConcOffset[heliumIndex] += incidentFluxVector[xi - surfacePosition[yj][zk]];
-				}
+				// ----- Account for flux of incoming He of cluster size 1 -----
+				updatedConcOffset[fluxIndex] += incidentFluxVector[xi];
 
 				// ---- Compute diffusion over the locally owned part of the grid -----
 				diffusionHandler->computeDiffusion(network, concVector,

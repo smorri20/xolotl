@@ -9,14 +9,16 @@
 namespace xolotlCore {
 
 FluxHandler::FluxHandler() :
-		heFluence(0.0),
-		heFlux(1.0),
+		fluence(0.0),
+		fluxAmplitude(0.0),
+		fluxIndex(-1),
 		useTimeProfile(false),
 		normFactor(0.0){
 	return;
 }
 
-void FluxHandler::initializeFluxHandler(int surfacePos, std::vector<double> grid) {
+void FluxHandler::initializeFluxHandler(PSIClusterReactionNetwork *network,
+		int surfacePos, std::vector<double> grid) {
 	// Set the grid
 	xGrid = grid;
 
@@ -35,7 +37,7 @@ void FluxHandler::initializeFluxHandler(int surfacePos, std::vector<double> grid
 
 	// Factor the incident flux will be multiplied by to get
 	// the wanted intensity
-	double heFluxNormalized = heFlux / normFactor;
+	double fluxNormalized = fluxAmplitude / normFactor;
 
 	// Clear the flux vector
 	incidentFluxVec.clear();
@@ -48,7 +50,7 @@ void FluxHandler::initializeFluxHandler(int surfacePos, std::vector<double> grid
 		auto x = xGrid[i] - xGrid[surfacePos];
 
 		// Compute the flux value
-		double incidentFlux = heFluxNormalized * fitFunction(x);
+		double incidentFlux = fluxNormalized * fitFunction(x);
 		// Add it to the vector
 		incidentFluxVec.push_back(incidentFlux);
 	}
@@ -56,12 +58,22 @@ void FluxHandler::initializeFluxHandler(int surfacePos, std::vector<double> grid
 	// The last value should always be 0.0 because of boundary conditions
 	incidentFluxVec.push_back(0.0);
 
+	// Set the flux index corresponding the the single helium cluster here
+	auto fluxCluster = (PSICluster *) network->get(heType, 1);
+	// Check that the helium cluster is present in the network
+	if (!fluxCluster) {
+		throw std::string(
+				"\nThe single helium cluster is not present in the network, "
+				"cannot use the flux option!");
+	}
+	fluxIndex = fluxCluster->getId() - 1;
+
 	return;
 }
 
 void FluxHandler::recomputeFluxHandler(int surfacePos) {
 	// Factor the incident flux will be multiplied by
-	double heFluxNormalized = heFlux / normFactor;
+	double fluxNormalized = fluxAmplitude / normFactor;
 
 	// Starts a i = surfacePos + 1 because the first values were already put in the vector
 	for (int i = surfacePos + 1; i < xGrid.size() - 1; i++) {
@@ -69,7 +81,7 @@ void FluxHandler::recomputeFluxHandler(int surfacePos) {
 		auto x = xGrid[i] - xGrid[surfacePos];
 
 		// Compute the flux value
-		double incidentFlux = heFluxNormalized * fitFunction(x);
+		double incidentFlux = fluxNormalized * fitFunction(x);
 		// Add it to the vector
 		incidentFluxVec[i - surfacePos] = incidentFlux;
 	}
@@ -92,23 +104,23 @@ void FluxHandler::initializeTimeProfile(const std::string& fileName) {
 		double xamp = 0.0, yamp = 0.0;
 		sscanf(line.c_str(), "%lf %lf", &xamp, &yamp);
 		time.push_back(xamp);
-		amplitude.push_back(yamp);
+		amplitudes.push_back(yamp);
 	}
 
 	return;
 }
 
-double FluxHandler::getAmplitude(double currentTime) const {
+double FluxHandler::getProfileAmplitude(double currentTime) const {
 	// Initialize the amplitude to return
 	double f = 0.0;
 
 	// If the time is smaller than or equal than the first stored time
 	if (currentTime <= time[0])
-		return f = amplitude[0];
+		return f = amplitudes[0];
 
 	// If the time is larger or equal to the last stored time
 	if (currentTime >= time[time.size() - 1])
-		return f = amplitude[time.size() - 1];
+		return f = amplitudes[time.size() - 1];
 
 	// Else loop to determine the interval the time falls in
 	// i.e. time[k] < time < time[k + 1]
@@ -118,8 +130,8 @@ double FluxHandler::getAmplitude(double currentTime) const {
 
 		// Compute the amplitude following a linear interpolation between
 		// the two stored values
-		f = amplitude[k]
-				+ (amplitude[k + 1] - amplitude[k]) * (currentTime - time[k])
+		f = amplitudes[k]
+				+ (amplitudes[k + 1] - amplitudes[k]) * (currentTime - time[k])
 						/ (time[k + 1] - time[k]);
 		break;
 	}
@@ -130,30 +142,34 @@ double FluxHandler::getAmplitude(double currentTime) const {
 std::vector<double> FluxHandler::getIncidentFluxVec(double currentTime, int surfacePos) {
 	// Recompute the flux vector if a time profile is used
 	if (useTimeProfile) {
-		heFlux = getAmplitude(currentTime);
+		fluxAmplitude = getProfileAmplitude(currentTime);
 		recomputeFluxHandler(surfacePos);
 	}
 
 	return incidentFluxVec;
 }
 
-void FluxHandler::incrementHeFluence(double dt) {
+int FluxHandler::getIncidentFluxClusterIndex() {
+	return fluxIndex;
+}
+
+void FluxHandler::incrementFluence(double dt) {
 	// The fluence is the flux times the time
-	heFluence += heFlux * dt;
+	fluence += fluxAmplitude * dt;
 
 	return;
 }
 
-double FluxHandler::getHeFluence() const {
-	return heFluence;
+double FluxHandler::getFluence() const {
+	return fluence;
 }
 
-void FluxHandler::setHeFlux(double flux) {
-	heFlux = flux;
+void FluxHandler::setFluxAmplitude(double flux) {
+	fluxAmplitude = flux;
 }
 
-double FluxHandler::getHeFlux() const {
-	return heFlux;
+double FluxHandler::getFluxAmplitude() const {
+	return fluxAmplitude;
 }
 
 } // end namespace xolotlCore

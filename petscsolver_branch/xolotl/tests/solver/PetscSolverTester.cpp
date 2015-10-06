@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 					"-ts_max_steps 5" << std::endl
 			<< "startTemp=900" << std::endl
 			<< "perfHandler=dummy" << std::endl
-			<< "heFlux=4.0e5" << std::endl
+			<< "flux=4.0e5" << std::endl
 			<< "material=W100" << std::endl
 			<< "dimensions=1" << std::endl
 			<< "process=diff advec" << std::endl
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(checkIrregularPetscSolver1DHandler) {
 					"-ts_max_steps 5" << std::endl
 			<< "startTemp=900" << std::endl
 			<< "perfHandler=dummy" << std::endl
-			<< "heFlux=4.0e5" << std::endl
+			<< "flux=4.0e5" << std::endl
 			<< "material=W100" << std::endl
 			<< "dimensions=1" << std::endl
 			<< "regularGrid=no" << std::endl
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 					"-ts_max_steps 5" << std::endl
 			<< "startTemp=900" << std::endl
 			<< "perfHandler=dummy" << std::endl
-			<< "heFlux=4.0e5" << std::endl
+			<< "flux=4.0e5" << std::endl
 			<< "material=W100" << std::endl
 			<< "dimensions=2" << std::endl
 			<< "process=diff advec" << std::endl
@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 					"-ts_max_steps 5" << std::endl
 			<< "startTemp=900" << std::endl
 			<< "perfHandler=dummy" << std::endl
-			<< "heFlux=4.0e5" << std::endl
+			<< "flux=4.0e5" << std::endl
 			<< "material=W100" << std::endl
 			<< "dimensions=3" << std::endl
 			<< "process=diff advec" << std::endl

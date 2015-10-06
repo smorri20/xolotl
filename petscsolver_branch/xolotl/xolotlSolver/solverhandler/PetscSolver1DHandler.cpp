@@ -129,7 +129,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) {
 	int xSize = grid.size();
 
 	// Initialize the flux handler
-	fluxHandler->initializeFluxHandler(surfacePosition, grid);
+	fluxHandler->initializeFluxHandler(network, surfacePosition, grid);
 
 	// Pointer for the concentration vector at a specific grid point
 	PetscScalar *concOffset;
@@ -264,8 +264,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 	// Declarations for variables used in the loop
 	double flux;
-	auto heCluster = (xolotlCore::PSICluster *) network->get(xolotlCore::heType, 1);
-	int heliumIndex = heCluster->getId() - 1, reactantIndex;
+	int fluxIndex = fluxHandler->getIncidentFluxClusterIndex(), reactantIndex;
 	xolotlCore::PSICluster *cluster = NULL;
 	double **concVector = new double*[3];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
@@ -318,12 +317,8 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		// grid point) at the expense of being a little tricky to comprehend.
 		network->updateConcentrationsFromArray(concOffset);
 
-		// ----- Account for flux of incoming He by computing forcing that
-		// produces He of cluster size 1 -----
-		if (heCluster) {
-			// Update the concentration of the cluster
-			updatedConcOffset[heliumIndex] += incidentFluxVector[xi - surfacePosition];
-		}
+		// ----- Account for flux of incoming He of cluster size 1 -----
+		updatedConcOffset[fluxIndex] += incidentFluxVector[xi];
 
 		// ---- Compute diffusion over the locally owned part of the grid -----
 		diffusionHandler->computeDiffusion(network, concVector,

@@ -85,11 +85,11 @@ public class ArgumentsTest {
 			// Check the default physical process argumen
 			assertEquals("diff advec movingSurface", args.getProcess());
 
+			// Check the default flux argument
+			assertEquals("4.0e7", args.getFlux());
+
 			// Check if there is a tempFile argument
 			assertEquals(false, args.isTempFile());
-
-			// Check if there is an heFlux argument
-			assertEquals(false, args.isHeFlux());
 
 			// Check if there is an fluxFile argument
 			assertEquals(false, args.isFluxFile());
@@ -134,7 +134,7 @@ public class ArgumentsTest {
 				"--dimensions", "2", "--nxGrid", "50", "--nyGrid", "10", "--nzGrid", "30", 
 				"--xStepSize", "0.2", "--yStepSize", "1.5", "--zStepSize", "10.0", 
 				"--material", "W111", "--process", "diff", "--tempFile", "temp.dat", 
-				"--heFlux", "5.0e5", "--fluxFile", "flux.dat", 
+				"--flux", "5.0e5", "--fluxFile", "flux.dat", 
 				"--checkpoint", "xolotlStop.h5", "--initialV", "0.05", 
 				"--regularGrid", "yes", "--voidPortion", "60.0", "--grain=Y 3.0" });
 			
@@ -192,17 +192,14 @@ public class ArgumentsTest {
 			// Check that the only physical process is diff
 			assertEquals("diff", args.getProcess());
 
+			// Check that the flux argument is 5.0e5
+			assertEquals("5.0e5", args.getFlux());
+
 			// Check if there is a tempFile argument
 			assertEquals(true, args.isTempFile());
 
 			// Check that the tempFile argument is temp.dat
 			assertEquals("temp.dat", args.getTempFile());
-
-			// Check if there is an heFlux argument
-			assertEquals(true, args.isHeFlux());
-
-			// Check that the heFlux argument is 5.0e5
-			assertEquals("5.0e5", args.getHeFlux());
 
 			// Check if there is an fluxFile argument
 			assertEquals(true, args.isFluxFile());

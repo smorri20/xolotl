@@ -251,7 +251,7 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 	// Master process
 	if (procId == 0) {
 		// Get the fluence
-		double heliumFluence = fluxHandler->getHeFluence();
+		double heliumFluence = fluxHandler->getFluence();
 
 		// Print the result
 		std::cout << "\nTime: " << time << std::endl;
@@ -1198,7 +1198,7 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt timestep, PetscReal time,
 
 		// Get the flux handler to reinitialize it
 		auto fluxHandler = solverHandler->getFluxHandler();
-		fluxHandler->initializeFluxHandler(surfacePos, grid);
+		fluxHandler->initializeFluxHandler(network, surfacePos, grid);
 
 		// Get the modified trap-mutation handler to reinitialize it
 		auto mutationHandler = solverHandler->getMutationHandler();

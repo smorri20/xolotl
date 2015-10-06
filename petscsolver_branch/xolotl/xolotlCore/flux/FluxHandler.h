@@ -28,14 +28,19 @@ protected:
 	std::vector<double> xGrid;
 
 	/**
-	 * Helium fluence.
+	 *  Fluence.
 	 */
-	double heFluence;
+	double fluence;
 
 	/**
 	 * The amplitude of the flux.
 	 */
-	double heFlux;
+	double fluxAmplitude;
+
+	/**
+	 * The index of the cluster.
+	 */
+	int fluxIndex;
 
 	/**
 	 * Are we using a time profile for the amplitude of the helium incoming flux?
@@ -57,7 +62,7 @@ protected:
 	 * Vector to hold the amplitude read from the input
 	 * time profile file.
 	 */
-	std::vector<double> amplitude;
+	std::vector<double> amplitudes;
 
 	/**
 	 * Function that calculates the flux at a given position x (in nm).
@@ -75,7 +80,7 @@ protected:
 	 * @param currentTime The time
 	 * @return The value of the helium flux at this time
 	 */
-	double getAmplitude(double currentTime) const;
+	double getProfileAmplitude(double currentTime) const;
 
 	/**
 	 * This method recomputes the values of the incident flux vector when
@@ -96,14 +101,15 @@ public:
 	 * Compute and store the incident flux values at each grid point.
      * \see IFluxHandler.h
 	 */
-	virtual void initializeFluxHandler(int surfacePos, std::vector<double> grid);
+	virtual void initializeFluxHandler(PSIClusterReactionNetwork *network,
+	int surfacePos, std::vector<double> grid);
 
 	/**
 	 * This method reads the values on the time profile file and store them in the
 	 * time and amplitude vectors.
      * \see IFluxHandler.h
 	 */
-	void initializeTimeProfile(const std::string& fileName);
+	virtual void initializeTimeProfile(const std::string& fileName);
 
 	/**
 	 * This operation returns the incident flux vector.
@@ -112,28 +118,35 @@ public:
 	virtual std::vector<double> getIncidentFluxVec(double currentTime, int surfacePos);
 
 	/**
-	 * This operation increments the helium fluence at the current time step.
+	 * This operation returns the index of the cluster that is irradiating
+	 * the material.
      * \see IFluxHandler.h
 	 */
-	virtual void incrementHeFluence(double dt);
+	virtual int getIncidentFluxClusterIndex();
 
 	/**
-	 * This operation returns the helium fluence.
+	 * This operation increments the fluence at the current time step.
      * \see IFluxHandler.h
 	 */
-	virtual double getHeFluence() const;
+	virtual void incrementFluence(double dt);
 
 	/**
-	 * This operation sets the factor to change the intensity of the helium flux.
+	 * This operation returns the fluence.
      * \see IFluxHandler.h
 	 */
-	virtual void setHeFlux(double flux);
+	virtual double getFluence() const;
 
 	/**
-	 * This operation gets the factor that changes the helium flux intensity.
+	 * This operation sets the factor to change the intensity of the flux.
      * \see IFluxHandler.h
 	 */
-	virtual double getHeFlux() const;
+	virtual void setFluxAmplitude(double flux);
+
+	/**
+	 * This operation gets the factor that changes the flux intensity/amplitude.
+     * \see IFluxHandler.h
+	 */
+	virtual double getFluxAmplitude() const;
 
 };
 //end class FluxHandler

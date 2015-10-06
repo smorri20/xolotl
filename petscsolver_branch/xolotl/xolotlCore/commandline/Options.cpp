@@ -28,8 +28,8 @@ Options::Options() :
 		constTempFlag(false),
 		constTemperature(1000.0),
 		tempProfileFlag(false),
-		heliumFluxFlag(false),
-		heliumFlux(0.0),
+		fluxFlag(false),
+		fluxAmplitude(0.0),
 		fluxProfileFlag(false),
 		perfRegistryType(xolotlPerf::IHandlerRegistry::std),
 		vizStandardHandlersFlag(false),
@@ -186,4 +186,3 @@ void Options::showHelp(std::ostream& os) const {
 }
 
 };  // end namespace xolotlCore
-
