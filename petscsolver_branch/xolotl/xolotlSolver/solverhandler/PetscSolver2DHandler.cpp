@@ -82,6 +82,11 @@ void PetscSolver2DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 		advectionHandlers[i]->initialize(network, ofill);
 	}
 
+	// Initialize the modified trap-mutation handler and the bubble bursting one here
+	// because they add connectivity
+	mutationHandler->initialize(surfacePosition[0], network, grid);
+	burstingHandler->initialize(surfacePosition[0], network, grid);
+
 	// Get the diagonal fill
 	getDiagonalFill(dfill, dof * dof);
 
@@ -140,8 +145,8 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) {
 	checkPetscError(ierr, "PetscSolver2DHandler::initializeConcentration: "
 			"DMDAGetInfo failed.");
 
-	// Initialize the modified trap-mutation handler
-	mutationHandler->initialize(surfacePosition[0], network, grid);
+	// Initialize the flux handler
+	fluxHandler->initializeFluxHandler(network, surfacePosition[0], grid);
 
 	// Pointer for the concentration vector at a specific grid point
 	PetscScalar *concOffset;
