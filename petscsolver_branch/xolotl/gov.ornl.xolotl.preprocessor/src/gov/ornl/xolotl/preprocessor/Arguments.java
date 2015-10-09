@@ -52,7 +52,7 @@ public interface Arguments {
 	 * This operation produces the required command line option '--maxVSize' which 
 	 * takes a single integer value and is defined by the previous Option annotation
 	 * 
-	 * @return The maxium size of a vacancy cluster in the network
+	 * @return The maximum size of a vacancy cluster in the network
 	 */
 	int getMaxVSize();
 
@@ -167,7 +167,7 @@ public interface Arguments {
 	 * additionally provides a brief description of the option.
 	 * 
 	 * @param defaultValue
-	 *            The single string of Petsc arguments that will be used if this
+	 *            The single string of PETSc arguments that will be used if this
 	 *            option is not specified via the command line
 	 * @param description
 	 *            Brief description of this option
@@ -181,7 +181,7 @@ public interface Arguments {
 	 * This operation produces the required command line option '--petscArgs' which 
 	 * takes a single string value and is defined by the previous Option annotation
 	 * 
-	 * @return The single string of Petsc arguments
+	 * @return The single string of PETSc arguments
 	 */
 	String getPetscArgs();
 

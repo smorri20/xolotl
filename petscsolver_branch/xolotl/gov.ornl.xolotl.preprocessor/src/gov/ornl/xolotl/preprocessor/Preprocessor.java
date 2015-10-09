@@ -116,17 +116,17 @@ public class Preprocessor {
 	public Map<String, String> petscOptions = new HashMap<String, String>();
 
 	/**
-	 * This operation generates a single string containing the Petsc arguments
-	 * that will be used to set the Petsc parameter required to run Xolotl.
+	 * This operation generates a single string containing the PETSc arguments
+	 * that will be used to set the PETSc parameter required to run Xolotl.
 	 * 
 	 * @param petscArgs
-	 *            The Petsc command line arguments as specified by the Arguments
+	 *            The PETSc command line arguments as specified by the Arguments
 	 *            interface
-	 * @return A string containing the Petsc arguments that will be passed to
+	 * @return A string containing the PETSc arguments that will be passed to
 	 *         Xolotl
 	 */
 	private String generatePetscArgs(String petscArgs) {
-		// Create a map of the default Petsc options and their corresponding
+		// Create a map of the default PETSc options and their corresponding
 		// arguments, if any, where the key is the option and the value is
 		// the argument
 		petscOptions.put("-ts_final_time", "1.0");
@@ -140,7 +140,7 @@ public class Preprocessor {
 		petscOptions.put("-fieldsplit_1_pc_type", "redundant");
 		petscOptions.put("-ts_monitor", "");
 
-		// Get the string of Petsc arguments from the command line
+		// Get the string of PETSc arguments from the command line
 		// and split the string around the blank spaces
 		List<String> petscList = new ArrayList<String>();
 		for (String str : petscArgs.split(" ")) {
@@ -158,7 +158,7 @@ public class Preprocessor {
 		String str = "-";
 		char dash = str.charAt(0);
 
-		// Loop through the Petsc list of strings to pair Petsc options with
+		// Loop through the PETSc list of strings to pair PETSc options with
 		// their corresponding arguments and identify the stand-alone options
 		for (int i = 0; i < petscList.size(); i++) {
 			// Check that we are reading the name of the option
@@ -265,7 +265,6 @@ public class Preprocessor {
 	 *         solely of helium.
 	 */
 	private ArrayList<Cluster> generateHe() {
-
 		// Local Declarations
 		ArrayList<Cluster> clusterList = new ArrayList<Cluster>();
 
@@ -323,7 +322,6 @@ public class Preprocessor {
 	 *         solely of V and HeV clusters.
 	 */
 	private ArrayList<Cluster> generateHeV() {
-
 		// Local Declarations
 		ArrayList<Cluster> clusterList = new ArrayList<Cluster>();
 		
@@ -402,7 +400,6 @@ public class Preprocessor {
 	 *         solely of interstitials.
 	 */
 	private ArrayList<Cluster> generateInterstitials() {
-
 		// Local Declarations
 		ArrayList<Cluster> clusterList = new ArrayList<Cluster>();
 
@@ -434,7 +431,6 @@ public class Preprocessor {
 	 *         arguments and settings.
 	 */
 	public ArrayList<Cluster> generateNetwork() {
-
 		// Create the list of clusters
 		ArrayList<Cluster> clusterList = new ArrayList<Cluster>();
 
@@ -455,7 +451,6 @@ public class Preprocessor {
 	 *            The parameters that will be written to the file
 	 */
 	public void writeParameterFile(String parameterFile, Properties parameters) {
-
 		try {
 			// Create the file containing the parameters
 			FileOutputStream paramsFile = new FileOutputStream(parameterFile);
@@ -482,7 +477,6 @@ public class Preprocessor {
 	 *            The parameter file name
 	 */
 	public Properties loadParameterFile(String parameterFile) {
-
 		// Local declarations
 		Properties inProperties = new Properties();
 
