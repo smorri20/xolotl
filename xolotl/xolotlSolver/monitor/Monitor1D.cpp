@@ -65,6 +65,14 @@ PetscErrorCode bubbles1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
 	const double **solutionArray, *gridPointSolution;
 	int xs, xm, Mx;
 
+	// Get the number of processes
+	int worldSize;
+	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
+
+	// Gets the process ID (important when it is running in parallel)
+	int procId;
+	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+
 	PetscFunctionBeginUser;
 
 	// Get the da from ts
@@ -145,19 +153,28 @@ PetscErrorCode bubbles1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
 		auto interfaceList = (*it)->getInterfaceList();
 		for (std::forward_list<xolotlCore::Bubble::Interface *>::iterator inter = interfaceList->begin();
 				inter != interfaceList->end(); inter++) {
-			// Skip if the outside point is already in a bubble
-			if (bubbleCol->isPointABubble((*inter)->outsidePoint)) continue;
+			// Get the index of the outside grid point
+			int outPoint = (*inter)->outsidePoint;
 
-			// Check the helium quantity on the grid point outside the interface
-			gridPointSolution = solutionArray[(*inter)->outsidePoint];
+			// Skip if the outside point is already in a bubble
+			if (bubbleCol->isPointABubble(outPoint)) continue;
+
 			// Initialize the helium quantity
+			double localHeliumQuantity = 0.0;
 			double heliumQuantity = 0.0;
-			// Loop on all the indices
-			for (int i = 0; i < heIndices1D.size(); i++) {
-				// Add the current concentration times the number of helium in the cluster
-				// (from the weight vector)
-				heliumQuantity += gridPointSolution[heIndices1D[i]] * heWeights1D[i] * hx;
+			// Check if the point outside the interface is on this process
+			if (outPoint >= xs && outPoint < xs + xm) {
+				// Check the helium quantity on the grid point outside the interface
+				gridPointSolution = solutionArray[outPoint];
+				// Loop on all the indices
+				for (int i = 0; i < heIndices1D.size(); i++) {
+					// Add the current concentration times the number of helium in the cluster
+					// (from the weight vector)
+					localHeliumQuantity += gridPointSolution[heIndices1D[i]] * heWeights1D[i] * hx;
+				}
 			}
+			// Get the helium quantity on all processes
+			MPI_Allreduce(&localHeliumQuantity, &heliumQuantity, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
 			// If the helium quantity plus the interface helium quantity is bigger
 			// than the threshold, move the interface
@@ -182,22 +199,27 @@ PetscErrorCode bubbles1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
 	// than the tungsten density at this grid point.
 
 	// Loop on the grid
-	for (int xi = xs; xi < xs + xm; xi++) {
+	for (int xi = 0; xi < Mx; xi++) {
 		// Skip the already existing bubbles
 		if (bubbleCol->isPointABubble(xi)) continue;
 
-		// Get the pointer to the beginning of the solution data for this grid point
-		gridPointSolution = solutionArray[xi];
-
 		// Initialize the helium quantity
 		double heliumQuantity = 0.0;
+		double localHeliumQuantity = 0.0;
+		// Check if xi is on this process
+		if (xi >= xs && xi < xs + xm) {
+			// Get the pointer to the beginning of the solution data for this grid point
+			gridPointSolution = solutionArray[xi];
 
-		// Loop on all the indices
-		for (int i = 0; i < heIndices1D.size(); i++) {
-			// Add the current concentration times the number of helium in the cluster
-			// (from the weight vector)
-			heliumQuantity += gridPointSolution[heIndices1D[i]] * heWeights1D[i] * hx;
+			// Loop on all the indices
+			for (int i = 0; i < heIndices1D.size(); i++) {
+				// Add the current concentration times the number of helium in the cluster
+				// (from the weight vector)
+				localHeliumQuantity += gridPointSolution[heIndices1D[i]] * heWeights1D[i] * hx;
+			}
 		}
+		// Get the helium quantity on all processes
+		MPI_Allreduce(&localHeliumQuantity, &heliumQuantity, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
 		// Check the helium quantity
 		if (heliumQuantity > tungstenDensity * 4.0 * hx) {
@@ -305,41 +327,56 @@ PetscErrorCode bubbles1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
 		for (std::forward_list<xolotlCore::Bubble::Interface *>::iterator inter = interfaceList->begin();
 				inter != interfaceList->end(); inter++) {
 			// Compute the diffusion of helium from the outside point of the interface
-			// Get the concentrations on the grid point outside the interface
-			gridPointSolution = solutionArray[(*inter)->outsidePoint];
+			// Get the index of the outside grid point
+			int outPoint = (*inter)->outsidePoint;
+
 			// Initialize the value for the flux
+			double localNewFlux = 0.0;
 			double newFlux = 0.0;
-			// Loop on the helium clusters
-			for (int i = 0; i < heliums.size(); i++) {
-				// Get the cluster
-				auto cluster = (PSICluster *) heliums.at(i);
-				// Get its id and concentration
-				int id = cluster->getId() - 1;
-				double conc = gridPointSolution[id];
-				// Get its size and diffusion coefficient
-				int size = cluster->getSize();
-				double coef = cluster->getDiffusionCoefficient();
-				// Compute the flux at the interface
-				newFlux += (double) size * sx * coef * conc;
+			// Check if the point outside the interface is on this process
+			if (outPoint >= xs && outPoint < xs + xm) {
+				// Get the concentrations on the grid point outside the interface
+				gridPointSolution = solutionArray[outPoint];
+				// Loop on the helium clusters
+				for (int i = 0; i < heliums.size(); i++) {
+					// Get the cluster
+					auto cluster = (PSICluster *) heliums.at(i);
+					// Get its id and concentration
+					int id = cluster->getId() - 1;
+					double conc = gridPointSolution[id];
+					// Get its size and diffusion coefficient
+					int size = cluster->getSize();
+					double coef = cluster->getDiffusionCoefficient();
+					// Compute the flux at the interface
+					localNewFlux += (double) size * sx * coef * conc;
+				}
 			}
+			// Get the new flux on all processes
+			MPI_Allreduce(&localNewFlux, &newFlux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
 			// Save the helium flux in the interface
 			(*inter)->heliumFlux = newFlux;
 		}
 	}
 
+	// Check the bubbles are not escaping
+	if (bubbleCol->isPointABubble(0) || bubbleCol->isPointABubble(Mx - 1))
+		throw std::string("Bubble is trying to escape the grid!!!");
+
 	// Print the bubbles for check
-	int i = 0;
-	for (std::forward_list<xolotlCore::Bubble *>::iterator it = bubbleList->begin();
-				it != bubbleList->end(); it++) {
-		std::cout << "Bubble " << i << std::endl;
-		auto gridPointList = (*it)->getGridPointList();
-		for (std::forward_list<int>::iterator pt = gridPointList->begin();
-				pt != gridPointList->end(); pt++) {
-			std::cout << (*pt) << " ";
+	if (procId == 0) {
+		int i = 0;
+		for (std::forward_list<xolotlCore::Bubble *>::iterator it = bubbleList->begin();
+					it != bubbleList->end(); it++) {
+			std::cout << "Bubble " << i << std::endl;
+			auto gridPointList = (*it)->getGridPointList();
+			for (std::forward_list<int>::iterator pt = gridPointList->begin();
+					pt != gridPointList->end(); pt++) {
+				std::cout << (*pt) << " ";
+			}
+			std::cout << std::endl;
+			i++;
 		}
-		std::cout << std::endl;
-		i++;
 	}
 
 	// Restore the solutionArray
@@ -545,7 +582,7 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 	// Master process
 	if (procId == 0) {
 		// Get the helium quantity from the bubbles
-		heConcentration += bubbleCol->getHeliumQuantity();
+		totalHeConcentration += bubbleCol->getHeliumQuantity();
 
 		// Get the fluence
 		double heliumFluence = fluxHandler->getFluence();
@@ -553,16 +590,16 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 		// Print the result
 		std::cout << "\nTime: " << time << std::endl;
 		std::cout << "Helium retention = "
-				<< 100.0 * (heConcentration / heliumFluence) << " %"
+				<< 100.0 * (totalHeConcentration / heliumFluence) << " %"
 				<< std::endl;
-		std::cout << "Helium concentration = " << heConcentration << std::endl;
+		std::cout << "Helium concentration = " << totalHeConcentration << std::endl;
 		std::cout << "Helium fluence = " << heliumFluence << "\n" << std::endl;
 
 		// Uncomment to write the retention and the fluence in a file
 		std::ofstream outputFile;
 		outputFile.open("retentionOut.txt", ios::app);
 		outputFile << heliumFluence << " "
-				<< 100.0 * (heConcentration / heliumFluence) << std::endl;
+				<< 100.0 * (totalHeConcentration / heliumFluence) << std::endl;
 		outputFile.close();
 	}
 
