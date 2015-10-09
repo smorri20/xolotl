@@ -101,7 +101,7 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 	checkPetscError(ierr, "PetscSolver3DHandler::initializeConcentration: DMDAGetInfo failed.");
 
 	// Initialize the flux handler
-	fluxHandler->initializeFluxHandler(Mx, hX, hY, hZ);
+	fluxHandler->initializeFluxHandler(network, Mx, hX);
 
 	// Initialize the advection handler
 	advectionHandler->initialize(network);
@@ -131,7 +131,7 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 
 				// Initialize the vacancy concentration
 				if (i > 0 && i < Mx - 1 && vacancyIndex > 0) {
-					concOffset[vacancyIndex] = initialVConc / hX;
+					concOffset[vacancyIndex] = initialVConc;
 				}
 			}
 		}
@@ -219,7 +219,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	// Declarations for variables used in the loop
 	double flux;
 	auto heCluster = (xolotlCore::PSICluster *) network->get(xolotlCore::heType, 1);
-	int heliumIndex = heCluster->getId() - 1, reactantIndex;
+	int fluxIndex = fluxHandler->getIncidentFluxClusterIndex(), reactantIndex;
 	xolotlCore::PSICluster *cluster = NULL;
 	double **concVector = new double*[7];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
@@ -276,12 +276,8 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				// grid point) at the expense of being a little tricky to comprehend.
 				network->updateConcentrationsFromArray(concOffset);
 
-				// ----- Account for flux of incoming He by computing forcing that
-				// produces He of cluster size 1 -----
-				if (heCluster) {
-					// Update the concentration of the cluster
-					updatedConcOffset[heliumIndex] += incidentFluxVector[xi];
-				}
+				// ----- Account for flux of incoming He of cluster size 1 -----
+					updatedConcOffset[fluxIndex] += incidentFluxVector[xi];
 
 				// ---- Compute diffusion over the locally owned part of the grid -----
 				diffusionHandler->computeDiffusion(network, concVector,
@@ -348,9 +344,6 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	ierr = DMDAGetCorners(da, &xs, &ys, &zs, &xm, &ym, &zm);
 	checkPetscError(ierr, "PetscSolver3DHandler::computeOffDiagonalJacobian: DMDAGetCorners failed.");
 
-	// The degree of freedom is the size of the network
-	const int dof = network->size();
-
 	// Pointer to the concentrations at a given grid point
 	PetscScalar *concOffset;
 
@@ -363,7 +356,7 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	// Arguments for MatSetValuesStencil called below
 	MatStencil row, cols[7];
 	PetscScalar vals[7 * nDiff];
-	PetscInt indices[nDiff];
+	int indices[nDiff];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
 
 	/*

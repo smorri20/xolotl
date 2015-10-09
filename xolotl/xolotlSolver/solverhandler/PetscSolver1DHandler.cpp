@@ -98,7 +98,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 	checkPetscError(ierr, "PetscSolver1DHandler::initializeConcentration: DMDAGetInfo failed.");
 
 	// Initialize the flux handler
-	fluxHandler->initializeFluxHandler(Mx, hX);
+	fluxHandler->initializeFluxHandler(network, Mx, hX);
 
 	// Initialize the advection handler
 	advectionHandler->initialize(network);
@@ -126,7 +126,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 
 		// Initialize the vacancy concentration
 		if (i > 0 && i < Mx - 1 && vacancyIndex > 0) {
-			concOffset[vacancyIndex] = initialVConc / hX;
+			concOffset[vacancyIndex] = initialVConc;
 		}
 	}
 
@@ -203,14 +203,27 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 	// Declarations for variables used in the loop
 	double flux;
-	auto heCluster = (xolotlCore::PSICluster *) network->get(xolotlCore::heType, 1);
-	int heliumIndex = heCluster->getId() - 1, reactantIndex;
+	int fluxIndex = fluxHandler->getIncidentFluxClusterIndex(), reactantIndex;
 	xolotlCore::PSICluster *cluster = NULL;
 	double **concVector = new double*[3];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
 
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = network->size();
+
+	// Loop over grid points to initialize the concentration in the bubbles
+	for (int xi = xs; xi < xs + xm; xi++) {
+		// Compute the old and new array offsets
+		concOffset = concs[xi];
+		updatedConcOffset = updatedConcs[xi];
+
+		// If it is in a bubble
+		if (bubbleCol->isPointABubble(xi)) {
+			for (int i = 0; i < dof; i++) {
+				concOffset[i] = 0.0;
+			}
+		}
+	}
 
 	// Loop over grid points computing ODE terms for each grid point
 	for (int xi = xs; xi < xs + xm; xi++) {
@@ -224,17 +237,8 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		concVector[2] = concs[xi + 1]; // right
 
 		// Boundary conditions
-		if (xi == 0 || xi == Mx - 1) {
+		if (xi == 0 || xi == Mx - 1 || bubbleCol->isPointABubble(xi)) {
 			for (int i = 0; i < dof; i++) {
-				updatedConcOffset[i] = 1.0 * concOffset[i];
-			}
-
-			continue;
-		}
-		// If it is in a bubble
-		if (bubbleCol->isPointABubble(xi)) {
-			for (int i = 0; i < dof; i++) {
-				concOffset[i] = 0.0;
 				updatedConcOffset[i] = 1.0 * concOffset[i];
 			}
 
@@ -261,20 +265,16 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		// grid point) at the expense of being a little tricky to comprehend.
 		network->updateConcentrationsFromArray(concOffset);
 
-		// ----- Account for flux of incoming He by computing forcing that
-		// produces He of cluster size 1 -----
-		if (heCluster) {
-			// Update the concentration of the cluster
-			updatedConcOffset[heliumIndex] += incidentFluxVector[xi];
-		}
+		// ----- Account for flux of incoming He of cluster size 1 -----
+		updatedConcOffset[fluxIndex] += incidentFluxVector[xi];
 
 		// ---- Compute diffusion over the locally owned part of the grid -----
 		diffusionHandler->computeDiffusion(network, concVector,
 				updatedConcOffset, sx);
 
-		// ---- Compute advection over the locally owned part of the grid -----
-		advectionHandler->computeAdvection(network, hX, gridPosition,
-				concVector, updatedConcOffset);
+//		// ---- Compute advection over the locally owned part of the grid -----
+//		advectionHandler->computeAdvection(network, hX, gridPosition,
+//				concVector, updatedConcOffset);
 
 		// ----- Compute all of the new fluxes -----
 		for (int i = 0; i < dof; i++) {
@@ -329,22 +329,19 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
 	checkPetscError(ierr, "PetscSolver1DHandler::computeOffDiagonalJacobian: DMDAGetCorners failed.");
 
-	// The degree of freedom is the size of the network
-	const int dof = network->size();
-
 	// Pointer to the concentrations at a given grid point
 	PetscScalar *concOffset;
 
 	// Get the total number of diffusing clusters
 	const int nDiff = diffusionHandler->getNumberOfDiffusing();
 
-	// Get the total number of advecting clusters
-	const int nAdvec = advectionHandler->getNumberOfAdvecting();
+//	// Get the total number of advecting clusters
+//	const int nAdvec = advectionHandler->getNumberOfAdvecting();
 
 	// Arguments for MatSetValuesStencil called below
 	MatStencil row, cols[3];
 	PetscScalar vals[3 * nDiff];
-	PetscInt indices[nDiff];
+	int indices[nDiff];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
 
 	/*
@@ -387,27 +384,27 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 			checkPetscError(ierr, "PetscSolver1DHandler::computeOffDiagonalJacobian: MatSetValuesStencil (diffusion) failed.");
 		}
 
-		// Get the partial derivatives for the advection
-		advectionHandler->computePartialsForAdvection(network, hX, vals,
-				indices, gridPosition);
-
-		// Loop on the number of advecting cluster to set the values in the Jacobian
-		for (int i = 0; i < nAdvec; i++) {
-			// Set grid coordinate and component number for the row
-			row.i = xi;
-			row.c = indices[i];
-
-			// Set grid coordinates and component numbers for the columns
-			// corresponding to the middle and right grid points
-			cols[0].i = xi; // middle
-			cols[0].c = indices[i];
-			cols[1].i = xi + 1; // right
-			cols[1].c = indices[i];
-
-			// Update the matrix
-			ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals + (2 * i), ADD_VALUES);
-			checkPetscError(ierr, "PetscSolver1DHandler::computeOffDiagonalJacobian: MatSetValuesStencil (advection) failed.");
-		}
+//		// Get the partial derivatives for the advection
+//		advectionHandler->computePartialsForAdvection(network, hX, vals,
+//				indices, gridPosition);
+//
+//		// Loop on the number of advecting cluster to set the values in the Jacobian
+//		for (int i = 0; i < nAdvec; i++) {
+//			// Set grid coordinate and component number for the row
+//			row.i = xi;
+//			row.c = indices[i];
+//
+//			// Set grid coordinates and component numbers for the columns
+//			// corresponding to the middle and right grid points
+//			cols[0].i = xi; // middle
+//			cols[0].c = indices[i];
+//			cols[1].i = xi + 1; // right
+//			cols[1].c = indices[i];
+//
+//			// Update the matrix
+//			ierr = MatSetValuesStencil(J, 1, &row, 2, cols, vals + (2 * i), ADD_VALUES);
+//			checkPetscError(ierr, "PetscSolver1DHandler::computeOffDiagonalJacobian: MatSetValuesStencil (advection) failed.");
+//		}
 	}
 
 	return;

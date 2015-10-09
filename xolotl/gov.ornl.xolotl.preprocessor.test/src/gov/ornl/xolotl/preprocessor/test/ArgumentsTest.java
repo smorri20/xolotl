@@ -36,6 +36,9 @@ public class ArgumentsTest {
 			// Check that the default maximum interstitial cluster size is 6
 			assertEquals(6, args.getMaxISize());
 
+			// Check if there is a phase cut argument
+			assertEquals(false, args.isPhaseCut());
+
 			// Check if there is a startTemp argument
 			assertEquals("1000", args.getStartTemp());
 
@@ -46,10 +49,10 @@ public class ArgumentsTest {
 			assertEquals("dummy", args.getVizHandler());
 
 			// Check the default petscArgs
-			assertEquals("-ts_final_time 50 -ts_dt 1.0e-12 "
-					+ "-ts_max_steps 100 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
-					+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant "
-					+ "-fieldsplit_1_pc_type sor -snes_monitor -ksp_monitor -ts_monitor",
+			assertEquals("-ts_final_time 1.0 -ts_dt 1.0e-12 "
+					+ "-ts_max_steps 100 -ts_adapt_dt_max 1.0e-6 -ts_max_snes_failures 200 "
+					+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type sor "
+					+ "-fieldsplit_1_pc_type redundant -ts_monitor",
 					args.getPetscArgs());
 
 			// Check that the default networkFile is networkInit.h5
@@ -79,11 +82,11 @@ public class ArgumentsTest {
 			// Check the default material argument
 			assertEquals("W100", args.getMaterial());
 
+			// Check the default flux argument
+			assertEquals("4.0e7", args.getFlux());
+
 			// Check if there is a tempFile argument
 			assertEquals(false, args.isTempFile());
-
-			// Check if there is an heFlux argument
-			assertEquals(false, args.isHeFlux());
 
 			// Check if there is an fluxFile argument
 			assertEquals(false, args.isFluxFile());
@@ -116,12 +119,12 @@ public class ArgumentsTest {
 		try {
 			// Parse the specified string of arguments
 			args = CliFactory.parseArguments(Arguments.class, new String[] {
-				"--maxHeSize", "7", "--maxVSize", "30", "--maxISize", "5",
+				"--maxHeSize", "7", "--maxVSize", "30", "--maxISize", "5", "--phaseCut", 
 				"--startTemp", "900", "--perfHandler", "dummy", "--vizHandler", "std", 
 				"--petscArgs=-plot", "--networkFile", "net.h5",
 				"--dimensions", "2", "--nxGrid", "50", "--nyGrid", "10", "--nzGrid", "30", 
 				"--xStepSize", "0.2", "--yStepSize", "1.5", "--zStepSize", "10.0", 
-				"--material", "W111", "--tempFile", "temp.dat", "--heFlux", "5.0e5", 
+				"--material", "W111", "--tempFile", "temp.dat", "--flux", "5.0e5", 
 				"--fluxFile", "flux.dat", "--checkpoint", "xolotlStop.h5", 
 				"--initialV", "0.05" });
 			
@@ -133,6 +136,9 @@ public class ArgumentsTest {
 			
 			// Check that the maximum interstitial cluster size is 5
 			assertEquals(5, args.getMaxISize());
+
+			// Check that the phase cut method is activated
+			assertEquals(true, args.isPhaseCut());
 
 			// Check that the temperature is 900
 			assertEquals("900", args.getStartTemp());
@@ -173,17 +179,14 @@ public class ArgumentsTest {
 			// Check that the material is W111
 			assertEquals("W111", args.getMaterial());
 
+			// Check that the flux argument is 5.0e5
+			assertEquals("5.0e5", args.getFlux());
+
 			// Check if there is a tempFile argument
 			assertEquals(true, args.isTempFile());
 
 			// Check that the tempFile argument is temp.dat
 			assertEquals("temp.dat", args.getTempFile());
-
-			// Check if there is an heFlux argument
-			assertEquals(true, args.isHeFlux());
-
-			// Check that the heFlux argument is 5.0e5
-			assertEquals("5.0e5", args.getHeFlux());
 
 			// Check if there is an fluxFile argument
 			assertEquals(true, args.isFluxFile());

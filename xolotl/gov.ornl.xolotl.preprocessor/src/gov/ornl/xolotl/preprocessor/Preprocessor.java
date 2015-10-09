@@ -24,7 +24,7 @@ import ncsa.hdf.hdf5lib.HDF5Constants;
  * 
  * Each element is:
  * 
- * nHe - The number of Helium atoms in the cluster.
+ * nHe - The number of helium atoms in the cluster.
  * 
  * nV - The number of vacancies in the cluster.
  * 
@@ -46,17 +46,17 @@ import ncsa.hdf.hdf5lib.HDF5Constants;
  */
 public class Preprocessor {
 
-	// The maximum size of a Helium cluster in the network.
+	// The maximum size of a helium cluster in the network.
 	private int maxHe;
 
 	// The maximum size of a mobile He cluster.
 	private int maxHeDiffusionSize = 6;
 
-	// The diffusion factors for single species Helium clusters.
+	// The diffusion factors for single species helium clusters.
 	private double[] heDiffusionFactors = { 0.0, 2.9e+10, 3.2e+10, 2.3e+10,
 			1.7e+10, 5.0e+09, 1.0e+09 };
 
-	// The migration energies for single species Helium clusters.
+	// The migration energies for single species helium clusters.
 	private double[] heMigrationEnergies = { Double.POSITIVE_INFINITY, 0.13,
 			0.20, 0.25, 0.20, 0.12, 0.3 };
 
@@ -82,12 +82,15 @@ public class Preprocessor {
 	// The migration energies for single species interstitial clusters.
 	private double[] iMigrationEnergies = { Double.POSITIVE_INFINITY, 0.01,
 			0.02, 0.03, 0.04, 0.05 };
+	
+	// Whether the phase-cut method is used for the network of not
+	private boolean usePhaseCut = false;
 
 	/**
-	 * The maximum number of Helium atoms that can be combined with a vacancy
+	 * The maximum number of helium atoms that can be combined with a vacancy
 	 * cluster with size equal to the index i in the array plus one. For
 	 * example, an HeV size cluster with size 1 would have size = i+1 = 1 and i
-	 * = 0. It could support a mixture of up to nine Helium atoms with one
+	 * = 0. It could support a mixture of up to nine helium atoms with one
 	 * vacancy.
 	 */
 	private int[] maxHePerV = { 9, 14, 18, 20, 27, 30, 35, 40, 45, 50, 55, 60,
@@ -101,10 +104,18 @@ public class Preprocessor {
 	private FormationEnergyEngine formationEnergyEngine = new FormationEnergyEngine();
 
 	/**
+	 * The number of spacial dimensions.
+	 */
+	private int dim;
+
+	/**
 	 * The list of parameters that will be passed to Xolotl
 	 */
 	public Properties xolotlParams = new Properties();
 
+	/**
+	 * The list of standard Petsc options
+	 */
 	public Map<String, String> petscOptions = new HashMap<String, String>();
 
 	/**
@@ -121,17 +132,15 @@ public class Preprocessor {
 		// Create a map of the default Petsc options and their corresponding
 		// arguments, if any, where the key is the option and the value is
 		// the argument
-		petscOptions.put("-ts_final_time", "50");
+		petscOptions.put("-ts_final_time", "1.0");
 		petscOptions.put("-ts_dt", "1.0e-12");
 		petscOptions.put("-ts_max_steps", "100");
-		petscOptions.put("-ts_adapt_dt_max", "10");
+		petscOptions.put("-ts_adapt_dt_max", "1.0e-6");
 		petscOptions.put("-ts_max_snes_failures", "200");
 		petscOptions.put("-pc_type", "fieldsplit");
 		petscOptions.put("-pc_fieldsplit_detect_coupling", "");
-		petscOptions.put("-fieldsplit_0_pc_type", "redundant");
-		petscOptions.put("-fieldsplit_1_pc_type", "sor");
-		petscOptions.put("-snes_monitor", "");
-		petscOptions.put("-ksp_monitor", "");
+		petscOptions.put("-fieldsplit_0_pc_type", "sor");
+		petscOptions.put("-fieldsplit_1_pc_type", "redundant");
 		petscOptions.put("-ts_monitor", "");
 
 		// Get the string of Petsc arguments from the command line
@@ -139,6 +148,13 @@ public class Preprocessor {
 		List<String> petscList = new ArrayList<String>();
 		for (String str : petscArgs.split(" ")) {
 			petscList.add(str);
+		}
+		
+		// Change the default preconditionner if we are not in 1D
+		if (dim > 1) {
+			petscList.add("-fieldsplit_1_pc_type"); petscList.add("gamg");
+			petscList.add("-fieldsplit_1_ksp_type"); petscList.add("gmres");
+			petscList.add("-ksp_type"); petscList.add("fgmres");
 		}
 
 		// Create the dash character
@@ -188,13 +204,12 @@ public class Preprocessor {
 	 *            interface.
 	 */
 	public Preprocessor(Arguments args) {
-
-		// Set the maximum size of a Helium cluster in the network.
+		// Set the maximum size of a helium cluster in the network.
 		maxHe = args.getMaxHeSize();
 		// Check to make sure the user entered an appropriate value
 		if ((maxHe > 8) || (maxHe < 0)) {
 			throw new IllegalArgumentException(
-					"The maxium Helium size must be less than 9 ( 0 <= maxHeSize < 9 )");
+					"The maxium helium size must be less than 9 ( 0 <= maxHeSize < 9 )");
 		}
 
 		// Set the maximum size of a vacancy cluster in the network.
@@ -210,10 +225,17 @@ public class Preprocessor {
 			throw new IllegalArgumentException(
 					"The maxium interstitial must be positive ( 0 <= maxISize )");
 		}
+		
+		// Whether the phase-cut method will be used or not
+		usePhaseCut = args.isPhaseCut();
+		
+		// The number of dimension for the problem to solve
+		dim = Integer.parseInt(args.getDimensions());
 
 		// Set the parameter options that will be passed to Xolotl
 		xolotlParams.setProperty("dimensions", args.getDimensions());
 		xolotlParams.setProperty("startTemp", args.getStartTemp());
+		xolotlParams.setProperty("flux", args.getFlux());
 		xolotlParams.setProperty("networkFile", args.getNetworkFile());
 		xolotlParams.setProperty("material", args.getMaterial());
 		xolotlParams.setProperty("perfHandler", args.getPerfHandler());
@@ -225,8 +247,6 @@ public class Preprocessor {
 		// be set if they are specified via the command line
 		if (args.isTempFile())
 			xolotlParams.setProperty("tempFile", args.getTempFile());
-		if (args.isHeFlux())
-			xolotlParams.setProperty("heFlux", args.getHeFlux());
 		if (args.isFluxFile())
 			xolotlParams.setProperty("fluxFile", args.getTempFile());
 		if (args.isInitialV())
@@ -238,7 +258,7 @@ public class Preprocessor {
 	 * This operation generates all helium clusters in the network.
 	 * 
 	 * @return A list of clusters configured to satisfy the bounds and composed
-	 *         solely of Helium.
+	 *         solely of helium.
 	 */
 	private ArrayList<Cluster> generateHe() {
 
@@ -270,7 +290,7 @@ public class Preprocessor {
 	 * configures the formation energies on its own.
 	 * 
 	 * @param heSize
-	 *            The number of Helium atoms in the cluster
+	 *            The number of helium atoms in the cluster
 	 * @param vSize
 	 *            The number of vacancies in the cluster
 	 * @return The cluster.
@@ -302,24 +322,62 @@ public class Preprocessor {
 
 		// Local Declarations
 		ArrayList<Cluster> clusterList = new ArrayList<Cluster>();
+		
+		// Check if the phase-cut method need to be applied
+		if (usePhaseCut) {
+			// Loop over vacancies in the outer loop. 
+			// This creates V and HeV.
+			for (int i = 1; i <= maxV && i <= maxHePerV.length; ++i) {
+				// For V < 12 loop on all the possible helium numbers up to
+				// the maximum size in the maxHePerV array
+				if (i < 12) {
+					for (int j = 0; j <= maxHePerV[i - 1]; j++) {
+						// Add the cluster to the list
+						clusterList.add(makeHeVCluster(j, i));
+					}
+				}
+				// For bigger V only add the last four helium sizes
+	            else {
+	            	// Add the vacancy cluster
+	                clusterList.add(makeHeVCluster(0, i));
+	                for (int j = maxHePerV[i - 1] - 4; j <= maxHePerV[i - 1]; j++) {
+	                    // Add the cluster to the list
+	                    clusterList.add(makeHeVCluster(j, i));
+	                } 
+	            }
+			}
 
-		// Loop over vacancies in the outer loop. Start at zero to account for
-		// single He. This creates V and HeV up to the maximum size in the
-		// maxHePerV array.
-		for (int i = 1; i <= maxV && i <= maxHePerV.length; ++i) {
-			// Add Helium
-			for (int j = 0; j <= maxHePerV[i - 1]; j++) {
-				// Add the cluster to the list
-				clusterList.add(makeHeVCluster(j, i));
+			// Create V and HeV up to the maximum length with a constant nHe/nV = 4,
+			// Keeping only the last four ones
+			for (int i = maxHePerV.length + 1; i <= maxV; i++) {
+            	// Add the vacancy cluster
+	            clusterList.add(makeHeVCluster(0, i)); 
+				for (int j = (i * 4) - 3; j <= i * 4; j++) {
+					// Add the cluster to the list
+					clusterList.add(makeHeVCluster(j, i));
+				}
 			}
 		}
+		// Else use the full network
+		else {
+			// Loop over vacancies in the outer loop. 
+			// This creates V and HeV up to the maximum size in the
+			// maxHePerV array.
+			for (int i = 1; i <= maxV && i <= maxHePerV.length; ++i) {
+				// Loop on the helium number
+				for (int j = 0; j <= maxHePerV[i - 1]; j++) {
+					// Add the cluster to the list
+					clusterList.add(makeHeVCluster(j, i));
+				}
+			}
 
-		// Create V and HeV up to the maximum length with a constant nHe/nV = 4.
-		for (int i = maxHePerV.length + 1; i <= maxV; i++) {
-			// Add Helium
-			for (int j = 0; j <= i * 4; j++) {
-				// Add the cluster to the list
-				clusterList.add(makeHeVCluster(j, i));
+			// Create V and HeV up to the maximum length with a constant nHe/nV = 4.
+			for (int i = maxHePerV.length + 1; i <= maxV; i++) {
+				// Loop on the helium number
+				for (int j = 0; j <= i * 4; j++) {
+					// Add the cluster to the list
+					clusterList.add(makeHeVCluster(j, i));
+				}
 			}
 		}
 

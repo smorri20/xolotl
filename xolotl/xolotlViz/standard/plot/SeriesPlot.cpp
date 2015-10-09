@@ -13,14 +13,13 @@ using namespace xolotlViz;
 #define W_WIDTH 1024
 #define W_HEIGHT 1024
 
-SeriesPlot::SeriesPlot(std::string name) : Plot(name) {
-	plotDataProviders = std::make_shared< std::vector< std::shared_ptr<IDataProvider> > > ();
-}
+SeriesPlot::SeriesPlot(const std::string& name) : Plot(name),
+	plotDataProviders(std::make_shared< std::vector< std::shared_ptr<IDataProvider> > > ()) {}
 
 SeriesPlot::~SeriesPlot() {
 }
 
-void SeriesPlot::render(std::string fileName) {
+void SeriesPlot::render(const std::string& fileName) {
 
 	// Check if the label provider is set
 	if (!plotLabelProvider){
@@ -103,8 +102,8 @@ void SeriesPlot::render(std::string fileName) {
     	// Give the yVector to the axisValues
     	eavlArray *axisValues = new eavlFloatArray(plotDataProviders->at(i)->getDataName(), 1);
     	axisValues->SetNumberOfTuples(data->GetNumPoints());
-    	for (int i = 0; i < yVector.size(); i++){
-    		axisValues->SetComponentFromDouble(i, 0, yVector.at(i));
+    	for (int j = 0; j < yVector.size(); j++){
+    		axisValues->SetComponentFromDouble(j, 0, yVector.at(j));
     	}
 
     	// Add the axisValues to a field of the data set
@@ -129,9 +128,7 @@ void SeriesPlot::render(std::string fileName) {
     window->Paint();
 
     // Save the final buffer as an image
-    char fn[25];
-    sprintf(fn, (fileName).c_str());
-    window->SaveWindowAsPNM(fn);
+    window->SaveWindowAsPNM(fileName);
 
 	return;
 }
