@@ -108,6 +108,8 @@ PetscErrorCode bubbles1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
 	auto bubbleList = bubbleCol->getBubbleList();
 	// Get all the helium clusters
 	auto heliums = network->getAll(heType);
+	// Get the helium diffusion coefficient
+	double diffCoef = ((PSICluster *) heliums[0])->getDiffusionCoefficient();
 
 	//------    Receive flux part   ------//
 
@@ -122,22 +124,16 @@ PetscErrorCode bubbles1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
 			addedHelium += incidentFluxVector[(*pt)];
 		}
 
-		// Get the quantity since the last time step
-		addedHelium = addedHelium * dt * hx;
-		// Divide this quantity on all the interfaces
-		auto interfaceList = (*it)->getInterfaceList();
-		int nInter = std::distance(interfaceList->begin(), interfaceList->end());
-		addedHelium = addedHelium / (double) nInter;
-		// Loop on the interfaces
-		for (std::forward_list<xolotlCore::Bubble::Interface *>::iterator inter = interfaceList->begin();
-				inter != interfaceList->end(); inter++) {
-			// Add the helium quantity
-			(*inter)->heliumQuantity += addedHelium;
+		// Get the number of point covered by the bubble
+		int nPoints = std::distance(gridPointList->begin(), gridPointList->end());
+		// Get the rate of helium clustering to the bubble
+		double rate = pow(std::min(((*it)->getHeliumQuantity())
+				/ (tungstenDensity * 32.0 * hx), 1.0), 1.0/3.0);
 
-			// Add the diffused helium since last time step using the stored flux
-			// (computed at the previous timestep)
-			(*inter)->heliumQuantity += (*inter)->heliumFlux * dt;
-		}
+		// Get the quantity since the last time step
+		addedHelium = addedHelium * dt * hx * rate;
+		// Add it to the bubble
+		(*it)->addHelium(addedHelium, dt, hx);
 	}
 
 	//------   Expend bubbles part   ------//
@@ -222,11 +218,13 @@ PetscErrorCode bubbles1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
 		MPI_Allreduce(&localHeliumQuantity, &heliumQuantity, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
 		// Check the helium quantity
-		if (heliumQuantity > tungstenDensity * 4.0 * hx) {
+		if (heliumQuantity > (tungstenDensity/100.0) * 4.0 * hx) {
 			// Create a bubble at this grid point
 			xolotlCore::Bubble * bubble = new xolotlCore::Bubble(xi, heliumQuantity, hx);
 			// Add it to the bubble collection
 			bubbleCol->addBubble(bubble);
+
+			break;
 		}
 	}
 
@@ -244,7 +242,7 @@ PetscErrorCode bubbles1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
 			// Merge them if they are neighbors
 			if (areNeighbors) {
 				// Get the helium quantity at the common interface
-				double interHeliumQuantity = 0.0;
+				double heliumQuantity = 0.0;
 				auto interfaceList = (*it)->getInterfaceList();
 				auto otherInterfaceList = (*otherIt)->getInterfaceList();
 
@@ -264,8 +262,8 @@ PetscErrorCode bubbles1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
 						if ((*inter)->insidePoint == (*otherInter)->outsidePoint
 								&& (*inter)->outsidePoint == (*otherInter)->insidePoint) {
 							// Get the helium quantity
-							interHeliumQuantity += (*inter)->heliumQuantity;
-							interHeliumQuantity += (*otherInter)->heliumQuantity;
+							heliumQuantity += (*it)->getHeliumQuantity();
+							heliumQuantity += (*otherIt)->getHeliumQuantity();
 
 							// Remove the interfaces from the lists
 							auto temp = *inter;
@@ -300,18 +298,10 @@ PetscErrorCode bubbles1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
 					gridPointList->emplace_front(*otherPt);
 				}
 
-				// Spread the helium quantity on all the interfaces
-				int nInter = std::distance(interfaceList->begin(), interfaceList->end());
-				interHeliumQuantity = interHeliumQuantity / (double) nInter;
-				// Loop on the interfaces
-				for (std::forward_list<xolotlCore::Bubble::Interface *>::iterator inter = interfaceList->begin();
-						inter != interfaceList->end(); inter++) {
-					// Add the helium quantity
-					(*inter)->heliumQuantity += interHeliumQuantity;
-				}
-
 				// Remove the other bubble
 				bubbleList->remove(*otherIt);
+				// Reset the helium quantity in the merged bubble
+				(*it)->resetHeliumQuantity(heliumQuantity);
 			}
 		}
 	}
@@ -330,32 +320,40 @@ PetscErrorCode bubbles1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
 			// Get the index of the outside grid point
 			int outPoint = (*inter)->outsidePoint;
 
-			// Initialize the value for the flux
-			double localNewFlux = 0.0;
-			double newFlux = 0.0;
-			// Check if the point outside the interface is on this process
-			if (outPoint >= xs && outPoint < xs + xm) {
-				// Get the concentrations on the grid point outside the interface
-				gridPointSolution = solutionArray[outPoint];
-				// Loop on the helium clusters
-				for (int i = 0; i < heliums.size(); i++) {
-					// Get the cluster
-					auto cluster = (PSICluster *) heliums.at(i);
-					// Get its id and concentration
-					int id = cluster->getId() - 1;
-					double conc = gridPointSolution[id];
-					// Get its size and diffusion coefficient
-					int size = cluster->getSize();
-					double coef = cluster->getDiffusionCoefficient();
-					// Compute the flux at the interface
-					localNewFlux += (double) size * sx * coef * conc;
-				}
+			// Check if the outside point is in another bubble
+			if (bubbleCol->isPointABubble(outPoint)) {
+				// The flux will be 0.0 then
+				(*inter)->heliumFlux = 0.0;
 			}
-			// Get the new flux on all processes
-			MPI_Allreduce(&localNewFlux, &newFlux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+			// Else compute the flux from diffusion
+			else {
+				// Initialize the value for the flux
+				double localNewFlux = 0.0;
+				double newFlux = 0.0;
+				// Check if the point outside the interface is on this process
+				if (outPoint >= xs && outPoint < xs + xm) {
+					// Get the concentrations on the grid point outside the interface
+					gridPointSolution = solutionArray[outPoint];
+					// Loop on the helium clusters
+					for (int i = 0; i < heliums.size(); i++) {
+						// Get the cluster
+						auto cluster = (PSICluster *) heliums.at(i);
+						// Get its id and concentration
+						int id = cluster->getId() - 1;
+						double conc = gridPointSolution[id];
+						// Get its size and diffusion coefficient
+						int size = cluster->getSize();
+						double coef = cluster->getDiffusionCoefficient();
+						// Compute the flux at the interface
+						localNewFlux += (double) size * sx * coef * conc;
+					}
+				}
+				// Get the new flux on all processes
+				MPI_Allreduce(&localNewFlux, &newFlux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
-			// Save the helium flux in the interface
-			(*inter)->heliumFlux = newFlux;
+				// Save the helium flux in the interface
+				(*inter)->heliumFlux = newFlux;
+			}
 		}
 	}
 

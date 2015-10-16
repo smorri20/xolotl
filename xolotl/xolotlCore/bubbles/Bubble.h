@@ -72,11 +72,18 @@ private:
 	double heliumReference;
 
 	/**
+	 * The quantity of helium actually contained in the bubble,
+	 * without the interfaces.
+	 */
+	double heliumQuantity;
+
+	/**
 	 * The default constructor is private because bubbles
 	 * must always be created with a grid point,a helium quantity,
 	 * and a cell size.
 	 */
-	Bubble() {}
+	Bubble(): heliumReference(0.0),
+			heliumQuantity(0.0) {}
 
 public:
 
@@ -118,10 +125,26 @@ public:
 	/**
 	 * Method adding a point to the grid point list.
 	 *
-	 * @param The point to add
+	 * @param point The point to add
 	 */
 	void addGridPoint(int point);
 
+	/**
+	 * Method adding helium to the quantity of helium held by the bubble.
+	 *
+	 * @param he The quantity of helium to add to the bubble
+	 * @param dt The time elapsed since the last time step
+	 * @param size The size of the cell (grid point)
+	 */
+	void addHelium(double he, double dt, double size);
+
+	/**
+	 * Method resetting the helium to the quantity of helium held by the bubble,
+	 * considering it is at saturation.
+	 *
+	 * @param he The quantity of helium in the bubble
+	 */
+	void resetHeliumQuantity(double he);
 };
 
 } // end namespace xolotlCore
