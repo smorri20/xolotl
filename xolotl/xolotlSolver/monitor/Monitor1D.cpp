@@ -62,7 +62,7 @@ bool printMaxClusterConc1D = true;
 PetscErrorCode bubbles1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
 		void *ictx) {
 	PetscErrorCode ierr;
-	const double **solutionArray, *gridPointSolution;
+	double **solutionArray, *gridPointSolution;
 	int xs, xm, Mx;
 
 	// Get the number of processes
@@ -80,7 +80,7 @@ PetscErrorCode bubbles1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
 	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
 
 	// Get the solutionArray
-	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOF(da, solution, &solutionArray);CHKERRQ(ierr);
 
 	// Get the corners of the grid
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
@@ -223,8 +223,6 @@ PetscErrorCode bubbles1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
 			xolotlCore::Bubble * bubble = new xolotlCore::Bubble(xi, heliumQuantity, hx);
 			// Add it to the bubble collection
 			bubbleCol->addBubble(bubble);
-
-			break;
 		}
 	}
 
@@ -236,8 +234,9 @@ PetscErrorCode bubbles1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
 		// Loop on the other bubbles
 		for (std::forward_list<xolotlCore::Bubble *>::iterator otherIt = it;
 				otherIt != bubbleList->end(); otherIt++) {
+			// Check if bubbles are neighbors
 			bool areNeighbors = false;
-			if (otherIt != it) areNeighbors = bubbleCol->getNeighbor((*it), (*otherIt));
+			if ((*otherIt) != (*it)) areNeighbors = bubbleCol->getNeighbor((*it), (*otherIt));
 
 			// Merge them if they are neighbors
 			if (areNeighbors) {
@@ -300,10 +299,68 @@ PetscErrorCode bubbles1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
 
 				// Remove the other bubble
 				bubbleList->remove(*otherIt);
+
 				// Reset the helium quantity in the merged bubble
 				(*it)->resetHeliumQuantity(heliumQuantity);
+
+				// Put the second iterator back at where it started to prevent segmentation fault
+				otherIt = it;
 			}
 		}
+	}
+
+	//------    Bubble bursting part   ------//
+
+	if (bubbleCol->isPointABubble(0)) {
+		// Find which bubble reached the surface
+		xolotlCore::Bubble * bubble;
+		for (std::forward_list<xolotlCore::Bubble *>::iterator it = bubbleList->begin();
+				it != bubbleList->end(); it++) {
+			auto gridPointList = (*it)->getGridPointList();
+			// Loop on the grid points
+			for (std::forward_list<int>::iterator point = gridPointList->begin();
+					point != gridPointList->end(); point++) {
+				if ((*point) == 0) {
+					bubble = (*it);
+					break;
+				}
+			}
+			// Break the loop on the bubbles supposing that only
+			// one bubble can reach the surface at a time in 1D
+			if (bubble) break;
+		}
+
+		// We have to get the grid point list of this bubble
+		// to reset their concentration
+		auto gridPointList = bubble->getGridPointList();
+		// Get the biggest cluster from the network to determine
+		// the biggest vacancy cluster present
+		int size = network->size();
+		auto biggestCluster = (PSICluster *) network->getAll()->at(size - 1);
+		auto comp = biggestCluster->getComposition();
+		int biggestV = comp[vType];
+		// Get the ID of the biggest V cluster now
+		biggestCluster = (PSICluster *) network->get(vType, biggestV);
+		int biggestVID = biggestCluster->getId() - 1;
+
+		// Loop on the grid point to reinitialise their concentration
+		for (std::forward_list<int>::iterator point = gridPointList->begin();
+				point != gridPointList->end(); point++) {
+			// If the point is on this process
+			if ((*point) >= xs && (*point) < xs + xm) {
+				// Get the concentrations
+				gridPointSolution = solutionArray[(*point)];
+				// Loop on the network size to reset the concentrations
+				for (int i = 0; i < size; i++) {
+					gridPointSolution[i] = 0.0;
+				}
+				// Set the biggest V cluster concentration
+				gridPointSolution[biggestVID] = tungstenDensity / (double) biggestV;
+			}
+		}
+
+		// Delete the bubble for the bubble collection
+		bubbleList->remove(bubble);
 	}
 
 	//------    Compute flux from diffusion part   ------//
@@ -358,7 +415,7 @@ PetscErrorCode bubbles1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
 	}
 
 	// Check the bubbles are not escaping
-	if (bubbleCol->isPointABubble(0) || bubbleCol->isPointABubble(Mx - 1))
+	if (bubbleCol->isPointABubble(Mx - 1))
 		throw std::string("Bubble is trying to escape the grid!!!");
 
 	// Print the bubbles for check
@@ -378,7 +435,7 @@ PetscErrorCode bubbles1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
 	}
 
 	// Restore the solutionArray
-	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecRestoreArrayDOF(da, solution, &solutionArray);CHKERRQ(ierr);
 
 	PetscFunctionReturn(0);
 }
