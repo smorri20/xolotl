@@ -318,7 +318,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		network->updateConcentrationsFromArray(concOffset);
 
 		// ----- Account for flux of incoming He of cluster size 1 -----
-		updatedConcOffset[fluxIndex] += incidentFluxVector[xi];
+		updatedConcOffset[fluxIndex] += incidentFluxVector[xi - surfacePosition];
 
 		// ---- Compute diffusion over the locally owned part of the grid -----
 		diffusionHandler->computeDiffusion(network, concVector,
