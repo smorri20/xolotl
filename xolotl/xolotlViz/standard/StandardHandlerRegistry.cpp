@@ -17,7 +17,7 @@ StandardHandlerRegistry::StandardHandlerRegistry(OutputType otype)
 StandardHandlerRegistry::~StandardHandlerRegistry() {
 }
 
-std::shared_ptr<IPlot> StandardHandlerRegistry::getPlot(std::string name, PlotType type) {
+std::shared_ptr<IPlot> StandardHandlerRegistry::getPlot(const std::string& name, PlotType type) {
     bool isRaster = (outputType==png);
 //    std::cerr << "isRaster="<<isRaster<<std::endl;
 	switch(type) {

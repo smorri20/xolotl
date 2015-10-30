@@ -22,13 +22,13 @@ using namespace xolotlViz;
 #define W_WIDTH 1024
 #define W_HEIGHT 1024
 
-SurfacePlot::SurfacePlot(std::string name, bool raster) : Plot(name, raster) {
+SurfacePlot::SurfacePlot(const std::string& name, bool raster) : Plot(name, raster) {
 }
 
 SurfacePlot::~SurfacePlot() {
 }
 
-void SurfacePlot::render(std::string fileName) {
+void SurfacePlot::render(const std::string& fileName) {
 
 	// Check if the label provider is set
 	if (!plotLabelProvider){

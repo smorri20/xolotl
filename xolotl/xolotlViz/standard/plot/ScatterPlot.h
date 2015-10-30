@@ -26,7 +26,7 @@ public:
 	/**
 	 * The default constructor
 	 */
-    ScatterPlot(std::string name, bool raster);
+    ScatterPlot(const std::string& name, bool raster);
 
 	/**
 	 * The destructor
@@ -36,7 +36,7 @@ public:
 	/**
 	 * Method managing everything that is related to the rendering of a plot.
 	 */
-	void render(std::string fileName = "fileName");
+	void render(const std::string& fileName = "fileName");
 
 };
 

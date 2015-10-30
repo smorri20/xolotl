@@ -3,7 +3,7 @@
 
 using namespace xolotlViz;
 
-Plot::Plot(std::string name, bool raster)
+Plot::Plot(const std::string& name, bool raster)
     : xolotlCore::Identifiable(name),
       enableRaster(raster) {
 }
@@ -11,11 +11,11 @@ Plot::Plot(std::string name, bool raster)
 Plot::~Plot() {
 }
 
-void Plot::render(std::string fileName) {
+void Plot::render(const std::string& fileName) {
 	return;
 }
 
-void Plot::write(std::string fileName) {
+void Plot::write(const std::string& fileName) {
 	render(fileName);
 	return;
 }

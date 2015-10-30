@@ -27,13 +27,13 @@ using namespace xolotlViz;
 #define W_WIDTH 1024
 #define W_HEIGHT 1024
 
-ScatterPlot::ScatterPlot(std::string name, bool raster) : Plot(name, raster) {
+ScatterPlot::ScatterPlot(const std::string& name, bool raster) : Plot(name, raster) {
 }
 
 ScatterPlot::~ScatterPlot() {
 }
 
-void ScatterPlot::render(std::string fileName) {
+void ScatterPlot::render(const std::string& fileName) {
 
 	// Check if the label provider is set
 	if (!plotLabelProvider){

@@ -35,7 +35,7 @@ public:
 	/**
 	 * The default constructor
 	 */
-    VideoPlot(std::string name, bool raster);
+    VideoPlot(const std::string& name, bool raster);
 
 	/**
 	 * The destructor
@@ -45,7 +45,7 @@ public:
 	/**
 	 * Method managing everything that is related to the rendering of a plot.
 	 */
-	void render(std::string fileName = "fileName");
+	void render(const std::string& fileName = "fileName");
 
 	/**
 	 * Sets the frame rate for VideoPlot.
