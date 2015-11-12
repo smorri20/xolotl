@@ -225,9 +225,9 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	// local array!
 	PetscScalar ***concs, ***updatedConcs;
 	// Get pointers to vector data
-	ierr = DMDAVecGetArrayDOF(da, localC, &concs);
+	ierr = DMDAVecGetArrayDOFRead(da, localC, &concs);
 	checkPetscError(ierr, "PetscSolver2DHandler::updateConcentration: "
-			"DMDAVecGetArrayDOF (localC) failed.");
+			"DMDAVecGetArrayDOFRead (localC) failed.");
 	ierr = DMDAVecGetArrayDOF(da, F, &updatedConcs);
 	checkPetscError(ierr, "PetscSolver2DHandler::updateConcentration: "
 			"DMDAVecGetArrayDOF (F) failed.");
@@ -398,9 +398,9 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	/*
 	 Restore vectors
 	 */
-	ierr = DMDAVecRestoreArrayDOF(da, localC, &concs);
+	ierr = DMDAVecRestoreArrayDOFRead(da, localC, &concs);
 	checkPetscError(ierr, "PetscSolver2DHandler::updateConcentration: "
-			"DMDAVecRestoreArrayDOF (localC) failed.");
+			"DMDAVecRestoreArrayDOFRead (localC) failed.");
 	ierr = DMDAVecRestoreArrayDOF(da, F, &updatedConcs);
 	checkPetscError(ierr, "PetscSolver2DHandler::updateConcentration: "
 			"DMDAVecRestoreArrayDOF (F) failed.");
@@ -426,20 +426,11 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	// Setup some step size variables
 	double sy = 1.0 / (hY * hY);
 
-	// Get pointers to vector data
-	PetscScalar ***concs;
-	ierr = DMDAVecGetArrayDOF(da, localC, &concs);
-	checkPetscError(ierr, "PetscSolver2DHandler::computeOffDiagonalJacobian: "
-			"DMDAVecGetArrayDOF failed.");
-
 	// Get local grid boundaries
 	PetscInt xs, xm, ys, ym;
 	ierr = DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL);
 	checkPetscError(ierr, "PetscSolver2DHandler::computeOffDiagonalJacobian: "
 			"DMDAGetCorners failed.");
-
-	// Pointer to the concentrations at a given grid point
-	PetscScalar *concOffset;
 
 	// Get the total number of diffusing clusters
 	const int nDiff = diffusionHandler->getNumberOfDiffusing();
@@ -478,11 +469,6 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 
 			// Set the grid position
 			gridPosition[0] = grid[xi];
-
-			// Copy data into the PSIClusterReactionNetwork so that it can
-			// compute the new concentrations.
-			concOffset = concs[yj][xi];
-			network->updateConcentrationsFromArray(concOffset);
 
 			// Get the partial derivatives for the diffusion
 			diffusionHandler->computePartialsForDiffusion(network, diffVals, diffIndices,
@@ -621,9 +607,9 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 
 	// Get pointers to vector data
 	PetscScalar ***concs;
-	ierr = DMDAVecGetArrayDOF(da, localC, &concs);
+	ierr = DMDAVecGetArrayDOFRead(da, localC, &concs);
 	checkPetscError(ierr, "PetscSolver2DHandler::computeDiagonalJacobian: "
-			"DMDAVecGetArrayDOF failed.");
+			"DMDAVecGetArrayDOFRead failed.");
 
 	// Get local grid boundaries
 	PetscInt xs, xm, ys, ym;
@@ -804,10 +790,12 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	/*
 	 Restore vectors
 	 */
-	ierr = DMDAVecRestoreArrayDOF(da, localC, &concs);
-	checkPetscError(ierr, "PetscSolver2DHandler::computeDiagonalJacobian: DMDAVecRestoreArrayDOF failed.");
+	ierr = DMDAVecRestoreArrayDOFRead(da, localC, &concs);
+	checkPetscError(ierr, "PetscSolver2DHandler::computeDiagonalJacobian: "
+			"DMDAVecRestoreArrayDOFRead failed.");
 	ierr = DMRestoreLocalVector(da, &localC);
-	checkPetscError(ierr, "PetscSolver2DHandler::computeDiagonalJacobian: DMRestoreLocalVector failed.");
+	checkPetscError(ierr, "PetscSolver2DHandler::computeDiagonalJacobian: "
+			"DMRestoreLocalVector failed.");
 
 	return;
 }
