@@ -105,34 +105,6 @@ void YGBAdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 
 			// Update the concentration of the cluster
 			updatedConcOffset[index] += conc;
-
-			// Removing the diffusion of this cluster
-			double oldConc = concVector[0][index]; // middle
-			double oldLeftConc = concVector[1][index]; // left
-			double oldRightConc = concVector[2][index]; // right
-			double sy = 1.0 / (hy * hy);
-			conc =
-					cluster->getDiffusionCoefficient()
-							* (2.0
-									* (oldLeftConc
-											+ (hxLeft / hxRight) * oldRightConc
-											- (1.0 + (hxLeft / hxRight))
-													* oldConc)
-									/ (hxLeft * (hxLeft + hxRight))
-									- 2.0 * oldConc * sy);
-			// Update the concentration of this cluster
-			updatedConcOffset[index] -= conc;
-
-			// In 3D there are more things to remove for diffusion
-			if (dimension == 3) {
-				double oldFrontConc = concVector[5][index]; // front
-				double oldBackConc = concVector[6][index]; // back
-				double sz = 1.0 / (hz * hz);
-				conc = cluster->getDiffusionCoefficient() * sz
-						* (oldFrontConc + oldBackConc - 2.0 * oldConc);
-				// Update the concentration of this cluster
-				updatedConcOffset[index] -= conc;
-			}
 		}
 		// Here we are NOT on the GB sink
 		else {
@@ -153,30 +125,6 @@ void YGBAdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 
 			// Update the concentration of the cluster
 			updatedConcOffset[index] += conc;
-
-			// If the position is next to the advection sink location
-			// we must remove the diffusion of this cluster
-			std::vector<double> newPos = { 0.0, 0.0, 0.0 };
-			newPos[1] = pos[1] + hy;
-			if (isPointOnSink(newPos)) {
-				// We are on the bottom side of the sink location
-				// So we won't receive the diffusion from the top side
-				oldConc = concVector[4][index]; // top
-				double sy = 1.0 / (hy * hy);
-				conc = cluster->getDiffusionCoefficient() * oldConc * sy;
-				// Update the concentration of this cluster
-				updatedConcOffset[index] -= conc;
-			}
-			newPos[1] = pos[1] - hy;
-			if (isPointOnSink(newPos)) {
-				// We are on the top side of the sink location
-				// So we won't receive the diffusion from the bottom side
-				oldConc = concVector[3][index]; // bottom
-				double sy = 1.0 / (hy * hy);
-				conc = cluster->getDiffusionCoefficient() * oldConc * sy;
-				// Update the concentration of this cluster
-				updatedConcOffset[index] -= conc;
-			}
 		}
 	}
 
@@ -209,41 +157,10 @@ void YGBAdvectionHandler::computePartialsForAdvection(
 		// If we are on the sink, the partial derivatives are not the same
 		// Both sides are giving their concentrations to the center
 		if (isPointOnSink(pos)) {
-			// 2D case (there is no 1D case)
-			if (dimension == 2) {
-				val[i * 5] = (3.0 * sinkStrength * diffCoeff)
-						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-								* pow(hy, 5)); // top or bottom
-				val[(i * 5) + 1] = val[i * 5]; // top or bottom
-
-				// Removing the diffusion on the middle point
-				double sy = 1.0 / (hy * hy);
-				val[(i * 5) + 2] = diffCoeff * 2.0
-						* ((1.0 / (hxLeft * hxRight)) + sy); // middle
-				val[(i * 5) + 3] = -diffCoeff * 2.0
-						/ (hxLeft * (hxLeft + hxRight)); // left
-				val[(i * 5) + 4] = -diffCoeff * 2.0
-						/ (hxRight * (hxLeft + hxRight)); // right
-			}
-			// 3D case
-			if (dimension == 3) {
-				val[i * 7] = (3.0 * sinkStrength * diffCoeff)
-						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-								* pow(hy, 5)); // top or bottom
-				val[(i * 7) + 1] = val[i * 7]; // top or bottom
-
-				// Removing the diffusion on the middle point
-				double sy = 1.0 / (hy * hy);
-				double sz = 1.0 / (hz * hz);
-				val[(i * 7) + 2] = diffCoeff * 2.0
-						* ((1.0 / (hxLeft * hxRight)) + sy + sz); // middle
-				val[(i * 7) + 3] = -diffCoeff * sz; // front
-				val[(i * 7) + 4] = val[(i * 7) + 3]; // back
-				val[(i * 7) + 5] = -diffCoeff * 2.0
-						/ (hxLeft * (hxLeft + hxRight)); // left
-				val[(i * 7) + 6] = -diffCoeff * 2.0
-						/ (hxRight * (hxLeft + hxRight)); // right
-			}
+			val[i * 2] = (3.0 * sinkStrength * diffCoeff)
+					/ (xolotlCore::kBoltzmann * cluster->getTemperature()
+							* pow(hy, 5)); // top or bottom
+			val[(i * 2) + 1] = val[i * 2]; // top or bottom
 		}
 		// Here we are NOT on the GB sink
 		else {
@@ -251,35 +168,14 @@ void YGBAdvectionHandler::computePartialsForAdvection(
 			double a = fabs(location - pos[1]);
 			double b = fabs(location - pos[1]) + hy;
 
-			// If we are on a grid point just next to the sink location
-			// We have to remove the diffusion received from the sink location
-			std::vector<double> newPosA = { 0.0, 0.0, 0.0 };
-			newPosA[1] = pos[1] - hy;
-			std::vector<double> newPosB = { 0.0, 0.0, 0.0 };
-			newPosB[1] = pos[1] + hy;
-			if (isPointOnSink(newPosA) || isPointOnSink(newPosB)) {
-				// Compute the partial derivatives for advection of this cluster as
-				// explained in the description of this method
-				val[i * 3] = -(3.0 * sinkStrength * diffCoeff)
-						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-								* hy * pow(a, 4)); // middle
-				val[(i * 3) + 1] = (3.0 * sinkStrength * diffCoeff)
-						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-								* hy * pow(b, 4)); // top or bottom
-
-				// Remove the diffusion
-				double sy = 1.0 / (hy * hy);
-				val[(i * 3) + 2] = -diffCoeff * sy; // opposite of top or bottom
-			} else {
-				// Compute the partial derivatives for advection of this cluster as
-				// explained in the description of this method
-				val[i * 2] = -(3.0 * sinkStrength * diffCoeff)
-						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-								* hy * pow(a, 4)); // middle
-				val[(i * 2) + 1] = (3.0 * sinkStrength * diffCoeff)
-						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-								* hy * pow(b, 4)); // top or bottom
-			}
+			// Compute the partial derivatives for advection of this cluster as
+			// explained in the description of this method
+			val[i * 2] = -(3.0 * sinkStrength * diffCoeff)
+					/ (xolotlCore::kBoltzmann * cluster->getTemperature()
+							* hy * pow(a, 4)); // middle
+			val[(i * 2) + 1] = (3.0 * sinkStrength * diffCoeff)
+					/ (xolotlCore::kBoltzmann * cluster->getTemperature()
+							* hy * pow(b, 4)); // top or bottom
 		}
 	}
 

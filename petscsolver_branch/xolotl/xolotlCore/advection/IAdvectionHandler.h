@@ -112,6 +112,13 @@ public:
 	 */
 	virtual int getNumberOfAdvecting() = 0;
 
+	/**
+	 * Get the vector of index of advecting clusters in the network.
+	 *
+	 * @return The vector of advecting clusters
+	 */
+	virtual std::vector<int> getIndexVector() = 0;
+
 };
 //end class IAdvectionHandler
 

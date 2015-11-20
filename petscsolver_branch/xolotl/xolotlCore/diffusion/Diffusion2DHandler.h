@@ -11,6 +11,11 @@ namespace xolotlCore {
  * mobile clusters in 2D.
  */
 class Diffusion2DHandler: public DiffusionHandler {
+private:
+
+	//! The vector to know which clusters are diffusing where
+	std::vector < std::vector < std::vector <bool> > > diffusionGrid;
+
 public:
 
 	//! The Constructor
@@ -18,6 +23,21 @@ public:
 
 	//! The Destructor
 	~Diffusion2DHandler() {}
+
+	/**
+	 * Initialize an array of the dimension of the physical domain times the number of diffusion
+	 * clusters. For each location, True means the cluster is diffusion, False means it is not.
+	 *
+	 * @param advectionHandlers The vector of advection handlers
+	 * @param grid The spatial grid in the depth direction
+	 * @param ny The number of grid points in the Y direction
+	 * @param hy The step size in the Y direction
+	 * @param nz The number of grid points in the Z direction
+	 * @param hz The step size in the Z direction
+	 */
+	void initializeDiffusionGrid(std::vector<IAdvectionHandler *> advectionHandlers,
+			std::vector<double> grid,
+			int ny = 0, double hy = 0.0, int nz = 0, double hz = 0.0);
 
 	/**
 	 * Compute the flux due to the diffusion for all the cluster that are diffusing,
@@ -37,12 +57,16 @@ public:
 	 * point where the diffusion is computed used to find the next solution
 	 * @param hxLeft The step size on the left side of the point in the x direction (a)
 	 * @param hxRight The step size on the right side of the point in the x direction (b)
+	 * @param ix The position on the x grid
 	 * @param sy The space parameter, depending on the grid step size in the y direction
+	 * @param iy The position on the y grid
 	 * @param sz The space parameter, depending on the grid step size in the z direction
+	 * @param iz The position on the z grid
 	 */
 	void computeDiffusion(PSIClusterReactionNetwork *network,
 			double **concVector, double *updatedConcOffset,
-			double hxLeft, double hxRight, double sy = 0.0, double sz = 0.0);
+			double hxLeft, double hxRight, int ix,
+			double sy = 0.0, int iy = 0, double sz = 0.0, int iz = 0);
 
 	/**
 	 * Compute the partials due to the diffusion of all the diffusing clusters given
@@ -77,12 +101,15 @@ public:
 	 * diffusing clusters in the network
 	 * @param hxLeft The step size on the left side of the point in the x direction (a)
 	 * @param hxRight The step size on the right side of the point in the x direction (b)
+	 * @param ix The position on the x grid
 	 * @param sy The space parameter, depending on the grid step size in the y direction
+	 * @param iy The position on the y grid
 	 * @param sz The space parameter, depending on the grid step size in the z direction
+	 * @param iz The position on the z grid
 	 */
 	void computePartialsForDiffusion(PSIClusterReactionNetwork *network,
-			double *val, int *indices, double hxLeft, double hxRight,
-			double sy = 0.0, double sz = 0.0);
+			double *val, int *indices, double hxLeft, double hxRight, int ix,
+			double sy = 0.0, int iy = 0, double sz = 0.0, int iz = 0);
 
 };
 //end class Diffusion2DHandler

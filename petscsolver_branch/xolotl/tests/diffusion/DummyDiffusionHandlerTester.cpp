@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 
 	// Compute the diffusion at this grid point
 	diffusionHandler.computeDiffusion(network, concVector,
-			updatedConcOffset, hx, hx);
+			updatedConcOffset, hx, hx, 1);
 
 	// Check the new values of updatedConcOffset
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 0.0, 0.01); // Does not diffuse

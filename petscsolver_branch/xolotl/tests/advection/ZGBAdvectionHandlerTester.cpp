@@ -113,12 +113,12 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 			concVector, updatedConcOffset, hx, hx, hy, hz);
 
 	// Check the new values of updatedConcOffset
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 5.60898e+12, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], 3.18281e+12, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], 1.54615e+12, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], 2.31216e+12, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], 2.06269e+12, 0.01);
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[5], 6.00814e+10, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 1.52642e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[1], 1.41443e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[2], 1.72697e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[3], 2.99176e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[4], 4.14897e+11, 0.01);
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[5], 1.55327e+10, 0.01);
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[6], 0.0, 0.01); // Does not advect
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[7], 0.0, 0.01); // Does not advect
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[8], 0.0, 0.01); // Does not advect
@@ -146,11 +146,11 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	// Check values
 	BOOST_REQUIRE_CLOSE(val[0], 3.76893e+06, 0.01);
 	BOOST_REQUIRE_CLOSE(val[1], 3.76893e+06, 0.01);
-	BOOST_REQUIRE_CLOSE(val[2], 6.73622e+10, 0.01);
-	BOOST_REQUIRE_CLOSE(val[3], -6.41544e+09, 0.01);
-	BOOST_REQUIRE_CLOSE(val[4], -6.41544e+09, 0.01);
-	BOOST_REQUIRE_CLOSE(val[5], -2.56618e+10, 0.01);
-	BOOST_REQUIRE_CLOSE(val[6], -2.56618e+10, 0.01);
+	BOOST_REQUIRE_CLOSE(val[2], 3.45234e+06, 0.01);
+	BOOST_REQUIRE_CLOSE(val[3], 3.45234e+06, 0.01);
+	BOOST_REQUIRE_CLOSE(val[4], 4.16701e+06, 0.01);
+	BOOST_REQUIRE_CLOSE(val[5], 4.16701e+06, 0.01);
+	BOOST_REQUIRE_CLOSE(val[6], 7.13648e+06, 0.01);
 
 	// Get the stencil
 	auto stencil = advectionHandler.getStencilForAdvection(gridPosition);

@@ -131,6 +131,9 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) {
 	// Initialize the flux handler
 	fluxHandler->initializeFluxHandler(network, surfacePosition, grid);
 
+	// Initialize the grid for the diffusion
+	diffusionHandler->initializeDiffusionGrid(advectionHandlers, grid);
+
 	// Pointer for the concentration vector at a specific grid point
 	PetscScalar *concOffset;
 
@@ -322,7 +325,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 		// ---- Compute diffusion over the locally owned part of the grid -----
 		diffusionHandler->computeDiffusion(network, concVector,
-				updatedConcOffset, grid[xi] - grid[xi-1], grid[xi+1] - grid[xi]);
+				updatedConcOffset, grid[xi] - grid[xi-1], grid[xi+1] - grid[xi], xi);
 
 		// ---- Compute advection over the locally owned part of the grid -----
 		for (int i = 0; i < advectionHandlers.size(); i++) {
@@ -397,7 +400,7 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	MatStencil row, cols[3];
 	PetscScalar diffVals[3 * nDiff];
 	PetscInt diffIndices[nDiff];
-	PetscScalar advecVals[3 * nAdvec];
+	PetscScalar advecVals[2 * nAdvec];
 	PetscInt advecIndices[nAdvec];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
 
@@ -415,7 +418,7 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 
 		// Get the partial derivatives for the diffusion
 		diffusionHandler->computePartialsForDiffusion(network, diffVals, diffIndices,
-				grid[xi] - grid[xi-1], grid[xi+1] - grid[xi]);
+				grid[xi] - grid[xi-1], grid[xi+1] - grid[xi], xi);
 
 		// Loop on the number of diffusion cluster to set the values in the Jacobian
 		for (int i = 0; i < nDiff; i++) {
@@ -461,14 +464,6 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 					cols[0].c = advecIndices[i];
 					cols[1].i = xi + advecStencil[0]; // right?
 					cols[1].c = advecIndices[i];
-					// Set the columns for canceling the diffusion
-					cols[2].i = xi; // middle
-					cols[2].c = advecIndices[i];
-
-					// Update the matrix
-					ierr = MatSetValuesStencil(J, 1, &row, 3, cols, advecVals + (3 * i), ADD_VALUES);
-					checkPetscError(ierr, "PetscSolver1DHandler::computeOffDiagonalJacobian: "
-							"MatSetValuesStencil (advection) failed.");
 				}
 				else {
 					// Set grid coordinates and component numbers for the columns
@@ -477,31 +472,12 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 					cols[0].c = advecIndices[i];
 					cols[1].i = xi + advecStencil[0]; // left or right
 					cols[1].c = advecIndices[i];
-
-					// The advection is different for grid points just next to the sink location
-					// because the diffusion has to be cancelled
-					std::vector<double> newPosA = { 0.0, 0.0, 0.0 };
-					newPosA[0] = gridPosition[0] - (grid[xi] - grid[xi-1]);
-					std::vector<double> newPosB = { 0.0, 0.0, 0.0 };
-					newPosB[0] = gridPosition[0] + (grid[xi+1] - grid[xi]);
-					if (advectionHandlers[l]->isPointOnSink(newPosA)
-							|| advectionHandlers[l]->isPointOnSink(newPosB)) {
-						// Set grid coordinate for the opposite grid point
-						cols[2].i = xi - advecStencil[0]; // left or right
-						cols[2].c = advecIndices[i];
-
-						// Update the matrix
-						ierr = MatSetValuesStencil(J, 1, &row, 3, cols, advecVals + (3 * i), ADD_VALUES);
-						checkPetscError(ierr, "PetscSolver1DHandler::computeOffDiagonalJacobian: "
-								"MatSetValuesStencil (advection) failed.");
-					}
-					else {
-						// Update the matrix
-						ierr = MatSetValuesStencil(J, 1, &row, 2, cols, advecVals + (2 * i), ADD_VALUES);
-						checkPetscError(ierr, "PetscSolver1DHandler::computeOffDiagonalJacobian: "
-								"MatSetValuesStencil (advection) failed.");
-					}
 				}
+
+				// Update the matrix
+				ierr = MatSetValuesStencil(J, 1, &row, 2, cols, advecVals + (2 * i), ADD_VALUES);
+				checkPetscError(ierr, "PetscSolver1DHandler::computeOffDiagonalJacobian: "
+						"MatSetValuesStencil (advection) failed.");
 			}
 		}
 	}

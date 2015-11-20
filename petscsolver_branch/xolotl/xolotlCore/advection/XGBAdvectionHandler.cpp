@@ -106,36 +106,6 @@ void XGBAdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 
 			// Update the concentration of the cluster
 			updatedConcOffset[index] += conc;
-
-			// Removing the diffusion of this cluster
-			double oldConc = concVector[0][index]; // middle
-			conc = -cluster->getDiffusionCoefficient() * 2.0 * oldConc
-					/ (hxLeft * hxRight);
-			// Update the concentration of this cluster
-			updatedConcOffset[index] -= conc;
-
-			// In 2D/3D there are more things to remove for the diffusion
-			if (dimension > 1) {
-				double oldBottomConc = concVector[3][index]; // bottom
-				double oldTopConc = concVector[4][index]; // top
-				double sy = 1.0 / (hy * hy);
-				conc = cluster->getDiffusionCoefficient() * sy
-						* (oldBottomConc + oldTopConc - 2.0 * oldConc);
-				// Update the concentration of this cluster
-				updatedConcOffset[index] -= conc;
-
-				// And more things in 3D
-				if (dimension == 3) {
-					double oldFrontConc = concVector[5][index]; // front
-					double oldBackConc = concVector[6][index]; // back
-					double sz = 1.0 / (hz * hz);
-					conc = cluster->getDiffusionCoefficient() * sz
-							* (oldFrontConc + oldBackConc - 2.0 * oldConc);
-					// Update the concentration of this cluster
-					updatedConcOffset[index] -= conc;
-				}
-			}
-
 		}
 		// Here we are NOT on the GB sink
 		else {
@@ -159,30 +129,6 @@ void XGBAdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 
 			// Update the concentration of the cluster
 			updatedConcOffset[index] += conc;
-
-			// If the position is next to the advection sink location
-			// we must remove the diffusion of this cluster
-			std::vector<double> newPos = { 0.0, 0.0, 0.0 };
-			newPos[0] = pos[0] + hxRight;
-			if (isPointOnSink(newPos)) {
-				// We are on the left side of the sink location
-				// So we won't receive the diffusion from the right side
-				oldConc = concVector[2][index]; // right
-				conc = cluster->getDiffusionCoefficient() * oldConc * 2.0
-						/ (hxRight * (hxLeft + hxRight));
-				// Update the concentration of this cluster
-				updatedConcOffset[index] -= conc;
-			}
-			newPos[0] = pos[0] - hxLeft;
-			if (isPointOnSink(newPos)) {
-				// We are on the right side of the sink location
-				// So we won't receive the diffusion from the left side
-				oldConc = concVector[1][index]; // left
-				conc = cluster->getDiffusionCoefficient() * oldConc * 2.0
-						/ (hxLeft * (hxLeft + hxRight));
-				// Update the concentration of this cluster
-				updatedConcOffset[index] -= conc;
-			}
 		}
 	}
 
@@ -217,50 +163,12 @@ void XGBAdvectionHandler::computePartialsForAdvection(
 		if (isPointOnSink(pos)) {
 			// 1D case
 			if (dimension == 1) {
-				val[i * 3] = (3.0 * sinkStrength * diffCoeff)
+				val[i * 2] = (3.0 * sinkStrength * diffCoeff)
 						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
 								* pow(hxLeft, 5)); // left
-				val[(i * 3) + 1] = (3.0 * sinkStrength * diffCoeff)
+				val[(i * 2) + 1] = (3.0 * sinkStrength * diffCoeff)
 						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
 								* pow(hxRight, 5)); // right
-
-				// Removing the diffusion on the middle point
-				val[(i * 3) + 2] = diffCoeff * 2.0 / (hxLeft * hxRight); // middle
-			}
-			// 2D case
-			else if (dimension == 2) {
-				val[i * 5] = (3.0 * sinkStrength * diffCoeff)
-						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-								* pow(hxLeft, 5)); // left
-				val[(i * 5) + 1] = (3.0 * sinkStrength * diffCoeff)
-						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-								* pow(hxRight, 5)); // right
-
-				// Removing the diffusion on the middle point
-				double sy = 1.0 / (hy * hy);
-				val[(i * 5) + 2] = diffCoeff * 2.0
-						* (1.0 / (hxLeft * hxRight) + sy); // middle
-				val[(i * 5) + 3] = -diffCoeff * sy; // bottom
-				val[(i * 5) + 4] = val[(i * 5) + 3]; // top
-			}
-			// 3D case
-			else if (dimension == 3) {
-				val[i * 7] = (3.0 * sinkStrength * diffCoeff)
-						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-								* pow(hxLeft, 5)); // left
-				val[(i * 7) + 1] = (3.0 * sinkStrength * diffCoeff)
-						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-								* pow(hxRight, 5)); // right
-
-				// Removing the diffusion on the middle point
-				double sy = 1.0 / (hy * hy);
-				double sz = 1.0 / (hz * hz);
-				val[(i * 7) + 2] = diffCoeff * 2.0
-						* (1.0 / (hxLeft * hxRight) + sy + sz); // middle
-				val[(i * 7) + 3] = -diffCoeff * sy; // bottom
-				val[(i * 7) + 4] = val[(i * 7) + 3]; // top
-				val[(i * 7) + 5] = -diffCoeff * sz; // front
-				val[(i * 7) + 6] = val[(i * 7) + 5]; // back
 			}
 		}
 		// Here we are NOT on the GB sink
@@ -270,48 +178,18 @@ void XGBAdvectionHandler::computePartialsForAdvection(
 			double b = fabs(location - pos[0]) + hxRight * (pos[0] > location)
 					+ hxLeft * (pos[0] < location);
 
-			// If the position is next to the advection sink location
-			// we must remove the diffusion of this cluster
-			std::vector<double> newPosA = { 0.0, 0.0, 0.0 };
-			std::vector<double> newPosB = { 0.0, 0.0, 0.0 };
-			newPosA[0] = pos[0] + hxRight;
-			newPosB[0] = pos[0] - hxLeft;
-			if (isPointOnSink(newPosA) || isPointOnSink(newPosB)) {
-				// Compute the partial derivatives for advection of this cluster as
-				// explained in the description of this method
-				val[i * 3] = -(3.0 * sinkStrength * diffCoeff)
-						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-								* pow(a, 4)
-								* (hxRight * (pos[0] > location)
-										+ hxLeft * (pos[0] < location))); // middle
-				val[(i * 3) + 1] = (3.0 * sinkStrength * diffCoeff)
-						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-								* pow(b, 4)
-								* (hxRight * (pos[0] > location)
-										+ hxLeft * (pos[0] < location))); // left or right
-
-				// Remove the diffusion
-				if (isPointOnSink(newPosA)) {
-					val[(i * 3) + 2] = -diffCoeff * 2.0
-							/ (hxRight * (hxLeft + hxRight));
-				} else {
-					val[(i * 3) + 2] = -diffCoeff * 2.0
-							/ (hxLeft * (hxLeft + hxRight));
-				}
-			} else {
-				// Compute the partial derivatives for advection of this cluster as
-				// explained in the description of this method
-				val[i * 2] = -(3.0 * sinkStrength * diffCoeff)
-						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-								* pow(a, 4)
-								* (hxRight * (pos[0] > location)
-										+ hxLeft * (pos[0] < location))); // middle
-				val[(i * 2) + 1] = (3.0 * sinkStrength * diffCoeff)
-						/ (xolotlCore::kBoltzmann * cluster->getTemperature()
-								* pow(b, 4)
-								* (hxRight * (pos[0] > location)
-										+ hxLeft * (pos[0] < location))); // left or right
-			}
+			// Compute the partial derivatives for advection of this cluster as
+			// explained in the description of this method
+			val[i * 2] = -(3.0 * sinkStrength * diffCoeff)
+					/ (xolotlCore::kBoltzmann * cluster->getTemperature()
+							* pow(a, 4)
+							* (hxRight * (pos[0] > location)
+									+ hxLeft * (pos[0] < location))); // middle
+			val[(i * 2) + 1] = (3.0 * sinkStrength * diffCoeff)
+					/ (xolotlCore::kBoltzmann * cluster->getTemperature()
+							* pow(b, 4)
+							* (hxRight * (pos[0] > location)
+									+ hxLeft * (pos[0] < location))); // left or right
 		}
 	}
 

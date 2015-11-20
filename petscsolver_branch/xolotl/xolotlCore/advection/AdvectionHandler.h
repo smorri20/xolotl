@@ -55,6 +55,13 @@ public:
 	 */
 	int getNumberOfAdvecting() {return indexVector.size();}
 
+	/**
+	 * Get the vector of index of advecting clusters in the network.
+	 *
+	 * @return The vector of advecting clusters
+	 */
+	std::vector<int> getIndexVector() {return indexVector;}
+
 };
 //end class AdvectionHandler
 

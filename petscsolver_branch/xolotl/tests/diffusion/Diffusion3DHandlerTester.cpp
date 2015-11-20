@@ -41,8 +41,17 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	// Get its size
 	const int size = network->getAll()->size();
 
+	// Create a grid
+	std::vector<double> grid;
+	for (int l = 0; l < 3; l++) {
+		grid.push_back((double) l);
+	}
+
 	// Create the diffusion handler
 	Diffusion3DHandler diffusionHandler;
+
+	// Create a collection of advection handlers
+	std::vector<IAdvectionHandler *> advectionHandlers;
 
 	// Create ofill
 	int mat[size*size];
@@ -50,6 +59,7 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 
 	// Initialize it
 	diffusionHandler.initializeOFill(network, ofill);
+	diffusionHandler.initializeDiffusionGrid(advectionHandlers, grid, 3, 1.0, 3, 1.0);
 
 	// Check the total number of diffusing clusters
 	BOOST_REQUIRE_EQUAL(diffusionHandler.getNumberOfDiffusing(), 7);
@@ -103,7 +113,7 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 
 	// Compute the diffusion at this grid point
 	diffusionHandler.computeDiffusion(network, concVector,
-			updatedConcOffset, hx, hx, sy, sz);
+			updatedConcOffset, hx, hx, 1, sy, 1, sz, 1);
 
 	// Check the new values of updatedConcOffset
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 9.45765e+12, 0.01);
@@ -126,7 +136,7 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 
 	// Compute the partial derivatives for the diffusion a the grid point 1
 	diffusionHandler.computePartialsForDiffusion(network, valPointer,
-			indicesPointer, hx, hx, sy, sz);
+			indicesPointer, hx, hx, 1, sy, 1, sz, 1);
 
 	// Check the values for the indices
 	BOOST_REQUIRE_EQUAL(indices[0], 0);
