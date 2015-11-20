@@ -28,11 +28,20 @@ public:
 	 * This function initialize the list of clusters that will move through advection for
 	 * grain boundaries.
 	 *
-	 * @param network The network
-	 * @param ofill The pointer to the array that will contain the value 1 at the indices
-	 * of the advecting clusters
+	 * \see IAdvectionHandler.h
 	 */
 	void initialize(PSIClusterReactionNetwork *network, int *ofill);
+
+	/**
+	 * Initialize an array of the dimension of the physical domain times the number of advecting
+	 * clusters. For each location, True means the cluster is moving, False means it is not.
+	 * Don't do anything here.
+	 *
+	 * \see IAdvectionHandler.h
+	 */
+	void initializeAdvectionGrid(std::vector<IAdvectionHandler *> advectionHandlers,
+			std::vector<double> grid,
+			int ny = 1, double hy = 0.0, int nz = 1, double hz = 0.0) {return;}
 
 	/**
 	 * Compute the flux due to the advection for all the helium clusters,
@@ -41,20 +50,12 @@ public:
 	 * This method also removes the flux from diffusion of the advecting clusters
 	 * on the GB.
 	 *
-	 * @param network The network
-	 * @param pos The position on the grid
-	 * @param concVector The pointer to the pointer of arrays of concentration at middle,
-	 * left, and right grid points
-	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
-	 * point where the advection is computed used to find the next solution
-	 * @param hxLeft The step size on the left side of the point in the x direction
-	 * @param hxRight The step size on the right side of the point in the x direction
-	 * @param hy The step size in the y direction
-	 * @param hz The step size in the z direction
+	 * \see IAdvectionHandler.h
 	 */
 	void computeAdvection(PSIClusterReactionNetwork *network,
 			std::vector<double> &pos, double **concVector, double *updatedConcOffset,
-			double hxLeft, double hxRight, double hy = 0.0, double hz = 0.0);
+			double hxLeft, double hxRight, int ix,
+			double hy = 0.0, int iy = 0, double hz = 0.0, int iz = 0);
 
 	/**
 	 * Compute the partials due to the advection of all the helium clusters given
@@ -63,20 +64,12 @@ public:
 	 * This method also removes the partials from diffusion of the advecting clusters
 	 * on the GB.
 	 *
-	 * @param network The network
-	 * @param val The pointer to the array that will contain the values of partials
-	 * for the advection
-	 * @param indices The pointer to the array that will contain the indices of the
-	 * advecting cluster in the network
-	 * @param pos The position on the grid
-	 * @param hxLeft The step size on the left side of the point in the x direction
-	 * @param hxRight The step size on the right side of the point in the x direction
-	 * @param hy The step size in the y direction
-	 * @param hz The step size in the z direction
+	 * \see IAdvectionHandler.h
 	 */
 	void computePartialsForAdvection(PSIClusterReactionNetwork *network,
 			double *val, int *indices, std::vector<double> &pos,
-			double hxLeft, double hxRight, double hy = 0.0, double hz = 0.0);
+			double hxLeft, double hxRight, int ix,
+			double hy = 0.0, int iy = 0, double hz = 0.0, int iz = 0);
 
 	/**
 	 * Compute the indices that will determine where the partial derivatives will
@@ -85,16 +78,14 @@ public:
 	 *
 	 * Here we consider GB in the Y direction.
 	 *
-	 * @param pos The position on the grid
-	 * @return The indices for the position in the Jacobian
+	 * \see IAdvectionHandler.h
 	 */
 	std::vector<int> getStencilForAdvection(std::vector<double> &pos);
 
 	/**
 	 * Check whether the grid point is located on the sink surface or not.
 	 *
-	 * @param pos The position on the grid
-	 * @return True if the point is on the sink
+	 * \see IAdvectionHandler.h
 	 */
 	bool isPointOnSink(std::vector<double> &pos);
 

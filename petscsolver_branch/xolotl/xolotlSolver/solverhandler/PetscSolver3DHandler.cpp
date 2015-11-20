@@ -161,6 +161,9 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) {
 	// Initialize the grid for the diffusion
 	diffusionHandler->initializeDiffusionGrid(advectionHandlers, grid, My, hY, Mz, hZ);
 
+	// Initialize the grid for the advection
+	advectionHandlers[0]->initializeAdvectionGrid(advectionHandlers, grid, My, hY, Mz, hZ);
+
 	// Pointer for the concentration vector at a specific grid point
 	PetscScalar *concOffset;
 
@@ -407,7 +410,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				for (int i = 0; i < advectionHandlers.size(); i++) {
 					advectionHandlers[i]->computeAdvection(network, gridPosition,
 							concVector, updatedConcOffset, grid[xi] - grid[xi-1],
-							grid[xi+1] - grid[xi], hY, hZ);
+							grid[xi+1] - grid[xi], xi, hY, yj, hZ, zk);
 				}
 
 				// ----- Compute the modified trap-mutation over the locally owned part of the grid -----
@@ -561,7 +564,7 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 				for (int l = 0; l < advectionHandlers.size(); l++) {
 					advectionHandlers[l]->computePartialsForAdvection(network, advecVals,
 							advecIndices, gridPosition, grid[xi] - grid[xi-1],
-							grid[xi+1] - grid[xi], hY, hZ);
+							grid[xi+1] - grid[xi], xi, hY, yj, hZ, zk);
 
 					// Get the stencil indices to know where to put the partial derivatives in the Jacobian
 					auto advecStencil = advectionHandlers[l]->getStencilForAdvection(gridPosition);

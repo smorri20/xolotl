@@ -40,13 +40,23 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	// Get its size
 	const int size = network->getAll()->size();
 
+	// Create a grid
+	std::vector<double> grid;
+	for (int l = 0; l < 3; l++) {
+		grid.push_back((double) l);
+	}
+
 	// Create ofill
 	int mat[size*size];
 	int *ofill = &mat[0];
 
+	// Create a collection of advection handlers
+	std::vector<IAdvectionHandler *> advectionHandlers;
+
 	// Create the advection handler and initialize it
 	W110AdvectionHandler advectionHandler;
 	advectionHandler.initialize(network, ofill);
+	advectionHandler.initializeAdvectionGrid(advectionHandlers, grid);
 
 	// Check the total number of advecting clusters
 	BOOST_REQUIRE_EQUAL(advectionHandler.getNumberOfAdvecting(), 6);
@@ -98,7 +108,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 
 	// Compute the advection at this grid point
 	advectionHandler.computeAdvection(network, gridPosition,
-			concVector, updatedConcOffset, hx, hx);
+			concVector, updatedConcOffset, hx, hx, 1);
 
 	// Check the new values of updatedConcOffset
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], -1.24827e+10, 0.01);
@@ -121,7 +131,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 
 	// Compute the partial derivatives for the advection a the grid point 1
 	advectionHandler.computePartialsForAdvection(network, valPointer,
-			indicesPointer, gridPosition, hx, hx);
+			indicesPointer, gridPosition, hx, hx, 1);
 
 	// Check the values for the indices
 	BOOST_REQUIRE_EQUAL(indices[0], 0);

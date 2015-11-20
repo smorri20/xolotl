@@ -79,8 +79,8 @@ void YGBAdvectionHandler::initialize(PSIClusterReactionNetwork *network,
 
 void YGBAdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 		std::vector<double> &pos, double **concVector,
-		double *updatedConcOffset, double hxLeft, double hxRight, double hy,
-		double hz) {
+		double *updatedConcOffset, double hxLeft, double hxRight, int ix,
+		double hy, int iy, double hz, int iz) {
 	// Get all the reactant
 	auto reactants = network->getAll();
 	// Get the number of advecting cluster
@@ -133,8 +133,8 @@ void YGBAdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 
 void YGBAdvectionHandler::computePartialsForAdvection(
 		PSIClusterReactionNetwork *network, double *val, int *indices,
-		std::vector<double> &pos, double hxLeft, double hxRight, double hy,
-		double hz) {
+		std::vector<double> &pos, double hxLeft, double hxRight, int ix,
+		double hy, int iy, double hz, int iz) {
 	// Get all the reactant
 	auto reactants = network->getAll();
 	// Get the number of advecting cluster

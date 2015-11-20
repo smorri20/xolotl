@@ -47,6 +47,21 @@ public:
 	virtual void setLocation(double pos) = 0;
 
 	/**
+	 * Initialize an array of the dimension of the physical domain times the number of advecting
+	 * clusters. For each location, True means the cluster is moving, False means it is not.
+	 *
+	 * @param advectionHandlers The vector of advection handlers
+	 * @param grid The spatial grid in the depth direction
+	 * @param ny The number of grid points in the Y direction
+	 * @param hy The step size in the Y direction
+	 * @param nz The number of grid points in the Z direction
+	 * @param hz The step size in the Z direction
+	 */
+	virtual void initializeAdvectionGrid(std::vector<IAdvectionHandler *> advectionHandlers,
+			std::vector<double> grid,
+			int ny = 1, double hy = 0.0, int nz = 1, double hz = 0.0) = 0;
+
+	/**
 	 * Compute the flux due to the advection for all the helium clusters,
 	 * given the space parameters and the position.
 	 * This method is called by the RHSFunction from the PetscSolver.
@@ -59,12 +74,16 @@ public:
 	 * point where the advection is computed used to find the next solution
 	 * @param hxLeft The step size on the left side of the point in the x direction
 	 * @param hxRight The step size on the right side of the point in the x direction
+	 * @param ix The position on the x grid
 	 * @param hy The step size in the y direction
+	 * @param iy The position on the y grid
 	 * @param hz The step size in the z direction
+	 * @param iz The position on the z grid
 	 */
 	virtual void computeAdvection(PSIClusterReactionNetwork *network,
 			std::vector<double> &pos, double **concVector, double *updatedConcOffset,
-			double hxLeft, double hxRight, double hy = 0.0, double hz = 0.0) = 0;
+			double hxLeft, double hxRight, int ix,
+			double hy = 0.0, int iy = 0, double hz = 0.0, int iz = 0) = 0;
 
 	/**
 	 * Compute the partial derivatives due to the advection of all the helium clusters given
@@ -80,12 +99,16 @@ public:
 	 * @param pos The position on the grid
 	 * @param hxLeft The step size on the left side of the point in the x direction
 	 * @param hxRight The step size on the right side of the point in the x direction
+	 * @param ix The position on the x grid
 	 * @param hy The step size in the y direction
+	 * @param iy The position on the y grid
 	 * @param hz The step size in the z direction
+	 * @param iz The position on the z grid
 	 */
 	virtual void computePartialsForAdvection(PSIClusterReactionNetwork *network,
 			double *val, int *indices, std::vector<double> &pos,
-			double hxLeft, double hxRight, double hy = 0.0, double hz = 0.0) = 0;
+			double hxLeft, double hxRight, int ix,
+			double hy = 0.0, int iy = 0, double hz = 0.0, int iz = 0) = 0;
 
 	/**
 	 * Compute the indices that will determine where the partial derivatives will
