@@ -32,6 +32,11 @@ protected:
 	double krFluenceAmplitude;
 
 	/**
+	 * The threshold displacement energy for tungsten.
+	 */
+	double thresholdDisplacementEnergy;
+
+	/**
 	 * The index of the cluster.
 	 */
 	int displacementIndex;
@@ -89,6 +94,18 @@ public:
      * \see IFluxHandler.h
 	 */
 	virtual double getKrFluenceAmplitude() const;
+
+	/**
+	 * This operation sets the factor to change the intensity of the flux.
+     * \see IFluxHandler.h
+	 */
+	virtual void setDispEnergy(double thresholdEnergy);
+
+	/**
+	 * This operation gets the factor that changes the flux intensity/amplitude.
+     * \see IFluxHandler.h
+	 */
+	virtual double getDispEnergy() const;
 
 };
 //end class FluxHandler

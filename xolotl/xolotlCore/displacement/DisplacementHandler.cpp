@@ -11,6 +11,7 @@ namespace xolotlCore {
 DisplacementHandler::DisplacementHandler() :
 		stepSize(0.0),
 		krFluenceAmplitude(0.0),
+		thresholdDisplacementEnergy(0.0),
 		displacementIndex(-1),
 		normFactor(0.0){
 	return;
@@ -83,6 +84,14 @@ void DisplacementHandler::setKrFluenceAmplitude(double krFluence) {
 
 double DisplacementHandler::getKrFluenceAmplitude() const {
 	return krFluenceAmplitude;
+}
+
+void DisplacementHandler::setDispEnergy(double thresholdEnergy) {
+	thresholdDisplacementEnergy = thresholdEnergy;
+}
+
+double DisplacementHandler::getDispEnergy() const {
+	return thresholdDisplacementEnergy;
 }
 
 } // end namespace xolotlCore

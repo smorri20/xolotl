@@ -84,6 +84,7 @@ include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/io)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/commandline)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/diffusion)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/advection)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/displacement)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants/psiclusters)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/temperature)
@@ -100,7 +101,7 @@ include_directories(${PETSC_INCLUDES})
 configure_file ("${CMAKE_SOURCE_DIR}/XolotlConfig.h.in" "${CMAKE_SOURCE_DIR}/XolotlConfig.h")
 
 # Setup the library list
-set(XOLOTL_LIBS xolotlReactants xolotlSolver xolotlIO xolotlPerf xolotlViz 
+set(XOLOTL_LIBS xolotlReactants xolotlSolver xolotlIO xolotlPerf xolotlViz
 xolotlFactory xolotlCL ${PETSC_LIBRARIES} ${HDF5_LIBRARIES})
 
 # Add an executable for the main program

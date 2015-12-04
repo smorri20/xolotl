@@ -6,6 +6,7 @@
 #include <IFluxHandler.h>
 #include <IAdvectionHandler.h>
 #include <IDiffusionHandler.h>
+#include <IDisplacementHandler.h>
 
 namespace xolotlFactory {
 
@@ -50,13 +51,21 @@ public:
 	virtual std::shared_ptr<xolotlCore::IDiffusionHandler> getDiffusionHandler() const = 0;
 
 	/**
+	 * Return the displacement handler.
+	 *
+	 * @return The displacement handler.
+	 */
+	virtual std::shared_ptr<xolotlCore::IDisplacementHandler> getDisplacementHandler() const = 0;
+
+	/**
 	 * Function that create the wanted material factory depending on the given type.
 	 *
 	 * @param materialType The type of wanted material.
 	 * @param dimension The number of dimensions of the problem.
 	 * @return The material factory.
 	 */
-	static std::shared_ptr<IMaterialFactory> createMaterialFactory(const std::string& materialType,
+	static std::shared_ptr<IMaterialFactory> createMaterialFactory(
+			const std::string& materialType,
 			int dimension);
 
 };

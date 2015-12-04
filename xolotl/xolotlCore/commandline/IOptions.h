@@ -297,6 +297,34 @@ public:
      */
     virtual void setDimensionNumber(int number) = 0;
 
+    /**
+     * Obtain the value of the intensity of the flux to be used.
+     *
+     * @return The value of the flux amplitude
+     */
+    virtual double getDispEnergy() const = 0;
+
+    /**
+     * Set the value for the flux intensity to use.
+     *
+     * @param flux The value for the flux amplitude
+     */
+    virtual void setDispEnergy(double thresholdEnergy) = 0;
+
+    /**
+     * Obtain the value of the intensity of the flux to be used.
+     *
+     * @return The value of the flux amplitude
+     */
+    virtual double getKrFluenceAmplitude() const = 0;
+
+    /**
+     * Set the value for the flux intensity to use.
+     *
+     * @param flux The value for the flux amplitude
+     */
+    virtual void setKrFluenceAmplitude(double krFluence) = 0;
+
 };//end class IOptions
 
 } /* namespace xolotlCore */

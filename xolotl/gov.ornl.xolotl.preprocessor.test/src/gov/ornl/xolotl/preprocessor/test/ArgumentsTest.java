@@ -96,6 +96,13 @@ public class ArgumentsTest {
 
 			// Check if there is a initial vacancy concentration argument
 			assertEquals(false, args.isInitialV());
+						
+			// Check the default Td argument
+			assertEquals("80", args.getThresholdEnergy());
+			
+			// Check the default krypton fluence argument
+			assertEquals("0", args.getKrFluence());
+		
 		}
 		catch (ArgumentValidationException e) {
 			// Complain and fail
@@ -126,7 +133,7 @@ public class ArgumentsTest {
 				"--xStepSize", "0.2", "--yStepSize", "1.5", "--zStepSize", "10.0", 
 				"--material", "W111", "--tempFile", "temp.dat", "--flux", "5.0e5", 
 				"--fluxFile", "flux.dat", "--checkpoint", "xolotlStop.h5", 
-				"--initialV", "0.05" });
+				"--initialV", "0.05", "--krFluence", "8.0e15", "--thresholdEnergy", "120" });
 			
 			// Check that the maximum Helium cluster size is 7
 			assertEquals(7, args.getMaxHeSize());
@@ -205,6 +212,13 @@ public class ArgumentsTest {
 
 			// Check its value
 			assertEquals("0.05", args.getInitialV());
+
+			// Check the krypton fluence is set to 8.0e15
+			assertEquals("8.0e15", args.getKrFluence());
+
+			// Check the threshold displacement energy is set to 120
+			assertEquals("120", args.getThresholdEnergy());
+				
 		} 
 		catch (ArgumentValidationException e) {
 			// Complain and fail

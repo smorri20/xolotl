@@ -75,6 +75,16 @@ protected:
 	double fluxAmplitude;
 
 	/**
+	 * Value for the  flux.
+	 */
+	double krFluenceAmplitude;
+
+	/**
+	 * Value for the  flux.
+	 */
+	double thresholdDisplacementEnergy;
+
+	/**
 	 * Use a time profile for the flux?
 	 */
 	bool fluxProfileFlag;
@@ -351,6 +361,30 @@ public:
      * \see IOptions.h
      */
     void setDimensionNumber(int number) {dimensionNumber = number;}
+
+    /**
+     * Obtain the value of the flux intensity to be used.
+     * \see IOptions.h
+     */
+    double getDispEnergy() const {return thresholdDisplacementEnergy;}
+
+    /**
+     * Set the value for the flux intensity to use.
+     * \see IOptions.h
+     */
+    void setDispEnergy(double thresholdEnergy) {thresholdDisplacementEnergy = thresholdEnergy;}
+
+    /**
+     * Obtain the value of the flux intensity to be used.
+     * \see IOptions.h
+     */
+    double getKrFluenceAmplitude() const {return krFluenceAmplitude;}
+
+    /**
+     * Set the value for the flux intensity to use.
+     * \see IOptions.h
+     */
+    void setKrFluenceAmplitude(double krFluence) {krFluenceAmplitude = krFluence;}
 
 };//end class Options
 

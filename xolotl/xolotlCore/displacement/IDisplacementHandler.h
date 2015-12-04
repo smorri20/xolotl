@@ -58,6 +58,21 @@ public:
 	 */
 	virtual double getKrFluenceAmplitude() const = 0;
 
+	/**
+	 * This operation sets the factor to change the intensity of the flux.
+	 *
+	 * @param flux The flux intensity
+	 */
+	virtual void setDispEnergy(double thresholdEnergy) = 0;
+
+	/**
+	 * This operation gets the factor that changes the flux
+	 * intensity/amplitude.
+	 *
+	 * @return The flux amplitude
+	 */
+	virtual double getDispEnergy() const = 0;
+
 }; //end class IFluxHandler
 
 }

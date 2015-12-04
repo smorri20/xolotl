@@ -251,7 +251,9 @@ public class Preprocessor {
 			xolotlParams.setProperty("fluxFile", args.getTempFile());
 		if (args.isInitialV())
 			xolotlParams.setProperty("initialV", args.getInitialV());
-
+		xolotlParams.setProperty("thresholdEnergy", args.getThresholdEnergy());
+		xolotlParams.setProperty("krFluence", args.getKrFluence());
+		
 	}
 
 	/**

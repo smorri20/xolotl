@@ -396,7 +396,54 @@ public interface Arguments {
 	 * @return The flux amplitude
 	 */
 	String getFlux();
-
+	
+	/**
+	 * This Option annotation corresponds to the '--thresholdEnergy' option which 
+	 * defines the default threshold displacement energy for initial vacancy 
+	 * distribution due to a tungsten irradiation by krypton and additionally  
+	 * provides a brief description of the option.
+	 * 
+	 * @param defaultValue
+	 *            The default threshold displacement energy that will be used if
+	 *             this option is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "80", 
+			description = "<thresholdEnergy> Threshold displacement energy of tungsten "
+					+ "(default = 80 eV)")
+	
+	/**
+	 * This operation produces the required command line option '--thresholdEnergy'  
+	 * which takes a double value and is defined by the previous Option annotation
+	 * 
+	 * @return Threshold displacement energy of tungsten.
+	 */
+	String getThresholdEnergy();
+	
+	/**
+	 * This Option annotation corresponds to the '--krFluence' option which 
+	 * defines the krypton fluence in tungsten irradiation by 100 eV krypton
+	 * and additionally provides a brief description of the option.  
+	 *  
+	 * @param defaultValue
+	 *            The default krypton fluence that will be used if
+	 *             this option is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "0", 
+			description = "<krFluence> Krypton fluence in (ions/nm2)"
+					+ "(default = 0)")
+	
+	/**
+	 * This operation produces the required command line option '--krFluence'  
+	 * which takes a double value and is defined by the previous Option annotation
+	 * 
+	 * @return Krypton fluence in (ions/nm2).
+	 */
+	String getKrFluence();
+		
 	/**
 	 * This Option annotation corresponds to the optional '--tempFile' option
 	 * and provides a brief description of the option.

@@ -6,6 +6,7 @@
 #include <ConstTempOptionHandler.h>
 #include <TempProfileOptionHandler.h>
 #include <FluxOptionHandler.h>
+#include <DisplacementOptionHandler.h>
 #include <FluxProfileOptionHandler.h>
 #include <PerfOptionHandler.h>
 #include <VizOptionHandler.h>
@@ -26,6 +27,8 @@ Options::Options() :
 		tempProfileFlag(false),
 		fluxFlag(false),
 		fluxAmplitude(0.0),
+		krFluenceAmplitude(0.0),
+		thresholdDisplacementEnergy(0.0),
 		fluxProfileFlag(false),
 		perfRegistryType(xolotlPerf::IHandlerRegistry::std),
 		vizStandardHandlersFlag(false),
@@ -55,6 +58,10 @@ Options::Options() :
 	auto vConcHandler = new VConcentrationOptionHandler();
 	// Create the dimensions option handler
 	auto dimHandler = new DimensionsOptionHandler();
+	// Create the flux option handler
+	auto displacementHandler = new DisplacementOptionHandler();
+
+
 
 	// Add our notion of which options we support.
 	optionsMap[networkHandler->key] = networkHandler;
@@ -68,6 +75,7 @@ Options::Options() :
 	optionsMap[materialHandler->key] = materialHandler;
 	optionsMap[vConcHandler->key] = vConcHandler;
 	optionsMap[dimHandler->key] = dimHandler;
+	optionsMap[displacementHandler->key] = displacementHandler;
 }
 
 Options::~Options(void) {

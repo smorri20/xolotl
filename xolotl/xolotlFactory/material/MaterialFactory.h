@@ -3,6 +3,8 @@
 
 #include <memory>
 #include <IMaterialFactory.h>
+#include <Td40FitDisplacementHandler.h>
+#include <W100FitFluxHandler.h>
 
 namespace xolotlFactory {
 
@@ -21,6 +23,10 @@ protected:
 
 	//! The diffusion handler
 	std::shared_ptr<xolotlCore::IDiffusionHandler> theDiffusionHandler;
+
+	//! The displacement handler
+	std::shared_ptr<xolotlCore::IDisplacementHandler> theDisplacementHandler;
+
 
 public:
 
@@ -57,6 +63,12 @@ public:
 			theFluxHandler->initializeTimeProfile(options.getFluxProfileName());
 		}
 
+//		theDisplacementHandler->setKrFluenceAmplitude(options.getKrFluenceAmplitude());
+//		theDisplacementHandler->setDispEnergy(options.getDispEnergy());
+
+//		theFluxHandler = std::make_shared<xolotlCore::W100FitFluxHandler>();
+    	theDisplacementHandler = std::make_shared<xolotlCore::Td40FitDisplacementHandler>();
+
 		return;
 	}
 
@@ -86,6 +98,16 @@ public:
 	std::shared_ptr<xolotlCore::IDiffusionHandler> getDiffusionHandler() const {
 		return theDiffusionHandler;
 	}
+
+	/**
+	 * Return the displacement handler.
+	 *
+	 *  @return The displacement handler.
+	 */
+	std::shared_ptr<xolotlCore::IDisplacementHandler> getDisplacementHandler() const {
+		return theDisplacementHandler;
+	}
+
 };
 
 } // end namespace xolotlFactory
