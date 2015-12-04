@@ -8,15 +8,15 @@
 namespace xolotlCore {
 
 /**
- * Realizations of this interface are responsible for handling the incident (incoming)
- * flux calculations.
+ * Realizations of this interface are responsible for handling the initial
+ * displacement calculations.
  */
 class DisplacementHandler: public IDisplacementHandler {
 
 protected:
 
 	/**
-	 * Vector to hold the incident flux values at each grid
+	 * Vector to hold the initial displacement values at each grid
 	 * point (x position).
 	 */
 	std::vector<double> initialDisplacementVec;
@@ -27,14 +27,14 @@ protected:
 	double stepSize;
 
 	/**
-	 * The amplitude of the flux.
+	 * The amplitude of the krypton fluence.
 	 */
 	double krFluenceAmplitude;
 
 	/**
 	 * The threshold displacement energy for tungsten.
 	 */
-	double thresholdDisplacementEnergy;
+	int thresholdDisplacementEnergy;
 
 	/**
 	 * The index of the cluster.
@@ -47,7 +47,7 @@ protected:
 	double normFactor;
 
 	/**
-	 * Function that calculates the flux at a given position x (in nm).
+	 * Function that calculates the displacement at a given position x (in nm).
 	 * It needs to be implemented by the daughter classes.
 	 *
 	 * @param x The position where to evaluate the fit
@@ -63,52 +63,51 @@ public:
 	}
 
 	/**
-	 * Compute and store the incident flux values at each grid point.
-     * \see IFluxHandler.h
+	 * Compute and store the initial displacement values at each grid point.
+     * \see IDisplacementHandler.h
 	 */
 	virtual void initializeDisplacementHandler(PSIClusterReactionNetwork *network,
 			int nx, double hx);
 
 	/**
-	 * This operation returns the incident flux vector.
-     * \see IFluxHandler.h
+	 * This operation returns the initial displacement vector.
+     * \see IDisplacementHandler.h
 	 */
 	virtual std::vector<double> getInitialDisplacementVec();
 
 	/**
-	 * This operation returns the index of the cluster that is irradiating
-	 * the material.
-     * \see IFluxHandler.h
+	 * This operation returns the index of the vacancy cluster.
+     * \see IDisplacementHandler.h
 	 */
 	virtual int getInitialDisplacementClusterIndex();
 
 
 	/**
-	 * This operation sets the factor to change the intensity of the flux.
-     * \see IFluxHandler.h
+	 * This operation sets the factor to change the intensity of the krypton fluence.
+     * \see IDisplacementHandler.h
 	 */
 	virtual void setKrFluenceAmplitude(double krFluence);
 
 	/**
-	 * This operation gets the factor that changes the flux intensity/amplitude.
-     * \see IFluxHandler.h
+	 * This operation gets the factor that changes the krypton fluence intensity/amplitude.
+     * \see IDisplacementHandler.h
 	 */
 	virtual double getKrFluenceAmplitude() const;
 
 	/**
-	 * This operation sets the factor to change the intensity of the flux.
-     * \see IFluxHandler.h
+	 * This operation sets the factor to change the threshold energy.
+     * \see IDisplacementHandler.h
 	 */
-	virtual void setDispEnergy(double thresholdEnergy);
+	virtual void setDispEnergy(int thresholdEnergy);
 
 	/**
-	 * This operation gets the factor that changes the flux intensity/amplitude.
-     * \see IFluxHandler.h
+	 * This operation gets the factor that changes the threshold energy.
+     * \see IDisplacementHandler.h
 	 */
-	virtual double getDispEnergy() const;
+	virtual int getDispEnergy() const;
 
 };
-//end class FluxHandler
+//end class DisplacementHandler
 
 }
 

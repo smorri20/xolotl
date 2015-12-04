@@ -75,14 +75,14 @@ protected:
 	double fluxAmplitude;
 
 	/**
-	 * Value for the  flux.
+	 * Value for the  krypton fluence.
 	 */
 	double krFluenceAmplitude;
 
 	/**
-	 * Value for the  flux.
+	 * Value for the  threshold displacement energy for tungsten.
 	 */
-	double thresholdDisplacementEnergy;
+	int thresholdDisplacementEnergy;
 
 	/**
 	 * Use a time profile for the flux?
@@ -363,25 +363,25 @@ public:
     void setDimensionNumber(int number) {dimensionNumber = number;}
 
     /**
-     * Obtain the value of the flux intensity to be used.
+     * Obtain the value of the threshold displacement energy.
      * \see IOptions.h
      */
-    double getDispEnergy() const {return thresholdDisplacementEnergy;}
+    int getDispEnergy() const {return thresholdDisplacementEnergy;}
 
     /**
-     * Set the value for the flux intensity to use.
+     * Set the value for the threshold displacement energy.
      * \see IOptions.h
      */
-    void setDispEnergy(double thresholdEnergy) {thresholdDisplacementEnergy = thresholdEnergy;}
+    void setDispEnergy(int thresholdEnergy) {thresholdDisplacementEnergy = thresholdEnergy;}
 
     /**
-     * Obtain the value of the flux intensity to be used.
+     * Obtain the value of the krypton fluence.
      * \see IOptions.h
      */
     double getKrFluenceAmplitude() const {return krFluenceAmplitude;}
 
     /**
-     * Set the value for the flux intensity to use.
+     * Set the value for the krypton fluence.
      * \see IOptions.h
      */
     void setKrFluenceAmplitude(double krFluence) {krFluenceAmplitude = krFluence;}

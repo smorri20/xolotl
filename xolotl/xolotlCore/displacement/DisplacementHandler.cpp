@@ -11,7 +11,7 @@ namespace xolotlCore {
 DisplacementHandler::DisplacementHandler() :
 		stepSize(0.0),
 		krFluenceAmplitude(0.0),
-		thresholdDisplacementEnergy(0.0),
+		thresholdDisplacementEnergy(0),
 		displacementIndex(-1),
 		normFactor(0.0){
 	return;
@@ -35,7 +35,7 @@ void DisplacementHandler::initializeDisplacementHandler(PSIClusterReactionNetwor
 		normFactor += VacancyFitFunction(x) * stepSize;
 	}
 
-	// Factor the incident flux will be multiplied by to get
+	// Factor the initial krypton fluence will be multiplied by to get
 	// the wanted intensity
 	double krFluenceNormalized = krFluenceAmplitude / normFactor;
 
@@ -47,7 +47,7 @@ void DisplacementHandler::initializeDisplacementHandler(PSIClusterReactionNetwor
 		// Get the x position
 		double x = i * stepSize;
 
-		// Compute the flux value
+		// Compute the fluence value
 		double initialDisplacement = krFluenceNormalized * VacancyFitFunction(x);
 		// Add it to the vector
 		initialDisplacementVec.push_back(initialDisplacement);
@@ -56,7 +56,7 @@ void DisplacementHandler::initializeDisplacementHandler(PSIClusterReactionNetwor
 	// The last value should always be 0.0 because of boundary conditions
 	initialDisplacementVec.push_back(0.0);
 
-	// Set the flux index corresponding the the single helium cluster here
+	// Set the displacement index corresponding the the single vacancy cluster here
 	auto displacementCluster = (PSICluster *) network->get(vType, 1);
 	// Check that the helium cluster is present in the network
 	if (!displacementCluster) {
@@ -70,7 +70,7 @@ void DisplacementHandler::initializeDisplacementHandler(PSIClusterReactionNetwor
 }
 
 std::vector<double> DisplacementHandler::getInitialDisplacementVec() {
-	// Recompute the flux vector if a time profile is used
+	// Compute the displacement vector
 	return initialDisplacementVec;
 }
 
@@ -86,11 +86,11 @@ double DisplacementHandler::getKrFluenceAmplitude() const {
 	return krFluenceAmplitude;
 }
 
-void DisplacementHandler::setDispEnergy(double thresholdEnergy) {
+void DisplacementHandler::setDispEnergy(int thresholdEnergy) {
 	thresholdDisplacementEnergy = thresholdEnergy;
 }
 
-double DisplacementHandler::getDispEnergy() const {
+int DisplacementHandler::getDispEnergy() const {
 	return thresholdDisplacementEnergy;
 }
 

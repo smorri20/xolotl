@@ -7,7 +7,6 @@
 #include <map>
 #include <xolotlPerf.h>
 
-
 namespace xolotlCore {
 
 /**
@@ -298,30 +297,30 @@ public:
     virtual void setDimensionNumber(int number) = 0;
 
     /**
-     * Obtain the value of the intensity of the flux to be used.
+     * Obtain the value of the threshold displacement energy.
      *
-     * @return The value of the flux amplitude
+     * @return The value of the threshold displacement energy
      */
-    virtual double getDispEnergy() const = 0;
+    virtual int getDispEnergy() const = 0;
 
     /**
-     * Set the value for the flux intensity to use.
+     * Set the value for the threshold displacement energy.
      *
-     * @param flux The value for the flux amplitude
+     * @param flux The value for the threshold displacement energy
      */
-    virtual void setDispEnergy(double thresholdEnergy) = 0;
+    virtual void setDispEnergy(int thresholdEnergy) = 0;
 
     /**
-     * Obtain the value of the intensity of the flux to be used.
+     * Obtain the value of the intensity of the krypton fluence.
      *
-     * @return The value of the flux amplitude
+     * @return The value of the krypton fluence amplitude
      */
     virtual double getKrFluenceAmplitude() const = 0;
 
     /**
-     * Set the value for the flux intensity to use.
+     * Set the value for the krypton fluence.
      *
-     * @param flux The value for the flux amplitude
+     * @param flux The value for the krypton fluence.
      */
     virtual void setKrFluenceAmplitude(double krFluence) = 0;
 

@@ -67,7 +67,7 @@ public:
 //		theDisplacementHandler->setDispEnergy(options.getDispEnergy());
 
 //		theFluxHandler = std::make_shared<xolotlCore::W100FitFluxHandler>();
-    	theDisplacementHandler = std::make_shared<xolotlCore::Td40FitDisplacementHandler>();
+		theDisplacementHandler = std::make_shared<xolotlCore::Td40FitDisplacementHandler>();
 
 		return;
 	}

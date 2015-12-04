@@ -415,7 +415,7 @@ public interface Arguments {
 	
 	/**
 	 * This operation produces the required command line option '--thresholdEnergy'  
-	 * which takes a double value and is defined by the previous Option annotation
+	 * which takes an integer value and is defined by the previous Option annotation
 	 * 
 	 * @return Threshold displacement energy of tungsten.
 	 */

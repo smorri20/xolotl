@@ -7,6 +7,7 @@
 #include <TempProfileOptionHandler.h>
 #include <FluxOptionHandler.h>
 #include <DisplacementOptionHandler.h>
+#include <KrFluenceOptionHandler.h>
 #include <FluxProfileOptionHandler.h>
 #include <PerfOptionHandler.h>
 #include <VizOptionHandler.h>
@@ -28,7 +29,7 @@ Options::Options() :
 		fluxFlag(false),
 		fluxAmplitude(0.0),
 		krFluenceAmplitude(0.0),
-		thresholdDisplacementEnergy(0.0),
+		thresholdDisplacementEnergy(0),
 		fluxProfileFlag(false),
 		perfRegistryType(xolotlPerf::IHandlerRegistry::std),
 		vizStandardHandlersFlag(false),
@@ -58,10 +59,10 @@ Options::Options() :
 	auto vConcHandler = new VConcentrationOptionHandler();
 	// Create the dimensions option handler
 	auto dimHandler = new DimensionsOptionHandler();
-	// Create the flux option handler
+	// Create the displacement option handler
 	auto displacementHandler = new DisplacementOptionHandler();
-
-
+	// Create the krypton fluence option handler
+	auto krFluenceHandler = new KrFluenceOptionHandler();
 
 	// Add our notion of which options we support.
 	optionsMap[networkHandler->key] = networkHandler;
@@ -76,6 +77,7 @@ Options::Options() :
 	optionsMap[vConcHandler->key] = vConcHandler;
 	optionsMap[dimHandler->key] = dimHandler;
 	optionsMap[displacementHandler->key] = displacementHandler;
+	optionsMap[krFluenceHandler->key] = krFluenceHandler;
 }
 
 Options::~Options(void) {
