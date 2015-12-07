@@ -975,8 +975,8 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 			seriesPlot1D = vizHandlerRegistry->getPlot("seriesPlot1D",
 					xolotlViz::PlotType::SERIES);
 
-			// set the log scale
-			seriesPlot1D->setLogScale();
+//			// set the log scale
+//			seriesPlot1D->setLogScale();
 
 			// Create and set the label provider
 			auto labelProvider = std::make_shared<xolotlViz::LabelProvider>(

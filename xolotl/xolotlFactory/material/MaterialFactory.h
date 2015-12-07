@@ -4,6 +4,8 @@
 #include <memory>
 #include <IMaterialFactory.h>
 #include <Td40FitDisplacementHandler.h>
+#include <Td80FitDisplacementHandler.h>
+#include <Td120FitDisplacementHandler.h>
 #include <W100FitFluxHandler.h>
 
 namespace xolotlFactory {
@@ -63,11 +65,25 @@ public:
 			theFluxHandler->initializeTimeProfile(options.getFluxProfileName());
 		}
 
-//		theDisplacementHandler->setKrFluenceAmplitude(options.getKrFluenceAmplitude());
-//		theDisplacementHandler->setDispEnergy(options.getDispEnergy());
 
-//		theFluxHandler = std::make_shared<xolotlCore::W100FitFluxHandler>();
-		theDisplacementHandler = std::make_shared<xolotlCore::Td40FitDisplacementHandler>();
+		// Switch on the threshold energy for displacement handler
+		switch (options.getDispEnergy()) {
+			case 40:
+				theDisplacementHandler = std::make_shared<xolotlCore::Td40FitDisplacementHandler>();
+				break;
+			case 80:
+				theDisplacementHandler = std::make_shared<xolotlCore::Td80FitDisplacementHandler>();
+				break;
+			case 120:
+				theDisplacementHandler = std::make_shared<xolotlCore::Td120FitDisplacementHandler>();
+				break;
+			default:
+				// The asked threshold energy is not good (choose 40, 80, or 120)
+				throw std::string("\nxolotlFactory: Bad threshold energy for material factory.");
+		}
+
+		theDisplacementHandler->setKrFluenceAmplitude(options.getKrFluenceAmplitude());
+//		theDisplacementHandler->setDispEnergy(options.getDispEnergy());
 
 		return;
 	}

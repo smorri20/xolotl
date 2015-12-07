@@ -57,6 +57,7 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 					"-ts_max_steps 5" << std::endl << "startTemp=900"
 			<< std::endl << "perfHandler=dummy" << std::endl << "flux=4.0e5"
 			<< std::endl << "material=W100" << std::endl << "dimensions=1"
+			<< std::endl << "thresholdEnergy=40" << std::endl << "krFluence=8.0e-03"
 			<< std::endl;
 	paramFile.close();
 
@@ -96,6 +97,9 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 	auto materialFactory =
 			xolotlFactory::IMaterialFactory::createMaterialFactory(
 					opts.getMaterial(), opts.getDimensionNumber());
+
+	// Initialize it with the options
+	materialFactory->initializeMaterial(opts);
 
 	// Initialize and get the temperature handler
 	bool tempInitOK = xolotlFactory::initializeTempHandler(opts);

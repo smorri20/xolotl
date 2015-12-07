@@ -100,6 +100,9 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 	// Initialize the flux handler
 	fluxHandler->initializeFluxHandler(network, Mx, hX);
 
+	// Initialize the displacement handler
+	displacementHandler->initializeDisplacementHandler(network, Mx, hX);
+
 	// Initialize the advection handler
 	advectionHandler->initialize(network);
 
@@ -108,6 +111,9 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = network->size();
+
+	// Get the initial displacement vector
+	auto initialDisplacementVector = displacementHandler->getInitialDisplacementVec();
 
 	// Get the single vacancy ID
 	auto singleVacancyCluster = network->get(xolotlCore::vType, 1);
@@ -126,7 +132,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 
 		// Initialize the vacancy concentration
 		if (i > 0 && i < Mx - 1 && vacancyIndex > 0) {
-			concOffset[vacancyIndex] = initialVConc;
+			concOffset[vacancyIndex] = initialDisplacementVector[i];
 		}
 	}
 

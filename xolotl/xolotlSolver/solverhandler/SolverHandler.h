@@ -34,6 +34,9 @@ protected:
 	//! The original flux handler created.
 	xolotlCore::IFluxHandler *fluxHandler;
 
+	//! The original displacement handler created.
+	xolotlCore::IDisplacementHandler *displacementHandler;
+
 	//! The original temperature handler created.
 	xolotlCore::ITemperatureHandler *temperatureHandler;
 
@@ -58,6 +61,9 @@ public:
 
 		// Set the flux handler
 		fluxHandler = (xolotlCore::IFluxHandler *) material->getFluxHandler().get();
+
+		// Set the displacement handler
+		displacementHandler = (xolotlCore::IDisplacementHandler *) material->getDisplacementHandler().get();
 
 		// Set the temperature handler
 		temperatureHandler = (xolotlCore::ITemperatureHandler *) tempHandler.get();
@@ -122,6 +128,12 @@ public:
 	 * \see ISolverHandler.h
 	 */
 	xolotlCore::IFluxHandler *getFluxHandler() const {return fluxHandler;}
+
+//	/**
+//	 * Get the displacement handler.
+//	 * \see ISolverHandler.h
+//	 */
+//	xolotlCore::IDisplacementHandler *getDisplacementHandler() const {return displacementHandler;}
 
 	/**
 	 * Get the network.
