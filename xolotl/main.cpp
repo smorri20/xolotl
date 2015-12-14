@@ -105,14 +105,16 @@ void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
 	solverTimer->stop();
 }
 
-std::shared_ptr<PSIClusterNetworkLoader> setUpNetworkLoader(int rank,
-		MPI_Comm comm, const std::string& networkFilename,
+std::shared_ptr<PSIClusterNetworkLoader> setUpNetworkLoader(Options &options,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
 	// Create a HDF5NetworkLoader
 	std::shared_ptr<HDF5NetworkLoader> networkLoader;
 	networkLoader = std::make_shared<HDF5NetworkLoader>(registry);
 	// Give the networkFilename to the network loader
-	networkLoader->setFilename(networkFilename);
+	networkLoader->setFilename(options.getNetworkFilename());
+	// Set the options for the grouping scheme
+	networkLoader->setHeMin(options.getGroupingHeMin());
+	networkLoader->setWidth(options.getGroupingWidth());
 
 	return networkLoader;
 }
@@ -190,8 +192,7 @@ int main(int argc, char **argv) {
 		networkLoadTimer->start();
 
 		// Set up the network loader
-		auto networkLoader = setUpNetworkLoader(rank, MPI_COMM_WORLD,
-				networkFilename, handlerRegistry);
+		auto networkLoader = setUpNetworkLoader(opts, handlerRegistry);
 
 		// Give the network loader to PETSc as input
 		solver->setNetworkLoader(networkLoader);

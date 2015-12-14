@@ -19,6 +19,16 @@ private:
 	std::string fileName;
 
 	/**
+	 * The helium size at wich the grouping scheme starts
+	 */
+	int heMin;
+
+	/**
+	 * The number of clusters that will be gathered in the grouping scheme
+	 */
+	int sectionWidth;
+
+	/**
 	 * Private nullary constructor.
 	 */
 	HDF5NetworkLoader() {}
@@ -29,8 +39,13 @@ public:
 	 * The default constructor. The setInputstream() operation must be called
 	 * if this constructor is used.
 	 */
-	HDF5NetworkLoader(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
+	HDF5NetworkLoader(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry):
+		fileName(""),
+		heMin(std::numeric_limits<int>::max()),
+		sectionWidth(1) {
 		handlerRegistry = registry;
+
+		return;
 	}
 
 	/**
@@ -70,14 +85,28 @@ public:
 	 *
 	 * @param name The name of the file
 	 */
-	void setFilename (const std::string& name);
+	void setFilename (const std::string& name) {fileName = name;}
 
 	/**
 	 * This operation will get the name of the file where to take the network from.
 	 *
 	 * @return The name of the file
 	 */
-	std::string getFilename () const;
+	std::string getFilename () const {return fileName;}
+
+	/**
+	 * This operation will set the helium size at which the grouping scheme starts.
+	 *
+	 * @param min The value for the size
+	 */
+	void setHeMin (int min) {heMin = min;}
+
+	/**
+	 * This operation will set the width for the grouping scheme.
+	 *
+	 * @param w The value of the width
+	 */
+	void setWidth (int w) {sectionWidth = w;}
 };
 
 } /* namespace xolotlCore */

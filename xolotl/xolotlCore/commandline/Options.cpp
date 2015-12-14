@@ -12,7 +12,9 @@
 #include <MaterialOptionHandler.h>
 #include <VConcentrationOptionHandler.h>
 #include <DimensionsOptionHandler.h>
+#include <GroupingOptionHandler.h>
 #include "Options.h"
+#include <limits>
 
 namespace xolotlCore {
 
@@ -31,7 +33,9 @@ Options::Options() :
 		vizStandardHandlersFlag(false),
 		materialName(""),
 		initialVConcentration(0.0),
-		dimensionNumber(1) {
+		dimensionNumber(1),
+		groupingHeMin(std::numeric_limits<int>::max()),
+		groupingWidth(1) {
 
 	// Create the network option handler
 	auto networkHandler = new NetworkOptionHandler();
@@ -55,6 +59,8 @@ Options::Options() :
 	auto vConcHandler = new VConcentrationOptionHandler();
 	// Create the dimensions option handler
 	auto dimHandler = new DimensionsOptionHandler();
+	// Create the grouping option handler
+	auto groupHandler = new GroupingOptionHandler();
 
 	// Add our notion of which options we support.
 	optionsMap[networkHandler->key] = networkHandler;
@@ -68,6 +74,7 @@ Options::Options() :
 	optionsMap[materialHandler->key] = materialHandler;
 	optionsMap[vConcHandler->key] = vConcHandler;
 	optionsMap[dimHandler->key] = dimHandler;
+	optionsMap[groupHandler->key] = groupHandler;
 }
 
 Options::~Options(void) {

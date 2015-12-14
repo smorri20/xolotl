@@ -120,7 +120,8 @@ BOOST_AUTO_TEST_CASE(goodParamFile)
 			<< "flux=1.5" << std::endl
 			<< "material=W100" << std::endl
 			<< "initialV=0.05" << std::endl
-			<< "dimensions=1" << std::endl;
+			<< "dimensions=1" << std::endl
+			<< "grouping=51 2" << std::endl;
 	goodParamFile.close();
 
 	string pathToFile("param_good.txt");
@@ -169,6 +170,12 @@ BOOST_AUTO_TEST_CASE(goodParamFile)
 
     // Check the number of dimensions option
     BOOST_REQUIRE_EQUAL(opts.getDimensionNumber(), 1);
+
+    // Check the helium min size for the grouping scheme
+    BOOST_REQUIRE_EQUAL(opts.getGroupingHeMin(), 51);
+
+    // Check the width for the grouping scheme
+    BOOST_REQUIRE_EQUAL(opts.getGroupingWidth(), 2);
 
     // Check the PETSc options
     BOOST_REQUIRE_EQUAL(opts.getPetscArgc(), 16);

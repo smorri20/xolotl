@@ -104,6 +104,11 @@ PSIClusterReactionNetwork::PSIClusterReactionNetwork(
 			it != other.mixedSpeciesMap.end(); ++it) {
 		reactants.push_back(it->second);
 	}
+	// Load the super-species clusters
+	for (auto it = other.superSpeciesMap.begin();
+			it != other.superSpeciesMap.end(); ++it) {
+	 	reactants.push_back(it->second);
+	}
 	for (int i = 0; i < reactants.size(); i++) {
 		add(reactants[i]->clone());
 	}
