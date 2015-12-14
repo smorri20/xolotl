@@ -39,7 +39,14 @@ struct MPIFixture
     }
 };
 
+#if BOOST_VERSION >= 105900
+// In Boost 1.59, the semicolon at the end of the definition of BOOST_GLOBAL_FIXTURE is removed
 BOOST_GLOBAL_FIXTURE( MPIFixture );
+#else
+// With earlier Boost versions, naively adding a semicolon to our code will generate compiler
+// warnings about redundant semicolons
+BOOST_GLOBAL_FIXTURE( MPIFixture )
+#endif
 
 BOOST_AUTO_TEST_CASE(createDummyHandlerReg)
 {

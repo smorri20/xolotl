@@ -10,8 +10,8 @@
 #include <sstream>
 
 namespace xolotlPerf {
-    class ITimer;
-};
+	class ITimer;
+}
 
 namespace xolotlCore {
 

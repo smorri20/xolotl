@@ -55,5 +55,5 @@ DummyHandlerRegistry::reportStatistics( std::ostream& os,
 
 
 
-};  // namespace xolotlPerf
+} // namespace xolotlPerf
 

@@ -140,7 +140,7 @@ namespace HDF5Utils {
 	std::vector< std::vector<double> > readGridPoint(const std::string& fileName,
 			int lastTimeStep, int i, int j = -1, int k = -1);
 
-};
+}
 
 } /* namespace xolotlCore */
 #endif

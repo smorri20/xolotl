@@ -167,4 +167,4 @@ void Options::showHelp(std::ostream& os) const {
 	os << std::endl;
 }
 
-};  // end namespace xolotlCore
+} // end namespace xolotlCore

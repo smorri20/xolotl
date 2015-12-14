@@ -129,4 +129,4 @@ std::ostream& operator<< (std::ostream& out, const Reactant& reactant) {
 	return out;
 }
 
-};
+}
