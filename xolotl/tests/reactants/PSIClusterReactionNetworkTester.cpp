@@ -13,6 +13,7 @@
 #include <HeCluster.h>
 #include <VCluster.h>
 #include <InterstitialCluster.h>
+#include <SuperCluster.h>
 #include <HeInterstitialCluster.h>
 #include <xolotlPerf.h>
 
@@ -107,6 +108,11 @@ BOOST_AUTO_TEST_CASE(checkReactants) {
 
 	BOOST_TEST_MESSAGE("Added " << counter << " HeI clusters");
 
+	// Add a super cluster
+	shared_ptr<SuperCluster> cluster(
+				new SuperCluster(4.5, 5.0, 2, 0.1, 200.0, registry));
+		psiNetwork->addSuper(cluster);
+
 	// Try adding a duplicate HeV and catch the exception
 	shared_ptr<HeVCluster> duplicateCluster = std::make_shared<HeVCluster>(5,
 			3, registry);
@@ -121,7 +127,7 @@ BOOST_AUTO_TEST_CASE(checkReactants) {
 
 	// Make sure that everything was added
 	auto reactants = psiNetwork->getAll();
-	BOOST_REQUIRE_EQUAL(84, reactants->size());
+	BOOST_REQUIRE_EQUAL(85, reactants->size());
 	// Get the clusters by type and check them. Start with He.
 	auto heReactants = psiNetwork->getAll("He");
 	BOOST_REQUIRE_EQUAL(1, heReactants.size());
@@ -137,10 +143,12 @@ BOOST_AUTO_TEST_CASE(checkReactants) {
 	// HeV
 	auto heVReactants = psiNetwork->getAll("HeV");
 	BOOST_REQUIRE_EQUAL(45, heVReactants.size());
-
 	// HeI
 	auto heIReactants = psiNetwork->getAll("HeI");
 	BOOST_REQUIRE_EQUAL(36, heIReactants.size());
+	// Super
+	auto superReactants = psiNetwork->getAll("Super");
+	BOOST_REQUIRE_EQUAL(1, superReactants.size());
 
 	// Add the required He_1, V_1, I_1 clusters to the network.
 	psiNetwork->add(make_shared<HeCluster>(1,registry));
@@ -154,7 +162,7 @@ BOOST_AUTO_TEST_CASE(checkReactants) {
 
 	// Try changing the temperature and make sure it works
 	psiNetwork->setTemperature(1000.0);
-	BOOST_REQUIRE_CLOSE(1000.0,reactants->at(0)->getTemperature(),0.0001);
+	BOOST_REQUIRE_CLOSE(1000.0, reactants->at(0)->getTemperature(), 0.0001);
 
 	return;
 }
@@ -170,6 +178,7 @@ BOOST_AUTO_TEST_CASE(checkProperties) {
 	int numVClusters = stoi(props["numVClusters"]);
 	int numIClusters = stoi(props["numIClusters"]);
 	int numHeVClusters = stoi(props["numHeVClusters"]);
+	int numSuperClusters = stoi(props["numSuperClusters"]);
 	int numHeIClusters = stoi(props["numHeIClusters"]);
 	int maxHeVClusterSize = stoi(props["maxHeVClusterSize"]);
 	int maxHeIClusterSize = stoi(props["maxHeIClusterSize"]);
@@ -182,6 +191,7 @@ BOOST_AUTO_TEST_CASE(checkProperties) {
 	BOOST_REQUIRE_EQUAL(0, numVClusters);
 	BOOST_REQUIRE_EQUAL(0, numIClusters);
 	BOOST_REQUIRE_EQUAL(0, numHeVClusters);
+	BOOST_REQUIRE_EQUAL(0, numSuperClusters);
 	BOOST_REQUIRE_EQUAL(0, numHeIClusters);
 	BOOST_REQUIRE_EQUAL(0, maxHeVClusterSize);
 	BOOST_REQUIRE_EQUAL(0, maxHeIClusterSize);
@@ -334,7 +344,6 @@ BOOST_AUTO_TEST_CASE(checkArrayOperations) {
 
 	return;
 }
-
 
 BOOST_AUTO_TEST_CASE(checkRefCounts) {
     // Obtain a network to work with.

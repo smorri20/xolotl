@@ -104,11 +104,6 @@ PSIClusterReactionNetwork::PSIClusterReactionNetwork(
 			it != other.mixedSpeciesMap.end(); ++it) {
 		reactants.push_back(it->second);
 	}
-	// Load the super-species clusters
-	for (auto it = other.superSpeciesMap.begin();
-			it != other.superSpeciesMap.end(); ++it) {
-		reactants.push_back(it->second);
-	}
 	for (int i = 0; i < reactants.size(); i++) {
 		add(reactants[i]->clone());
 	}
@@ -377,8 +372,63 @@ void PSIClusterReactionNetwork::addSuper(std::shared_ptr<Reactant> reactant) {
 	return;
 }
 
+void PSIClusterReactionNetwork::removeReactant(Reactant * reactant) {
+	auto comp = reactant->getComposition();
+	std::string type = reactant->getType();
+
+	// Look for the reactant in allReactants
+	for (auto it = allReactants->begin(); it != allReactants->end(); ++it) {
+		auto tempType = (*it)->getType();
+		// Compare the types and skip if necessary
+		if (tempType != type) continue;
+
+		auto tempComp = (*it)->getComposition();
+		// Compare the compositions and skip if necessary
+		if (tempComp[heType] != comp[heType] || tempComp[vType] != comp[vType]
+						|| tempComp[iType] != comp[iType]) continue;
+
+		allReactants->erase(it);
+		break;
+	}
+
+	// Look for the reactant in clusterTypeMap
+	auto clusters = clusterTypeMap[type];
+	for (auto it = clusters->begin(); it != clusters->end(); ++it) {
+		auto tempType = (*it)->getType();
+		// Compare the types and skip if necessary
+		if (tempType != type) continue;
+
+		auto tempComp = (*it)->getComposition();
+		// Compare the compositions and skip if necessary
+		if (tempComp[heType] != comp[heType] || tempComp[vType] != comp[vType]
+						|| tempComp[iType] != comp[iType]) continue;
+
+		clusters->erase(it);
+		break;
+	}
+
+	// Look for the reactant in mixedSpeciesMap
+	mixedSpeciesMap.erase(comp);
+
+	return;
+}
+
 void PSIClusterReactionNetwork::reinitializeNetwork() {
-	// Now loop on all the reactants to reset their connectivities
+	// Reset the Ids
+	int id = 0;
+	for (auto it = allReactants->begin(); it != allReactants->end(); ++it) {
+		id++;
+		(*it)->setId(id);
+	}
+
+	// Reset the network size
+	networkSize = id;
+
+	return;
+}
+
+void PSIClusterReactionNetwork::reinitializeConnectivities() {
+	// Loop on all the reactants to reset their connectivities
 	PSICluster * cluster;
 	for (auto it = allReactants->begin(); it != allReactants->end(); ++it) {
 		cluster = (PSICluster *) *it;

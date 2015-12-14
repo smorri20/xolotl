@@ -61,6 +61,9 @@ std::shared_ptr<PSIClusterReactionNetwork> HDF5NetworkLoader::load() {
 		(*reactantsIt)->setReactionNetwork(network);
 	}
 
+	// Clear the reactants vector
+	reactants.clear();
+
 	// Apply sectional grouping
 	applySectionalGrouping(network);
 
@@ -69,9 +72,9 @@ std::shared_ptr<PSIClusterReactionNetwork> HDF5NetworkLoader::load() {
 
 void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactionNetwork> network) {
 	// Define the starting helium size
-	int heMin = 31;
+	int heMin = 20000001;
 	// Define the width of the sections
-	int sectionWidth = 2;
+	int sectionWidth = 16;
 
 	// Get the HeV cluster map
 	auto heVMap = network->getAll(heVType);
@@ -280,8 +283,8 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 		// Skip the clusters that are too small
 		if (composition[heType] < heMin) continue;
 
-		// Reset the cluster
-		cluster->reset();
+		// Remove the reactant from the network
+		network->removeReactant(heVMap.at(i));
 	}
 
 	// Recompute Ids and network size and redefine the connectivities
@@ -332,4 +335,3 @@ void HDF5NetworkLoader::setFilename (const std::string& name) {
 std::string HDF5NetworkLoader::getFilename () const {
 	return fileName;
 }
-

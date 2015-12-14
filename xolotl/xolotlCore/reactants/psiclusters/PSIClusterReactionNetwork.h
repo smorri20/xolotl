@@ -250,13 +250,24 @@ public:
 	void addSuper(std::shared_ptr<Reactant> reactant);
 
 	/**
+	 * This operation removes the reactant from the network.
+	 *
+	 * @param reactant The reactant that should be removed.
+	 */
+	void removeReactant(Reactant * reactant);
+
+	/**
 	 * This operation reinitializes the network.
 	 *
-	 * It computes the cluster Ids and network size from the cluster type maps.
-	 *
-	 * It redefines the connectivities for each cluster.
+	 * It computes the cluster Ids and network size from the allReactants vector.
 	 */
 	void reinitializeNetwork();
+
+	/**
+	 * This method redefines the connectivities for each cluster in the
+	 * allReactans vector.
+	 */
+	void reinitializeConnectivities();
 
 	/**
 	 * This operation returns the names of the reactants in the network. For a

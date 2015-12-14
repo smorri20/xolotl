@@ -10,6 +10,22 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 		double hy, int nz, double hz) {
 	PetscErrorCode ierr;
 
+	// Set the last temperature to 0
+	lastTemperature = 0.0;
+
+	// Reinitialize the connectivities in the network after updating the temperature
+	// Get the temperature from the temperature handler
+	auto temperature = temperatureHandler->getTemperature({0.0, 0.0, 0.0}, 0.0);
+
+	// Update the network if the temperature changed
+	if (!xolotlCore::equal(temperature, lastTemperature)) {
+		network->setTemperature(temperature);
+		lastTemperature = temperature;
+	}
+
+	// Recompute Ids and network size and redefine the connectivities
+	network->reinitializeConnectivities();
+
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = network->size();
 
@@ -29,9 +45,6 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	// Set the size of the partial derivatives vectors
 	clusterPartials.resize(dof, 0.0);
 	reactingPartialsForCluster.resize(dof, 0.0);
-
-	// Set the last temperature to 0
-	lastTemperature = 0.0;
 
 	/*  The only spatial coupling in the Jacobian is due to diffusion.
 	 *  The ofill (thought of as a dof by dof 2d (row-oriented) array represents
@@ -460,6 +473,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 			auto pdColIdsVector = dFillMap.at(reactantIndex);
 			// Number of partial derivatives
 			pdColIdsVectorSize = pdColIdsVector.size();
+
 			// Loop over the list of column ids
 			for (int j = 0; j < pdColIdsVectorSize; j++) {
 				// Set grid coordinate and component number for a column in the list
@@ -468,6 +482,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 				// Get the partial derivative from the array of all of the partials
 				reactingPartialsForCluster[j] =
 						clusterPartials[pdColIdsVector[j]];
+
 				// Reset the cluster partial value to zero. This is much faster
 				// than using memset.
 				clusterPartials[pdColIdsVector[j]] = 0.0;

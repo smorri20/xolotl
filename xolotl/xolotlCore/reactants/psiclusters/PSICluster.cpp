@@ -502,27 +502,28 @@ void PSICluster::resetConnectivities() {
 	setReactionConnectivity(id);
 	setDissociationConnectivity(id);
 
-	// Loop on the reacting pairs
-	for (auto it = reactingPairs.begin(); it != reactingPairs.end(); ++it) {
+	// Loop on the effective reacting pairs
+	for (auto it = effReactingPairs.begin(); it != effReactingPairs.end(); ++it) {
 		// The cluster is connecting to both clusters in the pair
-		setReactionConnectivity((*it).first->id);
-		setReactionConnectivity((*it).second->id);
+		setReactionConnectivity((*it)->first->id);
+		setReactionConnectivity((*it)->second->id);
 	}
 
-	// Loop on the combining reactants
-	for (auto it = combiningReactants.begin(); it != combiningReactants.end(); ++it) {
+	// Loop on the effective combining reactants
+	for (auto it = effCombiningReactants.begin(); it != effCombiningReactants.end(); ++it) {
 		// The cluster is connecting to the combining cluster
-		setReactionConnectivity((*it).combining->id);
+		setReactionConnectivity((*it)->combining->id);
 	}
 
-	// Loop on the dissociating pairs
-	for (auto it = dissociatingPairs.begin(); it != dissociatingPairs.end(); ++it) {
+	// Loop on the effective dissociating pairs
+	for (auto it = effDissociatingPairs.begin(); it != effDissociatingPairs.end(); ++it) {
 		// The cluster is connecting to the dissociating cluster which
 		// is the first one by definition
-		setDissociationConnectivity((*it).first->id);
+		setDissociationConnectivity((*it)->first->id);
 	}
 
-	// Don't loop on the emission pairs because this cluster is not connected to them
+	// Don't loop on the effective emission pairs because
+	// this cluster is not connected to them
 
 	return;
 }
@@ -742,7 +743,7 @@ void PSICluster::getCombinationPartialDerivatives(
 		otherIndex = cluster->id - 1;
 		// Remember that the flux due to combinations is OUTGOING (-=)!
 		// Compute the contribution from this cluster
-		partials[thisNetworkIndex] -= effCombiningReactants[i]->kConstant
+		partials[id - 1] -= effCombiningReactants[i]->kConstant
 				* cluster->concentration;
 		// Compute the contribution from the combining cluster
 		partials[otherIndex] -= effCombiningReactants[i]->kConstant
