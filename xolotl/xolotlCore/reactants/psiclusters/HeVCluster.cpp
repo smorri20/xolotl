@@ -59,7 +59,7 @@ void HeVCluster::replaceInCompound(std::vector<Reactant *> & reactants,
 	int secondId = 0;
 
 	// Loop over all of the extra reactants in this reaction and handle the replacement
-	for (int i = 0; i < reactants.size(); i++) {
+	for (unsigned int i = 0; i < reactants.size(); i++) {
 		// Get the second reactant and its size
 		auto secondReactant = (PSICluster *) reactants[i];
 		int secondReactantSize = secondReactant->getSize();
@@ -97,7 +97,7 @@ void HeVCluster::combineClusters(std::vector<Reactant *> & clusters,
 			secondComposition;
 
 	// Loop on the potential combining reactants
-	for (int i = 0; i < clusters.size(); i++) {
+	for (unsigned int i = 0; i < clusters.size(); i++) {
 		// Get the second reactant, its composition and its index
 		auto secondCluster = (PSICluster *) clusters[i];
 		secondComposition = secondCluster->getComposition();
@@ -162,7 +162,7 @@ void HeVCluster::createReactionConnectivity() {
 	// He_(a-i) + (He_i)(V_b) --> (He_a)(V_b)
 	// Get all the He clusters from the network
 	auto reactants = network->getAll(heType);
-	for (int i = 0; i < reactants.size(); i++) {
+	for (unsigned int i = 0; i < reactants.size(); i++) {
 		auto heliumReactant = (PSICluster *) reactants[i];
 		int heliumReactantSize = heliumReactant->getSize();
 		// Get the second reactant, i.e. HeV cluster with He number smaller
@@ -232,7 +232,7 @@ void HeVCluster::createReactionConnectivity() {
 	reactants = network->getAll(iType);
 	// Get the composition of this cluster
 	comp = getComposition();
-	for (int i = 0; i < reactants.size(); i++) {
+	for (unsigned int i = 0; i < reactants.size(); i++) {
 		auto interstitialReactant = (PSICluster *) reactants[i];
 		int interstitialReactantSize = interstitialReactant->getSize();
 		// Get the second reactant, i.e. HeV cluster with V number bigger
@@ -305,7 +305,7 @@ void HeVCluster::createReactionConnectivity() {
 	}
 	if (!smallerCluster) {
 		// Loop on the possible He reactants He_c
-		for (int i = 0; i < reactants.size(); i++) {
+		for (unsigned int i = 0; i < reactants.size(); i++) {
 			auto heReactant = (PSICluster *) reactants[i];
 
 			// Case with I

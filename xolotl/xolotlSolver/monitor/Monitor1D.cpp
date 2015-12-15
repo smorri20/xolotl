@@ -224,7 +224,7 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 		gridPointSolution = solutionArray[xi];
 
 		// Loop on all the indices
-		for (int i = 0; i < heIndices1D.size(); i++) {
+		for (unsigned int i = 0; i < heIndices1D.size(); i++) {
 			// Add the current concentration times the number of helium in the cluster
 			// (from the weight vector)
 			heConcentration += gridPointSolution[heIndices1D[i]] * heWeights1D[i] * hx;
@@ -857,7 +857,7 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt timestep, PetscReal time,
 	// Get all the interstitial clusters
 	auto interstitials = network->getAll("I");
 	// Loop on them
-	for (int i = 0; i < interstitials.size(); i++) {
+	for (unsigned int i = 0; i < interstitials.size(); i++) {
 		// Get the cluster
 		auto cluster = (PSICluster *) interstitials.at(i);
 		// Get its id and concentration
@@ -1077,7 +1077,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		auto heVClusters = network->getAll(heVType);
 
 		// Loop on the helium clusters
-		for (int i = 0; i < heClusters.size(); i++) {
+		for (unsigned int i = 0; i < heClusters.size(); i++) {
 			auto cluster = (PSICluster *) heClusters[i];
 			int id = cluster->getId() - 1;
 			// Add the Id to the vector
@@ -1087,7 +1087,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		}
 
 		// Loop on the helium-vacancy clusters
-		for (int i = 0; i < heVClusters.size(); i++) {
+		for (unsigned int i = 0; i < heVClusters.size(); i++) {
 			auto cluster = (PSICluster *) heVClusters[i];
 			int id = cluster->getId() - 1;
 			// Add the Id to the vector

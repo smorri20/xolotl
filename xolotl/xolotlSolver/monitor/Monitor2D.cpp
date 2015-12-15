@@ -215,7 +215,7 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 			gridPointSolution = solutionArray[j][i];
 
 			// Loop on all the indices
-			for (int l = 0; l < heIndices2D.size(); l++) {
+			for (unsigned int l = 0; l < heIndices2D.size(); l++) {
 				// Add the current concentration times the number of helium in the cluster
 				// (from the weight vector)
 				heConcentration += gridPointSolution[heIndices2D[l]]
@@ -505,7 +505,7 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		auto heVClusters = network->getAll(heVType);
 
 		// Loop on the helium clusters
-		for (int i = 0; i < heClusters.size(); i++) {
+		for (unsigned int i = 0; i < heClusters.size(); i++) {
 			auto cluster = (PSICluster *) heClusters[i];
 			int id = cluster->getId() - 1;
 			// Add the Id to the vector
@@ -515,7 +515,7 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		}
 
 		// Loop on the helium-vacancy clusters
-		for (int i = 0; i < heVClusters.size(); i++) {
+		for (unsigned int i = 0; i < heVClusters.size(); i++) {
 			auto cluster = (PSICluster *) heVClusters[i];
 			int id = cluster->getId() - 1;
 			// Add the Id to the vector

@@ -59,7 +59,7 @@ void HeInterstitialCluster::replaceInCompound(std::vector<Reactant *> & reactant
 	int secondId = 0;
 
 	// Loop over all of the extra reactants in this reaction and handle the replacement
-	for (int i = 0; i < reactants.size(); i++) {
+	for (unsigned int i = 0; i < reactants.size(); i++) {
 		// Get the second reactant and its size
 		auto secondReactant = (PSICluster *) reactants[i];
 		auto secondReactantSize = secondReactant->getSize();
@@ -100,7 +100,7 @@ void HeInterstitialCluster::createReactionConnectivity() {
 	// He_(a-i) + (He_i)(I_b) --> (He_a)(I_b)
 	// Get all the He clusters from the network
 	auto reactants = network->getAll(heType);
-	for (int i = 0; i < reactants.size(); i++) {
+	for (unsigned int i = 0; i < reactants.size(); i++) {
 		auto heliumReactant = (PSICluster *) reactants[i];
 		int heliumReactantSize = heliumReactant->getSize();
 		// Get the second reactant, i.e. HeI cluster with He number smaller
@@ -168,7 +168,7 @@ void HeInterstitialCluster::createReactionConnectivity() {
 	// (He_a)[I_(b+i)] + (V_i) --> (He_a)(I_b)
 	// Get all the V clusters from the network
 	reactants = network->getAll(vType);
-	for (int i = 0; i < reactants.size(); i++) {
+	for (unsigned int i = 0; i < reactants.size(); i++) {
 		auto vacancyReactant = (PSICluster *) reactants[i];
 		int vacancyReactantSize = vacancyReactant->getSize();
 		// Get the second reactant, i.e. HeI cluster with I number bigger

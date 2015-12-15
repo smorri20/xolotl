@@ -123,7 +123,7 @@ PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
 	if (cwRank == 0) {
 		auto allPoints = std::make_shared<std::vector<xolotlViz::Point> >();
 
-		for (unsigned int i = 0; i < cwSize; ++i) {
+		for (int i = 0; i < cwSize; ++i) {
 			xolotlViz::Point aPoint;
 			aPoint.value = allTimerValues[i];
 			aPoint.x = i;

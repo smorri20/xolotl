@@ -114,12 +114,12 @@ void InterstitialCluster::createReactionConnectivity() {
 		// Get all the He clusters from the network
 		auto heReactants = network->getAll(heType);
 		// Loop on the HeV clusters
-		for (int i = 0; i < heVReactants.size(); i++) {
+		for (unsigned int i = 0; i < heVReactants.size(); i++) {
 			// Get the HeV cluster and its composition (He_b)(V_c)
 			auto heVCluster = (PSICluster *) heVReactants[i];
 			auto heVComp = heVCluster->getComposition();
 			// Loop on the He clusters
-			for (int j = 0; j < heReactants.size(); j++) {
+			for (unsigned int j = 0; j < heReactants.size(); j++) {
 				// Get the He cluster and its composition He_d
 				auto heCluster = (PSICluster *) heReactants[j];
 				auto heComp = heCluster->getComposition();
@@ -161,13 +161,13 @@ void InterstitialCluster::createReactionConnectivity() {
 		// Get all the He clusters from the network
 		auto heReactants = network->getAll(heType);
 		// Loop on the first He clusters
-		for (int i = 0; i < heReactants.size(); i++) {
+		for (unsigned int i = 0; i < heReactants.size(); i++) {
 			// Get the He cluster and its size b
 			auto firstCluster = (PSICluster *) heReactants[i];
 			int firstSize = firstCluster->getSize();
 			// Loop on the second He clusters starting at firstSize - 1 to avoid double counting
 			// This works only if the He clusters are ordered
-			for (int j = firstSize - 1; j < heReactants.size(); j++) {
+			for (unsigned int j = firstSize - 1; j < heReactants.size(); j++) {
 				// Get the He cluster and its size He_d
 				auto secondCluster = (PSICluster *) heReactants[j];
 				auto secondSize = secondCluster->getSize();
@@ -221,7 +221,7 @@ void InterstitialCluster::createDissociationConnectivity() {
 		// for a = 1
 		// Get all the HeI clusters of the network
 		auto allHeIReactants = network->getAll(heIType);
-		for (int i = 0; i < allHeIReactants.size(); i++) {
+		for (unsigned int i = 0; i < allHeIReactants.size(); i++) {
 			auto cluster = (PSICluster *) allHeIReactants[i];
 
 			// (He_c)(I_b) is the dissociating one, (He_c)[I_(b-a)] is the one

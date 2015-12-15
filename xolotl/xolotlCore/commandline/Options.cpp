@@ -79,7 +79,7 @@ Options::~Options(void) {
 	optionsMap.clear();
 
 	// release the dynamically-allocated PETSc arguments
-	for (unsigned int i = 0; i < petscArgc; ++i) {
+	for (int i = 0; i < petscArgc; ++i) {
 		delete[] petscArgv[i];
 	}
 	delete[] petscArgv;

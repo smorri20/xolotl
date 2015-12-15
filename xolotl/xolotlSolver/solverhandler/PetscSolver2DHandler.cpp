@@ -146,7 +146,7 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) const {
 				if (i >= xs && i < xs + xm && j >= ys && j < ys + ym) {
 					concOffset = concentrations[j][i];
 					// Loop on the concVector size
-					for (int l = 0; l < concVector.size(); l++) {
+					for (unsigned int l = 0; l < concVector.size(); l++) {
 						concOffset[(int) concVector.at(l).at(0)] =
 								concVector.at(l).at(1);
 					}

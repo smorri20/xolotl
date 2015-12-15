@@ -117,7 +117,7 @@ void VCluster::createDissociationConnectivity() {
 		// for a = 1
 		// Get all the HeV clusters of the network
 		auto allHeVReactants = network->getAll(heVType);
-		for (int i = 0; i < allHeVReactants.size(); i++) {
+		for (unsigned int i = 0; i < allHeVReactants.size(); i++) {
 			auto cluster = (PSICluster *) allHeVReactants[i];
 
 			// (He_c)(V_b) is the dissociating one, (He_c)[V_(b-a)] is the one
