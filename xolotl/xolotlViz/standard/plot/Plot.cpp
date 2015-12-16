@@ -9,7 +9,7 @@ Plot::Plot(const std::string& name) : xolotlCore::Identifiable(name) {
 Plot::~Plot() {
 }
 
-void Plot::render(const std::string& fileName) {
+void Plot::render(const std::string& /*fileName*/) {
 	return;
 }
 
@@ -59,11 +59,11 @@ void Plot::setLogScale(bool logScale) {
 	return;
 }
 
-void Plot::addDataProvider(std::shared_ptr<IDataProvider> dataProvider) {
+void Plot::addDataProvider(std::shared_ptr<IDataProvider> /*dataProvider*/) {
 	return;
 }
 
-std::shared_ptr<IDataProvider> Plot::getDataProvider(int i) const {
+std::shared_ptr<IDataProvider> Plot::getDataProvider(int /*i*/) const {
 	return plotDataProvider;
 }
 

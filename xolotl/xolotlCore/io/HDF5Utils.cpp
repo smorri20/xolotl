@@ -171,7 +171,7 @@ void HDF5Utils::fillNetwork(PSIClusterReactionNetwork *network) {
 	return;
 }
 
-void HDF5Utils::addConcentrationSubGroup(int timeStep, int networkSize,
+void HDF5Utils::addConcentrationSubGroup(int timeStep, int /*networkSize*/,
 		double time, double deltaTime) {
 	// Set the name of the sub group
 	std::stringstream subGroupName;

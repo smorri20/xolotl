@@ -6,8 +6,8 @@
 
 namespace xolotlSolver {
 
-void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int ny,
-		double hy, int nz, double hz) {
+void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int /*ny*/,
+		double /*hy*/, int /*nz*/, double /*hz*/) {
 	PetscErrorCode ierr;
 
 	// Degrees of freedom is the total number of clusters in the network

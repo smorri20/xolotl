@@ -36,19 +36,19 @@ DummyHandlerRegistry::getHardwareCounter( const std::string& name,
 }
 
 void 
-DummyHandlerRegistry::collectStatistics( PerfObjStatsMap<ITimer::ValType>& timerStats,
-                    PerfObjStatsMap<IEventCounter::ValType>& counterStats,
-                    PerfObjStatsMap<IHardwareCounter::CounterType>& hwCounterStats )
+DummyHandlerRegistry::collectStatistics( PerfObjStatsMap<ITimer::ValType>& /*timerStats*/,
+                    PerfObjStatsMap<IEventCounter::ValType>& /*counterStats*/,
+                    PerfObjStatsMap<IHardwareCounter::CounterType>& /*hwCounterStats*/ )
 {
     // do nothing
 }
 
 
 void 
-DummyHandlerRegistry::reportStatistics( std::ostream& os, 
-                    const PerfObjStatsMap<ITimer::ValType>& timerStats,
-                    const PerfObjStatsMap<IEventCounter::ValType>& counterStats,
-                    const PerfObjStatsMap<IHardwareCounter::CounterType>& hwCounterStats ) const
+DummyHandlerRegistry::reportStatistics( std::ostream& /*os*/,
+                    const PerfObjStatsMap<ITimer::ValType>& /*timerStats*/,
+                    const PerfObjStatsMap<IEventCounter::ValType>& /*counterStats*/,
+                    const PerfObjStatsMap<IHardwareCounter::CounterType>& /*hwCounterStats*/ ) const
 {
     // do nothing
 }

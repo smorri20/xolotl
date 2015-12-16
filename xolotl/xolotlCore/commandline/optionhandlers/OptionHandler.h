@@ -43,7 +43,7 @@ public:
      * @param opt The pointer to the option that will be modified.
      * @param arg The argument for the option.
      */
-    virtual bool handler(IOptions *opt, const std::string& arg) {return false;}
+    virtual bool handler(IOptions * /*opt*/, const std::string& /*arg*/) {return false;}
 
 };//end class OptionHandler
 

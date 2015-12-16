@@ -50,8 +50,8 @@ public:
 	 * @param counterName The DummyHardwareCounter's name
 	 * @param counterQuantities The vector of quantities the DummyHardwareCounter will monitor
 	 */
-	DummyHardwareCounter(const std::string& counterName,
-                            const IHardwareCounter::SpecType& ctrSpec)
+	DummyHardwareCounter(const std::string& /*counterName*/,
+                            const IHardwareCounter::SpecType& /*ctrSpec*/)
 		: xolotlCore::Identifiable("unused")
 	{ }
 
@@ -109,7 +109,7 @@ public:
      * This class' implementation is a stub.
      * @return An empty string.
      */
-    virtual std::string getCounterName(IHardwareCounter::CounterSpec cs) const
+    virtual std::string getCounterName(IHardwareCounter::CounterSpec /*cs*/) const
     {
         return std::string();
     }

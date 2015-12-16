@@ -48,7 +48,7 @@ std::shared_ptr<xolotlViz::IPlot> surfacePlot2D;
  * HDF5 is handling the parallel part, so no call to MPI here.
  */
 PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
-		void *ictx) {
+		void * /*ictx*/) {
 	PetscErrorCode ierr;
 	const double ***solutionArray, *gridPointSolution;
 	PetscInt xs, xm, Mx, ys, ym, My;
@@ -177,8 +177,8 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 /**
  * This is a monitoring method that will compute the total helium fluence
  */
-PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time,
-		Vec solution, void *ictx) {
+PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt /*timestep*/, PetscReal time,
+		Vec solution, void * /*ictx*/) {
 	PetscErrorCode ierr;
 	PetscInt xs, xm, ys, ym;
 
@@ -279,7 +279,7 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
  * a specific cluster at each grid point.
  */
 PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
-		Vec solution, void *ictx) {
+		Vec solution, void * /*ictx*/) {
 	PetscErrorCode ierr;
 	const double ***solutionArray, *gridPointSolution;
 	PetscInt xs, xm, Mx, ys, ym, My;

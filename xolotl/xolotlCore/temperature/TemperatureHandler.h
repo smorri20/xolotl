@@ -55,8 +55,8 @@ public:
 	 * @param currentTime The time
 	 * @return The temperature
 	 */
-	virtual double getTemperature(std::vector<double> position,
-			double currentTime) const {return temperature;}
+	virtual double getTemperature(const std::vector<double>& /*position*/,
+			double /*currentTime*/) const {return temperature;}
 
 }; //end class TemperatureHandler
 
