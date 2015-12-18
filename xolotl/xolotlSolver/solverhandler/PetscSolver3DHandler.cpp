@@ -218,7 +218,6 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 	// Declarations for variables used in the loop
 	double flux;
-	auto heCluster = (xolotlCore::PSICluster *) network->get(xolotlCore::heType, 1);
 	int fluxIndex = fluxHandler->getIncidentFluxClusterIndex(), reactantIndex;
 	xolotlCore::PSICluster *cluster = NULL;
 	double **concVector = new double*[7];

@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 
 	// Initialize and get the temperature handler
 	bool tempInitOK = xolotlFactory::initializeTempHandler(opts);
-	assert(tempInitOK);
+	BOOST_REQUIRE_EQUAL(tempInitOK, true);
 	auto tempHandler = xolotlFactory::getTemperatureHandler();
 
 	// Set up our dummy performance and visualization infrastructures
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 
 	// Initialize and get the temperature handler
 	bool tempInitOK = xolotlFactory::initializeTempHandler(opts);
-	assert(tempInitOK);
+	BOOST_REQUIRE_EQUAL(tempInitOK, true);
 	auto tempHandler = xolotlFactory::getTemperatureHandler();
 
 	// Set up our dummy performance and visualization infrastructures
@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 
 	// Initialize and get the temperature handler
 	bool tempInitOK = xolotlFactory::initializeTempHandler(opts);
-	assert(tempInitOK);
+	BOOST_REQUIRE_EQUAL(tempInitOK, true);
 	auto tempHandler = xolotlFactory::getTemperatureHandler();
 
 	// Set up our dummy performance and visualization infrastructures

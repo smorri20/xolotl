@@ -162,10 +162,12 @@ int main(int argc, char **argv) {
 		auto material = initMaterial(opts);
 		// Set up the temperature infrastructure
 		bool tempInitOK = initTemp(opts);
-		assert(tempInitOK);
+		if (!tempInitOK)
+			return EXIT_FAILURE;
 		// Set up the visualization infrastructure.
 		bool vizInitOK = initViz(opts.useVizStandardHandlers());
-		assert(vizInitOK);
+		if (!vizInitOK)
+			return EXIT_FAILURE;
 
 		// Access the temperature handler registry to get the temperature
 		auto tempHandler = xolotlFactory::getTemperatureHandler();
@@ -178,7 +180,8 @@ int main(int argc, char **argv) {
 
 		// Initialize and get the solver handler
 		bool dimOK = xolotlFactory::initializeDimension(opts);
-		assert(dimOK);
+		if (!dimOK)
+			return EXIT_FAILURE;
 		auto solvHandler = xolotlFactory::getSolverHandler();
 
 		// Setup the solver
