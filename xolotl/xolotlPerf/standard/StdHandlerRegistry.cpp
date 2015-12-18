@@ -190,7 +190,7 @@ StdHandlerRegistry::GetObjValue( const std::map<std::string, std::shared_ptr<T> 
 {
     auto currObjIter = myObjs.find(objName);
     bool found = currObjIter != myObjs.end();
-    V val;
+    V val = V();
     if( found )
     {
         val = currObjIter->second->getValue();
@@ -218,7 +218,7 @@ StdHandlerRegistry::GetObjValue( const std::map<std::string, std::shared_ptr<IHa
 
     auto objIter = myObjs.find(objNameOnly);
     bool found = objIter != myObjs.end();
-    IHardwareCounter::CounterType val;
+    IHardwareCounter::CounterType val = 0;
     if( found )
     {
         const std::shared_ptr<IHardwareCounter>& currObj = objIter->second;
