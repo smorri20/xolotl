@@ -556,7 +556,7 @@ std::vector<int> HDF5Utils::readSurface2D(const std::string& fileName, int lastT
 
 	// Get the dimensions of the dataset
 	hsize_t dims[1];
-	status = H5Sget_simple_extent_dims(dataspaceId, dims, H5P_DEFAULT);
+	status = H5Sget_simple_extent_dims(dataspaceId, dims, NULL);
 
 	// Create the array that will receive the indices
 	int index[dims[0]];
@@ -609,7 +609,7 @@ std::vector< std::vector<int> > HDF5Utils::readSurface3D(const std::string& file
 
 	// Get the dimensions of the dataset
 	hsize_t dims[2];
-	status = H5Sget_simple_extent_dims(dataspaceId, dims, H5P_DEFAULT);
+	status = H5Sget_simple_extent_dims(dataspaceId, dims, NULL);
 
 	// Create the array that will receive the indices
 	int index[dims[0]][dims[1]];
@@ -718,7 +718,7 @@ std::vector< std::vector<double> > HDF5Utils::readGridPoint(const std::string& f
 
 		// Get the dimensions of the dataset
 		hsize_t dims[2];
-		status = H5Sget_simple_extent_dims(dataspaceId, dims, H5P_DEFAULT);
+		status = H5Sget_simple_extent_dims(dataspaceId, dims, NULL);
 
 		// Create the array that will receive the concentrations
 		double conc[dims[0]][dims[1]];

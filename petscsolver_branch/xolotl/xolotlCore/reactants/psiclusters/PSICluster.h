@@ -407,6 +407,7 @@ protected:
 			const PSICluster & productReactant) const;
 
 	/**
+
 	 * This operation returns a set that contains only the entries of the
 	 * reaction connectivity array that are non-zero.
 	 *
@@ -655,6 +656,12 @@ public:
 	 * network.
 	 */
 	virtual void getEmissionPartialDerivatives(std::vector<double> & partials) const;
+
+	/**
+	 * This operation reset the connectivity sets based on the information
+	 * in the effective production and dissociation vectors.
+	 */
+	void resetConnectivities();
 
 	/**
 	 * This operation returns the total size of the cluster.
