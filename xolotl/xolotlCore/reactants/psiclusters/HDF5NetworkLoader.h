@@ -3,6 +3,7 @@
 
 //Includes
 #include <PSIClusterNetworkLoader.h>
+#include "SuperCluster.h"
 
 namespace xolotlCore {
 
@@ -77,7 +78,7 @@ public:
 	 * @param comp The composition of the HeV cluster.
 	 * @return The pointer to the super cluster
 	 */
-	PSICluster * findSuperCluster(std::vector<Reactant *> clusterList,
+	SuperCluster * findSuperCluster(std::vector<Reactant *> clusterList,
 			std::map<std::string, int> comp);
 
 	/**

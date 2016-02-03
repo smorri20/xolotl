@@ -7,7 +7,6 @@
 #include "VCluster.h"
 #include "InterstitialCluster.h"
 #include "HeVCluster.h"
-#include "SuperCluster.h"
 // #include "HeInterstitialCluster.h"
 #include "PSIClusterReactionNetwork.h"
 #include <xolotlPerf.h>
@@ -145,7 +144,7 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 	}
 
 	// Initialize variables for the loop
-	PSICluster * newCluster;
+	SuperCluster * newCluster;
 	// Loop on all the reactants to update the pairs vector with super clusters
 	auto reactants = network->getAll();
 	// Get the super cluster map
@@ -170,6 +169,7 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 					// It has to be replaced by a super cluster
 					newCluster = findSuperCluster(superMap, composition);
 					react[l].first = newCluster;
+					react[l].firstDistance = newCluster->getDistance(composition[heType]);
 				}
 			}
 
@@ -182,6 +182,7 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 					// It has to be replaced by a super cluster
 					newCluster = findSuperCluster(superMap, composition);
 					react[l].second = newCluster;
+					react[l].secondDistance = newCluster->getDistance(composition[heType]);
 				}
 			}
 		}
@@ -197,6 +198,7 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 					// It has to be replaced by a super cluster
 					newCluster = findSuperCluster(superMap, composition);
 					combi[l].combining = newCluster;
+					combi[l].distance = newCluster->getDistance(composition[heType]);
 				}
 			}
 		}
@@ -212,6 +214,7 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 					// It has to be replaced by a super cluster
 					newCluster = findSuperCluster(superMap, composition);
 					disso[l].first = newCluster;
+					disso[l].firstDistance = newCluster->getDistance(composition[heType]);
 				}
 			}
 
@@ -224,6 +227,7 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 					// It has to be replaced by a super cluster
 					newCluster = findSuperCluster(superMap, composition);
 					disso[l].second = newCluster;
+					disso[l].secondDistance = newCluster->getDistance(composition[heType]);
 				}
 			}
 		}
@@ -239,6 +243,7 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 					// It has to be replaced by a super cluster
 					newCluster = findSuperCluster(superMap, composition);
 					emi[l].first = newCluster;
+					emi[l].firstDistance = newCluster->getDistance(composition[heType]);
 				}
 			}
 
@@ -251,6 +256,7 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 					// It has to be replaced by a super cluster
 					newCluster = findSuperCluster(superMap, composition);
 					emi[l].second = newCluster;
+					emi[l].secondDistance = newCluster->getDistance(composition[heType]);
 				}
 			}
 		}
@@ -288,7 +294,7 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 	return;
 }
 
-PSICluster * HDF5NetworkLoader::findSuperCluster(std::vector<Reactant *> clusterList,
+SuperCluster * HDF5NetworkLoader::findSuperCluster(std::vector<Reactant *> clusterList,
 		std::map<std::string, int> comp) {
 	// Initialize variables for the loop
 	SuperCluster * superCluster;
@@ -318,5 +324,5 @@ PSICluster * HDF5NetworkLoader::findSuperCluster(std::vector<Reactant *> cluster
 		if (found) break;
 	}
 
-	return (PSICluster *) superCluster;
+	return superCluster;
 }

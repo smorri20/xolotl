@@ -39,13 +39,13 @@ public:
 	void initializeOFill(PSIClusterReactionNetwork *network, int *ofill) {
 		// Get all the reactants
 		auto reactants = network->getAll();
-		int size = reactants->size();
+		int size = reactants->size() + network->getAll("Super").size();
 
 		// Clear the index vector
 		indexVector.clear();
 
 		// Loop on the reactants
-		for (int i = 0; i < size; i++) {
+		for (int i = 0; i < size - network->getAll("Super").size(); i++) {
 			// Get the i-th cluster
 			auto cluster = (PSICluster *) reactants->at(i);
 			// Get its diffusion coefficient

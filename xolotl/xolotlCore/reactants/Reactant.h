@@ -56,6 +56,11 @@ protected:
 	int id;
 
 	/**
+	 * An integer identification number for this reactant momentum.
+	 */
+	int momId;
+
+	/**
 	 * The temperature at which the cluster currently exists. The diffusion
 	 * coefficient is recomputed each time the temperature is changed.
 	 */
@@ -130,9 +135,10 @@ public:
 	/**
 	 * This operation returns the current concentration.
 	 *
+	 * @param id The id in the group, used only for super clusters
 	 * @return The concentration of this reactant
 	 */
-	double getConcentration() const;
+	virtual double getConcentration(double id) const;
 
 	/**
 	 * This operation increases the concentration of the reactant by the
@@ -162,6 +168,22 @@ public:
 	 * This operation sets the concentration of the reactant to zero.
 	 */
 	void zero();
+
+	/**
+	 * This operation sets the zeroth order momentum. It doesn't do
+	 * anything except for Super clusters
+	 *
+	 * @param mom The momentum
+	 */
+	virtual void setZerothMomentum(double mom);
+
+	/**
+	 * This operation sets the first order momentum. It doesn't do
+	 * anything except for Super clusters
+	 *
+	 * @param mom The momentum
+	 */
+	virtual void setFirstMomentum(double mom);
 
 	/**
 	 * This operation returns the total flux of this reactant in the
@@ -272,6 +294,22 @@ public:
 	 * @return The id
 	 */
 	int getId() const {return id;}
+
+	/**
+	 * This operation sets the momentum id of the reactant, The id is zero by default
+	 * and clients, most likely the ReactionNetwork, are expected to set the
+	 * id as needed.
+	 *
+	 * @param nId The new momentum id for this reactant
+	 */
+	void setMomentumId(int nId) {momId = nId;}
+
+	/**
+	 * This operation returns the momentum id for this reactant.
+	 *
+	 * @return The id
+	 */
+	int getMomentumId() const {return momId;}
 
 	/**
 	 * This operation sets the temperature at which the reactant currently

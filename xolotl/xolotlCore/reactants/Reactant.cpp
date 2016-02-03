@@ -9,7 +9,7 @@ using namespace xolotlCore;
 
 Reactant::Reactant() :
 		concentration(0.0),
-		name(""), id(0),
+		name(""), id(0), momId(0),
 		temperature(0.0),
 		network(nullptr),
 		handlerRegistry(nullptr) {}
@@ -45,7 +45,7 @@ Reactant::Reactant(double conc, std::shared_ptr<xolotlPerf::IHandlerRegistry> re
 		network(nullptr),
 		handlerRegistry(registry) {}
 
-double Reactant::getConcentration() const {
+double Reactant::getConcentration(double id) const {
 	return concentration;
 }
 
@@ -70,6 +70,14 @@ void Reactant::setConcentration(double conc) {
 void Reactant::zero() {
 	concentration = 0.0;
 
+	return;
+}
+
+void Reactant::setZerothMomentum(double mom) {
+	return;
+}
+
+void Reactant::setFirstMomentum(double mom) {
 	return;
 }
 

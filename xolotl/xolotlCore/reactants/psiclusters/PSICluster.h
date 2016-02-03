@@ -38,6 +38,24 @@ class PSICluster: public Reactant {
 protected:
 
 	/**
+	 * The row of the reaction connectivity matrix corresponding to
+	 * this PSICluster stored as a set.
+	 *
+	 * If a cluster is involved in a reaction with this PSICluster,
+	 * the cluster id is an element of this set.
+	 */
+	std::set<int> reactionConnectivitySet;
+
+	/**
+	 * The row of the dissociation connectivity matrix corresponding to
+	 * this PSICluster stored as a set.
+	 *
+	 * If this PSICluster can dissociate into a particular cluster,
+	 * the cluster id is an element of this set.
+	 */
+	std::set<int> dissociationConnectivitySet;
+
+	/**
 	 * This is a protected class that is used to implement the flux calculations
 	 * for two body reactions or dissociation.
 	 *
@@ -59,6 +77,16 @@ protected:
 		PSICluster * second;
 
 		/**
+		 * The first cluster distance in the group (0.0 for non-super clusters)
+		 */
+		double firstDistance;
+
+		/**
+		 * The second cluster distance in the group (0.0 for non-super clusters)
+		 */
+		double secondDistance;
+
+		/**
 		 * The reaction/dissociation constant associated to this
 		 * reaction or dissociation
 		 */
@@ -66,7 +94,7 @@ protected:
 
 		//! The constructor
 		ClusterPair(PSICluster * firstPtr, PSICluster * secondPtr, double k)
-		: first(firstPtr), second(secondPtr), kConstant(k) {}
+		: first(firstPtr), second(secondPtr), kConstant(k), firstDistance(0.0), secondDistance(0.0) {}
 	};
 
 	/**
@@ -86,13 +114,18 @@ protected:
 		PSICluster * combining;
 
 		/**
+		 * The combining cluster distance in the group (0.0 for non-super clusters)
+		 */
+		double distance;
+
+		/**
 		 * The reaction constant associated to this reaction
 		 */
 		double kConstant;
 
 		//! The constructor
 		CombiningCluster(PSICluster * Ptr, double k)
-		: combining(Ptr), kConstant(k) {}
+		: combining(Ptr), kConstant(k), distance(0.0) {}
 	};
 
 	/**
@@ -421,24 +454,6 @@ protected:
 private:
 
 	/**
-	 * The row of the reaction connectivity matrix corresponding to
-	 * this PSICluster stored as a set.
-	 *
-	 * If a cluster is involved in a reaction with this PSICluster,
-	 * the cluster id is an element of this set.
-	 */
-	std::set<int> reactionConnectivitySet;
-
-	/**
-	 * The row of the dissociation connectivity matrix corresponding to
-	 * this PSICluster stored as a set.
-	 *
-	 * If this PSICluster can dissociate into a particular cluster,
-	 * the cluster id is an element of this set.
-	 */
-	std::set<int> dissociationConnectivitySet;
-
-	/**
 	 * The default constructor is private because PSIClusters must always be
 	 * initialized with a size.
 	 */
@@ -534,7 +549,7 @@ public:
 	 * This operation reset the connectivity sets based on the information
 	 * in the production and dissociation vectors.
 	 */
-	void resetConnectivities();
+	virtual void resetConnectivities();
 
 	/**
 	 * This operation returns the total flux of this cluster in the
@@ -543,7 +558,7 @@ public:
 	 * @return The total change in flux for this cluster due to all
 	 * reactions
 	 */
-	virtual double getTotalFlux();
+	virtual double getTotalFlux() const;
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -576,6 +591,14 @@ public:
 	 * @return The flux due to this cluster combining with other clusters
 	 */
 	virtual double getCombinationFlux() const;
+
+	/**
+	 * This operation returns the moment flux of this cluster in the
+	 * current network. It doesn't do anything except for superclusters.
+	 *
+	 * @return The total change in the moment flux
+	 */
+	virtual double getMomentFlux() const;
 
 	/**
 	 * This operation returns the list of partial derivatives of this cluster
@@ -643,6 +666,15 @@ public:
 	 * network.
 	 */
 	virtual void getEmissionPartialDerivatives(std::vector<double> & partials) const;
+
+	/**
+	 * This operation computes the partial derivatives for the momentum. It doesn't
+	 * do anything except for super clusters.
+	 *
+	 * @param partials The vector into which the partial derivatives should be
+	 * inserted.
+	 */
+	virtual void getMomentPartialDerivatives(std::vector<double> & partials) const;
 
 	/**
 	 * This operation returns the total size of the cluster.

@@ -218,6 +218,12 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 	// Declare the pointer for the concentrations at a specific grid point
 	PetscReal *gridPointSolution;
 
+	// Get the network
+	auto network = solverHandler->getNetwork();
+
+	// Get all the super clusters
+	auto superClusters = network->getAll("Super");
+
 	// Loop on the grid
 	for (int xi = xs; xi < xs + xm; xi++) {
 		// Get the pointer to the beginning of the solution data for this grid point
@@ -228,6 +234,18 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 			// Add the current concentration times the number of helium in the cluster
 			// (from the weight vector)
 			heConcentration += gridPointSolution[heIndices1D[i]] * (double) heWeights1D[i] * hx;
+		}
+
+		if (xi == 1) {
+			std::ofstream outputFile;
+			outputFile.open("momentum.txt");
+
+			for (int i = 0; i < superClusters.size(); i++) {
+				outputFile << gridPointSolution[superClusters[i]->getId() - 1] << " "
+						<< gridPointSolution[superClusters[i]->getId() - 1 + superClusters.size()] << std::endl;
+			}
+
+			outputFile.close();
 		}
 	}
 

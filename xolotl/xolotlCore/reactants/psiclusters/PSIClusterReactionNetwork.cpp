@@ -424,10 +424,17 @@ void PSIClusterReactionNetwork::reinitializeNetwork() {
 	for (auto it = allReactants->begin(); it != allReactants->end(); ++it) {
 		id++;
 		(*it)->setId(id);
+		(*it)->setMomentumId(0);
 	}
 
 	// Reset the network size
 	networkSize = id;
+
+	// Get all the super clusters and loop on them
+	for (auto it = clusterTypeMap[superType]->begin(); it != clusterTypeMap[superType]->end(); ++it) {
+		id++;
+		(*it)->setMomentumId(id);
+	}
 
 	return;
 }

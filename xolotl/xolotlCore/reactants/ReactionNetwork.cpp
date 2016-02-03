@@ -6,18 +6,18 @@
 
 using namespace xolotlCore;
 
-ReactionNetwork::ReactionNetwork()
-  : properties(new std::map<std::string, std::string>())
-{
+ReactionNetwork::ReactionNetwork() :
+		properties(new std::map<std::string, std::string>()) {
 //    concUpdateCounter = xolotlPerf::getHandlerRegistry()->getEventCounter("net_conc_updates");
 	return;
 }
 
-ReactionNetwork::ReactionNetwork(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry)
-  : properties(new std::map<std::string, std::string>()), handlerRegistry(registry)
-{
+ReactionNetwork::ReactionNetwork(
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
+		properties(new std::map<std::string, std::string>()), handlerRegistry(
+				registry) {
 	// Counter for the number of times the network concentration is updated.
-    concUpdateCounter = handlerRegistry->getEventCounter("net_conc_updates");
+	concUpdateCounter = handlerRegistry->getEventCounter("net_conc_updates");
 
 	return;
 }
@@ -28,12 +28,12 @@ ReactionNetwork::ReactionNetwork(const ReactionNetwork &other) {
 
 	handlerRegistry = other.handlerRegistry;
 
-    // TODO - do we copy the source ReactionNetwork's counter also?
-    // Or should we have our own counter?  How to distinguish them by name?
+	// TODO - do we copy the source ReactionNetwork's counter also?
+	// Or should we have our own counter?  How to distinguish them by name?
 //    concUpdateCounter = xolotlPerf::getHandlerRegistry()->getEventCounter("net_conc_updates");
 
 	// Counter for the number of times the network concentration is updated.
-    concUpdateCounter = handlerRegistry->getEventCounter("net_conc_updates");
+	concUpdateCounter = handlerRegistry->getEventCounter("net_conc_updates");
 
 	return;
 }
@@ -47,7 +47,7 @@ void ReactionNetwork::fillConcentrationsArray(double * concentrations) {
 	// Fill the array
 	for (int i = 0; i < size; i++) {
 		id = reactants->at(i)->getId() - 1;
-		concentrations[id] = reactants->at(i)->getConcentration();
+		concentrations[id] = reactants->at(i)->getConcentration(0);
 	}
 
 	return;
@@ -60,10 +60,19 @@ void ReactionNetwork::updateConcentrationsFromArray(double * concentrations) {
 	int id = 1;
 
 	// Set the concentrations
-    concUpdateCounter->increment();		// increment the update concentration counter
+	concUpdateCounter->increment();	// increment the update concentration counter
 	for (int i = 0; i < size; i++) {
 		id = reactants->at(i)->getId() - 1;
 		reactants->at(i)->setConcentration(concentrations[id]);
+	}
+
+	// Set the moments
+	int numSuperClusters = stoi(properties->at("numSuperClusters"));
+	for (int i = size - numSuperClusters; i < size; i++) {
+		id = reactants->at(i)->getId() - 1;
+		reactants->at(i)->setZerothMomentum(concentrations[id]);
+		id = reactants->at(i)->getMomentumId() - 1;
+		reactants->at(i)->setFirstMomentum(concentrations[id]);
 	}
 
 	return;
@@ -71,13 +80,14 @@ void ReactionNetwork::updateConcentrationsFromArray(double * concentrations) {
 
 void ReactionNetwork::askReactantsToReleaseNetwork(void) {
 	// Get all the reactants
-    auto allReactants = this->getAll();    
+	auto allReactants = this->getAll();
 
-    // Loop on each reactant to release the network
-    for(auto iter = allReactants->begin(); iter != allReactants->end(); ++iter) {
-        Reactant* currReactant = *iter;
-        assert( currReactant != NULL );
+	// Loop on each reactant to release the network
+	for (auto iter = allReactants->begin(); iter != allReactants->end();
+			++iter) {
+		Reactant* currReactant = *iter;
+		assert(currReactant != NULL);
 
-        currReactant->releaseReactionNetwork();
-    }
+		currReactant->releaseReactionNetwork();
+	}
 }

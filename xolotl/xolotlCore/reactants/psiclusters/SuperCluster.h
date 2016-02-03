@@ -23,6 +23,39 @@ private:
 	//! The number of HeV clusters gathered in this one.
 	int sectionWidth;
 
+	//! The 0th order momentum (mean).
+	double l0;
+
+	//! The first order momentum.
+	double l1;
+
+	//! The dispersion in the group
+	double dispersion;
+
+	//! The map containing all the reacting pairs separated by original helium cluster size.
+	std::map <int, std::vector<ClusterPair> > reactingMap;
+
+	//! The map containing all the combining clusters separated by original helium cluster size.
+	std::map <int, std::vector<CombiningCluster> > combiningMap;
+
+	//! The map containing all the dissociating pairs separated by original helium cluster size.
+	std::map <int, std::vector<ClusterPair> > dissociatingMap;
+
+	//! The map containing all the emission pairs separated by original helium cluster size.
+	std::map <int, std::vector<ClusterPair> > emissionMap;
+
+	//! The map containing all the effective reacting pairs separated by original helium cluster size.
+	std::map <int, std::vector<ClusterPair *> > effReactingMap;
+
+	//! The map containing all the effective combining clusters separated by original helium cluster size.
+	std::map <int, std::vector<CombiningCluster *> > effCombiningMap;
+
+	//! The map containing all the effective dissociating pairs separated by original helium cluster size.
+	std::map <int, std::vector<ClusterPair *> > effDissociatingMap;
+
+	//! The map containing all the effective emission pairs separated by original helium cluster size.
+	std::map <int, std::vector<ClusterPair *> > effEmissionMap;
+
 	/**
 	 * The default constructor is private because PSIClusters must always be
 	 * initialized with a size.
@@ -83,6 +116,22 @@ public:
 		{heVVector = vec;}
 
 	/**
+	 * This operation returns the current concentration.
+	 *
+	 * @param id The id in the group
+	 * @return The concentration of this reactant
+	 */
+	double getConcentration(double id) const;
+
+	/**
+	 * This operation returns the distance to the mean.
+	 *
+	 * @param he The number of helium
+	 * @return The distance to the mean number of helium in the group
+	 */
+	double getDistance(int he) const;
+
+	/**
 	 * Computes a row of the reaction connectivity matrix corresponding to
 	 * this reactant.
 	 *
@@ -106,6 +155,114 @@ public:
 	 * or CombiningCluster. Need to be called only when the temperature changes.
 	 */
 	void computeRateConstants();
+
+	/**
+	 * This operation sets the zeroth order momentum.
+	 *
+	 * @param mom The momentum
+	 */
+	void setZerothMomentum(double mom) {l0 = mom;}
+
+	/**
+	 * This operation sets the first order momentum.
+	 *
+	 * @param mom The momentum
+	 */
+	void setFirstMomentum(double mom) {l1 = mom;}
+
+	/**
+	 * This operation reset the connectivity sets based on the information
+	 * in the production and dissociation vectors.
+	 */
+	void resetConnectivities();
+
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * other clusters dissociating into it.
+	 *
+	 * @return The flux due to dissociation of other clusters
+	 */
+	double getDissociationFlux() const;
+
+	/**
+	 * This operation returns the total change in this cluster due its
+	 * own dissociation.
+	 *
+	 * @return The flux due to its dissociation
+	 */
+	double getEmissionFlux() const;
+
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * the production of this cluster by other clusters.
+	 *
+	 * @return The flux due to this cluster being produced
+	 */
+	double getProductionFlux() const;
+
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * the combination of this cluster with others.
+	 *
+	 * @return The flux due to this cluster combining with other clusters
+	 */
+	double getCombinationFlux() const;
+
+	/**
+	 * This operation returns the moment flux of this cluster in the
+	 * current network.
+	 *
+	 * @return The total change in the moment flux
+	 */
+	double getMomentFlux() const;
+
+	/**
+	 * This operation computes the partial derivatives due to production
+	 * reactions.
+	 *
+	 * @param partials The vector into which the partial derivatives should be
+	 * inserted. This vector should have a length equal to the size of the
+	 * network.
+	 */
+	void getProductionPartialDerivatives(std::vector<double> & partials) const;
+
+	/**
+	 * This operation computes the partial derivatives due to combination
+	 * reactions.
+	 *
+	 * @param partials The vector into which the partial derivatives should be
+	 * inserted. This vector should have a length equal to the size of the
+	 * network.
+	 */
+	void getCombinationPartialDerivatives(std::vector<double> & partials) const;
+
+	/**
+	 * This operation computes the partial derivatives due to dissociation of
+	 * other clusters into this one.
+	 *
+	 * @param partials The vector into which the partial derivatives should be
+	 * inserted. This vector should have a length equal to the size of the
+	 * network.
+	 */
+	void getDissociationPartialDerivatives(std::vector<double> & partials) const;
+
+	/**
+	 * This operation computes the partial derivatives due to emission
+	 * reactions.
+	 *
+	 * @param partials The vector into which the partial derivatives should be
+	 * inserted. This vector should have a length equal to the size of the
+	 * network.
+	 */
+	void getEmissionPartialDerivatives(std::vector<double> & partials) const;
+
+	/**
+	 * This operation computes the partial derivatives for the momentum.
+	 *
+	 * @param partials The vector into which the partial derivatives should be
+	 * inserted.
+	 */
+	void getMomentPartialDerivatives(std::vector<double> & partials) const;
 
 };
 //end class SuperCluster

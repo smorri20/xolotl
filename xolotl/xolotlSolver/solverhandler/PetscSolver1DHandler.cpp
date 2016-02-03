@@ -27,7 +27,7 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	network->reinitializeConnectivities();
 
 	// Degrees of freedom is the total number of clusters in the network
-	const int dof = network->size();
+	const int dof = network->size() + network->getAll("Super").size();
 
 	// Initialize the all reactants pointer
 	allReactants = network->getAll();
@@ -120,7 +120,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 	PetscScalar *concOffset;
 
 	// Degrees of freedom is the total number of clusters in the network
-	const int dof = network->size();
+	const int networkSize = network->size();
 
 	// Get the single vacancy ID
 	auto singleVacancyCluster = network->get(xolotlCore::vType, 1);
@@ -133,7 +133,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 		concOffset = concentrations[i];
 
 		// Loop on all the clusters to initialize at 0.0
-		for (int n = 0; n < dof; n++) {
+		for (int n = 0; n < networkSize; n++) {
 			concOffset[n] = 0.0;
 		}
 
@@ -222,7 +222,9 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
 
 	// Degrees of freedom is the total number of clusters in the network
-	const int dof = network->size();
+	const int networkSize = network->size();
+	// Get all the super clusters
+	auto superClusters = network->getAll("Super");
 
 	// Loop over grid points computing ODE terms for each grid point
 	for (int xi = xs; xi < xs + xm; xi++) {
@@ -237,7 +239,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 		// Boundary conditions
 		if (xi == 0 || xi == Mx - 1) {
-			for (int i = 0; i < dof; i++) {
+			for (int i = 0; i < networkSize; i++) {
 				updatedConcOffset[i] = 1.0 * concOffset[i];
 			}
 
@@ -276,12 +278,22 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				concVector, updatedConcOffset);
 
 		// ----- Compute all of the new fluxes -----
-		for (int i = 0; i < dof; i++) {
+		for (int i = 0; i < networkSize; i++) {
 			cluster = (xolotlCore::PSICluster *) allReactants->at(i);
 			// Compute the flux
 			flux = cluster->getTotalFlux();
 			// Update the concentration of the cluster
 			reactantIndex = cluster->getId() - 1;
+			updatedConcOffset[reactantIndex] += flux;
+		}
+
+		// ---- Moments ----
+		for (int i = 0; i < superClusters.size(); i++) {
+			cluster = (xolotlCore::PSICluster *) superClusters[i];
+			// Compute the moment flux
+			flux = cluster->getMomentFlux();
+			// Update the concentration of the cluster
+			reactantIndex = cluster->getMomentumId() - 1;
 			updatedConcOffset[reactantIndex] += flux;
 		}
 	}
@@ -434,14 +446,16 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	checkPetscError(ierr, "PetscSolver1DHandler::computeDiagonalJacobian: DMDAGetCorners failed.");
 
 	// The degree of freedom is the size of the network
-	const int dof = network->size();
+	const int networkSize = network->size();
+	// Get all the super clusters
+	auto superClusters = network->getAll("Super");
 
 	// Pointer to the concentrations at a given grid point
 	PetscScalar *concOffset;
 
 	// Arguments for MatSetValuesStencil called below
 	MatStencil rowId;
-	MatStencil colIds[dof];
+	MatStencil colIds[networkSize + superClusters.size()];
 	int pdColIdsVectorSize = 0;
 
 	// Declarations for variables used in the loop
@@ -458,7 +472,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 		network->updateConcentrationsFromArray(concOffset);
 
 		// Update the column in the Jacobian that represents each reactant
-		for (int i = 0; i < dof; i++) {
+		for (int i = 0; i < networkSize; i++) {
 			auto reactant = allReactants->at(i);
 			// Get the reactant index
 			reactantIndex = reactant->getId() - 1;
@@ -491,6 +505,43 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 			ierr = MatSetValuesStencil(J, 1, &rowId, pdColIdsVectorSize,
 					colIds, reactingPartialsForCluster.data(), ADD_VALUES);
 			checkPetscError(ierr, "PetscSolver1DHandler::computeDiagonalJacobian: MatSetValuesStencil failed.");
+		}
+
+		// Update the column in the Jacobian that represents the moment for the super clusters
+		for (int i = 0; i < superClusters.size(); i++) {
+			auto reactant = (xolotlCore::PSICluster *) superClusters[i];
+			// Get the reactant index
+			reactantIndex = reactant->getId() - 1 + superClusters.size();
+
+			// Set grid coordinate and component number for the row
+			rowId.i = xi;
+			rowId.c = reactantIndex;
+
+			// Get the partial derivatives
+			reactant->getMomentPartialDerivatives(clusterPartials);
+			// Get the list of column ids from the map
+			auto pdColIdsVector = dFillMap.at(reactantIndex);
+			// Number of partial derivatives
+			pdColIdsVectorSize = pdColIdsVector.size();
+
+			// Loop over the list of column ids
+			for (int j = 0; j < pdColIdsVectorSize; j++) {
+				// Set grid coordinate and component number for a column in the list
+				colIds[j].i = xi;
+				colIds[j].c = pdColIdsVector[j];
+				// Get the partial derivative from the array of all of the partials
+				reactingPartialsForCluster[j] =
+						clusterPartials[pdColIdsVector[j]];
+
+				// Reset the cluster partial value to zero. This is much faster
+				// than using memset.
+				clusterPartials[pdColIdsVector[j]] = 0.0;
+			}
+			// Update the matrix
+			ierr = MatSetValuesStencil(J, 1, &rowId, pdColIdsVectorSize,
+					colIds, reactingPartialsForCluster.data(), ADD_VALUES);
+			checkPetscError(ierr, "PetscSolver1DHandler::computeDiagonalJacobian: MatSetValuesStencil for momentum failed.");
+
 		}
 	}
 
