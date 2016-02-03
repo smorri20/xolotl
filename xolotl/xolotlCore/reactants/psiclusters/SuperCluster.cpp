@@ -58,6 +58,24 @@ double SuperCluster::getConcentration(double id) const {
 	return l0 + (id * l1);
 }
 
+double SuperCluster::getTotalConcentration() const {
+	// Initial declarations
+	int groupingIndex = 0;
+	double groupingDistance = 0.0, conc = 0.0;
+
+	// Loop on the width
+	for (int j = 0; j < sectionWidth; j++) {
+		// Compute the index
+		groupingIndex = (int) (numHe - (double) sectionWidth / 2.0) + j + 1;
+		groupingDistance = (double) groupingIndex - numHe;
+
+		// Add the concentration of each cluster in the group times its number of helium
+		conc += getConcentration(groupingDistance) * (double) groupingIndex;
+	}
+
+	return conc;
+}
+
 double SuperCluster::getDistance(int he) const {
 	return (double) he - numHe;
 }
@@ -110,7 +128,7 @@ void SuperCluster::computeRateConstants() {
 	// Loop on the width
 	for (int j = 0; j < sectionWidth; j++) {
 		// Compute the index
-		int groupingIndex = (numHe - (double) sectionWidth / 2.0) + j + 1;
+		int groupingIndex = (int) (numHe - (double) sectionWidth / 2.0) + j + 1;
 		// Compute nSquare for the dispersion
 		nSquare += groupingIndex * groupingIndex;
 
@@ -270,7 +288,7 @@ void SuperCluster::resetConnectivities() {
 	// Loop on the width
 	for (int j = 0; j < sectionWidth; j++) {
 		// Compute the index
-		int groupingIndex = (numHe - (double) sectionWidth / 2.0) + j + 1;
+		int groupingIndex = (int) (numHe - (double) sectionWidth / 2.0) + j + 1;
 		// Get all the reaction vectors at this index
 		effReactingPairs = effReactingMap[groupingIndex];
 		effCombiningReactants = effCombiningMap[groupingIndex];
@@ -309,14 +327,14 @@ void SuperCluster::resetConnectivities() {
 
 double SuperCluster::getDissociationFlux() const {
 	// Initial declarations
-	int nPairs = 0;
+	int nPairs = 0, groupingIndex = 0;
 	double flux = 0.0;
 	PSICluster *dissociatingCluster;
 
 	// Loop on the width
 	for (int j = 0; j < sectionWidth; j++) {
 		// Compute the index
-		int groupingIndex = (numHe - (double) sectionWidth / 2.0) + j + 1;
+		groupingIndex = (int) (numHe - (double) sectionWidth / 2.0) + j + 1;
 		// Get all the effective dissociating pairs at this index
 		auto pairs = effDissociatingMap.at(groupingIndex);
 
@@ -338,14 +356,14 @@ double SuperCluster::getDissociationFlux() const {
 
 double SuperCluster::getEmissionFlux() const {
 	// Initial declarations
-	int nPairs = 0;
-	double flux = 0.0;
+	int nPairs = 0, groupingIndex = 0;
+	double flux = 0.0, groupingDistance = 0.0;
 
 	// Loop on the width
 	for (int j = 0; j < sectionWidth; j++) {
 		// Compute the index
-		int groupingIndex = (numHe - (double) sectionWidth / 2.0) + j + 1;
-		double groupingDistance = (double) groupingIndex - numHe;
+		groupingIndex = (int) (numHe - (double) sectionWidth / 2.0) + j + 1;
+		groupingDistance = (double) groupingIndex - numHe;
 		// Get all the effective emission pairs at this index
 		auto pairs = effEmissionMap.at(groupingIndex);
 
@@ -364,13 +382,13 @@ double SuperCluster::getEmissionFlux() const {
 double SuperCluster::getProductionFlux() const {
 	// Local declarations
 	double flux = 0.0;
-	int nPairs = 0;
+	int nPairs = 0, groupingIndex = 0;
 	PSICluster *firstReactant, *secondReactant;
 
 	// Loop on the width
 	for (int j = 0; j < sectionWidth; j++) {
 		// Compute the index
-		int groupingIndex = (numHe - (double) sectionWidth / 2.0) + j + 1;
+		groupingIndex = (int) (numHe - (double) sectionWidth / 2.0) + j + 1;
 		// Get all the effective reaction pairs at this index
 		auto pairs = effReactingMap.at(groupingIndex);
 
@@ -393,15 +411,15 @@ double SuperCluster::getProductionFlux() const {
 
 double SuperCluster::getCombinationFlux() const {
 	// Local declarations
-	double flux = 0.0;
-	int nReactants = 0;
+	double flux = 0.0, groupingDistance = 0.0;
+	int nReactants = 0, groupingIndex = 0;
 	PSICluster *combiningCluster;
 
 	// Loop on the width
 	for (int j = 0; j < sectionWidth; j++) {
 		// Compute the index
-		int groupingIndex = (numHe - (double) sectionWidth / 2.0) + j + 1;
-		double groupingDistance = (double) groupingIndex - numHe;
+		groupingIndex = (int) (numHe - (double) sectionWidth / 2.0) + j + 1;
+		groupingDistance = (double) groupingIndex - numHe;
 		// Get all the effective combining reactants at this index
 		auto reactants = effCombiningMap.at(groupingIndex);
 
@@ -426,16 +444,16 @@ double SuperCluster::getMomentFlux() const {
 	// distance to the mean
 
 	// Local declarations
-	double flux = 0.0;
-	int nPairs = 0;
+	double flux = 0.0, groupingDistance = 0.0, factor = 0.0;
+	int nPairs = 0, groupingIndex = 0;
 	PSICluster *firstReactant, *secondReactant, *dissociatingCluster, *combiningCluster;
 
 	// Loop on the width
 	for (int j = 0; j < sectionWidth; j++) {
 		// Compute the index and the distance
-		int groupingIndex = (numHe - (double) sectionWidth / 2.0) + j + 1;
-		double groupingDistance = (double) groupingIndex - numHe;
-		double factor = groupingDistance / dispersion;
+		groupingIndex = (int) (numHe - (double) sectionWidth / 2.0) + j + 1;
+		groupingDistance = (double) groupingIndex - numHe;
+		factor = groupingDistance / dispersion;
 
 		// Get all the effective dissociation pairs at this index
 		auto pairs = effDissociatingMap.at(groupingIndex);
@@ -498,7 +516,8 @@ double SuperCluster::getMomentFlux() const {
 
 void SuperCluster::getProductionPartialDerivatives(std::vector<double> & partials) const {
 	// Initial declarations
-	int numReactants = 0, index = 0;
+	int numReactants = 0, index = 0, groupingIndex = 0;
+	double value = 0.0;
 
 	// Production
 	// A + B --> D, D being this cluster
@@ -511,26 +530,26 @@ void SuperCluster::getProductionPartialDerivatives(std::vector<double> & partial
 	// Loop on the width
 	for (int j = 0; j < sectionWidth; j++) {
 		// Compute the index
-		int groupingIndex = (numHe - (double) sectionWidth / 2.0) + j + 1;
+		groupingIndex = (int) (numHe - (double) sectionWidth / 2.0) + j + 1;
 		// Get all the effective reacting pairs at this index
 		auto pairs = effReactingMap.at(groupingIndex);
 
 		numReactants = pairs.size();
 		for (int i = 0; i < numReactants; i++) {
 			// Compute the contribution from the first part of the reacting pair
+			value = pairs[i]->kConstant
+					* pairs[i]->second->getConcentration(pairs[i]->secondDistance);
 			index = pairs[i]->first->getId() - 1;
-			partials[index] += pairs[i]->kConstant
-					* pairs[i]->second->getConcentration(pairs[i]->secondDistance);
+			partials[index] += value;
 			index = pairs[i]->first->getMomentumId() - 1;
-			partials[index] += pairs[i]->kConstant * pairs[i]->firstDistance
-					* pairs[i]->second->getConcentration(pairs[i]->secondDistance);
+			partials[index] += value * pairs[i]->firstDistance;
 			// Compute the contribution from the second part of the reacting pair
+			value = pairs[i]->kConstant
+					* pairs[i]->first->getConcentration(pairs[i]->firstDistance);
 			index = pairs[i]->second->getId() - 1;
-			partials[index] += pairs[i]->kConstant
-					* pairs[i]->first->getConcentration(pairs[i]->firstDistance);
+			partials[index] += value;
 			index = pairs[i]->second->getMomentumId() - 1;
-			partials[index] += pairs[i]->kConstant * pairs[i]->secondDistance
-					* pairs[i]->first->getConcentration(pairs[i]->firstDistance);
+			partials[index] += value * pairs[i]->secondDistance;
 		}
 	}
 
@@ -540,8 +559,9 @@ void SuperCluster::getProductionPartialDerivatives(std::vector<double> & partial
 void SuperCluster::getCombinationPartialDerivatives(
 		std::vector<double> & partials) const {
 	// Initial declarations
-	int numReactants = 0, otherIndex = 0;
+	int numReactants = 0, otherIndex = 0, groupingIndex = 0;
 	PSICluster *cluster;
+	double value = 0.0, groupingDistance = 0.0;
 
 	// Combination
 	// A + B --> D, A being this cluster
@@ -554,8 +574,8 @@ void SuperCluster::getCombinationPartialDerivatives(
 	// Loop on the width
 	for (int j = 0; j < sectionWidth; j++) {
 		// Compute the index
-		int groupingIndex = (numHe - (double) sectionWidth / 2.0) + j + 1;
-		double groupingDistance = (double) groupingIndex - numHe;
+		groupingIndex = (int) (numHe - (double) sectionWidth / 2.0) + j + 1;
+		groupingDistance = (double) groupingIndex - numHe;
 		// Get all the effective combining reactants at this index
 		auto reactants = effCombiningMap.at(groupingIndex);
 
@@ -564,14 +584,16 @@ void SuperCluster::getCombinationPartialDerivatives(
 			cluster = (PSICluster *) reactants[i]->combining;
 			// Remember that the flux due to combinations is OUTGOING (-=)!
 			// Compute the contribution from this cluster
-			partials[id - 1] -= reactants[i]->kConstant
+			value = reactants[i]->kConstant
 					* cluster->getConcentration(reactants[i]->distance);
-			partials[momId - 1] -= reactants[i]->kConstant * groupingDistance
-					* cluster->getConcentration(reactants[i]->distance);
+			partials[id - 1] -= value;
+			partials[momId - 1] -= value * groupingDistance;
 			// Compute the contribution from the combining cluster
+			value = reactants[i]->kConstant * getConcentration(groupingDistance);
+			otherIndex = cluster->getId() - 1;
+			partials[otherIndex] -= value;
 			otherIndex = cluster->getMomentumId() - 1;
-			partials[otherIndex] -= reactants[i]->kConstant * reactants[i]->distance
-					* getConcentration(groupingDistance);
+			partials[otherIndex] -= value * reactants[i]->distance;
 		}
 	}
 
@@ -581,8 +603,9 @@ void SuperCluster::getCombinationPartialDerivatives(
 void SuperCluster::getDissociationPartialDerivatives(
 		std::vector<double> & partials) const {
 	// Initial declarations
-	int numPairs = 0, index = 0;
+	int numPairs = 0, index = 0, groupingIndex = 0;
 	PSICluster *cluster;
+	double value = 0.0;
 
 	// Dissociation
 	// A --> B + D, B being this cluster
@@ -594,7 +617,7 @@ void SuperCluster::getDissociationPartialDerivatives(
 	// Loop on the width
 	for (int j = 0; j < sectionWidth; j++) {
 		// Compute the index
-		int groupingIndex = (numHe - (double) sectionWidth / 2.0) + j + 1;
+		groupingIndex = (int) (numHe - (double) sectionWidth / 2.0) + j + 1;
 		// Get all the effective dissociating pairs at this index
 		auto pairs = effDissociatingMap.at(groupingIndex);
 
@@ -602,10 +625,11 @@ void SuperCluster::getDissociationPartialDerivatives(
 		for (int i = 0; i < numPairs; i++) {
 			// Get the dissociating cluster
 			cluster = pairs[i]->first;
+			value = pairs[i]->kConstant;
 			index = cluster->getId() - 1;
-			partials[index] += pairs[i]->kConstant;
+			partials[index] += value;
 			index = cluster->getMomentumId() - 1;
-			partials[index] += pairs[i]->kConstant * pairs[i]->firstDistance;
+			partials[index] += value * pairs[i]->firstDistance;
 		}
 	}
 
@@ -614,7 +638,8 @@ void SuperCluster::getDissociationPartialDerivatives(
 
 void SuperCluster::getEmissionPartialDerivatives(std::vector<double> & partials) const {
 	// Initial declarations
-	int numPairs = 0, index = 0;
+	int numPairs = 0, index = 0, groupingIndex = 0;
+	double value = 0.0, groupingDistance = 0.0;
 
 	// Emission
 	// A --> B + D, A being this cluster
@@ -626,8 +651,8 @@ void SuperCluster::getEmissionPartialDerivatives(std::vector<double> & partials)
 	// Loop on the width
 	for (int j = 0; j < sectionWidth; j++) {
 		// Compute the index
-		int groupingIndex = (numHe - (double) sectionWidth / 2.0) + j + 1;
-		double groupingDistance = (double) groupingIndex - numHe;
+		groupingIndex = (int) (numHe - (double) sectionWidth / 2.0) + j + 1;
+		groupingDistance = (double) groupingIndex - numHe;
 		// Get all the effective emission pairs at this index
 		auto pairs = effEmissionMap.at(groupingIndex);
 
@@ -635,8 +660,9 @@ void SuperCluster::getEmissionPartialDerivatives(std::vector<double> & partials)
 		for (int i = 0; i < numPairs; i++) {
 			// Modify the partial derivative. Remember that the flux
 			// due to emission is OUTGOING (-=)!
-			partials[id - 1] -= pairs[i]->kConstant;
-			partials[momId - 1] -= pairs[i]->kConstant * groupingDistance;
+			value = pairs[i]->kConstant;
+			partials[id - 1] -= value;
+			partials[momId - 1] -= value * groupingDistance;
 		}
 	}
 
@@ -648,15 +674,16 @@ void SuperCluster::getMomentPartialDerivatives(std::vector<double> & partials) c
 	// distance to the mean
 
 	// Local declarations
-	int nPairs = 0, index = 0, otherIndex = 0;
+	int nPairs = 0, index = 0, otherIndex = 0, groupingIndex = 0;
 	PSICluster *cluster;
+	double value = 0.0, groupingDistance = 0.0, factor = 0.0;
 
 	// Loop on the width
 	for (int j = 0; j < sectionWidth; j++) {
 		// Compute the index and the distance
-		int groupingIndex = (numHe - (double) sectionWidth / 2.0) + j + 1;
-		double groupingDistance = (double) groupingIndex - numHe;
-		double factor = groupingDistance / dispersion;
+		groupingIndex = (int) (numHe - (double) sectionWidth / 2.0) + j + 1;
+		groupingDistance = (double) groupingIndex - numHe;
+		factor = groupingDistance / dispersion;
 
 		// Get all the reaction vectors at this index
 		auto pairs = effReactingMap.at(groupingIndex);
@@ -664,19 +691,19 @@ void SuperCluster::getMomentPartialDerivatives(std::vector<double> & partials) c
 		nPairs = pairs.size();
 		for (int i = 0; i < nPairs; i++) {
 			// Compute the contribution from the first part of the reacting pair
+			value = pairs[i]->kConstant
+					* pairs[i]->second->getConcentration(pairs[i]->secondDistance) * factor;
 			index = pairs[i]->first->getId() - 1;
-			partials[index] += pairs[i]->kConstant
-					* pairs[i]->second->getConcentration(pairs[i]->secondDistance) * factor;
+			partials[index] += value;
 			index = pairs[i]->first->getMomentumId() - 1;
-			partials[index] += pairs[i]->kConstant * pairs[i]->firstDistance
-					* pairs[i]->second->getConcentration(pairs[i]->secondDistance) * factor;
+			partials[index] += value * pairs[i]->firstDistance;
 			// Compute the contribution from the second part of the reacting pair
+			value = pairs[i]->kConstant
+					* pairs[i]->first->getConcentration(pairs[i]->firstDistance) * factor;
 			index = pairs[i]->second->getId() - 1;
-			partials[index] += pairs[i]->kConstant
-					* pairs[i]->first->getConcentration(pairs[i]->firstDistance) * factor;
+			partials[index] += value;
 			index = pairs[i]->second->getMomentumId() - 1;
-			partials[index] += pairs[i]->kConstant * pairs[i]->secondDistance
-					* pairs[i]->first->getConcentration(pairs[i]->firstDistance) * factor;
+			partials[index] += value * pairs[i]->secondDistance;
 		}
 
 		// Get all the effective combining reactants at this index
@@ -687,17 +714,17 @@ void SuperCluster::getMomentPartialDerivatives(std::vector<double> & partials) c
 			cluster = (PSICluster *) reactants[i]->combining;
 			// Remember that the flux due to combinations is OUTGOING (-=)!
 			// Compute the contribution from this cluster
-			partials[id - 1] -= reactants[i]->kConstant
+			value = reactants[i]->kConstant
 					* cluster->getConcentration(reactants[i]->distance) * factor;
-			partials[momId - 1] -= reactants[i]->kConstant * groupingDistance
-					* cluster->getConcentration(reactants[i]->distance) * factor;
+			partials[id - 1] -= value;
+			partials[momId - 1] -= value * groupingDistance;
 			// Compute the contribution from the combining cluster
+			value = reactants[i]->kConstant
+					* getConcentration(groupingDistance) * factor;
 			otherIndex = cluster->getId() - 1;
-			partials[otherIndex] -= reactants[i]->kConstant
-					* getConcentration(groupingDistance) * factor;
+			partials[otherIndex] -= value;
 			otherIndex = cluster->getMomentumId() - 1;
-			partials[otherIndex] -= reactants[i]->kConstant * reactants[i]->distance
-					* getConcentration(groupingDistance) * factor;
+			partials[otherIndex] -= value * reactants[i]->distance;
 		}
 
 		// Get all the effective dissociating pairs at this index
@@ -707,10 +734,11 @@ void SuperCluster::getMomentPartialDerivatives(std::vector<double> & partials) c
 		for (int i = 0; i < nPairs; i++) {
 			// Get the dissociating cluster
 			cluster = pairs[i]->first;
+			value = pairs[i]->kConstant * factor;
 			index = cluster->getId() - 1;
-			partials[index] += pairs[i]->kConstant * factor;
+			partials[index] += value;
 			index = cluster->getMomentumId() - 1;
-			partials[index] += pairs[i]->kConstant * pairs[i]->firstDistance * factor;
+			partials[index] += value * pairs[i]->firstDistance;
 		}
 
 		// Get all the effective emission pairs at this index
@@ -720,8 +748,9 @@ void SuperCluster::getMomentPartialDerivatives(std::vector<double> & partials) c
 		for (int i = 0; i < nPairs; i++) {
 			// Modify the partial derivative. Remember that the flux
 			// due to emission is OUTGOING (-=)!
-			partials[id - 1] -= pairs[i]->kConstant * factor;
-			partials[momId - 1] -= pairs[i]->kConstant * groupingDistance * factor;
+			value = pairs[i]->kConstant * factor;
+			partials[id - 1] -= value;
+			partials[momId - 1] -= value * groupingDistance;
 		}
 	}
 

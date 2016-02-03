@@ -14,6 +14,7 @@
 #include <vector>
 #include <memory>
 #include <HDF5Utils.h>
+#include <SuperCluster.h>
 
 namespace xolotlSolver {
 
@@ -229,11 +230,19 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 		// Get the pointer to the beginning of the solution data for this grid point
 		gridPointSolution = solutionArray[xi];
 
+		// Update the concentration in the network
+		network->updateConcentrationsFromArray(gridPointSolution);
+
 		// Loop on all the indices
 		for (int i = 0; i < heIndices1D.size(); i++) {
 			// Add the current concentration times the number of helium in the cluster
 			// (from the weight vector)
 			heConcentration += gridPointSolution[heIndices1D[i]] * (double) heWeights1D[i] * hx;
+		}
+		// Loop on all the super clusters
+		for (int i = 0; i < superClusters.size(); i++) {
+			auto cluster = (xolotlCore::SuperCluster *) superClusters[i];
+			heConcentration += cluster->getTotalConcentration() * hx;
 		}
 
 		if (xi == 1) {
@@ -1110,17 +1119,6 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		// Loop on the helium-vacancy clusters
 		for (int i = 0; i < heVClusters.size(); i++) {
 			auto cluster = (PSICluster *) heVClusters[i];
-			int id = cluster->getId() - 1;
-			// Add the Id to the vector
-			heIndices1D.push_back(id);
-			// Add the number of heliums of this cluster to the weight
-			auto comp = cluster->getComposition();
-			heWeights1D.push_back(comp[heType]);
-		}
-
-		// Loop on the helium-vacancy clusters
-		for (int i = 0; i < superClusters.size(); i++) {
-			auto cluster = (PSICluster *) superClusters[i];
 			int id = cluster->getId() - 1;
 			// Add the Id to the vector
 			heIndices1D.push_back(id);

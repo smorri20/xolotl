@@ -124,6 +124,13 @@ public:
 	double getConcentration(double id) const;
 
 	/**
+	 * This operation returns the current total concentration of helium in the group.
+
+	 * @return The concentration
+	 */
+	double getTotalConcentration() const;
+
+	/**
 	 * This operation returns the distance to the mean.
 	 *
 	 * @param he The number of helium

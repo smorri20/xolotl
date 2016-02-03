@@ -710,6 +710,7 @@ void PSICluster::getPartialDerivatives(std::vector<double> & partials) const {
 void PSICluster::getProductionPartialDerivatives(std::vector<double> & partials) const {
 	// Initial declarations
 	int numReactants = 0, index = 0;
+	double value = 0.0;
 
 	// Production
 	// A + B --> D, D being this cluster
@@ -721,19 +722,19 @@ void PSICluster::getProductionPartialDerivatives(std::vector<double> & partials)
 	numReactants = effReactingPairs.size();
 	for (int i = 0; i < numReactants; i++) {
 		// Compute the contribution from the first part of the reacting pair
+		value = effReactingPairs[i]->kConstant
+				* effReactingPairs[i]->second->getConcentration(effReactingPairs[i]->secondDistance);
 		index = effReactingPairs[i]->first->id - 1;
-		partials[index] += effReactingPairs[i]->kConstant
-				* effReactingPairs[i]->second->getConcentration(effReactingPairs[i]->secondDistance);
+		partials[index] += value;
 		index = effReactingPairs[i]->first->momId - 1;
-		partials[index] += effReactingPairs[i]->kConstant * effReactingPairs[i]->firstDistance
-				* effReactingPairs[i]->second->getConcentration(effReactingPairs[i]->secondDistance);
+		partials[index] += value * effReactingPairs[i]->firstDistance;
 		// Compute the contribution from the second part of the reacting pair
+		value = effReactingPairs[i]->kConstant
+				* effReactingPairs[i]->first->getConcentration(effReactingPairs[i]->firstDistance);
 		index = effReactingPairs[i]->second->id - 1;
-		partials[index] += effReactingPairs[i]->kConstant
-				* effReactingPairs[i]->first->getConcentration(effReactingPairs[i]->firstDistance);
+		partials[index] += value;
 		index = effReactingPairs[i]->second->momId - 1;
-		partials[index] += effReactingPairs[i]->kConstant * effReactingPairs[i]->secondDistance
-				* effReactingPairs[i]->first->getConcentration(effReactingPairs[i]->firstDistance);
+		partials[index] += value * effReactingPairs[i]->secondDistance;
 	}
 
 	return;
@@ -744,6 +745,7 @@ void PSICluster::getCombinationPartialDerivatives(
 	// Initial declarations
 	int numReactants = 0, otherIndex = 0;
 	PSICluster *cluster;
+	double value = 0.0;
 
 	// Combination
 	// A + B --> D, A being this cluster
@@ -760,12 +762,11 @@ void PSICluster::getCombinationPartialDerivatives(
 		partials[id - 1] -= effCombiningReactants[i]->kConstant
 				* cluster->getConcentration(effCombiningReactants[i]->distance);
 		// Compute the contribution from the combining cluster
+		value = effCombiningReactants[i]->kConstant * concentration;
 		otherIndex = cluster->id - 1;
-		partials[otherIndex] -= effCombiningReactants[i]->kConstant
-				* concentration;
+		partials[otherIndex] -= value;
 		otherIndex = cluster->momId - 1;
-		partials[otherIndex] -= effCombiningReactants[i]->kConstant
-				* effCombiningReactants[i]->distance * concentration;
+		partials[otherIndex] -= value * effCombiningReactants[i]->distance;
 	}
 
 	return;
@@ -776,6 +777,7 @@ void PSICluster::getDissociationPartialDerivatives(
 	// Initial declarations
 	int numPairs = 0, index = 0;
 	PSICluster *cluster;
+	double value = 0.0;
 
 	// Dissociation
 	// A --> B + D, B being this cluster
@@ -787,10 +789,11 @@ void PSICluster::getDissociationPartialDerivatives(
 	for (int i = 0; i < numPairs; i++) {
 		// Get the dissociating cluster
 		cluster = effDissociatingPairs[i]->first;
+		value = effDissociatingPairs[i]->kConstant;
 		index = cluster->id - 1;
-		partials[index] += effDissociatingPairs[i]->kConstant;
+		partials[index] += value;
 		index = cluster->momId - 1;
-		partials[index] += effDissociatingPairs[i]->kConstant * effDissociatingPairs[i]->firstDistance;
+		partials[index] += value * effDissociatingPairs[i]->firstDistance;
 	}
 
 	return;
