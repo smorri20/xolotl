@@ -78,16 +78,6 @@ public:
 	void applySectionalGrouping(std::shared_ptr<PSIClusterReactionNetwork> network);
 
 	/**
-	 * Find the super cluster that will replace the HeV cluster given by its composition.
-	 *
-	 * @param clusterList The list of super clusters.
-	 * @param comp The composition of the HeV cluster.
-	 * @return The pointer to the super cluster
-	 */
-	SuperCluster * findSuperCluster(std::vector<Reactant *> clusterList,
-			std::map<std::string, int> comp);
-
-	/**
 	 * This operation will set the name of the file where to take the network from.
 	 *
 	 * @param name The name of the file

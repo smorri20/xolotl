@@ -83,6 +83,11 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 	int count = 0, superCount = 0, heIndex = 0, vIndex = vMin;
 	double heSize = 0.0, vSize = 0.0, radius = 0.0;
 
+	// Map to know which cluster is in which group
+	std::map< std::vector<int>, std::pair<int, int> > clusterGroupMap;
+	// Map to know which super cluster gathers which group
+	std::map< std::pair<int, int>, SuperCluster *> superGroupMap;
+
 	// Get the number of groups in the helium and vacancy directions
 	int nVGroup = (network->getAll(vType).size() - vMin) / vSectionWidth + 1;
 	int nHeGroup = (network->getAll(vType).size() * 4) / heSectionWidth + 1;
@@ -110,6 +115,8 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 					heSize += (double) m;
 					vSize += (double) n;
 					radius += cluster->getReactionRadius();
+					// Keep the information of the group
+					clusterGroupMap[compositionVector] = std::make_pair(j, k);
 				}
 			}
 
@@ -128,6 +135,8 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 			// Add this cluster to the network and clusters
 			network->addSuper(superCluster);
 			clusters.push_back(superCluster);
+			// Keep the information of the group
+			superGroupMap[std::make_pair(j, k)] = superCluster.get();
 
 			std::cout << j << " " << k << " " << count << " " << superCluster->getName() << std::endl;
 
@@ -162,7 +171,8 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 				// Test its size
 				if (composition[vType] >= vMin) {
 					// It has to be replaced by a super cluster
-					newCluster = findSuperCluster(superMap, composition);
+					std::vector<int> compositionVector = { composition[heType], composition[vType], 0 };
+					newCluster = superGroupMap[clusterGroupMap[compositionVector]];
 					react[l].first = newCluster;
 					react[l].firstHeDistance = newCluster->getHeDistance(composition[heType]);
 					react[l].firstVDistance = newCluster->getVDistance(composition[vType]);
@@ -176,7 +186,8 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 				// Test its size
 				if (composition[vType] >= vMin) {
 					// It has to be replaced by a super cluster
-					newCluster = findSuperCluster(superMap, composition);
+					std::vector<int> compositionVector = { composition[heType], composition[vType], 0 };
+					newCluster = superGroupMap[clusterGroupMap[compositionVector]];
 					react[l].second = newCluster;
 					react[l].secondHeDistance = newCluster->getHeDistance(composition[heType]);
 					react[l].secondVDistance = newCluster->getVDistance(composition[vType]);
@@ -193,7 +204,8 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 				// Test its size
 				if (composition[vType] >= vMin) {
 					// It has to be replaced by a super cluster
-					newCluster = findSuperCluster(superMap, composition);
+					std::vector<int> compositionVector = { composition[heType], composition[vType], 0 };
+					newCluster = superGroupMap[clusterGroupMap[compositionVector]];
 					combi[l].combining = newCluster;
 					combi[l].heDistance = newCluster->getHeDistance(composition[heType]);
 					combi[l].vDistance = newCluster->getVDistance(composition[vType]);
@@ -210,7 +222,8 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 				// Test its size
 				if (composition[vType] >= vMin) {
 					// It has to be replaced by a super cluster
-					newCluster = findSuperCluster(superMap, composition);
+					std::vector<int> compositionVector = { composition[heType], composition[vType], 0 };
+					newCluster = superGroupMap[clusterGroupMap[compositionVector]];
 					disso[l].first = newCluster;
 					disso[l].firstHeDistance = newCluster->getHeDistance(composition[heType]);
 					disso[l].firstVDistance = newCluster->getVDistance(composition[vType]);
@@ -224,7 +237,8 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 				// Test its size
 				if (composition[vType] >= vMin) {
 					// It has to be replaced by a super cluster
-					newCluster = findSuperCluster(superMap, composition);
+					std::vector<int> compositionVector = { composition[heType], composition[vType], 0 };
+					newCluster = superGroupMap[clusterGroupMap[compositionVector]];
 					disso[l].second = newCluster;
 					disso[l].secondHeDistance = newCluster->getHeDistance(composition[heType]);
 					disso[l].secondVDistance = newCluster->getVDistance(composition[vType]);
@@ -241,7 +255,8 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 				// Test its size
 				if (composition[vType] >= vMin) {
 					// It has to be replaced by a super cluster
-					newCluster = findSuperCluster(superMap, composition);
+					std::vector<int> compositionVector = { composition[heType], composition[vType], 0 };
+					newCluster = superGroupMap[clusterGroupMap[compositionVector]];
 					emi[l].first = newCluster;
 					emi[l].firstHeDistance = newCluster->getHeDistance(composition[heType]);
 					emi[l].firstVDistance = newCluster->getVDistance(composition[vType]);
@@ -255,7 +270,8 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 				// Test its size
 				if (composition[vType] >= vMin) {
 					// It has to be replaced by a super cluster
-					newCluster = findSuperCluster(superMap, composition);
+					std::vector<int> compositionVector = { composition[heType], composition[vType], 0 };
+					newCluster = superGroupMap[clusterGroupMap[compositionVector]];
 					emi[l].second = newCluster;
 					emi[l].secondHeDistance = newCluster->getHeDistance(composition[heType]);
 					emi[l].secondVDistance = newCluster->getVDistance(composition[vType]);
@@ -294,37 +310,4 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 	network->reinitializeNetwork();
 
 	return;
-}
-
-SuperCluster * HDF5NetworkLoader::findSuperCluster(std::vector<Reactant *> clusterList,
-		std::map<std::string, int> comp) {
-	// Initialize variables for the loop
-	SuperCluster * superCluster;
-	static std::map<std::string, int> tempComp;
-	bool found = false;
-
-	// Loop on the super cluster list
-	for (int i = 0; i < clusterList.size(); i++) {
-		// Get the super cluster
-		superCluster = (SuperCluster *) clusterList.at(i);
-		found = false;
-
-		// Loop on its heVVector
-		for (int l = 0; l < superCluster->heVVector.size(); l++) {
-			// Get the composition and compare it
-			tempComp = superCluster->heVVector[l]->getComposition();
-			if (comp[heType] == tempComp[heType]
-					&& comp[vType] == tempComp[vType]
-					&& comp[iType] == tempComp[iType]) {
-				// We got the right one!
-				found = true;
-				break;
-			}
-		}
-
-		// If we found it we can return the super cluster
-		if (found) break;
-	}
-
-	return superCluster;
 }
