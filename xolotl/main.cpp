@@ -113,8 +113,9 @@ std::shared_ptr<PSIClusterNetworkLoader> setUpNetworkLoader(Options &options,
 	// Give the networkFilename to the network loader
 	networkLoader->setFilename(options.getNetworkFilename());
 	// Set the options for the grouping scheme
-	networkLoader->setHeMin(options.getGroupingHeMin());
-	networkLoader->setWidth(options.getGroupingWidth());
+	networkLoader->setVMin(options.getGroupingVMin());
+	networkLoader->setHeWidth(options.getGroupingHeWidth());
+	networkLoader->setVWidth(options.getGroupingVWidth());
 
 	return networkLoader;
 }

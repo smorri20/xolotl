@@ -100,13 +100,13 @@ BOOST_AUTO_TEST_CASE(checkCopying) {
 
 	// The values should now be different,
 	// so check them against the known values
-	BOOST_REQUIRE_CLOSE(reactant.getConcentration(0.0), 10.0, 1.0e-7);
-	BOOST_REQUIRE_CLOSE(reactantCopy.getConcentration(0.0), 15.0, 1.0e-7);
+	BOOST_REQUIRE_CLOSE(reactant.getConcentration(0.0, 0.0), 10.0, 1.0e-7);
+	BOOST_REQUIRE_CLOSE(reactantCopy.getConcentration(0.0, 0.0), 15.0, 1.0e-7);
 
 	// Try cloning the Reactant
 	auto reactantClone = reactant.clone();
 	
-	BOOST_REQUIRE_CLOSE(10.0, reactantClone->getConcentration(0.0), 1.0e-7);
+	BOOST_REQUIRE_CLOSE(10.0, reactantClone->getConcentration(0.0, 0.0), 1.0e-7);
 
 	return;
 }
@@ -117,25 +117,25 @@ BOOST_AUTO_TEST_CASE(checkConcentration) {
 	reactant.setConcentration(1.0);
 
 	// Make sure it was set correctly
-	BOOST_REQUIRE_EQUAL(1.0, reactant.getConcentration(0.0));
+	BOOST_REQUIRE_EQUAL(1.0, reactant.getConcentration(0.0, 0.0));
 
 	// Increase it
 	reactant.increaseConcentration(3.3);
 
 	// Make sure its correct
-	BOOST_REQUIRE_EQUAL(4.3, reactant.getConcentration(0.0));
+	BOOST_REQUIRE_EQUAL(4.3, reactant.getConcentration(0.0, 0.0));
 
 	// Decrease it
 	reactant.decreaseConcentration(1.3);
 
 	// Make sure its correct
-	BOOST_REQUIRE_EQUAL(3.0, reactant.getConcentration(0.0));
+	BOOST_REQUIRE_EQUAL(3.0, reactant.getConcentration(0.0, 0.0));
 
 	// Zero it
 	reactant.zero();
 
 	// Check it was zeroed
-	BOOST_REQUIRE_EQUAL(0.0, reactant.getConcentration(0.0));
+	BOOST_REQUIRE_EQUAL(0.0, reactant.getConcentration(0.0, 0.0));
 
 	// Make sure the base class getTotalFlux returns 0 for now
 	BOOST_REQUIRE_EQUAL(0.0, reactant.getTotalFlux());

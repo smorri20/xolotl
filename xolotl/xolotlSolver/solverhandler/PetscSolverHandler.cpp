@@ -29,7 +29,7 @@ void PetscSolverHandler::getDiagonalFill(PetscInt *diagFill,
 	auto superClusters = network->getAll("Super");
 
 	// Degrees of freedom is the total number of clusters in the network
-	const int dof = network->size() + superClusters.size();
+	const int dof = network->size() + 2 * superClusters.size();
 	const int diagSize = dof * dof;
 
 	// Declarations for the loop
@@ -39,7 +39,7 @@ void PetscSolverHandler::getDiagonalFill(PetscInt *diagFill,
 	// Fill the diagonal block if the sizes match up
 	if (diagFillSize == diagSize) {
 		// Get the connectivity for each reactant
-		for (int i = 0; i < dof - superClusters.size(); i++) {
+		for (int i = 0; i < dof - 2 * superClusters.size(); i++) {
 			// Get the reactant and its connectivity
 			auto reactant = allReactants->at(i);
 			connectivity = reactant->getConnectivity();
@@ -69,9 +69,9 @@ void PetscSolverHandler::getDiagonalFill(PetscInt *diagFill,
 			auto reactant = superClusters[i];
 			connectivity = reactant->getConnectivity();
 			connectivityLength = connectivity.size();
-			// Get the reactant id so that the connectivity can be lined up in
+			// Get the helium momentum id so that the connectivity can be lined up in
 			// the proper column
-			id = reactant->getMomentumId() - 1;
+			id = reactant->getHeMomentumId() - 1;
 
 			// Create the vector that will be inserted into the dFill map
 			std::vector<int> columnIds;
@@ -85,6 +85,20 @@ void PetscSolverHandler::getDiagonalFill(PetscInt *diagFill,
 				if (connectivity[j] == 1) {
 					columnIds.push_back(j);
 				}
+			}
+			// Update the map
+			dFillMap[id] = columnIds;
+
+			// Get the vacancy momentum id so that the connectivity can be lined up in
+			// the proper column
+			id = reactant->getVMomentumId() - 1;
+
+			// Add it to the diagonal fill block
+			for (int j = 0; j < connectivityLength; j++) {
+				// The id starts at j*connectivity length and is always offset
+				// by the id, which denotes the exact column.
+				index = (id) * dof + j;
+				diagFill[index] = connectivity[j];
 			}
 			// Update the map
 			dFillMap[id] = columnIds;

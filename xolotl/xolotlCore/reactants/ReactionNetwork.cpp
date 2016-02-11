@@ -47,7 +47,7 @@ void ReactionNetwork::fillConcentrationsArray(double * concentrations) {
 	// Fill the array
 	for (int i = 0; i < size; i++) {
 		id = reactants->at(i)->getId() - 1;
-		concentrations[id] = reactants->at(i)->getConcentration(0);
+		concentrations[id] = reactants->at(i)->getConcentration(0, 0);
 	}
 
 	return;
@@ -71,8 +71,10 @@ void ReactionNetwork::updateConcentrationsFromArray(double * concentrations) {
 	for (int i = size - numSuperClusters; i < size; i++) {
 		id = reactants->at(i)->getId() - 1;
 		reactants->at(i)->setZerothMomentum(concentrations[id]);
-		id = reactants->at(i)->getMomentumId() - 1;
-		reactants->at(i)->setFirstMomentum(concentrations[id]);
+		id = reactants->at(i)->getHeMomentumId() - 1;
+		reactants->at(i)->setHeMomentum(concentrations[id]);
+		id = reactants->at(i)->getVMomentumId() - 1;
+		reactants->at(i)->setVMomentum(concentrations[id]);
 	}
 
 	return;

@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(checkReactants) {
 
 	// Add a super cluster
 	shared_ptr<SuperCluster> cluster(
-				new SuperCluster(4.5, 5.0, 2, 0.1, 200.0, registry));
+				new SuperCluster(4.5, 5.0, 2, 2, 1, 0.1, registry));
 		psiNetwork->addSuper(cluster);
 
 	// Try adding a duplicate HeV and catch the exception
@@ -298,9 +298,9 @@ BOOST_AUTO_TEST_CASE(checkCopying) {
 	// original. Start by updating the copy.
 	auto copiedHeCluster = networkCopy.get("He", 1);
 	copiedHeCluster->setConcentration(7.0);
-	BOOST_REQUIRE_CLOSE(7.0, copiedHeCluster->getConcentration(0.0), 1.0e-5);
+	BOOST_REQUIRE_CLOSE(7.0, copiedHeCluster->getConcentration(0.0, 0.0), 1.0e-5);
 	// Make sure the original wasn't changed.
-	BOOST_REQUIRE_CLOSE(50.0, heCluster->getConcentration(0.0), 1.0e-5);
+	BOOST_REQUIRE_CLOSE(50.0, heCluster->getConcentration(0.0, 0.0), 1.0e-5);
 
 	// Check the size of the network
 	BOOST_REQUIRE_EQUAL(1, networkCopy.size());
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(checkArrayOperations) {
 	network->updateConcentrationsFromArray(concentrations);
 	auto reactants = network->getAll();
 	for (int i = 0; i < size; i++) {
-		BOOST_REQUIRE_CLOSE(1.0, reactants->at(0)->getConcentration(0.0), 1.0e-15);
+		BOOST_REQUIRE_CLOSE(1.0, reactants->at(0)->getConcentration(0.0, 0.0), 1.0e-15);
 	}
 
 	return;

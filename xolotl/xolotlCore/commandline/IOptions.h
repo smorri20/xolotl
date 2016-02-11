@@ -299,32 +299,46 @@ public:
 	virtual void setDimensionNumber(int number) = 0;
 
 	/**
-	 * Obtain the helium size at which the grouping scheme starts.
+	 * Obtain the vacancy size at which the grouping scheme starts.
 	 *
 	 * @return The size
 	 */
-	virtual int getGroupingHeMin() const = 0;
+	virtual int getGroupingVMin() const = 0;
 
 	/**
-	 * Set the helium size at which the grouping scheme starts.
+	 * Set the vacancy size at which the grouping scheme starts.
 	 *
 	 * @param size The size
 	 */
-	virtual void setGroupingHeMin(int size) = 0;
+	virtual void setGroupingVMin(int size) = 0;
 
 	/**
-	 * Obtain the width for the grouping scheme.
+	 * Obtain the helium width for the grouping scheme.
 	 *
 	 * @return The width
 	 */
-	virtual int getGroupingWidth() const = 0;
+	virtual int getGroupingHeWidth() const = 0;
 
 	/**
-	 * Set the width for the grouping scheme.
+	 * Set the helium width for the grouping scheme.
 	 *
 	 * @param width The width
 	 */
-	virtual void setGroupingWidth(int width) = 0;
+	virtual void setGroupingHeWidth(int width) = 0;
+
+	/**
+	 * Obtain the vacancy width for the grouping scheme.
+	 *
+	 * @return The width
+	 */
+	virtual int getGroupingVWidth() const = 0;
+
+	/**
+	 * Set the vacancy width for the grouping scheme.
+	 *
+	 * @param width The width
+	 */
+	virtual void setGroupingVWidth(int width) = 0;
 
 };
 //end class IOptions

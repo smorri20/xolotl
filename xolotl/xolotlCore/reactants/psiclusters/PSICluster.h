@@ -77,14 +77,24 @@ protected:
 		PSICluster * second;
 
 		/**
-		 * The first cluster distance in the group (0.0 for non-super clusters)
+		 * The first cluster helium distance in the group (0.0 for non-super clusters)
 		 */
-		double firstDistance;
+		double firstHeDistance;
 
 		/**
-		 * The second cluster distance in the group (0.0 for non-super clusters)
+		 * The first cluster vacancy distance in the group (0.0 for non-super clusters)
 		 */
-		double secondDistance;
+		double firstVDistance;
+
+		/**
+		 * The second cluster helium distance in the group (0.0 for non-super clusters)
+		 */
+		double secondHeDistance;
+
+		/**
+		 * The second cluster vacancy distance in the group (0.0 for non-super clusters)
+		 */
+		double secondVDistance;
 
 		/**
 		 * The reaction/dissociation constant associated to this
@@ -94,7 +104,8 @@ protected:
 
 		//! The constructor
 		ClusterPair(PSICluster * firstPtr, PSICluster * secondPtr, double k)
-		: first(firstPtr), second(secondPtr), kConstant(k), firstDistance(0.0), secondDistance(0.0) {}
+		: first(firstPtr), second(secondPtr), kConstant(k), firstHeDistance(0.0), firstVDistance(0.0),
+		  secondHeDistance(0.0), secondVDistance(0.0) {}
 	};
 
 	/**
@@ -114,9 +125,14 @@ protected:
 		PSICluster * combining;
 
 		/**
-		 * The combining cluster distance in the group (0.0 for non-super clusters)
+		 * The combining cluster helium distance in the group (0.0 for non-super clusters)
 		 */
-		double distance;
+		double heDistance;
+
+		/**
+		 * The combining cluster vacancy distance in the group (0.0 for non-super clusters)
+		 */
+		double vDistance;
 
 		/**
 		 * The reaction constant associated to this reaction
@@ -125,7 +141,7 @@ protected:
 
 		//! The constructor
 		CombiningCluster(PSICluster * Ptr, double k)
-		: combining(Ptr), kConstant(k), distance(0.0) {}
+		: combining(Ptr), kConstant(k), heDistance(0.0), vDistance(0.0) {}
 	};
 
 	/**
@@ -196,6 +212,16 @@ protected:
 	 * every time the temperature changes.
 	 */
 	std::vector<ClusterPair *> effEmissionPairs;
+
+	/**
+	 * The helium momentum flux. It is computed only for super clusters.
+	 */
+	double heMomentumFlux;
+
+	/**
+	 * The vacancy momentum flux. It is computed only for super clusters.
+	 */
+	double vMomentumFlux;
 
 	/**
 	 * Computes a row (or column) of the reaction connectivity matrix
@@ -558,7 +584,7 @@ public:
 	 * @return The total change in flux for this cluster due to all
 	 * reactions
 	 */
-	virtual double getTotalFlux() const;
+	virtual double getTotalFlux();
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -566,7 +592,7 @@ public:
 	 *
 	 * @return The flux due to dissociation of other clusters
 	 */
-	virtual double getDissociationFlux() const;
+	virtual double getDissociationFlux();
 
 	/**
 	 * This operation returns the total change in this cluster due its
@@ -574,7 +600,7 @@ public:
 	 *
 	 * @return The flux due to its dissociation
 	 */
-	virtual double getEmissionFlux() const;
+	virtual double getEmissionFlux();
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -582,7 +608,7 @@ public:
 	 *
 	 * @return The flux due to this cluster being produced
 	 */
-	virtual double getProductionFlux() const;
+	virtual double getProductionFlux();
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -590,15 +616,23 @@ public:
 	 *
 	 * @return The flux due to this cluster combining with other clusters
 	 */
-	virtual double getCombinationFlux() const;
+	virtual double getCombinationFlux();
 
 	/**
-	 * This operation returns the moment flux of this cluster in the
-	 * current network. It doesn't do anything except for superclusters.
+	 * This operation returns the helium moment flux of this cluster in the
+	 * current network. It is zero except for superclusters.
 	 *
 	 * @return The total change in the moment flux
 	 */
-	virtual double getMomentFlux() const;
+	virtual double getHeMomentFlux() const;
+
+	/**
+	 * This operation returns the moment vacancy flux of this cluster in the
+	 * current network. It is zero except for superclusters.
+	 *
+	 * @return The total change in the moment flux
+	 */
+	virtual double getVMomentFlux() const;
 
 	/**
 	 * This operation returns the list of partial derivatives of this cluster
@@ -668,13 +702,22 @@ public:
 	virtual void getEmissionPartialDerivatives(std::vector<double> & partials) const;
 
 	/**
-	 * This operation computes the partial derivatives for the momentum. It doesn't
+	 * This operation computes the partial derivatives for the helium momentum. It doesn't
 	 * do anything except for super clusters.
 	 *
 	 * @param partials The vector into which the partial derivatives should be
 	 * inserted.
 	 */
-	virtual void getMomentPartialDerivatives(std::vector<double> & partials) const;
+	virtual void getHeMomentPartialDerivatives(std::vector<double> & partials) const;
+
+	/**
+	 * This operation computes the partial derivatives for the vacancy momentum. It doesn't
+	 * do anything except for super clusters.
+	 *
+	 * @param partials The vector into which the partial derivatives should be
+	 * inserted.
+	 */
+	virtual void getVMomentPartialDerivatives(std::vector<double> & partials) const;
 
 	/**
 	 * This operation returns the total size of the cluster.

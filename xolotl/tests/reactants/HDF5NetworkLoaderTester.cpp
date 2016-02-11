@@ -112,8 +112,9 @@ BOOST_AUTO_TEST_CASE(checkGrouping) {
 	loader.setFilename(filename);
 
 	// Set the grouping scheme options
-	loader.setHeMin(21);
-	loader.setWidth(4);
+	loader.setVMin(4);
+	loader.setHeWidth(4);
+	loader.setVWidth(1);
 
 	// Load the network
 	auto network = loader.load();

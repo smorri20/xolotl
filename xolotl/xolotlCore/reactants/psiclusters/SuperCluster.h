@@ -20,41 +20,53 @@ private:
 	//! The mean number of atomic vacancies in this cluster.
 	double numV;
 
-	//! The number of HeV clusters gathered in this one.
-	int sectionWidth;
+	//! The total number of clusters gathered in this super cluster.
+	int nTot;
+
+	//! The width in the helium direction.
+	int sectionHeWidth;
+
+	//! The width in the vacancy direction.
+	int sectionVWidth;
 
 	//! The 0th order momentum (mean).
 	double l0;
 
-	//! The first order momentum.
-	double l1;
+	//! The first order momentum in the helium direction.
+	double l1He;
 
-	//! The dispersion in the group
-	double dispersion;
+	//! The first order momentum in the vacancy direction.
+	double l1V;
 
-	//! The map containing all the reacting pairs separated by original helium cluster size.
-	std::map <int, std::vector<ClusterPair> > reactingMap;
+	//! The dispersion in the group in the helium direction.
+	double dispersionHe;
 
-	//! The map containing all the combining clusters separated by original helium cluster size.
-	std::map <int, std::vector<CombiningCluster> > combiningMap;
+	//! The dispersion in the group in the vacancy direction.
+	double dispersionV;
 
-	//! The map containing all the dissociating pairs separated by original helium cluster size.
-	std::map <int, std::vector<ClusterPair> > dissociatingMap;
+	//! The map containing all the reacting pairs separated by original composition.
+	std::map <std::pair<int, int>, std::vector<ClusterPair> > reactingMap;
 
-	//! The map containing all the emission pairs separated by original helium cluster size.
-	std::map <int, std::vector<ClusterPair> > emissionMap;
+	//! The map containing all the combining clusters separated by original composition.
+	std::map <std::pair<int, int>, std::vector<CombiningCluster> > combiningMap;
 
-	//! The map containing all the effective reacting pairs separated by original helium cluster size.
-	std::map <int, std::vector<ClusterPair *> > effReactingMap;
+	//! The map containing all the dissociating pairs separated by original composition.
+	std::map <std::pair<int, int>, std::vector<ClusterPair> > dissociatingMap;
 
-	//! The map containing all the effective combining clusters separated by original helium cluster size.
-	std::map <int, std::vector<CombiningCluster *> > effCombiningMap;
+	//! The map containing all the emission pairs separated by original composition.
+	std::map <std::pair<int, int>, std::vector<ClusterPair> > emissionMap;
 
-	//! The map containing all the effective dissociating pairs separated by original helium cluster size.
-	std::map <int, std::vector<ClusterPair *> > effDissociatingMap;
+	//! The map containing all the effective reacting pairs separated by original composition.
+	std::map <std::pair<int, int>, std::vector<ClusterPair *> > effReactingMap;
 
-	//! The map containing all the effective emission pairs separated by original helium cluster size.
-	std::map <int, std::vector<ClusterPair *> > effEmissionMap;
+	//! The map containing all the effective combining clusters separated by original composition.
+	std::map <std::pair<int, int>, std::vector<CombiningCluster *> > effCombiningMap;
+
+	//! The map containing all the effective dissociating pairs separated by original composition.
+	std::map <std::pair<int, int>, std::vector<ClusterPair *> > effDissociatingMap;
+
+	//! The map containing all the effective emission pairs separated by original composition.
+	std::map <std::pair<int, int>, std::vector<ClusterPair *> > effEmissionMap;
 
 	/**
 	 * The default constructor is private because PSIClusters must always be
@@ -75,12 +87,13 @@ public:
 	 *
 	 * @param numHe The mean number of helium atoms in this cluster
 	 * @param numV The mean number of vacancies in this cluster
-	 * @param width The width of this super cluster
+	 * @param nTot The total number of clusters in this cluster
+	 * @param heWidth The width of this super cluster in the helium direction
+	 * @param vWidth The width of this super cluster in the vacancy direction
 	 * @param radius The mean radius
-	 * @param energy The mean formation energy
 	 * @param registry The performance handler registry
 	 */
-	SuperCluster(double numHe, double numV, int width, double radius, double energy,
+	SuperCluster(double numHe, double numV, int nTot, int heWidth, int vWidth,  double radius,
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
@@ -118,17 +131,25 @@ public:
 	/**
 	 * This operation returns the current concentration.
 	 *
-	 * @param id The id in the group
+	 * @param distHe The helium distance in the group
+	 * @param distV The vacancy distance in the group
 	 * @return The concentration of this reactant
 	 */
-	double getConcentration(double id) const;
+	double getConcentration(double distHe, double distV) const;
+
+	/**
+	 * This operation returns the current total concentration of clusters in the group.
+
+	 * @return The concentration
+	 */
+	double getTotalConcentration() const;
 
 	/**
 	 * This operation returns the current total concentration of helium in the group.
 
 	 * @return The concentration
 	 */
-	double getTotalConcentration() const;
+	double getTotalHeliumConcentration() const;
 
 	/**
 	 * This operation returns the distance to the mean.
@@ -136,7 +157,15 @@ public:
 	 * @param he The number of helium
 	 * @return The distance to the mean number of helium in the group
 	 */
-	double getDistance(int he) const;
+	double getHeDistance(int he) const;
+
+	/**
+	 * This operation returns the distance to the mean.
+	 *
+	 * @param he The number of vacancy
+	 * @return The distance to the mean number of vacancy in the group
+	 */
+	double getVDistance(int v) const;
 
 	/**
 	 * Computes a row of the reaction connectivity matrix corresponding to
@@ -171,11 +200,18 @@ public:
 	void setZerothMomentum(double mom) {l0 = mom;}
 
 	/**
-	 * This operation sets the first order momentum.
+	 * This operation sets the first order momentum in the helium direction.
 	 *
 	 * @param mom The momentum
 	 */
-	void setFirstMomentum(double mom) {l1 = mom;}
+	void setHeMomentum(double mom) {l1He = mom;}
+
+	/**
+	 * This operation sets the first order momentum in the vacancy direction.
+	 *
+	 * @param mom The momentum
+	 */
+	void setVMomentum(double mom) {l1V = mom;}
 
 	/**
 	 * This operation reset the connectivity sets based on the information
@@ -185,43 +221,39 @@ public:
 
 	/**
 	 * This operation returns the total change in this cluster due to
-	 * other clusters dissociating into it.
+	 * other clusters dissociating into it. Compute the contributions to
+	 * the momentum fluxes at the same time.
 	 *
 	 * @return The flux due to dissociation of other clusters
 	 */
-	double getDissociationFlux() const;
+	double getDissociationFlux();
 
 	/**
 	 * This operation returns the total change in this cluster due its
-	 * own dissociation.
+	 * own dissociation. Compute the contributions to
+	 * the momentum fluxes at the same time.
 	 *
 	 * @return The flux due to its dissociation
 	 */
-	double getEmissionFlux() const;
+	double getEmissionFlux();
 
 	/**
 	 * This operation returns the total change in this cluster due to
-	 * the production of this cluster by other clusters.
+	 * the production of this cluster by other clusters. Compute the contributions to
+	 * the momentum fluxes at the same time.
 	 *
 	 * @return The flux due to this cluster being produced
 	 */
-	double getProductionFlux() const;
+	double getProductionFlux();
 
 	/**
 	 * This operation returns the total change in this cluster due to
-	 * the combination of this cluster with others.
+	 * the combination of this cluster with others. Compute the contributions to
+	 * the momentum fluxes at the same time.
 	 *
 	 * @return The flux due to this cluster combining with other clusters
 	 */
-	double getCombinationFlux() const;
-
-	/**
-	 * This operation returns the moment flux of this cluster in the
-	 * current network.
-	 *
-	 * @return The total change in the moment flux
-	 */
-	double getMomentFlux() const;
+	double getCombinationFlux();
 
 	/**
 	 * This operation computes the partial derivatives due to production
@@ -264,12 +296,20 @@ public:
 	void getEmissionPartialDerivatives(std::vector<double> & partials) const;
 
 	/**
-	 * This operation computes the partial derivatives for the momentum.
+	 * This operation computes the partial derivatives for the helium momentum.
 	 *
 	 * @param partials The vector into which the partial derivatives should be
 	 * inserted.
 	 */
-	void getMomentPartialDerivatives(std::vector<double> & partials) const;
+	void getHeMomentPartialDerivatives(std::vector<double> & partials) const;
+
+	/**
+	 * This operation computes the partial derivatives for the vacancy momentum.
+	 *
+	 * @param partials The vector into which the partial derivatives should be
+	 * inserted.
+	 */
+	void getVMomentPartialDerivatives(std::vector<double> & partials) const;
 
 };
 //end class SuperCluster

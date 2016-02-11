@@ -56,9 +56,14 @@ protected:
 	int id;
 
 	/**
-	 * An integer identification number for this reactant momentum.
+	 * An integer identification number for this reactant helium momentum.
 	 */
-	int momId;
+	int heMomId;
+
+	/**
+	 * An integer identification number for this reactant vacancy momentum.
+	 */
+	int vMomId;
 
 	/**
 	 * The temperature at which the cluster currently exists. The diffusion
@@ -135,10 +140,11 @@ public:
 	/**
 	 * This operation returns the current concentration.
 	 *
-	 * @param id The id in the group, used only for super clusters
+	 * @param distHe The helium distance in the group
+	 * @param distV The vacancy distance in the group
 	 * @return The concentration of this reactant
 	 */
-	virtual double getConcentration(double id) const;
+	virtual double getConcentration(double distHe, double distV) const;
 
 	/**
 	 * This operation increases the concentration of the reactant by the
@@ -178,12 +184,20 @@ public:
 	virtual void setZerothMomentum(double mom);
 
 	/**
-	 * This operation sets the first order momentum. It doesn't do
+	 * This operation sets the first order helium momentum. It doesn't do
 	 * anything except for Super clusters
 	 *
 	 * @param mom The momentum
 	 */
-	virtual void setFirstMomentum(double mom);
+	virtual void setHeMomentum(double mom);
+
+	/**
+	 * This operation sets the first order vacancy momentum. It doesn't do
+	 * anything except for Super clusters
+	 *
+	 * @param mom The momentum
+	 */
+	virtual void setVMomentum(double mom);
 
 	/**
 	 * This operation returns the total flux of this reactant in the
@@ -296,20 +310,36 @@ public:
 	int getId() const {return id;}
 
 	/**
-	 * This operation sets the momentum id of the reactant, The id is zero by default
+	 * This operation sets the helium momentum id of the reactant, The id is zero by default
 	 * and clients, most likely the ReactionNetwork, are expected to set the
 	 * id as needed.
 	 *
 	 * @param nId The new momentum id for this reactant
 	 */
-	void setMomentumId(int nId) {momId = nId;}
+	void setHeMomentumId(int nId) {heMomId = nId;}
 
 	/**
-	 * This operation returns the momentum id for this reactant.
+	 * This operation returns the helium momentum id for this reactant.
 	 *
 	 * @return The id
 	 */
-	int getMomentumId() const {return momId;}
+	int getHeMomentumId() const {return heMomId;}
+
+	/**
+	 * This operation returns the vacancy momentum id for this reactant.
+	 *
+	 * @return The id
+	 */
+	int getVMomentumId() const {return vMomId;}
+
+	/**
+	 * This operation sets the vacancy momentum id of the reactant, The id is zero by default
+	 * and clients, most likely the ReactionNetwork, are expected to set the
+	 * id as needed.
+	 *
+	 * @param nId The new momentum id for this reactant
+	 */
+	void setVMomentumId(int nId) {vMomId = nId;}
 
 	/**
 	 * This operation sets the temperature at which the reactant currently

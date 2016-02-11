@@ -20,14 +20,19 @@ private:
 	std::string fileName;
 
 	/**
-	 * The helium size at wich the grouping scheme starts
+	 * The vacancy size at which the grouping scheme starts
 	 */
-	int heMin;
+	int vMin;
 
 	/**
-	 * The number of clusters that will be gathered in the grouping scheme
+	 * The width of the group in the helium direction.
 	 */
-	int sectionWidth;
+	int heSectionWidth;
+
+	/**
+	 * The width of the group in the vacancy direction.
+	 */
+	int vSectionWidth;
 
 	/**
 	 * Private nullary constructor.
@@ -42,8 +47,9 @@ public:
 	 */
 	HDF5NetworkLoader(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry):
 		fileName(""),
-		heMin(std::numeric_limits<int>::max()),
-		sectionWidth(1) {
+		vMin(std::numeric_limits<int>::max()),
+		heSectionWidth(1),
+		vSectionWidth(1) {
 		handlerRegistry = registry;
 
 		return;
@@ -100,14 +106,21 @@ public:
 	 *
 	 * @param min The value for the size
 	 */
-	void setHeMin (int min) {heMin = min;}
+	void setVMin (int min) {vMin = min;}
 
 	/**
-	 * This operation will set the width for the grouping scheme.
+	 * This operation will set the helium width for the grouping scheme.
 	 *
 	 * @param w The value of the width
 	 */
-	void setWidth (int w) {sectionWidth = w;}
+	void setHeWidth (int w) {heSectionWidth = w;}
+
+	/**
+	 * This operation will set the vacancy width for the grouping scheme.
+	 *
+	 * @param w The value of the width
+	 */
+	void setVWidth (int w) {vSectionWidth = w;}
 };
 
 } /* namespace xolotlCore */

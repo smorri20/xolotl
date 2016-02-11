@@ -34,8 +34,9 @@ Options::Options() :
 		materialName(""),
 		initialVConcentration(0.0),
 		dimensionNumber(1),
-		groupingHeMin(std::numeric_limits<int>::max()),
-		groupingWidth(1) {
+		groupingVMin(std::numeric_limits<int>::max()),
+		groupingHeWidth(1),
+		groupingVWidth(1) {
 
 	// Create the network option handler
 	auto networkHandler = new NetworkOptionHandler();

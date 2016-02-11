@@ -112,12 +112,17 @@ protected:
 	/**
 	 * Size at which the grouping scheme will start.
 	 */
-	int groupingHeMin;
+	int groupingVMin;
 
 	/**
-	 * Width for the sections of the grouping scheme.
+	 * Width for the sections of the grouping scheme (helium direction).
 	 */
-	int groupingWidth;
+	int groupingHeWidth;
+
+	/**
+	 * Width for the sections of the grouping scheme (vacancy direction).
+	 */
+	int groupingVWidth;
 
 public:
 
@@ -436,35 +441,51 @@ public:
 	}
 
 	/**
-	 * Obtain the helium size at which the grouping scheme starts.
+	 * Obtain the vacancy size at which the grouping scheme starts.
 	 * \see IOptions.h
 	 */
-	int getGroupingHeMin() const {
-		return groupingHeMin;
+	int getGroupingVMin() const {
+		return groupingVMin;
 	}
 
 	/**
-	 * Set the helium size at which the grouping scheme starts.
+	 * Set the vacancy size at which the grouping scheme starts.
 	 * \see IOptions.h
 	 */
-	void setGroupingHeMin(int size) {
-		groupingHeMin = size;
+	void setGroupingVMin(int size) {
+		groupingVMin = size;
 	}
 
 	/**
-	 * Obtain the width for the grouping scheme.
+	 * Obtain the width for the grouping scheme (helium).
 	 * \see IOptions.h
 	 */
-	int getGroupingWidth() const {
-		return groupingWidth;
+	int getGroupingHeWidth() const {
+		return groupingHeWidth;
 	}
 
 	/**
-	 * Set the width for the grouping scheme.
+	 * Set the width for the grouping scheme (helium).
 	 * \see IOptions.h
 	 */
-	void setGroupingWidth(int width) {
-		groupingWidth = width;
+	void setGroupingHeWidth(int width) {
+		groupingHeWidth = width;
+	}
+
+	/**
+	 * Obtain the width for the grouping scheme (vacancy).
+	 * \see IOptions.h
+	 */
+	int getGroupingVWidth() const {
+		return groupingVWidth;
+	}
+
+	/**
+	 * Set the width for the grouping scheme (vacancy).
+	 * \see IOptions.h
+	 */
+	void setGroupingVWidth(int width) {
+		groupingVWidth = width;
 	}
 
 };

@@ -47,6 +47,11 @@ std::vector<int> heIndices1D;
 // Declare the vector that will store the weight of the helium clusters
 // (their He composition)
 std::vector<int> heWeights1D;
+// Declare the vector that will store the weight of the helium bubbles
+// (their He composition)
+std::vector<int> bubbleWeights1D;
+// Declare the vector that will store the radii of bubbles
+std::vector<double> radii1D;
 // Variable to indicate whether or not the fact that the concentration of the biggest
 // cluster in the network is higher than 1.0e-16 should be printed.
 // Becomes false once it is printed.
@@ -214,7 +219,7 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
 
 	// Store the concentration over the grid
-	double heConcentration = 0;
+	double heConcentration = 0.0, bubbleConcentration = 0.0, concTot = 0.0, heliumTot = 0.0;
 
 	// Declare the pointer for the concentrations at a specific grid point
 	PetscReal *gridPointSolution;
@@ -238,11 +243,18 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 			// Add the current concentration times the number of helium in the cluster
 			// (from the weight vector)
 			heConcentration += gridPointSolution[heIndices1D[i]] * (double) heWeights1D[i] * hx;
+			if (bubbleWeights1D[i] > 0) bubbleConcentration += gridPointSolution[heIndices1D[i]] * hx;
+			if (bubbleWeights1D[i] > 0) concTot += gridPointSolution[heIndices1D[i]];
+			heliumTot += gridPointSolution[heIndices1D[i]] * radii1D[i];
 		}
 		// Loop on all the super clusters
 		for (int i = 0; i < superClusters.size(); i++) {
 			auto cluster = (xolotlCore::SuperCluster *) superClusters[i];
-			heConcentration += cluster->getTotalConcentration() * hx;
+			auto comp = cluster->getComposition();
+			heConcentration += cluster->getTotalHeliumConcentration() * hx;
+			bubbleConcentration += cluster->getTotalConcentration() * hx;
+			concTot += cluster->getTotalConcentration();
+			heliumTot += cluster->getTotalConcentration() * cluster->getReactionRadius();
 		}
 
 		if (xi == 1) {
@@ -265,6 +277,12 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 	// Sum all the concentrations through MPI reduce
 	double totalHeConcentration = 0.0;
 	MPI_Reduce(&heConcentration, &totalHeConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	double totalBubbleConcentration = 0.0;
+	MPI_Reduce(&bubbleConcentration, &totalBubbleConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	double totalConc = 0.0;
+	MPI_Reduce(&concTot, &totalConc, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	double totalHeliumRadii = 0.0;
+	MPI_Reduce(&heliumTot, &totalHeliumRadii, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
 	// Master process
 	if (procId == 0) {
@@ -283,7 +301,9 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 		std::ofstream outputFile;
 		outputFile.open("retentionOut.txt", ios::app);
 		outputFile << heliumFluence << " "
-				<< 100.0 * (totalHeConcentration / heliumFluence) << std::endl;
+				<< 100.0 * (totalHeConcentration / heliumFluence) << " "
+				<< totalHeliumRadii/totalConc << " "
+				<< totalBubbleConcentration << std::endl;
 		outputFile.close();
 	}
 
@@ -1114,6 +1134,8 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 			heIndices1D.push_back(id);
 			// Add the number of heliums of this cluster to the weight
 			heWeights1D.push_back(cluster->getSize());
+			bubbleWeights1D.push_back(0);
+			radii1D.push_back(0.0);
 		}
 
 		// Loop on the helium-vacancy clusters
@@ -1125,6 +1147,8 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 			// Add the number of heliums of this cluster to the weight
 			auto comp = cluster->getComposition();
 			heWeights1D.push_back(comp[heType]);
+			bubbleWeights1D.push_back(comp[heType]);
+			radii1D.push_back(cluster->getReactionRadius());
 		}
 
 		if (heIndices1D.size() == 0) {

@@ -17,9 +17,9 @@ public:
 	 */
 	GroupingOptionHandler() :
 			OptionHandler("grouping",
-					"grouping <min> <width>               "
+					"grouping <vMin> <heWidth> <vWidth>               "
 					"This option allows the use a grouping scheme starting at the HeV cluster "
-					"with 'min' He clusters and with the given width.  \n") {
+					"with 'vMin' V clusters and with the given widths.  \n") {
 	}
 
 	/**
@@ -44,9 +44,10 @@ public:
 		auto tokens = reader.loadLine();
 
 		// Set grouping minimum size
-		opt->setGroupingHeMin(strtol(tokens[0].c_str(), NULL, 10));
-		// Set the grouping width
-		opt->setGroupingWidth(strtol(tokens[1].c_str(), NULL, 10));
+		opt->setGroupingVMin(strtol(tokens[0].c_str(), NULL, 10));
+		// Set the grouping widths
+		opt->setGroupingHeWidth(strtol(tokens[1].c_str(), NULL, 10));
+		opt->setGroupingVWidth(strtol(tokens[2].c_str(), NULL, 10));
 
 		return true;
 	}
