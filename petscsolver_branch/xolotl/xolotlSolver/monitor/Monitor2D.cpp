@@ -659,7 +659,7 @@ PetscErrorCode monitorInterstitial2D(TS ts, PetscInt timestep, PetscReal time,
 				double hxRight = grid[xi+1] - grid[xi];
 				double factor = 2.0 / (hxLeft * (hxLeft + hxRight));
 				// Compute the flux going to the left
-				newFlux += (double) size * factor * coef * conc;
+				newFlux += (double) size * factor * coef * conc * hxLeft;
 			}
 
 			// Update the previous flux at this position
