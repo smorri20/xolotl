@@ -21,7 +21,7 @@ ENDIF()
 # Request warnings as diagnostic messages
 IF (CMAKE_COMPILER_IS_GNUCXX)
     message(STATUS "GCC detected, adding some options to request warnings")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wno-vla")
 ENDIF()
 
 # Tell CMake to look for static libraries
