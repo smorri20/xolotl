@@ -267,6 +267,125 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 }
 
 #undef __FUNCT__
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "computeBoundaryFlux1D")
+/**
+ * This is a monitoring method that will compute the total helium fluence
+ */
+PetscErrorCode computeBoundaryFlux1D(TS ts, PetscInt timestep, PetscReal time,
+		Vec solution, void *ictx) {
+	PetscErrorCode ierr;
+	PetscInt xs, xm;
+
+	PetscFunctionBeginUser;
+
+	// Get the solver handler
+	auto solverHandler = PetscSolver::getSolverHandler();
+
+	// Get the flux handler that will be used to compute fluxes.
+	auto fluxHandler = solverHandler->getFluxHandler();
+	auto network = solverHandler->getNetwork();
+	auto heliums = network->getAll("He");
+	auto cluster = (PSICluster *)heliums.at(0);
+	auto temp = network->getTemperature();
+	int id = cluster->getId()-1;
+	double difCoef=cluster->getDiffusionCoefficient();
+
+	// Get the da from ts
+	DM da;
+	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
+
+	// Get the corners of the grid
+	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
+
+	// Setup step size variable
+	double hx = solverHandler->getStepSizeX();
+
+	// Get the array of concentration
+	PetscReal **solutionArray;
+	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+
+	// Store the concentrations over the grid
+	double heConcentration = 0;
+	double vConcentration = 0;
+	double hevConcentration = 0;
+	double he2vConcentration = 0;
+	double he3vConcentration = 0;
+	double he4vConcentration = 0;
+
+	// Declare the necessary coefficients for He flux calculation at the boundary
+	double fluxBoundary = 0.0;
+	double concentration_0 = 0.0, concentration_1 = 0.0;
+
+	// Declare the pointer for the concentrations at a specific grid point
+	PetscReal *gridPointSolution;
+
+	// Loop on the grid
+	for (int xi = xs; xi < xs + xm; xi++) {
+		// Get the pointer to the beginning of the solution data for this grid point
+		gridPointSolution = solutionArray[xi];
+
+		heConcentration += gridPointSolution[6] * hx;
+		vConcentration += gridPointSolution[14] * hx;
+		hevConcentration += gridPointSolution[15] * hx;
+		he2vConcentration += gridPointSolution[16] * hx;
+		he3vConcentration += gridPointSolution[17] * hx;
+		he4vConcentration += gridPointSolution[18] * hx;
+
+		if (xi == 0)
+			concentration_0 = gridPointSolution[6] * hx;
+		else if (xi == 1)
+			concentration_1 = gridPointSolution[6] * hx;
+	}
+
+	// Get the current process ID
+	int procId;
+	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+
+	// Sum all the concentrations through MPI reduce
+	double totalHeConcentration = 0.0;
+	double totalVConcentration = 0.0;
+	double totalHevConcentration = 0.0;
+	double totalHe2vConcentration = 0.0;
+	double totalHe3vConcentration = 0.0;
+	double totalHe4vConcentration = 0.0;
+
+	MPI_Reduce(&heConcentration, &totalHeConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&vConcentration, &totalVConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&hevConcentration, &totalHevConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&he2vConcentration, &totalHe2vConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&he3vConcentration, &totalHe3vConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&he4vConcentration, &totalHe4vConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
+	// Master process
+	if (procId == 0) {
+
+		// Helium flux calculation at the boundary
+		fluxBoundary = difCoef * (concentration_1 - concentration_0) / hx;
+
+		// Print the results for He, V, HeV, He2V, He3V, and He4V
+		std::cout << "\nTime: " << time << std::endl;
+		std::cout << "Helium concentration = " << totalHeConcentration << std::endl;
+		std::cout << "Vacancy concentration = " << totalVConcentration << std::endl;
+		std::cout << "HeV concentration = " << totalHevConcentration << std::endl;
+		std::cout << "He2V concentration = " << totalHe2vConcentration << std::endl;
+		std::cout << "He3V concentration = " << totalHe3vConcentration << std::endl;
+		std::cout << "He4V concentration = " << totalHe4vConcentration << std::endl;
+
+		// Uncomment to write the flux at the boundary and temperature in a file
+		std::ofstream outputFile;
+		outputFile.open("thds.txt", ios::app);
+		outputFile << temp << " "
+				<< fluxBoundary << std::endl;
+		outputFile.close();
+	}
+
+	// Restore the solutionArray
+	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+
+	PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ Actual__FUNCT__("xolotlSolver", "monitorScatter1D")
 /**
  * This is a monitoring method that will save 1D plots of one concentration
@@ -896,7 +1015,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 	// Flags to launch the monitors or not
 	PetscBool flag2DPlot, flag1DPlot, flagSeries, flagPerf, flagRetention,
-			flagStatus, flagMaxClusterConc, flagInterstitial;
+			flagStatus, flagMaxClusterConc, flagInterstitial, flagBoundaryFlux;
 
 	// Check the option -plot_perf
 	ierr = PetscOptionsHasName(NULL, NULL, "-plot_perf", &flagPerf);
@@ -929,6 +1048,10 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 	// Check the option -interstitial_diff
 	ierr = PetscOptionsHasName(NULL, NULL, "-interstitial_diff", &flagInterstitial);
 	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-interstitial_diff) failed.");
+
+	// Check the option -boundary_flux
+	ierr = PetscOptionsHasName(NULL, NULL, "-boundary_flux", &flagBoundaryFlux);
+	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-boundary_flux) failed.");
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -1182,6 +1305,17 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 //		std::ofstream outputFile;
 //		outputFile.open("interstitialOut.txt");
 //		outputFile.close();
+	}
+
+	// Set the monitor to compute the helium flux at the boundary
+	if (flagBoundaryFlux) {
+		// computeBoundaryFlux1D will be called at each timestep
+		ierr = TSMonitorSet(ts, computeBoundaryFlux1D, NULL, NULL);
+		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (computeBoundaryFlux1D) failed.");
+
+		std::ofstream outputFile;
+		outputFile.open("thds.txt");
+		outputFile.close();
 	}
 
 	// Set the monitor to simply change the previous time to the new time
