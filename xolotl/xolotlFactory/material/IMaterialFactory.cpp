@@ -2,10 +2,8 @@
 #include <W100MaterialFactory.h>
 #include <W110MaterialFactory.h>
 #include <W111MaterialFactory.h>
-/*#include <Td40MaterialFactory.h>
-#include <Td80MaterialFactory.h>
-#include <Td120MaterialFactory.h>
-*/
+#include <WSRIMMaterialFactory.h>
+
 namespace xolotlFactory {
 
 static std::shared_ptr<IMaterialFactory> theMaterialFactory;
@@ -19,6 +17,8 @@ std::shared_ptr<IMaterialFactory> IMaterialFactory::createMaterialFactory(
 	else if (materialType == "W110") theMaterialFactory = std::make_shared<W110MaterialFactory>(dimension);
 	// W111 case
 	else if (materialType == "W111") theMaterialFactory = std::make_shared<W111MaterialFactory>(dimension);
+	// WSRIM case
+	else if (materialType == "WSRIM") theMaterialFactory = std::make_shared<WSRIMMaterialFactory>(dimension);
 	// The type is not supported
 	else {
 		throw std::string(

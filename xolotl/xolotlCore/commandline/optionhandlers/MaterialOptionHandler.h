@@ -21,9 +21,10 @@ public:
     			"This option allows the user to change the profile of "
     			"the helium flux corresponding to the material.  \n"
     			"                                    The material options are as follows: "
-    			"{W100, W110, W111}, where W is for \n"
+    			"{W100, W110, W111, WSRIM}, where W is for \n"
     			"                                    tungsten and the numbers correspond to "
-    			"the surface orientation.\n")
+    			"the surface orientation. SRIM is for the He range output of SRIM simulations "
+			"				     for amorphous W\n")
 	{}
 
 	/**
