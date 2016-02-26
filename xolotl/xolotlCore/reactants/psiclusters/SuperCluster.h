@@ -256,6 +256,21 @@ public:
 	double getCombinationFlux();
 
 	/**
+	 * This operation works as getPartialDerivatives above, but instead of
+	 * returning a vector that it creates it fills a vector that is passed to
+	 * it by the caller. This allows the caller to optimize the amount of
+	 * memory allocations to just one if they are accessing the partial
+	 * derivatives many times.
+	 *
+	 * @param the vector that should be filled with the partial derivatives
+	 * for this reactant where index zero corresponds to the first reactant in
+	 * the list returned by the ReactionNetwork::getAll() operation. The size of
+	 * the vector should be equal to ReactionNetwork::size().
+	 *
+	 */
+	virtual void getPartialDerivatives(std::vector<double> & partials) const;
+
+	/**
 	 * This operation computes the partial derivatives due to production
 	 * reactions.
 	 *

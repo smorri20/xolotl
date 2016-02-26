@@ -3,6 +3,7 @@
 #include <HDF5Utils.h>
 #include <MathUtils.h>
 #include <Constants.h>
+#include <SuperCluster.h>
 
 namespace xolotlSolver {
 
@@ -477,8 +478,8 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 		concOffset = concs[xi];
 		network->updateConcentrationsFromArray(concOffset);
 
-		// Update the column in the Jacobian that represents each reactant
-		for (int i = 0; i < networkSize; i++) {
+		// Update the column in the Jacobian that represents each normal reactant
+		for (int i = 0; i < networkSize - superClusters.size(); i++) {
 			auto reactant = allReactants->at(i);
 			// Get the reactant index
 			reactantIndex = reactant->getId() - 1;
@@ -517,18 +518,48 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 
 		// Update the column in the Jacobian that represents the moment for the super clusters
 		for (int i = 0; i < superClusters.size(); i++) {
-			auto reactant = (xolotlCore::PSICluster *) superClusters[i];
-			// Get the helium momentum index
-			reactantIndex = reactant->getHeMomentumId() - 1;
+			auto reactant = (xolotlCore::SuperCluster *) superClusters[i];
 
+			// Get the super cluster index
+			reactantIndex = reactant->getId() - 1;
 			// Set grid coordinate and component number for the row
 			rowId.i = xi;
 			rowId.c = reactantIndex;
 
 			// Get the partial derivatives
-			reactant->getHeMomentPartialDerivatives(clusterPartials);
+			reactant->getPartialDerivatives(clusterPartials);
 			// Get the list of column ids from the map
 			auto pdColIdsVector = dFillMap.at(reactantIndex);
+			// Number of partial derivatives
+			pdColIdsVectorSize = pdColIdsVector.size();
+
+			// Loop over the list of column ids
+			for (int j = 0; j < pdColIdsVectorSize; j++) {
+				// Set grid coordinate and component number for a column in the list
+				colIds[j].i = xi;
+				colIds[j].c = pdColIdsVector[j];
+				// Get the partial derivative from the array of all of the partials
+				reactingPartialsForCluster[j] =
+						clusterPartials[pdColIdsVector[j]];
+
+				// Reset the cluster partial value to zero. This is much faster
+				// than using memset.
+				clusterPartials[pdColIdsVector[j]] = 0.0;
+			}
+			// Update the matrix
+			ierr = MatSetValuesStencil(J, 1, &rowId, pdColIdsVectorSize,
+					colIds, reactingPartialsForCluster.data(), ADD_VALUES);
+			checkPetscError(ierr, "PetscSolver1DHandler::computeDiagonalJacobian: MatSetValuesStencil for super cluster failed.");
+
+			// Get the helium momentum index
+			reactantIndex = reactant->getHeMomentumId() - 1;
+			// Set component number for the row
+			rowId.c = reactantIndex;
+
+			// Get the partial derivatives
+			reactant->getHeMomentPartialDerivatives(clusterPartials);
+			// Get the list of column ids from the map
+			pdColIdsVector = dFillMap.at(reactantIndex);
 			// Number of partial derivatives
 			pdColIdsVectorSize = pdColIdsVector.size();
 
@@ -552,7 +583,6 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 
 			// Get the vacancy momentum index
 			reactantIndex = reactant->getVMomentumId() - 1;
-
 			// Set component number for the row
 			rowId.c = reactantIndex;
 

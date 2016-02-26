@@ -424,8 +424,8 @@ void PSIClusterReactionNetwork::reinitializeNetwork() {
 	for (auto it = allReactants->begin(); it != allReactants->end(); ++it) {
 		id++;
 		(*it)->setId(id);
-		(*it)->setHeMomentumId(0);
-		(*it)->setVMomentumId(0);
+		(*it)->setHeMomentumId(id);
+		(*it)->setVMomentumId(id);
 	}
 
 	// Reset the network size
