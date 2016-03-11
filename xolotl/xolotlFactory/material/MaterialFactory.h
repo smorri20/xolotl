@@ -22,6 +22,9 @@ protected:
 	//! The diffusion handler
 	std::shared_ptr<xolotlCore::IDiffusionHandler> theDiffusionHandler;
 
+	//! The bursting handler
+	std::shared_ptr<xolotlCore::IBubbleBurstingHandler> theBurstingHandler;
+
 public:
 
 	/**
@@ -85,6 +88,15 @@ public:
 	 */
 	std::shared_ptr<xolotlCore::IDiffusionHandler> getDiffusionHandler() const {
 		return theDiffusionHandler;
+	}
+
+	/**
+	 * Return the bursting handler.
+	 *
+	 *  @return The bursting handler.
+	 */
+	std::shared_ptr<xolotlCore::IBubbleBurstingHandler> getBurstingHandler() const {
+		return theBurstingHandler;
 	}
 };
 

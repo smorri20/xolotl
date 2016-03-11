@@ -8,6 +8,7 @@
 #include <Diffusion1DHandler.h>
 #include <Diffusion2DHandler.h>
 #include <Diffusion3DHandler.h>
+#include <BubbleBurstingHandler.h>
 
 namespace xolotlFactory {
 
@@ -32,6 +33,7 @@ public:
 	W110MaterialFactory(int dim) {
 		theFluxHandler = std::make_shared<xolotlCore::W110FitFluxHandler>();
 		theAdvectionHandler = std::make_shared<xolotlCore::W110AdvectionHandler>();
+		theBurstingHandler = std::make_shared<xolotlCore::BubbleBurstingHandler>();
 
 		// Switch on the dimension for the diffusion handler
 		switch (dim) {

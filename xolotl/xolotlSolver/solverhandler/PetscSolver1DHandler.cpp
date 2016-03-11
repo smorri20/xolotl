@@ -69,6 +69,9 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	// Fill ofill, the matrix of "off-diagonal" elements that represents diffusion
 	diffusionHandler->initializeOFill(network, ofill);
 
+	// Initialize the bubble bursting handler here because it adds connectivity
+	burstingHandler->initialize(network, hX, nx);
+
 	// Get the diagonal fill
 	getDiagonalFill(dfill, dof * dof);
 
@@ -257,6 +260,9 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		// Update the network if the temperature changed
 		if (!xolotlCore::equal(temperature, lastTemperature)) {
 			network->setTemperature(temperature);
+			// Update the bubble bursting rate
+			// that depends on the network reaction rates
+			burstingHandler->updateBurstingRate(network);
 			lastTemperature = temperature;
 		}
 
@@ -277,6 +283,9 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		// ---- Compute advection over the locally owned part of the grid -----
 		advectionHandler->computeAdvection(network, hX, gridPosition,
 				concVector, updatedConcOffset);
+
+		// ----- Compute the bubble bursting over the locally owned part of the grid -----
+		burstingHandler->computeBursting(network, xi, updatedConcOffset);
 
 		// ----- Compute all of the new fluxes -----
 		for (int i = 0; i < networkSize; i++) {
@@ -610,6 +619,37 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 			ierr = MatSetValuesStencil(J, 1, &rowId, pdColIdsVectorSize,
 					colIds, reactingPartialsForCluster.data(), ADD_VALUES);
 			checkPetscError(ierr, "PetscSolver1DHandler::computeDiagonalJacobian: MatSetValuesStencil for vacancy momentum failed.");
+		}
+
+		// ----- Take care of the bubble bursting for all the bubbles -----
+
+		// Store the total number of HeV bubbles in the network for the
+		// bubble bursting
+		int nBubble = burstingHandler->getNBursting(network, xi);
+
+		// Arguments for MatSetValuesStencil called below
+		MatStencil row, col;
+		PetscScalar burstingVals[nBubble];
+		PetscInt burstingIndices[2 * nBubble];
+
+		// Compute the partial derivative from bubble bursting at this grid point
+		int nBursting = burstingHandler->computePartialsForBursting(network,
+				burstingVals, burstingIndices, xi);
+
+		// Loop on the number of bubbles bursting to set the values
+		// in the Jacobian
+		for (int i = 0; i < nBursting; i++) {
+			// Set grid coordinate and component number for the row and column
+			// corresponding to the bursting cluster
+			row.i = xi;
+			row.c = burstingIndices[2 * i];
+			col.i = xi;
+			col.c = burstingIndices[(2 * i) + 1];
+
+			ierr = MatSetValuesStencil(J, 1, &row, 1, &col,
+					burstingVals + i, ADD_VALUES);
+			checkPetscError(ierr, "PetscSolver1DHandler::computeDiagonalJacobian: "
+					"MatSetValuesStencil (bursting) failed.");
 		}
 	}
 

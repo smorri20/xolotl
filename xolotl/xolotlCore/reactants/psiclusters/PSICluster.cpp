@@ -903,6 +903,10 @@ double PSICluster::getReactionRadius() const {
 	return reactionRadius; // Computed by subclasses in constructors.
 }
 
+double PSICluster::getBiggestRate() const {
+	return biggestRate; // Computed by computeRateConstants
+}
+
 std::vector<int> PSICluster::getConnectivity() const {
 	int connectivityLength = network->size() + 2 * network->getAll(superType).size();
 	std::vector<int> connectivity = std::vector<int>(connectivityLength, 0);
@@ -956,6 +960,8 @@ void PSICluster::computeRateConstants() {
 		*dissociatingCluster, *otherEmittedCluster, *firstCluster,
 		*secondCluster;
 	double rate = 0.0;
+	// Initialize the value for the biggest production rate
+	double biggestProductionRate = 0.0;
 
 	// Compute the reaction constant associated to the reacting pairs
 	// Set the total number of reacting pairs
@@ -975,6 +981,10 @@ void PSICluster::computeRateConstants() {
 		// if the rate is not 0.0
 		if (!xolotlCore::equal(rate, 0.0)) {
 			effReactingPairs.push_back(&reactingPairs[i]);
+
+			// Check if the rate is the biggest one up to now
+			if (rate > biggestProductionRate)
+				biggestProductionRate = rate;
 		}
 	}
 
@@ -1063,6 +1073,9 @@ void PSICluster::computeRateConstants() {
 	effCombiningReactants.shrink_to_fit();
 	effDissociatingPairs.shrink_to_fit();
 	effEmissionPairs.shrink_to_fit();
+
+	// Set the biggest rate to the biggest production rate
+	biggestRate = biggestProductionRate;
 
 	return;
 }

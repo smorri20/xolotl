@@ -11,6 +11,7 @@ include_directories(${CMAKE_SOURCE_DIR}/xolotlSolver/solverhandler)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants/psiclusters)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/modifiedreaction/bubblebursting)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/diffusion)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/advection)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/flux)
@@ -38,7 +39,7 @@ if(Boost_FOUND)
         message(STATUS "Making test ${test}")
         get_filename_component(testName ${test} NAME_WE)
         add_executable(${testName} ${test})
-        target_link_libraries(${testName} xolotlSolver xolotlReactants ${PETSC_LIBRARIES} 
+        target_link_libraries(${testName} xolotlSolver xolotlReactants xolotlModified ${PETSC_LIBRARIES} 
         xolotlPerf xolotlFactory)
         add_test(${testName} ${testName}) 
         #add a label so the tests can be run separately

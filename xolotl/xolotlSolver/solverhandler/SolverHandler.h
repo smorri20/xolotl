@@ -3,6 +3,7 @@
 
 // Includes
 #include "ISolverHandler.h"
+#include <BubbleBurstingHandler.h>
 
 namespace xolotlSolver {
 
@@ -43,6 +44,9 @@ protected:
 	//! The original advection handler created.
 	xolotlCore::IAdvectionHandler *advectionHandler;
 
+	//! The original bubble bursting handler created.
+	xolotlCore::IBubbleBurstingHandler *burstingHandler;
+
 	//! The number of dimensions for the problem.
 	int dimension;
 
@@ -67,6 +71,9 @@ public:
 
 		// Set the advection handler
 		advectionHandler = (xolotlCore::IAdvectionHandler *) material->getAdvectionHandler().get();
+
+		// Set the bubble bursting handler
+		burstingHandler = (xolotlCore::IBubbleBurstingHandler *) material->getBurstingHandler().get();
 
 		// Set the initial vacancy concentration
 		initialVConc = options.getInitialVConcentration();

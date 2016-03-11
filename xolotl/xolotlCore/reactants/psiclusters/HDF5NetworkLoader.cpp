@@ -88,6 +88,57 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 	// Map to know which super cluster gathers which group
 	std::map< std::pair<int, int>, SuperCluster *> superGroupMap;
 
+	// Take care of the clusters near He / V = 4
+	// Loop on the vacancy groups
+	for (int k = vMin; k <= network->getAll(vType).size(); k++) {
+		// Loop within the group
+		for (int m = k * 4 - 3; m < (k + 1) * 4; m++) {
+			// Get the corresponding cluster
+			std::vector<int> compositionVector = { m, k, 0 };
+			// Get the product of the same type as the second reactant
+			cluster = (PSICluster *) network->getCompound(heVType, compositionVector);
+
+			// Verify if the cluster exists
+			if (!cluster) continue;
+
+			// Increment the counter
+			count++;
+
+			// Add this cluster to the temporary vector
+			tempVector.push_back(cluster);
+			heSize += (double) m;
+			vSize += (double) k;
+			radius += cluster->getReactionRadius();
+			// Keep the information of the group
+			clusterGroupMap[compositionVector] = std::make_pair(-1, k);
+		}
+
+		// Check if there were clusters in this group
+		if (count == 0) continue;
+
+		// Average all values
+		heSize = heSize / (double) count;
+		vSize = vSize / (double) count;
+		radius = radius / (double) count;
+		// Create the cluster
+		superCluster = std::make_shared<SuperCluster>(heSize, vSize,
+				count, heSectionWidth, vSectionWidth, radius, handlerRegistry);
+		// Set the HeV vector
+		superCluster->setHeVVector(tempVector);
+		// Add this cluster to the network and clusters
+		network->addSuper(superCluster);
+		clusters.push_back(superCluster);
+		// Keep the information of the group
+		superGroupMap[std::make_pair(-1, k)] = superCluster.get();
+
+		std::cout << -1 << " " << k << " " << count << " " << superCluster->getName() << " " << radius << std::endl;
+
+		// Reinitialize everything
+		heSize = 0.0, vSize = 0.0, radius = 0.0;
+		count = 0;
+		tempVector.clear();
+	}
+
 	// Get the number of groups in the helium and vacancy directions
 	int nVGroup = (network->getAll(vType).size() - vMin) / vSectionWidth + 1;
 	int nHeGroup = (network->getAll(vType).size() * 4) / heSectionWidth + 1;
@@ -106,6 +157,9 @@ void HDF5NetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterReactio
 
 					// Verify if the cluster exists
 					if (!cluster) continue;
+
+					// Verify it was not already used
+					if (clusterGroupMap.find(compositionVector) != clusterGroupMap.end()) continue;
 
 					// Increment the counter
 					count++;

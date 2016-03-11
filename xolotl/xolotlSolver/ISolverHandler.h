@@ -10,6 +10,7 @@
 #include <IDiffusionHandler.h>
 #include <IAdvectionHandler.h>
 #include <IMaterialFactory.h>
+#include <IBubbleBurstingHandler.h>
 
 namespace xolotlSolver {
 

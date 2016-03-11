@@ -6,6 +6,7 @@
 #include <IFluxHandler.h>
 #include <IAdvectionHandler.h>
 #include <IDiffusionHandler.h>
+#include <IBubbleBurstingHandler.h>
 
 namespace xolotlFactory {
 
@@ -48,6 +49,13 @@ public:
 	 * @return The diffusion handler.
 	 */
 	virtual std::shared_ptr<xolotlCore::IDiffusionHandler> getDiffusionHandler() const = 0;
+
+	/**
+	 * Return the bursting handler.
+	 *
+	 * @return The bursting handler.
+	 */
+	virtual std::shared_ptr<xolotlCore::IBubbleBurstingHandler> getBurstingHandler() const = 0;
 
 	/**
 	 * Function that create the wanted material factory depending on the given type.
