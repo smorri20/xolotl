@@ -40,7 +40,7 @@ double previousIFlux1D = 0.0;
 //! How often HDF5 file is written
 PetscInt hdf5Stride1D = 0;
 //! HDF5 output file name
-std::string hdf5OutputName1D = "xolotlStop.h5";
+std::string hdf5OutputName1D = "xolotlStop2.h5";
 // Declare the vector that will store the Id of the helium clusters
 std::vector<int> heIndices1D;
 // Declare the vector that will store the weight of the helium clusters
@@ -365,11 +365,11 @@ PetscErrorCode computeBoundaryFlux1D(TS ts, PetscInt timestep, PetscReal time,
 		// Print the results for He, V, HeV, He2V, He3V, and He4V
 		std::cout << "\nTime: " << time << std::endl;
 		std::cout << "Helium concentration = " << totalHeConcentration << std::endl;
-		std::cout << "Vacancy concentration = " << totalVConcentration << std::endl;
-		std::cout << "HeV concentration = " << totalHevConcentration << std::endl;
-		std::cout << "He2V concentration = " << totalHe2vConcentration << std::endl;
-		std::cout << "He3V concentration = " << totalHe3vConcentration << std::endl;
-		std::cout << "He4V concentration = " << totalHe4vConcentration << std::endl;
+		std::cout << "Vconcentration = " << totalVConcentration << std::endl;
+		std::cout << "HeVconcentration = " << totalHevConcentration << std::endl;
+		std::cout << "He2Vconcentration = " << totalHe2vConcentration << std::endl;
+		std::cout << "He3Vconcentration = " << totalHe3vConcentration << std::endl;
+		std::cout << "He4Vconcentration = " << totalHe4vConcentration << std::endl;
 
 		// Uncomment to write the flux at the boundary and temperature in a file
 		std::ofstream outputFile;
