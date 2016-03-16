@@ -9,8 +9,9 @@
 #include <ITemperatureHandler.h>
 #include <IDiffusionHandler.h>
 #include <IAdvectionHandler.h>
-#include <IMaterialFactory.h>
+#include <ITrapMutationHandler.h>
 #include <IBubbleBurstingHandler.h>
+#include <IMaterialFactory.h>
 
 namespace xolotlSolver {
 
@@ -77,7 +78,7 @@ public:
 	 * @param da The PETSc distributed array
 	 * @param C The PETSc solution vector
 	 */
-	virtual void initializeConcentration(DM &da, Vec &C) const = 0;
+	virtual void initializeConcentration(DM &da, Vec &C) = 0;
 
 	/**
 	 * Compute the new concentrations for the RHS function given an initial
@@ -109,11 +110,11 @@ public:
 	virtual void computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) = 0;
 
 	/**
-	 * Get the step size in the x direction.
+	 * Get the grid in the x direction.
 	 *
-	 * @return The step size in the x direction
+	 * @return The grid in the x direction
 	 */
-	virtual double getStepSizeX() const = 0;
+	virtual std::vector<double> getXGrid() const = 0;
 
 	/**
 	 * Get the step size in the y direction.
@@ -137,11 +138,64 @@ public:
 	virtual int getDimension() const = 0;
 
 	/**
+	 * Get the position of the surface.
+	 *
+	 * @param j The index on the grid in the y direction
+	 * @param k The index on the grid in the z direction
+	 * @return The position of the surface at this y,z coordinates
+	 */
+	virtual int getSurfacePosition(int j = -1, int k = -1) const = 0;
+
+	/**
+	 * Set the position of the surface.
+	 *
+	 * @param pos The index of the position
+	 * @param j The index on the grid in the y direction
+	 * @param k The index on the grid in the z direction
+	 */
+	virtual void setSurfacePosition(int pos, int j = -1, int k = -1) = 0;
+
+	/**
+	 * Get the initial vacancy concentration.
+	 *
+	 * @return The initial vacancy concentration
+	 */
+	virtual double getInitialVConc() const = 0;
+
+	/**
+	 * To know if the surface should be able to move.
+	 *
+	 * @return True if the surface should be able to move.
+	 */
+	virtual bool moveSurface() const = 0;
+
+	/**
 	 * Get the flux handler.
 	 *
 	 * @return The flux handler
 	 */
 	virtual xolotlCore::IFluxHandler *getFluxHandler() const = 0;
+
+	/**
+	 * Get the advection handler.
+	 *
+	 * @return The first advection handler
+	 */
+	virtual xolotlCore::IAdvectionHandler *getAdvectionHandler() const = 0;
+
+	/**
+	 * Get the modified trap-mutation handler.
+	 *
+	 * @return The modified trap-mutation handler
+	 */
+	virtual xolotlCore::ITrapMutationHandler *getMutationHandler() const = 0;
+
+	/**
+	 * Get the bubble bursting handler.
+	 *
+	 * @return The bubble bursting handler
+	 */
+	virtual xolotlCore::IBubbleBurstingHandler *getBurstingHandler() const = 0;
 
 	/**
 	 * Get the network.

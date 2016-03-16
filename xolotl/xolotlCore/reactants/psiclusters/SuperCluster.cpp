@@ -901,7 +901,8 @@ void SuperCluster::getVMomentPartialDerivatives(std::vector<double> & partials) 
 	return;
 }
 
-void SuperCluster::initializeBursting(double hx, int nx) {
+void SuperCluster::initializeBursting(int surfacePos,
+		std::vector<double> grid) {
 	// Add the needed reaction connectivity
 	// Each V cluster connects to every HeV clusters with the same number of V
 
@@ -931,24 +932,25 @@ void SuperCluster::initializeBursting(double hx, int nx) {
 	}
 
 	// Method that will fill the index vector that is actually used during the solving steps
-	initializeBurstingIndex(hx, nx);
+	initializeBurstingIndex(surfacePos, grid);
 
 	return;
 }
 
-void SuperCluster::initializeBurstingIndex(double hx, int nx) {
+void SuperCluster::initializeBurstingIndex(int surfacePos,
+		std::vector<double> grid) {
 	// Clear the vector of HeV bubble bursting at each grid point
 	burstingIndexVector.clear();
 	// Initial declarations
 	int heIndex = 0, vIndex = 0;
 
 	// Loop on the grid points
-	for (int i = 0; i < nx; i++) {
+	for (int i = 0; i < grid.size(); i++) {
 		// Create the list (vector) of indices at this grid point
 		std::vector<std::pair<int, int> > indices;
 
 		// Get the depth
-		double depth = (double) i * hx;
+		double depth = grid[i] - grid[surfacePos];
 
 		// Loop on the vacancy width
 		for (int k = 0; k < sectionVWidth; k++) {

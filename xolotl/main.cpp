@@ -210,22 +210,25 @@ int main(int argc, char **argv) {
 
 		totalTimer->stop();
 
-		// Report statistics about the performance data collected during
-		// the run we just completed.
-		xperf::PerfObjStatsMap<xperf::ITimer::ValType> timerStats;
-		xperf::PerfObjStatsMap<xperf::IEventCounter::ValType> counterStats;
-		xperf::PerfObjStatsMap<xperf::IHardwareCounter::CounterType> hwCtrStats;
-		handlerRegistry->collectStatistics( timerStats, counterStats, hwCtrStats );
-		if (rank == 0) {
-			handlerRegistry->reportStatistics(std::cout,
-																				timerStats,
-																				counterStats,
-																				hwCtrStats);
-		}
-	} catch (const std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		std::cerr << "Aborting." << std::endl;
-		return EXIT_FAILURE;
+        // Report statistics about the performance data collected during
+        // the run we just completed.
+        xperf::PerfObjStatsMap<xperf::ITimer::ValType> timerStats;
+        xperf::PerfObjStatsMap<xperf::IEventCounter::ValType> counterStats;
+        xperf::PerfObjStatsMap<xperf::IHardwareCounter::CounterType> hwCtrStats;
+        handlerRegistry->collectStatistics( timerStats, counterStats, hwCtrStats );
+        if( rank == 0 )
+        {
+            handlerRegistry->reportStatistics( std::cout, 
+                                                timerStats, 
+                                                counterStats, 
+                                                hwCtrStats );
+        }
+
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        std::cerr << "Aborting." << std::endl;
+        return EXIT_FAILURE;
+
 	} catch (const std::string& error) {
 		std::cout << error << std::endl;
 		std::cout << "Aborting." << std::endl;

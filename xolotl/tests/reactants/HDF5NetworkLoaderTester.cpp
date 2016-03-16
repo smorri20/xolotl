@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(checkGrouping) {
 	// Get the size of the network
 	int networkSize = network->size();
 	// Check the value
-	BOOST_REQUIRE_EQUAL(networkSize, 102);
+	BOOST_REQUIRE_EQUAL(networkSize, 71);
 
 	// Get the properties
 	auto props = network->getProperties();
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(checkGrouping) {
 	BOOST_REQUIRE_EQUAL(strtol(props["numVClusters"].c_str(),NULL,10), 5);
 	BOOST_REQUIRE_EQUAL(strtol(props["numIClusters"].c_str(),NULL,10), 6);
 	BOOST_REQUIRE_EQUAL(strtol(props["numHeVClusters"].c_str(),NULL,10), 88);
-	BOOST_REQUIRE_EQUAL(strtol(props["numSuperClusters"].c_str(),NULL,10), 2);
+	BOOST_REQUIRE_EQUAL(strtol(props["numSuperClusters"].c_str(),NULL,10), 11);
 
 	// Get all the reactants
 	auto reactants = network->getAll();
@@ -145,12 +145,12 @@ BOOST_AUTO_TEST_CASE(checkGrouping) {
 	auto reactant = (PSICluster *) reactants->at(networkSize - 1);
 	// Check the composition
 	auto composition = reactant->getComposition();
-	BOOST_REQUIRE_EQUAL(composition["He"], 78);
-	BOOST_REQUIRE_EQUAL(composition["V"], 15);
+	BOOST_REQUIRE_EQUAL(composition["He"], 24);
+	BOOST_REQUIRE_EQUAL(composition["V"], 5);
 	BOOST_REQUIRE_EQUAL(composition["I"], 0);
 	// Check the formation energy
 	auto formationEnergy = reactant->getFormationEnergy();
-	BOOST_REQUIRE_CLOSE(formationEnergy, 68.281, 0.01);
+	BOOST_REQUIRE_CLOSE(formationEnergy, 0.0, 0.01);
 	// Check the migration energy
 	auto migrationEnergy = reactant->getMigrationEnergy();
 	BOOST_REQUIRE_EQUAL(migrationEnergy, std::numeric_limits<double>::infinity());

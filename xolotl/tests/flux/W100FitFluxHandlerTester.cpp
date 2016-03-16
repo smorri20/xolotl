@@ -7,6 +7,9 @@
 #include <XolotlConfig.h>
 #include <DummyHandlerRegistry.h>
 #include <mpi.h>
+#include <HDF5NetworkLoader.h>
+#include <DummyHandlerRegistry.h>
+#include <XolotlConfig.h>
 
 using namespace std;
 using namespace xolotlCore;
@@ -35,23 +38,26 @@ BOOST_AUTO_TEST_CASE(checkGetIncidentFlux) {
 	// Load the network
 	auto network = (PSIClusterReactionNetwork *) loader.load().get();
 
-	// Specify the number of grid points that will be used
-	int nGridpts = 5;
-	// Specify the step size between grid points
-	double step = 1.25;
+	// Create a grid
+	std::vector<double> grid;
+	for (int l = 0; l < 5; l++) {
+		grid.push_back((double) l * 1.25);
+	}
+	// Specify the surface position
+	int surfacePos = 0;
 
-	// Create the flux handler
+	// Create the W100 flux handler
     auto testFitFlux = make_shared<W100FitFluxHandler>();
-    // Set the factor to change the helium flux
+    // Set the flux amplitude
     testFitFlux->setFluxAmplitude(1.0);
     // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(network, nGridpts, step);
+    testFitFlux->initializeFluxHandler(network, surfacePos, grid);
 
 	// Create a time
 	double currTime = 1.0;
 
 	// Get the flux vector
-	auto testFluxVec = testFitFlux->getIncidentFluxVec(currTime);
+	auto testFluxVec = testFitFlux->getIncidentFluxVec(currTime, surfacePos);
 
 	// Check the value at some grid points
 	BOOST_REQUIRE_CLOSE(testFluxVec[1], 0.476819, 0.01);
@@ -75,17 +81,20 @@ BOOST_AUTO_TEST_CASE(checkFluxIndex) {
 	// Load the network
 	auto network = (PSIClusterReactionNetwork *) loader.load().get();
 
-	// Specify the number of grid points that will be used
-	int nGridpts = 5;
-	// Specify the step size between grid points
-	double step = 1.25;
+	// Create a grid
+	std::vector<double> grid;
+	for (int l = 0; l < 5; l++) {
+		grid.push_back((double) l * 1.25);
+	}
+	// Specify the surface position
+	int surfacePos = 0;
 
 	// Create the flux handler
     auto testFitFlux = make_shared<W100FitFluxHandler>();
-    // Set the factor to change the helium flux
+    // Set the amplitude
     testFitFlux->setFluxAmplitude(1.0);
     // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(network, nGridpts, step);
+    testFitFlux->initializeFluxHandler(network, surfacePos, grid);
 
     // Check the value of the index of the cluster for the flux
     BOOST_REQUIRE_EQUAL(testFitFlux->getIncidentFluxClusterIndex(), 0);
@@ -107,18 +116,21 @@ BOOST_AUTO_TEST_CASE(checkFluence) {
 	// Load the network
 	auto network = (PSIClusterReactionNetwork *) loader.load().get();
 
-	// Specify the number of grid points that will be used
-	int nGridpts = 5;
-	// Specify the step size between grid points
-	double step = 1.25;
+	// Create a grid
+	std::vector<double> grid;
+	for (int l = 0; l < 5; l++) {
+		grid.push_back((double) l * 1.25);
+	}
+	// Specify the surface position
+	int surfacePos = 0;
 
-	// Create the flux handler
+	// Create the W100 flux handler
     auto testFitFlux = make_shared<W100FitFluxHandler>();
-    // Set the factor to change the helium flux
+    // Set the flux amplitude
     testFitFlux->setFluxAmplitude(1.0);
     // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(network, nGridpts, step);
-
+    testFitFlux->initializeFluxHandler(network, surfacePos, grid);
+    
 	// Check that the fluence is 0.0 at the beginning
 	BOOST_REQUIRE_EQUAL(testFitFlux->getFluence(), 0.0);
 
@@ -145,28 +157,30 @@ BOOST_AUTO_TEST_CASE(checkFluxAmplitude) {
 	// Load the network
 	auto network = (PSIClusterReactionNetwork *) loader.load().get();
 
-	// Specify the number of grid points that will be used
-	int nGridpts = 5;
-	// Specify the step size between grid points
-	double step = 1.25;
+	// Create a grid
+	std::vector<double> grid;
+	for (int l = 0; l < 5; l++) {
+		grid.push_back((double) l * 1.25);
+	}
+	// Specify the surface position
+	int surfacePos = 0;
 
-	// Create the flux handler
+	// Create the W100 flux handler
     auto testFitFlux = make_shared<W100FitFluxHandler>();
-    // Set the factor to change the helium flux
-    testFitFlux->setFluxAmplitude(1.0);
-    // Set the factor to change the helium flux
+
+    // Set the factor to change the flux amplitude
     testFitFlux->setFluxAmplitude(2.5);
     // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(network, nGridpts, step);
+    testFitFlux->initializeFluxHandler(network, surfacePos, grid);
 
-    // Check the value of the helium flux
+    // Check the value of the flux amplitude
     BOOST_REQUIRE_EQUAL(testFitFlux->getFluxAmplitude(), 2.5);
 
 	// Create a time
 	double currTime = 1.0;
 
 	// Get the flux vector
-	auto testFluxVec = testFitFlux->getIncidentFluxVec(currTime);
+	auto testFluxVec = testFitFlux->getIncidentFluxVec(currTime, surfacePos);
 
 	// Check the value at some grid points
 	BOOST_REQUIRE_CLOSE(testFluxVec[1], 1.192047, 0.01);
@@ -190,10 +204,13 @@ BOOST_AUTO_TEST_CASE(checkTimeProfileFlux) {
 	// Load the network
 	auto network = (PSIClusterReactionNetwork *) loader.load().get();
 
-	// Specify the number of grid points that will be used
-	int nGridpts = 5;
-	// Specify the step size between grid points
-	double step = 1.25;
+	// Create a grid
+	std::vector<double> grid;
+	for (int l = 0; l < 5; l++) {
+		grid.push_back((double) l * 1.25);
+	}
+	// Specify the surface position
+	int surfacePos = 0;
 
 	// Create a file with a time profile for the flux
 	// First column with the time and the second with
@@ -206,37 +223,36 @@ BOOST_AUTO_TEST_CASE(checkTimeProfileFlux) {
 			"4.0 0.0";
 	writeFluxFile.close();
 
-	// Create the flux handler
     auto testFitFlux = make_shared<W100FitFluxHandler>();
     // Initialize the time profile for the flux handler
     testFitFlux->initializeTimeProfile("fluxFile.dat");
     // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(network, nGridpts, step);
+    testFitFlux->initializeFluxHandler(network, surfacePos, grid);
 
 	// Create a time
 	double currTime = 0.5;
 
 	// Get the flux vector
-	auto testFluxVec = testFitFlux->getIncidentFluxVec(currTime);
+	auto testFluxVec = testFitFlux->getIncidentFluxVec(currTime, surfacePos);
 
 	// Check the value at some grid points
 	BOOST_REQUIRE_CLOSE(testFluxVec[1], 1192.047, 0.01);
 	BOOST_REQUIRE_CLOSE(testFluxVec[2], 564.902, 0.01);
 	BOOST_REQUIRE_CLOSE(testFluxVec[3], 243.050, 0.01);
-	// Check the value of the helium flux
+	// Check the value of the flux amplitude
     BOOST_REQUIRE_EQUAL(testFitFlux->getFluxAmplitude(), 2500.0);
 
     // Change the current time
     currTime = 3.5;
 
 	// Get the flux vector
-	testFluxVec = testFitFlux->getIncidentFluxVec(currTime);
+	testFluxVec = testFitFlux->getIncidentFluxVec(currTime, surfacePos);
 
 	// Check the value at some grid points
 	BOOST_REQUIRE_CLOSE(testFluxVec[1], 715.228, 0.01);
 	BOOST_REQUIRE_CLOSE(testFluxVec[2], 338.941, 0.01);
 	BOOST_REQUIRE_CLOSE(testFluxVec[3], 145.830, 0.01);
-	// Check the value of the helium flux
+	// Check the value of the flux amplitude
     BOOST_REQUIRE_EQUAL(testFitFlux->getFluxAmplitude(), 1500.0);
 
     // Remove the created file

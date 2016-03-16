@@ -801,6 +801,17 @@ public:
 	double getBiggestRate() const;
 
 	/**
+	 * This operation returns the sum of combination rate and emission rate
+	 * (where this cluster is on the left side of the reaction) for this
+	 * particular cluster.
+	 * This is used to computed the desorption rate in the
+	 * modified trap-mutation handler.
+	 *
+	 * @return The rate
+	 */
+	double getLeftSideRate() const;
+
+	/**
 	 * This operation returns a list that represents the connectivity
 	 * between this cluster and other clusters in the network.
 	 * "Connectivity" indicates whether two clusters interact, via any

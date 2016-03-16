@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(checkCopying) {
 	// Check the migration energy
 	cluster.setMigrationEnergy(1.0);
 	copiedCluster.setMigrationEnergy(3.0);
-	BOOST_REQUIRE(abs(cluster.getMigrationEnergy() -
+	BOOST_REQUIRE(fabs(cluster.getMigrationEnergy() -
 					copiedCluster.getMigrationEnergy()) > 2.0 - 1e-5);
 
 	// Check cloning. Note that clone returns a shared_ptr!

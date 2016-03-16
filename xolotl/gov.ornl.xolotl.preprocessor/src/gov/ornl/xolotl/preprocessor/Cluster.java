@@ -12,7 +12,7 @@ package gov.ornl.xolotl.preprocessor;
  */
 public class Cluster {
 
-	// The number of Helium atoms in the cluster. Default value is 0.
+	// The number of helium atoms in the cluster. Default value is 0.
 	public int nHe = 0;
 
 	// The number of vacancies in the cluster. Default value is 0.

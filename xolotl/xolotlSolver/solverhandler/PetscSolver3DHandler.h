@@ -11,6 +11,10 @@ namespace xolotlSolver {
  * to solve the ADR equations in 3D using PETSc from Argonne National Laboratory.
  */
 class PetscSolver3DHandler: public PetscSolverHandler {
+private:
+	//! The position of the surface
+	std::vector< std::vector<int> > surfacePosition;
+
 public:
 
 	//! The Constructor
@@ -30,7 +34,7 @@ public:
 	 * Initialize the concentration solution vector.
      * \see ISolverHandler.h
 	 */
-	void initializeConcentration(DM &da, Vec &C) const;
+	void initializeConcentration(DM &da, Vec &C);
 
 	/**
 	 * Compute the new concentrations for the RHS function given an initial
@@ -50,6 +54,22 @@ public:
      * \see ISolverHandler.h
 	 */
 	void computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J);
+
+	/**
+	 * Get the position of the surface.
+     * \see ISolverHandler.h
+	 */
+	int getSurfacePosition(int j = -1, int k = -1) const {
+		return surfacePosition[j][k];
+	}
+
+	/**
+	 * Set the position of the surface.
+     * \see ISolverHandler.h
+	 */
+	void setSurfacePosition(int pos, int j = -1, int k = -1) {
+		surfacePosition[j][k] = pos;
+	}
 
 }; //end class PetscSolver3DHandler
 

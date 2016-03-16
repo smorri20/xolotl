@@ -11,8 +11,12 @@
 #include <VizOptionHandler.h>
 #include <MaterialOptionHandler.h>
 #include <VConcentrationOptionHandler.h>
+#include <VoidPortionOptionHandler.h>
 #include <DimensionsOptionHandler.h>
 #include <GroupingOptionHandler.h>
+#include <RegularGridOptionHandler.h>
+#include <ProcessOptionHandler.h>
+#include <GrainBoundariesOptionHandler.h>
 #include "Options.h"
 #include <limits>
 
@@ -36,7 +40,10 @@ Options::Options() :
 		dimensionNumber(1),
 		groupingVMin(std::numeric_limits<int>::max()),
 		groupingHeWidth(1),
-		groupingVWidth(1) {
+		groupingVWidth(1),
+		voidPortion(50.0),
+		useRegularGridFlag(true), 
+		gbList("") {
 
 	// Create the network option handler
 	auto networkHandler = new NetworkOptionHandler();
@@ -58,10 +65,18 @@ Options::Options() :
 	auto materialHandler = new MaterialOptionHandler();
 	// Create the initial vacancy concentration option handler
 	auto vConcHandler = new VConcentrationOptionHandler();
+	// Create the void portion option handler
+	auto voidHandler = new VoidPortionOptionHandler();
 	// Create the dimensions option handler
 	auto dimHandler = new DimensionsOptionHandler();
 	// Create the grouping option handler
 	auto groupHandler = new GroupingOptionHandler();
+	// Create the regular grid option handler
+	auto gridHandler = new RegularGridOptionHandler();
+	// Create the physical processes option handler
+	auto procHandler = new ProcessOptionHandler();
+	// Create the GB option handler
+	auto gbHandler = new GrainBoundariesOptionHandler();
 
 	// Add our notion of which options we support.
 	optionsMap[networkHandler->key] = networkHandler;
@@ -74,8 +89,12 @@ Options::Options() :
 	optionsMap[vizHandler->key] = vizHandler;
 	optionsMap[materialHandler->key] = materialHandler;
 	optionsMap[vConcHandler->key] = vConcHandler;
+	optionsMap[voidHandler->key] = voidHandler;
 	optionsMap[dimHandler->key] = dimHandler;
 	optionsMap[groupHandler->key] = groupHandler;
+	optionsMap[gridHandler->key] = gridHandler;
+	optionsMap[procHandler->key] = procHandler;
+	optionsMap[gbHandler->key] = gbHandler;
 }
 
 Options::~Options(void) {
@@ -176,4 +195,3 @@ void Options::showHelp(std::ostream& os) const {
 }
 
 };  // end namespace xolotlCore
-

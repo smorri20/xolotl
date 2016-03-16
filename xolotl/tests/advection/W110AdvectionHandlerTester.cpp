@@ -40,12 +40,34 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	// Get its size
 	const int size = network->getAll()->size();
 
+	// Create a grid
+	std::vector<double> grid;
+	for (int l = 0; l < 3; l++) {
+		grid.push_back((double) l);
+	}
+
+	// Create ofill
+	int mat[size*size];
+	int *ofill = &mat[0];
+
+	// Create a collection of advection handlers
+	std::vector<IAdvectionHandler *> advectionHandlers;
+
 	// Create the advection handler and initialize it
 	W110AdvectionHandler advectionHandler;
-	advectionHandler.initialize(network);
+	advectionHandler.initialize(network, ofill);
+	advectionHandler.initializeAdvectionGrid(advectionHandlers, grid);
 
 	// Check the total number of advecting clusters
 	BOOST_REQUIRE_EQUAL(advectionHandler.getNumberOfAdvecting(), 6);
+
+	// Check the clusters in ofill
+	BOOST_REQUIRE_EQUAL(ofill[0], 1);
+	BOOST_REQUIRE_EQUAL(ofill[10], 1);
+	BOOST_REQUIRE_EQUAL(ofill[20], 1);
+	BOOST_REQUIRE_EQUAL(ofill[30], 1);
+	BOOST_REQUIRE_EQUAL(ofill[40], 1);
+	BOOST_REQUIRE_EQUAL(ofill[50], 1);
 
 	// Set the size parameter in the x direction
 	double hx = 1.0;
@@ -82,11 +104,11 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	concVector[2] = conc + 2 * size; // right
 
 	// Set the grid position
-	std::vector<double> gridPosition = { hx, 0, 0 };
+	std::vector<double> gridPosition = { hx, 0.0, 0.0 };
 
 	// Compute the advection at this grid point
-	advectionHandler.computeAdvection(network, hx, gridPosition,
-			concVector, updatedConcOffset);
+	advectionHandler.computeAdvection(network, gridPosition,
+			concVector, updatedConcOffset, hx, hx, 1);
 
 	// Check the new values of updatedConcOffset
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], -1.24827e+10, 0.01);
@@ -108,8 +130,8 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	double *valPointer = &val[0];
 
 	// Compute the partial derivatives for the advection a the grid point 1
-	advectionHandler.computePartialsForAdvection(network, hx, valPointer,
-			indicesPointer, gridPosition);
+	advectionHandler.computePartialsForAdvection(network, valPointer,
+			indicesPointer, gridPosition, hx, hx, 1);
 
 	// Check the values for the indices
 	BOOST_REQUIRE_EQUAL(indices[0], 0);
@@ -124,6 +146,14 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	BOOST_REQUIRE_CLOSE(val[1], 12842306.0, 0.01);
 	BOOST_REQUIRE_CLOSE(val[2], -161884163.0, 0.01);
 	BOOST_REQUIRE_CLOSE(val[3], 10117760.0, 0.01);
+
+	// Get the stencil
+	auto stencil = advectionHandler.getStencilForAdvection(gridPosition);
+
+	// Check the value of the stencil
+	BOOST_REQUIRE_EQUAL(stencil[0], 1); //x
+	BOOST_REQUIRE_EQUAL(stencil[1], 0);
+	BOOST_REQUIRE_EQUAL(stencil[2], 0);
 
 	// Finalize MPI
 	MPI_Finalize();

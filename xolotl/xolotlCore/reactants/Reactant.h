@@ -377,5 +377,4 @@ public:
 };
 
 } // end namespace xolotlCore
-
 #endif

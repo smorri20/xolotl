@@ -82,6 +82,9 @@ public class ArgumentsTest {
 			// Check the default material argument
 			assertEquals("W100", args.getMaterial());
 
+			// Check the default physical process argumen
+			assertEquals("diff advec movingSurface", args.getProcess());
+
 			// Check the default flux argument
 			assertEquals("4.0e7", args.getFlux());
 
@@ -91,11 +94,21 @@ public class ArgumentsTest {
 			// Check if there is an fluxFile argument
 			assertEquals(false, args.isFluxFile());
 
-			// Check if there is a checkpoint argument
-			assertEquals(false, args.isCheckpoint());
+			// Check the default petscArgs
+			assertEquals("-ts_final_time 1.0 -ts_dt 1.0e-12 "
+					+ "-ts_max_steps 100 -ts_adapt_dt_max 1.0e-6 -ts_max_snes_failures 200 "
+					+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type sor "
+					+ "-fieldsplit_1_pc_type redundant -ts_monitor",
+					args.getPetscArgs());
 
 			// Check if there is a initial vacancy concentration argument
 			assertEquals(false, args.isInitialV());
+
+			// Check if there is a void portion argument
+			assertEquals(false, args.isVoidPortion());
+
+			// Check if there is a grain boundary argument
+			assertEquals(false, args.isGrain());
 		}
 		catch (ArgumentValidationException e) {
 			// Complain and fail
@@ -124,9 +137,10 @@ public class ArgumentsTest {
 				"--petscArgs=-plot", "--networkFile", "net.h5",
 				"--dimensions", "2", "--nxGrid", "50", "--nyGrid", "10", "--nzGrid", "30", 
 				"--xStepSize", "0.2", "--yStepSize", "1.5", "--zStepSize", "10.0", 
-				"--material", "W111", "--tempFile", "temp.dat", "--flux", "5.0e5", 
-				"--fluxFile", "flux.dat", "--checkpoint", "xolotlStop.h5", 
-				"--initialV", "0.05" });
+				"--material", "W111", "--process", "diff", "--tempFile", "temp.dat", 
+				"--flux", "5.0e5", "--fluxFile", "flux.dat", 
+				"--checkpoint", "xolotlStop.h5", "--initialV", "0.05", 
+				"--regularGrid", "yes", "--voidPortion", "60.0", "--grain=Y 3.0" });
 			
 			// Check that the maximum Helium cluster size is 7
 			assertEquals(7, args.getMaxHeSize());
@@ -178,6 +192,9 @@ public class ArgumentsTest {
 		
 			// Check that the material is W111
 			assertEquals("W111", args.getMaterial());
+		
+			// Check that the only physical process is diff
+			assertEquals("diff", args.getProcess());
 
 			// Check that the flux argument is 5.0e5
 			assertEquals("5.0e5", args.getFlux());
@@ -205,6 +222,21 @@ public class ArgumentsTest {
 
 			// Check its value
 			assertEquals("0.05", args.getInitialV());
+
+			// Check if there is an void portion argument
+			assertEquals(true, args.isVoidPortion());
+
+			// Check its value
+			assertEquals("60.0", args.getVoidPortion());
+
+			// Check if there is a regular grid argument
+			assertEquals(true, args.isRegularGrid());
+
+			// Check its value
+			assertEquals("yes", args.getRegularGrid());
+
+			// Check if there is a grain boundary argument
+			assertEquals(true, args.isGrain());
 		} 
 		catch (ArgumentValidationException e) {
 			// Complain and fail

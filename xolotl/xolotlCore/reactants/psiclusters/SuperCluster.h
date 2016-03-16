@@ -337,18 +337,20 @@ public:
 	 * of same number of V. It must also initialize the rates of the reactions and define
 	 * which bubbles can burst at each grid point.
 	 *
-	 * @param hx The step size on the x axis
-	 * @param nx The number of grid points on the x axis
+	 * @param surfacePos The index of the position of the surface
+	 * @param grid The grid on the x axis
 	 */
-	void initializeBursting(double hx, int nx);
+	void initializeBursting(int surfacePos,
+			std::vector<double> grid);
 
 	/**
 	 * This method defines which bursting is allowed at each grid point.
 	 *
-	 * @param hx The step size on the x axis
-	 * @param nx The number of grid points on the x axis
+	 * @param surfacePos The index of the position of the surface
+	 * @param grid The grid on the x axis
 	 */
-	void initializeBurstingIndex(double hx, int nx);
+	void initializeBurstingIndex(int surfacePos,
+			std::vector<double> grid);
 
 	/**
 	 * Compute the flux due to the bubble bursting for all the cluster,

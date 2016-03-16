@@ -29,21 +29,22 @@ public:
 	 * of same number of V. It must also initialize the rates of the reactions and define
 	 * which bubbles can burst at each grid point by calling initializeIndex.
 	 *
+	 * @param surfacePos The index of the position of the surface
 	 * @param network The network
-	 * @param hx The step size on the x axis
-	 * @param nx The number of grid points on the x axis
+	 * @param grid The grid on the x axis
 	 */
-	virtual void initialize(PSIClusterReactionNetwork *network,
-			double  hx, int nx) = 0;
+	virtual void initialize(int surfacePos, PSIClusterReactionNetwork *network,
+			std::vector<double> grid) = 0;
 
 	/**
 	 * This method defines which bursting is allowed at each grid point.
 	 *
+	 * @param surfacePos The index of the position of the surface
 	 * @param network The network
-	 * @param hx The step size on the x axis
-	 * @param nx The number of grid points on the x axis
+	 * @param grid The grid on the x axis
 	 */
-	virtual void initializeIndex(PSIClusterReactionNetwork *network, double hx, int nx) = 0;
+	virtual void initializeIndex(int surfacePos, PSIClusterReactionNetwork *network,
+			std::vector<double> grid) = 0;
 
 	/**
 	 * This method updates the rate for the bubble bursting if rates changed in the network,

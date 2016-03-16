@@ -52,7 +52,7 @@ public interface Arguments {
 	 * This operation produces the required command line option '--maxVSize' which 
 	 * takes a single integer value and is defined by the previous Option annotation
 	 * 
-	 * @return The maxium size of a vacancy cluster in the network
+	 * @return The maximum size of a vacancy cluster in the network
 	 */
 	int getMaxVSize();
 
@@ -167,7 +167,7 @@ public interface Arguments {
 	 * additionally provides a brief description of the option.
 	 * 
 	 * @param defaultValue
-	 *            The single string of Petsc arguments that will be used if this
+	 *            The single string of PETSc arguments that will be used if this
 	 *            option is not specified via the command line
 	 * @param description
 	 *            Brief description of this option
@@ -181,7 +181,7 @@ public interface Arguments {
 	 * This operation produces the required command line option '--petscArgs' which 
 	 * takes a single string value and is defined by the previous Option annotation
 	 * 
-	 * @return The single string of Petsc arguments
+	 * @return The single string of PETSc arguments
 	 */
 	String getPetscArgs();
 
@@ -360,16 +360,16 @@ public interface Arguments {
 	double getZStepSize();
 
 	/**
-	 * This Option annotation corresponds to the  '--material' option
+	 * This Option annotation corresponds to the '--material' option
 	 * and provides a brief description of the option.
 	 * 
 	 * @param description
 	 *            Brief description of this option
 	 */
 	@Option(defaultValue = "W100",
-			description = "{W100, W110, W111} "
-			+ "The option declaring which material will be used "
-			+ "(W is for tungsten and the numbers correspond to the surface orientation)")
+			description = "{W100, W110, W111, W211} "
+					+ "The option declaring which material will be used "
+					+ "(W is for tungsten and the numbers correspond to the surface orientation)")
 	/**
 	 * This operation produces the optional command line option '--material' which 
 	 * takes a single string value and is defined by the previous Option annotation
@@ -390,12 +390,34 @@ public interface Arguments {
 			+ "the factor specified (in nm).")
 	
 	/**
-	 * This operation produces the optional command line option '--heFlux' which 
+	 * This operation produces the optional command line option '--flux' which 
 	 * takes a single string value and is defined by the previous Option annotation
 	 * 
 	 * @return The flux amplitude
 	 */
 	String getFlux();
+
+	/**
+	 * This Option annotation corresponds to the '--process' option which
+	 * defines the default value to be the single string of physical processes and
+	 * additionally provides a brief description of the option.
+	 * 
+	 * @param defaultValue
+	 *            The single string of physical processes that will be used if this
+	 *            option is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "diff advec movingSurface", 
+			description = "List of physical processes for the simulation "
+					+ "(diff, advec, modifiedTM, movingSurface, bursting, attenuation)")
+	/**
+	 * This operation produces the required command line option '--petscArgs' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The single string of processes
+	 */
+	String getProcess();
 
 	/**
 	 * This Option annotation corresponds to the optional '--tempFile' option
@@ -477,6 +499,32 @@ public interface Arguments {
 	boolean isCheckpoint();
 
 	/**
+	 * This Option annotation corresponds to the optional '--voidPortion' option
+	 * and provides a brief description of the option.
+	 * 
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(description = "The portion of the grid (in %) that won't be material at "
+			+ "the start of the simulation. It is room for the surface to grow.")
+	
+	/**
+	 * This operation produces the optional command line option '--voidPortion' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The portion of the grid that is NOT the material 
+	 */
+	String getVoidPortion();
+
+	/**
+	 * This operation makes the command line option '--voidPortion' optional.
+	 * 
+	 * @return Returns true if the option has been specified and false if it has
+	 *         not
+	 */
+	boolean isVoidPortion();
+
+	/**
 	 * This Option annotation corresponds to the optional '--initialV' option
 	 * and provides a brief description of the option.
 	 * 
@@ -501,6 +549,57 @@ public interface Arguments {
 	 *         not
 	 */
 	boolean isInitialV();
+
+	/**
+	 * This Option annotation corresponds to the optional '--regularGrid' option
+	 * and provides a brief description of the option.
+	 * 
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(description = "If the user wants to use a regular grid in the "
+			+ "x direction or not.")
+	
+	/**
+	 * This operation produces the optional command line option '--regularGrid' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return If the user wants to use a regular grid
+	 */
+	String getRegularGrid();
+
+	/**
+	 * This operation makes the command line option '--regularGrid' optional.
+	 * 
+	 * @return Returns true if the option has been specified and false if it has
+	 *         not
+	 */
+	boolean isRegularGrid();
+
+	/**
+	 * This Option annotation corresponds to the optional '--grain' option 
+	 * provides a brief description of the option.
+	 * 
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(description = "List of arguments for the grain boundaries.")
+	
+	/**
+	 * This operation produces the optional command line option '--grain' which 
+	 * takes a single string value and is defined by the previous Option annotation
+	 * 
+	 * @return The single string of grain boundaries
+	 */
+	String getGrain();
+
+	/**
+	 * This operation makes the command line option '--grain' optional.
+	 * 
+	 * @return Returns true if the option has been specified and false if it has
+	 *         not
+	 */
+	boolean isGrain();
 
 	/**
 	 * This produces the command line arguments '--help' or '-h' either of which

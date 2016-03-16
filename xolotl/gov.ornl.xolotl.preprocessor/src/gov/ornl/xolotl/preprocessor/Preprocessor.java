@@ -50,15 +50,15 @@ public class Preprocessor {
 	private int maxHe;
 
 	// The maximum size of a mobile He cluster.
-	private int maxHeDiffusionSize = 6;
+	private int maxHeDiffusionSize = 7;
 
 	// The diffusion factors for single species helium clusters.
 	private double[] heDiffusionFactors = { 0.0, 2.9e+10, 3.2e+10, 2.3e+10,
-			1.7e+10, 5.0e+09, 1.0e+09 };
+			1.7e+10, 5.0e+09, 1.0e+09, 5.0e+08 };
 
 	// The migration energies for single species helium clusters.
 	private double[] heMigrationEnergies = { Double.POSITIVE_INFINITY, 0.13,
-			0.20, 0.25, 0.20, 0.12, 0.3 };
+			0.20, 0.25, 0.20, 0.12, 0.3, 0.4 };
 
 	// The maximum size of a vacancy cluster in the network.
 	private int maxV;
@@ -104,7 +104,7 @@ public class Preprocessor {
 	private FormationEnergyEngine formationEnergyEngine = new FormationEnergyEngine();
 
 	/**
-	 * The number of spacial dimensions.
+	 * The number of spatial dimensions.
 	 */
 	private int dim;
 
@@ -119,17 +119,17 @@ public class Preprocessor {
 	public Map<String, String> petscOptions = new HashMap<String, String>();
 
 	/**
-	 * This operation generates a single string containing the Petsc arguments
-	 * that will be used to set the Petsc parameter required to run Xolotl.
+	 * This operation generates a single string containing the PETSc arguments
+	 * that will be used to set the PETSc parameter required to run Xolotl.
 	 * 
 	 * @param petscArgs
-	 *            The Petsc command line arguments as specified by the Arguments
+	 *            The PETSc command line arguments as specified by the Arguments
 	 *            interface
-	 * @return A string containing the Petsc arguments that will be passed to
+	 * @return A string containing the PETSc arguments that will be passed to
 	 *         Xolotl
 	 */
 	private String generatePetscArgs(String petscArgs) {
-		// Create a map of the default Petsc options and their corresponding
+		// Create a map of the default PETSc options and their corresponding
 		// arguments, if any, where the key is the option and the value is
 		// the argument
 		petscOptions.put("-ts_final_time", "1.0");
@@ -143,7 +143,7 @@ public class Preprocessor {
 		petscOptions.put("-fieldsplit_1_pc_type", "redundant");
 		petscOptions.put("-ts_monitor", "");
 
-		// Get the string of Petsc arguments from the command line
+		// Get the string of PETSc arguments from the command line
 		// and split the string around the blank spaces
 		List<String> petscList = new ArrayList<String>();
 		for (String str : petscArgs.split(" ")) {
@@ -157,11 +157,18 @@ public class Preprocessor {
 			petscList.add("-ksp_type"); petscList.add("fgmres");
 		}
 
+		// Change the default preconditionner if we are not in 1D
+		if (dim > 1) {
+			petscList.add("-fieldsplit_1_pc_type"); petscList.add("gamg");
+			petscList.add("-fieldsplit_1_ksp_type"); petscList.add("gmres");
+			petscList.add("-ksp_type"); petscList.add("fgmres");
+		}
+
 		// Create the dash character
 		String str = "-";
 		char dash = str.charAt(0);
 
-		// Loop through the Petsc list of strings to pair Petsc options with
+		// Loop through the PETSc list of strings to pair PETSc options with
 		// their corresponding arguments and identify the stand-alone options
 		for (int i = 0; i < petscList.size(); i++) {
 			// Check that we are reading the name of the option
@@ -237,6 +244,12 @@ public class Preprocessor {
 						+ "PETSc. ");
 			}
 		}
+		
+		// Whether the phase-cut method will be used or not
+		usePhaseCut = args.isPhaseCut();
+		
+		// The number of dimension for the problem to solve
+		dim = Integer.parseInt(args.getDimensions());
 
 		// Set the parameter options that will be passed to Xolotl
 		xolotlParams.setProperty("dimensions", args.getDimensions());
@@ -248,6 +261,7 @@ public class Preprocessor {
 		xolotlParams.setProperty("vizHandler", args.getVizHandler());
 		xolotlParams.setProperty("petscArgs",
 				generatePetscArgs(args.getPetscArgs()));
+		xolotlParams.setProperty("process", args.getProcess());
 
 		// The following parameter options are optional and will only
 		// be set if they are specified via the command line
@@ -257,6 +271,12 @@ public class Preprocessor {
 			xolotlParams.setProperty("fluxFile", args.getTempFile());
 		if (args.isInitialV())
 			xolotlParams.setProperty("initialV", args.getInitialV());
+		if (args.isVoidPortion())
+			xolotlParams.setProperty("voidPortion", args.getVoidPortion());
+		if (args.isRegularGrid())
+			xolotlParams.setProperty("regularGrid", args.getRegularGrid());
+		if (args.isGrain())
+			xolotlParams.setProperty("grain", args.getGrain());
 
 	}
 
@@ -267,7 +287,6 @@ public class Preprocessor {
 	 *         solely of helium.
 	 */
 	private ArrayList<Cluster> generateHe() {
-
 		// Local Declarations
 		ArrayList<Cluster> clusterList = new ArrayList<Cluster>();
 
@@ -325,7 +344,6 @@ public class Preprocessor {
 	 *         solely of V and HeV clusters.
 	 */
 	private ArrayList<Cluster> generateHeV() {
-
 		// Local Declarations
 		ArrayList<Cluster> clusterList = new ArrayList<Cluster>();
 		
@@ -404,7 +422,6 @@ public class Preprocessor {
 	 *         solely of interstitials.
 	 */
 	private ArrayList<Cluster> generateInterstitials() {
-
 		// Local Declarations
 		ArrayList<Cluster> clusterList = new ArrayList<Cluster>();
 
@@ -436,7 +453,6 @@ public class Preprocessor {
 	 *         arguments and settings.
 	 */
 	public ArrayList<Cluster> generateNetwork() {
-
 		// Create the list of clusters
 		ArrayList<Cluster> clusterList = new ArrayList<Cluster>();
 
@@ -457,7 +473,6 @@ public class Preprocessor {
 	 *            The parameters that will be written to the file
 	 */
 	public void writeParameterFile(String parameterFile, Properties parameters) {
-
 		try {
 			// Create the file containing the parameters
 			FileOutputStream paramsFile = new FileOutputStream(parameterFile);
@@ -484,7 +499,6 @@ public class Preprocessor {
 	 *            The parameter file name
 	 */
 	public Properties loadParameterFile(String parameterFile) {
-
 		// Local declarations
 		Properties inProperties = new Properties();
 
@@ -540,8 +554,8 @@ public class Preprocessor {
 	public void writeHeader(String name, Arguments args) {
 		// The status of the previous HDF5 operation
 		int status;
-		
-		// Get the grid size
+
+		// Get the grid sizes
 		int[] nxGrid = { args.getNxGrid() };
 		int[] nyGrid = { args.getNyGrid() };
 		int[] nzGrid = { args.getNzGrid() };
@@ -974,6 +988,194 @@ public class Preprocessor {
 	}
 	
 	/**
+	 * This operation copies the surface position information from the already 
+	 * existing file to the concentration subgroup of the newly created file
+	 * 
+	 * @param fromName
+	 *            The name of the HDF5 file from which the surface position 
+	 *            information will be read
+	 * @param lastTimeStep
+	 *            The value of the last time step to know which concentration 
+	 *            group to look at
+	 * @param toName
+	 *            The name of the created HDF5 file
+	 */
+	public void copySurface(String fromName, int lastTimeStep, String toName) {
+		// The status of the previous HDF5 operation
+		int status;
+		
+		try {
+			// Open the file
+			int fileId = H5.H5Fopen(fromName, HDF5Constants.H5F_ACC_RDONLY,
+					HDF5Constants.H5P_DEFAULT);
+			
+			// Open the corresponding sub group
+			// Set the name of the sub group
+			String subGroupName = "concentrationsGroup/concentration_"
+					+ lastTimeStep;
+
+			// Open this specific concentration sub group
+			int concentrationGroupId = H5.H5Gopen(fileId, subGroupName,
+					HDF5Constants.H5P_DEFAULT);
+			
+			// Check if the surface position is an attribute 
+			// (thus the Xolotl was ran in 1D)
+			if (H5.H5Aexists(concentrationGroupId, "iSurface")) {
+				// Read the attribute
+				int[] iSurface = {-1};
+				int attributeId = H5.H5Aopen(concentrationGroupId,
+						"iSurface", HDF5Constants.H5P_DEFAULT);
+				status = H5.H5Aread(attributeId,
+						HDF5Constants.H5T_STD_I32LE, iSurface);
+				
+				// Close everything from the old file
+				status = H5.H5Aclose(attributeId);
+				status = H5.H5Gclose(concentrationGroupId);
+				status = H5.H5Fclose(fileId);
+				
+				// And write the surface attribute in the new file
+				// Open the created HDF5 file 
+				fileId = H5.H5Fopen(toName, HDF5Constants.H5F_ACC_RDWR,
+						HDF5Constants.H5P_DEFAULT);
+				// Open the new concentration subgroup
+				concentrationGroupId = H5.H5Gopen(fileId, 
+						"concentrationsGroup/concentration_0",
+						HDF5Constants.H5P_DEFAULT);
+				// Create and write the surface position attribute
+				int dataspaceId = H5.H5Screate(HDF5Constants.H5S_SCALAR);
+				attributeId = H5.H5Acreate(concentrationGroupId, "iSurface",
+						HDF5Constants.H5T_STD_I32LE, dataspaceId,
+						HDF5Constants.H5P_DEFAULT, HDF5Constants.H5P_DEFAULT);
+				status = H5.H5Awrite(attributeId,
+						HDF5Constants.H5T_STD_I32LE, iSurface);
+				
+				// Close everything from the new file
+				status = H5.H5Aclose(attributeId);
+				status = H5.H5Sclose(dataspaceId);
+				status = H5.H5Gclose(concentrationGroupId);
+				status = H5.H5Fclose(fileId);
+			}
+			// If the surface position information is not an attribute, it is a dataset
+			else {
+				// Open the dataset
+				int datasetId = H5.H5Dopen(concentrationGroupId, "iSurface", 
+						HDF5Constants.H5P_DEFAULT);
+				// Get the dataspace from it
+				int dataspaceId = H5.H5Dget_space(datasetId);
+				// Determine the dimensionality
+				int n = H5.H5Sget_simple_extent_ndims(dataspaceId);
+				
+				// Two possibilities now: either the dataset is a one dimension one or 
+				// a two dimensions one, the former case corresponding to Xolotl running in 2D,
+				// the latter in 3D
+				if (n == 1) {
+					// We are in the Xolotl 2D case
+					// Initialize the dimensions of the dataset
+					long[] dims = { 0 };
+					// Get the dimension of the dataset
+					status = H5.H5Sget_simple_extent_dims(dataspaceId, dims, 
+							null);
+					// Create the array that will receive the surface positions information
+					int[] surfaceArray = new int[(int) dims[0]];
+
+					// Read the dataset
+					status = H5.H5Dread(datasetId, HDF5Constants.H5T_STD_I32LE, HDF5Constants.H5S_ALL, 
+							HDF5Constants.H5S_ALL, HDF5Constants.H5P_DEFAULT, surfaceArray);
+					
+					// Close everything from the old file
+					status = H5.H5Dclose(datasetId);
+					status = H5.H5Sclose(dataspaceId);
+					status = H5.H5Gclose(concentrationGroupId);
+					status = H5.H5Fclose(fileId);
+					
+					// Write this surface position dataset into the new file
+					// Open the created HDF5 file 
+					fileId = H5.H5Fopen(toName, HDF5Constants.H5F_ACC_RDWR,
+							HDF5Constants.H5P_DEFAULT);
+					// Open the new concentration subgroup
+					concentrationGroupId = H5.H5Gopen(fileId, 
+							"concentrationsGroup/concentration_0",
+							HDF5Constants.H5P_DEFAULT);
+					// Create the dataspace 
+					dataspaceId = H5.H5Screate_simple(1, dims, null);
+					// Create the dataset for the concentrations
+					datasetId = H5.H5Dcreate(concentrationGroupId, "iSurface",
+							HDF5Constants.H5T_STD_I32LE, dataspaceId,
+							HDF5Constants.H5P_DEFAULT,
+							HDF5Constants.H5P_DEFAULT,
+							HDF5Constants.H5P_DEFAULT);
+					// Write the surface position array in the dataset
+					status = H5.H5Dwrite(datasetId,
+							HDF5Constants.H5T_STD_I32LE,
+							HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL,
+							HDF5Constants.H5P_DEFAULT, surfaceArray);
+					
+					// Close everything from the new file
+					status = H5.H5Dclose(datasetId);
+					status = H5.H5Sclose(dataspaceId);
+					status = H5.H5Gclose(concentrationGroupId);
+					status = H5.H5Fclose(fileId);
+				}
+				else if (n == 2) {
+					// We are in the Xolotl 3D case
+					// Initialize the dimensions of the dataset
+					long[] dims = { 0, 0 };
+					// Get the dimension of the dataset
+					status = H5.H5Sget_simple_extent_dims(dataspaceId, dims, 
+							null);
+					// Create the array that will receive the surface positions information
+					int[][] surfaceArray = new int[(int) dims[0]][(int) dims[1]];
+
+					// Read the dataset
+					status = H5.H5Dread(datasetId, HDF5Constants.H5T_STD_I32LE, HDF5Constants.H5S_ALL, 
+							HDF5Constants.H5S_ALL, HDF5Constants.H5P_DEFAULT, surfaceArray);
+					
+					// Close everything from the old file
+					status = H5.H5Dclose(datasetId);
+					status = H5.H5Sclose(dataspaceId);
+					status = H5.H5Gclose(concentrationGroupId);
+					status = H5.H5Fclose(fileId);
+					
+					// Write this surface position dataset into the new file
+					// Open the created HDF5 file 
+					fileId = H5.H5Fopen(toName, HDF5Constants.H5F_ACC_RDWR,
+							HDF5Constants.H5P_DEFAULT);
+					// Open the new concentration subgroup
+					concentrationGroupId = H5.H5Gopen(fileId, 
+							"concentrationsGroup/concentration_0",
+							HDF5Constants.H5P_DEFAULT);
+					// Create the dataspace 
+					dataspaceId = H5.H5Screate_simple(2, dims, null);
+					// Create the dataset for the concentrations
+					datasetId = H5.H5Dcreate(concentrationGroupId, "iSurface",
+							HDF5Constants.H5T_STD_I32LE, dataspaceId,
+							HDF5Constants.H5P_DEFAULT,
+							HDF5Constants.H5P_DEFAULT,
+							HDF5Constants.H5P_DEFAULT);
+					// Write the surface position array in the dataset
+					status = H5.H5Dwrite(datasetId,
+							HDF5Constants.H5T_STD_I32LE,
+							HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL,
+							HDF5Constants.H5P_DEFAULT, surfaceArray);
+					
+					// Close everything from the new file
+					status = H5.H5Dclose(datasetId);
+					status = H5.H5Sclose(dataspaceId);
+					status = H5.H5Gclose(concentrationGroupId);
+					status = H5.H5Fclose(fileId);
+				}
+			}
+			
+		} catch (Exception e) {
+			// Complain
+			e.printStackTrace();
+		}
+		
+		return;
+		
+	}
+	
+	/**
 	 * This operation reads the network of an already existing file and create 
 	 * a map of the index and composition of the clusters 
 	 * 
@@ -1291,6 +1493,9 @@ public class Preprocessor {
 				// Create the concentration subgroup in the new file and store
 				// the times
 				createConcentrationSubGroup(toName, times);
+				
+				// Copy the surface position information 
+				copySurface(fromName, lastTimeStep, toName);
 				
 				// Create a map of the index and composition of the network present 
 				// in the given HDF5 file

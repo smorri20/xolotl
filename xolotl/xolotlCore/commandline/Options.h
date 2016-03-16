@@ -105,6 +105,11 @@ protected:
 	double initialVConcentration;
 
 	/**
+	 * Value of the portion of the void on the grid at the start of the simulation.
+	 */
+	double voidPortion;
+
+	/**
 	 * Number of dimensions for the simulation.
 	 */
 	int dimensionNumber;
@@ -123,6 +128,21 @@ protected:
 	 * Width for the sections of the grouping scheme (vacancy direction).
 	 */
 	int groupingVWidth;
+
+	/**
+	 * Use a regular grid on the x direction?
+	 */
+	bool useRegularGridFlag;
+
+	/**
+	 * The map of physical processes to use in the simulation.
+	 */
+	std::map<std::string, bool> processMap;
+
+	/**
+	 * String of the list of wanted GB.
+	 */
+	std::string gbList;
 
 public:
 
@@ -149,13 +169,11 @@ public:
 	 */
 	void showHelp(std::ostream& os) const;
 
-	/**
-	 * Should the program run after parsing the parameter file?
-	 * \see IOptions.h
-	 */
-	bool shouldRun() const {
-		return shouldRunFlag;
-	}
+    /**
+     * Should the program run after parsing the parameter file?
+     * \see IOptions.h
+     */
+    bool shouldRun() const {return shouldRunFlag;}
 
 	/**
 	 * Set the shouldRunFlag.
@@ -173,13 +191,11 @@ public:
 		return exitCode;
 	}
 
-	/**
-	 * Set the value for the exit code.
-	 * \see IOptions.h
-	 */
-	void setExitCode(int code) {
-		exitCode = code;
-	}
+    /**
+     * Set the value for the exit code.
+     * \see IOptions.h
+     */
+    void setExitCode(int code) {exitCode = code;}
 
 	/**
 	 * Get the name of the network file.
@@ -189,13 +205,11 @@ public:
 		return networkFilename;
 	}
 
-	/**
-	 * Set the name of the network file.
-	 * \see IOptions.h
-	 */
-	void setNetworkFilename(const std::string& name) {
-		networkFilename = name;
-	}
+    /**
+     * Set the name of the network file.
+     * \see IOptions.h
+     */
+    void setNetworkFilename(const std::string& name) {networkFilename = name;}
 
 	/**
 	 * Get the Argc for PETSc.
@@ -285,54 +299,41 @@ public:
 		return tempProfileFilename;
 	}
 
-	/**
-	 * Set the name of the profile file to use.
-	 * \see IOptions.h
-	 */
-	void setTempProfileFilename(const std::string& name) {
-		tempProfileFilename = name;
-	}
+    /**
+     * Set the name of the profile file to use.
+     * \see IOptions.h
+     */
+    void setTempProfileFilename(const std::string& name) {tempProfileFilename = name;}
 
-	/**
-	 * Should we use the flux option?
-	 * \see IOptions.h
-	 */
-	bool useFluxAmplitude() const {
-		return fluxFlag;
-	}
-	;
+    /**
+     * Should we use the flux option?
+     * \see IOptions.h
+     */
+    bool useFluxAmplitude() const {return fluxFlag;};
 
-	/**
-	 * Set the fluxFlag.
-	 * \see IOptions.h
-	 */
-	void setFluxFlag(bool flag) {
-		fluxFlag = flag;
-	}
+    /**
+     * Set the fluxFlag.
+     * \see IOptions.h
+     */
+    void setFluxFlag(bool flag) {fluxFlag = flag;}
 
-	/**
-	 * Obtain the value of the flux intensity to be used.
-	 * \see IOptions.h
-	 */
-	double getFluxAmplitude() const {
-		return fluxAmplitude;
-	}
+    /**
+     * Obtain the value of the flux intensity to be used.
+     * \see IOptions.h
+     */
+    double getFluxAmplitude() const {return fluxAmplitude;}
 
-	/**
-	 * Set the value for the flux intensity to use.
-	 * \see IOptions.h
-	 */
-	void setFluxAmplitude(double flux) {
-		fluxAmplitude = flux;
-	}
+    /**
+     * Set the value for the flux intensity to use.
+     * \see IOptions.h
+     */
+    void setFluxAmplitude(double flux) {fluxAmplitude = flux;}
 
-	/**
-	 * Should we use a time profile for the flux?
-	 * \see IOptions.h
-	 */
-	bool useFluxTimeProfile() const {
-		return fluxProfileFlag;
-	}
+    /**
+     * Should we use a time profile for the flux?
+     * \see IOptions.h
+     */
+    bool useFluxTimeProfile() const {return fluxProfileFlag;}
 
 	/**
 	 * Set the fluxProfileFlag.
@@ -342,22 +343,18 @@ public:
 		fluxProfileFlag = flag;
 	}
 
-	/**
-	 * Obtain the name of the file containing the time profile data for the
-	 * flux.
-	 * \see IOptions.h
-	 */
-	std::string getFluxProfileName() const {
-		return fluxProfileFilename;
-	}
+    /**
+     * Obtain the name of the file containing the time profile data for the
+     * flux.
+     * \see IOptions.h
+     */
+    std::string getFluxProfileName() const {return fluxProfileFilename;}
 
-	/**
-	 * Set the name of the time profile file to use.
-	 * \see IOptions.h
-	 */
-	void setFluxProfileName(const std::string& name) {
-		fluxProfileFilename = name;
-	}
+    /**
+     * Set the name of the time profile file to use.
+     * \see IOptions.h
+     */
+    void setFluxProfileName(const std::string& name) {fluxProfileFilename = name;}
 
 	/**
 	 * Which type of performance handlers should we use?
@@ -392,21 +389,17 @@ public:
 		vizStandardHandlersFlag = flag;
 	}
 
-	/**
-	 * Obtain the name of the material to be used for simulation.
-	 * \see IOptions.h
-	 */
-	std::string getMaterial() const {
-		return materialName;
-	}
+    /**
+     * Obtain the name of the material to be used for simulation.
+     * \see IOptions.h
+     */
+    std::string getMaterial() const {return materialName;}
 
-	/**
-	 * Set the name of the material to be used for the simulation.
-	 * \see IOptions.h
-	 */
-	void setMaterial(const std::string& material) {
-		materialName = material;
-	}
+    /**
+     * Set the name of the material to be used for the simulation.
+     * \see IOptions.h
+     */
+    void setMaterial(const std::string& material) {materialName = material;}
 
 	/**
 	 * Obtain the value of the concentration for the vacancies.
@@ -447,7 +440,6 @@ public:
 	int getGroupingVMin() const {
 		return groupingVMin;
 	}
-
 	/**
 	 * Set the vacancy size at which the grouping scheme starts.
 	 * \see IOptions.h
@@ -487,6 +479,56 @@ public:
 	void setGroupingVWidth(int width) {
 		groupingVWidth = width;
 	}
+
+    /**
+     * Obtain the value of the void portion for the simulation.
+     * \see IOptions.h
+     */
+    double getVoidPortion() const {return voidPortion;}
+
+    /**
+     * Set the value of the void portion for the surface to grow.
+     * \see IOptions.h
+     */
+    void setVoidPortion(double portion) {voidPortion = portion;}
+
+    /**
+     * Should we use a regular grid on the x direction?
+     * \see IOptions.h
+     */
+    bool useRegularXGrid() const {return useRegularGridFlag;}
+
+    /**
+     * Set the useRegularGridFlag.
+     * \see IOptions.h
+     */
+    void setRegularXGrid(bool flag) {useRegularGridFlag = flag;}
+
+    /**
+     * Obtain the physical process map.
+     *
+     * @return The map
+     */
+    std::map<std::string, bool> getProcesses() const {return processMap;}
+
+    /**
+     * Set the physical process map.
+     *
+     * @param map The map
+     */
+    void setProcesses(std::map<std::string, bool> map) {processMap = map;}
+
+    /**
+     * Obtain the string listing the wanted GB.
+     * \see IOptions.h
+     */
+    std::string getGbString() const {return gbList;}
+
+    /**
+     * Set the string listing the wanted GB.
+     * \see IOptions.h
+     */
+    void setGbString(const std::string& gbString) {gbList = gbString;}
 
 };
 //end class Options

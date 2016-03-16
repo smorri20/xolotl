@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_SUITE (TungstenIntegrationTester_testSuite)
  * This operation checks the fluxs from the reactant as best as is possible
  * given that it requires external data.
  */
-BOOST_AUTO_TEST_CASE(checkGetReactantFluxesAndParials) {
+BOOST_AUTO_TEST_CASE(checkGetReactantFluxesAndPartials) {
 	// Local Declarations
 	string sourceDir(XolotlSourceDirectory);
 	string pathToFile("/tests/testfiles/tungsten.txt");

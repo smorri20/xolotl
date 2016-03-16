@@ -7,6 +7,9 @@
 #include <XolotlConfig.h>
 #include <DummyHandlerRegistry.h>
 #include <mpi.h>
+#include <HDF5NetworkLoader.h>
+#include <DummyHandlerRegistry.h>
+#include <XolotlConfig.h>
 
 using namespace std;
 using namespace xolotlCore;
@@ -35,23 +38,26 @@ BOOST_AUTO_TEST_CASE(checkgetIncidentFlux) {
 	// Load the network
 	auto network = (PSIClusterReactionNetwork *) loader.load().get();
 
-	// Specify the number of grid points that will be used
-	int nGridpts = 5;
-	// Specify the step size between grid points
-	double step = 1.25;
+	// Create a grid
+	std::vector<double> grid;
+	for (int l = 0; l < 5; l++) {
+		grid.push_back((double) l * 1.25);
+	}
+	// Specify the surface position
+	int surfacePos = 0;
 
-	// Create the flux handler
+	// Create the W111 flux handler
     auto testFitFlux = make_shared<W111FitFluxHandler>();
-    // Set the factor to change the helium flux
+    // Set the flux amplitude
     testFitFlux->setFluxAmplitude(1.0);
     // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(network, nGridpts, step);
+    testFitFlux->initializeFluxHandler(network, surfacePos, grid);
 
 	// Create a time
 	double currTime = 1.0;
 
 	// Get the flux vector
-	auto testFluxVec = testFitFlux->getIncidentFluxVec(currTime);
+	auto testFluxVec = testFitFlux->getIncidentFluxVec(currTime, surfacePos);
 
 	// Check the value at some grid points
 	BOOST_REQUIRE_CLOSE(testFluxVec[1], 0.391408, 0.01);

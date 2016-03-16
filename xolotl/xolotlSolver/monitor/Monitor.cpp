@@ -165,5 +165,4 @@ PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
 }
 
 }
-
 /* end namespace xolotlSolver */

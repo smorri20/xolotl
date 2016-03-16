@@ -4,8 +4,8 @@
 
 namespace xolotlCore {
 
-void BubbleBurstingHandler::initialize(PSIClusterReactionNetwork *network,
-		double hx, int nx) {
+void BubbleBurstingHandler::initialize(int surfacePos, PSIClusterReactionNetwork *network,
+		std::vector<double> grid) {
 	// Add the needed reaction connectivity
 	// Each V cluster connects to every HeV clusters with the same number of V
 
@@ -33,13 +33,13 @@ void BubbleBurstingHandler::initialize(PSIClusterReactionNetwork *network,
 	}
 
 	// Method that will fill the index vector that is actually used during the solving steps
-	initializeIndex(network, hx, nx);
+	initializeIndex(surfacePos, network, grid);
 
 	// Initialize the super clusters that are treated differently
 	auto supers = network->getAll(superType);
 	for (int i = 0; i < supers.size(); i++) {
 		auto super = (SuperCluster *) supers[i];
-		super->initializeBursting(hx, nx);
+		super->initializeBursting(surfacePos, grid);
 	}
 
 	// Update the bubble bursting rate
@@ -48,8 +48,8 @@ void BubbleBurstingHandler::initialize(PSIClusterReactionNetwork *network,
 	return;
 }
 
-void BubbleBurstingHandler::initializeIndex(PSIClusterReactionNetwork *network,
-		double hx, int nx) {
+void BubbleBurstingHandler::initializeIndex(int surfacePos, PSIClusterReactionNetwork *network,
+		std::vector<double> grid) {
 	// Clear the vector of HeV bubble bursting at each grid point
 	indexVector.clear();
 
@@ -57,12 +57,18 @@ void BubbleBurstingHandler::initializeIndex(PSIClusterReactionNetwork *network,
 	auto bubbles = network->getAll(heVType);
 
 	// Loop on the grid points
-	for (int i = 0; i < nx; i++) {
+	for (int i = 0; i < grid.size(); i++) {
 		// Create the list (vector) of indices at this grid point
 		std::vector<int> indices;
 
+		// Nothing happens on the left side of the surface
+		if (i <= surfacePos) {
+			indexVector.push_back(indices);
+			continue;
+		}
+
 		// Get the depth
-		double depth = (double) i * hx;
+		double depth = grid[i] - grid[surfacePos];
 
 		// Loop on all the bubbles
 		for (int j = 0; j < bubbles.size(); j++) {
@@ -213,10 +219,10 @@ int BubbleBurstingHandler::computePartialsForBursting(
 int BubbleBurstingHandler::getNBursting(
 		PSIClusterReactionNetwork *network, int xi) {
 	// Get the pointer to list of indices at this grid point
-	std::vector<int> * clusterIndices = &indexVector[xi];
+	auto clusterIndices = indexVector[xi];
 
 	// Initialize the counter of number of bursting clusters
-	int count = clusterIndices->size() * 2;
+	int count = clusterIndices.size() * 2;
 
 	// Get all the super clusters from the network
 	auto supers = network->getAll(superType);

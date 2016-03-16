@@ -15,7 +15,7 @@ import java.io.IOException;
  * 
  * This class looks in the user directory during construction and will override
  * the fit coefficients if it finds a csv file with one set of coefficients per
- * row and named fit.csv. There should be three rows with three coefficients per
+ * row and named fit.csv. There should be eight rows with six coefficients per
  * row.
  * 
  * @author Jay Jay Billings
@@ -92,7 +92,6 @@ public class FormationEnergyEngine {
 	 * finished.
 	 */
 	public FormationEnergyEngine() {
-
 		// Get the fit file
 		File fitFile = new File("fit.csv");
 
@@ -199,7 +198,7 @@ public class FormationEnergyEngine {
 	 * @return The formation energy.
 	 */
 	public double getHeFormationEnergy(int size) {
-
+		// Initialize the formation energy to infinity
 		double energy = Double.POSITIVE_INFINITY;
 
 		if (size < 9 && size > 0)
@@ -217,7 +216,7 @@ public class FormationEnergyEngine {
 	 * @return The formation energy.
 	 */
 	public double getVFormationEnergy(int size) {
-
+		// Initialize the formation energy to infinity
 		double energy = Double.POSITIVE_INFINITY;
 
 		if (size < 3 && size > 0)
@@ -270,17 +269,21 @@ public class FormationEnergyEngine {
 	 *            The order of the polynomial
 	 */
 	private double legendrePolynomial(double x, int degree) {
-
+		// For degree 0 the return value is 1.0
 		if (degree == 0)
 			return 1.0;
-		else if (degree == 1)
+		// For degree1 the return value i x
+		if (degree == 1)
 			return x;
 
+		// Initialize the polynomials orders for the loop
 		double Pn2 = 1.0, Pn1 = x, Pn = 0.0;
-
+		// Loop on the wanted degree
 		for (int n = 1; n < degree; n++) {
+			// Compute the polynomial at the current order
 			Pn = (((2.0 * (double) n + 1.0) * x * Pn1) - ((double) n * Pn2))
 					/ ((double) n + 1.0);
+			// Update the polynomials orders
 			Pn2 = Pn1;
 			Pn1 = Pn;
 		}
@@ -302,13 +305,13 @@ public class FormationEnergyEngine {
 	 *            The coefficients array.
 	 */
 	private double compute3rdOrderLegendre(double x, double[] coeffs) {
-
+		// Initialize the value
 		double value = 0.0;
 
 		// Compute the value
-		value = coeffs[0] + coeffs[1] * x 
-				+ coeffs[2] * legendrePolynomial(x, 2) 
-				+ coeffs[3] * legendrePolynomial(x, 3);
+		for (int i = 0; i < 4; i++) {
+			value = value + coeffs[i] * legendrePolynomial(x, i);
+		}
 
 		return value;
 	}
@@ -327,15 +330,13 @@ public class FormationEnergyEngine {
 	 *            The coefficients array.
 	 */
 	private double compute5thOrderLegendre(double x, double[] coeffs) {
-
+		// Initialize the value
 		double value = 0.0;
 
 		// Compute the value
-		value = coeffs[0] + coeffs[1] * x 
-				+ coeffs[2] * legendrePolynomial(x, 2) 
-				+ coeffs[3] * legendrePolynomial(x, 3)
-				+ coeffs[4] * legendrePolynomial(x, 4)
-				+ coeffs[5] * legendrePolynomial(x, 5);
+		for (int i = 0; i < 6; i++) {
+			value = value + coeffs[i] * legendrePolynomial(x, i);
+		}
 
 		return value;
 	}
@@ -347,7 +348,7 @@ public class FormationEnergyEngine {
 	 * f(x/y,y) where y = vSize and x/y = heSize/vSize.
 	 * 
 	 * @param heSize
-	 *            The number of Helium atoms in the cluster
+	 *            The number of helium atoms in the cluster
 	 * @param vSize
 	 *            The number of vacancies in the cluster
 	 * @return The formation energy
@@ -399,5 +400,4 @@ public class FormationEnergyEngine {
 
 		return energy;
 	}
-
 }

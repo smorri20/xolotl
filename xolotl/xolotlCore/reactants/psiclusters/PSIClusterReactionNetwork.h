@@ -342,5 +342,4 @@ public:
 };
 
 }
-
 #endif

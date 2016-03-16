@@ -6,6 +6,7 @@
 #include <IFluxHandler.h>
 #include <IAdvectionHandler.h>
 #include <IDiffusionHandler.h>
+#include <ITrapMutationHandler.h>
 #include <IBubbleBurstingHandler.h>
 
 namespace xolotlFactory {
@@ -37,11 +38,11 @@ public:
 	virtual std::shared_ptr<xolotlCore::IFluxHandler> getFluxHandler() const = 0;
 
 	/**
-	 * Return the advection handler.
+	 * Return the advection handlers.
 	 *
-	 * @return The advection handler.
+	 * @return The advection handlers.
 	 */
-	virtual std::shared_ptr<xolotlCore::IAdvectionHandler> getAdvectionHandler() const = 0;
+	virtual std::vector<std::shared_ptr<xolotlCore::IAdvectionHandler> > getAdvectionHandler() const = 0;
 
 	/**
 	 * Return the diffusion handler.
@@ -51,11 +52,18 @@ public:
 	virtual std::shared_ptr<xolotlCore::IDiffusionHandler> getDiffusionHandler() const = 0;
 
 	/**
-	 * Return the bursting handler.
+	 * Return the modified trap-mutation handler.
 	 *
-	 * @return The bursting handler.
+	 * @return The trap mutation handler.
 	 */
-	virtual std::shared_ptr<xolotlCore::IBubbleBurstingHandler> getBurstingHandler() const = 0;
+	virtual std::shared_ptr<xolotlCore::ITrapMutationHandler> getTrapMutationHandler() const = 0;
+
+	/**
+	 * Return the bubble bursting handler.
+	 *
+	 * @return The bubble bursting handler.
+	 */
+	virtual std::shared_ptr<xolotlCore::IBubbleBurstingHandler> getBubbleBurstingHandler() const = 0;
 
 	/**
 	 * Function that create the wanted material factory depending on the given type.
