@@ -946,8 +946,8 @@ void SuperCluster::initializeBurstingIndex(int surfacePos,
 
 	// Loop on the grid points
 	for (int i = 0; i < grid.size(); i++) {
-		// Create the list (vector) of indices at this grid point
-		std::vector<std::pair<int, int> > indices;
+		// Boolean to know if the cluster bursts at this depth
+		bool burst = false;
 
 		// Get the depth
 		double depth = grid[i] - grid[surfacePos];
@@ -979,14 +979,14 @@ void SuperCluster::initializeBurstingIndex(int surfacePos,
 
 				// If the radius is bigger than the distance to the surface there is bursting
 				if (radius > depth) {
-					// Add the bubble index to the list of indices
-					indices.push_back(pair);
+					// Set burst to true
+					burst = true;
 				}
 			}
 		}
 
 		// Add indices to the index vector
-		burstingIndexVector.push_back(indices);
+		burstingIndexVector.push_back(burst);
 	}
 
 	return;
@@ -999,16 +999,17 @@ void SuperCluster::computeBurstingFlux(int xi, double *updatedConcOffset,
 	double heDistance = 0.0, vDistance = 0.0, value = 0.0, heFactor = 0.0,
 			vFactor = 0.0;
 
-	// Get the list of indices at this grid point
-	auto indices = burstingIndexVector[xi];
-	// Loop on the list
-	for (int i = 0; i < indices.size(); i++) {
+	// Check if this cluster bursts at this depth
+	if (!burstingIndexVector[xi]) return;
+
+	// Loop on the effective map
+	for (auto mapIt = effReactingMap.begin(); mapIt != effReactingMap.end(); ++mapIt) {
 		// Compute the helium index
-		heIndex = indices[i].first;
+		heIndex = mapIt->first.first;
 		heDistance = (double) heIndex - numHe;
 		heFactor = heDistance / dispersionHe;
 		// Compute the vacancy index
-		vIndex = indices[i].second;
+		vIndex = mapIt->first.second;
 		vDistance = (double) vIndex - numV;
 		vFactor = vDistance / dispersionV;
 
@@ -1034,20 +1035,21 @@ void SuperCluster::computeBurstingFlux(int xi, double *updatedConcOffset,
 int SuperCluster::computePartialsForBursting(double *val,
 		int *indices, int xi, double kBursting, int iStart) {
 	// Initial declarations
-	int heIndex = 0, vIndex = 0;
+	int heIndex = 0, vIndex = 0, i = 0;
 	double heDistance = 0.0, vDistance = 0.0, value = 0.0, heFactor = 0.0,
 			vFactor = 0.0;
 
-	// Get the list of indices at this grid point
-	auto clusterIndices = burstingIndexVector[xi];
-	// Loop on the list
-	for (int i = 0; i < clusterIndices.size(); i++) {
+	// Check if this cluster bursts at this depth
+	if (!burstingIndexVector[xi]) return 0;
+
+	// Loop on the effective map
+	for (auto mapIt = effReactingMap.begin(); mapIt != effReactingMap.end(); ++mapIt) {
 		// Compute the helium index
-		heIndex = clusterIndices[i].first;
+		heIndex = mapIt->first.first;
 		heDistance = (double) heIndex - numHe;
 		heFactor = heDistance / dispersionHe;
 		// Compute the vacancy index
-		vIndex = clusterIndices[i].second;
+		vIndex = mapIt->first.second;
 		vDistance = (double) vIndex - numV;
 		vFactor = vDistance / dispersionV;
 
@@ -1100,14 +1102,14 @@ int SuperCluster::computePartialsForBursting(double *val,
 		indices[(iStart * 2) + (i * 24) + 22] = vId;
 		indices[(iStart * 2) + (i * 24) + 23] = vMomId - 1;
 		val[iStart + (i * 12) + 11] = value * vDistance;
+
+		// Increment i
+		i++;
 	}
 
-	return clusterIndices.size();
+	return i;
 }
 
 int SuperCluster::getNBursting(int xi) {
-	// Get the list of indices at this grid point
-	auto clusterIndices = burstingIndexVector[xi];
-
-	return clusterIndices.size();
+	return nTot * (int) burstingIndexVector[xi];
 }

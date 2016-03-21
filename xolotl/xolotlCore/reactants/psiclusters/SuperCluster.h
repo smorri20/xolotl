@@ -69,10 +69,9 @@ private:
 	std::map <std::pair<int, int>, std::vector<ClusterPair *> > effEmissionMap;
 
 	/**
-	 * The vector containing the composition of the clusters taking
-	 * part in the bursting process for each grid point
+	 * The vector containing a boolean to know if this super cluster burst at each depth.
 	 */
-	std::vector<std::vector<std::pair<int, int> > > burstingIndexVector;
+	std::vector<bool> burstingIndexVector;
 
 	/**
 	 * The default constructor is private because PSIClusters must always be
