@@ -17,7 +17,7 @@ Reactant::Reactant() :
 Reactant::Reactant(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		concentration(0.0),
 		name(""),
-		id(0),
+		id(0), heMomId(0), vMomId(0),
 		temperature(0.0),
 		network(nullptr),
 		handlerRegistry(registry) {}

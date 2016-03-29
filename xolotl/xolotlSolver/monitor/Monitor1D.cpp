@@ -234,14 +234,19 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time
 
 	// Get the network
 	auto network = solverHandler->getNetwork();
-
 	// Get all the super clusters
 	auto superClusters = network->getAll("Super");
+
+	// Get the position of the surface
+	int surfacePos = solverHandler->getSurfacePosition();
 
 	// Loop on the grid
 	for (int xi = xs; xi < xs + xm; xi++) {
 		// Get the pointer to the beginning of the solution data for this grid point
 		gridPointSolution = solutionArray[xi];
+
+		// Boundary conditions
+		if (xi <= surfacePos || xi == grid.size() - 1) continue;
 
 		// Update the concentration in the network
 		network->updateConcentrationsFromArray(gridPointSolution);
@@ -340,16 +345,13 @@ PetscErrorCode computeHeliumConc1D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the physical grid in the x direction
 	auto grid = solverHandler->getXGrid();
+	int xSize = grid.size();
 
 	// Setup step size variables
 	double hy = solverHandler->getStepSizeY();
 
-	// Get the total size of the grid rescale the concentrations
-	int Mx;
-	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);CHKERRQ(ierr);
+	// Get the position of the surface
+	int surfacePos = solverHandler->getSurfacePosition();
 
 	// Get the array of concentration
 	const double **solutionArray, *gridPointSolution;
@@ -373,9 +375,12 @@ PetscErrorCode computeHeliumConc1D(TS ts, PetscInt timestep, PetscReal time,
 	}
 
 	// Loop on the full grid
-	for (int xi = 0; xi < Mx; xi++) {
+	for (int xi = 0; xi < xSize; xi++) {
 		// Wait for everybody at each grid point
 		MPI_Barrier(PETSC_COMM_WORLD);
+
+		// Boundary conditions
+		if (xi <= surfacePos || xi == xSize - 1) continue;
 
 		// Set x
 		double x = grid[xi];
@@ -460,6 +465,9 @@ PetscErrorCode computeCumulativeHelium1D(TS ts, PetscInt timestep, PetscReal tim
 	auto grid = solverHandler->getXGrid();
 	int xSize = grid.size();
 
+	// Get the position of the surface
+	int surfacePos = solverHandler->getSurfacePosition();
+
 	// Get the array of concentration
 	PetscReal **solutionArray;
 	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
@@ -488,6 +496,9 @@ PetscErrorCode computeCumulativeHelium1D(TS ts, PetscInt timestep, PetscReal tim
 	for (int xi = 0; xi < xSize; xi++) {
 		// Wait for everybody at each grid point
 		MPI_Barrier(PETSC_COMM_WORLD);
+
+		// Boundary conditions
+		if (xi <= surfacePos || xi == xSize - 1) continue;
 
 		// Set x
 		double x = grid[xi];

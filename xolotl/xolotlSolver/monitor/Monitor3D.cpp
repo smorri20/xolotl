@@ -246,10 +246,16 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time
 	// Loop on the grid
 	for (int k = zs; k < zs + zm; k++) {
 		for (int j = ys; j < ys + ym; j++) {
+			// Get the surface position
+			int surfacePos = solverHandler->getSurfacePosition(j, k);
+
 			for (int i = xs; i < xs + xm; i++) {
 				// Get the pointer to the beginning of the solution data for
 				// this grid point
 				gridPointSolution = solutionArray[k][j][i];
+
+				// Boundary conditions
+				if (i <= surfacePos || i == grid.size() - 1) continue;
 
 				// Loop on all the indices
 				for (int l = 0; l < heIndices3D.size(); l++) {

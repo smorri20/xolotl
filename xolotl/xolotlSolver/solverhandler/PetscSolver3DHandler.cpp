@@ -492,6 +492,9 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	checkPetscError(ierr, "PetscSolver3DHandler::updateConcentration: "
 			"DMRestoreLocalVector failed.");
 
+	// Clear the memory
+	delete [] concVector;
+
 	return;
 }
 

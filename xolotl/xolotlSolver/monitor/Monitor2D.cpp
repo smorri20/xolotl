@@ -232,7 +232,12 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 
 	// Loop on the grid
 	for (int j = ys; j < ys + ym; j++) {
+		// Get the surface position
+		int surfacePos = solverHandler->getSurfacePosition(j);
 		for (int i = xs; i < xs + xm; i++) {
+			// Boundary conditions
+			if (i <= surfacePos || i == grid.size() - 1) continue;
+
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[j][i];
 
@@ -373,6 +378,11 @@ PetscErrorCode computeHeliumConc2D(TS ts, PetscInt timestep, PetscReal time,
 
 		// Loop on Y to integrate
 		for (int yj = 0; yj < My; yj++) {
+			// Get the surface position
+			int surfacePos = solverHandler->getSurfacePosition(yj);
+			// Boundary conditions
+			if (xi <= surfacePos || xi == grid.size() - 1) continue;
+
 			// If we are on the right process
 			if (xi >= xs && xi < xs + xm && yj >= ys && yj < ys + ym) {
 				// Get the pointer to the beginning of the solution data for this grid point

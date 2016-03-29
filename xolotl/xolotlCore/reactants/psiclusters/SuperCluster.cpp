@@ -105,8 +105,8 @@ double SuperCluster::getTotalConcentration() const {
 				continue;
 
 			// Compute the distances
-			heDistance = (double) heIndex - numHe;
-			vDistance = (double) vIndex - numV;
+			heDistance = 2.0 * (double) (heIndex - numHe) / (double) sectionHeWidth;
+			vDistance = 2.0 * (double) (vIndex - numV) / (double) sectionVWidth;
 
 			// Add the concentration of each cluster in the group times its number of helium
 			conc += getConcentration(heDistance, vDistance);
@@ -136,8 +136,8 @@ double SuperCluster::getTotalHeliumConcentration() const {
 				continue;
 
 			// Compute the distances
-			heDistance = (double) heIndex - numHe;
-			vDistance = (double) vIndex - numV;
+			heDistance = 2.0 * (double) (heIndex - numHe) / (double) sectionHeWidth;
+			vDistance = 2.0 * (double) (vIndex - numV) / (double) sectionVWidth;
 
 			// Add the concentration of each cluster in the group times its number of helium
 			conc += getConcentration(heDistance, vDistance) * (double) heIndex;
@@ -148,11 +148,11 @@ double SuperCluster::getTotalHeliumConcentration() const {
 }
 
 double SuperCluster::getHeDistance(int he) const {
-	return (double) he - numHe;
+	return 2.0 * (double) (he - numHe) / (double) sectionHeWidth;
 }
 
 double SuperCluster::getVDistance(int v) const {
-	return (double) v - numV;
+	return 2.0 * (double) (v - numV) / (double) sectionVWidth;
 }
 
 void SuperCluster::createReactionConnectivity() {
@@ -380,12 +380,12 @@ void SuperCluster::computeRateConstants() {
 	biggestRate = biggestProductionRate;
 
 	// Compute the dispersions
-	dispersionHe = ((double) nHeSquare
+	dispersionHe = 2.0 * ((double) nHeSquare
 			- (double) (compositionMap[heType] * compositionMap[heType])
-					/ (double) nTot) / (double) nTot;
-	dispersionV = ((double) nVSquare
+					/ (double) nTot) / ((double) (nTot * sectionHeWidth));
+	dispersionV = 2.0 * ((double) nVSquare
 			- (double) (compositionMap[vType] * compositionMap[vType])
-					/ (double) nTot) / (double) nTot;
+					/ (double) nTot) / ((double) (nTot * sectionVWidth));
 
 	if (equal(dispersionHe, 0.0))
 		dispersionHe = 1.0;
@@ -481,20 +481,17 @@ void SuperCluster::resetConnectivities() {
 double SuperCluster::getDissociationFlux() {
 	// Initial declarations
 	int nPairs = 0, heIndex = 0, vIndex = 0;
-	double flux = 0.0, heDistance = 0.0, vDistance = 0.0, heFactor = 0.0,
-			vFactor = 0.0, value = 0.0;
+	double flux = 0.0, heFactor = 0.0, vFactor = 0.0, value = 0.0;
 	PSICluster *dissociatingCluster;
 
 	// Loop on the effective map
 	for (auto mapIt = effDissociatingMap.begin(); mapIt != effDissociatingMap.end(); ++mapIt) {
 		// Compute the helium index
 		heIndex = mapIt->first.first;
-		heDistance = (double) heIndex - numHe;
-		heFactor = heDistance / dispersionHe;
+		heFactor = (double) (heIndex - numHe) / dispersionHe;
 		// Compute the vacancy index
 		vIndex = mapIt->first.second;
-		vDistance = (double) vIndex - numV;
-		vFactor = vDistance / dispersionV;
+		vFactor = (double) (vIndex - numV) / dispersionV;
 
 		// Get the pairs
 		auto pairs = mapIt->second;
@@ -529,12 +526,12 @@ double SuperCluster::getEmissionFlux() {
 	for (auto mapIt = effEmissionMap.begin(); mapIt != effEmissionMap.end(); ++mapIt) {
 		// Compute the helium index
 		heIndex = mapIt->first.first;
-		heDistance = (double) heIndex - numHe;
-		heFactor = heDistance / dispersionHe;
+		heDistance = 2.0 * (double) (heIndex - numHe) / (double) sectionHeWidth;
+		heFactor = (double) (heIndex - numHe) / dispersionHe;
 		// Compute the vacancy index
 		vIndex = mapIt->first.second;
-		vDistance = (double) vIndex - numV;
-		vFactor = vDistance / dispersionV;
+		vDistance = 2.0 * (double) (vIndex - numV) / (double) sectionVWidth;
+		vFactor = (double) (vIndex - numV) / dispersionV;
 
 		// Set the total number of reactants emitted by this one
 		nPairs = mapIt->second.size();
@@ -554,8 +551,7 @@ double SuperCluster::getEmissionFlux() {
 
 double SuperCluster::getProductionFlux() {
 	// Local declarations
-	double flux = 0.0, heDistance = 0.0, vDistance = 0.0, heFactor = 0.0,
-			vFactor = 0.0, value = 0.0;
+	double flux = 0.0, heFactor = 0.0, vFactor = 0.0, value = 0.0;
 	int nPairs = 0, heIndex = 0, vIndex = 0;
 	PSICluster *firstReactant, *secondReactant;
 
@@ -563,12 +559,10 @@ double SuperCluster::getProductionFlux() {
 	for (auto mapIt = effReactingMap.begin(); mapIt != effReactingMap.end(); ++mapIt) {
 		// Compute the helium index
 		heIndex = mapIt->first.first;
-		heDistance = (double) heIndex - numHe;
-		heFactor = heDistance / dispersionHe;
+		heFactor = (double) (heIndex - numHe) / dispersionHe;
 		// Compute the vacancy index
 		vIndex = mapIt->first.second;
-		vDistance = (double) vIndex - numV;
-		vFactor = vDistance / dispersionV;
+		vFactor = (double) (vIndex - numV) / dispersionV;
 
 		// Get the pairs
 		auto pairs = mapIt->second;
@@ -605,12 +599,12 @@ double SuperCluster::getCombinationFlux() {
 	for (auto mapIt = effCombiningMap.begin(); mapIt != effCombiningMap.end(); ++mapIt) {
 		// Compute the helium index
 		heIndex = mapIt->first.first;
-		heDistance = (double) heIndex - numHe;
-		heFactor = heDistance / dispersionHe;
+		heDistance = 2.0 * (double) (heIndex - numHe) / (double) sectionHeWidth;
+		heFactor = (double) (heIndex - numHe) / dispersionHe;
 		// Compute the vacancy index
 		vIndex = mapIt->first.second;
-		vDistance = (double) vIndex - numV;
-		vFactor = vDistance / dispersionV;
+		vDistance = 2.0 * (double) (vIndex - numV) / (double) sectionVWidth;
+		vFactor = (double) (vIndex - numV) / dispersionV;
 
 		// Get the pairs
 		auto reactants = mapIt->second;
@@ -652,8 +646,7 @@ void SuperCluster::getProductionPartialDerivatives(
 		std::vector<double> & partials) const {
 	// Initial declarations
 	int numReactants = 0, index = 0, heIndex = 0, vIndex = 0;
-	double value = 0.0, heDistance = 0.0, vDistance = 0.0, heFactor = 0.0,
-			vFactor = 0.0;
+	double value = 0.0, heFactor = 0.0, vFactor = 0.0;
 
 	// Production
 	// A + B --> D, D being this cluster
@@ -667,12 +660,10 @@ void SuperCluster::getProductionPartialDerivatives(
 	for (auto mapIt = effReactingMap.begin(); mapIt != effReactingMap.end(); ++mapIt) {
 		// Compute the helium index
 		heIndex = mapIt->first.first;
-		heDistance = (double) heIndex - numHe;
-		heFactor = heDistance / dispersionHe;
+		heFactor = (double) (heIndex - numHe) / dispersionHe;
 		// Compute the vacancy index
 		vIndex = mapIt->first.second;
-		vDistance = (double) vIndex - numV;
-		vFactor = vDistance / dispersionV;
+		vFactor = (double) (vIndex - numV) / dispersionV;
 
 		// Get the pairs
 		auto pairs = mapIt->second;
@@ -736,12 +727,12 @@ void SuperCluster::getCombinationPartialDerivatives(
 	for (auto mapIt = effCombiningMap.begin(); mapIt != effCombiningMap.end(); ++mapIt) {
 		// Compute the helium index
 		heIndex = mapIt->first.first;
-		heDistance = (double) heIndex - numHe;
-		heFactor = heDistance / dispersionHe;
+		heDistance = 2.0 * (double) (heIndex - numHe) / (double) sectionHeWidth;
+		heFactor = (double) (heIndex - numHe) / dispersionHe;
 		// Compute the vacancy index
 		vIndex = mapIt->first.second;
-		vDistance = (double) vIndex - numV;
-		vFactor = vDistance / dispersionV;
+		vDistance = 2.0 * (double) (vIndex - numV) / (double) sectionVWidth;
+		vFactor = (double) (vIndex - numV) / dispersionV;
 
 		// Get the pairs
 		auto reactants = mapIt->second;
@@ -788,8 +779,7 @@ void SuperCluster::getDissociationPartialDerivatives(
 	// Initial declarations
 	int numPairs = 0, index = 0, heIndex = 0, vIndex = 0;
 	PSICluster *cluster;
-	double value = 0.0, heDistance = 0.0, vDistance = 0.0,
-			heFactor = 0.0, vFactor = 0.0;
+	double value = 0.0, heFactor = 0.0, vFactor = 0.0;
 
 	// Dissociation
 	// A --> B + D, B being this cluster
@@ -802,12 +792,10 @@ void SuperCluster::getDissociationPartialDerivatives(
 	for (auto mapIt = effDissociatingMap.begin(); mapIt != effDissociatingMap.end(); ++mapIt) {
 		// Compute the helium index
 		heIndex = mapIt->first.first;
-		heDistance = (double) heIndex - numHe;
-		heFactor = heDistance / dispersionHe;
+		heFactor = (double) (heIndex - numHe) / dispersionHe;
 		// Compute the vacancy index
 		vIndex = mapIt->first.second;
-		vDistance = (double) vIndex - numV;
-		vFactor = vDistance / dispersionV;
+		vFactor = (double) (vIndex - numV) / dispersionV;
 
 		// Get the pairs
 		auto pairs = mapIt->second;
@@ -852,12 +840,12 @@ void SuperCluster::getEmissionPartialDerivatives(
 	for (auto mapIt = effEmissionMap.begin(); mapIt != effEmissionMap.end(); ++mapIt) {
 		// Compute the helium index
 		heIndex = mapIt->first.first;
-		heDistance = (double) heIndex - numHe;
-		heFactor = heDistance / dispersionHe;
+		heDistance = 2.0 * (double) (heIndex - numHe) / (double) sectionHeWidth;
+		heFactor = (double) (heIndex - numHe) / dispersionHe;
 		// Compute the vacancy index
 		vIndex = mapIt->first.second;
-		vDistance = (double) vIndex - numV;
-		vFactor = vDistance / dispersionV;
+		vDistance = 2.0 * (double) (vIndex - numV) / (double) sectionVWidth;
+		vFactor = (double) (vIndex - numV) / dispersionV;
 
 		// Get the pairs
 		auto pairs = mapIt->second;
@@ -1006,12 +994,12 @@ void SuperCluster::computeBurstingFlux(int xi, double *updatedConcOffset,
 	for (auto mapIt = effReactingMap.begin(); mapIt != effReactingMap.end(); ++mapIt) {
 		// Compute the helium index
 		heIndex = mapIt->first.first;
-		heDistance = (double) heIndex - numHe;
-		heFactor = heDistance / dispersionHe;
+		heDistance = 2.0 * (double) (heIndex - numHe) / (double) sectionHeWidth;
+		heFactor = (double) (heIndex - numHe) / dispersionHe;
 		// Compute the vacancy index
 		vIndex = mapIt->first.second;
-		vDistance = (double) vIndex - numV;
-		vFactor = vDistance / dispersionV;
+		vDistance = 2.0 * (double) (vIndex - numV) / (double) sectionVWidth;
+		vFactor = (double) (vIndex - numV) / dispersionV;
 
 		// Get the initial concentration
 		double oldConc = getConcentration(heDistance, vDistance);
@@ -1046,12 +1034,12 @@ int SuperCluster::computePartialsForBursting(double *val,
 	for (auto mapIt = effReactingMap.begin(); mapIt != effReactingMap.end(); ++mapIt) {
 		// Compute the helium index
 		heIndex = mapIt->first.first;
-		heDistance = (double) heIndex - numHe;
-		heFactor = heDistance / dispersionHe;
+		heDistance = 2.0 * (double) (heIndex - numHe) / (double) sectionHeWidth;
+		heFactor = (double) (heIndex - numHe) / dispersionHe;
 		// Compute the vacancy index
 		vIndex = mapIt->first.second;
-		vDistance = (double) vIndex - numV;
-		vFactor = vDistance / dispersionV;
+		vDistance = 2.0 * (double) (vIndex - numV) / (double) sectionVWidth;
+		vFactor = (double) (vIndex - numV) / dispersionV;
 
 		// Compute the value of the partial derivatives
 		value = kBursting / (double) nTot;
