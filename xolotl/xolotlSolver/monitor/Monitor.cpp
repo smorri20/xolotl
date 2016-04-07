@@ -131,6 +131,9 @@ PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
 			allPoints->push_back(aPoint);
 		}
 
+	  // Clean up the receive buffer (only valid at root)
+	  delete[] allTimerValues;
+
 		// Provide the data provider the points.
 		perfPlot->getDataProvider()->setPoints(allPoints);
 		perfPlot->getDataProvider()->setDataName("SolverTimer");
@@ -157,9 +160,6 @@ PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
 		fileName << "timer_TS" << timestep << ".pnm";
 		perfPlot->write(fileName.str());
 	}
-
-	// Clean up
-	delete[] allTimerValues;
 
 	PetscFunctionReturn(0);
 }
