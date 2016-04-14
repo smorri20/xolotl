@@ -51,7 +51,7 @@ std::shared_ptr<Reactant> HeInterstitialCluster::clone() {
 }
 
 void HeInterstitialCluster::replaceInCompound(std::vector<Reactant *> & reactants,
-		const std::string& oldComponentName, const std::string& /*newComponentName*/) {
+		const std::string& oldComponentName) {
 	// Local Declarations
 	std::map<std::string, int> myComp = getComposition(),
 			productReactantComp;
@@ -196,7 +196,7 @@ void HeInterstitialCluster::createReactionConnectivity() {
 	// Get all the V clusters from the network
 	reactants = network->getAll(vType);
 	// replaceInCompound handles this reaction, it is overridden in this class
-	replaceInCompound(reactants, iType, vType);
+	replaceInCompound(reactants, iType);
 
 	// Helium absorption by HeI clusters
 	// He_c + (He_a)(I_b) --> [He_(a+c)](I_b)

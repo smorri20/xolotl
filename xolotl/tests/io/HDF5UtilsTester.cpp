@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 	HDF5Utils::openFile("test.h5");
 
 	// Add the concentration sub group
-	HDF5Utils::addConcentrationSubGroup(timeStep, networkSize, currentTime, currentTimeStep);
+	HDF5Utils::addConcentrationSubGroup(timeStep, currentTime, currentTimeStep);
 
 	// Add the concentration dataset
 	int length = 5;

@@ -61,7 +61,6 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 	paramFile.close();
 
 	// Create a fake command line to read the options
-	argc = 1;
 	argv = new char*[2];
 	std::string parameterFile = "params.txt";
 	argv[0] = new char[parameterFile.length() + 1];
@@ -70,7 +69,7 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 
 	// Read the options
 	Options opts;
-	opts.readParams(argc, argv);
+	opts.readParams(argv);
 
 	// Create the network loader
 	std::shared_ptr < HDF5NetworkLoader > loader = std::make_shared
@@ -168,7 +167,6 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 	paramFile.close();
 
 	// Create a fake command line to read the options
-	argc = 1;
 	argv = new char*[2];
 	std::string parameterFile = "params.txt";
 	argv[0] = new char[parameterFile.length() + 1];
@@ -177,7 +175,7 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 
 	// Read the options
 	Options opts;
-	opts.readParams(argc, argv);
+	opts.readParams(argv);
 
 	// Create the network loader
 	std::shared_ptr < HDF5NetworkLoader > loader = std::make_shared
@@ -275,7 +273,6 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 	paramFile.close();
 
 	// Create a fake command line to read the options
-	argc = 1;
 	argv = new char*[2];
 	std::string parameterFile = "params.txt";
 	argv[0] = new char[parameterFile.length() + 1];
@@ -284,7 +281,7 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 
 	// Read the options
 	Options opts;
-	opts.readParams(argc, argv);
+	opts.readParams(argv);
 
 	// Create the network loader
 	std::shared_ptr < HDF5NetworkLoader > loader = std::make_shared

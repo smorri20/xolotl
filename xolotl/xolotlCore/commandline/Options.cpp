@@ -86,7 +86,7 @@ Options::~Options(void) {
 	petscArgv = NULL;
 }
 
-void Options::readParams(int /*argc*/, char* argv[]) {
+void Options::readParams(char* argv[]) {
 	// All the options are read from an ASCII file that is parsed
 	// with the TokenizedLineReader.
 	// We assume that the name of this file is the first and only

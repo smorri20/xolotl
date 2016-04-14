@@ -50,7 +50,7 @@ std::shared_ptr<xolotlViz::IPlot> surfacePlotXZ3D;
  * HDF5 is handling the parallel part, so no call to MPI here.
  */
 PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
-		void * /*ictx*/) {
+		void *) {
 	PetscErrorCode ierr;
 	const double ****solutionArray, *gridPointSolution;
 	PetscInt xs, xm, Mx, ys, ym, My, zs, zm, Mz;
@@ -101,7 +101,7 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 	ierr = TSGetTimeStep(ts, &currentTimeStep);CHKERRQ(ierr);
 
 	// Add a concentration sub group
-	xolotlCore::HDF5Utils::addConcentrationSubGroup(timestep, networkSize, time,
+	xolotlCore::HDF5Utils::addConcentrationSubGroup(timestep, time,
 			currentTimeStep);
 
 	// Loop on the full grid
@@ -183,8 +183,8 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 /**
  * This is a monitoring method that will compute the total helium fluence
  */
-PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt /*timestep*/, PetscReal time,
-		Vec solution, void * /*ictx*/) {
+PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt, PetscReal time,
+		Vec solution, void *) {
 	PetscErrorCode ierr;
 	PetscInt xs, xm, ys, ym, zs, zm;
 
@@ -290,7 +290,7 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt /*timestep*/, PetscReal 
  * a specific cluster at each grid point on the XY surface, integrating over Z.
  */
 PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
-		Vec solution, void * /*ictx*/) {
+		Vec solution, void *) {
 	PetscErrorCode ierr;
 	const double ****solutionArray, *gridPointSolution;
 	PetscInt xs, xm, Mx, ys, ym, My, zs, zm, Mz;
@@ -422,7 +422,7 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
  * a specific cluster at each grid point on the XZ surface, integrating over Y.
  */
 PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
-		Vec solution, void * /*ictx*/) {
+		Vec solution, void *) {
 	PetscErrorCode ierr;
 	const double ****solutionArray, *gridPointSolution;
 	PetscInt xs, xm, Mx, ys, ym, My, zs, zm, Mz;

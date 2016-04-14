@@ -27,8 +27,8 @@ double previousTime = 0.0;
  * because multiple monitors need the previous time value from the previous timestep.
  * This monitor must be called last when needed.
  */
-PetscErrorCode monitorTime(TS /*ts*/, PetscInt /*timestep*/, PetscReal time, Vec /*solution*/,
-		void * /*ictx*/) {
+PetscErrorCode monitorTime(TS, PetscInt, PetscReal time, Vec,
+		void *) {
 	PetscFunctionBeginUser;
 
 	// Set the previous time to the current time for the next timestep
@@ -42,8 +42,8 @@ PetscErrorCode monitorTime(TS /*ts*/, PetscInt /*timestep*/, PetscReal time, Vec
 /**
  * This is a monitoring method that will compute the total helium fluence
  */
-PetscErrorCode computeHeliumFluence(TS /*ts*/, PetscInt /*timestep*/, PetscReal time,
-		Vec /*solution*/, void * /*ictx*/) {
+PetscErrorCode computeHeliumFluence(TS, PetscInt, PetscReal time,
+		Vec, void *) {
 	PetscFunctionBeginUser;
 
 	// Get the solver handler and the flux handler
@@ -65,7 +65,7 @@ PetscErrorCode computeHeliumFluence(TS /*ts*/, PetscInt /*timestep*/, PetscReal 
  * This is a monitoring method that will save 1D plots of one performance timer
  */
 PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
-		Vec /*solution*/, void * /*ictx*/) {
+		Vec, void *) {
 	// To check PETSc errors
 	PetscInt ierr;
 

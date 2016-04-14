@@ -67,14 +67,14 @@ void InterstitialCluster::createReactionConnectivity() {
 	// Get all the V clusters from the network
 	reactants = network->getAll(vType);
 	// fillVWithI handles this reaction
-	fillVWithI(vType, reactants);
+	fillVWithI(reactants);
 
 	// Vacancy reduction by Interstitial absorption in HeV clusters
 	// (He_b)(V_c) + (I_a) --> (He_b)[V_(c-a)]
 	// Get all the HeV clusters from the network
 	reactants = network->getAll(heVType);
 	// replaceInCompound handles this reaction
-	replaceInCompound(reactants, vType, iType);
+	replaceInCompound(reactants, vType);
 
 	// Vacancy-Interstitial annihilation producing this cluster
 	// I_(a+b) + V_b --> I_a

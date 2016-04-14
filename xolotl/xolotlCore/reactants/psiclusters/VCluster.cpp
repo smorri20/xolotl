@@ -67,7 +67,7 @@ void VCluster::createReactionConnectivity() {
 	// Get all the I clusters from the network
 	reactants = network->getAll(iType);
 	// fillVWithI handles this reaction
-	fillVWithI(iType, reactants);
+	fillVWithI(reactants);
 
 	// Vacancy-Interstitial annihilation producing this cluster
 	// I_b + V_(a+b) --> V_a
@@ -98,7 +98,7 @@ void VCluster::createReactionConnectivity() {
 	// Get all the HeI clusters from the network
 	reactants = network->getAll(heIType);
 	// replaceInCompound handles this reaction
-	replaceInCompound(reactants, iType, vType);
+	replaceInCompound(reactants, iType);
 
 	return;
 }

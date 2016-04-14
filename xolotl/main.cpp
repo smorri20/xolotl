@@ -105,8 +105,8 @@ void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
 	solverTimer->stop();
 }
 
-std::shared_ptr<PSIClusterNetworkLoader> setUpNetworkLoader(int /*rank*/,
-		MPI_Comm /*comm*/, const std::string& networkFilename,
+std::shared_ptr<PSIClusterNetworkLoader> setUpNetworkLoader(
+		const std::string& networkFilename,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
 	// Create a HDF5NetworkLoader
 	std::shared_ptr<HDF5NetworkLoader> networkLoader;
@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
 	argc -= 1; // one for the executable name
 	argv += 1; // one for the executable name
 	Options opts;
-	opts.readParams(argc, argv);
+	opts.readParams(argv);
 	if (!opts.shouldRun()) {
 		return opts.getExitCode();
 	}
@@ -193,8 +193,7 @@ int main(int argc, char **argv) {
 		networkLoadTimer->start();
 
 		// Set up the network loader
-		auto networkLoader = setUpNetworkLoader(rank, MPI_COMM_WORLD,
-				networkFilename, handlerRegistry);
+		auto networkLoader = setUpNetworkLoader(networkFilename, handlerRegistry);
 
 		// Give the network loader to PETSc as input
 		solver->setNetworkLoader(networkLoader);
@@ -219,9 +218,9 @@ int main(int argc, char **argv) {
 		handlerRegistry->collectStatistics( timerStats, counterStats, hwCtrStats );
 		if (rank == 0) {
 			handlerRegistry->reportStatistics(std::cout,
-																				timerStats,
-																				counterStats,
-																				hwCtrStats);
+					timerStats,
+					counterStats,
+					hwCtrStats);
 		}
 	} catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;

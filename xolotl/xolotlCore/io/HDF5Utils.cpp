@@ -171,8 +171,8 @@ void HDF5Utils::fillNetwork(PSIClusterReactionNetwork *network) {
 	return;
 }
 
-void HDF5Utils::addConcentrationSubGroup(int timeStep, int /*networkSize*/,
-		double time, double deltaTime) {
+void HDF5Utils::addConcentrationSubGroup(int timeStep, double time,
+		double deltaTime) {
 	// Set the name of the sub group
 	std::stringstream subGroupName;
 	subGroupName << "concentration_" << timeStep;
@@ -500,7 +500,7 @@ std::vector< std::vector<double> > HDF5Utils::readGridPoint(const std::string& f
 
 		// Get the dimensions of the dataset
 		hsize_t dims[2];
-		status = H5Sget_simple_extent_dims(dataspaceId, dims, H5P_DEFAULT);
+		status = H5Sget_simple_extent_dims(dataspaceId, dims, NULL);
 
 		// Create the array that will receive the concentrations
 		double conc[dims[0]][dims[1]];
