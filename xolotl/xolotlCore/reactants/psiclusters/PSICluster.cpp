@@ -401,7 +401,6 @@ void PSICluster::fillVWithI(std::vector<Reactant *> & reactants) {
 	return;
 }
 
-/*
 void PSICluster::printReaction(const PSICluster & firstReactant,
 		const PSICluster & secondReactant,
 		const PSICluster & productReactant) const {
@@ -437,7 +436,6 @@ void PSICluster::printDissociation(const PSICluster & firstReactant,
 
 	return;
 }
-*/
 
 static std::vector<int> getFullConnectivityVector(std::set<int> connectivitySet,
 		int size) {
@@ -465,12 +463,6 @@ std::vector<int> PSICluster::getReactionConnectivity() const {
 	return getFullConnectivityVector(reactionConnectivitySet, network->size());
 }
 
-/*
-std::set<int> PSICluster::getReactionConnectivitySet() const {
-	return std::set<int>(reactionConnectivitySet);
-}
-*/
-
 void PSICluster::setDissociationConnectivity(int clusterId) {
 	// Add the cluster to the set.
 	dissociationConnectivitySet.insert(clusterId);
@@ -484,11 +476,40 @@ std::vector<int> PSICluster::getDissociationConnectivity() const {
 			network->size());
 }
 
-/*
-const std::set<int> & PSICluster::getDissociationConnectivitySet() const {
-	return dissociationConnectivitySet;
+void PSICluster::resetConnectivities() {
+	// Clear both sets
+	reactionConnectivitySet.clear();
+	dissociationConnectivitySet.clear();
+
+	// Connect this cluster to itself since any reaction will affect it
+	setReactionConnectivity(id);
+	setDissociationConnectivity(id);
+
+	// Loop on the effective reacting pairs
+	for (auto it = effReactingPairs.begin(); it != effReactingPairs.end(); ++it) {
+		// The cluster is connecting to both clusters in the pair
+		setReactionConnectivity((*it)->first->id);
+		setReactionConnectivity((*it)->second->id);
+	}
+
+	// Loop on the effective combining reactants
+	for (auto it = effCombiningReactants.begin(); it != effCombiningReactants.end(); ++it) {
+		// The cluster is connecting to the combining cluster
+		setReactionConnectivity((*it)->combining->id);
+	}
+
+	// Loop on the effective dissociating pairs
+	for (auto it = effDissociatingPairs.begin(); it != effDissociatingPairs.end(); ++it) {
+		// The cluster is connecting to the dissociating cluster which
+		// is the first one by definition
+		setDissociationConnectivity((*it)->first->id);
+	}
+
+	// Don't loop on the effective emission pairs because
+	// this cluster is not connected to them
+
+	return;
 }
-*/
 
 int PSICluster::getSize() const {
 	// Return this cluster's size

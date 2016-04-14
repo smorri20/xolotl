@@ -360,7 +360,7 @@ public interface Arguments {
 	double getZStepSize();
 
 	/**
-	 * This Option annotation corresponds to the '--material' option
+	 * This Option annotation corresponds to the  '--material' option
 	 * and provides a brief description of the option.
 	 * 
 	 * @param description

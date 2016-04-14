@@ -91,10 +91,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 			< xolotlSolver::PetscSolver
 			> (make_shared<xolotlPerf::DummyHandlerRegistry>());
 
-	// Create the material factory
+	// Create the material factory and initialize it
 	auto materialFactory =
 			xolotlFactory::IMaterialFactory::createMaterialFactory(
 					opts.getMaterial(), opts.getDimensionNumber());
+	materialFactory->initializeMaterial(opts);
 
 	// Initialize and get the temperature handler
 	bool tempInitOK = xolotlFactory::initializeTempHandler(opts);
@@ -126,10 +127,10 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 	network->fillConcentrationsArray(concs);
 
 	// Check some concentrations
-	BOOST_REQUIRE_SMALL(concs[0], 1.0e-10);
-	BOOST_REQUIRE_SMALL(concs[1], 1.0e-17);
-	BOOST_REQUIRE_SMALL(concs[2], 1.0e-25);
-	BOOST_REQUIRE_SMALL(concs[7], 1.0e-61);
+	BOOST_REQUIRE_SMALL(concs[0], 1.0e-4);
+	BOOST_REQUIRE_SMALL(concs[1], 1.0e-6);
+	BOOST_REQUIRE_SMALL(concs[2], 1.0e-8);
+	BOOST_REQUIRE_SMALL(concs[7], 1.0e-17);
 	BOOST_REQUIRE_CLOSE(concs[8], 0.0, 0.01);
 
 	// Remove the created file
@@ -197,10 +198,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 			< xolotlSolver::PetscSolver
 			> (make_shared<xolotlPerf::DummyHandlerRegistry>());
 
-	// Create the material factory
+	// Create the material factory and initialize it
 	auto materialFactory =
 			xolotlFactory::IMaterialFactory::createMaterialFactory(
 					opts.getMaterial(), opts.getDimensionNumber());
+	materialFactory->initializeMaterial(opts);
 
 	// Initialize and get the temperature handler
 	bool tempInitOK = xolotlFactory::initializeTempHandler(opts);
@@ -232,11 +234,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 	network->fillConcentrationsArray(concs);
 
 	// Check some concentrations
-	BOOST_REQUIRE_SMALL(concs[0], 1.0e-72);
-	BOOST_REQUIRE_SMALL(concs[1], 1.0e-144);
-	BOOST_REQUIRE_SMALL(concs[6], 1.0e-10);
-	BOOST_REQUIRE_CLOSE(concs[14], 0.0, 0.01);
-	BOOST_REQUIRE_SMALL(concs[23], 1.0e-71);
+	BOOST_REQUIRE_SMALL(concs[0], 1.0e-24);
+	BOOST_REQUIRE_SMALL(concs[1], 1.0e-46);
+	BOOST_REQUIRE_SMALL(concs[6], 1.0e-4);
+	BOOST_REQUIRE_SMALL(concs[14], 1.0e-120);
+	BOOST_REQUIRE_SMALL(concs[23], 1.0e-21);
 
 	// Remove the created file
 	std::string tempFile = "params.txt";
@@ -303,10 +305,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 			< xolotlSolver::PetscSolver
 			> (make_shared<xolotlPerf::DummyHandlerRegistry>());
 
-	// Create the material factory
+	// Create the material factory and initialize it
 	auto materialFactory =
 			xolotlFactory::IMaterialFactory::createMaterialFactory(
 					opts.getMaterial(), opts.getDimensionNumber());
+	materialFactory->initializeMaterial(opts);
 
 	// Initialize and get the temperature handler
 	bool tempInitOK = xolotlFactory::initializeTempHandler(opts);
@@ -338,11 +341,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 	network->fillConcentrationsArray(concs);
 
 	// Check some concentrations
-	BOOST_REQUIRE_SMALL(concs[0], 1.0e-78);
-	BOOST_REQUIRE_SMALL(concs[6], 1.0e-10);
-	BOOST_REQUIRE_CLOSE(concs[14], 0.0, 0.01);
-	BOOST_REQUIRE_SMALL(concs[15], 1.0e-156);
-	BOOST_REQUIRE_SMALL(concs[16], 1.0e-143);
+	BOOST_REQUIRE_SMALL(concs[0], 1.0e-27);
+	BOOST_REQUIRE_SMALL(concs[6], 1.0e-4);
+	BOOST_REQUIRE_SMALL(concs[14], 1.0e-120);
+	BOOST_REQUIRE_SMALL(concs[15], 1.0e-106);
+	BOOST_REQUIRE_SMALL(concs[16], 1.0e-92);
 
 	// Remove the created file
 	std::string tempFile = "params.txt";

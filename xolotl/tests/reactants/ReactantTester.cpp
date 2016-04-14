@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(checkCopying) {
 
 	// Try cloning the Reactant
 	auto reactantClone = reactant.clone();
-
+	
 	BOOST_REQUIRE_CLOSE(10.0, reactantClone->getConcentration(), 1.0e-7);
 
 	return;
@@ -149,9 +149,9 @@ BOOST_AUTO_TEST_CASE(checkIsConnected) {
 
 	// Check the connectivity matrix (8 * 8)
 	int connectivityExpected[8][8] = {
-			{1, 1, 1, 0, 1, 0, 0, 0}, // He
+			{1, 1, 1, 0, 1, 0, 1, 0}, // He
 			{1, 1, 0, 0, 0, 0, 0, 0}, // He_2
-			{1, 0, 1, 1, 1, 1, 0, 0}, // V
+			{1, 0, 1, 1, 1, 1, 1, 0}, // V
 			{0, 0, 1, 1, 1, 0, 0, 0}, // V_2
 			{1, 0, 1, 1, 1, 1, 0, 0}, // I
 			{0, 0, 1, 0, 1, 1, 0, 0}, // I_2

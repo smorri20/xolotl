@@ -74,6 +74,7 @@ BOOST_AUTO_TEST_CASE(checkFluxIndex) {
 
 	// Load the network
 	auto network = (PSIClusterReactionNetwork *) loader.load().get();
+
 	// Specify the number of grid points that will be used
 	int nGridpts = 5;
 	// Specify the step size between grid points
@@ -143,6 +144,7 @@ BOOST_AUTO_TEST_CASE(checkFluxAmplitude) {
 
 	// Load the network
 	auto network = (PSIClusterReactionNetwork *) loader.load().get();
+
 	// Specify the number of grid points that will be used
 	int nGridpts = 5;
 	// Specify the step size between grid points
@@ -150,6 +152,8 @@ BOOST_AUTO_TEST_CASE(checkFluxAmplitude) {
 
 	// Create the flux handler
     auto testFitFlux = make_shared<W100FitFluxHandler>();
+    // Set the factor to change the helium flux
+    testFitFlux->setFluxAmplitude(1.0);
     // Set the factor to change the helium flux
     testFitFlux->setFluxAmplitude(2.5);
     // Initialize the flux handler

@@ -540,8 +540,8 @@ public class Preprocessor {
 	public void writeHeader(String name, Arguments args) {
 		// The status of the previous HDF5 operation
 		int status;
-
-		// Get the grid sizes
+		
+		// Get the grid size
 		int[] nxGrid = { args.getNxGrid() };
 		int[] nyGrid = { args.getNyGrid() };
 		int[] nzGrid = { args.getNzGrid() };

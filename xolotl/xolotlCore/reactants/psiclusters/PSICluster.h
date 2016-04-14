@@ -380,11 +380,9 @@ protected:
 	 * @param secondReactant - The second reactant in the reaction, B.
 	 * @param thirdReactant - The third reactant in the reaction, C.
 	 */
-/*
 	void printReaction(const PSICluster & firstReactant,
 			const PSICluster & secondReactant,
 			const PSICluster & productReactant) const;
-*/
 
 	/**
 	 * This operation prints a backward reaction given the three reactants in
@@ -394,11 +392,9 @@ protected:
 	 * @param secondReactant - The second reactant in the reaction, B.
 	 * @param thirdReactant - The third reactant in the reaction, C.
 	 */
-/*
 	void printDissociation(const PSICluster & firstReactant,
 			const PSICluster & secondReactant,
 			const PSICluster & productReactant) const;
-*/
 
 	/**
 	 * This operation signifies that the cluster with cluster Id should be
@@ -420,15 +416,6 @@ protected:
 	virtual std::vector<int> getReactionConnectivity() const;
 
 	/**
-	 * This operation returns a set that contains only the entries of the
-	 * reaction connectivity array that are non-zero.
-	 *
-	 * @return The set of connected reactants. Each entry in the set is the id
-	 * of a connected cluster for forward reactions.
-	 */
-	//std::set<int> getReactionConnectivitySet() const;
-
-	/**
 	 * This operation signifies that the cluster with cluster Id should be
 	 * listed as connected with this cluster through forward reactions.
 	 *
@@ -446,15 +433,6 @@ protected:
 	 * reactions
 	 */
 	virtual std::vector<int> getDissociationConnectivity() const;
-
-	/**
-	 * This operation returns a set that contains only the entries of the
-	 * dissociation connectivity array that are non-zero.
-	 *
-	 * @return The set of connected reactants. Each entry in the set is the id
-	 * of a connected cluster for dissociation reactions
-	 */
-	//const std::set<int> & getDissociationConnectivitySet() const;
 
 	/**
 	 * This operation recomputes the diffusion coefficient. It is called
@@ -649,6 +627,12 @@ public:
 	 * network.
 	 */
 	virtual void getEmissionPartialDerivatives(std::vector<double> & partials) const;
+
+	/**
+	 * This operation reset the connectivity sets based on the information
+	 * in the effective production and dissociation vectors.
+	 */
+	void resetConnectivities();
 
 	/**
 	 * This operation returns the total size of the cluster.
