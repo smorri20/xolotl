@@ -11,6 +11,9 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 		double hy, int nz, double hz) {
 	PetscErrorCode ierr;
 
+	// Initialize the all reactants pointer
+	allReactants = network->getAll();
+
 	// Set the last temperature to 0
 	lastTemperature = 0.0;
 
@@ -18,9 +21,22 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	// Get the temperature from the temperature handler
 	auto temperature = temperatureHandler->getTemperature({0.0, 0.0, 0.0}, 0.0);
 
-	// Update the network if the temperature changed
+	// Set the temperature to compute all the rate constants
 	if (!xolotlCore::equal(temperature, lastTemperature)) {
-		network->setTemperature(temperature);
+		// Update the temperature for all of the clusters
+		int networkSize = network->size();
+		for (int i = 0; i < networkSize; i++) {
+			// This part will set the temperature in each reactant
+			// and recompute the diffusion coefficient
+			allReactants->at(i)->setTemperature(temperature);
+		}
+		for (int i = 0; i < networkSize; i++) {
+			// Now that the diffusion coefficients of all the reactants
+			// are updated, the reaction and dissociation rates can be
+			// recomputed
+			auto cluster = (xolotlCore::PSICluster *) allReactants->at(i);
+			cluster->computeRateConstants();
+		}
 		lastTemperature = temperature;
 	}
 
@@ -29,9 +45,6 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = network->size() + 2 * network->getAll("Super").size();
-
-	// Initialize the all reactants pointer
-	allReactants = network->getAll();
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Create distributed array (DMDA) to manage parallel grid and vectors

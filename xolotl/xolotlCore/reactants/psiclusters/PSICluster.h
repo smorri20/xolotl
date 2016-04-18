@@ -829,9 +829,16 @@ public:
 	/**
 	 * Calculate all the rate constants for the reactions and dissociations in which this
 	 * cluster is taking part. Store these values in the kConstant field of ClusterPair
-	 * or CombiningCluster. Need to be called only when the temperature changes.
+	 * or CombiningCluster. Need to be called only the first time.
 	 */
 	virtual void computeRateConstants();
+
+	/**
+	 * Calculate all the rate constants for the reactions and dissociations in which this
+	 * cluster is taking part. Store these values in the kConstant field of ClusterPair
+	 * or CombiningCluster. Need to be called only when the temperature changes.
+	 */
+	virtual void updateRateConstants();
 
 	/**
 	 * This operation overrides Reactant's setTemperature operation to

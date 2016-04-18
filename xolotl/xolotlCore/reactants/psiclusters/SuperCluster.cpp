@@ -71,6 +71,10 @@ SuperCluster::SuperCluster(const SuperCluster &other) :
 	effCombiningMap = other.effCombiningMap;
 	effDissociatingMap = other.effDissociatingMap;
 	effEmissionMap = other.effEmissionMap;
+	effReactingList = other.effReactingList;
+	effCombiningList = other.effCombiningList;
+	effDissociatingList = other.effDissociatingList;
+	effEmissionList = other.effEmissionList;
 
 	return;
 }
@@ -83,6 +87,14 @@ std::shared_ptr<Reactant> SuperCluster::clone() {
 
 double SuperCluster::getConcentration(double distHe, double distV) const {
 	return l0 + (distHe * l1He) + (distV * l1V);
+}
+
+double SuperCluster::getHeMomentum() const {
+	return l1He;
+}
+
+double SuperCluster::getVMomentum() const {
+	return l1V;
 }
 
 double SuperCluster::getTotalConcentration() const {
@@ -308,16 +320,10 @@ void SuperCluster::computeRateConstants() {
 				// The order of the cluster is important here because of the binding
 				// energy used in the computation. It is taken from the type of the first cluster
 				// which must be the single one
-				if (size == 1) {
-					// "this" is the single size one
-					rate = calculateDissociationConstant(*dissociatingCluster,
-						*this, *otherEmittedCluster);
-				} else {
-					// otherEmittedCluster is the single size one
-					rate = calculateDissociationConstant(*dissociatingCluster,
-							*otherEmittedCluster, *this);
+				// otherEmittedCluster is the single size one
+				rate = calculateDissociationConstant(*dissociatingCluster,
+						*otherEmittedCluster, *this);
 
-				}
 				// Set it in the pair
 				dissociatingMap[key][i].kConstant = rate
 					/ (double) nTot;
@@ -393,6 +399,411 @@ void SuperCluster::computeRateConstants() {
 	if (equal(dispersionV, 0.0))
 		dispersionV = 1.0;
 
+	// Method to optimize the reaction vectors
+	optimizeReactions();
+
+	return;
+}
+
+void SuperCluster::optimizeReactions() {
+	// Local declarations
+	double heFactor = 0.0, vFactor = 0.0, heDistance = 0.0, vDistance = 0.0;
+	int nPairs = 0;
+	PSICluster *firstReactant, *secondReactant, *combiningReactant,
+			*dissociatingCluster, *otherEmittedCluster, *firstCluster,
+			*secondCluster;
+	int heIndex = 0, vIndex = 0;
+
+	// Loop on the effective reacting map
+	for (auto mapIt = effReactingMap.begin(); mapIt != effReactingMap.end(); ++mapIt) {
+		// Get the pairs
+		auto pairs = mapIt->second;
+		// Loop over all the reacting pairs
+		for (auto it = pairs.begin(); it != pairs.end(); ) {
+			// Get the two reacting clusters
+			firstReactant = (*it)->first;
+			secondReactant = (*it)->second;
+
+			// Create a new SuperClusterProductionPair
+			SuperClusterProductionPair superPair(firstReactant, secondReactant, (*it)->kConstant);
+
+			// Loop on the whole super cluster to fill this super pair
+			for (auto mapItBis = mapIt; mapItBis != effReactingMap.end(); ++mapItBis) {
+				// Compute the helium index
+				heIndex = mapItBis->first.first;
+				heFactor = (double) (heIndex - numHe) / dispersionHe;
+				// Compute the vacancy index
+				vIndex = mapItBis->first.second;
+				vFactor = (double) (vIndex - numV) / dispersionV;
+
+				// Get the pairs
+				auto pairsBis = mapItBis->second;
+				// Set the total number of reactants that produce to form this one
+				// Loop over all the reacting pairs
+				for (auto itBis = pairsBis.begin(); itBis != pairsBis.end(); ) {
+					// Get the two reacting clusters
+					auto firstReactantBis = (*itBis)->first;
+					auto secondReactantBis = (*itBis)->second;
+
+					// Check if it is the same reaction
+					if (firstReactantBis == firstReactant && secondReactantBis == secondReactant) {
+						superPair.a00000 += 1.0;
+						superPair.a00001 += heFactor;
+						superPair.a00010 += vFactor;
+						superPair.a00011 += (*itBis)->firstHeDistance;
+						superPair.a00100 += (*itBis)->firstHeDistance * heFactor;
+						superPair.a00101 += (*itBis)->firstHeDistance * vFactor;
+						superPair.a00110 += (*itBis)->firstVDistance;
+						superPair.a00111 += (*itBis)->firstVDistance * heFactor;
+						superPair.a01000 += (*itBis)->firstVDistance * vFactor;
+						superPair.a01001 += (*itBis)->secondHeDistance;
+						superPair.a01010 += (*itBis)->secondHeDistance * heFactor;
+						superPair.a01011 += (*itBis)->secondHeDistance * vFactor;
+						superPair.a01100 += (*itBis)->secondVDistance;
+						superPair.a01101 += (*itBis)->secondVDistance * heFactor;
+						superPair.a01110 += (*itBis)->secondVDistance * vFactor;
+						superPair.a01111 += (*itBis)->firstHeDistance * (*itBis)->secondHeDistance;
+						superPair.a10000 += (*itBis)->firstHeDistance * (*itBis)->secondHeDistance * heFactor;
+						superPair.a10001 += (*itBis)->firstHeDistance * (*itBis)->secondHeDistance * vFactor;
+						superPair.a10010 += (*itBis)->firstHeDistance * (*itBis)->secondVDistance;
+						superPair.a10011 += (*itBis)->firstHeDistance * (*itBis)->secondVDistance * heFactor;
+						superPair.a10100 += (*itBis)->firstHeDistance * (*itBis)->secondVDistance * vFactor;
+						superPair.a10101 += (*itBis)->firstVDistance * (*itBis)->secondHeDistance;
+						superPair.a10110 += (*itBis)->firstVDistance * (*itBis)->secondHeDistance * heFactor;
+						superPair.a10111 += (*itBis)->firstVDistance * (*itBis)->secondHeDistance * vFactor;
+						superPair.a11000 += (*itBis)->firstVDistance * (*itBis)->secondVDistance;
+						superPair.a11001 += (*itBis)->firstVDistance * (*itBis)->secondVDistance * heFactor;
+						superPair.a11010 += (*itBis)->firstVDistance * (*itBis)->secondVDistance * vFactor;
+
+						// Do not delete the element if it is the original one
+						if (itBis == it) {
+							++itBis;
+							continue;
+						}
+
+						// Remove the reaction from the vector
+						itBis = pairsBis.erase(itBis);
+					}
+					// Go to the next element
+					else ++itBis;
+				}
+
+				// Give back the pairs
+				mapItBis->second = pairsBis;
+			}
+
+			// Add the super pair
+			effReactingList.push_front(superPair);
+
+			// Remove the reaction from the vector
+			it = pairs.erase(it);
+		}
+	}
+
+	// Loop on the effective combining map
+	for (auto mapIt = effCombiningMap.begin(); mapIt != effCombiningMap.end(); ++mapIt) {
+		// Get the pairs
+		auto clusters = mapIt->second;
+		// Loop over all the reacting pairs
+		for (auto it = clusters.begin(); it != clusters.end(); ) {
+			// Get the combining cluster
+			combiningReactant = (*it)->combining;
+
+			// Create a new SuperClusterProductionPair with NULL as the second cluster because
+			// we do not need it
+			SuperClusterProductionPair superPair(combiningReactant, NULL, (*it)->kConstant);
+
+			// Loop on the whole super cluster to fill this super pair
+			for (auto mapItBis = mapIt; mapItBis != effCombiningMap.end(); ++mapItBis) {
+				// Compute the helium index
+				heIndex = mapItBis->first.first;
+				heDistance = 2.0 * (double) (heIndex - numHe) / (double) sectionHeWidth;
+				heFactor = (double) (heIndex - numHe) / dispersionHe;
+				// Compute the vacancy index
+				vIndex = mapItBis->first.second;
+				vDistance = 2.0 * (double) (vIndex - numV) / (double) sectionVWidth;
+				vFactor = (double) (vIndex - numV) / dispersionV;
+
+				// Get the pairs
+				auto clustersBis = mapItBis->second;
+				// Set the total number of reactants that produce to form this one
+				// Loop over all the reacting pairs
+				for (auto itBis = clustersBis.begin(); itBis != clustersBis.end(); ) {
+					// Get the two reacting clusters
+					auto combiningReactantBis = (*itBis)->combining;
+
+					// Check if it is the same reaction
+					if (combiningReactantBis == combiningReactant) {
+						superPair.a00000 += 1.0;
+						superPair.a00001 += heFactor;
+						superPair.a00010 += vFactor;
+						superPair.a00011 += (*itBis)->heDistance;
+						superPair.a00100 += (*itBis)->heDistance * heFactor;
+						superPair.a00101 += (*itBis)->heDistance * vFactor;
+						superPair.a00110 += (*itBis)->vDistance;
+						superPair.a00111 += (*itBis)->vDistance * heFactor;
+						superPair.a01000 += (*itBis)->vDistance * vFactor;
+						superPair.a01001 += heDistance;
+						superPair.a01010 += heDistance * heFactor;
+						superPair.a01011 += heDistance * vFactor;
+						superPair.a01100 += vDistance;
+						superPair.a01101 += vDistance * heFactor;
+						superPair.a01110 += vDistance * vFactor;
+						superPair.a01111 += (*itBis)->heDistance * heDistance;
+						superPair.a10000 += (*itBis)->heDistance * heDistance * heFactor;
+						superPair.a10001 += (*itBis)->heDistance * heDistance * vFactor;
+						superPair.a10010 += (*itBis)->heDistance * vDistance;
+						superPair.a10011 += (*itBis)->heDistance * vDistance * heFactor;
+						superPair.a10100 += (*itBis)->heDistance * vDistance * vFactor;
+						superPair.a10101 += (*itBis)->vDistance * heDistance;
+						superPair.a10110 += (*itBis)->vDistance * heDistance * heFactor;
+						superPair.a10111 += (*itBis)->vDistance * heDistance * vFactor;
+						superPair.a11000 += (*itBis)->vDistance * vDistance;
+						superPair.a11001 += (*itBis)->vDistance * vDistance * heFactor;
+						superPair.a11010 += (*itBis)->vDistance * vDistance * vFactor;
+
+						// Do not delete the element if it is the original one
+						if (itBis == it) {
+							++itBis;
+							continue;
+						}
+
+						// Remove the reaction from the vector
+						itBis = clustersBis.erase(itBis);
+					}
+					// Go to the next element
+					else ++itBis;
+				}
+
+				// Give back the pairs
+				mapItBis->second = clustersBis;
+			}
+
+			// Add the super pair
+			effCombiningList.push_front(superPair);
+
+			// Remove the reaction from the vector
+			it = clusters.erase(it);
+		}
+	}
+
+	// Loop on the effective dissociating map
+	for (auto mapIt = effDissociatingMap.begin(); mapIt != effDissociatingMap.end(); ++mapIt) {
+		// Get the pairs
+		auto pairs = mapIt->second;
+		// Loop over all the reacting pairs
+		for (auto it = pairs.begin(); it != pairs.end(); ) {
+			// Get the two reacting clusters
+			dissociatingCluster = (*it)->first;
+			otherEmittedCluster = (*it)->second;
+
+			// Create a new SuperClusterProductionPair
+			SuperClusterDissociationPair superPair(dissociatingCluster, otherEmittedCluster, (*it)->kConstant);
+
+			// Loop on the whole super cluster to fill this super pair
+			for (auto mapItBis = mapIt; mapItBis != effDissociatingMap.end(); ++mapItBis) {
+				// Compute the helium index
+				heIndex = mapItBis->first.first;
+				heFactor = (double) (heIndex - numHe) / dispersionHe;
+				// Compute the vacancy index
+				vIndex = mapItBis->first.second;
+				vFactor = (double) (vIndex - numV) / dispersionV;
+
+				// Get the pairs
+				auto pairsBis = mapItBis->second;
+				// Set the total number of reactants that produce to form this one
+				// Loop over all the reacting pairs
+				for (auto itBis = pairsBis.begin(); itBis != pairsBis.end(); ) {
+					// Get the two reacting clusters
+					auto dissociatingClusterBis = (*itBis)->first;
+					auto otherEmittedClusterBis = (*itBis)->second;
+
+					// Check if it is the same reaction
+					if (dissociatingClusterBis == dissociatingCluster && otherEmittedClusterBis == otherEmittedCluster) {
+						superPair.a0000 += 1.0;
+						superPair.a0001 += heFactor;
+						superPair.a0010 += vFactor;
+						superPair.a0011 += (*itBis)->firstHeDistance;
+						superPair.a0100 += (*itBis)->firstHeDistance * heFactor;
+						superPair.a0101 += (*itBis)->firstHeDistance * vFactor;
+						superPair.a0110 += (*itBis)->firstVDistance;
+						superPair.a0111 += (*itBis)->firstVDistance * heFactor;
+						superPair.a1000 += (*itBis)->firstVDistance * vFactor;
+
+						// Do not delete the element if it is the original one
+						if (itBis == it) {
+							++itBis;
+							continue;
+						}
+
+						// Remove the reaction from the vector
+						itBis = pairsBis.erase(itBis);
+					}
+					// Go to the next element
+					else ++itBis;
+				}
+
+				// Give back the pairs
+				mapItBis->second = pairsBis;
+			}
+
+			// Add the super pair
+			effDissociatingList.push_front(superPair);
+
+			// Remove the reaction from the vector
+			it = pairs.erase(it);
+		}
+	}
+
+	// Loop on the effective emission map
+	for (auto mapIt = effEmissionMap.begin(); mapIt != effEmissionMap.end(); ++mapIt) {
+		// Get the pairs
+		auto pairs = mapIt->second;
+		// Loop over all the reacting pairs
+		for (auto it = pairs.begin(); it != pairs.end(); ) {
+			// Get the two reacting clusters
+			firstCluster = (*it)->first;
+			secondCluster = (*it)->second;
+
+			// Create a new SuperClusterProductionPair
+			SuperClusterDissociationPair superPair(firstCluster, secondCluster, (*it)->kConstant);
+
+			// Loop on the whole super cluster to fill this super pair
+			for (auto mapItBis = mapIt; mapItBis != effEmissionMap.end(); ++mapItBis) {
+				// Compute the helium index
+				heIndex = mapItBis->first.first;
+				heDistance = 2.0 * (double) (heIndex - numHe) / (double) sectionHeWidth;
+				heFactor = (double) (heIndex - numHe) / dispersionHe;
+				// Compute the vacancy index
+				vIndex = mapItBis->first.second;
+				vDistance = 2.0 * (double) (vIndex - numV) / (double) sectionVWidth;
+				vFactor = (double) (vIndex - numV) / dispersionV;
+
+				// Get the pairs
+				auto pairsBis = mapItBis->second;
+				// Set the total number of reactants that produce to form this one
+				// Loop over all the reacting pairs
+				for (auto itBis = pairsBis.begin(); itBis != pairsBis.end(); ) {
+					// Get the two reacting clusters
+					auto firstClusterBis = (*itBis)->first;
+					auto secondClusterBis = (*itBis)->second;
+
+					// Check if it is the same reaction
+					if (firstClusterBis == firstCluster && secondClusterBis == secondCluster) {
+						superPair.a0000 += 1.0;
+						superPair.a0001 += heFactor;
+						superPair.a0010 += vFactor;
+						superPair.a0011 += heDistance;
+						superPair.a0100 += heDistance * heFactor;
+						superPair.a0101 += heDistance * vFactor;
+						superPair.a0110 += vDistance;
+						superPair.a0111 += vDistance * heFactor;
+						superPair.a1000 += vDistance * vFactor;
+
+						// Do not delete the element if it is the original one
+						if (itBis == it) {
+							++itBis;
+							continue;
+						}
+
+						// Remove the reaction from the vector
+						itBis = pairsBis.erase(itBis);
+					}
+					// Go to the next element
+					else ++itBis;
+				}
+
+				// Give back the pairs
+				mapItBis->second = pairsBis;
+			}
+
+			// Add the super pair
+			effEmissionList.push_front(superPair);
+
+			// Remove the reaction from the vector
+			it = pairs.erase(it);
+		}
+	}
+
+	// Clear the maps because they won't be used anymore
+	effReactingPairs.clear();
+	effCombiningReactants.clear();
+	effDissociatingPairs.clear();
+	effEmissionPairs.clear();
+	reactingPairs.clear();
+	combiningReactants.clear();
+	dissociatingPairs.clear();
+	emissionPairs.clear();
+
+	return;
+}
+
+void SuperCluster::updateRateConstants() {
+	// Local declarations
+	PSICluster *firstReactant, *secondReactant, *combiningReactant,
+		*dissociatingCluster, *otherEmittedCluster, *firstCluster,
+		*secondCluster;
+	double rate = 0.0;
+	// Initialize the value for the biggest production rate
+	double biggestProductionRate = 0.0;
+
+	// Loop on the reacting list
+	for (auto it = effReactingList.begin(); it != effReactingList.end(); ++it) {
+		// Get the reactants
+		firstReactant = (*it).first;
+		secondReactant = (*it).second;
+		// Compute the reaction constant
+		rate = calculateReactionRateConstant(*firstReactant,
+				*secondReactant);
+		// Set it in the pair
+		(*it).kConstant = rate / (double) nTot;
+
+		// Check if the rate is the biggest one up to now
+		if (rate > biggestProductionRate)
+			biggestProductionRate = rate;
+	}
+
+	// Loop on the combining list
+	for (auto it = effCombiningList.begin(); it != effCombiningList.end(); ++it) {
+		// Get the reactants
+		combiningReactant = (*it).first;
+		// Compute the reaction constant
+		rate = calculateReactionRateConstant(*this, *combiningReactant);
+		// Set it in the combining cluster
+		(*it).kConstant = rate / (double) nTot;
+	}
+
+	// Loop on the dissociating list
+	for (auto it = effDissociatingList.begin(); it != effDissociatingList.end(); ++it) {
+		dissociatingCluster = (*it).first;
+		// The second element of the pair is the cluster that is also
+		// emitted by the dissociation
+		otherEmittedCluster = (*it).second;
+		// Compute the dissociation constant
+		// The order of the cluster is important here because of the binding
+		// energy used in the computation. It is taken from the type of the first cluster
+		// which must be the single one
+		// otherEmittedCluster is the single size one
+		rate = calculateDissociationConstant(*dissociatingCluster,
+				*otherEmittedCluster, *this);
+		// Set it in the pair
+		(*it).kConstant = rate / (double) nTot;
+	}
+
+	// Loop on the emission list
+	for (auto it = effEmissionList.begin(); it != effEmissionList.end(); ++it) {
+		firstCluster = (*it).first;
+		secondCluster = (*it).second;
+		// Compute the dissociation rate
+		rate = calculateDissociationConstant(*this, *firstCluster,
+				*secondCluster);
+		// Set it in the pair
+		(*it).kConstant = rate / (double) nTot;
+	}
+
+	// Set the biggest rate to the biggest production rate
+	biggestRate = biggestProductionRate;
+
 	return;
 }
 
@@ -409,66 +820,35 @@ void SuperCluster::resetConnectivities() {
 	setReactionConnectivity(vMomId);
 	setDissociationConnectivity(vMomId);
 
-	// Local declarations
-	int heIndex = 0, vIndex = 0;
-
-	// Loop on the vacancy width
-	for (int k = 0; k < sectionVWidth; k++) {
-		// Compute the vacancy index
-		vIndex = (int) (numV - (double) sectionVWidth / 2.0) + k + 1;
-
-		// Loop on the helium width
-		for (int j = 0; j < sectionHeWidth; j++) {
-			// Compute the helium index
-			heIndex = (int) (numHe - (double) sectionHeWidth / 2.0) + j + 1;
-
-			// Create the key for the maps
-			auto key = std::make_pair(heIndex, vIndex);
-
-			// Check if this cluster exists
-			if (effReactingMap.find(key) == effReactingMap.end())
-				continue;
-
-			// Get all the reaction vectors at this index
-			effReactingPairs = effReactingMap[key];
-			effCombiningReactants = effCombiningMap[key];
-			effDissociatingPairs = effDissociatingMap[key];
-
-			// Loop on the effective reacting pairs
-			for (auto it = effReactingPairs.begin(); it != effReactingPairs.end();
-					++it) {
-				// The cluster is connecting to both clusters in the pair
-				setReactionConnectivity((*it)->first->getId());
-				setReactionConnectivity((*it)->first->getHeMomentumId());
-				setReactionConnectivity((*it)->first->getVMomentumId());
-				setReactionConnectivity((*it)->second->getId());
-				setReactionConnectivity((*it)->second->getHeMomentumId());
-				setReactionConnectivity((*it)->second->getVMomentumId());
-			}
-
-			// Loop on the effective combining reactants
-			for (auto it = effCombiningReactants.begin();
-					it != effCombiningReactants.end(); ++it) {
-				// The cluster is connecting to the combining cluster
-				setReactionConnectivity((*it)->combining->getId());
-				setReactionConnectivity((*it)->combining->getHeMomentumId());
-				setReactionConnectivity((*it)->combining->getVMomentumId());
-			}
-
-			// Loop on the effective dissociating pairs
-			for (auto it = effDissociatingPairs.begin();
-					it != effDissociatingPairs.end(); ++it) {
-				// The cluster is connecting to the dissociating cluster which
-				// is the first one by definition
-				setDissociationConnectivity((*it)->first->getId());
-				setDissociationConnectivity((*it)->first->getHeMomentumId());
-				setDissociationConnectivity((*it)->first->getVMomentumId());
-			}
-
-			// Don't loop on the effective emission pairs because
-			// this cluster is not connected to them
-		}
+	// Loop over all the reacting pairs
+	for (auto it = effReactingList.begin(); it != effReactingList.end(); ++it) {
+		// The cluster is connecting to both clusters in the pair
+		setReactionConnectivity((*it).first->getId());
+		setReactionConnectivity((*it).first->getHeMomentumId());
+		setReactionConnectivity((*it).first->getVMomentumId());
+		setReactionConnectivity((*it).second->getId());
+		setReactionConnectivity((*it).second->getHeMomentumId());
+		setReactionConnectivity((*it).second->getVMomentumId());
 	}
+
+	// Loop over all the combining pairs
+	for (auto it = effCombiningList.begin(); it != effCombiningList.end(); ++it) {
+		// The cluster is connecting to the combining cluster
+		setReactionConnectivity((*it).first->getId());
+		setReactionConnectivity((*it).first->getHeMomentumId());
+		setReactionConnectivity((*it).first->getVMomentumId());
+	}
+
+	// Loop over all the dissociating pairs
+	for (auto it = effDissociatingList.begin(); it != effDissociatingList.end(); ++it) {
+		// The cluster is connecting to the combining cluster
+		setDissociationConnectivity((*it).first->getId());
+		setDissociationConnectivity((*it).first->getHeMomentumId());
+		setDissociationConnectivity((*it).first->getVMomentumId());
+	}
+
+	// Don't loop on the effective emission pairs because
+	// this cluster is not connected to them
 
 	// Initialize the partial vector for the momentum
 	int dof = network->size() + 2 * network->getAll(superType).size();
@@ -480,36 +860,28 @@ void SuperCluster::resetConnectivities() {
 
 double SuperCluster::getDissociationFlux() {
 	// Initial declarations
-	int nPairs = 0, heIndex = 0, vIndex = 0;
-	double flux = 0.0, heFactor = 0.0, vFactor = 0.0, value = 0.0;
+	double flux = 0.0, value = 0.0;
 	PSICluster *dissociatingCluster;
 
-	// Loop on the effective map
-	for (auto mapIt = effDissociatingMap.begin(); mapIt != effDissociatingMap.end(); ++mapIt) {
-		// Compute the helium index
-		heIndex = mapIt->first.first;
-		heFactor = (double) (heIndex - numHe) / dispersionHe;
-		// Compute the vacancy index
-		vIndex = mapIt->first.second;
-		vFactor = (double) (vIndex - numV) / dispersionV;
-
-		// Get the pairs
-		auto pairs = mapIt->second;
-		// Set the total number of reactants that dissociate to form this one
-		nPairs = pairs.size();
-		// Loop over all dissociating clusters that form this cluster
-		for (int i = 0; i < nPairs; i++) {
-			// Get the dissociating cluster
-			dissociatingCluster = pairs[i]->first;
-			// Calculate the Dissociation flux
-			value = pairs[i]->kConstant
-					* dissociatingCluster->getConcentration(
-							pairs[i]->firstHeDistance, pairs[i]->firstVDistance);
-			flux += value;
-			// Compute the momentum fluxes
-			heMomentumFlux += value * heFactor;
-			vMomentumFlux += value * vFactor;
-		}
+	// Loop over all the dissociating pairs
+	for (auto it = effDissociatingList.begin(); it != effDissociatingList.end(); ++it) {
+		// Get the dissociating clusters
+		dissociatingCluster = (*it).first;
+		double l0A = dissociatingCluster->getConcentration(0.0, 0.0);
+		double lHeA = dissociatingCluster->getHeMomentum();
+		double lVA = dissociatingCluster->getVMomentum();
+		// Update the flux
+		value = (*it).kConstant;
+		flux += value * ((*it).a0000 * l0A
+				+ (*it).a0011 * lHeA
+				+ (*it).a0110 * lVA);
+		// Compute the momentum fluxes
+		heMomentumFlux += value * ((*it).a0001 * l0A
+				+ (*it).a0100 * lHeA
+				+ (*it).a0111 * lVA);
+		vMomentumFlux += value * ((*it).a0010 * l0A
+				+ (*it).a0101 * lHeA
+				+ (*it).a1000 * lVA);
 	}
 
 	// Return the flux
@@ -518,32 +890,22 @@ double SuperCluster::getDissociationFlux() {
 
 double SuperCluster::getEmissionFlux() {
 	// Initial declarations
-	int nPairs = 0, heIndex = 0, vIndex = 0;
-	double flux = 0.0, heDistance = 0.0, vDistance = 0.0, heFactor = 0.0,
-			vFactor = 0.0, value = 0.0;
+	double flux = 0.0, value = 0.0;
 
-	// Loop on the effective map
-	for (auto mapIt = effEmissionMap.begin(); mapIt != effEmissionMap.end(); ++mapIt) {
-		// Compute the helium index
-		heIndex = mapIt->first.first;
-		heDistance = 2.0 * (double) (heIndex - numHe) / (double) sectionHeWidth;
-		heFactor = (double) (heIndex - numHe) / dispersionHe;
-		// Compute the vacancy index
-		vIndex = mapIt->first.second;
-		vDistance = 2.0 * (double) (vIndex - numV) / (double) sectionVWidth;
-		vFactor = (double) (vIndex - numV) / dispersionV;
-
-		// Set the total number of reactants emitted by this one
-		nPairs = mapIt->second.size();
-		// Loop over all the pairs
-		for (int i = 0; i < nPairs; i++) {
-			// Update the flux
-			value = mapIt->second[i]->kConstant * getConcentration(heDistance, vDistance);
-			flux += value;
-			// Compute the momentum fluxes
-			heMomentumFlux -= value * heFactor;
-			vMomentumFlux -= value * vFactor;
-		}
+	// Loop over all the emission pairs
+	for (auto it = effEmissionList.begin(); it != effEmissionList.end(); ++it) {
+		// Update the flux
+		value = (*it).kConstant;
+		flux += value * ((*it).a0000 * l0
+				+ (*it).a0011 * l1He
+				+ (*it).a0110 * l1V);
+		// Compute the momentum fluxes
+		heMomentumFlux -= value * ((*it).a0001 * l0
+				+ (*it).a0100 * l1He
+				+ (*it).a0111 * l1V);
+		vMomentumFlux -= value * ((*it).a0010 * l0
+				+ (*it).a0101 * l1He
+				+ (*it).a1000 * l1V);
 	}
 
 	return flux;
@@ -551,37 +913,50 @@ double SuperCluster::getEmissionFlux() {
 
 double SuperCluster::getProductionFlux() {
 	// Local declarations
-	double flux = 0.0, heFactor = 0.0, vFactor = 0.0, value = 0.0;
-	int nPairs = 0, heIndex = 0, vIndex = 0;
+	double flux = 0.0, value = 0.0;
 	PSICluster *firstReactant, *secondReactant;
 
-	// Loop on the effective map
-	for (auto mapIt = effReactingMap.begin(); mapIt != effReactingMap.end(); ++mapIt) {
-		// Compute the helium index
-		heIndex = mapIt->first.first;
-		heFactor = (double) (heIndex - numHe) / dispersionHe;
-		// Compute the vacancy index
-		vIndex = mapIt->first.second;
-		vFactor = (double) (vIndex - numV) / dispersionV;
-
-		// Get the pairs
-		auto pairs = mapIt->second;
-		// Set the total number of reactants that produce to form this one
-		nPairs = pairs.size();
-		// Loop over all the reacting pairs
-		for (int i = 0; i < nPairs; i++) {
-			// Get the two reacting clusters
-			firstReactant = pairs[i]->first;
-			secondReactant = pairs[i]->second;
-			// Update the flux
-			value = pairs[i]->kConstant
-					* firstReactant->getConcentration(pairs[i]->firstHeDistance, pairs[i]->firstVDistance)
-					* secondReactant->getConcentration(pairs[i]->secondHeDistance, pairs[i]->secondVDistance);
-			flux += value;
-			// Compute the momentum fluxes
-			heMomentumFlux += value * heFactor;
-			vMomentumFlux += value * vFactor;
-		}
+	// Loop over all the reacting pairs
+	for (auto it = effReactingList.begin(); it != effReactingList.end(); ++it) {
+		// Get the two reacting clusters
+		firstReactant = (*it).first;
+		secondReactant = (*it).second;
+		double l0A = firstReactant->getConcentration(0.0, 0.0);
+		double l0B = secondReactant->getConcentration(0.0, 0.0);
+		double lHeA = firstReactant->getHeMomentum();
+		double lHeB = secondReactant->getHeMomentum();
+		double lVA = firstReactant->getVMomentum();
+		double lVB = secondReactant->getVMomentum();
+		// Update the flux
+		value = (*it).kConstant;
+		flux += value * ((*it).a00000 * l0A * l0B
+				+ (*it).a01001 * l0A * lHeB
+				+ (*it).a01100 * l0A * lVB
+				+ (*it).a00011 * lHeA * l0B
+				+ (*it).a01111 * lHeA * lHeB
+				+ (*it).a10010 * lHeA * lVB
+				+ (*it).a00110 * lVA * l0B
+				+ (*it).a10101 * lVA * lHeB
+				+ (*it).a11000 * lVA * lVB);
+		// Compute the momentum fluxes
+		heMomentumFlux += value * ((*it).a00001 * l0A * l0B
+				+ (*it).a01010 * l0A * lHeB
+				+ (*it).a01101 * l0A * lVB
+				+ (*it).a00100 * lHeA * l0B
+				+ (*it).a10000 * lHeA * lHeB
+				+ (*it).a10011 * lHeA * lVB
+				+ (*it).a00111 * lVA * l0B
+				+ (*it).a10110 * lVA * lHeB
+				+ (*it).a11001 * lVA * lVB);
+		vMomentumFlux += value * ((*it).a00010 * l0A * l0B
+				+ (*it).a01011 * l0A * lHeB
+				+ (*it).a01110 * l0A * lVB
+				+ (*it).a00101 * lHeA * l0B
+				+ (*it).a10001 * lHeA * lHeB
+				+ (*it).a10100 * lHeA * lVB
+				+ (*it).a01000 * lVA * l0B
+				+ (*it).a10111 * lVA * lHeB
+				+ (*it).a11010 * lVA * lVB);
 	}
 
 	// Return the production flux
@@ -595,34 +970,43 @@ double SuperCluster::getCombinationFlux() {
 	int nReactants = 0, heIndex = 0, vIndex = 0;
 	PSICluster *combiningCluster;
 
-	// Loop on the effective map
-	for (auto mapIt = effCombiningMap.begin(); mapIt != effCombiningMap.end(); ++mapIt) {
-		// Compute the helium index
-		heIndex = mapIt->first.first;
-		heDistance = 2.0 * (double) (heIndex - numHe) / (double) sectionHeWidth;
-		heFactor = (double) (heIndex - numHe) / dispersionHe;
-		// Compute the vacancy index
-		vIndex = mapIt->first.second;
-		vDistance = 2.0 * (double) (vIndex - numV) / (double) sectionVWidth;
-		vFactor = (double) (vIndex - numV) / dispersionV;
-
-		// Get the pairs
-		auto reactants = mapIt->second;
-		// Set the total number of reactants that combine to form this one
-		nReactants = reactants.size();
-		// Loop over all possible clusters
-		for (int i = 0; i < nReactants; i++) {
-			// Get the cluster that combines with this one
-			combiningCluster = reactants[i]->combining;
-			// Calculate Second term of production flux
-			value = reactants[i]->kConstant
-					* combiningCluster->getConcentration(reactants[i]->heDistance, reactants[i]->vDistance)
-					* getConcentration(heDistance, vDistance);
-			flux += value;
-			// Compute the momentum fluxes
-			heMomentumFlux -= value * heFactor;
-			vMomentumFlux -= value * vFactor;
-		}
+	// Loop over all the combining clusters
+	for (auto it = effCombiningList.begin(); it != effCombiningList.end(); ++it) {
+		// Get the two reacting clusters
+		combiningCluster = (*it).first;
+		double l0A = combiningCluster->getConcentration(0.0, 0.0);
+		double lHeA = combiningCluster->getHeMomentum();
+		double lVA = combiningCluster->getVMomentum();
+		// Update the flux
+		value = (*it).kConstant;
+		flux += value * ((*it).a00000 * l0A * l0
+				+ (*it).a01001 * l0A * l1He
+				+ (*it).a01100 * l0A * l1V
+				+ (*it).a00011 * lHeA * l0
+				+ (*it).a01111 * lHeA * l1He
+				+ (*it).a10010 * lHeA * l1V
+				+ (*it).a00110 * lVA * l0
+				+ (*it).a10101 * lVA * l1He
+				+ (*it).a11000 * lVA * l1V);
+		// Compute the momentum fluxes
+		heMomentumFlux -= value * ((*it).a00001 * l0A * l0
+				+ (*it).a01010 * l0A * l1He
+				+ (*it).a01101 * l0A * l1V
+				+ (*it).a00100 * lHeA * l0
+				+ (*it).a10000 * lHeA * l1He
+				+ (*it).a10011 * lHeA * l1V
+				+ (*it).a00111 * lVA * l0
+				+ (*it).a10110 * lVA * l1He
+				+ (*it).a11001 * lVA * l1V);
+		vMomentumFlux -= value * ((*it).a00010 * l0A * l0
+				+ (*it).a01011 * l0A * l1He
+				+ (*it).a01110 * l0A * l1V
+				+ (*it).a00101 * lHeA * l0
+				+ (*it).a10001 * lHeA * l1He
+				+ (*it).a10100 * lHeA * l1V
+				+ (*it).a01000 * lVA * l0
+				+ (*it).a10111 * lVA * l1He
+				+ (*it).a11010 * lVA * l1V);
 	}
 
 	return flux;
@@ -645,8 +1029,9 @@ void SuperCluster::getPartialDerivatives(std::vector<double> & partials) const {
 void SuperCluster::getProductionPartialDerivatives(
 		std::vector<double> & partials) const {
 	// Initial declarations
-	int numReactants = 0, index = 0, heIndex = 0, vIndex = 0;
-	double value = 0.0, heFactor = 0.0, vFactor = 0.0;
+	double value = 0.0;
+	int index = 0;
+	PSICluster *firstReactant, *secondReactant;
 
 	// Production
 	// A + B --> D, D being this cluster
@@ -656,52 +1041,81 @@ void SuperCluster::getProductionPartialDerivatives(
 	// dF(C_D)/dC_A = k+_(A,B)*C_B
 	// dF(C_D)/dC_B = k+_(A,B)*C_A
 
-	// Loop on the effective map
-	for (auto mapIt = effReactingMap.begin(); mapIt != effReactingMap.end(); ++mapIt) {
-		// Compute the helium index
-		heIndex = mapIt->first.first;
-		heFactor = (double) (heIndex - numHe) / dispersionHe;
-		// Compute the vacancy index
-		vIndex = mapIt->first.second;
-		vFactor = (double) (vIndex - numV) / dispersionV;
+	// Loop over all the reacting pairs
+		for (auto it = effReactingList.begin(); it != effReactingList.end(); ++it) {
+		// Get the two reacting clusters
+		firstReactant = (*it).first;
+		secondReactant = (*it).second;
+		double l0A = firstReactant->getConcentration(0.0, 0.0);
+		double l0B = secondReactant->getConcentration(0.0, 0.0);
+		double lHeA = firstReactant->getHeMomentum();
+		double lHeB = secondReactant->getHeMomentum();
+		double lVA = firstReactant->getVMomentum();
+		double lVB = secondReactant->getVMomentum();
 
-		// Get the pairs
-		auto pairs = mapIt->second;
-		numReactants = pairs.size();
-		for (int i = 0; i < numReactants; i++) {
-			// Compute the contribution from the first part of the reacting pair
-			value = pairs[i]->kConstant
-					* pairs[i]->second->getConcentration(pairs[i]->secondHeDistance,
-							pairs[i]->secondVDistance);
-			index = pairs[i]->first->getId() - 1;
-			partials[index] += value;
-			heMomentumPartials[index] += value * heFactor;
-			vMomentumPartials[index] += value * vFactor;
-			index = pairs[i]->first->getHeMomentumId() - 1;
-			partials[index] += value * pairs[i]->firstHeDistance;
-			heMomentumPartials[index] += value * pairs[i]->firstHeDistance * heFactor;
-			vMomentumPartials[index] += value * pairs[i]->firstHeDistance * vFactor;
-			index = pairs[i]->first->getVMomentumId() - 1;
-			partials[index] += value * pairs[i]->firstVDistance;
-			heMomentumPartials[index] += value * pairs[i]->firstVDistance * heFactor;
-			vMomentumPartials[index] += value * pairs[i]->firstVDistance * vFactor;
-			// Compute the contribution from the second part of the reacting pair
-			value = pairs[i]->kConstant
-					* pairs[i]->first->getConcentration(pairs[i]->firstHeDistance,
-							pairs[i]->firstVDistance);
-			index = pairs[i]->second->getId() - 1;
-			partials[index] += value;
-			heMomentumPartials[index] += value * heFactor;
-			vMomentumPartials[index] += value * vFactor;
-			index = pairs[i]->second->getHeMomentumId() - 1;
-			partials[index] += value * pairs[i]->secondHeDistance;
-			heMomentumPartials[index] += value * pairs[i]->secondHeDistance * heFactor;
-			vMomentumPartials[index] += value * pairs[i]->secondHeDistance * vFactor;
-			index = pairs[i]->second->getVMomentumId() - 1;
-			partials[index] += value * pairs[i]->secondVDistance;
-			heMomentumPartials[index] += value * pairs[i]->secondVDistance * heFactor;
-			vMomentumPartials[index] += value * pairs[i]->secondVDistance * vFactor;
-		}
+		// Compute the contribution from the first part of the reacting pair
+		value = (*it).kConstant;
+		index = firstReactant->getId() - 1;
+		partials[index] += value * ((*it).a00000 * l0B
+				+ (*it).a01001 * lHeB
+				+ (*it).a01100 * lVB);
+		heMomentumPartials[index] += value * ((*it).a00001 * l0B
+				+ (*it).a01010 * lHeB
+				+ (*it).a01101 * lVB);
+		vMomentumPartials[index] += value * ((*it).a00010 * l0B
+				+ (*it).a01011 * lHeB
+				+ (*it).a01110 * lVB);
+		index = firstReactant->getHeMomentumId() - 1;
+		partials[index] += value * ((*it).a00011 * l0B
+				+ (*it).a01111 * lHeB
+				+ (*it).a10010 * lVB);
+		heMomentumPartials[index] += value * ((*it).a00100 * l0B
+				+ (*it).a10000 * lHeB
+				+ (*it).a10011 * lVB);
+		vMomentumPartials[index] += value * ((*it).a00101 * l0B
+				+ (*it).a10001 * lHeB
+				+ (*it).a10100 * lVB);
+		index = firstReactant->getVMomentumId() - 1;
+		partials[index] += value * ((*it).a00110 * l0B
+				+ (*it).a10101 * lHeB
+				+ (*it).a11000 * lVB);
+		heMomentumPartials[index] += value * ((*it).a00111 * l0B
+				+ (*it).a10110 * lHeB
+				+ (*it).a11001 * lVB);
+		vMomentumPartials[index] += value * ((*it).a01000 * l0B
+				+ (*it).a10111 * lHeB
+				+ (*it).a11010 * lVB);
+		// Compute the contribution from the second part of the reacting pair
+		index = secondReactant->getId() - 1;
+		partials[index] += value * ((*it).a00000 * l0A
+				+ (*it).a00011 * lHeA
+				+ (*it).a00110 * lVA);
+		heMomentumPartials[index] += value * ((*it).a00001 * l0A
+				+ (*it).a00100 * lHeA
+				+ (*it).a00111 * lVA);
+		vMomentumPartials[index] += value * ((*it).a00010 * l0A
+				+ (*it).a00101 * lHeA
+				+ (*it).a01000 * lVA);
+		index = secondReactant->getHeMomentumId() - 1;
+		partials[index] += value * ((*it).a01001 * l0A
+				+ (*it).a01111 * lHeA
+				+ (*it).a10101 * lVA);
+		heMomentumPartials[index] += value * ((*it).a01010 * l0A
+				+ (*it).a10000 * lHeA
+				+ (*it).a10110 * lVA);
+		vMomentumPartials[index] += value * ((*it).a01011 * l0A
+				+ (*it).a10001 * lHeA
+				+ (*it).a10111 * lVA);
+		index = secondReactant->getVMomentumId() - 1;
+		partials[index] += value * ((*it).a01100 * l0A
+				+ (*it).a10010 * lHeA
+				+ (*it).a11000 * lVA);
+		heMomentumPartials[index] += value * ((*it).a01101 * l0A
+				+ (*it).a10011 * lHeA
+				+ (*it).a11001 * lVA);
+		vMomentumPartials[index] += value * ((*it).a01110 * l0A
+				+ (*it).a10100 * lHeA
+				+ (*it).a11010 * lVA);
 	}
 
 	return;
@@ -710,10 +1124,9 @@ void SuperCluster::getProductionPartialDerivatives(
 void SuperCluster::getCombinationPartialDerivatives(
 		std::vector<double> & partials) const {
 	// Initial declarations
-	int numReactants = 0, otherIndex = 0, heIndex = 0, vIndex = 0;
+	int index = 0;
 	PSICluster *cluster;
-	double value = 0.0, heDistance = 0.0, vDistance = 0.0,
-			heFactor = 0.0, vFactor = 0.0;
+	double value = 0.0;
 
 	// Combination
 	// A + B --> D, A being this cluster
@@ -723,52 +1136,77 @@ void SuperCluster::getCombinationPartialDerivatives(
 	// dF(C_A)/dC_A = - k+_(A,B)*C_B
 	// dF(C_A)/dC_B = - k+_(A,B)*C_A
 
-	// Loop on the effective map
-	for (auto mapIt = effCombiningMap.begin(); mapIt != effCombiningMap.end(); ++mapIt) {
-		// Compute the helium index
-		heIndex = mapIt->first.first;
-		heDistance = 2.0 * (double) (heIndex - numHe) / (double) sectionHeWidth;
-		heFactor = (double) (heIndex - numHe) / dispersionHe;
-		// Compute the vacancy index
-		vIndex = mapIt->first.second;
-		vDistance = 2.0 * (double) (vIndex - numV) / (double) sectionVWidth;
-		vFactor = (double) (vIndex - numV) / dispersionV;
+	// Loop over all the combining clusters
+		for (auto it = effCombiningList.begin(); it != effCombiningList.end(); ++it) {
+		// Get the two reacting clusters
+		cluster = (*it).first;
+		double l0A = cluster->getConcentration(0.0, 0.0);
+		double lHeA = cluster->getHeMomentum();
+		double lVA = cluster->getVMomentum();
 
-		// Get the pairs
-		auto reactants = mapIt->second;
-		numReactants = reactants.size();
-		for (int i = 0; i < numReactants; i++) {
-			cluster = (PSICluster *) reactants[i]->combining;
-			// Remember that the flux due to combinations is OUTGOING (-=)!
-			// Compute the contribution from this cluster
-			value = reactants[i]->kConstant
-					* cluster->getConcentration(reactants[i]->heDistance,
-							reactants[i]->vDistance);
-			partials[id - 1] -= value;
-			heMomentumPartials[id - 1] -= value * heFactor;
-			vMomentumPartials[id - 1] -= value * vFactor;
-			partials[heMomId - 1] -= value * heDistance;
-			heMomentumPartials[heMomId - 1] -= value * heDistance * heFactor;
-			vMomentumPartials[heMomId - 1] -= value * heDistance * vFactor;
-			partials[vMomId - 1] -= value * vDistance;
-			heMomentumPartials[vMomId - 1] -= value * vDistance * heFactor;
-			vMomentumPartials[vMomId - 1] -= value * vDistance * vFactor;
-			// Compute the contribution from the combining cluster
-			value = reactants[i]->kConstant
-					* getConcentration(heDistance, vDistance);
-			otherIndex = cluster->getId() - 1;
-			partials[otherIndex] -= value;
-			heMomentumPartials[otherIndex] -= value * heFactor;
-			vMomentumPartials[otherIndex] -= value * vFactor;
-			otherIndex = cluster->getHeMomentumId() - 1;
-			partials[otherIndex] -= value * reactants[i]->heDistance;
-			heMomentumPartials[otherIndex] -= value * reactants[i]->heDistance * heFactor;
-			vMomentumPartials[otherIndex] -= value * reactants[i]->heDistance * vFactor;
-			otherIndex = cluster->getVMomentumId() - 1;
-			partials[otherIndex] -= value * reactants[i]->vDistance;
-			heMomentumPartials[otherIndex] -= value * reactants[i]->vDistance * heFactor;
-			vMomentumPartials[otherIndex] -= value * reactants[i]->vDistance * vFactor;
-		}
+		// Compute the contribution from the combining cluster
+		value = (*it).kConstant;
+		index = cluster->getId() - 1;
+		partials[index] -= value * ((*it).a00000 * l0
+				+ (*it).a01001 * l1He
+				+ (*it).a01100 * l1V);
+		heMomentumPartials[index] -= value * ((*it).a00001 * l0
+				+ (*it).a01010 * l1He
+				+ (*it).a01101 * l1V);
+		vMomentumPartials[index] -= value * ((*it).a00010 * l0
+				+ (*it).a01011 * l1He
+				+ (*it).a01110 * l1V);
+		index = cluster->getHeMomentumId() - 1;
+		partials[index] -= value * ((*it).a00011 * l0
+				+ (*it).a01111 * l1He
+				+ (*it).a10010 * l1V);
+		heMomentumPartials[index] -= value * ((*it).a00100 * l0
+				+ (*it).a10000 * l1He
+				+ (*it).a10011 * l1V);
+		vMomentumPartials[index] -= value * ((*it).a00101 * l0
+				+ (*it).a10001 * l1He
+				+ (*it).a10100 * l1V);
+		index = cluster->getVMomentumId() - 1;
+		partials[index] -= value * ((*it).a00110 * l0
+				+ (*it).a10101 * l1He
+				+ (*it).a11000 * l1V);
+		heMomentumPartials[index] -= value * ((*it).a00111 * l0
+				+ (*it).a10110 * l1He
+				+ (*it).a11001 * l1V);
+		vMomentumPartials[index] -= value * ((*it).a01000 * l0
+				+ (*it).a10111 * l1He
+				+ (*it).a11010 * l1V);
+		// Compute the contribution from this cluster
+		index = id - 1;
+		partials[index] -= value * ((*it).a00000 * l0A
+				+ (*it).a00011 * lHeA
+				+ (*it).a00110 * lVA);
+		heMomentumPartials[index] -= value * ((*it).a00001 * l0A
+				+ (*it).a00100 * lHeA
+				+ (*it).a00111 * lVA);
+		vMomentumPartials[index] -= value * ((*it).a00010 * l0A
+				+ (*it).a00101 * lHeA
+				+ (*it).a01000 * lVA);
+		index = heMomId - 1;
+		partials[index] -= value * ((*it).a01001 * l0A
+				+ (*it).a01111 * lHeA
+				+ (*it).a10101 * lVA);
+		heMomentumPartials[index] -= value * ((*it).a01010 * l0A
+				+ (*it).a10000 * lHeA
+				+ (*it).a10110 * lVA);
+		vMomentumPartials[index] -= value * ((*it).a01011 * l0A
+				+ (*it).a10001 * lHeA
+				+ (*it).a10111 * lVA);
+		index = vMomId - 1;
+		partials[index] -= value * ((*it).a01100 * l0A
+				+ (*it).a10010 * lHeA
+				+ (*it).a11000 * lVA);
+		heMomentumPartials[index] -= value * ((*it).a01101 * l0A
+				+ (*it).a10011 * lHeA
+				+ (*it).a11001 * lVA);
+		vMomentumPartials[index] -= value * ((*it).a01110 * l0A
+				+ (*it).a10100 * lHeA
+				+ (*it).a11010 * lVA);
 	}
 
 	return;
@@ -777,9 +1215,9 @@ void SuperCluster::getCombinationPartialDerivatives(
 void SuperCluster::getDissociationPartialDerivatives(
 		std::vector<double> & partials) const {
 	// Initial declarations
-	int numPairs = 0, index = 0, heIndex = 0, vIndex = 0;
+	int index = 0;
 	PSICluster *cluster;
-	double value = 0.0, heFactor = 0.0, vFactor = 0.0;
+	double value = 0.0;
 
 	// Dissociation
 	// A --> B + D, B being this cluster
@@ -788,35 +1226,25 @@ void SuperCluster::getDissociationPartialDerivatives(
 	// Thus, the partial derivatives
 	// dF(C_B)/dC_A = k-_(B,D)
 
-	// Loop on the effective map
-	for (auto mapIt = effDissociatingMap.begin(); mapIt != effDissociatingMap.end(); ++mapIt) {
-		// Compute the helium index
-		heIndex = mapIt->first.first;
-		heFactor = (double) (heIndex - numHe) / dispersionHe;
-		// Compute the vacancy index
-		vIndex = mapIt->first.second;
-		vFactor = (double) (vIndex - numV) / dispersionV;
+	// Loop over all the dissociating pairs
+	for (auto it = effDissociatingList.begin(); it != effDissociatingList.end(); ++it) {
+		// Get the dissociating clusters
+		cluster = (*it).first;
 
-		// Get the pairs
-		auto pairs = mapIt->second;
-		numPairs = pairs.size();
-		for (int i = 0; i < numPairs; i++) {
-			// Get the dissociating cluster
-			cluster = pairs[i]->first;
-			value = pairs[i]->kConstant;
-			index = cluster->getId() - 1;
-			partials[index] += value;
-			heMomentumPartials[index] += value * heFactor;
-			vMomentumPartials[index] += value * vFactor;
-			index = cluster->getHeMomentumId() - 1;
-			partials[index] += value * pairs[i]->firstHeDistance;
-			heMomentumPartials[index] += value * pairs[i]->firstHeDistance * heFactor;
-			vMomentumPartials[index] += value * pairs[i]->firstHeDistance * vFactor;
-			index = cluster->getVMomentumId() - 1;
-			partials[index] += value * pairs[i]->firstVDistance;
-			heMomentumPartials[index] += value * pairs[i]->firstVDistance * heFactor;
-			vMomentumPartials[index] += value * pairs[i]->firstVDistance * vFactor;
-		}
+		// Compute the contribution from the dissociating cluster
+		value = (*it).kConstant;
+		index = cluster->getId() - 1;
+		partials[index] += value * ((*it).a0000);
+		heMomentumPartials[index] += value * ((*it).a0001);
+		vMomentumPartials[index] += value * ((*it).a0010);
+		index = cluster->getHeMomentumId() - 1;
+		partials[index] += value * ((*it).a0011);
+		heMomentumPartials[index] += value * ((*it).a0100);
+		vMomentumPartials[index] += value * ((*it).a0101);
+		index = cluster->getVMomentumId() - 1;
+		partials[index] += value * ((*it).a0110);
+		heMomentumPartials[index] += value * ((*it).a0111);
+		vMomentumPartials[index] += value * ((*it).a1000);
 	}
 
 	return;
@@ -825,9 +1253,8 @@ void SuperCluster::getDissociationPartialDerivatives(
 void SuperCluster::getEmissionPartialDerivatives(
 		std::vector<double> & partials) const {
 	// Initial declarations
-	int numPairs = 0, index = 0, heIndex = 0, vIndex = 0;
-	double value = 0.0, heDistance = 0.0, vDistance = 0.0,
-			heFactor = 0.0, vFactor = 0.0;
+	int index = 0;
+	double value = 0.0;
 
 	// Emission
 	// A --> B + D, A being this cluster
@@ -836,34 +1263,22 @@ void SuperCluster::getEmissionPartialDerivatives(
 	// Thus, the partial derivatives
 	// dF(C_A)/dC_A = - k-_(B,D)
 
-	// Loop on the effective map
-	for (auto mapIt = effEmissionMap.begin(); mapIt != effEmissionMap.end(); ++mapIt) {
-		// Compute the helium index
-		heIndex = mapIt->first.first;
-		heDistance = 2.0 * (double) (heIndex - numHe) / (double) sectionHeWidth;
-		heFactor = (double) (heIndex - numHe) / dispersionHe;
-		// Compute the vacancy index
-		vIndex = mapIt->first.second;
-		vDistance = 2.0 * (double) (vIndex - numV) / (double) sectionVWidth;
-		vFactor = (double) (vIndex - numV) / dispersionV;
-
-		// Get the pairs
-		auto pairs = mapIt->second;
-		numPairs = pairs.size();
-		for (int i = 0; i < numPairs; i++) {
-			// Modify the partial derivative. Remember that the flux
-			// due to emission is OUTGOING (-=)!
-			value = pairs[i]->kConstant;
-			partials[id - 1] -= value;
-			heMomentumPartials[id - 1] -= value * heFactor;
-			vMomentumPartials[id - 1] -= value * vFactor;
-			partials[heMomId - 1] -= value * heDistance;
-			heMomentumPartials[heMomId - 1] -= value * heDistance * heFactor;
-			vMomentumPartials[heMomId - 1] -= value * heDistance * vFactor;
-			partials[vMomId - 1] -= value * vDistance;
-			heMomentumPartials[vMomId - 1] -= value * vDistance * heFactor;
-			vMomentumPartials[vMomId - 1] -= value * vDistance * vFactor;
-		}
+	// Loop over all the emission pairs
+	for (auto it = effEmissionList.begin(); it != effEmissionList.end(); ++it) {
+		// Compute the contribution from the dissociating cluster
+		value = (*it).kConstant;
+		index = id - 1;
+		partials[index] -= value * ((*it).a0000);
+		heMomentumPartials[index] -= value * ((*it).a0001);
+		vMomentumPartials[index] -= value * ((*it).a0010);
+		index = heMomId - 1;
+		partials[index] -= value * ((*it).a0011);
+		heMomentumPartials[index] -= value * ((*it).a0100);
+		vMomentumPartials[index] -= value * ((*it).a0101);
+		index = vMomId - 1;
+		partials[index] -= value * ((*it).a0110);
+		heMomentumPartials[index] -= value * ((*it).a0111);
+		vMomentumPartials[index] -= value * ((*it).a1000);
 	}
 
 	return;

@@ -147,6 +147,20 @@ public:
 	virtual double getConcentration(double distHe, double distV) const;
 
 	/**
+	 * This operation returns the first helium momentum.
+	 *
+	 * @return The momentum
+	 */
+	virtual double getHeMomentum() const;
+
+	/**
+	 * This operation returns the first vacancy momentum.
+	 *
+	 * @return The momentum
+	 */
+	virtual double getVMomentum() const;
+
+	/**
 	 * This operation increases the concentration of the reactant by the
 	 * specified amount.
 	 *

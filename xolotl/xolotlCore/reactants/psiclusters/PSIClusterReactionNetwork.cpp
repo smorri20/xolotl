@@ -132,7 +132,7 @@ void PSIClusterReactionNetwork::setTemperature(double temp) {
 		// are updated, the reaction and dissociation rates can be
 		// recomputed
 		auto cluster = (PSICluster *) allReactants->at(i);
-		cluster->computeRateConstants();
+		cluster->updateRateConstants();
 	}
 
 	return;

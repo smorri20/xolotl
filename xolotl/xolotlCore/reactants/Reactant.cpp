@@ -49,6 +49,14 @@ double Reactant::getConcentration(double distHe, double distV) const {
 	return concentration;
 }
 
+double Reactant::getHeMomentum() const {
+	return 0.0;
+}
+
+double Reactant::getVMomentum() const {
+	return 0.0;
+}
+
 void Reactant::increaseConcentration(double deltaConc) {
 	concentration += deltaConc;
 

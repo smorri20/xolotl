@@ -4,6 +4,7 @@
 // Includes
 #include "PSICluster.h"
 #include <string>
+#include <forward_list>
 
 namespace xolotlCore {
 
@@ -11,6 +12,121 @@ namespace xolotlCore {
  *  A cluster gathering the average properties of many HeV clusters.
  */
 class SuperCluster: public PSICluster {
+
+protected:
+
+	/**
+	 * This is a protected class that is used to implement the flux calculations
+	 * for two body production reactions.
+	 *
+	 * The constants are stored along the clusters taking part in the
+	 * reaction or dissociation for faster computation because they only change
+	 * when the temperature change. k is computed when setTemperature() is called.
+	 */
+	class SuperClusterProductionPair {
+	public:
+
+		/**
+		 * The first cluster in the pair
+		 */
+		PSICluster * first;
+
+		/**
+		 * The second cluster in the pair
+		 */
+		PSICluster * second;
+
+		/**
+		 * The reaction/dissociation constant associated to this
+		 * reaction or dissociation
+		 */
+		double kConstant;
+
+		/**
+		 * All the coefficient needed to compute each element
+		 */
+		double a00000;
+		double a00001;
+		double a00010;
+		double a00011;
+		double a00100;
+		double a00101;
+		double a00110;
+		double a00111;
+		double a01000;
+		double a01001;
+		double a01010;
+		double a01011;
+		double a01100;
+		double a01101;
+		double a01110;
+		double a01111;
+		double a10000;
+		double a10001;
+		double a10010;
+		double a10011;
+		double a10100;
+		double a10101;
+		double a10110;
+		double a10111;
+		double a11000;
+		double a11001;
+		double a11010;
+
+		//! The constructor
+		SuperClusterProductionPair(PSICluster * firstPtr, PSICluster * secondPtr, double k)
+		: first(firstPtr), second(secondPtr), kConstant(k), a00000(0.0), a00001(0.0), a00010(0.0),
+		  a00011(0.0), a00100(0.0), a00101(0.0), a00110(0.0), a00111(0.0), a01000(0.0), a01001(0.0),
+		  a01010(0.0), a01011(0.0), a01100(0.0), a01101(0.0), a01110(0.0), a01111(0.0), a10000(0.0),
+		  a10001(0.0), a10010(0.0), a10011(0.0), a10100(0.0), a10101(0.0), a10110(0.0), a10111(0.0),
+		  a11000(0.0), a11001(0.0), a11010(0.0) {}
+	};
+
+	/**
+	 * This is a protected class that is used to implement the flux calculations
+	 * for two dissociation reactions.
+	 *
+	 * The constants are stored along the clusters taking part in the
+	 * reaction or dissociation for faster computation because they only change
+	 * when the temperature change. k is computed when setTemperature() is called.
+	 */
+	class SuperClusterDissociationPair {
+	public:
+
+		/**
+		 * The first cluster in the pair
+		 */
+		PSICluster * first;
+
+		/**
+		 * The second cluster in the pair
+		 */
+		PSICluster * second;
+
+		/**
+		 * The reaction/dissociation constant associated to this
+		 * reaction or dissociation
+		 */
+		double kConstant;
+
+		/**
+		 * All the coefficient needed to compute each element
+		 */
+		double a0000;
+		double a0001;
+		double a0010;
+		double a0011;
+		double a0100;
+		double a0101;
+		double a0110;
+		double a0111;
+		double a1000;
+
+		//! The constructor
+		SuperClusterDissociationPair(PSICluster * firstPtr, PSICluster * secondPtr, double k)
+		: first(firstPtr), second(secondPtr), kConstant(k), a0000(0.0), a0001(0.0), a0010(0.0),
+		  a0011(0.0), a0100(0.0), a0101(0.0), a0110(0.0), a0111(0.0), a1000(0.0) {}
+	};
 
 private:
 
@@ -68,6 +184,18 @@ private:
 	//! The map containing all the effective emission pairs separated by original composition.
 	std::map <std::pair<int, int>, std::vector<ClusterPair *> > effEmissionMap;
 
+	//! The list of optimized effective reacting pairs.
+	std::forward_list <SuperClusterProductionPair> effReactingList;
+
+	//! The list of optimized effective combining pairs.
+	std::forward_list <SuperClusterProductionPair> effCombiningList;
+
+	//! The list of optimized effective dissociating pairs.
+	std::forward_list <SuperClusterDissociationPair> effDissociatingList;
+
+	//! The list of optimized effective emission pairs.
+	std::forward_list <SuperClusterDissociationPair> effEmissionList;
+
 	/**
 	 * The vector containing a boolean to know if this super cluster burst at each depth.
 	 */
@@ -80,6 +208,11 @@ private:
 	SuperCluster() :
 		PSICluster(1)
 	{ numHe = 1.0; numV = 1.0; }
+
+	/**
+	 * Group the same reactions together.
+	 */
+	void optimizeReactions();
 
 public:
 
@@ -143,6 +276,20 @@ public:
 	double getConcentration(double distHe, double distV) const;
 
 	/**
+	 * This operation returns the first helium momentum.
+	 *
+	 * @return The momentum
+	 */
+	double getHeMomentum() const;
+
+	/**
+	 * This operation returns the first vacancy momentum.
+	 *
+	 * @return The momentum
+	 */
+	double getVMomentum() const;
+
+	/**
 	 * This operation returns the current total concentration of clusters in the group.
 
 	 * @return The concentration
@@ -193,9 +340,16 @@ public:
 	/**
 	 * Calculate all the rate constants for the reactions and dissociations in which this
 	 * cluster is taking part. Store these values in the kConstant field of ClusterPair
-	 * or CombiningCluster. Need to be called only when the temperature changes.
+	 * or CombiningCluster. Need to be called only the first time.
 	 */
 	void computeRateConstants();
+
+	/**
+	 * Calculate all the rate constants for the reactions and dissociations in which this
+	 * cluster is taking part. Store these values in the kConstant field of ClusterPair
+	 * or CombiningCluster. Need to be called only when the temperature changes.
+	 */
+	void updateRateConstants();
 
 	/**
 	 * This operation sets the zeroth order momentum.

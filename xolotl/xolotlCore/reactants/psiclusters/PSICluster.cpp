@@ -1102,6 +1102,94 @@ void PSICluster::computeRateConstants() {
 	return;
 }
 
+void PSICluster::updateRateConstants() {
+	// Local declarations
+	PSICluster *firstReactant, *secondReactant, *combiningReactant,
+		*dissociatingCluster, *otherEmittedCluster, *firstCluster,
+		*secondCluster;
+	double rate = 0.0;
+	// Initialize the value for the biggest production rate
+	double biggestProductionRate = 0.0;
+
+	// Compute the reaction constant associated to the reacting pairs
+	// Set the total number of reacting pairs
+	int nPairs = effReactingPairs.size();
+	// Loop on them
+	for (int i = 0; i < nPairs; i++) {
+		// Get the reactants
+		firstReactant = effReactingPairs[i]->first;
+		secondReactant = effReactingPairs[i]->second;
+		// Compute the reaction constant
+		rate = calculateReactionRateConstant(*firstReactant,
+				*secondReactant);
+		// Set it in the pair
+		effReactingPairs[i]->kConstant = rate;
+
+		// Check if the rate is the biggest one up to now
+		if (rate > biggestProductionRate)
+			biggestProductionRate = rate;
+	}
+
+	// Compute the reaction constant associated to the combining reactants
+	// Set the total number of combining reactants
+	int nReactants = effCombiningReactants.size();
+	// Loop on them
+	for (int i = 0; i < nReactants; i++) {
+		// Get the reactants
+		combiningReactant = effCombiningReactants[i]->combining;
+		// Compute the reaction constant
+		rate = calculateReactionRateConstant(*this, *combiningReactant);
+		// Set it in the combining cluster
+		effCombiningReactants[i]->kConstant = rate;
+	}
+
+	// Compute the dissociation constant associated to the dissociating clusters
+	// Set the total number of dissociating clusters
+	nPairs = effDissociatingPairs.size();
+	// Loop on them
+	for (int i = 0; i < nPairs; i++) {
+		dissociatingCluster = effDissociatingPairs[i]->first;
+		// The second element of the pair is the cluster that is also
+		// emitted by the dissociation
+		otherEmittedCluster = effDissociatingPairs[i]->second;
+		// Compute the dissociation constant
+		// The order of the cluster is important here because of the binding
+		// energy used in the computation. It is taken from the type of the first cluster
+		// which must be the single one
+		if (size == 1) {
+			// "this" is the single size one
+			rate = calculateDissociationConstant(*dissociatingCluster, *this,
+					*otherEmittedCluster);
+		} else {
+			// otherEmittedCluster is the single size one
+			rate = calculateDissociationConstant(*dissociatingCluster,
+					*otherEmittedCluster, *this);
+
+		}
+		// Set it in the pair
+		effDissociatingPairs[i]->kConstant = rate;
+	}
+
+	// Compute the dissociation constant associated to the emission of pairs of clusters
+	// Set the total number of emission pairs
+	nPairs = effEmissionPairs.size();
+	// Loop on them
+	for (int i = 0; i < nPairs; i++) {
+		firstCluster = effEmissionPairs[i]->first;
+		secondCluster = effEmissionPairs[i]->second;
+		// Compute the dissociation rate
+		rate = calculateDissociationConstant(*this, *firstCluster,
+				*secondCluster);
+		// Set it in the pair
+		effEmissionPairs[i]->kConstant = rate;
+	}
+
+	// Set the biggest rate to the biggest production rate
+	biggestRate = biggestProductionRate;
+
+	return;
+}
+
 void PSICluster::setTemperature(double temp) {
 	// Set the temperature
 	Reactant::setTemperature(temp);
