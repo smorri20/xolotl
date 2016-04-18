@@ -54,7 +54,7 @@ std::vector< std::vector<double> > nInterstitial3D;
  * HDF5 is handling the parallel part, so no call to MPI here.
  */
 PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
-		void *ictx) {
+		void *) {
 	PetscErrorCode ierr;
 	const double ****solutionArray, *gridPointSolution;
 	int xs, xm, Mx, ys, ym, My, zs, zm, Mz;
@@ -117,7 +117,7 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 	ierr = TSGetTimeStep(ts, &currentTimeStep);CHKERRQ(ierr);
 
 	// Add a concentration sub group
-	xolotlCore::HDF5Utils::addConcentrationSubGroup(timestep, networkSize, time,
+	xolotlCore::HDF5Utils::addConcentrationSubGroup(timestep, time,
 			currentTimeStep);
 
 	// Write the surface positions in the concentration sub group
@@ -202,8 +202,8 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 /**
  * This is a monitoring method that will compute the total helium fluence
  */
-PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time,
-		Vec solution, void *ictx) {
+PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt, PetscReal time,
+		Vec solution, void *) {
 	PetscErrorCode ierr;
 	int xs, xm, ys, ym, zs, zm;
 
@@ -245,7 +245,7 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time
 				gridPointSolution = solutionArray[k][j][i];
 
 				// Loop on all the indices
-				for (int l = 0; l < heIndices3D.size(); l++) {
+				for (unsigned int l = 0; l < heIndices3D.size(); l++) {
 					// Add the current concentration times the number of helium in the cluster
 					// (from the weight vector)
 					heConcentration += gridPointSolution[heIndices3D[l]] * heWeights3D[l]
@@ -311,7 +311,7 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt timestep, PetscReal time
  * a specific cluster at each grid point on the XY surface, integrating over Z.
  */
 PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
-		Vec solution, void *ictx) {
+		Vec solution, void *) {
 	PetscErrorCode ierr;
 	const double ****solutionArray, *gridPointSolution;
 	int xs, xm, Mx, ys, ym, My, zs, zm, Mz;
@@ -445,7 +445,7 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
  * a specific cluster at each grid point on the XZ surface, integrating over Y.
  */
 PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
-		Vec solution, void *ictx) {
+		Vec solution, void *) {
 	PetscErrorCode ierr;
 	const double ****solutionArray, *gridPointSolution;
 	int xs, xm, Mx, ys, ym, My, zs, zm, Mz;
@@ -849,7 +849,7 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 		auto heVClusters = network->getAll(heVType);
 
 		// Loop on the helium clusters
-		for (int i = 0; i < heClusters.size(); i++) {
+		for (unsigned int i = 0; i < heClusters.size(); i++) {
 			auto cluster = (PSICluster *) heClusters[i];
 			int id = cluster->getId() - 1;
 			// Add the Id to the vector
@@ -859,7 +859,7 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 		}
 
 		// Loop on the helium-vacancy clusters
-		for (int i = 0; i < heVClusters.size(); i++) {
+		for (unsigned int i = 0; i < heVClusters.size(); i++) {
 			auto cluster = (PSICluster *) heVClusters[i];
 			int id = cluster->getId() - 1;
 			// Add the Id to the vector

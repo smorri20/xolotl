@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 
 			// HeV
 			0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0,
+			1, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0,
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 			1
 	};
 
-	for (int i = 0; i < reactionConnectivity.size(); i++) {
+	for (unsigned int i = 0; i < reactionConnectivity.size(); i++) {
 		BOOST_REQUIRE_EQUAL(reactionConnectivity[i],
 				connectivityExpected[i]);
 	}
@@ -131,8 +131,8 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
  BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
  	// Local Declarations
  	// The vector of partial derivatives to compare with
- 	double knownPartials[] = {-2850.42, -3005.08, 0.0, -14316.7, 896815.0, 257925.0,
- 			0.0, -2188.27, -2373.78, -1789.59, 0.0, 224717.0, 0.0, 0.0, -2054.05};
+	 	double knownPartials[] = {-2850.42, -3005.08, 0.0, -14316.7, 896815.0, 257925.0,
+	 			0.0, -2188.27, -2373.78, 356134.7, 0.0, 224717.0, 0.0, 0.0, -2054.05};
  	// Get the simple reaction network
  	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork(3);
 
@@ -151,10 +151,10 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
  	auto partials = cluster->getPartialDerivatives();
 
  	// Check the size of the partials
- 	BOOST_REQUIRE_EQUAL(partials.size(), 15);
+ 	BOOST_REQUIRE_EQUAL(partials.size(), 15U);
 
  	// Check all the values
- 	for (int i = 0; i < partials.size(); i++) {
+ 	for (unsigned int i = 0; i < partials.size(); i++) {
  		BOOST_REQUIRE_CLOSE(partials[i], knownPartials[i], 0.1);
  	}
 

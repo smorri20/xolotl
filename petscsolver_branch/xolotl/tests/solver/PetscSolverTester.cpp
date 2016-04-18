@@ -65,7 +65,6 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 	paramFile.close();
 
 	// Create a fake command line to read the options
-	argc = 1;
 	argv = new char*[2];
 	std::string parameterFile = "param.txt";
 	argv[0] = new char[parameterFile.length() + 1];
@@ -74,7 +73,7 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 
 	// Read the options
 	Options opts;
-	opts.readParams(argc, argv);
+	opts.readParams(argv);
 
 	// Set the options to use a regular grid in the x direction because the parameter file
 	// says the opposite
@@ -186,7 +185,7 @@ BOOST_AUTO_TEST_CASE(checkIrregularPetscSolver1DHandler) {
 
 	// Read the options
 	Options opts;
-	opts.readParams(argc, argv);
+	opts.readParams(argv);
 
 	// Create the network loader
 	std::shared_ptr<HDF5NetworkLoader> loader =
@@ -212,7 +211,7 @@ BOOST_AUTO_TEST_CASE(checkIrregularPetscSolver1DHandler) {
 
 	// Initialize and get the temperature handler
 	bool tempInitOK = xolotlFactory::initializeTempHandler(opts);
-	assert(tempInitOK);
+	BOOST_REQUIRE_EQUAL(tempInitOK, true);
 	auto tempHandler = xolotlFactory::getTemperatureHandler();
 
 	// Set up our dummy performance and visualization infrastructures
@@ -285,7 +284,6 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 	paramFile.close();
 
 	// Create a fake command line to read the options
-	argc = 1;
 	argv = new char*[2];
 	std::string parameterFile = "param.txt";
 	argv[0] = new char[parameterFile.length() + 1];
@@ -294,7 +292,7 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 
 	// Read the options
 	Options opts;
-	opts.readParams(argc, argv);
+	opts.readParams(argv);
 
 	// Create the network loader
 	std::shared_ptr<HDF5NetworkLoader> loader =
@@ -321,7 +319,7 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 
 	// Initialize and get the temperature handler
 	bool tempInitOK = xolotlFactory::initializeTempHandler(opts);
-	assert(tempInitOK);
+	BOOST_REQUIRE_EQUAL(tempInitOK, true);
 	auto tempHandler = xolotlFactory::getTemperatureHandler();
 
 	// Set up our dummy performance and visualization infrastructures
@@ -349,11 +347,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 	network->fillConcentrationsArray(concs);
 
 	// Check some concentrations
-    BOOST_REQUIRE_SMALL(concs[0], 1.0e-72);
-    BOOST_REQUIRE_SMALL(concs[1], 1.0e-144);
-    BOOST_REQUIRE_SMALL(concs[6], 1.0e-10);
-    BOOST_REQUIRE_CLOSE(concs[14], 0.0, 0.01);
-    BOOST_REQUIRE_SMALL(concs[23], 1.0e-71);
+	BOOST_REQUIRE_SMALL(concs[0], 1.0e-24);
+	BOOST_REQUIRE_SMALL(concs[1], 1.0e-46);
+	BOOST_REQUIRE_SMALL(concs[6], 1.0e-4);
+	BOOST_REQUIRE_SMALL(concs[14], 1.0e-120);
+	BOOST_REQUIRE_SMALL(concs[23], 1.0e-21);
 
 	// Remove the created file
 	std::string tempFile = "param.txt";
@@ -394,7 +392,6 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 	paramFile.close();
 
 	// Create a fake command line to read the options
-	argc = 1;
 	argv = new char*[2];
 	std::string parameterFile = "param.txt";
 	argv[0] = new char[parameterFile.length() + 1];
@@ -403,7 +400,7 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 
 	// Read the options
 	Options opts;
-	opts.readParams(argc, argv);
+	opts.readParams(argv);
 
 	// Create the network loader
 	std::shared_ptr<HDF5NetworkLoader> loader =
@@ -429,7 +426,7 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 
 	// Initialize and get the temperature handler
 	bool tempInitOK = xolotlFactory::initializeTempHandler(opts);
-	assert(tempInitOK);
+	BOOST_REQUIRE_EQUAL(tempInitOK, true);
 	auto tempHandler = xolotlFactory::getTemperatureHandler();
 
 	// Set up our dummy performance and visualization infrastructures
@@ -457,11 +454,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 	network->fillConcentrationsArray(concs);
 
 	// Check some concentrations
-    BOOST_REQUIRE_SMALL(concs[0], 1.0e-77);
-    BOOST_REQUIRE_SMALL(concs[6], 1.0e-10);
-    BOOST_REQUIRE_CLOSE(concs[14], 0.0, 0.01);
-    BOOST_REQUIRE_SMALL(concs[15], 1.0e-156);
-    BOOST_REQUIRE_SMALL(concs[16], 1.0e-143);
+	BOOST_REQUIRE_SMALL(concs[0], 1.0e-27);
+	BOOST_REQUIRE_SMALL(concs[6], 1.0e-4);
+	BOOST_REQUIRE_SMALL(concs[14], 1.0e-120);
+	BOOST_REQUIRE_SMALL(concs[15], 1.0e-106);
+	BOOST_REQUIRE_SMALL(concs[16], 1.0e-92);
 
 	// Remove the created file
 	std::string tempFile = "param.txt";

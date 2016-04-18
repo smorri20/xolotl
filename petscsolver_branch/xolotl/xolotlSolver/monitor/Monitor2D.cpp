@@ -52,7 +52,7 @@ std::vector<double> nInterstitial2D;
  * HDF5 is handling the parallel part, so no call to MPI here.
  */
 PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
-		void *ictx) {
+		void *) {
 	PetscErrorCode ierr;
 	const double ***solutionArray, *gridPointSolution;
 	int xs, xm, Mx, ys, ym, My;
@@ -109,7 +109,7 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 	ierr = TSGetTimeStep(ts, &currentTimeStep);CHKERRQ(ierr);
 
 	// Add a concentration sub group
-	xolotlCore::HDF5Utils::addConcentrationSubGroup(timestep, networkSize, time,
+	xolotlCore::HDF5Utils::addConcentrationSubGroup(timestep, time,
 			currentTimeStep);
 
 	// Write the surface positions in the concentration sub group
@@ -190,8 +190,8 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 /**
  * This is a monitoring method that will compute the total helium fluence
  */
-PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time,
-		Vec solution, void *ictx) {
+PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt, PetscReal time,
+		Vec solution, void *) {
 	PetscErrorCode ierr;
 	int xs, xm, ys, ym;
 
@@ -230,7 +230,7 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt timestep, PetscReal time
 			gridPointSolution = solutionArray[j][i];
 
 			// Loop on all the indices
-			for (int l = 0; l < heIndices2D.size(); l++) {
+			for (unsigned int l = 0; l < heIndices2D.size(); l++) {
 				// Add the current concentration times the number of helium in the cluster
 				// (from the weight vector)
 				heConcentration += gridPointSolution[heIndices2D[l]] * heWeights2D[l]
@@ -412,11 +412,11 @@ PetscErrorCode computeHeliumConc2D(TS ts, PetscInt timestep, PetscReal time,
  * a specific cluster at each grid point.
  */
 PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
-		Vec solution, void *ictx) {
+		Vec solution, void *) {
 	PetscErrorCode ierr;
 	const double ***solutionArray, *gridPointSolution;
 	int xs, xm, Mx, ys, ym, My;
-	double x, y;
+	double x = 0.0, y = 0.0;
 
 	PetscFunctionBeginUser;
 
@@ -832,7 +832,7 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		auto heVClusters = network->getAll(heVType);
 
 		// Loop on the helium clusters
-		for (int i = 0; i < heClusters.size(); i++) {
+		for (unsigned int i = 0; i < heClusters.size(); i++) {
 			auto cluster = (PSICluster *) heClusters[i];
 			int id = cluster->getId() - 1;
 			// Add the Id to the vector
@@ -842,7 +842,7 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		}
 
 		// Loop on the helium-vacancy clusters
-		for (int i = 0; i < heVClusters.size(); i++) {
+		for (unsigned int i = 0; i < heVClusters.size(); i++) {
 			auto cluster = (PSICluster *) heVClusters[i];
 			int id = cluster->getId() - 1;
 			// Add the Id to the vector

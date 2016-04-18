@@ -67,7 +67,7 @@ void VCluster::createReactionConnectivity() {
 	// Get all the I clusters from the network
 	reactants = network->getAll(iType);
 	// fillVWithI handles this reaction
-	fillVWithI(iType, reactants);
+	fillVWithI(reactants);
 
 	// Vacancy-Interstitial annihilation producing this cluster
 	// I_b + V_(a+b) --> V_a
@@ -98,7 +98,7 @@ void VCluster::createReactionConnectivity() {
 	// Get all the HeI clusters from the network
 	reactants = network->getAll(heIType);
 	// replaceInCompound handles this reaction
-	replaceInCompound(reactants, iType, vType);
+	replaceInCompound(reactants, iType);
 
 	return;
 }
@@ -110,6 +110,17 @@ void VCluster::createDissociationConnectivity() {
 
 	// This cluster is always V_a
 
+	// He Dissociation
+	// (He_1)(V_a) --> V_a + He
+	// Get the cluster with one more helium
+	std::vector<int> compositionVec = { 1, size, 0 };
+	auto heVClusterMoreHe = (PSICluster *) network->getCompound(heVType, compositionVec);
+	// Get the single helium cluster
+	auto singleCluster = (PSICluster *) network->get(heType, 1);
+	// Here it is important that heVClusterMoreHe is the first cluster
+	// because it is the dissociating one.
+	dissociateCluster(heVClusterMoreHe, singleCluster);
+
 	// Specific case for the single species cluster
 	if (size == 1) {
 		// V dissociation of HeV cluster is handled here
@@ -117,7 +128,7 @@ void VCluster::createDissociationConnectivity() {
 		// for a = 1
 		// Get all the HeV clusters of the network
 		auto allHeVReactants = network->getAll(heVType);
-		for (int i = 0; i < allHeVReactants.size(); i++) {
+		for (unsigned int i = 0; i < allHeVReactants.size(); i++) {
 			auto cluster = (PSICluster *) allHeVReactants[i];
 
 			// (He_c)(V_b) is the dissociating one, (He_c)[V_(b-a)] is the one

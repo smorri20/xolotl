@@ -46,7 +46,7 @@ public class ClusterTest {
 		// network!
 
 		// Modify the migration energy and diffusion factor and check that this
-		// does not interfere with the other properties. 
+		// does not interfere with the other properties.
 		cluster.E_f = Double.POSITIVE_INFINITY;
 		cluster.E_m = 0.13;
 		cluster.D_0 = 2.9e-8;

@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(checkBubbleBursting) {
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[34], 0.0, 0.01); // Does not burst (He10V2)
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[94], -1.0888e22, 0.01); // (He15V5)
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[97], -1.0904e22, 0.01); // (He18V5)
-	BOOST_REQUIRE_CLOSE(updatedConcOffset[261], 5.9512e23, 0.01); // (V10)
+	BOOST_REQUIRE_CLOSE(updatedConcOffset[261], 2.5159e23, 0.01); // (V10)
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[306], -1.2007e22, 0.01); // (He45V10)
 
 	// Initialize the indices and values to set in the Jacobian
@@ -99,9 +99,9 @@ BOOST_AUTO_TEST_CASE(checkBubbleBursting) {
 			indicesPointer, 2);
 
 	// Check the values for the indices
-	BOOST_REQUIRE_EQUAL(indices[0], 40);
+	BOOST_REQUIRE_EQUAL(indices[0], 48);
 	BOOST_REQUIRE_EQUAL(indices[1], 39);
-	BOOST_REQUIRE_EQUAL(indices[2], 41);
+	BOOST_REQUIRE_EQUAL(indices[2], 49);
 	BOOST_REQUIRE_EQUAL(indices[3], 39);
 
 	// Check values

@@ -6,8 +6,8 @@
 
 namespace xolotlSolver {
 
-void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int ny,
-		double hy, int nz, double hz) {
+void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int,
+		double, int, double) {
 	PetscErrorCode ierr;
 
 	// Set the last temperature to 0
@@ -189,7 +189,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) {
 			if (i >= xs && i < xs + xm) {
 				concOffset = concentrations[i];
 				// Loop on the concVector size
-				for (int l = 0; l < concVector.size(); l++) {
+				for (unsigned int l = 0; l < concVector.size(); l++) {
 					concOffset[(int) concVector.at(l).at(0)] =
 							concVector.at(l).at(1);
 				}
@@ -260,6 +260,9 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 		// Loop over grid points
 		for (int xi = xs; xi < xs + xm; xi++) {
+			// Boundary conditions
+			if (xi <= surfacePosition || xi == xSize - 1) continue;
+
 			// We are only interested in the helium near the surface
 			if (grid[xi] - grid[surfacePosition] > 2.0) continue;
 
@@ -380,6 +383,9 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	ierr = DMRestoreLocalVector(da, &localC);
 	checkPetscError(ierr, "PetscSolver1DHandler::updateConcentration: "
 			"DMRestoreLocalVector failed.");
+
+	// Clear memory
+	delete [] concVector;
 
 	return;
 }
@@ -549,6 +555,9 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 
 		// Loop over grid points
 		for (int xi = xs; xi < xs + xm; xi++) {
+			// Boundary conditions
+			if (xi <= surfacePosition || xi == xSize - 1) continue;
+
 			// We are only interested in the helium near the surface
 			if (grid[xi] - grid[surfacePosition] > 2.0) continue;
 

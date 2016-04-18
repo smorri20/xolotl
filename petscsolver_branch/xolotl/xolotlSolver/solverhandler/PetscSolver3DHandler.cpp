@@ -224,7 +224,7 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) {
 							&& k >= zs && k < zs + zm) {
 						concOffset = concentrations[k][j][i];
 						// Loop on the concVector size
-						for (int l = 0; l < concVector.size(); l++) {
+						for (unsigned int l = 0; l < concVector.size(); l++) {
 							concOffset[(int) concVector.at(l).at(0)] =
 									concVector.at(l).at(1);
 						}
@@ -294,7 +294,6 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 	// Declarations for variables used in the loop
 	double flux;
-	auto heCluster = (xolotlCore::PSICluster *) network->get(xolotlCore::heType, 1);
 	int fluxIndex = fluxHandler->getIncidentFluxClusterIndex(), reactantIndex;
 	xolotlCore::PSICluster *cluster = NULL;
 	double **concVector = new double*[7];
@@ -458,6 +457,9 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	ierr = DMRestoreLocalVector(da, &localC);
 	checkPetscError(ierr, "PetscSolver3DHandler::updateConcentration: "
 			"DMRestoreLocalVector failed.");
+
+	// Clear memory
+	delete [] concVector;
 
 	return;
 }

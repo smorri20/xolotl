@@ -67,6 +67,9 @@ void BubbleBurstingHandler::initializeIndex(int surfacePos, PSIClusterReactionNe
 			// Get the bubble and its radius
 			auto bubble = (PSICluster *) bubbles[j];
 			double radius = bubble->getReactionRadius();
+			auto comp = bubble->getComposition();
+
+			if (comp[heType] < comp[vType] * 3) continue;
 
 			// If the radius is bigger than the distance to the surface there is bursting
 			if (radius > depth) {

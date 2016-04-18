@@ -32,7 +32,7 @@ void FluxHandler::initializeFluxHandler(PSIClusterReactionNetwork *network,
 		double x = xGrid[i] - xGrid[surfacePos];
 
 		// Add the the value of the function times the step size
-		normFactor += fitFunction(x) * (xGrid[i] - xGrid[i-1]);
+		normFactor += FitFunction(x) * (xGrid[i] - xGrid[i-1]);
 	}
 
 	// Factor the incident flux will be multiplied by to get
@@ -50,7 +50,7 @@ void FluxHandler::initializeFluxHandler(PSIClusterReactionNetwork *network,
 		auto x = xGrid[i] - xGrid[surfacePos];
 
 		// Compute the flux value
-		double incidentFlux = fluxNormalized * fitFunction(x);
+		double incidentFlux = fluxNormalized * FitFunction(x);
 		// Add it to the vector
 		incidentFluxVec.push_back(incidentFlux);
 	}
@@ -81,7 +81,7 @@ void FluxHandler::recomputeFluxHandler(int surfacePos) {
 		auto x = xGrid[i] - xGrid[surfacePos];
 
 		// Compute the flux value
-		double incidentFlux = fluxNormalized * fitFunction(x);
+		double incidentFlux = fluxNormalized * FitFunction(x);
 		// Add it to the vector
 		incidentFluxVec[i - surfacePos] = incidentFlux;
 	}
@@ -124,7 +124,7 @@ double FluxHandler::getProfileAmplitude(double currentTime) const {
 
 	// Else loop to determine the interval the time falls in
 	// i.e. time[k] < time < time[k + 1]
-	for (int k = 0; k < time.size() - 1; k++) {
+	for (unsigned int k = 0; k < time.size() - 1; k++) {
 		if (currentTime < time[k]) continue;
 		if (currentTime > time[k + 1]) continue;
 

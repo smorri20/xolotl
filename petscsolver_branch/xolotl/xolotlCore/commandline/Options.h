@@ -10,7 +10,7 @@ namespace xolotlCore {
  * Options realizes the IOptions interface.
  * All private members will be accessed through getters and setters.
  */
-class Options : public IOptions {
+class Options: public IOptions {
 
 protected:
 	/**
@@ -63,7 +63,7 @@ protected:
 	 * Name of the input temperature profile file.
 	 */
 	std::string tempProfileFilename;
-	
+
 	/**
 	 * Use the flux amplitude option?
 	 */
@@ -134,296 +134,385 @@ public:
 	/**
 	 * The constructor.
 	 */
-    Options();
+	Options();
 
 	/**
 	 * The destructor.
 	 */
-    ~Options();
+	~Options();
 
-    /**
-     * Read the parameters from the given file to set the different
-     * xolotl options.
-     * \see IOptions.h
-     */
-    void readParams(int argc, char* argv[]);
+	/**
+	 * Read the parameters from the given file to set the different
+	 * xolotl options.
+	 * \see IOptions.h
+	 */
+	void readParams(char* argv[]);
 
-    /**
-     * Show our help message.
-     * \see IOptions.h
-     */
-    void showHelp(std::ostream& os) const;
+	/**
+	 * Show our help message.
+	 * \see IOptions.h
+	 */
+	void showHelp(std::ostream& os) const;
 
-    /**
-     * Should the program run after parsing the parameter file?
-     * \see IOptions.h
-     */
-    bool shouldRun() const {return shouldRunFlag;}
+	/**
+	 * Should the program run after parsing the parameter file?
+	 * \see IOptions.h
+	 */
+	bool shouldRun() const {
+		return shouldRunFlag;
+	}
 
-    /**
-     * Set the shouldRunFlag.
-     * \see IOptions.h
-     */
-    void setShouldRunFlag(bool flag) {shouldRunFlag = flag;}
+	/**
+	 * Set the shouldRunFlag.
+	 * \see IOptions.h
+	 */
+	void setShouldRunFlag(bool flag) {
+		shouldRunFlag = flag;
+	}
 
-    /**
-     * If program shouldn't run, what should its exit code be?
-     * \see IOptions.h
-     */
-    int getExitCode() const {return exitCode;}
+	/**
+	 * If program shouldn't run, what should its exit code be?
+	 * \see IOptions.h
+	 */
+	int getExitCode() const {
+		return exitCode;
+	}
 
-    /**
-     * Set the value for the exit code.
-     * \see IOptions.h
-     */
-    void setExitCode(int code) {exitCode = code;}
+	/**
+	 * Set the value for the exit code.
+	 * \see IOptions.h
+	 */
+	void setExitCode(int code) {
+		exitCode = code;
+	}
 
-    /**
-     * Get the name of the network file.
-     * \see IOptions.h
-     */
-    std::string getNetworkFilename() const {return networkFilename;}
+	/**
+	 * Get the name of the network file.
+	 * \see IOptions.h
+	 */
+	std::string getNetworkFilename() const {
+		return networkFilename;
+	}
 
-    /**
-     * Set the name of the network file.
-     * \see IOptions.h
-     */
-    void setNetworkFilename(const std::string& name) {networkFilename = name;}
+	/**
+	 * Set the name of the network file.
+	 * \see IOptions.h
+	 */
+	void setNetworkFilename(const std::string& name) {
+		networkFilename = name;
+	}
 
-    /**
-     * Get the Argc for PETSc.
-     * \see IOptions.h
-     */
-    int getPetscArgc() const {return petscArgc;}
+	/**
+	 * Get the Argc for PETSc.
+	 * \see IOptions.h
+	 */
+	int getPetscArgc() const {
+		return petscArgc;
+	}
 
-    /**
-     * Set the Argc for PETSc.
-     * \see IOptions.h
-     */
-    void setPetscArgc(int argc) {petscArgc = argc;}
+	/**
+	 * Set the Argc for PETSc.
+	 * \see IOptions.h
+	 */
+	void setPetscArgc(int argc) {
+		petscArgc = argc;
+	}
 
-    /**
-     * Get the Argv for PETSc.
-     * \see IOptions.h
-     */
-    char** getPetscArgv() const {return petscArgv;}
+	/**
+	 * Get the Argv for PETSc.
+	 * \see IOptions.h
+	 */
+	char** getPetscArgv() const {
+		return petscArgv;
+	}
 
-    /**
-     * Set the Argv for PETSc.
-     * \see IOptions.h
-     */
-    void setPetscArgv(char** argv) {petscArgv = argv;}
+	/**
+	 * Set the Argv for PETSc.
+	 * \see IOptions.h
+	 */
+	void setPetscArgv(char** argv) {
+		petscArgv = argv;
+	}
 
-    /**
-     * Should we use const temperature handlers?
-     * \see IOptions.h
-     */
-    bool useConstTemperatureHandlers() const {return constTempFlag;}
+	/**
+	 * Should we use const temperature handlers?
+	 * \see IOptions.h
+	 */
+	bool useConstTemperatureHandlers() const {
+		return constTempFlag;
+	}
 
-    /**
-     * Set the constTempFlag.
-     * \see IOptions.h
-     */
-    void setConstTempFlag(bool flag) {constTempFlag = flag;}
+	/**
+	 * Set the constTempFlag.
+	 * \see IOptions.h
+	 */
+	void setConstTempFlag(bool flag) {
+		constTempFlag = flag;
+	}
 
-    /**
-     * Obtain the value of the constant temperature to be used.
-     * \see IOptions.h
-     */
-    double getConstTemperature() const {return constTemperature;}
+	/**
+	 * Obtain the value of the constant temperature to be used.
+	 * \see IOptions.h
+	 */
+	double getConstTemperature() const {
+		return constTemperature;
+	}
 
-    /**
-     * Set the constant temperature.
-     * \see IOptions.h
-     */
-    void setConstTemperature(double temp) {constTemperature = temp;}
+	/**
+	 * Set the constant temperature.
+	 * \see IOptions.h
+	 */
+	void setConstTemperature(double temp) {
+		constTemperature = temp;
+	}
 
-    /**
-     * Should we use temperature profile handlers?
-     * \see IOptions.h
-     */
-    bool useTemperatureProfileHandlers() const {return tempProfileFlag;}
+	/**
+	 * Should we use temperature profile handlers?
+	 * \see IOptions.h
+	 */
+	bool useTemperatureProfileHandlers() const {
+		return tempProfileFlag;
+	}
 
-    /**
-     * Set the tempProfileFlag.
-     * \see IOptions.h
-     */
-    void setTempProfileFlag(bool flag) {tempProfileFlag = flag;}
+	/**
+	 * Set the tempProfileFlag.
+	 * \see IOptions.h
+	 */
+	void setTempProfileFlag(bool flag) {
+		tempProfileFlag = flag;
+	}
 
-    /**
-     * Obtain the name of the file containing the temperature profile data.
-     * \see IOptions.h
-     */
-    std::string getTempProfileFilename() const {return tempProfileFilename;}
+	/**
+	 * Obtain the name of the file containing the temperature profile data.
+	 * \see IOptions.h
+	 */
+	std::string getTempProfileFilename() const {
+		return tempProfileFilename;
+	}
 
-    /**
-     * Set the name of the profile file to use.
-     * \see IOptions.h
-     */
-    void setTempProfileFilename(const std::string& name) {tempProfileFilename = name;}
+	/**
+	 * Set the name of the profile file to use.
+	 * \see IOptions.h
+	 */
+	void setTempProfileFilename(const std::string& name) {
+		tempProfileFilename = name;
+	}
 
-    /**
-     * Should we use the flux option?
-     * \see IOptions.h
-     */
-    bool useFluxAmplitude() const {return fluxFlag;};
+	/**
+	 * Should we use the flux option?
+	 * \see IOptions.h
+	 */
+	bool useFluxAmplitude() const {
+		return fluxFlag;
+	}
+	;
 
-    /**
-     * Set the fluxFlag.
-     * \see IOptions.h
-     */
-    void setFluxFlag(bool flag) {fluxFlag = flag;}
+	/**
+	 * Set the fluxFlag.
+	 * \see IOptions.h
+	 */
+	void setFluxFlag(bool flag) {
+		fluxFlag = flag;
+	}
 
-    /**
-     * Obtain the value of the flux intensity to be used.
-     * \see IOptions.h
-     */
-    double getFluxAmplitude() const {return fluxAmplitude;}
+	/**
+	 * Obtain the value of the flux intensity to be used.
+	 * \see IOptions.h
+	 */
+	double getFluxAmplitude() const {
+		return fluxAmplitude;
+	}
 
-    /**
-     * Set the value for the flux intensity to use.
-     * \see IOptions.h
-     */
-    void setFluxAmplitude(double flux) {fluxAmplitude = flux;}
+	/**
+	 * Set the value for the flux intensity to use.
+	 * \see IOptions.h
+	 */
+	void setFluxAmplitude(double flux) {
+		fluxAmplitude = flux;
+	}
 
-    /**
-     * Should we use a time profile for the flux?
-     * \see IOptions.h
-     */
-    bool useFluxTimeProfile() const {return fluxProfileFlag;}
+	/**
+	 * Should we use a time profile for the flux?
+	 * \see IOptions.h
+	 */
+	bool useFluxTimeProfile() const {
+		return fluxProfileFlag;
+	}
 
-    /**
-     * Set the fluxProfileFlag.
-     * \see IOptions.h
-     */
-    void setFluxProfileFlag(bool flag) {fluxProfileFlag = flag;}
+	/**
+	 * Set the fluxProfileFlag.
+	 * \see IOptions.h
+	 */
+	void setFluxProfileFlag(bool flag) {
+		fluxProfileFlag = flag;
+	}
 
-    /**
-     * Obtain the name of the file containing the time profile data for the
-     * flux.
-     * \see IOptions.h
-     */
-    std::string getFluxProfileName() const {return fluxProfileFilename;}
+	/**
+	 * Obtain the name of the file containing the time profile data for the
+	 * flux.
+	 * \see IOptions.h
+	 */
+	std::string getFluxProfileName() const {
+		return fluxProfileFilename;
+	}
 
-    /**
-     * Set the name of the time profile file to use.
-     * \see IOptions.h
-     */
-    void setFluxProfileName(const std::string& name) {fluxProfileFilename = name;}
+	/**
+	 * Set the name of the time profile file to use.
+	 * \see IOptions.h
+	 */
+	void setFluxProfileName(const std::string& name) {
+		fluxProfileFilename = name;
+	}
 
-    /**
-     * Which type of performance handlers should we use?
-     * \see IOptions.h
-     */
-    xolotlPerf::IHandlerRegistry::RegistryType getPerfHandlerType(void) const { return perfRegistryType; }
+	/**
+	 * Which type of performance handlers should we use?
+	 * \see IOptions.h
+	 */
+	xolotlPerf::IHandlerRegistry::RegistryType getPerfHandlerType(void) const {
+		return perfRegistryType;
+	}
 
-    /**
-     * Set the type of performance handlers to use.
-     * \see IOptions.h
-     */
-    void setPerfHandlerType(xolotlPerf::IHandlerRegistry::RegistryType rtype) { perfRegistryType = rtype; }
+	/**
+	 * Set the type of performance handlers to use.
+	 * \see IOptions.h
+	 */
+	void setPerfHandlerType(xolotlPerf::IHandlerRegistry::RegistryType rtype) {
+		perfRegistryType = rtype;
+	}
 
-    /**
-     * Should we use the "standard" set of handlers for the visualization?
-     * If false, use dummy (stub) handlers.
-     * \see IOptions.h
-     */
-    bool useVizStandardHandlers() const {return vizStandardHandlersFlag;}
+	/**
+	 * Should we use the "standard" set of handlers for the visualization?
+	 * If false, use dummy (stub) handlers.
+	 * \see IOptions.h
+	 */
+	bool useVizStandardHandlers() const {
+		return vizStandardHandlersFlag;
+	}
 
-    /**
-     * Set the vizStandardHandlersFlag.
-     * \see IOptions.h
-     */
-    void setVizStandardHandlers(bool flag) {vizStandardHandlersFlag = flag;}
+	/**
+	 * Set the vizStandardHandlersFlag.
+	 * \see IOptions.h
+	 */
+	void setVizStandardHandlers(bool flag) {
+		vizStandardHandlersFlag = flag;
+	}
 
-    /**
-     * Obtain the name of the material to be used for simulation.
-     * \see IOptions.h
-     */
-    std::string getMaterial() const {return materialName;}
+	/**
+	 * Obtain the name of the material to be used for simulation.
+	 * \see IOptions.h
+	 */
+	std::string getMaterial() const {
+		return materialName;
+	}
 
-    /**
-     * Set the name of the material to be used for the simulation.
-     * \see IOptions.h
-     */
-    void setMaterial(const std::string& material) {materialName = material;}
+	/**
+	 * Set the name of the material to be used for the simulation.
+	 * \see IOptions.h
+	 */
+	void setMaterial(const std::string& material) {
+		materialName = material;
+	}
 
+	/**
+	 * Obtain the value of the concentration for the vacancies.
+	 * \see IOptions.h
+	 */
+	double getInitialVConcentration() const {
+		return initialVConcentration;
+	}
 
-    /**
-     * Obtain the value of the concentration for the vacancies.
-     * \see IOptions.h
-     */
-    double getInitialVConcentration() const {return initialVConcentration;}
+	/**
+	 * Set the value of the concentration for the vacancies.
+	 * \see IOptions.h
+	 */
+	void setInitialVConcentration(double conc) {
+		initialVConcentration = conc;
+	}
 
-    /**
-     * Set the value of the concentration for the vacancies.
-     * \see IOptions.h
-     */
-    void setInitialVConcentration(double conc) {initialVConcentration = conc;}
+	/**
+	 * Obtain the number of dimensions for the simulation.
+	 * \see IOptions.h
+	 */
+	int getDimensionNumber() const {
+		return dimensionNumber;
+	}
 
-    /**
-     * Obtain the number of dimensions for the simulation.
-     * \see IOptions.h
-     */
-    int getDimensionNumber() const {return dimensionNumber;}
+	/**
+	 * Set the number of dimensions for the simulation.
+	 * \see IOptions.h
+	 */
+	void setDimensionNumber(int number) {
+		dimensionNumber = number;
+	}
 
-    /**
-     * Set the number of dimensions for the simulation.
-     * \see IOptions.h
-     */
-    void setDimensionNumber(int number) {dimensionNumber = number;}
+	/**
+	 * Obtain the value of the void portion for the simulation.
+	 * \see IOptions.h
+	 */
+	double getVoidPortion() const {
+		return voidPortion;
+	}
 
-    /**
-     * Obtain the value of the void portion for the simulation.
-     * \see IOptions.h
-     */
-    double getVoidPortion() const {return voidPortion;}
+	/**
+	 * Set the value of the void portion for the surface to grow.
+	 * \see IOptions.h
+	 */
+	void setVoidPortion(double portion) {
+		voidPortion = portion;
+	}
 
-    /**
-     * Set the value of the void portion for the surface to grow.
-     * \see IOptions.h
-     */
-    void setVoidPortion(double portion) {voidPortion = portion;}
+	/**
+	 * Should we use a regular grid on the x direction?
+	 * \see IOptions.h
+	 */
+	bool useRegularXGrid() const {
+		return useRegularGridFlag;
+	}
 
-    /**
-     * Should we use a regular grid on the x direction?
-     * \see IOptions.h
-     */
-    bool useRegularXGrid() const {return useRegularGridFlag;}
+	/**
+	 * Set the useRegularGridFlag.
+	 * \see IOptions.h
+	 */
+	void setRegularXGrid(bool flag) {
+		useRegularGridFlag = flag;
+	}
 
-    /**
-     * Set the useRegularGridFlag.
-     * \see IOptions.h
-     */
-    void setRegularXGrid(bool flag) {useRegularGridFlag = flag;}
+	/**
+	 * Obtain the physical process map.
+	 *
+	 * @return The map
+	 */
+	std::map<std::string, bool> getProcesses() const {
+		return processMap;
+	}
 
-    /**
-     * Obtain the physical process map.
-     *
-     * @return The map
-     */
-    std::map<std::string, bool> getProcesses() const {return processMap;}
+	/**
+	 * Set the physical process map.
+	 *
+	 * @param map The map
+	 */
+	void setProcesses(std::map<std::string, bool> map) {
+		processMap = map;
+	}
 
-    /**
-     * Set the physical process map.
-     *
-     * @param map The map
-     */
-    void setProcesses(std::map<std::string, bool> map) {processMap = map;}
+	/**
+	 * Obtain the string listing the wanted GB.
+	 * \see IOptions.h
+	 */
+	std::string getGbString() const {
+		return gbList;
+	}
 
-    /**
-     * Obtain the string listing the wanted GB.
-     * \see IOptions.h
-     */
-    std::string getGbString() const {return gbList;}
+	/**
+	 * Set the string listing the wanted GB.
+	 * \see IOptions.h
+	 */
+	void setGbString(const std::string& gbString) {
+		gbList = gbString;
+	}
 
-    /**
-     * Set the string listing the wanted GB.
-     * \see IOptions.h
-     */
-    void setGbString(const std::string& gbString) {gbList = gbString;}
-
-};//end class Options
+};
+//end class Options
 
 } /* namespace xolotlCore */
 
