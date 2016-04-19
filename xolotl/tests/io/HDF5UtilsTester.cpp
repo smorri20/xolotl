@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(checkIO) {
 	HDF5Utils::openFile("test.h5");
 
 	// Add the concentration sub group
-	HDF5Utils::addConcentrationSubGroup(timeStep, networkSize, currentTime, currentTimeStep);
+	HDF5Utils::addConcentrationSubGroup(timeStep, currentTime, currentTimeStep);
 
 	// Write the surface position
 	HDF5Utils::writeSurface1D(timeStep, iSurface);
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(checkIO) {
 		// Check the size of the vector
 		BOOST_REQUIRE_EQUAL(returnedVector.size(), concVector.size());
 		// Check the values
-		for (int i = 0; i < returnedVector.size(); i++) {
+		for (unsigned int i = 0; i < returnedVector.size(); i++) {
 			BOOST_REQUIRE_CLOSE(returnedVector.at(i).at(0), concVector.at(i).at(0), 0.0001);
 			BOOST_REQUIRE_CLOSE(returnedVector.at(i).at(1), concVector.at(i).at(1), 0.0001);
 		}
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(checkSurface2D) {
 	int timeStep = 0;
 
 	// Add the concentration sub group
-	HDF5Utils::addConcentrationSubGroup(timeStep, networkSize, currentTime, currentTimeStep);
+	HDF5Utils::addConcentrationSubGroup(timeStep, currentTime, currentTimeStep);
 
 	// Set the surface information in 2D
 	std::vector<int> iSurface = {2, 3, 2, 0, 5};
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(checkSurface3D) {
 	int timeStep = 0;
 
 	// Add the concentration sub group
-	HDF5Utils::addConcentrationSubGroup(timeStep, networkSize, currentTime, currentTimeStep);
+	HDF5Utils::addConcentrationSubGroup(timeStep, currentTime, currentTimeStep);
 
 	// Set the surface information in 2D
 	std::vector< std::vector<int> > iSurface = {{2, 4, 1, 0, 5}, {2, 3, 2, 0, 5}, {6, 1, 2, 3, 2}};

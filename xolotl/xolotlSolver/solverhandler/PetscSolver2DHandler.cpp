@@ -8,7 +8,7 @@
 namespace xolotlSolver {
 
 void PetscSolver2DHandler::createSolverContext(DM &da, int nx, double hx, int ny,
-		double hy, int nz, double hz) {
+		double hy, int, double) {
 	PetscErrorCode ierr;
 
 	// Initialize the all reactants pointer
@@ -225,7 +225,7 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) {
 				if (i >= xs && i < xs + xm && j >= ys && j < ys + ym) {
 					concOffset = concentrations[j][i];
 					// Loop on the concVector size
-					for (int l = 0; l < concVector.size(); l++) {
+					for (unsigned int l = 0; l < concVector.size(); l++) {
 						concOffset[(int) concVector.at(l).at(0)] =
 								concVector.at(l).at(1);
 					}
@@ -321,7 +321,7 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		heConc = 0.0;
 
 		// Loop over grid points
-		for (int xi = 0; xi < Mx; xi++) {
+		for (int xi = surfacePosition[yj] + 1; xi < Mx; xi++) {
 			// We are only interested in the helium near the surface
 			if (grid[xi] - grid[surfacePosition[yj]] > 2.0) continue;
 
@@ -476,7 +476,7 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	checkPetscError(ierr, "PetscSolver2DHandler::updateConcentration: "
 			"DMRestoreLocalVector failed.");
 
-	// Clear the memory
+	// Clear memory
 	delete [] concVector;
 
 	return;
@@ -696,7 +696,7 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 		heConc = 0.0;
 
 		// Loop over grid points
-		for (int xi = 0; xi < Mx; xi++) {
+		for (int xi = surfacePosition[yj] + 1; xi < Mx; xi++) {
 			// We are only interested in the helium near the surface
 			if (grid[xi] - grid[surfacePosition[yj]] > 2.0) continue;
 

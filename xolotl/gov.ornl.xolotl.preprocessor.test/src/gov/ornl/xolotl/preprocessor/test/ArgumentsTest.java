@@ -26,13 +26,13 @@ public class ArgumentsTest {
 		try {
 			// Parse the empty string of arguments
 			args = CliFactory.parseArguments(Arguments.class, new String[] {});
-			
+
 			// Check that the default maximum Helium cluster size is 8
 			assertEquals(8, args.getMaxHeSize());
-			
+
 			// Check that the default maximum vacancy cluster size is 29
 			assertEquals(29, args.getMaxVSize());
-			
+
 			// Check that the default maximum interstitial cluster size is 6
 			assertEquals(6, args.getMaxISize());
 
@@ -52,8 +52,7 @@ public class ArgumentsTest {
 			assertEquals("-ts_final_time 1.0 -ts_dt 1.0e-12 "
 					+ "-ts_max_steps 100 -ts_adapt_dt_max 1.0e-6 -ts_max_snes_failures 200 "
 					+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type sor "
-					+ "-fieldsplit_1_pc_type redundant -ts_monitor",
-					args.getPetscArgs());
+					+ "-fieldsplit_1_pc_type redundant -ts_monitor", args.getPetscArgs());
 
 			// Check that the default networkFile is networkInit.h5
 			assertEquals("networkInit.h5", args.getNetworkFile());
@@ -109,19 +108,18 @@ public class ArgumentsTest {
 
 			// Check if there is a grain boundary argument
 			assertEquals(false, args.isGrain());
-		}
-		catch (ArgumentValidationException e) {
+		} catch (ArgumentValidationException e) {
 			// Complain and fail
 			e.printStackTrace();
 			fail();
-		} 
-		
+		}
+
 		return;
 	}
 
 	/**
 	 * This operation tests that default parameter values are only overridden if
-	 * they are specified via the command line and that the optional arguments 
+	 * they are specified via the command line and that the optional arguments
 	 * are only set if they are also specified
 	 */
 	@Test
@@ -131,23 +129,21 @@ public class ArgumentsTest {
 
 		try {
 			// Parse the specified string of arguments
-			args = CliFactory.parseArguments(Arguments.class, new String[] {
-				"--maxHeSize", "7", "--maxVSize", "30", "--maxISize", "5", "--phaseCut", 
-				"--startTemp", "900", "--perfHandler", "dummy", "--vizHandler", "std", 
-				"--petscArgs=-plot", "--networkFile", "net.h5",
-				"--dimensions", "2", "--nxGrid", "50", "--nyGrid", "10", "--nzGrid", "30", 
-				"--xStepSize", "0.2", "--yStepSize", "1.5", "--zStepSize", "10.0", 
-				"--material", "W111", "--process", "diff", "--tempFile", "temp.dat", 
-				"--flux", "5.0e5", "--fluxFile", "flux.dat", 
-				"--checkpoint", "xolotlStop.h5", "--initialV", "0.05", 
-				"--regularGrid", "yes", "--voidPortion", "60.0", "--grain=Y 3.0" });
-			
+			args = CliFactory.parseArguments(Arguments.class,
+					new String[] { "--maxHeSize", "7", "--maxVSize", "30", "--maxISize", "5", "--phaseCut",
+							"--startTemp", "900", "--perfHandler", "dummy", "--vizHandler", "std", "--petscArgs=-plot",
+							"--networkFile", "net.h5", "--dimensions", "2", "--nxGrid", "50", "--nyGrid", "10",
+							"--nzGrid", "30", "--xStepSize", "0.2", "--yStepSize", "1.5", "--zStepSize", "10.0",
+							"--material", "W111", "--process", "diff", "--tempFile", "temp.dat", "--flux", "5.0e5",
+							"--fluxFile", "flux.dat", "--checkpoint", "xolotlStop.h5", "--initialV", "0.05",
+							"--regularGrid", "yes", "--voidPortion", "60.0", "--grain=Y 3.0" });
+
 			// Check that the maximum Helium cluster size is 7
 			assertEquals(7, args.getMaxHeSize());
-			
+
 			// Check that the maximum vacancy cluster size is 30
 			assertEquals(30, args.getMaxVSize());
-			
+
 			// Check that the maximum interstitial cluster size is 5
 			assertEquals(5, args.getMaxISize());
 
@@ -168,16 +164,16 @@ public class ArgumentsTest {
 
 			// Check that the networkFile is net.h5
 			assertEquals("net.h5", args.getNetworkFile());
-			
+
 			// Check that the number of dimensions is 2
 			assertEquals("2", args.getDimensions());
-			
+
 			// Check that the number of grid points in the x direction is 50
 			assertEquals(50, args.getNxGrid());
-			
+
 			// Check that the number of grid points in the y direction is 10
 			assertEquals(10, args.getNyGrid());
-			
+
 			// Check that the number of grid points in the z direction is 30
 			assertEquals(30, args.getNzGrid());
 
@@ -189,10 +185,10 @@ public class ArgumentsTest {
 
 			// Check that the zStepSize was set to 10.0
 			assertEquals(10.0, args.getZStepSize(), 0.001);
-		
+
 			// Check that the material is W111
 			assertEquals("W111", args.getMaterial());
-		
+
 			// Check that the only physical process is diff
 			assertEquals("diff", args.getProcess());
 
@@ -210,13 +206,13 @@ public class ArgumentsTest {
 
 			// Check that the fluxFile argument is flux.dat
 			assertEquals("flux.dat", args.getFluxFile());
-		
+
 			// Check if there is a checkpoint argument
 			assertEquals(true, args.isCheckpoint());
 
 			// Check the name of the file for the checkpoint
 			assertEquals("xolotlStop.h5", args.getCheckpoint());
-			
+
 			// Check if there is an initial vacancy concentration argument
 			assertEquals(true, args.isInitialV());
 
@@ -237,13 +233,12 @@ public class ArgumentsTest {
 
 			// Check if there is a grain boundary argument
 			assertEquals(true, args.isGrain());
-		} 
-		catch (ArgumentValidationException e) {
+		} catch (ArgumentValidationException e) {
 			// Complain and fail
 			e.printStackTrace();
 			fail();
-		} 
-		
+		}
+
 		return;
 	}
 }

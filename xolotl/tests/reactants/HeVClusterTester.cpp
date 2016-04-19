@@ -23,13 +23,13 @@ using namespace std;
 using namespace xolotlCore;
 using namespace testUtils;
 
-static std::shared_ptr<xolotlPerf::IHandlerRegistry> registry = std::make_shared<xolotlPerf::DummyHandlerRegistry>();
+static std::shared_ptr<xolotlPerf::IHandlerRegistry> registry =
+		std::make_shared<xolotlPerf::DummyHandlerRegistry>();
 
 /**
  * This suite is responsible for testing the HeVCluster.
  */
-BOOST_AUTO_TEST_SUITE(HeVCluster_testSuite)
-
+BOOST_AUTO_TEST_SUITE (HeVCluster_testSuite)
 
 BOOST_AUTO_TEST_CASE(getSpeciesSize) {
 	HeVCluster cluster(4, 5, registry);
@@ -55,58 +55,43 @@ BOOST_AUTO_TEST_CASE(getSpeciesSize) {
 BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
 	auto props = network->getProperties();
-	
+
 	// Prevent dissociation from being added to the connectivity array
 	props["dissociationsEnabled"] = "false";
-	
+
 	// Check the reaction connectivity of the HeV cluster
 	// with 3He and 2V
 	// Get the connectivity array from the reactant
-	vector<int> composition = {3, 2, 0 };
+	vector<int> composition = { 3, 2, 0 };
 	auto reactant = (PSICluster *) network->getCompound("HeV", composition);
-	
+
 	// Check the type name
 	BOOST_REQUIRE_EQUAL("HeV",reactant->getType());
 	auto reactionConnectivity = reactant->getConnectivity();
-		
+
 	BOOST_REQUIRE_EQUAL(reactant->getComposition().at("He"), 3);
 	BOOST_REQUIRE_EQUAL(reactant->getComposition().at("V"), 2);
-		
+
 	// Check the connectivity for He, V, and I
 	int connectivityExpected[] = {
-		// He
-		1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
-			
-		// V
-		1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-			
-		// I
-		1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
-			
-		// HeV
-		0, 0, 1, 0, 0, 0, 0, 0, 0,
-		1, 1, 1, 1, 0, 0, 0, 0,
-		0, 0, 1, 0, 0, 0, 0,
-		0, 0, 1, 0, 0, 0,
-		0, 0, 1, 0, 0,
-		0, 0, 1, 0,
-		0, 0, 1,
-		0, 0,
-		0,
-			
-		// HeI
-		0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0,
-		0, 0, 0, 0,
-		0, 0, 0,
-		0, 0,
-		0
-	};
-		
-	for (int i = 0; i < reactionConnectivity.size(); i++) {
+			// He
+			1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
+
+			// V
+			1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+
+			// I
+			1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
+
+			// HeV
+			0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+			0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
+
+			// HeI
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+	for (unsigned int i = 0; i < reactionConnectivity.size(); i++) {
 		BOOST_REQUIRE_EQUAL(reactionConnectivity[i], connectivityExpected[i]);
 	}
 
@@ -121,9 +106,8 @@ BOOST_AUTO_TEST_CASE(checkTotalFlux) {
 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
 
 	// Get an HeV cluster with composition 2,1,0.
-	vector<int> composition = {2, 1, 0};
-	auto cluster = (PSICluster *) network->getCompound(
-			"HeV",composition);
+	vector<int> composition = { 2, 1, 0 };
+	auto cluster = (PSICluster *) network->getCompound("HeV", composition);
 	// Get one that it combines with (He)
 	auto secondCluster = (PSICluster *) network->get("He", 1);
 	// Set the diffusion factor and migration energy based on the
@@ -140,15 +124,15 @@ BOOST_AUTO_TEST_CASE(checkTotalFlux) {
 	secondCluster->setTemperature(1000.0);
 	secondCluster->setConcentration(0.5);
 
- 	// Compute the rate constants that are needed for the flux
- 	cluster->computeRateConstants();
+	// Compute the rate constants that are needed for the flux
+	cluster->computeRateConstants();
 	// The flux can pretty much be anything except "not a number" (nan).
 	double flux = cluster->getTotalFlux();
 	BOOST_TEST_MESSAGE("HeVClusterTester Message: \n" << "Total Flux is " << flux << "\n"
-			  << "   -Production Flux: " << cluster->getProductionFlux() << "\n"
-			  << "   -Combination Flux: " << cluster->getCombinationFlux() << "\n"
-			  << "   -Dissociation Flux: " << cluster->getDissociationFlux() << "\n"
-	  	  	  << "   -Emission Flux: " << cluster->getEmissionFlux() << "\n");
+			<< "   -Production Flux: " << cluster->getProductionFlux() << "\n"
+			<< "   -Combination Flux: " << cluster->getCombinationFlux() << "\n"
+			<< "   -Dissociation Flux: " << cluster->getDissociationFlux() << "\n"
+			<< "   -Emission Flux: " << cluster->getEmissionFlux() << "\n");
 
 	BOOST_REQUIRE_CLOSE(-1134677704810.4, flux, 0.1);
 
@@ -162,14 +146,13 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	// Local Declarations
 	// The vector of partial derivatives to compare with
 	double knownPartials[] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-			0.0, 0.0, 0.0, 0.0, 0.0};
+		0.0, 0.0, 0.0, 0.0, 0.0};
 	// Get the simple reaction network
 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork(3);
 
 	// Get an HeV cluster with composition 2,1,0.
-	vector<int> composition = {2, 1, 0};
-	auto cluster = (PSICluster *) network->getCompound(
-			"HeV",composition);
+	vector<int> composition = { 2, 1, 0 };
+	auto cluster = (PSICluster *) network->getCompound("HeV", composition);
 	// Set the diffusion factor and migration energy based on the
 	// values from the tungsten benchmark for this problem.
 	cluster->setDiffusionFactor(0.0);
@@ -183,10 +166,10 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	auto partials = cluster->getPartialDerivatives();
 
 	// Check the size of the partials
-	BOOST_REQUIRE_EQUAL(partials.size(), 15);
+	BOOST_REQUIRE_EQUAL(partials.size(), 15U);
 
 	// Check all the values
-	for (int i = 0; i < partials.size(); i++) {
+	for (unsigned int i = 0; i < partials.size(); i++) {
 		BOOST_REQUIRE_CLOSE(partials[i], knownPartials[i], 0.1);
 	}
 

@@ -161,7 +161,7 @@ public:
 	 * xolotl options.
 	 * \see IOptions.h
 	 */
-	void readParams(int argc, char* argv[]);
+	void readParams(char* argv[]);
 
 	/**
 	 * Show our help message.

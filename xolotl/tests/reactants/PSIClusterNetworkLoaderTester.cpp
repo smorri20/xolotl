@@ -17,7 +17,7 @@ using namespace xolotlCore;
  * creates a string stream that contains each of the available PSICluster types
  * and checks that the loader returns a list with each type in it.
  */
-BOOST_AUTO_TEST_SUITE(PSIClusterNetworkLoader_testSuite)
+BOOST_AUTO_TEST_SUITE (PSIClusterNetworkLoader_testSuite)
 
 /** This operation checks the loader. */
 BOOST_AUTO_TEST_CASE(checkLoading) {
@@ -25,22 +25,20 @@ BOOST_AUTO_TEST_CASE(checkLoading) {
 	shared_ptr<stringstream> networkStream(
 			new stringstream(stringstream::in | stringstream::out));
 	string singleHeString = "1 0 0 6.15 0.999 1.34\n";
-	string singleVString =
-			"0 50 0 3.6 0.888 2.345\n";
+	string singleVString = "0 50 0 3.6 0.888 2.345\n";
 	string singleIString = "0 0 1 5.0 0.7777 3.456\n";
-	string mixedString =
-			"1 50 0 2.49 6.789 4.5678\n";
+	string mixedString = "1 50 0 2.49 6.789 4.5678\n";
 	// This string is bad because it is one value short
 	string badString = "1 2 3\n";
 	bool caughtFlag = false;
-	PSIClusterNetworkLoader loader = PSIClusterNetworkLoader(std::make_shared<xolotlPerf::DummyHandlerRegistry>());
-	
-	
+	PSIClusterNetworkLoader loader = PSIClusterNetworkLoader(
+			std::make_shared<xolotlPerf::DummyHandlerRegistry>());
+
 	// Load the network stream. This simulates a file with single He, single
 	// V, single I and one mixed-species cluster. They are mixed up here to test
 	// the ability of the loader to order them.
 	*networkStream << singleVString << mixedString << singleHeString
-			<< singleIString;
+	<< singleIString;
 
 	// Diagnostic information
 	// @formatter:off
@@ -67,7 +65,7 @@ BOOST_AUTO_TEST_CASE(checkLoading) {
 	auto props = network->getProperties();
 	BOOST_TEST_MESSAGE("Number of properties = " << props.size());
 	BOOST_REQUIRE(!props.empty());
-	
+
 	// Print the properties list to debug
 	for (auto it = props.begin(); it != props.end(); ++it) {
 		printf("\"%s\" => \"%s\"\n", it->first.c_str(), it->second.c_str());
@@ -90,19 +88,19 @@ BOOST_AUTO_TEST_CASE(checkLoading) {
 	BOOST_REQUIRE(strtol(props["numIClusters"].c_str(),NULL,10) == 1);
 
 	// Check the reactants - He first
-	auto heCluster = (PSICluster *) network->get("He",1);
+	auto heCluster = (PSICluster *) network->get("He", 1);
 	BOOST_REQUIRE(heCluster->getSize() == 1);
 	double formationEnergy = heCluster->getFormationEnergy();
 	BOOST_REQUIRE_CLOSE(formationEnergy, 6.15, 0.001);
 	// V
-	auto vCluster = (PSICluster *) network->get("V",50);
+	auto vCluster = (PSICluster *) network->get("V", 50);
 	BOOST_REQUIRE(vCluster->getSize() == 50);
 	formationEnergy = vCluster->getFormationEnergy();
 	BOOST_REQUIRE_CLOSE(formationEnergy,3.6, 0.001);
 	BOOST_REQUIRE_CLOSE(vCluster->getMigrationEnergy(),0.888,0.001);
 	BOOST_REQUIRE_CLOSE(vCluster->getDiffusionFactor(),2.345,0.001);
 	// I
-	auto iCluster = (PSICluster *) network->get("I",1);
+	auto iCluster = (PSICluster *) network->get("I", 1);
 	BOOST_REQUIRE(iCluster->getSize() == 1);
 	formationEnergy = iCluster->getFormationEnergy();
 	BOOST_REQUIRE_CLOSE(formationEnergy,5.0, 0.001);
@@ -113,7 +111,7 @@ BOOST_AUTO_TEST_CASE(checkLoading) {
 	composition.push_back(1);
 	composition.push_back(50);
 	composition.push_back(0);
-	auto heVCluster = (PSICluster *) network->getCompound("HeV",composition);
+	auto heVCluster = (PSICluster *) network->getCompound("HeV", composition);
 	BOOST_REQUIRE(heVCluster->getSize() == 51);
 	formationEnergy = heVCluster->getFormationEnergy();
 	BOOST_REQUIRE_CLOSE(formationEnergy, 2.49, 0.001);
@@ -130,7 +128,7 @@ BOOST_AUTO_TEST_CASE(checkLoading) {
 		// Do nothing but flip the flag
 		caughtFlag = true;
 	}
-	BOOST_REQUIRE(caughtFlag);
+	BOOST_REQUIRE (caughtFlag);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

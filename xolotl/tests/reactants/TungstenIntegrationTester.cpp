@@ -33,13 +33,12 @@ BOOST_AUTO_TEST_CASE(checkGetReactantFluxesAndPartials) {
 			"TungstenIntegrationTester Message: Network filename is: " << networkFilename);
 
 	// Load the input file from the master task
-	shared_ptr<istream> networkStream = make_shared < ifstream
-			> (networkFilename);
+	shared_ptr<istream> networkStream = make_shared<ifstream>(networkFilename);
 
 	// Create a network loader and set the istream on every MPI task
-	shared_ptr<PSIClusterNetworkLoader> networkLoader = make_shared
-			< PSIClusterNetworkLoader
-			> (std::make_shared<xolotlPerf::DummyHandlerRegistry>());
+	shared_ptr<PSIClusterNetworkLoader> networkLoader = make_shared<
+			PSIClusterNetworkLoader>(
+			std::make_shared<xolotlPerf::DummyHandlerRegistry>());
 	networkLoader->setInputstream(networkStream);
 	// Load the network
 	shared_ptr<ReactionNetwork> network = networkLoader->load();
@@ -95,30 +94,29 @@ BOOST_AUTO_TEST_CASE(checkGetReactantFluxesAndPartials) {
 	return;
 }
 
- /**
-  * This operation checks the partial derivatives for the production
-  * He_1 + He_1 --> He_2
-  * and the dissociation
-  * He_2 --> He_1 + He_1
-  */
- BOOST_AUTO_TEST_CASE(checkSingleReaction) {
- 	// Local Declarations
- 	string sourceDir(XolotlSourceDirectory);
- 	// This file contains specific values to obtain round numbers for the partial derivatives
- 	string pathToFile("/tests/testfiles/single_reaction.txt");
- 	string networkFilename = sourceDir + pathToFile;
+/**
+ * This operation checks the partial derivatives for the production
+ * He_1 + He_1 --> He_2
+ * and the dissociation
+ * He_2 --> He_1 + He_1
+ */
+BOOST_AUTO_TEST_CASE(checkSingleReaction) {
+	// Local Declarations
+	string sourceDir(XolotlSourceDirectory);
+	// This file contains specific values to obtain round numbers for the partial derivatives
+	string pathToFile("/tests/testfiles/single_reaction.txt");
+	string networkFilename = sourceDir + pathToFile;
 
- 	BOOST_TEST_MESSAGE(
- 			"TungstenIntegrationTester Message: Network filename is: " << networkFilename);
+	BOOST_TEST_MESSAGE(
+			"TungstenIntegrationTester Message: Network filename is: " << networkFilename);
 
 	// Load the input file from the master task
-	shared_ptr<istream> networkStream = make_shared < ifstream
-			> (networkFilename);
+	shared_ptr<istream> networkStream = make_shared<ifstream>(networkFilename);
 
 	// Create a network loader and set the istream on every MPI task
-	shared_ptr<PSIClusterNetworkLoader> networkLoader = make_shared
-			< PSIClusterNetworkLoader
-			> (std::make_shared<xolotlPerf::DummyHandlerRegistry>());
+	shared_ptr<PSIClusterNetworkLoader> networkLoader = make_shared<
+			PSIClusterNetworkLoader>(
+			std::make_shared<xolotlPerf::DummyHandlerRegistry>());
 	networkLoader->setInputstream(networkStream);
 	// Load the network
 	shared_ptr<ReactionNetwork> network = networkLoader->load();

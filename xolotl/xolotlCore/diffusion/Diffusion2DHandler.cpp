@@ -70,7 +70,7 @@ void Diffusion2DHandler::initializeDiffusionGrid(std::vector<IAdvectionHandler *
 void Diffusion2DHandler::computeDiffusion(PSIClusterReactionNetwork *network,
 		double **concVector, double *updatedConcOffset,
 		double hxLeft, double hxRight, int ix,
-		double sy, int iy, double sz, int iz) {
+		double sy, int iy, double, int) {
 	// Get all the reactants
 	auto reactants = network->getAll();
 	// Get the number of diffusing clusters
@@ -106,7 +106,7 @@ void Diffusion2DHandler::computeDiffusion(PSIClusterReactionNetwork *network,
 void Diffusion2DHandler::computePartialsForDiffusion(
 		PSIClusterReactionNetwork *network,
 		double *val, int *indices, double hxLeft, double hxRight, int ix,
-		double sy, int iy, double sz, int iz) {
+		double sy, int iy, double, int) {
 	// Get all the reactant
 	auto reactants = network->getAll();
 	// Get the number of diffusing cluster

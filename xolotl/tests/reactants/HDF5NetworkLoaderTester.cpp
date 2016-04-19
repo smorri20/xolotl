@@ -16,7 +16,7 @@ using namespace xolotlCore;
 /**
  * This suite is responsible for testing the HDF5NetworkLoader.
  */
-BOOST_AUTO_TEST_SUITE(HDF5NetworkLoader_testSuite)
+BOOST_AUTO_TEST_SUITE (HDF5NetworkLoader_testSuite)
 
 /**
  * Method checking the loading of the network from the HDF5 file.
@@ -28,8 +28,8 @@ BOOST_AUTO_TEST_CASE(checkLoad) {
 	MPI_Init(&argc, &argv);
 
 	// Create the network loader
-	HDF5NetworkLoader loader =
-			HDF5NetworkLoader(make_shared<xolotlPerf::DummyHandlerRegistry>());
+	HDF5NetworkLoader loader = HDF5NetworkLoader(
+			make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Define the filename to load the network from
 	string sourceDir(XolotlSourceDirectory);
 	string pathToFile("/tests/testfiles/tungsten_diminutive.h5");
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(checkLoad) {
 BOOST_AUTO_TEST_CASE(checkGrouping) {
 	// Create the network loader
 	HDF5NetworkLoader loader =
-			HDF5NetworkLoader(make_shared<xolotlPerf::DummyHandlerRegistry>());
+	HDF5NetworkLoader(make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Define the filename to load the network from
 	string sourceDir(XolotlSourceDirectory);
 	string pathToFile("/tests/testfiles/tungsten_super.h5");

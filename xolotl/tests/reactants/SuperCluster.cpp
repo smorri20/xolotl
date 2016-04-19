@@ -17,13 +17,13 @@ using namespace std;
 using namespace xolotlCore;
 using namespace testUtils;
 
-static std::shared_ptr<xolotlPerf::IHandlerRegistry> registry = std::make_shared<xolotlPerf::DummyHandlerRegistry>();
+static std::shared_ptr<xolotlPerf::IHandlerRegistry> registry =
+		std::make_shared<xolotlPerf::DummyHandlerRegistry>();
 
 /**
  * This suite is responsible for testing the HeVCluster.
  */
-BOOST_AUTO_TEST_SUITE(SuperCluster_testSuite)
-
+BOOST_AUTO_TEST_SUITE (SuperCluster_testSuite)
 
 BOOST_AUTO_TEST_CASE(getSpeciesSize) {
 	SuperCluster cluster(4.5, 5.0, 2, 0.1, 200.0, registry);

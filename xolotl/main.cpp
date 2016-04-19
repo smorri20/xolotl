@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
 	argc -= 1; // one for the executable name
 	argv += 1; // one for the executable name
 	Options opts;
-	opts.readParams(argc, argv);
+	opts.readParams(argv);
 	if (!opts.shouldRun()) {
 		return opts.getExitCode();
 	}
@@ -165,10 +165,12 @@ int main(int argc, char **argv) {
 		auto material = initMaterial(opts);
 		// Set up the temperature infrastructure
 		bool tempInitOK = initTemp(opts);
-		assert(tempInitOK);
+		if (!tempInitOK)
+			return EXIT_FAILURE;
 		// Set up the visualization infrastructure.
 		bool vizInitOK = initViz(opts.useVizStandardHandlers());
-		assert(vizInitOK);
+		if (!vizInitOK)
+			return EXIT_FAILURE;
 
 		// Access the temperature handler registry to get the temperature
 		auto tempHandler = xolotlFactory::getTemperatureHandler();
@@ -181,7 +183,8 @@ int main(int argc, char **argv) {
 
 		// Initialize and get the solver handler
 		bool dimOK = xolotlFactory::initializeDimension(opts);
-		assert(dimOK);
+		if (!dimOK)
+			return EXIT_FAILURE;
 		auto solvHandler = xolotlFactory::getSolverHandler();
 
 		// Setup the solver
@@ -209,26 +212,23 @@ int main(int argc, char **argv) {
 		solverFinalizeTimer->stop();
 
 		totalTimer->stop();
-
-        // Report statistics about the performance data collected during
-        // the run we just completed.
-        xperf::PerfObjStatsMap<xperf::ITimer::ValType> timerStats;
-        xperf::PerfObjStatsMap<xperf::IEventCounter::ValType> counterStats;
-        xperf::PerfObjStatsMap<xperf::IHardwareCounter::CounterType> hwCtrStats;
-        handlerRegistry->collectStatistics( timerStats, counterStats, hwCtrStats );
-        if( rank == 0 )
-        {
-            handlerRegistry->reportStatistics( std::cout, 
-                                                timerStats, 
-                                                counterStats, 
-                                                hwCtrStats );
-        }
-
-    } catch (const std::exception& e) {
-        std::cerr << e.what() << std::endl;
-        std::cerr << "Aborting." << std::endl;
-        return EXIT_FAILURE;
-
+		
+		// Report statistics about the performance data collected during
+		// the run we just completed.
+		xperf::PerfObjStatsMap<xperf::ITimer::ValType> timerStats;
+		xperf::PerfObjStatsMap<xperf::IEventCounter::ValType> counterStats;
+		xperf::PerfObjStatsMap<xperf::IHardwareCounter::CounterType> hwCtrStats;
+		handlerRegistry->collectStatistics( timerStats, counterStats, hwCtrStats );
+		if (rank == 0) {
+			handlerRegistry->reportStatistics(std::cout,
+					timerStats,
+					counterStats,
+					hwCtrStats);
+		}
+	} catch (const std::exception& e) {
+		std::cerr << e.what() << std::endl;
+		std::cerr << "Aborting." << std::endl;
+		return EXIT_FAILURE;
 	} catch (const std::string& error) {
 		std::cout << error << std::endl;
 		std::cout << "Aborting." << std::endl;

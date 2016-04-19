@@ -21,16 +21,14 @@ BOOST_AUTO_TEST_CASE(noOptions) {
 	// were provided (i.e., it contains the executable name or path),
 	// and we skipped that executable name before calling the
 	// parsing method as specified in its comment.
-	int fargc = 1;
 	char* args[2];
 	args[0] = const_cast<char*>("./xolotl");
 	args[1] = NULL;
 	char** fargv = args;
 
 	// Attempt to read the parameters
-	fargc -= 1;
 	fargv += 1;
-	opts.readParams(fargc, fargv);
+	opts.readParams(fargv);
 
 	// The Option class does not like empty command line
 	// a parameter file is always needed
@@ -46,7 +44,6 @@ BOOST_AUTO_TEST_CASE(badParamFileName) {
 	const char* fname = filename.c_str();
 
 	// Build a command line with a non existing parameter file
-	int fargc = 2;
 	char* args[3];
 	args[0] = const_cast<char*>("./xolotl");
 	args[1] = const_cast<char*>(fname);
@@ -54,9 +51,8 @@ BOOST_AUTO_TEST_CASE(badParamFileName) {
 	char** fargv = args;
 
 	// Attempt to read the parameters
-	fargc -= 1;
 	fargv += 1;
-	opts.readParams(fargc, fargv);
+	opts.readParams(fargv);
 
 	// If the parameter file does not exist, xolotl should not run
 	BOOST_REQUIRE_EQUAL(opts.shouldRun(), false);
@@ -76,7 +72,6 @@ BOOST_AUTO_TEST_CASE(badParamFile) {
 	const char* fname = filename.c_str();
 
 	// Build a command line with a parameter file containing bad options
-	int fargc = 2;
 	char* args[3];
 	args[0] = const_cast<char*>("./xolotl");
 	args[1] = const_cast<char*>(fname);
@@ -84,9 +79,8 @@ BOOST_AUTO_TEST_CASE(badParamFile) {
 	char** fargv = args;
 
 	// Attempt to read the parameter file
-	fargc -= 1;
 	fargv += 1;
-	opts.readParams(fargc, fargv);
+	opts.readParams(fargv);
 
 	// An unrecognized parameter should result in indicating
 	// the program shouldn't run, and an error exit code.
@@ -104,17 +98,22 @@ BOOST_AUTO_TEST_CASE(goodParamFile) {
 	// Create a good parameter file
 	std::ofstream goodParamFile("param_good.txt");
 	goodParamFile << "vizHandler=std" << std::endl
-			<< "petscArgs=-fieldsplit_0_pc_type redundant "
-					"-ts_max_snes_failures 200 "
-					"-pc_fieldsplit_detect_coupling "
-					"-ts_adapt_dt_max 10 -pc_type fieldsplit "
-					"-fieldsplit_1_pc_type sor -ts_final_time 1000 "
-					"-ts_max_steps 3" << std::endl << "networkFile=tungsten.txt"
-			<< std::endl << "startTemp=900" << std::endl << "perfHandler=std"
-			<< std::endl << "flux=1.5" << std::endl << "material=W100"
-			<< std::endl << "initialV=0.05" << std::endl << "dimensions=1"
-			<< std::endl << "voidPortion=60.0" << std::endl << "regularGrid=no"
-			<< std::endl << "process=diff" << std::endl;
+	<< "petscArgs=-fieldsplit_0_pc_type redundant "
+	"-ts_max_snes_failures 200 "
+	"-pc_fieldsplit_detect_coupling "
+	"-ts_adapt_dt_max 10 -pc_type fieldsplit "
+	"-fieldsplit_1_pc_type sor -ts_final_time 1000 "
+	"-ts_max_steps 3" << std::endl
+	<< "networkFile=tungsten.txt" << std::endl
+	<< "startTemp=900" << std::endl
+	<< "perfHandler=std" << std::endl
+	<< "flux=1.5" << std::endl
+	<< "material=W100" << std::endl
+	<< "initialV=0.05" << std::endl
+	<< "dimensions=1" << std::endl
+	<< "voidPortion=60.0" << std::endl
+	<< "regularGrid=no" << std::endl
+	<< "process=diff" << std::endl;
 	goodParamFile.close();
 
 	string pathToFile("param_good.txt");
@@ -122,7 +121,6 @@ BOOST_AUTO_TEST_CASE(goodParamFile) {
 	const char* fname = filename.c_str();
 
 	// Build a command line with a parameter file containing good options
-	int fargc = 2;
 	char* args[3];
 	args[0] = const_cast<char*>("./xolotl");
 	args[1] = const_cast<char*>(fname);
@@ -130,9 +128,8 @@ BOOST_AUTO_TEST_CASE(goodParamFile) {
 	char** fargv = args;
 
 	// Attempt to read the parameter file
-	fargc -= 1;
 	fargv += 1;
-	opts.readParams(fargc, fargv);
+	opts.readParams(fargv);
 
 	// Xolotl should run with good parameters
 	BOOST_REQUIRE_EQUAL(opts.shouldRun(), true);
@@ -218,7 +215,6 @@ BOOST_AUTO_TEST_CASE(wrongPerfHandler) {
 	const char* fname = filename.c_str();
 
 	// Build a command line with a parameter file containing a wrong performance handler option
-	int fargc = 2;
 	char* args[3];
 	args[0] = const_cast<char*>("./xolotl");
 	args[1] = const_cast<char*>(fname);
@@ -226,9 +222,8 @@ BOOST_AUTO_TEST_CASE(wrongPerfHandler) {
 	char** fargv = args;
 
 	// Attempt to read the parameter file
-	fargc -= 1;
 	fargv += 1;
-	opts.readParams(fargc, fargv);
+	opts.readParams(fargv);
 
 	// Xolotl should not be able to run with a wrong performance handler parameter
 	BOOST_REQUIRE_EQUAL(opts.shouldRun(), false);
@@ -252,7 +247,6 @@ BOOST_AUTO_TEST_CASE(wrongVizHandler) {
 	const char* fname = filename.c_str();
 
 	// Build a command line with a parameter file containing a wrong performance handler option
-	int fargc = 2;
 	char* args[3];
 	args[0] = const_cast<char*>("./xolotl");
 	args[1] = const_cast<char*>(fname);
@@ -260,9 +254,8 @@ BOOST_AUTO_TEST_CASE(wrongVizHandler) {
 	char** fargv = args;
 
 	// Attempt to read the parameter file
-	fargc -= 1;
 	fargv += 1;
-	opts.readParams(fargc, fargv);
+	opts.readParams(fargv);
 
 	// Xolotl should not be able to run with a wrong visualization handler parameter
 	BOOST_REQUIRE_EQUAL(opts.shouldRun(), false);
@@ -279,16 +272,16 @@ BOOST_AUTO_TEST_CASE(goodParamFileWithProfiles) {
 	// the temperature at that time.
 	std::ofstream writeTempFile("temperatureFile.dat");
 	writeTempFile << "0.0 2.0 \n"
-			"1.0 1.99219766723 \n"
-			"2.0 1.87758256189 \n"
-			"3.0 1.4311765168 \n"
-			"4.0 0.583853163453 \n"
-			"5.0 0.000137654918313 \n"
-			"6.0 0.789204200569 \n"
-			"7.0 1.9875147713 \n"
-			"8.0 0.854499966191 \n"
-			"9.0 0.235300873168 \n"
-			"10.0 1.99779827918";
+	"1.0 1.99219766723 \n"
+	"2.0 1.87758256189 \n"
+	"3.0 1.4311765168 \n"
+	"4.0 0.583853163453 \n"
+	"5.0 0.000137654918313 \n"
+	"6.0 0.789204200569 \n"
+	"7.0 1.9875147713 \n"
+	"8.0 0.854499966191 \n"
+	"9.0 0.235300873168 \n"
+	"10.0 1.99779827918";
 	writeTempFile.close();
 
 	// Create a file with a time profile for the flux
@@ -296,10 +289,10 @@ BOOST_AUTO_TEST_CASE(goodParamFileWithProfiles) {
 	// the amplitude (in He/nm2/s) at that time.
 	std::ofstream writeFluxFile("fluxFile.dat");
 	writeFluxFile << "0.0 1000.0 \n"
-			"1.0 4000.0 \n"
-			"2.0 2000.0 \n"
-			"3.0 3000.0 \n"
-			"4.0 0.0";
+	"1.0 4000.0 \n"
+	"2.0 2000.0 \n"
+	"3.0 3000.0 \n"
+	"4.0 0.0";
 	writeFluxFile.close();
 
 	xolotlCore::Options opts;
@@ -307,7 +300,7 @@ BOOST_AUTO_TEST_CASE(goodParamFileWithProfiles) {
 	// Create a parameter file using these two profile files
 	std::ofstream paramFile("param_good_profiles.txt");
 	paramFile << "fluxFile=fluxFile.dat" << std::endl
-			<< "tempFile=temperatureFile.dat" << std::endl;
+	<< "tempFile=temperatureFile.dat" << std::endl;
 	paramFile.close();
 
 	string pathToFile("param_good_profiles.txt");
@@ -316,7 +309,6 @@ BOOST_AUTO_TEST_CASE(goodParamFileWithProfiles) {
 
 	// Build a command line with a parameter file containing
 	// the two profile options
-	int fargc = 2;
 	char* args[3];
 	args[0] = const_cast<char*>("./xolotl");
 	args[1] = const_cast<char*>(fname);
@@ -324,9 +316,8 @@ BOOST_AUTO_TEST_CASE(goodParamFileWithProfiles) {
 	char** fargv = args;
 
 	// Attempt to read the parameter file
-	fargc -= 1;
 	fargv += 1;
-	opts.readParams(fargc, fargv);
+	opts.readParams(fargv);
 
 	// Xolotl should run with good parameters
 	BOOST_REQUIRE_EQUAL(opts.shouldRun(), true);
@@ -365,17 +356,15 @@ BOOST_AUTO_TEST_CASE(wrongFluxProfile) {
 	const char* fname = filename.c_str();
 
 	// Build a command line with a parameter file containing a wrong performance handler option
-	int fargc = 2;
 	char* args[3];
 	args[0] = const_cast<char*>("./xolotl");
 	args[1] = const_cast<char*>(fname);
 	args[2] = NULL;
 	char** fargv = args;
-
+	
 	// Attempt to read the parameter file
-	fargc -= 1;
 	fargv += 1;
-	opts.readParams(fargc, fargv);
+	opts.readParams(fargv);
 
 	// Xolotl should not be able to run with a wrong flux profile file name
 	BOOST_REQUIRE_EQUAL(opts.shouldRun(), false);
@@ -399,7 +388,6 @@ BOOST_AUTO_TEST_CASE(wrongTempProfile) {
 	const char* fname = filename.c_str();
 
 	// Build a command line with a parameter file containing a wrong performance handler option
-	int fargc = 2;
 	char* args[3];
 	args[0] = const_cast<char*>("./xolotl");
 	args[1] = const_cast<char*>(fname);
@@ -407,9 +395,8 @@ BOOST_AUTO_TEST_CASE(wrongTempProfile) {
 	char** fargv = args;
 
 	// Attempt to read the parameter file
-	fargc -= 1;
 	fargv += 1;
-	opts.readParams(fargc, fargv);
+	opts.readParams(fargv);
 
 	// Xolotl should not be able to run with a wrong temperature profile file name
 	BOOST_REQUIRE_EQUAL(opts.shouldRun(), false);
@@ -433,7 +420,6 @@ BOOST_AUTO_TEST_CASE(papiPerfHandler) {
 	const char* fname = filename.c_str();
 
 	// Build a command line with a parameter file
-	int fargc = 2;
 	char* args[3];
 	args[0] = const_cast<char*>("./xolotl");
 	args[1] = const_cast<char*>(fname);
@@ -441,9 +427,8 @@ BOOST_AUTO_TEST_CASE(papiPerfHandler) {
 	char** fargv = args;
 
 	// Attempt to read the parameter file
-	fargc -= 1;
 	fargv += 1;
-	opts.readParams(fargc, fargv);
+	opts.readParams(fargv);
 
 	// Xolotl should run with good parameters
 	BOOST_REQUIRE_EQUAL(opts.shouldRun(), true);
@@ -471,7 +456,6 @@ BOOST_AUTO_TEST_CASE(osPerfHandler) {
 	const char* fname = filename.c_str();
 
 	// Build a command line with a parameter file
-	int fargc = 2;
 	char* args[3];
 	args[0] = const_cast<char*>("./xolotl");
 	args[1] = const_cast<char*>(fname);
@@ -479,9 +463,8 @@ BOOST_AUTO_TEST_CASE(osPerfHandler) {
 	char** fargv = args;
 
 	// Attempt to read the parameter file
-	fargc -= 1;
 	fargv += 1;
-	opts.readParams(fargc, fargv);
+	opts.readParams(fargv);
 
 	// Xolotl should run with good parameters
 	BOOST_REQUIRE_EQUAL(opts.shouldRun(), true);
@@ -509,7 +492,6 @@ BOOST_AUTO_TEST_CASE(dummyPerfHandler) {
 	const char* fname = filename.c_str();
 
 	// Build a command line with a parameter file containing good options
-	int fargc = 2;
 	char* args[3];
 	args[0] = const_cast<char*>("./xolotl");
 	args[1] = const_cast<char*>(fname);
@@ -517,9 +499,8 @@ BOOST_AUTO_TEST_CASE(dummyPerfHandler) {
 	char** fargv = args;
 
 	// Attempt to read the parameter file
-	fargc -= 1;
 	fargv += 1;
-	opts.readParams(fargc, fargv);
+	opts.readParams(fargv);
 
 	// Xolotl should run with good parameters
 	BOOST_REQUIRE_EQUAL(opts.shouldRun(), true);

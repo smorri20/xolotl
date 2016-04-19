@@ -240,7 +240,7 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) {
 							&& k >= zs && k < zs + zm) {
 						concOffset = concentrations[k][j][i];
 						// Loop on the concVector size
-						for (int l = 0; l < concVector.size(); l++) {
+						for (unsigned int l = 0; l < concVector.size(); l++) {
 							concOffset[(int) concVector.at(l).at(0)] =
 									concVector.at(l).at(1);
 						}
@@ -310,7 +310,6 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 	// Declarations for variables used in the loop
 	double flux;
-	auto heCluster = (xolotlCore::PSICluster *) network->get(xolotlCore::heType, 1);
 	int fluxIndex = fluxHandler->getIncidentFluxClusterIndex(), reactantIndex;
 	xolotlCore::PSICluster *cluster = NULL;
 	double **concVector = new double*[7];
@@ -344,7 +343,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			heConc = 0.0;
 
 			// Loop over grid points
-			for (int xi = 0; xi < Mx; xi++) {
+			for (int xi = surfacePosition[yj][zk] + 1; xi < Mx; xi++) {
 				// We are only interested in the helium near the surface
 				if (grid[xi] - grid[surfacePosition[yj][zk]] > 2.0) continue;
 
@@ -505,7 +504,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	checkPetscError(ierr, "PetscSolver3DHandler::updateConcentration: "
 			"DMRestoreLocalVector failed.");
 
-	// Clear the memory
+	// Clear memory
 	delete [] concVector;
 
 	return;
@@ -753,7 +752,7 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 			heConc = 0.0;
 
 			// Loop over grid points
-			for (int xi = 0; xi < Mx; xi++) {
+			for (int xi = surfacePosition[yj][zk] + 1; xi < Mx; xi++) {
 				// We are only interested in the helium near the surface
 				if (grid[xi] - grid[surfacePosition[yj][zk]] > 2.0) continue;
 

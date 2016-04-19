@@ -27,7 +27,7 @@ static std::shared_ptr<xolotlPerf::IHandlerRegistry> registry =
 /**
  * This suite is responsible for testing the HeInterstitialCluster.
  */
-BOOST_AUTO_TEST_SUITE(HeInterstitialCluster_testSuite)
+BOOST_AUTO_TEST_SUITE (HeInterstitialCluster_testSuite)
 
 BOOST_AUTO_TEST_CASE(getSpeciesSize) {
 	HeInterstitialCluster cluster(4, 2, registry);
@@ -61,8 +61,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	// with 5He and 3I
 	// Get the connectivity array from the reactant
 	vector<int> composition = { 5, 0, 3 };
-	auto reactant =
-			(PSICluster *) (network->getCompound("HeI", composition));
+	auto reactant = (PSICluster *) (network->getCompound("HeI", composition));
 	// Check the type name
 	BOOST_REQUIRE_EQUAL("HeI", reactant->getType());
 	auto reactionConnectivity = reactant->getConnectivity();
@@ -82,16 +81,14 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 			1, 0, 1, 0, 0, 0, 0, 0, 0, 0,
 
 			// HeV
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 			// HeI
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1,
-			1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0 };
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1,
+			0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-	for (int i = 0; i < reactionConnectivity.size(); i++) {
+	for (unsigned int i = 0; i < reactionConnectivity.size(); i++) {
 		BOOST_REQUIRE_EQUAL(reactionConnectivity[i],
 				connectivityExpected[i]);
 	}
@@ -133,10 +130,10 @@ BOOST_AUTO_TEST_CASE(checkTotalFlux) {
 	// The flux can pretty much be anything except "not a number" (nan).
 	double flux = cluster->getTotalFlux();
 	BOOST_TEST_MESSAGE("HeInterstitialClusterTester Message: \n" << "Total Flux is " << flux << "\n"
-			  << "   -Production Flux: " << cluster->getProductionFlux() << "\n"
-			  << "   -Combination Flux: " << cluster->getCombinationFlux() << "\n"
-			  << "   -Dissociation Flux: " << cluster->getDissociationFlux() << "\n"
-	  	  	  << "   -Emission Flux: " << cluster->getEmissionFlux() << "\n");
+			<< "   -Production Flux: " << cluster->getProductionFlux() << "\n"
+			<< "   -Combination Flux: " << cluster->getCombinationFlux() << "\n"
+			<< "   -Dissociation Flux: " << cluster->getDissociationFlux() << "\n"
+			<< "   -Emission Flux: " << cluster->getEmissionFlux() << "\n");
 
 	// Check the flux
 	BOOST_REQUIRE_CLOSE(-16982855380.0, flux, 0.1);
@@ -151,7 +148,7 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	// Local Declarations
 	// The vector of partial derivatives to compare with
 	double knownPartials[] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-			0.0, 0.0, 0.0, 0.0, 0.0};
+		0.0, 0.0, 0.0, 0.0, 0.0};
 	// Get the simple reaction network
 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork(3);
 
@@ -169,10 +166,10 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	auto partials = cluster->getPartialDerivatives();
 
 	// Check the size of the partials
-	BOOST_REQUIRE_EQUAL(partials.size(), 15);
+	BOOST_REQUIRE_EQUAL(partials.size(), 15U);
 
 	// Check all the values
-	for (int i = 0; i < partials.size(); i++) {
+	for (unsigned int i = 0; i < partials.size(); i++) {
 		BOOST_REQUIRE_CLOSE(partials[i], knownPartials[i], 0.1);
 	}
 
@@ -193,7 +190,7 @@ BOOST_AUTO_TEST_CASE(checkReactionRadius) {
 	// Check all the values
 	for (int i = 1; i <= 5; i++) {
 		cluster = shared_ptr < HeInterstitialCluster
-				> (new HeInterstitialCluster(1, i, registry));
+		> (new HeInterstitialCluster(1, i, registry));
 		BOOST_REQUIRE_CLOSE(expectedRadii[i - 1], cluster->getReactionRadius(),
 				0.000001);
 	}
