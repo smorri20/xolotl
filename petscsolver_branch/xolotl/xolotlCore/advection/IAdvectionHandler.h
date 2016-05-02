@@ -142,6 +142,13 @@ public:
 	 */
 	virtual std::vector<int> getIndexVector() = 0;
 
+	/**
+	 * Get the location of the sink.
+	 *
+	 * @return The location
+	 */
+	virtual double getLocation() = 0;
+
 };
 //end class IAdvectionHandler
 

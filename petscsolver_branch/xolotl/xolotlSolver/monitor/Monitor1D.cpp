@@ -1322,7 +1322,8 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt, PetscReal time,
 
 		// Get the modified trap-mutation handler to reinitialize it
 		auto mutationHandler = solverHandler->getMutationHandler();
-		mutationHandler->initializeIndex(surfacePos, network, grid);
+		auto advecHandlers = solverHandler->getAdvectionHandlers();
+		mutationHandler->initializeIndex(surfacePos, network, advecHandlers, grid);
 
 		// Get the bubble bursting handler to reinitialize it
 		auto burstingHandler = solverHandler->getBurstingHandler();

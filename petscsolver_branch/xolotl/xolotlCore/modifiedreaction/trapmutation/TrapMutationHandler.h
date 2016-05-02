@@ -3,6 +3,7 @@
 
 // Includes
 #include <ITrapMutationHandler.h>
+#include <Sigma3TrapMutationHandler.h>
 
 namespace xolotlCore {
 
@@ -35,7 +36,9 @@ protected:
 		: size(s), portion(p) {}
 	};
 
-	//! The vector containing the different depths for the modified trap-mutation
+	/** The vector containing the different depths for the modified trap-mutation
+	 * associated with the surface
+	 */
 	std::vector<double> depthVec;
 
 	//! The vector containing the different vacancy size for the modified trap-mutation
@@ -56,7 +59,7 @@ protected:
 	 * is that this one is used for the actual computation whereas the other one is
 	 * defined by the user. indexVector is created with the depthVec information.
 	 */
-	std::vector<std::vector<int> > indexVector;
+	std::vector<std::vector<std::vector<std::vector<int> > > > indexVector;
 
 	/**
 	 * The desorption information
@@ -94,24 +97,24 @@ public:
 	 * initialize the rates of the reactions and define which trap-mutation is allowed
 	 * at each grid point.
 	 *
-	 * @param surfacePos The index of the position of the surface
-	 * @param network The network
-	 * @param grid The grid on the x axis
+	 * \see ITrapMutationHandler.h
 	 */
 	void initialize(int surfacePos, PSIClusterReactionNetwork *network,
-			std::vector<double> grid);
+			std::vector<IAdvectionHandler *> advectionHandlers,
+			std::vector<double> grid, int ny = 0, double hy = 0.0,
+			int nz = 0, double hz = 0.0);
 
 	/**
 	 * This method defines which trap-mutation is allowed at each grid point.
 	 * The stored indices correspond to the HeV bubbles, and more precisely to their
 	 * rank in the bubbles vector obtained with bubbles = network->getAll(heVType).
 	 *
-	 * @param surfacePos The index of the position of the surface
-	 * @param network The network
-	 * @param grid The grid on the x axis
+	 * \see ITrapMutationHandler.h
 	 */
 	void initializeIndex(int surfacePos, PSIClusterReactionNetwork *network,
-			std::vector<double> grid);
+			std::vector<IAdvectionHandler *> advectionHandlers,
+			std::vector<double> grid, int ny = 0, double hy = 0.0,
+			int nz = 0, double hz = 0.0);
 
 	/**
 	 * This method update the rate for the modified trap-mutation if the rates
@@ -146,16 +149,11 @@ public:
 	 *
 	 * F(He_i) = -F[(He_i)(V)] = -F(I) = -kMutation * C_(He_i)
 	 *
-	 * @param network The network
-	 * @param xi The index of the position on the grid
-	 * @param concOffset The pointer to the array of concentration at the grid
-	 * point where the trap-mutation is computed
-	 * @param updatedConcOffset The pointer to the array of the concentration
-	 * at the grid point where the trap-mutation is computed used to find the
-	 * next solution
+	 * \see ITrapMutationHandler.h
 	 */
 	void computeTrapMutation(PSIClusterReactionNetwork *network,
-			int xi, double *concOffset, double *updatedConcOffset);
+			double *concOffset, double *updatedConcOffset,
+			int xi, int yj = 0, int zk = 0);
 
 	/**
 	 * Compute the partials due to the modified trap-mutation for all the
@@ -168,18 +166,11 @@ public:
 	 * dF(He_i)/dC_(He_i) = -dF[(He_i)(V)]/dC_(He_i) = -dF(I)/dC_(He_i)
 	 * 		= -kMutation
 	 *
-	 * @param network The network
-	 * @param val The pointer to the array that will contain the values of
-	 * partials for the trap-mutation
-	 * @param indices The pointer to the array that will contain the indices
-	 * of the clusters
-	 * @param xi The index of the grip point
-	 *
-	 * @return The number of helium clusters that go through modified trap-mutation
-	 * at this grid point
+	 * \see ITrapMutationHandler.h
 	 */
 	int computePartialsForTrapMutation(PSIClusterReactionNetwork *network,
-			double *val, int *indices, int xi);
+			double *val, int *indices,
+			int xi, int yj = 0, int zk = 0);
 
 };
 //end class TrapMutationHandler

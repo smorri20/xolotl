@@ -6,6 +6,7 @@
 #include <HDF5NetworkLoader.h>
 #include <XolotlConfig.h>
 #include <DummyHandlerRegistry.h>
+#include <DummyAdvectionHandler.h>
 #include <mpi.h>
 
 using namespace std;
@@ -54,8 +55,12 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	// Create the modified trap-mutation handler
 	DummyTrapMutationHandler trapMutationHandler;
 
+	// Create the advection handlers needed to initialize the trap mutation handler
+	std::vector<xolotlCore::IAdvectionHandler *> advectionHandlers;
+	advectionHandlers.push_back(new DummyAdvectionHandler());
+
 	// Initialize it
-	trapMutationHandler.initialize(surfacePos, network, grid);
+	trapMutationHandler.initialize(surfacePos, network, advectionHandlers, grid);
 
 	// The arrays of concentration
 	double concentration[13*size];
@@ -76,8 +81,8 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	double *updatedConcOffset = updatedConc + size;
 
 	// Compute the modified trap mutation at the second grid point
-	trapMutationHandler.computeTrapMutation(network, 1,
-			concOffset, updatedConcOffset);
+	trapMutationHandler.computeTrapMutation(network,
+			concOffset, updatedConcOffset, 1);
 
 	// Check the new values of updatedConcOffset
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 0.0, 0.01); // Create I

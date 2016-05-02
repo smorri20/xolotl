@@ -18,9 +18,11 @@ include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/modifiedreaction/trapmutation
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/modifiedreaction/bubblebursting)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants/psiclusters)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/advection)
 
 #Add a library
 add_library(${LIBRARY_NAME} STATIC ${SRC})
+target_link_libraries(${LIBRARY_NAME} xolotlAdvection)
 
 #Install the xolotl header files
 install(FILES ${HEADERS} DESTINATION include)

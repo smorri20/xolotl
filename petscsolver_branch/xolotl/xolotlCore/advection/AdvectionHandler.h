@@ -29,7 +29,7 @@ protected:
 public:
 
 	//! The Constructor
-	AdvectionHandler() : location(0.0) {}
+	AdvectionHandler() : location(0.0), dimension(0) {}
 
 	//! The Destructor
 	~AdvectionHandler() {}
@@ -61,6 +61,13 @@ public:
 	 * @return The vector of advecting clusters
 	 */
 	std::vector<int> getIndexVector() {return indexVector;}
+
+	/**
+	 * Get the location of the sink.
+	 *
+	 * @return The location
+	 */
+	double getLocation() {return location;}
 
 };
 //end class AdvectionHandler

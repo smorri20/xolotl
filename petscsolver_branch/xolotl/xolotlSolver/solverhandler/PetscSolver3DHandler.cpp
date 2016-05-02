@@ -105,7 +105,7 @@ void PetscSolver3DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 
 	// Initialize the modified trap-mutation handler and the bubble bursting one here
 	// because they add connectivity
-	mutationHandler->initialize(surfacePosition[0][0], network, grid);
+	mutationHandler->initialize(surfacePosition[0][0], network, advectionHandlers, grid, ny, hy, nz, hz);
 	burstingHandler->initialize(surfacePosition[0][0], network, grid);
 
 	// Get the diagonal fill
@@ -360,7 +360,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			// on the surface position at Y
 			fluxHandler->initializeFluxHandler(network, surfacePosition[yj][zk], grid);
 			advectionHandlers[0]->setLocation(grid[surfacePosition[yj][zk]]);
-			mutationHandler->initializeIndex(surfacePosition[yj][zk], network, grid);
+			mutationHandler->initializeIndex(surfacePosition[yj][zk], network, advectionHandlers, grid, My, hY, Mz, hZ);
 
 			// Get the flux vector which can be different at each Y position
 			incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime, surfacePosition[yj][zk]);
@@ -429,8 +429,8 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				}
 
 				// ----- Compute the modified trap-mutation over the locally owned part of the grid -----
-				mutationHandler->computeTrapMutation(network, xi, concOffset,
-						updatedConcOffset);
+				mutationHandler->computeTrapMutation(network, concOffset,
+						updatedConcOffset, xi, yj, zk);
 
 				// ----- Compute all of the new fluxes -----
 				for (int i = 0; i < dof; i++) {
@@ -737,7 +737,7 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 
 			// Initialize the trap-mutation handler which depends
 			// on the surface position at Y
-			mutationHandler->initializeIndex(surfacePosition[yj][zk], network, grid);
+			mutationHandler->initializeIndex(surfacePosition[yj][zk], network, advectionHandlers, grid, My, hY, Mz, hZ);
 
 			for (int xi = xs; xi < xs + xm; xi++) {
 				// Boundary conditions
@@ -797,7 +797,7 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 
 				// Compute the partial derivative from modified trap-mutation at this grid point
 				int nMutating = mutationHandler->computePartialsForTrapMutation(network,
-						mutationVals, mutationIndices, xi);
+						mutationVals, mutationIndices, xi, yj, zk);
 
 				// Loop on the number of helium undergoing trap-mutation to set the values
 				// in the Jacobian

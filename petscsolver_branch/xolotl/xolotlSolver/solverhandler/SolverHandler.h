@@ -222,7 +222,13 @@ public:
 	 * Get the advection handler.
 	 * \see ISolverHandler.h
 	 */
-	xolotlCore::IAdvectionHandler *getAdvectionHandler() const {return advectionHandlers[0];};
+	xolotlCore::IAdvectionHandler *getAdvectionHandler() const {return advectionHandlers[0];}
+
+	/**
+	 * Get the advection handlers.
+	 * \see ISolverHandler.h
+	 */
+	std::vector<xolotlCore::IAdvectionHandler *> getAdvectionHandlers() const {return advectionHandlers;}
 
 	/**
 	 * Get the modified trap-mutation handler.
