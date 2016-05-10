@@ -97,7 +97,8 @@ void PetscSolver2DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 
 	// Initialize the modified trap-mutation handler and the bubble bursting one here
 	// because they add connectivity
-	mutationHandler->initialize(surfacePosition[0], network, advectionHandlers, grid, ny, hy);
+	mutationHandler->initialize(network, grid, ny, hy);
+	mutationHandler->initializeIndex2D(surfacePosition, network, advectionHandlers, grid, ny, hy);
 	burstingHandler->initialize(surfacePosition[0], network, grid);
 
 	// Get the diagonal fill
@@ -337,7 +338,6 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		// on the surface position at Y
 		fluxHandler->initializeFluxHandler(network, surfacePosition[yj], grid);
 		advectionHandlers[0]->setLocation(grid[surfacePosition[yj]]);
-		mutationHandler->initializeIndex(surfacePosition[yj], network, advectionHandlers, grid, My, hY);
 
 		// Get the flux vector which can be different at each Y position
 		incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime, surfacePosition[yj]);
@@ -677,10 +677,6 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 
 		// Skip if we are not on the right process
 		if (yj < ys || yj >= ys + ym) continue;
-
-		// Initialize the trap-mutation handler which depends
-		// on the surface position at Y
-		mutationHandler->initializeIndex(surfacePosition[yj], network, advectionHandlers, grid, My, hY);
 
 		for (int xi = xs; xi < xs + xm; xi++) {
 			// Boundary conditions

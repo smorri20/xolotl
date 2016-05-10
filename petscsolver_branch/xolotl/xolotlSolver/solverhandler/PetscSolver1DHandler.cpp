@@ -92,7 +92,8 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int,
 
 	// Initialize the modified trap-mutation handler and the bubble bursting one here
 	// because they add connectivity
-	mutationHandler->initialize(surfacePosition, network, advectionHandlers, grid);
+	mutationHandler->initialize(network, grid);
+	mutationHandler->initializeIndex1D(surfacePosition, network, advectionHandlers, grid);
 	burstingHandler->initialize(surfacePosition, network, grid);
 
 	// Get the diagonal fill

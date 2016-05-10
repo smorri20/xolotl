@@ -60,7 +60,8 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	advectionHandlers.push_back(new DummyAdvectionHandler());
 
 	// Initialize it
-	trapMutationHandler.initialize(surfacePos, network, advectionHandlers, grid);
+	trapMutationHandler.initialize(network, grid);
+	trapMutationHandler.initializeIndex1D(surfacePos, network, advectionHandlers, grid);
 
 	// The arrays of concentration
 	double concentration[13*size];

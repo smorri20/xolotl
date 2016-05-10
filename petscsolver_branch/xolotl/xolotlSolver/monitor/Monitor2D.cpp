@@ -273,12 +273,12 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt, PetscReal time,
 		std::cout << "Helium mean concentration = " << totalHeConcentration << std::endl;
 		std::cout << "Helium fluence = " << heliumFluence << "\n" << std::endl;
 
-//		// Uncomment to write the retention and the fluence in a file
-//		std::ofstream outputFile;
-//		outputFile.open("retentionOut.txt", ios::app);
-//		outputFile << heliumFluence << " "
-//				<< 100.0 * (totalHeConcentration / heliumFluence) << std::endl;
-//		outputFile.close();
+		// Uncomment to write the retention and the fluence in a file
+		std::ofstream outputFile;
+		outputFile.open("retentionOut.txt", ios::app);
+		outputFile << heliumFluence << " "
+				<< 100.0 * (totalHeConcentration / heliumFluence) << std::endl;
+		outputFile.close();
 	}
 
 	// Restore the solutionArray
@@ -452,7 +452,7 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 	double hy = solverHandler->getStepSizeY();
 
 	// Choice of the cluster to be plotted
-	int iCluster = 6;
+	int iCluster = 19;
 
 	// Create a Point vector to store the data to give to the data provider
 	// for the visualization
@@ -550,7 +550,7 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 
 		// Render and save in file
 		std::stringstream fileName;
-		fileName << cluster->getName() << "_surface_TS" << timestep << ".pnm";
+		fileName << cluster->getName() << "_surface_TS" << timestep << ".png";
 		surfacePlot2D->write(fileName.str());
 	}
 
@@ -569,6 +569,7 @@ PetscErrorCode monitorInterstitial2D(TS ts, PetscInt timestep, PetscReal time,
 	PetscErrorCode ierr;
 	double ***solutionArray, *gridPointSolution;
 	int xs, xm, xi, ys, ym, yj, Mx, My;
+	bool surfaceHasMoved = false;
 
 	PetscFunctionBeginUser;
 
@@ -684,6 +685,8 @@ PetscErrorCode monitorInterstitial2D(TS ts, PetscInt timestep, PetscReal time,
 		// The density of tungsten is 62.8 atoms/nm3, thus the threshold is
 		double threshold = (62.8 - initialVConc) * (grid[xi] - grid[xi-1]);
 		if (nInterstitial2D[yj] > threshold) {
+			// The surface is moving
+			surfaceHasMoved = true;
 			// Compute the number of grid points to move the surface of
 			int nGridPoints = (int) (nInterstitial2D[yj] / threshold);
 
@@ -727,6 +730,21 @@ PetscErrorCode monitorInterstitial2D(TS ts, PetscInt timestep, PetscReal time,
 				--nGridPoints;
 			}
 		}
+	}
+
+	// Reinitialize the modified trap-mutation handler if the surface has moved
+	if (surfaceHasMoved) {
+		// Get the modified trap-mutation handler to reinitialize it
+		auto mutationHandler = solverHandler->getMutationHandler();
+		auto advecHandlers = solverHandler->getAdvectionHandlers();
+
+		// Get the vector of positions of the surface
+		std::vector<int> surfaceIndices;
+		for (int i = 0; i < My; i++) {
+			surfaceIndices.push_back(solverHandler->getSurfacePosition(i));
+		}
+
+		mutationHandler->initializeIndex2D(surfaceIndices, network, advecHandlers, grid, My, hy);
 	}
 
 	// Restore the solutionArray
@@ -866,10 +884,10 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		ierr = TSMonitorSet(ts, computeHeliumRetention2D, NULL, NULL);
 		checkPetscError(ierr, "setupPetsc2DMonitor: TSMonitorSet (computeHeliumRetention2D) failed.");
 
-//		// Uncomment to clear the file where the retention will be written
-//		std::ofstream outputFile;
-//		outputFile.open("retentionOut.txt");
-//		outputFile.close();
+		// Uncomment to clear the file where the retention will be written
+		std::ofstream outputFile;
+		outputFile.open("retentionOut.txt");
+		outputFile.close();
 	}
 
 	// Set the monitor to save the status of the simulation in hdf5 file

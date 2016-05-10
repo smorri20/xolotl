@@ -581,6 +581,7 @@ PetscErrorCode monitorInterstitial3D(TS ts, PetscInt timestep, PetscReal time,
 	PetscErrorCode ierr;
 	double ****solutionArray, *gridPointSolution;
 	int xs, xm, xi, ys, ym, yj, zs, zm, zk, Mx, My, Mz;
+	bool surfaceHasMoved = false;
 
 	PetscFunctionBeginUser;
 
@@ -699,6 +700,9 @@ PetscErrorCode monitorInterstitial3D(TS ts, PetscInt timestep, PetscReal time,
 			// The density of tungsten is 62.8 atoms/nm3, thus the threshold is
 			double threshold = (62.8 - initialVConc) * (grid[xi] - grid[xi-1]);
 			if (nInterstitial3D[yj][zk] > threshold) {
+				// The surface is moving
+				surfaceHasMoved = true;
+
 				// Compute the number of grid points to move the surface of
 				int nGridPoints = (int) (nInterstitial3D[yj][zk] / threshold);
 
@@ -744,6 +748,27 @@ PetscErrorCode monitorInterstitial3D(TS ts, PetscInt timestep, PetscReal time,
 				}
 			}
 		}
+	}
+
+	// Reinitialize the modified trap-mutation handler if the surface has moved
+	if (surfaceHasMoved) {
+		// Get the modified trap-mutation handler to reinitialize it
+		auto mutationHandler = solverHandler->getMutationHandler();
+		auto advecHandlers = solverHandler->getAdvectionHandlers();
+
+		// Get the vector of positions of the surface
+		std::vector< std::vector<int> > surfaceIndices;
+		for (int i = 0; i < My; i++) {
+			// Create a temporary vector
+			std::vector<int> temp;
+			for (int j = 0; j < Mz; j++) {
+				temp.push_back(solverHandler->getSurfacePosition(i, j));
+			}
+			// Add the temporary vector to the vector of surface indices
+			surfaceIndices.push_back(temp);
+		}
+
+		mutationHandler->initializeIndex3D(surfaceIndices, network, advecHandlers, grid, My, hy, Mz, hz);
 	}
 
 	// Restore the solutionArray

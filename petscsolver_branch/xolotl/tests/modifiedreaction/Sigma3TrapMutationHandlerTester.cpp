@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 		grid.push_back((double) l * 0.1);
 	}
 	// Set the surface position
-	int surfacePos = 0;
+	std::vector<int> surfacePos = {0, 0, 0, 0, 0};
 
 	// Create the modified trap-mutation handler
 	DummyTrapMutationHandler trapMutationHandler;
@@ -66,7 +66,8 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	advectionHandlers.push_back(advecHandler);
 
 	// Initialize it
-	trapMutationHandler.initialize(surfacePos, network, advectionHandlers, grid, 5, 0.5);
+	trapMutationHandler.initialize(network, grid, 5, 0.5);
+	trapMutationHandler.initializeIndex2D(surfacePos, network, advectionHandlers, grid, 5, 0.5);
 
 	// The arrays of concentration
 	double concentration[13*5*size];

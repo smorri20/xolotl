@@ -29,19 +29,42 @@ public:
 	 * rates of the reactions and call initializeIndex to define which trap-mutation
 	 * is allowed at each grid point.
 	 *
-	 * @param surfacePos The index of the position of the surface
 	 * @param network The network
-	 * @param advectionHandlers The vector of advection handlers
 	 * @param grid The grid on the x axis
 	 * @param ny The number of grid points in the Y direction
 	 * @param hy The step size in the Y direction
 	 * @param nz The number of grid points in the Z direction
 	 * @param hz The step size in the Z direction
 	 */
-	virtual void initialize(int surfacePos, PSIClusterReactionNetwork *network,
-			std::vector<IAdvectionHandler *> advectionHandlers,
+	virtual void initialize(PSIClusterReactionNetwork *network,
 			std::vector<double> grid, int ny = 0, double hy = 0.0,
 			int nz = 0, double hz = 0.0) = 0;
+
+	/**
+	 * This method defines which trap-mutation is allowed at each grid point.
+	 *
+	 * @param surfacePos The index of the position of the surface
+	 * @param network The network
+	 * @param advectionHandlers The vector of advection handlers
+	 * @param grid The grid on the x axis
+	 */
+	virtual void initializeIndex1D(int surfacePos, PSIClusterReactionNetwork *network,
+			std::vector<IAdvectionHandler *> advectionHandlers,
+			std::vector<double> grid) = 0;
+
+	/**
+	 * This method defines which trap-mutation is allowed at each grid point.
+	 *
+	 * @param surfacePos The index of the position of the surface
+	 * @param network The network
+	 * @param advectionHandlers The vector of advection handlers
+	 * @param grid The grid on the x axis
+	 * @param ny The number of grid points in the Y direction
+	 * @param hy The step size in the Y direction
+	 */
+	virtual void initializeIndex2D(std::vector<int> surfacePos, PSIClusterReactionNetwork *network,
+			std::vector<IAdvectionHandler *> advectionHandlers,
+			std::vector<double> grid, int ny, double hy) = 0;
 
 	/**
 	 * This method defines which trap-mutation is allowed at each grid point.
@@ -55,10 +78,10 @@ public:
 	 * @param nz The number of grid points in the Z direction
 	 * @param hz The step size in the Z direction
 	 */
-	virtual void initializeIndex(int surfacePos, PSIClusterReactionNetwork *network,
+	virtual void initializeIndex3D(std::vector<std::vector<int> > surfacePos, PSIClusterReactionNetwork *network,
 			std::vector<IAdvectionHandler *> advectionHandlers,
-			std::vector<double> grid, int ny = 0, double hy = 0.0,
-			int nz = 0, double hz = 0.0) = 0;
+			std::vector<double> grid, int ny, double hy,
+			int nz, double hz) = 0;
 
 	/**
 	 * This method update the rate for the modified trap-mutation if the rates

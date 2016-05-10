@@ -99,8 +99,7 @@ public:
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
-	void initialize(int surfacePos, PSIClusterReactionNetwork *network,
-			std::vector<IAdvectionHandler *> advectionHandlers,
+	void initialize(PSIClusterReactionNetwork *network,
 			std::vector<double> grid, int ny = 0, double hy = 0.0,
 			int nz = 0, double hz = 0.0);
 
@@ -111,10 +110,33 @@ public:
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
-	void initializeIndex(int surfacePos, PSIClusterReactionNetwork *network,
+	void initializeIndex1D(int surfacePos, PSIClusterReactionNetwork *network,
 			std::vector<IAdvectionHandler *> advectionHandlers,
-			std::vector<double> grid, int ny = 0, double hy = 0.0,
-			int nz = 0, double hz = 0.0);
+			std::vector<double> grid);
+
+	/**
+	 * This method defines which trap-mutation is allowed at each grid point.
+	 * The stored indices correspond to the HeV bubbles, and more precisely to their
+	 * rank in the bubbles vector obtained with bubbles = network->getAll(heVType).
+	 *
+	 * \see ITrapMutationHandler.h
+	 */
+	void initializeIndex2D(std::vector<int> surfacePos, PSIClusterReactionNetwork *network,
+			std::vector<IAdvectionHandler *> advectionHandlers,
+			std::vector<double> grid, int ny, double hy);
+
+	/**
+	 * This method defines which trap-mutation is allowed at each grid point.
+	 * The stored indices correspond to the HeV bubbles, and more precisely to their
+	 * rank in the bubbles vector obtained with bubbles = network->getAll(heVType).
+	 *
+	 * \see ITrapMutationHandler.h
+	 */
+	void initializeIndex3D(std::vector<std::vector<int> > surfacePos,
+			PSIClusterReactionNetwork *network,
+			std::vector<IAdvectionHandler *> advectionHandlers,
+			std::vector<double> grid, int ny, double hy,
+			int nz, double hz);
 
 	/**
 	 * This method update the rate for the modified trap-mutation if the rates
