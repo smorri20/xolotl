@@ -19,8 +19,8 @@ protected:
 	//! The original network created from the network loader.
 	xolotlCore::PSIClusterReactionNetwork *network;
 
-	//! The grid step size in the x direction.
-	double hX;
+	//! Vector storing the grid in the x direction
+	std::vector<double> grid;
 
 	//! The grid step size in the y direction.
 	double hY;
@@ -40,11 +40,76 @@ protected:
 	//! The original diffusion handler created.
 	xolotlCore::IDiffusionHandler *diffusionHandler;
 
-	//! The original advection handler created.
-	xolotlCore::IAdvectionHandler *advectionHandler;
+	//! The vector of advection handlers.
+	std::vector<xolotlCore::IAdvectionHandler *> advectionHandlers;
+
+	//! The original modified trap-mutation handler created.
+	xolotlCore::ITrapMutationHandler *mutationHandler;
+
+	//! The original bubble bursting handler created.
+	xolotlCore::IBubbleBurstingHandler *burstingHandler;
 
 	//! The number of dimensions for the problem.
 	int dimension;
+
+	//! The portion of void at the beginning of the problem.
+	double portion;
+
+	//! If the user wants to use a regular grid.
+	bool useRegularGrid;
+
+	//! If the user wants to move the surface.
+	bool movingSurface;
+
+	//! Method generating the grid in the x direction
+	void generateGrid(int nx, double hx, int surfacePos) {
+		// Clear the grid
+		grid.clear();
+
+		// Check if the user wants a regular grid
+		if (useRegularGrid) {
+			// The grid will me made of nx points separated by hx nm
+			for (int l = 0; l < nx; l++){
+				grid.push_back((double) l * hx);
+			}
+		}
+		// If it is not regular do a fine mesh close to the surface and
+		// increase the step size when away from the surface
+		else {
+			// Initialize the value of the previous point
+			double previousPoint = 0.0;
+			// The first grid point will be at x = 0.0
+			grid.push_back(0.0);
+
+			// The loop starts at 1 because the first grid point was
+			// already added to the grid vector
+			for (int l = 1; l < nx; l++) {
+				// 0.1nm step near the surface (x < 2.5nm)
+				if (l < surfacePos + 26) {
+					grid.push_back(previousPoint + 0.1);
+					previousPoint += 0.1;
+				}
+				// Then 0.25nm (2.5nm < x < 5.0nm)
+				else if (l < surfacePos + 36) {
+					grid.push_back(previousPoint + 0.25);
+					previousPoint += 0.25;
+				}
+				// Then 0.5nm (5.0nm < x < 7.5nm)
+				else if (l < surfacePos + 41) {
+					grid.push_back(previousPoint + 0.5);
+					previousPoint += 0.5;
+				}
+				// 1.0nm step size for all the other ones
+				// (7.5nm < x)
+				else {
+					grid.push_back(previousPoint + 1.0);
+					previousPoint += 1.0;
+				}
+			}
+		}
+
+		return;
+	}
 
 public:
 
@@ -55,7 +120,6 @@ public:
 	void initializeHandlers(std::shared_ptr<xolotlFactory::IMaterialFactory> material,
 			std::shared_ptr<xolotlCore::ITemperatureHandler> tempHandler,
 			xolotlCore::Options &options) {
-
 		// Set the flux handler
 		fluxHandler = (xolotlCore::IFluxHandler *) material->getFluxHandler().get();
 
@@ -65,14 +129,34 @@ public:
 		// Set the diffusion handler
 		diffusionHandler = (xolotlCore::IDiffusionHandler *) material->getDiffusionHandler().get();
 
-		// Set the advection handler
-		advectionHandler = (xolotlCore::IAdvectionHandler *) material->getAdvectionHandler().get();
+		// Set the advection handlers
+		auto handlers = material->getAdvectionHandler();
+		for (int i = 0; i < handlers.size(); i++) {
+			advectionHandlers.push_back((xolotlCore::IAdvectionHandler *) handlers[i].get());
+		}
+
+
+		// Set the modified trap-mutation handler
+		mutationHandler = (xolotlCore::ITrapMutationHandler *) material->getTrapMutationHandler().get();
+
+		// Set the bubble bursting handler
+		burstingHandler = (xolotlCore::IBubbleBurstingHandler *) material->getBubbleBurstingHandler().get();
 
 		// Set the initial vacancy concentration
 		initialVConc = options.getInitialVConcentration();
 
 		// Set the number of dimension
 		dimension = options.getDimensionNumber();
+
+		// Set the void portion
+		portion = options.getVoidPortion();
+
+		// Look at if the user wants to use a regular grid in the x direction
+		useRegularGrid = options.useRegularXGrid();
+
+		// Should we be able to move the surface?
+		auto map = options.getProcesses();
+		movingSurface = map["movingSurface"];
 
 		return;
 	}
@@ -83,7 +167,6 @@ public:
 	 */
 	void initializeNetwork(const std::string& fileName,
 			xolotlCore::PSIClusterReactionNetwork *net) {
-
 		// Set the network loader
 		networkName = fileName;
 
@@ -94,10 +177,10 @@ public:
 	}
 
 	/**
-	 * Get the step size in the x direction.
+	 * Get the grid in the x direction.
 	 * \see ISolverHandler.h
 	 */
-	double getStepSizeX() const {return hX;}
+	std::vector<double> getXGrid() const {return grid;}
 
 	/**
 	 * Get the step size in the y direction.
@@ -118,10 +201,46 @@ public:
 	int getDimension() const {return dimension;}
 
 	/**
+	 * Get the initial vacancy concentration.
+	 * \see ISolverHandler.h
+	 */
+	double getInitialVConc() const {return initialVConc;}
+
+	/**
+	 * To know if the surface should be able to move.
+	 * \see ISolverHandler.h
+	 */
+	bool moveSurface() const {return movingSurface;}
+
+	/**
 	 * Get the flux handler.
 	 * \see ISolverHandler.h
 	 */
 	xolotlCore::IFluxHandler *getFluxHandler() const {return fluxHandler;}
+
+	/**
+	 * Get the advection handler.
+	 * \see ISolverHandler.h
+	 */
+	xolotlCore::IAdvectionHandler *getAdvectionHandler() const {return advectionHandlers[0];}
+
+	/**
+	 * Get the advection handlers.
+	 * \see ISolverHandler.h
+	 */
+	std::vector<xolotlCore::IAdvectionHandler *> getAdvectionHandlers() const {return advectionHandlers;}
+
+	/**
+	 * Get the modified trap-mutation handler.
+	 * \see ISolverHandler.h
+	 */
+	xolotlCore::ITrapMutationHandler *getMutationHandler() const {return mutationHandler;}
+
+	/**
+	 * Get the bubble bursting handler.
+	 * \see ISolverHandler.h
+	 */
+	xolotlCore::IBubbleBurstingHandler *getBurstingHandler() const {return burstingHandler;}
 
 	/**
 	 * Get the network.

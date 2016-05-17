@@ -18,12 +18,6 @@ ELSE()
     MESSAGE(FATAL_ERROR "XOLOTL requires C++11 support from C++ compiler")
 ENDIF()
 
-# Request warnings as diagnostic messages
-IF (CMAKE_COMPILER_IS_GNUCXX)
-    message(STATUS "GCC detected, adding some options to request warnings")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wno-vla")
-ENDIF()
-
 # Tell CMake to look for static libraries
 SET(BUILD_SHARED_LIBS OFF)
 
@@ -93,6 +87,8 @@ include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/advection)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants/psiclusters)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/temperature)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/modifiedreaction/trapmutation)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/modifiedreaction/bubblebursting)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/flux)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlFactory/material)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlFactory/vizHandler)

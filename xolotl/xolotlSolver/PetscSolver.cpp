@@ -104,13 +104,15 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *) {
  */
 PetscErrorCode RHSJacobian(TS ts, PetscReal, Vec C, Mat A, Mat J,
 		void *) {
-	// Start the RHSJacobian timer
-	RHSJacobianTimer->start();
 
 	PetscErrorCode ierr;
 
 	// Get the matrix from PETSc
 	PetscFunctionBeginUser;
+
+	// Start the RHSJacobian timer
+	RHSJacobianTimer->start();
+
 	ierr = MatZeroEntries(J);CHKERRQ(ierr);
 	DM da;
 	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);

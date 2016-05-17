@@ -295,7 +295,7 @@ void PSIClusterReactionNetwork::reinitializeConnectivities() {
 		cluster = (PSICluster *) *it;
 		cluster->resetConnectivities();
 	}
-
+	
 	return;
 }
 

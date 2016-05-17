@@ -1,5 +1,5 @@
 /**
- * main.cpp, currently only able to load clusters
+ * Main.c, currently only able to load clusters
  */
 #include <cstdlib>
 #include <iostream>
@@ -24,6 +24,7 @@ using namespace std;
 using std::shared_ptr;
 namespace xperf = xolotlPerf;
 
+
 //! This operation prints the start message
 void printStartMessage() {
 	std::cout << "Starting Xolotl Plasma-Surface Interactions Simulator" << std::endl;
@@ -45,25 +46,26 @@ std::shared_ptr<xolotlFactory::IMaterialFactory> initMaterial(Options &options) 
 }
 
 bool initTemp(Options &options) {
+
 	bool tempInitOK = xolotlFactory::initializeTempHandler(options);
 	if (!tempInitOK) {
 		std::cerr << "Unable to initialize requested temperature.  Aborting"
 				<< std::endl;
 		return EXIT_FAILURE;
-	}
-	else
+	} else
 		return tempInitOK;
 }
 
+
 bool initViz(bool opts) {
+
 	bool vizInitOK = xolotlFactory::initializeVizHandler(opts);
 	if (!vizInitOK) {
 		std::cerr
 				<< "Unable to initialize requested visualization infrastructure. "
 				<< "Aborting" << std::endl;
 		return EXIT_FAILURE;
-	}
-	else
+	} else
 		return vizInitOK;
 }
 
@@ -90,24 +92,26 @@ std::shared_ptr<xolotlSolver::PetscSolver> setUpSolver(
 
 void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry) {
-	xperf::IHardwareCounter::SpecType hwctrSpec;
-	hwctrSpec.push_back( xperf::IHardwareCounter::FPOps );
-	hwctrSpec.push_back( xperf::IHardwareCounter::Cycles );
-	hwctrSpec.push_back( xperf::IHardwareCounter::L3CacheMisses );
+
+    xperf::IHardwareCounter::SpecType hwctrSpec;
+    hwctrSpec.push_back( xperf::IHardwareCounter::FPOps );
+    hwctrSpec.push_back( xperf::IHardwareCounter::Cycles );
+    hwctrSpec.push_back( xperf::IHardwareCounter::L3CacheMisses );
 
 	// Launch the PetscSolver
 	auto solverTimer = handlerRegistry->getTimer("solve");
-	auto solverHwctr = handlerRegistry->getHardwareCounter( "solve", hwctrSpec );
+    auto solverHwctr = handlerRegistry->getHardwareCounter( "solve", hwctrSpec );
 	solverTimer->start();
-	solverHwctr->start();
+    solverHwctr->start();
 	solver->solve();
-	solverHwctr->stop();
+    solverHwctr->stop();
 	solverTimer->stop();
 }
 
 std::shared_ptr<PSIClusterNetworkLoader> setUpNetworkLoader(
 		const std::string& networkFilename,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
+
 	// Create a HDF5NetworkLoader
 	std::shared_ptr<HDF5NetworkLoader> networkLoader;
 	networkLoader = std::make_shared<HDF5NetworkLoader>(registry);
@@ -117,8 +121,10 @@ std::shared_ptr<PSIClusterNetworkLoader> setUpNetworkLoader(
 	return networkLoader;
 }
 
+
 //! Main program
 int main(int argc, char **argv) {
+
 	// Local Declarations
 	int rank;
 
@@ -209,7 +215,7 @@ int main(int argc, char **argv) {
 		solverFinalizeTimer->stop();
 
 		totalTimer->stop();
-
+		
 		// Report statistics about the performance data collected during
 		// the run we just completed.
 		xperf::PerfObjStatsMap<xperf::ITimer::ValType> timerStats;
@@ -232,7 +238,7 @@ int main(int argc, char **argv) {
 		return EXIT_FAILURE;
 	}
 
-	// Finalize our use of MPI
+	// finalize our use of MPI
 	MPI_Finalize();
 
 	return EXIT_SUCCESS;

@@ -89,8 +89,7 @@ BOOST_AUTO_TEST_CASE(badParamFile) {
 
 	// Remove the created file
 	std::string tempFile = "param_bad.txt";
-	if (std::remove(tempFile.c_str()) != 0)
-		throw std::string("Error deleting " + tempFile);
+	std::remove(tempFile.c_str());
 }
 
 BOOST_AUTO_TEST_CASE(goodParamFile) {
@@ -99,16 +98,22 @@ BOOST_AUTO_TEST_CASE(goodParamFile) {
 	// Create a good parameter file
 	std::ofstream goodParamFile("param_good.txt");
 	goodParamFile << "vizHandler=std" << std::endl
-			<< "petscArgs=-fieldsplit_0_pc_type redundant "
-					"-ts_max_snes_failures 200 "
-					"-pc_fieldsplit_detect_coupling "
-					"-ts_adapt_dt_max 10 -pc_type fieldsplit "
-					"-fieldsplit_1_pc_type sor -ts_final_time 1000 "
-					"-ts_max_steps 3" << std::endl << "networkFile=tungsten.txt"
-			<< std::endl << "startTemp=900" << std::endl << "perfHandler=std"
-			<< std::endl << "flux=1.5" << std::endl << "material=W100"
-			<< std::endl << "initialV=0.05" << std::endl << "dimensions=1"
-			<< std::endl;
+	<< "petscArgs=-fieldsplit_0_pc_type redundant "
+	"-ts_max_snes_failures 200 "
+	"-pc_fieldsplit_detect_coupling "
+	"-ts_adapt_dt_max 10 -pc_type fieldsplit "
+	"-fieldsplit_1_pc_type sor -ts_final_time 1000 "
+	"-ts_max_steps 3" << std::endl
+	<< "networkFile=tungsten.txt" << std::endl
+	<< "startTemp=900" << std::endl
+	<< "perfHandler=std" << std::endl
+	<< "flux=1.5" << std::endl
+	<< "material=W100" << std::endl
+	<< "initialV=0.05" << std::endl
+	<< "dimensions=1" << std::endl
+	<< "voidPortion=60.0" << std::endl
+	<< "regularGrid=no" << std::endl
+	<< "process=diff" << std::endl;
 	goodParamFile.close();
 
 	string pathToFile("param_good.txt");
@@ -157,6 +162,19 @@ BOOST_AUTO_TEST_CASE(goodParamFile) {
 	// Check the number of dimensions option
 	BOOST_REQUIRE_EQUAL(opts.getDimensionNumber(), 1);
 
+	// Check the void portion option
+	BOOST_REQUIRE_EQUAL(opts.getVoidPortion(), 60.0);
+
+	// Check the regular grid option
+	BOOST_REQUIRE_EQUAL(opts.useRegularXGrid(), false);
+
+	// Check the physical processes option
+	auto map = opts.getProcesses();
+	BOOST_REQUIRE_EQUAL(map["diff"], true);
+	BOOST_REQUIRE_EQUAL(map["advec"], false);
+	BOOST_REQUIRE_EQUAL(map["modifiedTM"], false);
+	BOOST_REQUIRE_EQUAL(map["movingSurface"], false);
+
 	// Check the PETSc options
 	BOOST_REQUIRE_EQUAL(opts.getPetscArgc(), 16);
 
@@ -181,8 +199,7 @@ BOOST_AUTO_TEST_CASE(goodParamFile) {
 
 	// Remove the created file
 	std::string tempFile = "param_good.txt";
-	if (std::remove(tempFile.c_str()) != 0)
-		throw std::string("Error deleting " + tempFile);
+	std::remove(tempFile.c_str());
 }
 
 BOOST_AUTO_TEST_CASE(wrongPerfHandler) {
@@ -214,8 +231,7 @@ BOOST_AUTO_TEST_CASE(wrongPerfHandler) {
 
 	// Remove the created file
 	std::string tempFile = "param_perf_wrong.txt";
-	if (std::remove(tempFile.c_str()) != 0)
-		throw std::string("Error deleting " + tempFile);
+	std::remove(tempFile.c_str());
 }
 
 BOOST_AUTO_TEST_CASE(wrongVizHandler) {
@@ -247,8 +263,7 @@ BOOST_AUTO_TEST_CASE(wrongVizHandler) {
 
 	// Remove the created file
 	std::string tempFile = "param_viz_wrong.txt";
-	if (std::remove(tempFile.c_str()) != 0)
-		throw std::string("Error deleting " + tempFile);
+	std::remove(tempFile.c_str());
 }
 
 BOOST_AUTO_TEST_CASE(goodParamFileWithProfiles) {
@@ -257,16 +272,16 @@ BOOST_AUTO_TEST_CASE(goodParamFileWithProfiles) {
 	// the temperature at that time.
 	std::ofstream writeTempFile("temperatureFile.dat");
 	writeTempFile << "0.0 2.0 \n"
-			"1.0 1.99219766723 \n"
-			"2.0 1.87758256189 \n"
-			"3.0 1.4311765168 \n"
-			"4.0 0.583853163453 \n"
-			"5.0 0.000137654918313 \n"
-			"6.0 0.789204200569 \n"
-			"7.0 1.9875147713 \n"
-			"8.0 0.854499966191 \n"
-			"9.0 0.235300873168 \n"
-			"10.0 1.99779827918";
+	"1.0 1.99219766723 \n"
+	"2.0 1.87758256189 \n"
+	"3.0 1.4311765168 \n"
+	"4.0 0.583853163453 \n"
+	"5.0 0.000137654918313 \n"
+	"6.0 0.789204200569 \n"
+	"7.0 1.9875147713 \n"
+	"8.0 0.854499966191 \n"
+	"9.0 0.235300873168 \n"
+	"10.0 1.99779827918";
 	writeTempFile.close();
 
 	// Create a file with a time profile for the flux
@@ -274,10 +289,10 @@ BOOST_AUTO_TEST_CASE(goodParamFileWithProfiles) {
 	// the amplitude (in He/nm2/s) at that time.
 	std::ofstream writeFluxFile("fluxFile.dat");
 	writeFluxFile << "0.0 1000.0 \n"
-			"1.0 4000.0 \n"
-			"2.0 2000.0 \n"
-			"3.0 3000.0 \n"
-			"4.0 0.0";
+	"1.0 4000.0 \n"
+	"2.0 2000.0 \n"
+	"3.0 3000.0 \n"
+	"4.0 0.0";
 	writeFluxFile.close();
 
 	xolotlCore::Options opts;
@@ -285,7 +300,7 @@ BOOST_AUTO_TEST_CASE(goodParamFileWithProfiles) {
 	// Create a parameter file using these two profile files
 	std::ofstream paramFile("param_good_profiles.txt");
 	paramFile << "fluxFile=fluxFile.dat" << std::endl
-			<< "tempFile=temperatureFile.dat" << std::endl;
+	<< "tempFile=temperatureFile.dat" << std::endl;
 	paramFile.close();
 
 	string pathToFile("param_good_profiles.txt");
@@ -321,14 +336,11 @@ BOOST_AUTO_TEST_CASE(goodParamFileWithProfiles) {
 
 	// Remove the created files
 	std::string tempFile = "temperatureFile.dat";
-	if (std::remove(tempFile.c_str()) != 0)
-		throw std::string("Error deleting " + tempFile);
+	std::remove(tempFile.c_str());
 	tempFile = "fluxFile.dat";
-	if (std::remove(tempFile.c_str()) != 0)
-		throw std::string("Error deleting " + tempFile);
+	std::remove(tempFile.c_str());
 	tempFile = "param_good_profiles.txt";
-	if (std::remove(tempFile.c_str()) != 0)
-		throw std::string("Error deleting " + tempFile);
+	std::remove(tempFile.c_str());
 }
 
 BOOST_AUTO_TEST_CASE(wrongFluxProfile) {
@@ -360,8 +372,7 @@ BOOST_AUTO_TEST_CASE(wrongFluxProfile) {
 
 	// Remove the created file
 	std::string tempFile = "param_flux_wrong.txt";
-	if (std::remove(tempFile.c_str()) != 0)
-		throw std::string("Error deleting " + tempFile);
+	std::remove(tempFile.c_str());
 }
 
 BOOST_AUTO_TEST_CASE(wrongTempProfile) {
@@ -393,8 +404,7 @@ BOOST_AUTO_TEST_CASE(wrongTempProfile) {
 
 	// Remove the created file
 	std::string tempFile = "param_temp_wrong.txt";
-	if (std::remove(tempFile.c_str()) != 0)
-		throw std::string("Error deleting " + tempFile);
+	std::remove(tempFile.c_str());
 }
 
 BOOST_AUTO_TEST_CASE(papiPerfHandler) {
@@ -430,8 +440,7 @@ BOOST_AUTO_TEST_CASE(papiPerfHandler) {
 
 	// Remove the created file
 	std::string tempFile = "param_good_perf_papi.txt";
-	if (std::remove(tempFile.c_str()) != 0)
-		throw std::string("Error deleting " + tempFile);
+	std::remove(tempFile.c_str());
 }
 
 BOOST_AUTO_TEST_CASE(osPerfHandler) {
@@ -467,8 +476,7 @@ BOOST_AUTO_TEST_CASE(osPerfHandler) {
 
 	// Remove the created file
 	std::string tempFile = "param_good_perf_os.txt";
-	if (std::remove(tempFile.c_str()) != 0)
-		throw std::string("Error deleting " + tempFile);
+	std::remove(tempFile.c_str());
 }
 
 BOOST_AUTO_TEST_CASE(dummyPerfHandler) {
@@ -504,8 +512,7 @@ BOOST_AUTO_TEST_CASE(dummyPerfHandler) {
 
 	// Remove the created file
 	std::string tempFile = "param_good_perf_dummy.txt";
-	if (std::remove(tempFile.c_str()) != 0)
-		throw std::string("Error deleting " + tempFile);
+	std::remove(tempFile.c_str());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

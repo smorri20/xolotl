@@ -5,9 +5,11 @@
 #include <MaterialFactory.h>
 #include <W110FitFluxHandler.h>
 #include <W110AdvectionHandler.h>
+#include <W110TrapMutationHandler.h>
 #include <Diffusion1DHandler.h>
 #include <Diffusion2DHandler.h>
 #include <Diffusion3DHandler.h>
+#include <BubbleBurstingHandler.h>
 
 namespace xolotlFactory {
 
@@ -31,7 +33,9 @@ public:
 	 */
 	W110MaterialFactory(int dim) {
 		theFluxHandler = std::make_shared<xolotlCore::W110FitFluxHandler>();
-		theAdvectionHandler = std::make_shared<xolotlCore::W110AdvectionHandler>();
+		theAdvectionHandler.push_back(std::make_shared<xolotlCore::W110AdvectionHandler>());
+		theTrapMutationHandler = std::make_shared<xolotlCore::W110TrapMutationHandler>();
+		theBubbleBurstingHandler = std::make_shared<xolotlCore::BubbleBurstingHandler>();
 
 		// Switch on the dimension for the diffusion handler
 		switch (dim) {

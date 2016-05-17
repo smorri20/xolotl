@@ -21,8 +21,7 @@ BOOST_AUTO_TEST_SUITE(HDF5Utils_testSuite)
 /**
  * Method checking the writing and reading of the HDF5 file.
  */
-BOOST_AUTO_TEST_CASE(checkOI) {
-
+BOOST_AUTO_TEST_CASE(checkIO) {
 	// Initialize MPI for HDF5
 	int argc = 0;
 	char **argv;
@@ -60,6 +59,8 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 	// Set the time information
 	double currentTime = 0.0001;
 	double currentTimeStep = 0.000001;
+	// Set the surface information
+	int iSurface = 3;
 	// Write the header in the HDF5 file
 	HDF5Utils::fillHeader(nGrid, stepSize);
 
@@ -74,6 +75,9 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 
 	// Add the concentration sub group
 	HDF5Utils::addConcentrationSubGroup(timeStep, currentTime, currentTimeStep);
+
+	// Write the surface position
+	HDF5Utils::writeSurface1D(timeStep, iSurface);
 
 	// Add the concentration dataset
 	int length = 5;
@@ -114,8 +118,12 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 	// Read the times
 	double t = 0.0, dt = 0.0;
 	HDF5Utils::readTimes("test.h5", 0, t, dt);
-	BOOST_REQUIRE_EQUAL(t, currentTime);
-	BOOST_REQUIRE_EQUAL(dt, currentTimeStep);
+	BOOST_REQUIRE_CLOSE(t, currentTime, 0.0001);
+	BOOST_REQUIRE_CLOSE(dt, currentTimeStep, 0.0001);
+
+	// Read the surface position
+	int surfacePos = HDF5Utils::readSurface1D("test.h5", timeStep);
+	BOOST_REQUIRE_EQUAL(surfacePos, iSurface);
 
 	// Read the network of the written file
 	auto networkVector = HDF5Utils::readNetwork("test.h5");
@@ -162,9 +170,102 @@ BOOST_AUTO_TEST_CASE(checkOI) {
 			BOOST_REQUIRE_CLOSE(returnedVector.at(i).at(1), concVector.at(i).at(1), 0.0001);
 		}
 	}
+}
 
-	// Finalize MPI
-	MPI_Finalize();
+/**
+ * Method checking the writing and reading of the surface position specifically
+ * in the case of a 2D grid.
+ */
+BOOST_AUTO_TEST_CASE(checkSurface2D) {
+	// Initialize the HDF5 file
+	int networkSize = 10;
+	HDF5Utils::initializeFile("test.h5", networkSize);
+
+	// Set the number of grid points and step size
+	int nGrid = 5;
+	double stepSize = 0.5;
+	// Set the time information
+	double currentTime = 0.0001;
+	double currentTimeStep = 0.000001;
+	// Write the header in the HDF5 file
+	HDF5Utils::fillHeader(nGrid, stepSize);
+
+	// Finalize the HDF5 file
+	HDF5Utils::finalizeFile();
+
+	// Open it again to add the concentrations
+	HDF5Utils::openFile("test.h5");
+
+	// Set the time step number
+	int timeStep = 0;
+
+	// Add the concentration sub group
+	HDF5Utils::addConcentrationSubGroup(timeStep, currentTime, currentTimeStep);
+
+	// Set the surface information in 2D
+	std::vector<int> iSurface = {2, 3, 2, 0, 5};
+
+	// Write the surface position
+	HDF5Utils::writeSurface2D(timeStep, iSurface);
+
+	// Close the HDF5 file
+	xolotlCore::HDF5Utils::closeFile();
+
+	// Read the surface position
+	auto surfacePos = HDF5Utils::readSurface2D("test.h5", timeStep);
+	// Check all the values
+	for (int i = 0; i < surfacePos.size(); i++) {
+		BOOST_REQUIRE_EQUAL(surfacePos[i], iSurface[i]);
+	}
+}
+
+/**
+ * Method checking the writing and reading of the surface position specifically
+ * in the case of a 3D grid.
+ */
+BOOST_AUTO_TEST_CASE(checkSurface3D) {
+	// Initialize the HDF5 file
+	int networkSize = 10;
+	HDF5Utils::initializeFile("test.h5", networkSize);
+
+	// Set the number of grid points and step size
+	int nGrid = 5;
+	double stepSize = 0.5;
+	// Set the time information
+	double currentTime = 0.0001;
+	double currentTimeStep = 0.000001;
+	// Write the header in the HDF5 file
+	HDF5Utils::fillHeader(nGrid, stepSize);
+
+	// Finalize the HDF5 file
+	HDF5Utils::finalizeFile();
+
+	// Open it again to add the concentrations
+	HDF5Utils::openFile("test.h5");
+
+	// Set the time step number
+	int timeStep = 0;
+
+	// Add the concentration sub group
+	HDF5Utils::addConcentrationSubGroup(timeStep, currentTime, currentTimeStep);
+
+	// Set the surface information in 2D
+	std::vector< std::vector<int> > iSurface = {{2, 4, 1, 0, 5}, {2, 3, 2, 0, 5}, {6, 1, 2, 3, 2}};
+
+	// Write the surface position
+	HDF5Utils::writeSurface3D(timeStep, iSurface);
+
+	// Close the HDF5 file
+	xolotlCore::HDF5Utils::closeFile();
+
+	// Read the surface position
+	auto surfacePos = HDF5Utils::readSurface3D("test.h5", timeStep);
+	// Check all the values
+	for (int i = 0; i < surfacePos.size(); i++) {
+		for (int j = 0; j < surfacePos[0].size(); j++) {
+			BOOST_REQUIRE_EQUAL(surfacePos[i][j], iSurface[i][j]);
+		}
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()

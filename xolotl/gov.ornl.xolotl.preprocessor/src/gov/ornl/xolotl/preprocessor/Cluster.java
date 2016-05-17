@@ -12,7 +12,7 @@ package gov.ornl.xolotl.preprocessor;
  */
 public class Cluster {
 
-	// The number of Helium atoms in the cluster. Default value is 0.
+	// The number of helium atoms in the cluster. Default value is 0.
 	public int nHe = 0;
 
 	// The number of vacancies in the cluster. Default value is 0.
@@ -41,10 +41,8 @@ public class Cluster {
 	public String toString() {
 
 		// Convert infinite energies
-		String EfAsString = (!Double.isInfinite(E_f)) ? String.valueOf(E_f)
-				: "Infinity";
-		String EMAsString = (!Double.isInfinite(E_m)) ? String.valueOf(E_m)
-				: "Infinity";
+		String EfAsString = (!Double.isInfinite(E_f)) ? String.valueOf(E_f) : "Infinity";
+		String EMAsString = (!Double.isInfinite(E_m)) ? String.valueOf(E_m) : "Infinity";
 
 		return nHe + " " + nV + " " + nI + " " + EfAsString + " " + EMAsString + " " + D_0;
 	}

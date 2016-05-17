@@ -22,9 +22,10 @@ protected:
 	std::vector<double> incidentFluxVec;
 
 	/**
-	 * Step size between each grid point in the x direction.
+	 * Vector to hold the position at each grid
+	 * point (x position).
 	 */
-	double stepSize;
+	std::vector<double> xGrid;
 
 	/**
 	 *  Fluence.
@@ -84,8 +85,10 @@ protected:
 	/**
 	 * This method recomputes the values of the incident flux vector when
 	 * a time profile is given.
+	 *
+	 * @param surfacePos The current position of the surface
 	 */
-	void recomputeFluxHandler();
+	void recomputeFluxHandler(int surfacePos);
 
 public:
 
@@ -99,20 +102,20 @@ public:
      * \see IFluxHandler.h
 	 */
 	virtual void initializeFluxHandler(PSIClusterReactionNetwork *network,
-			int nx, double hx);
+	int surfacePos, std::vector<double> grid);
 
 	/**
 	 * This method reads the values on the time profile file and store them in the
 	 * time and amplitude vectors.
      * \see IFluxHandler.h
 	 */
-	void initializeTimeProfile(const std::string& fileName);
+	virtual void initializeTimeProfile(const std::string& fileName);
 
 	/**
 	 * This operation returns the incident flux vector.
      * \see IFluxHandler.h
 	 */
-	virtual std::vector<double> getIncidentFluxVec(double currentTime);
+	virtual std::vector<double> getIncidentFluxVec(double currentTime, int surfacePos);
 
 	/**
 	 * This operation returns the index of the cluster that is irradiating
