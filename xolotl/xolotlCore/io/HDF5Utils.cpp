@@ -659,11 +659,11 @@ std::vector<std::vector<double> > HDF5Utils::readNetwork(const std::string& file
 	status = H5Aclose(networkSizeAttributeId);
 
 	// Create the array that will receive the network
-	double networkArray[networkSize][6];
+	double*networkArray = new double[networkSize*6];
 
 	// Read the data set
 	status = H5Dread(datasetId, H5T_IEEE_F64LE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-			&networkArray);
+			networkArray);
 
 	// Fill the vector to return with the dataset
 	std::vector<std::vector<double> > networkVector;
@@ -672,7 +672,7 @@ std::vector<std::vector<double> > HDF5Utils::readNetwork(const std::string& file
 		// Create the line to give to the vector
 		std::vector<double> line;
 		for (int j = 0; j < 6; j++) {
-			line.push_back(networkArray[i][j]);
+			line.push_back(networkArray[i * 6 + j]);
 		}
 		networkVector.push_back(line);
 	}
@@ -680,6 +680,7 @@ std::vector<std::vector<double> > HDF5Utils::readNetwork(const std::string& file
 	// Close everything
 	status = H5Dclose(datasetId);
 	status = H5Fclose(fileId);
+	delete [] networkArray;
 
 	return networkVector;
 }
