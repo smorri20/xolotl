@@ -359,11 +359,11 @@ public class Preprocessor {
 						clusterList.add(makeHeVCluster(j, i));
 					}
 				}
-				// For bigger V only add the last four helium sizes
+				// For bigger V only add the needed helium sizes
 				else {
 					// Add the vacancy cluster
 					clusterList.add(makeHeVCluster(0, i));
-					for (int j = maxHePerV[i - 1] - 4; j <= maxHePerV[i - 1]; j++) {
+					for (int j = maxHePerV[i - 2] + 1; j <= maxHePerV[i - 1]; j++) {
 						// Add the cluster to the list
 						clusterList.add(makeHeVCluster(j, i));
 					}
