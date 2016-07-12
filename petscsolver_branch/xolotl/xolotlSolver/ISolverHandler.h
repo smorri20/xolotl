@@ -211,6 +211,13 @@ public:
 	 */
 	virtual xolotlCore::PSIClusterReactionNetwork *getNetwork() const = 0;
 
+	/**
+	 * Get the network name.
+	 *
+	 * @return The network name
+	 */
+	virtual std::string getNetworkName() const = 0;
+
 }; //end class ISolverHandler
 
 } /* namespace xolotlSolver */

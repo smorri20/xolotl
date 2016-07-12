@@ -71,7 +71,7 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 
 	// Gets the process ID (important when it is running in parallel)
 	int procId;
-	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
 
 	// Get the da from ts
 	DM da;
@@ -118,15 +118,18 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 
 	// Add a concentration sub group
 	xolotlCore::HDF5Utils::addConcentrationSubGroup(timestep, time,
-			currentTimeStep);
+			previousTime, currentTimeStep);
 
 	// Write the surface positions in the concentration sub group
-	xolotlCore::HDF5Utils::writeSurface3D(timestep, surfaceIndices);
+	xolotlCore::HDF5Utils::writeSurface3D(timestep, surfaceIndices,
+			nInterstitial3D, previousIFlux3D);
 
 	// Loop on the full grid
 	for (int k = 0; k < Mz; k++) {
 		for (int j = 0; j < My; j++) {
 			for (int i = 0; i < Mx; i++) {
+				// Wait for all the processes
+				MPI_Barrier(PETSC_COMM_WORLD);
 				// Size of the concentration that will be stored
 				int concSize = -1;
 				// Vector for the concentrations
@@ -141,7 +144,7 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 					// Loop on the concentrations
 					concVector.clear();
 					for (int l = 0; l < networkSize; l++) {
-						if (gridPointSolution[l] > 1.0e-16) {
+						if (gridPointSolution[l] > 1.0e-16 || gridPointSolution[l] < -1.0e-16) {
 							// Create the concentration vector for this cluster
 							std::vector<double> conc;
 							conc.push_back((double) l);
@@ -161,13 +164,13 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 							continue;
 
 						// Send the size
-						MPI_Send(&concSize, 1, MPI_INT, l, 0, MPI_COMM_WORLD);
+						MPI_Send(&concSize, 1, MPI_INT, l, 0, PETSC_COMM_WORLD);
 					}
 				}
 
 				// Else: only receive the conc size
 				else {
-					MPI_Recv(&concSize, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD,
+					MPI_Recv(&concSize, 1, MPI_INT, MPI_ANY_SOURCE, 0, PETSC_COMM_WORLD,
 							MPI_STATUS_IGNORE);
 				}
 
@@ -183,6 +186,8 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 						&& k >= zs && k < zs + zm) {
 					// Fill the dataset
 					xolotlCore::HDF5Utils::fillConcentrations(concVector, i, j, k);
+
+//					std::cout << "Done writing in HDF5 " << i << " " << j << " " << k << " " << concSize << std::endl;
 				}
 			}
 		}
@@ -257,11 +262,11 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt, PetscReal time,
 
 	// Get the current process ID
 	int procId;
-	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
 
 	// Sum all the concentrations through MPI reduce
 	double totalHeConcentration = 0.0;
-	MPI_Reduce(&heConcentration, &totalHeConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&heConcentration, &totalHeConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
 
 	// Master process
 	if (procId == 0) {
@@ -290,12 +295,12 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt, PetscReal time,
 		std::cout << "Helium mean concentration = " << totalHeConcentration << std::endl;
 		std::cout << "Helium fluence = " << heliumFluence << "\n" << std::endl;
 
-//		// Uncomment to write the retention and the fluence in a file
-//		std::ofstream outputFile;
-//		outputFile.open("retentionOut.txt", ios::app);
-//		outputFile << heliumFluence << " "
-//				<< 100.0 * (totalHeConcentration / heliumFluence) << std::endl;
-//		outputFile.close();
+		// Uncomment to write the retention and the fluence in a file
+		std::ofstream outputFile;
+		outputFile.open("retentionOut.txt", ios::app);
+		outputFile << heliumFluence << " "
+				<< 100.0 * (totalHeConcentration / heliumFluence) << std::endl;
+		outputFile.close();
 	}
 
 	// Restore the solutionArray
@@ -321,7 +326,7 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Gets the process ID
 	int procId;
-	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
 
 	// Get the da from ts
 	DM da;
@@ -385,7 +390,7 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 
 			// Sum all the concentration on Z
 			double totalConc = 0.0;
-			MPI_Reduce(&conc, &totalConc, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+			MPI_Reduce(&conc, &totalConc, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
 
 			// If it is procId == 0 just store the integrated value in the myPoints vector
 			if (procId == 0) {
@@ -455,7 +460,7 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Gets the process ID
 	int procId;
-	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
 
 	// Get the da from ts
 	DM da;
@@ -519,7 +524,7 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 
 			// Sum all the concentration on Y
 			double totalConc = 0.0;
-			MPI_Reduce(&conc, &totalConc, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+			MPI_Reduce(&conc, &totalConc, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
 
 			// If it is procId == 0 just store the integrated value in the myPoints vector
 			if (procId == 0) {
@@ -590,7 +595,7 @@ PetscErrorCode monitorInterstitial3D(TS ts, PetscInt timestep, PetscReal time,
 	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
 	// Gets the process ID
 	int procId;
-	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
 
 	// Get the da from ts
 	DM da;
@@ -687,12 +692,12 @@ PetscErrorCode monitorInterstitial3D(TS ts, PetscInt timestep, PetscReal time,
 
 			// Get which processor will send the information
 			int surfaceId = 0;
-			MPI_Allreduce(&surfaceProc, &surfaceId, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+			MPI_Allreduce(&surfaceProc, &surfaceId, 1, MPI_INT, MPI_SUM, PETSC_COMM_WORLD);
 
 			// Send the information about nInterstitial2D and previousFlux2D
 			// to the other processes
-			MPI_Bcast(&nInterstitial3D[yj][zk], 1, MPI_DOUBLE, surfaceId, MPI_COMM_WORLD);
-			MPI_Bcast(&previousIFlux3D[yj][zk], 1, MPI_DOUBLE, surfaceId, MPI_COMM_WORLD);
+			MPI_Bcast(&nInterstitial3D[yj][zk], 1, MPI_DOUBLE, surfaceId, PETSC_COMM_WORLD);
+			MPI_Bcast(&previousIFlux3D[yj][zk], 1, MPI_DOUBLE, surfaceId, PETSC_COMM_WORLD);
 
 			// Now that all the processes have the same value of nInterstitials, compare
 			// it to the threshold to now if we should move the surface
@@ -771,6 +776,33 @@ PetscErrorCode monitorInterstitial3D(TS ts, PetscInt timestep, PetscReal time,
 		mutationHandler->initializeIndex3D(surfaceIndices, network, advecHandlers, grid, My, hy, Mz, hz);
 	}
 
+	// Write the surface position in a file
+	// Open the file
+	std::ofstream outputFile;
+	if (procId == 0) {
+		std::stringstream name;
+		name << "surfacePosition_" << timestep << ".dat";
+		outputFile.open(name.str());
+
+		// Setup step size variables
+		double hy = solverHandler->getStepSizeY();
+		double hz = solverHandler->getStepSizeZ();
+
+		// Loop on the grid
+		for (yj = 0; yj < My; yj++) {
+			for (zk = 0; zk < Mz; zk++) {
+				// Get the surface position
+				int surfacePos = solverHandler->getSurfacePosition(yj, zk);
+				// Write it in the file
+				outputFile << (double) yj * hy << " " << (double) zk * hz
+						<< " " << grid[surfacePos] << std::endl;
+			}
+		}
+
+		// Close the file
+		outputFile.close();
+	}
+
 	// Restore the solutionArray
 	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
 
@@ -787,7 +819,7 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 
 	// Get the process ID
 	int procId;
-	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
 
 	// Get the xolotlViz handler registry
 	auto vizHandlerRegistry = xolotlFactory::getVizHandlerRegistry();
@@ -899,6 +931,24 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 					"PetscSolver Exception: Cannot compute the retention because there is no helium or helium-vacancy cluster in the network.");
 		}
 
+		// Get the last time step written in the HDF5 file
+		int tempTimeStep = -2;
+		std::string networkName = solverHandler->getNetworkName();
+		bool hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
+				networkName, tempTimeStep);
+
+		// Get the previous time if concentrations were stored and initialize the fluence
+		if (hasConcentrations) {
+			// Get the previous time from the HDF5 file
+			double time = xolotlCore::HDF5Utils::readPreviousTime(networkName, tempTimeStep);
+			// Initialize the fluence
+			auto fluxHandler = solverHandler->getFluxHandler();
+			// The length of the time step
+			double dt = time;
+			// Increment the fluence with the value at this current timestep
+			fluxHandler->incrementFluence(dt);
+		}
+
 		// computeHeliumFluence will be called at each timestep
 		ierr = TSMonitorSet(ts, computeHeliumFluence, NULL, NULL);
 		checkPetscError(ierr, "setupPetsc3DMonitor: TSMonitorSet (computeHeliumFluence) failed.");
@@ -907,10 +957,10 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 		ierr = TSMonitorSet(ts, computeHeliumRetention3D, NULL, NULL);
 		checkPetscError(ierr, "setupPetsc3DMonitor: TSMonitorSet (computeHeliumRetention3D) failed.");
 
-//		// Uncomment to clear the file where the retention will be written
-//		std::ofstream outputFile;
-//		outputFile.open("retentionOut.txt");
-//		outputFile.close();
+		// Uncomment to clear the file where the retention will be written
+		std::ofstream outputFile;
+		outputFile.open("retentionOut.txt");
+		outputFile.close();
 	}
 
 	// Set the monitor to save the status of the simulation in hdf5 file
@@ -1026,6 +1076,22 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 			// to create their initial structure
 			nInterstitial3D.push_back(tempVector);
 			previousIFlux3D.push_back(tempVector);
+		}
+
+		// Get the last time step written in the HDF5 file
+		int tempTimeStep = -2;
+		std::string networkName = solverHandler->getNetworkName();
+		bool hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
+				networkName, tempTimeStep);
+
+		// Get the interstitial information at the surface if concentrations were stored
+		if (hasConcentrations) {
+			// Get the interstitial quantity from the HDF5 file
+			nInterstitial3D = xolotlCore::HDF5Utils::readNInterstitial3D(networkName, tempTimeStep);
+			// Get the previous I flux from the HDF5 file
+			previousIFlux3D = xolotlCore::HDF5Utils::readPreviousIFlux3D(networkName, tempTimeStep);
+			// Get the previous time from the HDF5 file
+			previousTime = xolotlCore::HDF5Utils::readPreviousTime(networkName, tempTimeStep);
 		}
 
 		// Set the monitor on the outgoing flux of interstitials at the surface

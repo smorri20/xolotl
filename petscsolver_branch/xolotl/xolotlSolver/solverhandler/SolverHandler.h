@@ -248,6 +248,12 @@ public:
 	 */
 	xolotlCore::PSIClusterReactionNetwork *getNetwork() const {return network;}
 
+	/**
+	 * Get the network name.
+	 * \see ISolverHandler.h
+	 */
+	std::string getNetworkName() const {return networkName;}
+
 }; //end class SolverHandler
 
 } /* end namespace xolotlSolver */

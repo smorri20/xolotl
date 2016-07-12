@@ -178,7 +178,7 @@ void HDF5Utils::fillNetwork(PSIClusterReactionNetwork *network) {
 }
 
 void HDF5Utils::addConcentrationSubGroup(int timeStep, double time,
-		double deltaTime) {
+		double previousTime, double deltaTime) {
 	// Set the name of the sub group
 	std::stringstream subGroupName;
 	subGroupName << "concentration_" << timeStep;
@@ -194,6 +194,13 @@ void HDF5Utils::addConcentrationSubGroup(int timeStep, double time,
 			dataspaceId,
 			H5P_DEFAULT, H5P_DEFAULT);
 	status = H5Awrite(attributeId, H5T_IEEE_F64LE, &time);
+	status = H5Aclose(attributeId);
+
+	// Create, write, and close the previous time attribute
+	attributeId = H5Acreate2(subConcGroupId, "previousTime", H5T_IEEE_F64LE,
+			dataspaceId,
+			H5P_DEFAULT, H5P_DEFAULT);
+	status = H5Awrite(attributeId, H5T_IEEE_F64LE, &previousTime);
 	status = H5Aclose(attributeId);
 
 	// Create, write, and close the timestep time attribute
@@ -218,19 +225,35 @@ void HDF5Utils::addConcentrationSubGroup(int timeStep, double time,
 	return;
 }
 
-void HDF5Utils::writeSurface1D(int timeStep, int iSurface) {
+void HDF5Utils::writeSurface1D(int timeStep, int iSurface,
+		double nInter, double previousFlux) {
 	// Create, write, and close the surface position attribute
 	hid_t dataspaceId = H5Screate(H5S_SCALAR);
-	hid_t surfaceAttributeId = H5Acreate2(subConcGroupId, "iSurface", H5T_STD_I32LE,
+	hid_t attributeId = H5Acreate2(subConcGroupId, "iSurface", H5T_STD_I32LE,
 			dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
-	status = H5Awrite(surfaceAttributeId, H5T_STD_I32LE, &iSurface);
-	status = H5Aclose(surfaceAttributeId);
+	status = H5Awrite(attributeId, H5T_STD_I32LE, &iSurface);
+	status = H5Aclose(attributeId);
+
+	// Create, write, and close the quantity of interstitial attribute
+	attributeId = H5Acreate2(subConcGroupId, "nInterstitial", H5T_IEEE_F64LE,
+			dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
+	status = H5Awrite(attributeId, H5T_IEEE_F64LE, &nInter);
+	status = H5Aclose(attributeId);
+
+	// Create, write, and close the flux of interstitial attribute
+	attributeId = H5Acreate2(subConcGroupId, "previousIFlux", H5T_IEEE_F64LE,
+			dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
+	status = H5Awrite(attributeId, H5T_IEEE_F64LE, &previousFlux);
+	status = H5Aclose(attributeId);
+
+	// Close the dataspace
 	status = H5Sclose(dataspaceId);
 
 	return;
 }
 
-void HDF5Utils::writeSurface2D(int timeStep, std::vector<int> iSurface) {
+void HDF5Utils::writeSurface2D(int timeStep, std::vector<int> iSurface,
+		std::vector<double> nInter, std::vector<double> previousFlux) {
 	// Create the array that will store the indices and fill it
 	int size = iSurface.size();
 	int indexArray[size];
@@ -251,6 +274,39 @@ void HDF5Utils::writeSurface2D(int timeStep, std::vector<int> iSurface) {
 	status = H5Dwrite(datasetId, H5T_STD_I32LE, H5S_ALL, H5S_ALL,
 	H5P_DEFAULT, &indexArray);
 
+	// Close the dataset
+	status = H5Dclose(datasetId);
+
+	// Create the array that will store the quantities and fill it
+	double quantityArray[size];
+	for (int i = 0; i < size; i++) {
+		quantityArray[i] = nInter[i];
+	}
+
+	// Create the dataset for the surface indices
+	datasetId = H5Dcreate2(subConcGroupId, "nInterstitial", H5T_IEEE_F64LE,
+			dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+	// Write networkArray in the dataset
+	status = H5Dwrite(datasetId, H5T_IEEE_F64LE, H5S_ALL, H5S_ALL,
+	H5P_DEFAULT, &quantityArray);
+
+	// Close the dataset
+	status = H5Dclose(datasetId);
+
+	// Fill the array with the previous flux
+	for (int i = 0; i < size; i++) {
+		quantityArray[i] = previousFlux[i];
+	}
+
+	// Create the dataset for the surface indices
+	datasetId = H5Dcreate2(subConcGroupId, "previousIFlux", H5T_IEEE_F64LE,
+			dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+	// Write networkArray in the dataset
+	status = H5Dwrite(datasetId, H5T_IEEE_F64LE, H5S_ALL, H5S_ALL,
+	H5P_DEFAULT, &quantityArray);
+
 	// Close everything
 	status = H5Dclose(datasetId);
 	status = H5Sclose(dataspaceId);
@@ -258,7 +314,9 @@ void HDF5Utils::writeSurface2D(int timeStep, std::vector<int> iSurface) {
 	return;
 }
 
-void HDF5Utils::writeSurface3D(int timeStep, std::vector< std::vector<int> > iSurface) {
+void HDF5Utils::writeSurface3D(int timeStep, std::vector< std::vector<int> > iSurface,
+		std::vector< std::vector<double> > nInter,
+		std::vector< std::vector<double> > previousFlux) {
 	// Create the array that will store the indices and fill it
 	int xSize = iSurface.size();
 	int ySize = iSurface[0].size();
@@ -278,13 +336,46 @@ void HDF5Utils::writeSurface3D(int timeStep, std::vector< std::vector<int> > iSu
 	// Create the dataset for the surface indices
 	hid_t datasetId = H5Dcreate2(subConcGroupId, "iSurface", H5T_STD_I32LE,
 			dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-
-	// Write networkArray in the dataset
+	// Write in the dataset
 	status = H5Dwrite(datasetId, H5T_STD_I32LE, H5S_ALL, H5S_ALL,
 	H5P_DEFAULT, &indexArray);
-
-	// Close everything
+	// Close the dataset
 	status = H5Dclose(datasetId);
+
+	// Create the array that will store the interstitial quantities and fill it
+	double quantityArray[xSize][ySize];
+	for (int i = 0; i < xSize; i++) {
+		for (int j = 0; j < ySize; j++) {
+			quantityArray[i][j] = nInter[i][j];
+		}
+	}
+
+	// Create the dataset for the interstitial quantities
+	datasetId = H5Dcreate2(subConcGroupId, "nInterstitial", H5T_IEEE_F64LE,
+			dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	// Write in the dataset
+	status = H5Dwrite(datasetId, H5T_IEEE_F64LE, H5S_ALL, H5S_ALL,
+	H5P_DEFAULT, &quantityArray);
+	// Close the dataset
+	status = H5Dclose(datasetId);
+
+	// Fill the array that will store the interstitial flux
+	for (int i = 0; i < xSize; i++) {
+		for (int j = 0; j < ySize; j++) {
+			quantityArray[i][j] = previousFlux[i][j];
+		}
+	}
+
+	// Create the dataset for the interstitial quantities
+	datasetId = H5Dcreate2(subConcGroupId, "previousIFlux", H5T_IEEE_F64LE,
+			dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	// Write in the dataset
+	status = H5Dwrite(datasetId, H5T_IEEE_F64LE, H5S_ALL, H5S_ALL,
+	H5P_DEFAULT, &quantityArray);
+	// Close the dataset
+	status = H5Dclose(datasetId);
+
+	// Close the dataspace
 	status = H5Sclose(dataspaceId);
 
 	return;
@@ -494,6 +585,37 @@ void HDF5Utils::readTimes(const std::string& fileName, int lastTimeStep, double 
 	return;
 }
 
+double HDF5Utils::readPreviousTime(const std::string& fileName, int lastTimeStep) {
+	// Set up file access property list with parallel I/O access
+	propertyListId = H5Pcreate(H5P_FILE_ACCESS);
+	H5Pset_fapl_mpio(propertyListId, MPI_COMM_WORLD, MPI_INFO_NULL);
+
+	// Open the given HDF5 file with read only access
+	fileId = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, propertyListId);
+
+	// Close the property list
+	status = H5Pclose(propertyListId);
+
+	// Set the name of the sub group
+	std::stringstream subGroupName;
+	subGroupName << "concentrationsGroup/concentration_" << lastTimeStep;
+
+	// Open this specific concentration sub group
+	subConcGroupId = H5Gopen(fileId, subGroupName.str().c_str(), H5P_DEFAULT);
+
+	// Open and read the previousTime attribute
+	double previousTime = 0.0;
+	hid_t attributeId = H5Aopen(subConcGroupId, "previousTime", H5P_DEFAULT);
+	status = H5Aread(attributeId, H5T_IEEE_F64LE, &previousTime);
+
+	// Close everything
+	status = H5Aclose(attributeId);
+	status = H5Gclose(subConcGroupId);
+	status = H5Fclose(fileId);
+
+	return previousTime;
+}
+
 int HDF5Utils::readSurface1D(const std::string& fileName, int lastTimeStep) {
 	// Initialize the surface position
 	int iSurface = 0;
@@ -624,6 +746,294 @@ std::vector< std::vector<int> > HDF5Utils::readSurface3D(const std::string& file
 		std::vector<int> temp;
 		for (int j = 0; j < dims[1]; j++) {
 			temp.push_back(index[i][j]);
+		}
+		// Add the temporary vector to the one to return
+		toReturn.push_back(temp);
+	}
+
+	// Close everything
+	status = H5Dclose(datasetId);
+	status = H5Sclose(dataspaceId);
+	status = H5Gclose(subConcGroupId);
+	status = H5Fclose(fileId);
+
+	return toReturn;
+}
+
+double HDF5Utils::readNInterstitial1D(const std::string& fileName, int lastTimeStep) {
+	// Initialize the surface position
+	double nInter = 0.0;
+
+	// Set up file access property list with parallel I/O access
+	propertyListId = H5Pcreate(H5P_FILE_ACCESS);
+	H5Pset_fapl_mpio(propertyListId, MPI_COMM_WORLD, MPI_INFO_NULL);
+
+	// Open the given HDF5 file with read only access
+	fileId = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, propertyListId);
+
+	// Close the property list
+	status = H5Pclose(propertyListId);
+
+	// Set the name of the sub group
+	std::stringstream subGroupName;
+	subGroupName << "concentrationsGroup/concentration_" << lastTimeStep;
+
+	// Open this specific concentration sub group
+	subConcGroupId = H5Gopen(fileId, subGroupName.str().c_str(), H5P_DEFAULT);
+
+	// Open and read the iSurface attribute
+	hid_t attributeId = H5Aopen(subConcGroupId, "nInterstitial", H5P_DEFAULT);
+	status = H5Aread(attributeId, H5T_IEEE_F64LE, &nInter);
+	status = H5Aclose(attributeId);
+
+	// Close everything
+	status = H5Gclose(subConcGroupId);
+	status = H5Fclose(fileId);
+
+	return nInter;
+}
+
+std::vector<double> HDF5Utils::readNInterstitial2D(const std::string& fileName, int lastTimeStep) {
+	// Create the vector to return
+	std::vector<double> toReturn;
+
+	// Set up file access property list with parallel I/O access
+	propertyListId = H5Pcreate(H5P_FILE_ACCESS);
+	H5Pset_fapl_mpio(propertyListId, MPI_COMM_WORLD, MPI_INFO_NULL);
+
+	// Open the given HDF5 file with read only access
+	fileId = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, propertyListId);
+
+	// Close the property list
+	status = H5Pclose(propertyListId);
+
+	// Set the name of the sub group
+	std::stringstream subGroupName;
+	subGroupName << "concentrationsGroup/concentration_" << lastTimeStep;
+
+	// Open this specific concentration sub group
+	subConcGroupId = H5Gopen(fileId, subGroupName.str().c_str(), H5P_DEFAULT);
+
+	// Open the dataset
+	hid_t datasetId = H5Dopen(subConcGroupId, "nInterstitial", H5P_DEFAULT);
+
+	// Get the dataspace object
+	hid_t dataspaceId = H5Dget_space(datasetId);
+
+	// Get the dimensions of the dataset
+	hsize_t dims[1];
+	status = H5Sget_simple_extent_dims(dataspaceId, dims, NULL);
+
+	// Create the array that will receive the indices
+	double quantity[dims[0]];
+
+	// Read the data set
+	status = H5Dread(datasetId, H5T_IEEE_F64LE, H5S_ALL, H5S_ALL,
+			H5P_DEFAULT, &quantity);
+
+	// Loop on the length and fill the vector to return
+	for (int i = 0; i < dims[0]; i++) {
+		toReturn.push_back(quantity[i]);
+	}
+
+	// Close everything
+	status = H5Dclose(datasetId);
+	status = H5Sclose(dataspaceId);
+	status = H5Gclose(subConcGroupId);
+	status = H5Fclose(fileId);
+
+	return toReturn;
+}
+
+std::vector< std::vector<double> > HDF5Utils::readNInterstitial3D(const std::string& fileName,
+		int lastTimeStep) {
+	// Create the vector to return
+	std::vector< std::vector<double> > toReturn;
+
+	// Set up file access property list with parallel I/O access
+	propertyListId = H5Pcreate(H5P_FILE_ACCESS);
+	H5Pset_fapl_mpio(propertyListId, MPI_COMM_WORLD, MPI_INFO_NULL);
+
+	// Open the given HDF5 file with read only access
+	fileId = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, propertyListId);
+
+	// Close the property list
+	status = H5Pclose(propertyListId);
+
+	// Set the name of the sub group
+	std::stringstream subGroupName;
+	subGroupName << "concentrationsGroup/concentration_" << lastTimeStep;
+
+	// Open this specific concentration sub group
+	subConcGroupId = H5Gopen(fileId, subGroupName.str().c_str(), H5P_DEFAULT);
+
+	// Open the dataset
+	hid_t datasetId = H5Dopen(subConcGroupId, "nInterstitial", H5P_DEFAULT);
+
+	// Get the dataspace object
+	hid_t dataspaceId = H5Dget_space(datasetId);
+
+	// Get the dimensions of the dataset
+	hsize_t dims[2];
+	status = H5Sget_simple_extent_dims(dataspaceId, dims, NULL);
+
+	// Create the array that will receive the indices
+	double quantity[dims[0]][dims[1]];
+
+	// Read the data set
+	status = H5Dread(datasetId, H5T_IEEE_F64LE, H5S_ALL, H5S_ALL,
+			H5P_DEFAULT, &quantity);
+
+	// Loop on the length and fill the vector to return
+	for (int i = 0; i < dims[0]; i++) {
+		// Create a temporary vector
+		std::vector<double> temp;
+		for (int j = 0; j < dims[1]; j++) {
+			temp.push_back(quantity[i][j]);
+		}
+		// Add the temporary vector to the one to return
+		toReturn.push_back(temp);
+	}
+
+	// Close everything
+	status = H5Dclose(datasetId);
+	status = H5Sclose(dataspaceId);
+	status = H5Gclose(subConcGroupId);
+	status = H5Fclose(fileId);
+
+	return toReturn;
+}
+
+double HDF5Utils::readPreviousIFlux1D(const std::string& fileName, int lastTimeStep) {
+	// Initialize the surface position
+	double previousFlux = 0.0;
+
+	// Set up file access property list with parallel I/O access
+	propertyListId = H5Pcreate(H5P_FILE_ACCESS);
+	H5Pset_fapl_mpio(propertyListId, MPI_COMM_WORLD, MPI_INFO_NULL);
+
+	// Open the given HDF5 file with read only access
+	fileId = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, propertyListId);
+
+	// Close the property list
+	status = H5Pclose(propertyListId);
+
+	// Set the name of the sub group
+	std::stringstream subGroupName;
+	subGroupName << "concentrationsGroup/concentration_" << lastTimeStep;
+
+	// Open this specific concentration sub group
+	subConcGroupId = H5Gopen(fileId, subGroupName.str().c_str(), H5P_DEFAULT);
+
+	// Open and read the iSurface attribute
+	hid_t attributeId = H5Aopen(subConcGroupId, "previousIFlux", H5P_DEFAULT);
+	status = H5Aread(attributeId, H5T_IEEE_F64LE, &previousFlux);
+	status = H5Aclose(attributeId);
+
+	// Close everything
+	status = H5Gclose(subConcGroupId);
+	status = H5Fclose(fileId);
+
+	return previousFlux;
+}
+
+std::vector<double> HDF5Utils::readPreviousIFlux2D(const std::string& fileName, int lastTimeStep) {
+	// Create the vector to return
+	std::vector<double> toReturn;
+
+	// Set up file access property list with parallel I/O access
+	propertyListId = H5Pcreate(H5P_FILE_ACCESS);
+	H5Pset_fapl_mpio(propertyListId, MPI_COMM_WORLD, MPI_INFO_NULL);
+
+	// Open the given HDF5 file with read only access
+	fileId = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, propertyListId);
+
+	// Close the property list
+	status = H5Pclose(propertyListId);
+
+	// Set the name of the sub group
+	std::stringstream subGroupName;
+	subGroupName << "concentrationsGroup/concentration_" << lastTimeStep;
+
+	// Open this specific concentration sub group
+	subConcGroupId = H5Gopen(fileId, subGroupName.str().c_str(), H5P_DEFAULT);
+
+	// Open the dataset
+	hid_t datasetId = H5Dopen(subConcGroupId, "previousIFlux", H5P_DEFAULT);
+
+	// Get the dataspace object
+	hid_t dataspaceId = H5Dget_space(datasetId);
+
+	// Get the dimensions of the dataset
+	hsize_t dims[1];
+	status = H5Sget_simple_extent_dims(dataspaceId, dims, NULL);
+
+	// Create the array that will receive the indices
+	double flux[dims[0]];
+
+	// Read the data set
+	status = H5Dread(datasetId, H5T_IEEE_F64LE, H5S_ALL, H5S_ALL,
+			H5P_DEFAULT, &flux);
+
+	// Loop on the length and fill the vector to return
+	for (int i = 0; i < dims[0]; i++) {
+		toReturn.push_back(flux[i]);
+	}
+
+	// Close everything
+	status = H5Dclose(datasetId);
+	status = H5Sclose(dataspaceId);
+	status = H5Gclose(subConcGroupId);
+	status = H5Fclose(fileId);
+
+	return toReturn;
+}
+
+std::vector< std::vector<double> > HDF5Utils::readPreviousIFlux3D(const std::string& fileName,
+		int lastTimeStep) {
+	// Create the vector to return
+	std::vector< std::vector<double> > toReturn;
+
+	// Set up file access property list with parallel I/O access
+	propertyListId = H5Pcreate(H5P_FILE_ACCESS);
+	H5Pset_fapl_mpio(propertyListId, MPI_COMM_WORLD, MPI_INFO_NULL);
+
+	// Open the given HDF5 file with read only access
+	fileId = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, propertyListId);
+
+	// Close the property list
+	status = H5Pclose(propertyListId);
+
+	// Set the name of the sub group
+	std::stringstream subGroupName;
+	subGroupName << "concentrationsGroup/concentration_" << lastTimeStep;
+
+	// Open this specific concentration sub group
+	subConcGroupId = H5Gopen(fileId, subGroupName.str().c_str(), H5P_DEFAULT);
+
+	// Open the dataset
+	hid_t datasetId = H5Dopen(subConcGroupId, "previousIFlux", H5P_DEFAULT);
+
+	// Get the dataspace object
+	hid_t dataspaceId = H5Dget_space(datasetId);
+
+	// Get the dimensions of the dataset
+	hsize_t dims[2];
+	status = H5Sget_simple_extent_dims(dataspaceId, dims, NULL);
+
+	// Create the array that will receive the indices
+	double quantity[dims[0]][dims[1]];
+
+	// Read the data set
+	status = H5Dread(datasetId, H5T_IEEE_F64LE, H5S_ALL, H5S_ALL,
+			H5P_DEFAULT, &quantity);
+
+	// Loop on the length and fill the vector to return
+	for (int i = 0; i < dims[0]; i++) {
+		// Create a temporary vector
+		std::vector<double> temp;
+		for (int j = 0; j < dims[1]; j++) {
+			temp.push_back(quantity[i][j]);
 		}
 		// Add the temporary vector to the one to return
 		toReturn.push_back(temp);

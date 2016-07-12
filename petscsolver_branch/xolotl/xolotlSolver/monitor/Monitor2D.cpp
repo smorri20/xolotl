@@ -69,7 +69,7 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 
 	// Gets the process ID (important when it is running in parallel)
 	int procId;
-	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
 
 	// Get the da from ts
 	DM da;
@@ -109,15 +109,19 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 	ierr = TSGetTimeStep(ts, &currentTimeStep);CHKERRQ(ierr);
 
 	// Add a concentration sub group
-	xolotlCore::HDF5Utils::addConcentrationSubGroup(timestep, time,
+	xolotlCore::HDF5Utils::addConcentrationSubGroup(timestep, time, previousTime,
 			currentTimeStep);
 
-	// Write the surface positions in the concentration sub group
-	xolotlCore::HDF5Utils::writeSurface2D(timestep, surfaceIndices);
+	// Write the surface positions and the associated interstitial quantities
+	// in the concentration sub group
+	xolotlCore::HDF5Utils::writeSurface2D(timestep, surfaceIndices,
+			nInterstitial2D, previousIFlux2D);
 
 	// Loop on the full grid
 	for (int j = 0; j < My; j++) {
 		for (int i = 0; i < Mx; i++) {
+			// Wait for all the processes
+			MPI_Barrier(PETSC_COMM_WORLD);
 			// Size of the concentration that will be stored
 			int concSize = -1;
 			// Vector for the concentrations
@@ -131,7 +135,7 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 				// Loop on the concentrations
 				concVector.clear();
 				for (int l = 0; l < networkSize; l++) {
-					if (gridPointSolution[l] > 1.0e-16) {
+					if (gridPointSolution[l] > 1.0e-16 || gridPointSolution[l] < -1.0e-16) {
 						// Create the concentration vector for this cluster
 						std::vector<double> conc;
 						conc.push_back((double) l);
@@ -151,13 +155,13 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 						continue;
 
 					// Send the size
-					MPI_Send(&concSize, 1, MPI_INT, l, 0, MPI_COMM_WORLD);
+					MPI_Send(&concSize, 1, MPI_INT, l, 0, PETSC_COMM_WORLD);
 				}
 			}
 
 			// Else: only receive the conc size
 			else {
-				MPI_Recv(&concSize, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD,
+				MPI_Recv(&concSize, 1, MPI_INT, MPI_ANY_SOURCE, 0, PETSC_COMM_WORLD,
 						MPI_STATUS_IGNORE);
 			}
 
@@ -241,11 +245,11 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt, PetscReal time,
 
 	// Get the current process ID
 	int procId;
-	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
 
 	// Sum all the concentrations through MPI reduce
 	double totalHeConcentration = 0.0;
-	MPI_Reduce(&heConcentration, &totalHeConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&heConcentration, &totalHeConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
 
 	// Master process
 	if (procId == 0) {
@@ -305,7 +309,7 @@ PetscErrorCode computeHeliumConc2D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Gets the process ID (important when it is running in parallel)
 	int procId;
-	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -377,7 +381,7 @@ PetscErrorCode computeHeliumConc2D(TS ts, PetscInt timestep, PetscReal time,
 
 		// Gather all the data
 		for (int i = 0; i < 1001; i++) {
-			MPI_Reduce(&heConcLocal[i], &heConcentrations[i], 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+			MPI_Reduce(&heConcLocal[i], &heConcentrations[i], 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
 		}
 
 		// Print it from the main proc
@@ -422,7 +426,7 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Gets the process ID
 	int procId;
-	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
 
 	// Get the da from ts
 	DM da;
@@ -484,27 +488,27 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 				// Else, the values must be sent to procId 0
 				else {
 					// Send the value of the local position to the master process
-					MPI_Send(&x, 1, MPI_DOUBLE, 0, 10, MPI_COMM_WORLD);
+					MPI_Send(&x, 1, MPI_DOUBLE, 0, 10, PETSC_COMM_WORLD);
 					// Send the value of the local position to the master process
-					MPI_Send(&y, 1, MPI_DOUBLE, 0, 11, MPI_COMM_WORLD);
+					MPI_Send(&y, 1, MPI_DOUBLE, 0, 11, PETSC_COMM_WORLD);
 
 					// Send the value of the concentration to the master process
 					MPI_Send(&gridPointSolution[iCluster], 1, MPI_DOUBLE, 0, 12,
-							MPI_COMM_WORLD);
+							PETSC_COMM_WORLD);
 				}
 			}
 			// Else if it is NOT the locally owned part of the grid but still procId == 0,
 			// it should receive the values for the point and add them to myPoint
 			else if (procId == 0) {
 				// Get the position
-				MPI_Recv(&x, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 10, MPI_COMM_WORLD,
+				MPI_Recv(&x, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 10, PETSC_COMM_WORLD,
 						MPI_STATUS_IGNORE);
-				MPI_Recv(&y, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 11, MPI_COMM_WORLD,
+				MPI_Recv(&y, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 11, PETSC_COMM_WORLD,
 						MPI_STATUS_IGNORE);
 
 				// and the concentration
 				double conc = 0.0;
-				MPI_Recv(&conc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 12, MPI_COMM_WORLD,
+				MPI_Recv(&conc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 12, PETSC_COMM_WORLD,
 						MPI_STATUS_IGNORE);
 
 				// Modify the Point with the received values and add it to myPoints
@@ -578,7 +582,7 @@ PetscErrorCode monitorInterstitial2D(TS ts, PetscInt timestep, PetscReal time,
 	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
 	// Gets the process ID
 	int procId;
-	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
 
 	// Get the da from ts
 	DM da;
@@ -672,12 +676,12 @@ PetscErrorCode monitorInterstitial2D(TS ts, PetscInt timestep, PetscReal time,
 
 		// Get which processor will send the information
 		int surfaceId = 0;
-		MPI_Allreduce(&surfaceProc, &surfaceId, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+		MPI_Allreduce(&surfaceProc, &surfaceId, 1, MPI_INT, MPI_SUM, PETSC_COMM_WORLD);
 
 		// Send the information about nInterstitial2D and previousFlux2D
 		// to the other processes
-		MPI_Bcast(&nInterstitial2D[yj], 1, MPI_DOUBLE, surfaceId, MPI_COMM_WORLD);
-		MPI_Bcast(&previousIFlux2D[yj], 1, MPI_DOUBLE, surfaceId, MPI_COMM_WORLD);
+		MPI_Bcast(&nInterstitial2D[yj], 1, MPI_DOUBLE, surfaceId, PETSC_COMM_WORLD);
+		MPI_Bcast(&previousIFlux2D[yj], 1, MPI_DOUBLE, surfaceId, PETSC_COMM_WORLD);
 
 		// Now that all the processes have the same value of nInterstitials, compare
 		// it to the threshold to now if we should move the surface
@@ -763,7 +767,7 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 
 	// Get the process ID
 	int procId;
-	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
 
 	// Get the xolotlViz handler registry
 	auto vizHandlerRegistry = xolotlFactory::getVizHandlerRegistry();
@@ -876,6 +880,24 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 					"no helium or helium-vacancy cluster in the network.");
 		}
 
+		// Get the last time step written in the HDF5 file
+		int tempTimeStep = -2;
+		std::string networkName = solverHandler->getNetworkName();
+		bool hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
+				networkName, tempTimeStep);
+
+		// Get the previous time if concentrations were stored and initialize the fluence
+		if (hasConcentrations) {
+			// Get the previous time from the HDF5 file
+			double time = xolotlCore::HDF5Utils::readPreviousTime(networkName, tempTimeStep);
+			// Initialize the fluence
+			auto fluxHandler = solverHandler->getFluxHandler();
+			// The length of the time step
+			double dt = time;
+			// Increment the fluence with the value at this current timestep
+			fluxHandler->incrementFluence(dt);
+		}
+
 		// computeHeliumFluence will be called at each timestep
 		ierr = TSMonitorSet(ts, computeHeliumFluence, NULL, NULL);
 		checkPetscError(ierr, "setupPetsc2DMonitor: TSMonitorSet (computeHeliumFluence) failed.");
@@ -970,6 +992,22 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		for (int j = 0; j < My; j++) {
 			nInterstitial2D.push_back(0.0);
 			previousIFlux2D.push_back(0.0);
+		}
+
+		// Get the last time step written in the HDF5 file
+		int tempTimeStep = -2;
+		std::string networkName = solverHandler->getNetworkName();
+		bool hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
+				networkName, tempTimeStep);
+
+		// Get the interstitial information at the surface if concentrations were stored
+		if (hasConcentrations) {
+			// Get the interstitial quantity from the HDF5 file
+			nInterstitial2D = xolotlCore::HDF5Utils::readNInterstitial2D(networkName, tempTimeStep);
+			// Get the previous I flux from the HDF5 file
+			previousIFlux2D = xolotlCore::HDF5Utils::readPreviousIFlux2D(networkName, tempTimeStep);
+			// Get the previous time from the HDF5 file
+			previousTime = xolotlCore::HDF5Utils::readPreviousTime(networkName, tempTimeStep);
 		}
 
 		// Set the monitor on the outgoing flux of interstitials at the surface
