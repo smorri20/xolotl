@@ -58,9 +58,11 @@ BOOST_AUTO_TEST_CASE(checkIO) {
 	double stepSize = 0.5;
 	// Set the time information
 	double currentTime = 0.0001;
+	double previousTime = 0.00001;
 	double currentTimeStep = 0.000001;
 	// Set the surface information
 	int iSurface = 3;
+	double nInter = 1.0, previousFlux = 0.1;
 	// Write the header in the HDF5 file
 	HDF5Utils::fillHeader(nGrid, stepSize);
 
@@ -74,10 +76,10 @@ BOOST_AUTO_TEST_CASE(checkIO) {
 	HDF5Utils::openFile("test.h5");
 
 	// Add the concentration sub group
-	HDF5Utils::addConcentrationSubGroup(timeStep, currentTime, currentTimeStep);
+	HDF5Utils::addConcentrationSubGroup(timeStep, currentTime, previousTime, currentTimeStep);
 
 	// Write the surface position
-	HDF5Utils::writeSurface1D(timeStep, iSurface);
+	HDF5Utils::writeSurface1D(timeStep, iSurface, nInter, previousFlux);
 
 	// Add the concentration dataset
 	int length = 5;
@@ -120,10 +122,16 @@ BOOST_AUTO_TEST_CASE(checkIO) {
 	HDF5Utils::readTimes("test.h5", 0, t, dt);
 	BOOST_REQUIRE_CLOSE(t, currentTime, 0.0001);
 	BOOST_REQUIRE_CLOSE(dt, currentTimeStep, 0.0001);
+	double previousReadTime = HDF5Utils::readPreviousTime("test.h5", 0);
+	BOOST_REQUIRE_CLOSE(previousReadTime, previousTime, 0.0001);
 
 	// Read the surface position
 	int surfacePos = HDF5Utils::readSurface1D("test.h5", timeStep);
 	BOOST_REQUIRE_EQUAL(surfacePos, iSurface);
+	double nInterstitial = HDF5Utils::readNInterstitial1D("test.h5", timeStep);
+	BOOST_REQUIRE_CLOSE(nInterstitial, nInter, 0.0001);
+	double previousIFlux = HDF5Utils::readPreviousIFlux1D("test.h5", timeStep);
+	BOOST_REQUIRE_CLOSE(previousIFlux, previousFlux, 0.0001);
 
 	// Read the network of the written file
 	auto networkVector = HDF5Utils::readNetwork("test.h5");
@@ -186,6 +194,7 @@ BOOST_AUTO_TEST_CASE(checkSurface2D) {
 	double stepSize = 0.5;
 	// Set the time information
 	double currentTime = 0.0001;
+	double previousTime = 0.00001;
 	double currentTimeStep = 0.000001;
 	// Write the header in the HDF5 file
 	HDF5Utils::fillHeader(nGrid, stepSize);
@@ -200,13 +209,15 @@ BOOST_AUTO_TEST_CASE(checkSurface2D) {
 	int timeStep = 0;
 
 	// Add the concentration sub group
-	HDF5Utils::addConcentrationSubGroup(timeStep, currentTime, currentTimeStep);
+	HDF5Utils::addConcentrationSubGroup(timeStep, currentTime, previousTime, currentTimeStep);
 
 	// Set the surface information in 2D
 	std::vector<int> iSurface = {2, 3, 2, 0, 5};
+	std::vector<double> nInter = {0.0, 0.0, 0.5, 0.6, 0.5};
+	std::vector<double> previousFlux = {0.0, 0.1, 3.0, -1.0, 5.0};
 
 	// Write the surface position
-	HDF5Utils::writeSurface2D(timeStep, iSurface);
+	HDF5Utils::writeSurface2D(timeStep, iSurface, nInter, previousFlux);
 
 	// Close the HDF5 file
 	xolotlCore::HDF5Utils::closeFile();
@@ -216,6 +227,20 @@ BOOST_AUTO_TEST_CASE(checkSurface2D) {
 	// Check all the values
 	for (int i = 0; i < surfacePos.size(); i++) {
 		BOOST_REQUIRE_EQUAL(surfacePos[i], iSurface[i]);
+	}
+
+	// Read the interstitial quantity
+	auto nInterstitial = HDF5Utils::readNInterstitial2D("test.h5", timeStep);
+	// Check all the values
+	for (int i = 0; i < nInterstitial.size(); i++) {
+		BOOST_REQUIRE_CLOSE(nInterstitial[i], nInter[i], 0.0001);
+	}
+
+	// Read the interstitial flux
+	auto previousIFlux = HDF5Utils::readPreviousIFlux2D("test.h5", timeStep);
+	// Check all the values
+	for (int i = 0; i < previousIFlux.size(); i++) {
+		BOOST_REQUIRE_CLOSE(previousIFlux[i], previousFlux[i], 0.0001);
 	}
 }
 
@@ -233,6 +258,7 @@ BOOST_AUTO_TEST_CASE(checkSurface3D) {
 	double stepSize = 0.5;
 	// Set the time information
 	double currentTime = 0.0001;
+	double previousTime = 0.00001;
 	double currentTimeStep = 0.000001;
 	// Write the header in the HDF5 file
 	HDF5Utils::fillHeader(nGrid, stepSize);
@@ -247,13 +273,17 @@ BOOST_AUTO_TEST_CASE(checkSurface3D) {
 	int timeStep = 0;
 
 	// Add the concentration sub group
-	HDF5Utils::addConcentrationSubGroup(timeStep, currentTime, currentTimeStep);
+	HDF5Utils::addConcentrationSubGroup(timeStep, currentTime, previousTime, currentTimeStep);
 
 	// Set the surface information in 2D
 	std::vector< std::vector<int> > iSurface = {{2, 4, 1, 0, 5}, {2, 3, 2, 0, 5}, {6, 1, 2, 3, 2}};
+	std::vector< std::vector<double> > nInter = {{0.0, 0.0, 0.0, 0.0, 0.0},
+			{2.0, 3.0, 2.0, 0.0, 0.5}, {0.0, 0.0, 0.0, 0.0, 0.0}};
+	std::vector< std::vector<double> > previousFlux = {{0.0, 0.0, 0.0, 0.0, 0.0},
+			{-2.0, 3.0, 2.0, 0.0, -0.5}, {0.0, 0.0, 0.0, 0.0, 0.0}};
 
 	// Write the surface position
-	HDF5Utils::writeSurface3D(timeStep, iSurface);
+	HDF5Utils::writeSurface3D(timeStep, iSurface, nInter, previousFlux);
 
 	// Close the HDF5 file
 	xolotlCore::HDF5Utils::closeFile();
@@ -264,6 +294,20 @@ BOOST_AUTO_TEST_CASE(checkSurface3D) {
 	for (int i = 0; i < surfacePos.size(); i++) {
 		for (int j = 0; j < surfacePos[0].size(); j++) {
 			BOOST_REQUIRE_EQUAL(surfacePos[i][j], iSurface[i][j]);
+		}
+	}
+	auto nInterstitial = HDF5Utils::readNInterstitial3D("test.h5", timeStep);
+	// Check all the values
+	for (int i = 0; i < nInterstitial.size(); i++) {
+		for (int j = 0; j < nInterstitial[0].size(); j++) {
+			BOOST_REQUIRE_CLOSE(nInterstitial[i][j], nInter[i][j], 0.0001);
+		}
+	}
+	auto previousIFlux = HDF5Utils::readPreviousIFlux3D("test.h5", timeStep);
+	// Check all the values
+	for (int i = 0; i < previousIFlux.size(); i++) {
+		for (int j = 0; j < previousIFlux[0].size(); j++) {
+			BOOST_REQUIRE_CLOSE(previousIFlux[i][j], previousFlux[i][j], 0.0001);
 		}
 	}
 }

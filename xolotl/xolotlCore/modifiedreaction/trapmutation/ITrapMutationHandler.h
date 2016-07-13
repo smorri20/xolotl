@@ -4,6 +4,7 @@
 // Includes
 #include <PSICluster.h>
 #include <PSIClusterReactionNetwork.h>
+#include <IAdvectionHandler.h>
 #include <memory>
 
 namespace xolotlCore {
@@ -28,11 +29,27 @@ public:
 	 * rates of the reactions and call initializeIndex to define which trap-mutation
 	 * is allowed at each grid point.
 	 *
-	 * @param surfacePos The index of the position of the surface
 	 * @param network The network
 	 * @param grid The grid on the x axis
+	 * @param ny The number of grid points in the Y direction
+	 * @param hy The step size in the Y direction
+	 * @param nz The number of grid points in the Z direction
+	 * @param hz The step size in the Z direction
 	 */
-	virtual void initialize(int surfacePos, PSIClusterReactionNetwork *network,
+	virtual void initialize(PSIClusterReactionNetwork *network,
+			std::vector<double> grid, int ny = 0, double hy = 0.0,
+			int nz = 0, double hz = 0.0) = 0;
+
+	/**
+	 * This method defines which trap-mutation is allowed at each grid point.
+	 *
+	 * @param surfacePos The index of the position of the surface
+	 * @param network The network
+	 * @param advectionHandlers The vector of advection handlers
+	 * @param grid The grid on the x axis
+	 */
+	virtual void initializeIndex1D(int surfacePos, PSIClusterReactionNetwork *network,
+			std::vector<IAdvectionHandler *> advectionHandlers,
 			std::vector<double> grid) = 0;
 
 	/**
@@ -40,10 +57,31 @@ public:
 	 *
 	 * @param surfacePos The index of the position of the surface
 	 * @param network The network
+	 * @param advectionHandlers The vector of advection handlers
 	 * @param grid The grid on the x axis
+	 * @param ny The number of grid points in the Y direction
+	 * @param hy The step size in the Y direction
 	 */
-	virtual void initializeIndex(int surfacePos, PSIClusterReactionNetwork *network,
-			std::vector<double> grid) = 0;
+	virtual void initializeIndex2D(std::vector<int> surfacePos, PSIClusterReactionNetwork *network,
+			std::vector<IAdvectionHandler *> advectionHandlers,
+			std::vector<double> grid, int ny, double hy) = 0;
+
+	/**
+	 * This method defines which trap-mutation is allowed at each grid point.
+	 *
+	 * @param surfacePos The index of the position of the surface
+	 * @param network The network
+	 * @param advectionHandlers The vector of advection handlers
+	 * @param grid The grid on the x axis
+	 * @param ny The number of grid points in the Y direction
+	 * @param hy The step size in the Y direction
+	 * @param nz The number of grid points in the Z direction
+	 * @param hz The step size in the Z direction
+	 */
+	virtual void initializeIndex3D(std::vector<std::vector<int> > surfacePos, PSIClusterReactionNetwork *network,
+			std::vector<IAdvectionHandler *> advectionHandlers,
+			std::vector<double> grid, int ny, double hy,
+			int nz, double hz) = 0;
 
 	/**
 	 * This method update the rate for the modified trap-mutation if the rates
@@ -75,15 +113,18 @@ public:
 	 * This method is called by the RHSFunction from the PetscSolver.
 	 *
 	 * @param network The network
-	 * @param xi The index of the position on the grid
 	 * @param concOffset The pointer to the array of concentration at the grid
 	 * point where the trap-mutation is computed
 	 * @param updatedConcOffset The pointer to the array of the concentration
 	 * at the grid point where the trap-mutation is computed used to find the
 	 * next solution
+	 * @param xi The index of the position on the grid in the depth direction
+	 * @param yj The index of the position on the grid in the Y direction
+	 * @param zk The index of the position on the grid in the Z direction
 	 */
 	virtual void computeTrapMutation(PSIClusterReactionNetwork *network,
-			int xi, double *concOffset, double *updatedConcOffset) = 0;
+			double *concOffset, double *updatedConcOffset,
+			int xi, int yj = 0, int zk = 0) = 0;
 
 	/**
 	 * Compute the partials due to the modified trap-mutation for all the
@@ -96,13 +137,15 @@ public:
 	 * partials for the trap-mutation
 	 * @param indices The pointer to the array that will contain the indices
 	 * of the clusters
-	 * @param xi The index of the grip point
+	 * @param xi The index of the position on the grid in the depth direction
+	 * @param yj The index of the position on the grid in the Y direction
+	 * @param zk The index of the position on the grid in the Z direction
 	 *
 	 * @return The number of helium clusters that go through modified trap-mutation
 	 * at this grid point
 	 */
 	virtual int computePartialsForTrapMutation(PSIClusterReactionNetwork *network,
-			double *val, int *indices, int xi) = 0;
+			double *val, int *indices, int xi, int yj = 0, int zk = 0) = 0;
 
 };
 //end class ITrapMutationHandler

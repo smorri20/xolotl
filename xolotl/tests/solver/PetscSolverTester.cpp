@@ -54,7 +54,8 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 					"-pc_type fieldsplit "
 					"-fieldsplit_1_pc_type sor "
 					"-ts_final_time 1000 "
-					"-ts_max_steps 5" << std::endl
+					"-ts_max_steps 5 "
+					"-ts_exact_final_time stepover" << std::endl
 			<< "startTemp=900" << std::endl
 			<< "perfHandler=dummy" << std::endl
 			<< "flux=4.0e5" << std::endl
@@ -164,7 +165,8 @@ BOOST_AUTO_TEST_CASE(checkIrregularPetscSolver1DHandler) {
 					"-pc_type fieldsplit "
 					"-fieldsplit_1_pc_type sor "
 					"-ts_final_time 1000 "
-					"-ts_max_steps 5" << std::endl
+					"-ts_max_steps 5 "
+					"-ts_exact_final_time stepover" << std::endl
 			<< "startTemp=900" << std::endl
 			<< "perfHandler=dummy" << std::endl
 			<< "flux=4.0e5" << std::endl
@@ -274,7 +276,8 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 					"-pc_type fieldsplit "
 					"-fieldsplit_1_pc_type sor "
 					"-ts_final_time 1000 "
-					"-ts_max_steps 5" << std::endl
+					"-ts_max_steps 5 "
+					"-ts_exact_final_time stepover" << std::endl
 			<< "startTemp=900" << std::endl
 			<< "perfHandler=dummy" << std::endl
 			<< "flux=4.0e5" << std::endl
@@ -382,7 +385,8 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 					"-pc_type fieldsplit "
 					"-fieldsplit_1_pc_type sor "
 					"-ts_final_time 1000 "
-					"-ts_max_steps 5" << std::endl
+					"-ts_max_steps 5 "
+					"-ts_exact_final_time stepover" << std::endl
 			<< "startTemp=900" << std::endl
 			<< "perfHandler=dummy" << std::endl
 			<< "flux=4.0e5" << std::endl

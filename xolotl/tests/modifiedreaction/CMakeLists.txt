@@ -11,6 +11,7 @@ include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/modifiedreaction/trapmutation
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/modifiedreaction/bubblebursting)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants/psiclusters)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/advection)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf/dummy)
 include_directories(${Boost_BINARY_DIRS})

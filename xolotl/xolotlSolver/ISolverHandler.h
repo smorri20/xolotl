@@ -184,6 +184,13 @@ public:
 	virtual xolotlCore::IAdvectionHandler *getAdvectionHandler() const = 0;
 
 	/**
+	 * Get the advection handlers.
+	 *
+	 * @return The first advection handlers
+	 */
+	virtual std::vector<xolotlCore::IAdvectionHandler *> getAdvectionHandlers() const = 0;
+
+	/**
 	 * Get the modified trap-mutation handler.
 	 *
 	 * @return The modified trap-mutation handler
@@ -203,6 +210,13 @@ public:
 	 * @return The network
 	 */
 	virtual xolotlCore::PSIClusterReactionNetwork *getNetwork() const = 0;
+
+	/**
+	 * Get the network name.
+	 *
+	 * @return The network name
+	 */
+	virtual std::string getNetworkName() const = 0;
 
 }; //end class ISolverHandler
 

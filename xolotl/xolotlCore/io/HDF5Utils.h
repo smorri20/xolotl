@@ -49,10 +49,11 @@ namespace HDF5Utils {
 	 *
 	 * @param timeStep The number of the time step
 	 * @param time The physical time at this time step
+	 * @param previousTime The physical time at the previous time step
 	 * @param deltaTime The physical length of the time step
 	 */
 	void addConcentrationSubGroup(int timeStep, double time,
-			double deltaTime);
+			double previousTime, double deltaTime);
 
 	/**
 	 * Write the surface position as an attribute of the
@@ -60,8 +61,11 @@ namespace HDF5Utils {
 	 *
 	 * @param timeStep The number of the time step
 	 * @param iSurface The index of the surface position
+	 * @param nInter The quantity of interstitial at each surface position
+	 * @param previousFlux The previous I flux at each surface position
 	 */
-	void writeSurface1D(int timeStep, int iSurface);
+	void writeSurface1D(int timeStep, int iSurface,
+			double nInter, double previousFlux);
 
 	/**
 	 * Write the surface positions as a dataset of the
@@ -69,8 +73,11 @@ namespace HDF5Utils {
 	 *
 	 * @param timeStep The number of the time step
 	 * @param iSurface The indices of the surface position
+	 * @param nInter The quantity of interstitial at each surface position
+	 * @param previousFlux The previous I flux at each surface position
 	 */
-	void writeSurface2D(int timeStep, std::vector<int> iSurface);
+	void writeSurface2D(int timeStep, std::vector<int> iSurface,
+			std::vector<double> nInter, std::vector<double> previousFlux);
 
 	/**
 	 * Write the surface positions as a dataset of the
@@ -78,9 +85,13 @@ namespace HDF5Utils {
 	 *
 	 * @param timeStep The number of the time step
 	 * @param iSurface The indices of the surface position
+	 * @param nInter The quantity of interstitial at each surface position
+	 * @param previousFlux The previous I flux at each surface position
 	 */
 	void writeSurface3D(int timeStep,
-			std::vector< std::vector<int> > iSurface);
+			std::vector< std::vector<int> > iSurface,
+			std::vector< std::vector<double> > nInter,
+			std::vector< std::vector<double> > previousFlux);
 
 	/**
 	 * Add the concentration dataset at a specific grid point.
@@ -148,6 +159,15 @@ namespace HDF5Utils {
 			double &deltaTime);
 
 	/**
+	 * Read the previous time from the concentration group of a HDF5 file.
+	 *
+	 * @param fileName The name of the file to read from
+	 * @param lastTimeStep The value of the last written time step
+	 * @return The physical time at the previous timestep
+	 */
+	double readPreviousTime(const std::string& fileName, int lastTimeStep);
+
+	/**
 	 * Read the surface position from the concentration group of a HDF5 file in
 	 * the case of a 1D grid (one surface position).
 	 *
@@ -176,6 +196,72 @@ namespace HDF5Utils {
 	 * @return The vector of vector of indices of the surface position
 	 */
 	std::vector< std::vector<int> > readSurface3D(const std::string& fileName,
+			int lastTimeStep);
+
+	/**
+	 * Read the quantity of interstitial at the surface from the concentration
+	 * group of a HDF5 file in the case of a 1D grid (one surface position).
+	 *
+	 * @param fileName The name of the file to read from
+	 * @param lastTimeStep The value of the last written time step
+	 * @return The number of interstitial
+	 */
+	double readNInterstitial1D(const std::string& fileName, int lastTimeStep);
+
+	/**
+	 * Read the quantity of interstitial at each surface position
+	 * from the concentration group of a HDF5 file in
+	 * the case of a 2D grid (a vector of surface positions).
+	 *
+	 * @param fileName The name of the file to read from
+	 * @param lastTimeStep The value of the last written time step
+	 * @return The vector of interstitial quantity of the surface position
+	 */
+	std::vector<double> readNInterstitial2D(const std::string& fileName, int lastTimeStep);
+
+	/**
+	 * Read the quantity of interstitial at each surface position
+	 * from the concentration group of a HDF5 file in
+	 * the case of a 3D grid (a vector of vector of surface positions).
+	 *
+	 * @param fileName The name of the file to read from
+	 * @param lastTimeStep The value of the last written time step
+	 * @return The vector of interstitial quantity of the surface position
+	 */
+	std::vector< std::vector<double> > readNInterstitial3D(const std::string& fileName,
+			int lastTimeStep);
+
+	/**
+	 * Read the previous interstitial flux at the surface from the concentration
+	 * group of a HDF5 file in the case of a 1D grid (one surface position).
+	 *
+	 * @param fileName The name of the file to read from
+	 * @param lastTimeStep The value of the last written time step
+	 * @return The number of interstitial
+	 */
+	double readPreviousIFlux1D(const std::string& fileName, int lastTimeStep);
+
+	/**
+	 * Read the previous interstitial flux at each surface position
+	 *  from the concentration group of a HDF5 file in
+	 * the case of a 2D grid (a vector of surface positions).
+	 *
+	 * @param fileName The name of the file to read from
+	 * @param lastTimeStep The value of the last written time step
+	 * @return The vector of previous flux at each surface position
+	 */
+	std::vector<double> readPreviousIFlux2D(const std::string& fileName, int lastTimeStep);
+
+	/**
+	 * Read the previous interstitial flux at each surface position
+	 * from the concentration group of a HDF5 file in
+	 * the case of a 3D grid (a vector of vector of surface positions).
+	 *
+	 * @param fileName The name of the file to read from
+	 * @param lastTimeStep The value of the last written time step
+	 * @return The vector of previous flux at each surface position
+	 */
+	std::vector< std::vector<double> > readPreviousIFlux3D(const std::string& fileName,
 			int lastTimeStep);
 
 	/**

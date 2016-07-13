@@ -106,7 +106,8 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int,
 
 	// Initialize the modified trap-mutation handler and the bubble bursting one here
 	// because they add connectivity
-	mutationHandler->initialize(surfacePosition, network, grid);
+	mutationHandler->initialize(network, grid);
+	mutationHandler->initializeIndex1D(surfacePosition, network, advectionHandlers, grid);
 	burstingHandler->initialize(surfacePosition, network, grid);
 
 	// Get the diagonal fill
@@ -383,8 +384,8 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		}
 
 		// ----- Compute the modified trap-mutation over the locally owned part of the grid -----
-		mutationHandler->computeTrapMutation(network, xi, concOffset,
-				updatedConcOffset);
+		mutationHandler->computeTrapMutation(network, concOffset,
+				updatedConcOffset, xi);
 
 		// ----- Compute the bubble bursting over the locally owned part of the grid -----
 		burstingHandler->computeBursting(network, xi, updatedConcOffset);
