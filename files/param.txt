@@ -1,0 +1,12 @@
+#Tue May 17 12:03:50 EDT 2016
+dimensions=1
+process=diff movingSurface
+networkFile=networkInit.h5
+vizHandler=std
+perfHandler=dummy
+material=W100
+startTemp=933
+voidPortion=20.0
+regularGrid=no
+flux=4.0e7
+petscArgs=-plot_series -ts_exact_final_time stepover -helium_retention -helium_cumul -fieldsplit_0_pc_type sor -ts_max_snes_failures 200 -pc_fieldsplit_detect_coupling -ts_dt 1.0e-12 -ts_adapt_dt_max 1.0e-8 -ts_monitor -pc_type fieldsplit -fieldsplit_1_pc_type redundant -ts_final_time 1.0e-6 -ts_max_steps 200 
