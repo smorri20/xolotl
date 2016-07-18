@@ -135,6 +135,7 @@ public class Preprocessor {
 		petscOptions.put("-fieldsplit_0_pc_type", "sor");
 		petscOptions.put("-fieldsplit_1_pc_type", "redundant");
 		petscOptions.put("-ts_monitor", "");
+		petscOptions.put("-ts_exact_final_time", "stepover");
 
 		// Get the string of PETSc arguments from the command line
 		// and split the string around the blank spaces

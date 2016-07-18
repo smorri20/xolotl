@@ -51,10 +51,10 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int,
 	// advection toward the surface (or a dummy one if it is deactivated)
 	advectionHandlers[0]->setLocation(grid[surfacePosition]);
 
-	for (int i = 0; i < grid.size(); i++) {
-		std::cout << grid[i] - grid[surfacePosition] << " ";
-	}
-	std::cout << std::endl;
+//	for (int i = 0; i < grid.size(); i++) {
+//		std::cout << grid[i] - grid[surfacePosition] << " ";
+//	}
+//	std::cout << std::endl;
 
 	// Set the size of the partial derivatives vectors
 	clusterPartials.resize(dof, 0.0);
