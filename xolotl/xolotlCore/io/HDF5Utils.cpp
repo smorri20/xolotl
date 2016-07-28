@@ -6,11 +6,11 @@
 
 using namespace xolotlCore;
 
-hid_t propertyListId, fileId, concentrationGroupId, subConcGroupId, concDataspaceId, networkGroupId,
-		networkDataspaceId, headerGroupId;
+hid_t propertyListId, fileId, concentrationGroupId, subConcGroupId, concDataspaceId,
+		headerGroupId;
 herr_t status;
 
-void HDF5Utils::initializeFile(const std::string& fileName, int networkSize) {
+void HDF5Utils::initializeFile(const std::string& fileName) {
 	// Set up file access property list with parallel I/O access
 	propertyListId = H5Pcreate(H5P_FILE_ACCESS);
 	H5Pset_fapl_mpio(propertyListId, MPI_COMM_WORLD, MPI_INFO_NULL);
@@ -24,16 +24,6 @@ void HDF5Utils::initializeFile(const std::string& fileName, int networkSize) {
 	// Create the group where the header will be stored
 	headerGroupId = H5Gcreate2(fileId, "headerGroup", H5P_DEFAULT, H5P_DEFAULT,
 	H5P_DEFAULT);
-
-	// Create the group where the network will be stored
-	networkGroupId = H5Gcreate2(fileId, "networkGroup", H5P_DEFAULT,
-	H5P_DEFAULT, H5P_DEFAULT);
-
-	// Create the dataspace for the network with dimension dims
-	hsize_t dims[2];
-	dims[0] = networkSize;
-	dims[1] = 6;
-	networkDataspaceId = H5Screate_simple(2, dims, NULL);
 
 	// Create the group where the concentrations will be stored
 	concentrationGroupId = H5Gcreate2(fileId, "concentrationsGroup", H5P_DEFAULT,
@@ -118,61 +108,22 @@ void HDF5Utils::fillHeader(int nx, double hx, int ny,
 	return;
 }
 
-void HDF5Utils::fillNetwork(PSIClusterReactionNetwork *network) {
-	// Create the array that will store the network
-	int networkSize = network->size();
-	double networkArray[networkSize][6];
+void HDF5Utils::fillNetwork(const std::string& fileName) {
+	// Set up file access property list with parallel I/O access
+	propertyListId = H5Pcreate(H5P_FILE_ACCESS);
+	H5Pset_fapl_mpio(propertyListId, MPI_COMM_WORLD, MPI_INFO_NULL);
 
-	// Get all the reactants
-	auto reactants = network->getAll();
+	// Open the given HDF5 file with read only access
+	hid_t fromFileId = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, propertyListId);
 
-	// Loop on them
-	for (int i = 0; i < networkSize; i++) {
-		// Get the i-th reactant
-		auto reactant = (PSICluster *) reactants->at(i);
+	// Close the property list
+	status = H5Pclose(propertyListId);
 
-		// Get its composition to store it
-		auto composition = reactant->getComposition();
-		networkArray[i][0] = composition["He"];
-		networkArray[i][1] = composition["V"];
-		networkArray[i][2] = composition["I"];
-
-		// Get its formation energy to store it
-		double formationEnergy = reactant->getFormationEnergy();
-		networkArray[i][3] = formationEnergy;
-
-		// Get its migration energy to store it
-		double migrationEnergy = reactant->getMigrationEnergy();
-		networkArray[i][4] = migrationEnergy;
-
-		// Get its diffusion factor to store it
-		double diffusionFactor = reactant->getDiffusionFactor();
-		networkArray[i][5] = diffusionFactor;
-	}
-
-	// Create the dataset for the network
-	hid_t datasetId = H5Dcreate2(networkGroupId, "network", H5T_IEEE_F64LE,
-			networkDataspaceId,
-			H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-
-	// Write networkArray in the dataset
-	status = H5Dwrite(datasetId, H5T_IEEE_F64LE, H5S_ALL, H5S_ALL,
-	H5P_DEFAULT, &networkArray);
-
-	// Create the attribute for the network size
-	hid_t networkSizeDataspaceId = H5Screate(H5S_SCALAR);
-	hid_t networkSizeAttributeId = H5Acreate2(datasetId, "networkSize", H5T_STD_I32LE,
-			networkSizeDataspaceId,
+	status = H5Ocopy(fromFileId, "/networkGroup", fileId, "/networkGroup",
 			H5P_DEFAULT, H5P_DEFAULT);
 
-	// Write it
-	status = H5Awrite(networkSizeAttributeId, H5T_STD_I32LE, &networkSize);
-
-	// Close everything
-	status = H5Sclose(networkDataspaceId);
-	status = H5Sclose(networkSizeDataspaceId);
-	status = H5Aclose(networkSizeAttributeId);
-	status = H5Dclose(datasetId);
+	// Close the from file
+	status = H5Fclose(fromFileId);
 
 	return;
 }
@@ -440,7 +391,6 @@ void HDF5Utils::fillConcentrations(const std::vector<std::vector<double> >& conc
 void HDF5Utils::finalizeFile() {
 	// Close everything
 	status = H5Gclose(headerGroupId);
-	status = H5Gclose(networkGroupId);
 	status = H5Gclose(concentrationGroupId);
 	status = H5Fclose(fileId);
 

@@ -105,9 +105,10 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 
 	// Get the network
 	auto network = solverHandler->getNetwork();
-
 	// Network size
 	const int networkSize = network->size();
+	// Get all the super clusters
+	auto superClusters = network->getAll("Super");
 
 	// Get the position of the surface
 	int surfacePos = solverHandler->getSurfacePosition();
@@ -144,7 +145,7 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 
 			// Loop on the concentrations
 			concVector.clear();
-			for (int l = 0; l < networkSize; l++) {
+			for (int l = 0; l < networkSize + 2 * superClusters.size(); l++) {
 				if (gridPointSolution[l] > 1.0e-16 || gridPointSolution[l] < -1.0e-16) {
 					// Create the concentration vector for this cluster
 					std::vector<double> conc;
@@ -203,7 +204,7 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 /**
  * This is a monitoring method that will compute the helium retention
  */
-PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
+PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *) {
 	PetscErrorCode ierr;
 	PetscInt xs, xm;
@@ -215,6 +216,9 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 
 	// Get the flux handler that will be used to compute fluxes.
 	auto fluxHandler = solverHandler->getFluxHandler();
+
+	// Get the network
+	auto network = solverHandler->getNetwork();
 
 	// Get the da from ts
 	DM da;
@@ -236,8 +240,8 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 	// Declare the pointer for the concentrations at a specific grid point
 	PetscReal *gridPointSolution;
 
-	// Get the network
-	auto network = solverHandler->getNetwork();
+//	// Get the network
+//	auto network = solverHandler->getNetwork();
 	// Get all the super clusters
 	auto superClusters = network->getAll("Super");
 
@@ -1761,7 +1765,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		checkPetscError(ierr, "setupPetsc1DMonitor: DMDAGetInfo failed.");
 
 		// Initialize the HDF5 file for all the processes
-		xolotlCore::HDF5Utils::initializeFile(hdf5OutputName1D, networkSize);
+		xolotlCore::HDF5Utils::initializeFile(hdf5OutputName1D);
 
 		// Get the solver handler
 		auto solverHandler = PetscSolver::getSolverHandler();
@@ -1773,7 +1777,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		xolotlCore::HDF5Utils::fillHeader(Mx, grid[1] - grid[0]);
 
 		// Save the network in the HDF5 file
-		xolotlCore::HDF5Utils::fillNetwork(network);
+		xolotlCore::HDF5Utils::fillNetwork(solverHandler->getNetworkName());
 
 		// Finalize the HDF5 file
 		xolotlCore::HDF5Utils::finalizeFile();

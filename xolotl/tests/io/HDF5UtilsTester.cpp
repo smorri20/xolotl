@@ -5,7 +5,7 @@
 #include <HDF5Utils.h>
 #include <PSIClusterReactionNetwork.h>
 #include <DummyHandlerRegistry.h>
-#include <PSIClusterNetworkLoader.h>
+#include <HDF5NetworkLoader.h>
 #include <XolotlConfig.h>
 #include <mpi.h>
 #include <memory>
@@ -28,20 +28,14 @@ BOOST_AUTO_TEST_CASE(checkIO) {
 	MPI_Init(&argc, &argv);
 
 	// Create the network loader
-	PSIClusterNetworkLoader loader =
-			PSIClusterNetworkLoader(make_shared<xolotlPerf::DummyHandlerRegistry>());
+	HDF5NetworkLoader loader =
+			HDF5NetworkLoader(make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Define the filename to load the network from
 	string sourceDir(XolotlSourceDirectory);
-	string pathToFile("/tests/testfiles/tungsten.txt");
+	string pathToFile("/tests/testfiles/tungsten_diminutive.h5");
 	string filename = sourceDir + pathToFile;
-	// Create the network stream
-	shared_ptr<istream> networkStream;
-	networkStream = make_shared<ifstream>(filename);
-	// Read the buffer of the stream
-	auto bufferSS = make_shared<stringstream>();
-	(*bufferSS) << networkStream->rdbuf();
-	// Give the network stream to the network loader
-	loader.setInputstream(bufferSS);
+	// Give the filename to the network loader
+	loader.setFilename(filename);
 
 	// Load the network
 	auto network = (PSIClusterReactionNetwork *) loader.load().get();
@@ -51,7 +45,7 @@ BOOST_AUTO_TEST_CASE(checkIO) {
 	// Set the time step number
 	int timeStep = 0;
 	// Initialize the HDF5 file
-	HDF5Utils::initializeFile("test.h5", networkSize);
+	HDF5Utils::initializeFile("test.h5");
 
 	// Set the number of grid points and step size
 	int nGrid = 5;
@@ -67,7 +61,7 @@ BOOST_AUTO_TEST_CASE(checkIO) {
 	HDF5Utils::fillHeader(nGrid, stepSize);
 
 	// Write the network in the HDF5 file
-	HDF5Utils::fillNetwork(network);
+	HDF5Utils::fillNetwork(filename);
 
 	// Finalize the HDF5 file
 	HDF5Utils::finalizeFile();
@@ -187,7 +181,7 @@ BOOST_AUTO_TEST_CASE(checkIO) {
 BOOST_AUTO_TEST_CASE(checkSurface2D) {
 	// Initialize the HDF5 file
 	int networkSize = 10;
-	HDF5Utils::initializeFile("test.h5", networkSize);
+	HDF5Utils::initializeFile("test.h5");
 
 	// Set the number of grid points and step size
 	int nGrid = 5;
@@ -251,7 +245,7 @@ BOOST_AUTO_TEST_CASE(checkSurface2D) {
 BOOST_AUTO_TEST_CASE(checkSurface3D) {
 	// Initialize the HDF5 file
 	int networkSize = 10;
-	HDF5Utils::initializeFile("test.h5", networkSize);
+	HDF5Utils::initializeFile("test.h5");
 
 	// Set the number of grid points and step size
 	int nGrid = 5;
