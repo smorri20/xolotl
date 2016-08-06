@@ -141,7 +141,7 @@ void PSICluster::createDissociationConnectivity() {
 	if (size == 1) {
 		// all the cluster of the same type dissociate into it
 		auto allSameTypeReactants = network->getAll(typeName);
-		for (int i = 0; i < allSameTypeReactants.size(); i++) {
+		for (unsigned int i = 0; i < allSameTypeReactants.size(); i++) {
 			auto cluster = (PSICluster *) allSameTypeReactants[i];
 			// X_1 cannot dissociate and X_2 --> X + X was already
 			// counted in the previous step
@@ -300,7 +300,7 @@ void PSICluster::combineClusters(std::vector<Reactant *> & reactants,
 }
 
 void PSICluster::replaceInCompound(std::vector<Reactant *> & reactants,
-		const std::string& oldComponentName, const std::string& newComponentName) {
+		const std::string& oldComponentName) {
 	// Local Declarations
 	std::map<std::string, int> secondReactantComp, productReactantComp;
 	int numReactants = reactants.size();
@@ -339,8 +339,7 @@ void PSICluster::replaceInCompound(std::vector<Reactant *> & reactants,
 	return;
 }
 
-void PSICluster::fillVWithI(const std::string& secondClusterName,
-		std::vector<Reactant *> & reactants) {
+void PSICluster::fillVWithI(std::vector<Reactant *> & reactants) {
 	// Local Declarations
 	std::string productClusterName;
 	int firstClusterSize = 0, secondClusterSize = 0, productClusterSize = 0,
@@ -475,6 +474,41 @@ std::vector<int> PSICluster::getDissociationConnectivity() const {
 	// Create the full vector from the set and return it
 	return getFullConnectivityVector(dissociationConnectivitySet,
 			network->size());
+}
+
+void PSICluster::resetConnectivities() {
+	// Clear both sets
+	reactionConnectivitySet.clear();
+	dissociationConnectivitySet.clear();
+
+	// Connect this cluster to itself since any reaction will affect it
+	setReactionConnectivity(id);
+	setDissociationConnectivity(id);
+
+	// Loop on the effective reacting pairs
+	for (auto it = effReactingPairs.begin(); it != effReactingPairs.end(); ++it) {
+		// The cluster is connecting to both clusters in the pair
+		setReactionConnectivity((*it)->first->id);
+		setReactionConnectivity((*it)->second->id);
+	}
+
+	// Loop on the effective combining reactants
+	for (auto it = effCombiningReactants.begin(); it != effCombiningReactants.end(); ++it) {
+		// The cluster is connecting to the combining cluster
+		setReactionConnectivity((*it)->combining->id);
+	}
+
+	// Loop on the effective dissociating pairs
+	for (auto it = effDissociatingPairs.begin(); it != effDissociatingPairs.end(); ++it) {
+		// The cluster is connecting to the dissociating cluster which
+		// is the first one by definition
+		setDissociationConnectivity((*it)->first->id);
+	}
+
+	// Don't loop on the effective emission pairs because
+	// this cluster is not connected to them
+
+	return;
 }
 
 int PSICluster::getSize() const {
@@ -799,10 +833,10 @@ std::vector<int> PSICluster::getConnectivity() const {
 
 	// The reaction and dissociation vectors must have a length equal to the
 	// number of clusters
-	if (reactionConnVector.size() != connectivityLength) {
+	if (reactionConnVector.size() != (unsigned int)connectivityLength) {
 		throw std::string("The reaction vector is an incorrect length");
 	}
-	if (dissociationConnVector.size() != connectivityLength) {
+	if (dissociationConnVector.size() != (unsigned int)connectivityLength) {
 		throw std::string("The dissociation vector is an incorrect length");
 	}
 

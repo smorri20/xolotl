@@ -89,14 +89,14 @@ Options::~Options(void) {
 	optionsMap.clear();
 
 	// release the dynamically-allocated PETSc arguments
-	for (unsigned int i = 0; i < petscArgc; ++i) {
+	for (int i = 0; i < petscArgc; ++i) {
 		delete[] petscArgv[i];
 	}
 	delete[] petscArgv;
 	petscArgv = NULL;
 }
 
-void Options::readParams(int argc, char* argv[]) {
+void Options::readParams(char* argv[]) {
 	// All the options are read from an ASCII file that is parsed
 	// with the TokenizedLineReader.
 	// We assume that the name of this file is the first and only
@@ -177,5 +177,4 @@ void Options::showHelp(std::ostream& os) const {
 	os << std::endl;
 }
 
-};  // end namespace xolotlCore
-
+} // end namespace xolotlCore

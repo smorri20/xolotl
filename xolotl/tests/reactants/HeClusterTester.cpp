@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 		0
 	};
 
-	for (int i = 0; i < reactionConnectivity.size(); i++) {
+	for (unsigned int i = 0; i < reactionConnectivity.size(); i++) {
 		BOOST_REQUIRE_EQUAL(reactionConnectivity[i], connectivityExpected[i]);
 	}
 
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 	// Local Declarations
 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
 
-	// Get an He cluster with compostion 1,0,0.
+	// Get an He cluster with composition 1,0,0.
 	auto cluster = (PSICluster *) network->get("He", 1);
 	// Get one that it combines with (He2)
 	auto secondCluster = (PSICluster *) network->get("He", 2);
@@ -135,12 +135,12 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	// Local Declarations
 	// The vector of partial derivatives to compare with
 	double knownPartials[] = {-1.96821e+11, 1.23317e+13, 3.21149e+12,
-			-1.79298e+10, -1.95933e+10, 0.0, -1.87741e+10, -2.04376e+10, 0.0, -1.79298e+10,
-			2.25143e+12, 0.0, -1.79298e+10, 2.25143e+12, 0.0};
+			-1.79298e+10, -1.95933e+10, 0.0, -1.87741e+10, -2.04376e+10, 0.0, 2.23350e+12,
+			2.25143e+12, 2.46031e+12, -1.79298e+10, 2.25143e+12, 0.0};
 	// Get the simple reaction network
 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork(3);
 
-	// Get an He cluster with compostion 1,0,0.
+	// Get an He cluster with composition 1,0,0.
 	auto cluster = (PSICluster *) network->get("He", 1);
 	// Set the diffusion factor and migration energy based on the
 	// values from the tungsten benchmark for this problem.
@@ -155,10 +155,10 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	auto partials = cluster->getPartialDerivatives();
 
 	// Check the size of the partials
-	BOOST_REQUIRE_EQUAL(partials.size(), 15);
+	BOOST_REQUIRE_EQUAL(partials.size(), 15U);
 
 	// Check all the values
-	for (int i = 0; i < partials.size(); i++) {
+	for (unsigned int i = 0; i < partials.size(); i++) {
 		BOOST_REQUIRE_CLOSE(partials[i], knownPartials[i], 0.1);
 	}
 

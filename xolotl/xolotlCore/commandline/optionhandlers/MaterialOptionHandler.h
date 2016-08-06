@@ -23,8 +23,7 @@ public:
     			"                                    The material options are as follows: "
     			"{W100, W110, W111, WSRIM}, where W is for \n"
     			"                                    tungsten and the numbers correspond to "
-    			"the surface orientation. SRIM is for the He range output of SRIM simulations "
-			"				     for amorphous W\n")
+    			"the surface orientation.\n")
 	{}
 
 	/**

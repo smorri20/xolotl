@@ -18,6 +18,12 @@ ELSE()
     MESSAGE(FATAL_ERROR "XOLOTL requires C++11 support from C++ compiler")
 ENDIF()
 
+# Request warnings as diagnostic messages
+IF (CMAKE_COMPILER_IS_GNUCXX)
+    message(STATUS "GCC detected, adding some options to request warnings")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wno-vla")
+ENDIF()
+
 # Tell CMake to look for static libraries
 SET(BUILD_SHARED_LIBS OFF)
 
@@ -101,7 +107,7 @@ include_directories(${PETSC_INCLUDES})
 configure_file ("${CMAKE_SOURCE_DIR}/XolotlConfig.h.in" "${CMAKE_SOURCE_DIR}/XolotlConfig.h")
 
 # Setup the library list
-set(XOLOTL_LIBS xolotlReactants xolotlSolver xolotlIO xolotlPerf xolotlViz
+set(XOLOTL_LIBS xolotlReactants xolotlSolver xolotlIO xolotlPerf xolotlViz 
 xolotlFactory xolotlCL ${PETSC_LIBRARIES} ${HDF5_LIBRARIES})
 
 # Add an executable for the main program

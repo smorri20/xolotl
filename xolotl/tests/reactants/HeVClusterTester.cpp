@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 		0
 	};
 		
-	for (int i = 0; i < reactionConnectivity.size(); i++) {
+	for (unsigned int i = 0; i < reactionConnectivity.size(); i++) {
 		BOOST_REQUIRE_EQUAL(reactionConnectivity[i], connectivityExpected[i]);
 	}
 
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(checkTotalFlux) {
 	// Local Declarations
 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
 
-	// Get an HeV cluster with compostion 2,1,0.
+	// Get an HeV cluster with composition 2,1,0.
 	vector<int> composition = {2, 1, 0};
 	auto cluster = (PSICluster *) network->getCompound(
 			"HeV",composition);
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	// Get the simple reaction network
 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork(3);
 
-	// Get an HeV cluster with compostion 2,1,0.
+	// Get an HeV cluster with composition 2,1,0.
 	vector<int> composition = {2, 1, 0};
 	auto cluster = (PSICluster *) network->getCompound(
 			"HeV",composition);
@@ -183,10 +183,10 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	auto partials = cluster->getPartialDerivatives();
 
 	// Check the size of the partials
-	BOOST_REQUIRE_EQUAL(partials.size(), 15);
+	BOOST_REQUIRE_EQUAL(partials.size(), 15U);
 
 	// Check all the values
-	for (int i = 0; i < partials.size(); i++) {
+	for (unsigned int i = 0; i < partials.size(); i++) {
 		BOOST_REQUIRE_CLOSE(partials[i], knownPartials[i], 0.1);
 	}
 

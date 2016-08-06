@@ -59,7 +59,7 @@ void PSIClusterReactionNetwork::setDefaultPropsAndNames() {
 }
 
 PSIClusterReactionNetwork::PSIClusterReactionNetwork() :
-		ReactionNetwork() {
+		ReactionNetwork(), temperature(0.0) {
 	// Setup the properties map and the name lists
 	setDefaultPropsAndNames();
 
@@ -68,7 +68,7 @@ PSIClusterReactionNetwork::PSIClusterReactionNetwork() :
 
 PSIClusterReactionNetwork::PSIClusterReactionNetwork(
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		ReactionNetwork(registry) {
+		ReactionNetwork(registry), temperature(0.0) {
 	// Setup the properties map and the name lists
 	setDefaultPropsAndNames();
 
@@ -79,7 +79,8 @@ PSIClusterReactionNetwork::PSIClusterReactionNetwork(
 		const PSIClusterReactionNetwork &other) :
 		ReactionNetwork(other),
 		names(other.getNames()),
-		compoundNames(other.getCompoundNames()) {
+		compoundNames(other.getCompoundNames()),
+		temperature(other.getTemperature()) {
 	// The size and ids do not need to be copied. They will be fixed when the
 	// reactants are added.
 
@@ -99,7 +100,7 @@ PSIClusterReactionNetwork::PSIClusterReactionNetwork(
 			it != other.mixedSpeciesMap.end(); ++it) {
 		reactants.push_back(it->second);
 	}
-	for (int i = 0; i < reactants.size(); i++) {
+	for (unsigned int i = 0; i < reactants.size(); i++) {
 		add(reactants[i]->clone());
 	}
 
@@ -282,6 +283,17 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<Reactant> reactant) {
 		clusters->push_back(reactant);
 		// Add the pointer to the list of all clusters
 		allReactants->push_back(reactant.get());
+	}
+
+	return;
+}
+
+void PSIClusterReactionNetwork::reinitializeConnectivities() {
+	// Loop on all the reactants to reset their connectivities
+	PSICluster * cluster;
+	for (auto it = allReactants->begin(); it != allReactants->end(); ++it) {
+		cluster = (PSICluster *) *it;
+		cluster->resetConnectivities();
 	}
 
 	return;

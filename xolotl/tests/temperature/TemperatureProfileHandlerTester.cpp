@@ -56,19 +56,20 @@ BOOST_AUTO_TEST_CASE(check_getTemperature) {
 
 	// Vector to hold interpolated values
 	std::vector<double> tempInterp;
-	for (int i = 0; i < t.size(); i++) {
+	for (unsigned int i = 0; i < t.size(); i++) {
 		tempInterp.push_back(testTemp->getTemperature(pos, t[i]));
 	}
 
 	// Verify the values
-	for(int j = 0; j < t.size(); j++)
+	for(unsigned int j = 0; j < t.size(); j++)
 		BOOST_REQUIRE_CLOSE(tempInterp[j], trueInterp[j], 10e-8);
 
-    // Remove the created file
+	// Remove the created file
 	std::string tempFile = "tempFile.dat";
-    std::remove(tempFile.c_str());
+	if (std::remove(tempFile.c_str()) != 0)
+		throw std::string("Error deleting " + tempFile);
 
-    return;
+	return;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

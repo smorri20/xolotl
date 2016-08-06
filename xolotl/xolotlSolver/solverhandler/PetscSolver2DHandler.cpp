@@ -7,8 +7,24 @@
 namespace xolotlSolver {
 
 void PetscSolver2DHandler::createSolverContext(DM &da, int nx, double hx, int ny,
-		double hy, int nz, double hz) {
+		double hy, int, double) {
 	PetscErrorCode ierr;
+
+	// Set the last temperature to 0
+	lastTemperature = 0.0;
+
+	// Reinitialize the connectivities in the network after updating the temperature
+	// Get the temperature from the temperature handler
+	auto temperature = temperatureHandler->getTemperature({0.0, 0.0, 0.0}, 0.0);
+
+	// Update the network if the temperature changed
+	if (!xolotlCore::equal(temperature, lastTemperature)) {
+		network->setTemperature(temperature);
+		lastTemperature = temperature;
+	}
+
+	// Recompute Ids and network size and redefine the connectivities
+	network->reinitializeConnectivities();
 
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = network->size();
@@ -30,9 +46,6 @@ void PetscSolver2DHandler::createSolverContext(DM &da, int nx, double hx, int ny
 	// Set the size of the partial derivatives vectors
 	clusterPartials.resize(dof, 0.0);
 	reactingPartialsForCluster.resize(dof, 0.0);
-
-	// Set the last temperature to 0
-	lastTemperature = 0.0;
 
 	/*  The only spatial coupling in the Jacobian is due to diffusion.
 	 *  The ofill (thought of as a dof by dof 2d (row-oriented) array represents
@@ -146,7 +159,7 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) const {
 				if (i >= xs && i < xs + xm && j >= ys && j < ys + ym) {
 					concOffset = concentrations[j][i];
 					// Loop on the concVector size
-					for (int l = 0; l < concVector.size(); l++) {
+					for (unsigned int l = 0; l < concVector.size(); l++) {
 						concOffset[(int) concVector.at(l).at(0)] =
 								concVector.at(l).at(1);
 					}
@@ -294,6 +307,9 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	ierr = DMRestoreLocalVector(da, &localC);
 	checkPetscError(ierr, "PetscSolver2DHandler::updateConcentration: DMRestoreLocalVector failed.");
 
+	// Clear memory
+	delete [] concVector;
+
 	return;
 }
 
@@ -418,6 +434,12 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 			}
 		}
 	}
+
+	/*
+	 Restore vectors
+	 */
+	ierr = DMDAVecRestoreArrayDOF(da, localC, &concs);
+	checkPetscError(ierr, "PetscSolver2DHandler::computeOffDiagonalJacobian: DMDAVecRestoreArrayDOF failed.");
 
 	return;
 }
