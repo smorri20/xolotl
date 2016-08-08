@@ -3,6 +3,7 @@
 
 #include "FluxHandler.h"
 #include <cmath>
+#include <fstream>
 
 namespace xolotlCore {
 
@@ -21,23 +22,27 @@ private:
 	 * @return The evaluated value
 	 */
 	double FitFunction(double x) {
-		// Value at which the flux goes to 0
-		double x1 = 9.3;
 
-		if (x > x1) return 0.0;
+		double p0, p1, z;
+		double value;
 
-		double x2 = 2.0 * x/10.001-1.0;
+//		// Uncomment to read the parameters from a file
+//		ifstream parameters;
+//		parameters.open("/home/ocekmer/Workspaces/UQTk-Xolotl/Step2_SurrogateConstruction/FitParameters.dat");
+//		double p[2];
+//		for (int i=0;i<2;i++)
+//			parameters >> p[i];
+//		z = (x-p[0])/p[1];
+//		value = 1/p[1] * exp(-(z+exp(-z)));
+//		parameters.close();
 
-		// Compute the fit
-		double value = 0.401800
-				- 0.499444 * x2
-				- 0.180232 * 1./2. * (3.0 * pow(x2, 2)-1.0)
-				+ 0.506055 * 1./2. * (5.0 * pow(x2, 3)-3.0 * x2)
-				- 0.260581 * 1./8. * (35.0 * pow(x2, 4)-30.0 * pow(x2, 2) + 3.0)
-				+ 0.001267 * 1./8. * (63.0 * pow(x2, 5)-70.0 * pow(x2, 3) + 15.0 * x2)
-				+ 0.038797 * 1./16. * (231.0 * pow(x2, 6)-315.0 * pow(x2, 4) + 105.0 * (x2, 2) - 5.0);
+		p0 = 1.083180509068046;
+		p1 = 0.9468532619150253;
 
-		return std::max(value,0.0);
+		z = (x-p0)/p1;
+		value = 1/p1 * exp(-(z+exp(-z)));
+
+		return value;
 	}
 
 public:

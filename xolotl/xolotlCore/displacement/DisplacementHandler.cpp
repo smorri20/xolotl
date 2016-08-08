@@ -61,8 +61,8 @@ void DisplacementHandler::initializeDisplacementHandler(PSIClusterReactionNetwor
 	// Check that the helium cluster is present in the network
 	if (!displacementCluster) {
 		throw std::string(
-				"\nThe single helium cluster is not present in the network, "
-				"cannot use the flux option!");
+				"\nThe single vacancy cluster is not present in the network, "
+				"cannot use the desorption branch!");
 	}
 	displacementIndex = displacementCluster->getId() - 1;
 
