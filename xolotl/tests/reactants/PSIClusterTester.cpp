@@ -8,8 +8,8 @@
 #define BOOST_TEST_MODULE Regression
 
 #include <boost/test/included/unit_test.hpp>
-#include "../../xolotlPerf/HandlerRegistryFactory.h"
-#include "../../xolotlPerf/dummy/DummyHandlerRegistry.h"
+#include <xolotlPerf.h>
+#include <DummyHandlerRegistry.h>
 #include <PSICluster.h>
 #include <PSIClusterReactionNetwork.h>
 #include <memory>
@@ -29,7 +29,6 @@ BOOST_AUTO_TEST_SUITE (PSICluster_testSuite)
 
 /** This operation checks the loader. */
 BOOST_AUTO_TEST_CASE(checkDiffusionCoefficient) {
-
 	// Local Declarations
 	PSICluster cluster(1, registry);
 
@@ -69,13 +68,13 @@ BOOST_AUTO_TEST_CASE(checkDiffusionCoefficient) {
 	cluster.setMigrationEnergy(0.013);
 	BOOST_REQUIRE_CLOSE(cluster.getDiffusionCoefficient(),9766651101.800613,0.0000001);
 
+	return;
 }
 
 /**
  * This operation tests the copy constructor.
  */
 BOOST_AUTO_TEST_CASE(checkCopying) {
-
 	// Local Declarations
 	PSICluster cluster(1, registry);
 	cluster.setDiffusionFactor(1.0);
@@ -106,27 +105,28 @@ BOOST_AUTO_TEST_CASE(checkCopying) {
 	// Check the migration energy
 	cluster.setMigrationEnergy(1.0);
 	copiedCluster.setMigrationEnergy(3.0);
-	BOOST_REQUIRE(abs(cluster.getMigrationEnergy() -
+	BOOST_REQUIRE(fabs(cluster.getMigrationEnergy() -
 					copiedCluster.getMigrationEnergy()) > 2.0 - 1e-5);
 
 	// Check cloning. Note that clone returns a shared_ptr!
 	auto clusterClone = cluster.clone();
 	BOOST_REQUIRE_EQUAL(cluster.getName(), clusterClone->getName());
+
+	return;
 }
 
 /**
  * This operation tests the default values returned by select flux routines.
  */
 BOOST_AUTO_TEST_CASE(checkDefaultFluxes) {
-
 	// Local Declarations
 	PSICluster cluster(1, registry);
 
 	// Check the default values of the fluxes
-	BOOST_REQUIRE_CLOSE(cluster.getProductionFlux(273.0), 0.0, 1e-5);
-	BOOST_REQUIRE_CLOSE(cluster.getCombinationFlux(273.0), 0.0, 1e-5);
-	BOOST_REQUIRE_CLOSE(cluster.getDissociationFlux(273.0), 0.0, 1e-5);
-	BOOST_REQUIRE_CLOSE(cluster.getTotalFlux(273.0), 0.0, 1e-5);
+	BOOST_REQUIRE_CLOSE(cluster.getProductionFlux(), 0.0, 1e-5);
+	BOOST_REQUIRE_CLOSE(cluster.getCombinationFlux(), 0.0, 1e-5);
+	BOOST_REQUIRE_CLOSE(cluster.getDissociationFlux(), 0.0, 1e-5);
+	BOOST_REQUIRE_CLOSE(cluster.getTotalFlux(), 0.0, 1e-5);
 
 }
 

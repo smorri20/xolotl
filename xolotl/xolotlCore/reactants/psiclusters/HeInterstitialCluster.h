@@ -3,14 +3,13 @@
 
 // Includes
 #include "PSICluster.h"
-#include "../../xolotlPerf/HandlerRegistryFactory.h"
 #include <string>
 #include <map>
 
 namespace xolotlCore {
 
 /**
- *  A cluster composed of helium and vacancies
+ *  A cluster composed of helium and intersititial.
  */
 class HeInterstitialCluster : public PSICluster {
 
@@ -30,60 +29,6 @@ private:
 		PSICluster(1)
 	{ numHe = 1; numI = 1; }
 
-public:
-
-	/**
-	 * The constructor. All HeInterstitialClusters must be initialized with a map
-	 * that describes the species of which the cluster is composed. The map
-	 * should contain as its keys the names of the species and the sizes of the
-	 * species as its values. The names of the species must be one of
-	 * {He,I}.
-	 */
-	HeInterstitialCluster(int numHe, int numI,
-			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
-
-	/**
-	 * Copy constructor
-	 * @param other the reactant to be copied
-	 */
-	HeInterstitialCluster(const HeInterstitialCluster &other);
-
-	//! Destructor
-	~HeInterstitialCluster();
-
-	/**
-	 * This operation returns a Reactant that is created using the copy
-	 * constructor of HeInterstitialCluster.
-	 * @return A copy of this reactant.
-	 */
-	virtual std::shared_ptr<Reactant> clone();
-
-	/**
-	 * This operation returns the total generation rate due to emission for
-	 * this cluster.
-	 */
-	double getGenByEm();
-
-	/**
-	 * This operation returns the total annihilation rate due to emission for
-	 * this cluster.
-	 */
-	double getAnnByEm();
-
-	/**
-	 * This operation returns true to signify that this cluster is a mixture of
-	 * He and I.
-	 */
-	virtual bool isMixed() const { return true; };
-
-	/**
-	 * This operation overrides Reactant's setTemperature operation to
-	 * correctly recompute the diffusion coefficient and other
-	 * temperature-dependent quantities when the temperature is set.
-	 * @param temp
-	 */
-	virtual void setTemperature(double temp);
-
 	/**
 	 * This operation handles partial replacement reactions of the form
 	 *
@@ -99,11 +44,51 @@ public:
 	 * cluster of the form C_z.
 	 * @param oldComponentName The name of the component that will be partially
 	 * replaced.
-	 * @param newComponentName The name of the component that will replace the old
-	 * component.
 	 */
 	void replaceInCompound(std::vector<Reactant *> & clusters,
-			std::string oldComponentName, std::string newComponentName);
+			const std::string& oldComponentName);
+
+public:
+
+	/**
+	 * The constructor. All HeInterstitialClusters must be initialized with a map
+	 * that describes the species of which the cluster is composed. The map
+	 * should contain as its keys the names of the species and the sizes of the
+	 * species as its values. The names of the species must be one of
+	 * {He,I}.
+	 *
+	 * @param numHe The number of helium atoms in this cluster
+	 * @param numI The number of interstitial defect in this cluster
+	 * @param registry The performance handler registry
+	 */
+	HeInterstitialCluster(int numHe, int numI,
+			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+
+	/**
+	 * Copy constructor
+	 *
+	 * @param other the reactant to be copied
+	 */
+	HeInterstitialCluster(const HeInterstitialCluster &other);
+
+	//! Destructor
+	~HeInterstitialCluster() {}
+
+	/**
+	 * This operation returns a Reactant that is created using the copy
+	 * constructor of HeInterstitialCluster.
+	 *
+	 * @return A copy of this reactant
+	 */
+	virtual std::shared_ptr<Reactant> clone();
+
+	/**
+	 * This operation returns true to signify that this cluster is a mixture of
+	 * He and I.
+	 *
+	 * @return True if mixed
+	 */
+	virtual bool isMixed() const {return true;}
 
 	/**
 	 * Computes a row of the reaction connectivity matrix corresponding to

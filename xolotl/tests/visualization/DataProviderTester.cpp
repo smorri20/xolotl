@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(checkData) {
 	BOOST_REQUIRE_EQUAL(dataPoints->size(), myPoints->size());
 
 	// Loop on all the points in dataPoints
-	for (int i = 0; i < dataPoints->size(); i++) {
+	for (unsigned int i = 0; i < dataPoints->size(); i++) {
 
 		// Check that all the fields are the same
 		BOOST_REQUIRE_EQUAL(dataPoints->at(i).value, myPoints->at(i).value);
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(checkData) {
 	}
 
 	// Get the mean value of the data
-	auto mean = myDataProvider->getDataMean();
+	double mean = myDataProvider->getDataMean();
 
 	// Check it is the right mean value:
 	// (3 + 2 + 5 - 8 + 7) / 5

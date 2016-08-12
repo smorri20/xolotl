@@ -12,21 +12,23 @@ namespace xolotlViz {
  * Plot the data value as a function of one dimension. Available PlottingStyle are POINTS or LINE.
  * It can be associated to QvsXDataProvider, QvsYDataProvider, QvsZDataProvider, or QvsTimeDataProvider.
  */
-class ScatterPlot: public Plot{
+class ScatterPlot: public Plot {
 
 private:
 
 	/**
-     * Declare the constructor as private to force the use of a name
+	 * Declare the constructor as private to force the use of a name
 	 */
-	ScatterPlot() : Plot() {}
+	ScatterPlot() :
+			Plot() {
+	}
 
 public:
 
 	/**
 	 * The default constructor
 	 */
-	ScatterPlot(std::string name);
+	ScatterPlot(const std::string& name);
 
 	/**
 	 * The destructor
@@ -36,7 +38,7 @@ public:
 	/**
 	 * Method managing everything that is related to the rendering of a plot.
 	 */
-	void render(std::string fileName = "fileName");
+	void render(const std::string& fileName = "fileName");
 
 };
 

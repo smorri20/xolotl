@@ -17,23 +17,25 @@ class SeriesPlot: public Plot {
 private:
 
 	/**
-     * Declare the constructor as private to force the use of a name
+	 * Declare the constructor as private to force the use of a name
 	 */
-    SeriesPlot() : Plot() {}
+	SeriesPlot() :
+			Plot() {
+	}
 
 private:
 
 	/**
 	 * Container of data providers used for the plot.
 	 */
-	std::shared_ptr< std::vector< std::shared_ptr<IDataProvider> > > plotDataProviders;
+	std::shared_ptr<std::vector<std::shared_ptr<IDataProvider> > > plotDataProviders;
 
 public:
 
 	/**
 	 * The default constructor
 	 */
-	SeriesPlot(std::string name);
+	SeriesPlot(const std::string& name);
 
 	/**
 	 * The destructor
@@ -43,7 +45,7 @@ public:
 	/**
 	 * Method managing everything that is related to the rendering of a plot.
 	 */
-	void render(std::string fileName = "fileName");
+	void render(const std::string& fileName = "fileName");
 
 	/**
 	 * Method adding one data provider to the vector plotDataProviders

@@ -39,6 +39,11 @@ BOOST_AUTO_TEST_CASE(getSpeciesSize) {
 	BOOST_REQUIRE_EQUAL(composition["He"], 4);
 	BOOST_REQUIRE_EQUAL(composition["V"], 0);
 	BOOST_REQUIRE_EQUAL(composition["I"], 2);
+
+	// Check if it is a mixed cluster
+	BOOST_REQUIRE_EQUAL(cluster.isMixed(), true);
+
+	return;
 }
 
 /**
@@ -46,7 +51,6 @@ BOOST_AUTO_TEST_CASE(getSpeciesSize) {
  * its connectivity to other clusters.
  */
 BOOST_AUTO_TEST_CASE(checkConnectivity) {
-
 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
 	auto props = network->getProperties();
 
@@ -55,46 +59,44 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 
 	// Check the reaction connectivity of the HeI cluster
 	// with 5He and 3I
+	// Get the connectivity array from the reactant
+	vector<int> composition = { 5, 0, 3 };
+	auto reactant =
+			(PSICluster *) (network->getCompound("HeI", composition));
+	// Check the type name
+	BOOST_REQUIRE_EQUAL("HeI", reactant->getType());
+	auto reactionConnectivity = reactant->getConnectivity();
 
-	{
-		// Get the connectivity array from the reactant
-		vector<int> composition = { 5, 0, 3 };
-		auto reactant =
-				(PSICluster *) (network->getCompound("HeI", composition));
-		// Check the type name
-		BOOST_REQUIRE_EQUAL("HeI", reactant->getType());
-		auto reactionConnectivity = reactant->getConnectivity();
+	BOOST_REQUIRE_EQUAL(reactant->getComposition().at("He"), 5);
+	BOOST_REQUIRE_EQUAL(reactant->getComposition().at("I"), 3);
 
-		BOOST_REQUIRE_EQUAL(reactant->getComposition().at("He"), 5);
-		BOOST_REQUIRE_EQUAL(reactant->getComposition().at("I"), 3);
+	// Check the connectivity for He, V, and I
+	int connectivityExpected[] = {
+			// He
+			1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
 
-		// Check the connectivity for He, V, and I
+			// V
+			1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
 
-		int connectivityExpected[] = {
-				// He
-				1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
+			// I
+			1, 0, 1, 0, 0, 0, 0, 0, 0, 0,
 
-				// V
-				1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+			// HeV
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0,
 
-				// I
-				1, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+			// HeI
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1,
+			1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0 };
 
-				// HeV
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0,
-
-				// HeI
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1,
-				1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0 };
-
-		for (int i = 0; i < reactionConnectivity.size(); i++) {
-			BOOST_REQUIRE_EQUAL(reactionConnectivity[i],
-					connectivityExpected[i]);
-		}
+	for (unsigned int i = 0; i < reactionConnectivity.size(); i++) {
+		BOOST_REQUIRE_EQUAL(reactionConnectivity[i],
+				connectivityExpected[i]);
 	}
+
+	return;
 }
 
 /**
@@ -113,35 +115,29 @@ BOOST_AUTO_TEST_CASE(checkTotalFlux) {
 	auto cluster = (PSICluster *) network->getCompound("HeI", composition);
 	// Get one that it combines with (I)
 	auto secondCluster = (PSICluster *) network->get("I", 1);
-	// Set the diffusion factor, migration and binding energies to arbitrary
-	// values because HeI does not exist in benchmarks
+	// Set the diffusion factor and migration energy to arbitrary values
 	cluster->setDiffusionFactor(1.5E+10);
 	cluster->setTemperature(1000.0);
 	cluster->setMigrationEnergy(numeric_limits<double>::infinity());
-	vector<double> energies = { 5.09, numeric_limits<double>::infinity(), 5.09,
-			12.6 };
-	cluster->setBindingEnergies(energies);
 	cluster->setConcentration(0.5);
 
-	// Set the diffusion factor, migration and binding energies based on the
-	// values from the tungsten benchmark for this problem for the second cluster
+	// Set the diffusion factor and migration energy based on the
+	// values from the preprocessor
 	secondCluster->setDiffusionFactor(2.13E+10);
 	secondCluster->setMigrationEnergy(0.013);
-	energies = {numeric_limits<double>::infinity(), numeric_limits<double>::infinity(),
-		numeric_limits<double>::infinity(), numeric_limits<double>::infinity()};
-	secondCluster->setBindingEnergies(energies);
 	secondCluster->setConcentration(0.5);
 	secondCluster->setTemperature(1000.0);
 
 	// Compute the rate constants that are needed for the flux
-	cluster->computeRateConstants(1000.0);
+	cluster->computeRateConstants();
 	// The flux can pretty much be anything except "not a number" (nan).
-	double flux = cluster->getTotalFlux(1000.0);
+	double flux = cluster->getTotalFlux();
 	BOOST_TEST_MESSAGE("HeInterstitialClusterTester Message: \n" << "Total Flux is " << flux << "\n"
-			  << "   -Production Flux: " << cluster->getProductionFlux(1000.0) << "\n"
-			  << "   -Combination Flux: " << cluster->getCombinationFlux(1000.0) << "\n"
-			  << "   -Dissociation Flux: " << cluster->getDissociationFlux(1000.0) << "\n"
-	  	  	  << "   -Emission Flux: " << cluster->getEmissionFlux(1000.0) << "\n");
+			  << "   -Production Flux: " << cluster->getProductionFlux() << "\n"
+			  << "   -Combination Flux: " << cluster->getCombinationFlux() << "\n"
+			  << "   -Dissociation Flux: " << cluster->getDissociationFlux() << "\n"
+	  	  	  << "   -Emission Flux: " << cluster->getEmissionFlux() << "\n");
+
 	// Check the flux
 	BOOST_REQUIRE_CLOSE(-16982855380.0, flux, 0.1);
 
@@ -149,7 +145,7 @@ BOOST_AUTO_TEST_CASE(checkTotalFlux) {
 }
 
 /**
- * This operation checks the HeCluster get*PartialDerivatives methods.
+ * This operation checks the HeInterstitialCluster get*PartialDerivatives methods.
  */
 BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	// Local Declarations
@@ -162,46 +158,47 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	// Get an HeI cluster with compostion 2,0,1.
 	vector<int> composition = { 2, 0, 1 };
 	auto cluster = (PSICluster *) network->getCompound("HeI", composition);
-	// Set the diffusion factor, migration and binding energies to arbitrary
-	// values because HeI does not exist in benchmarks
+	// Set the diffusion factor and migration energy to arbitrary values
 	cluster->setDiffusionFactor(1.5E+10);
 	cluster->setTemperature(1000.0);
-	cluster->setMigrationEnergy(numeric_limits<double>::infinity());
-	vector<double> energies = { 5.09, numeric_limits<double>::infinity(), 5.09,
-			12.6 };
-	cluster->setBindingEnergies(energies);
 	cluster->setConcentration(0.5);
 
 	// Compute the rate constants that are needed for the partial derivatives
-	cluster->computeRateConstants(1000.0);
+	cluster->computeRateConstants();
 	// Get the vector of partial derivatives
-	auto partials = cluster->getPartialDerivatives(1000.0);
+	auto partials = cluster->getPartialDerivatives();
 
 	// Check the size of the partials
-	BOOST_REQUIRE_EQUAL(partials.size(), 15);
+	BOOST_REQUIRE_EQUAL(partials.size(), 15U);
 
 	// Check all the values
-	for (int i = 0; i < partials.size(); i++) {
+	for (unsigned int i = 0; i < partials.size(); i++) {
 		BOOST_REQUIRE_CLOSE(partials[i], knownPartials[i], 0.1);
 	}
+
+	return;
 }
 
 /**
  * This operation checks the reaction radius for HeInterstitialCluster.
  */
 BOOST_AUTO_TEST_CASE(checkReactionRadius) {
-
-	vector<shared_ptr<HeInterstitialCluster>> clusters;
+	// Create the HeI clsuter
 	shared_ptr<HeInterstitialCluster> cluster;
+
+	// The vector of radii to compare with
 	double expectedRadii[] = { 0.1372650265, 0.1778340462, 0.2062922619,
 			0.2289478080, 0.2480795532 };
 
+	// Check all the values
 	for (int i = 1; i <= 5; i++) {
 		cluster = shared_ptr < HeInterstitialCluster
 				> (new HeInterstitialCluster(1, i, registry));
 		BOOST_REQUIRE_CLOSE(expectedRadii[i - 1], cluster->getReactionRadius(),
-				.000001);
+				0.000001);
 	}
+
+	return;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,9 +1,9 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE Regression
 
-#include <boost/test/included/unit_test.hpp>
-#include <DummyEventCounter.h>
 #include <string>
+#include <boost/test/included/unit_test.hpp>
+#include "xolotlPerf/dummy/DummyEventCounter.h"
 
 using namespace std;
 using namespace xolotlPerf;
@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(checkInitialValue) {
 
 	DummyEventCounter tester("test");
 
-	BOOST_REQUIRE_EQUAL(0, tester.getValue());
+	BOOST_REQUIRE_EQUAL(0U, tester.getValue());
 
 }
 
@@ -32,13 +32,11 @@ BOOST_AUTO_TEST_CASE(checkCounting) {
 
 	DummyEventCounter tester("test");
 
-	long count = 3;
-
 	for(int i = 0; i < 3; i++){
 		tester.increment();
 	}
 
-	BOOST_REQUIRE_EQUAL(0, tester.getValue());
+	BOOST_REQUIRE_EQUAL(0U, tester.getValue());
 
 }
 

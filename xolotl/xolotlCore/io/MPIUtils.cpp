@@ -8,13 +8,13 @@ using std::shared_ptr;
 
 
 shared_ptr<std::istream> MPIUtils::broadcastStream(
-	shared_ptr<std::istream> stream, int master, MPI_Comm comm) {
-	
+	shared_ptr<std::istream> stream, int master) {
+	// Local declarations
 	int rank;
 	int tasks;
 	auto bufferSS = std::make_shared<std::stringstream>();
-	int bufferSize;
-	char *buffer;
+	int bufferSize = 0;
+	char *buffer = NULL;
 
 	// Get the rank and number of tasks
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -45,7 +45,7 @@ shared_ptr<std::istream> MPIUtils::broadcastStream(
 	// Broadcast the buffer
 	MPI_Bcast(buffer, bufferSize, MPI_CHAR, master, MPI_COMM_WORLD);
 	
-	// Creat the string from the buffer on the nodes
+	// Create the string from the buffer on the nodes
 	if (rank != master) {
 		std::string bufferString(buffer, bufferSize);
 		bufferSS->str(bufferString);
@@ -55,7 +55,7 @@ shared_ptr<std::istream> MPIUtils::broadcastStream(
 	bufferSS->seekg(0);
 
 	// Clean up the buffer memory and return it
-	delete buffer;
+	delete[] buffer;
 	
 	return bufferSS;
 }

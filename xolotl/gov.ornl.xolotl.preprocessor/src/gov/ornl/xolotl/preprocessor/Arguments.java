@@ -15,21 +15,21 @@ public interface Arguments {
 	 * description of this option.
 	 * 
 	 * @param defaultValue
-	 *            The default value for the maximum size of a Helium cluster in
+	 *            The default value for the maximum size of a helium cluster in
 	 *            the network if this option is not specified via the command
 	 *            line
 	 * @param description
 	 *            Brief description of this option
 	 */
-	@Option(defaultValue = "8", 
-			description = "The maximum size of a Helium cluster in the network "
-			+ "satisfying the condition 0 < maxHeSize < 9. (default = 8)")
+	@Option(defaultValue = "8", description = "The maximum size of a helium cluster in the network "
+			+ "satisfying the condition 0 <= maxHeSize < 9. (default = 8)")
 	/**
-	 * This operation produces the required command line option '--maxHeSize' which 
-	 * takes a single integer value and is defined by the previous Option annotation
+	 * This operation produces the required command line option '--maxHeSize'
+	 * which takes a single integer value and is defined by the previous Option
+	 * annotation
 	 * 
-	 * @return The maximum size of a Helium cluster in the network satisfying 
-	 * the condition 0 < maxHeSize < 9
+	 * @return The maximum size of a helium cluster in the network satisfying
+	 *         the condition 0 <= maxHeSize < 9
 	 */
 	int getMaxHeSize();
 
@@ -39,19 +39,20 @@ public interface Arguments {
 	 * description of this option.
 	 * 
 	 * @param defaultValue
-	 *            The default value for the maximum size of a vacancy cluster
-	 *            in the network if this option is not specified via the
-	 *            command line
+	 *            The default value for the maximum size of a vacancy cluster in
+	 *            the network if this option is not specified via the command
+	 *            line
 	 * @param description
 	 *            Brief description of this option
 	 */
-	@Option(defaultValue = "29", 
-			description = "The maximum size of a vacancy cluster in the network. (default = 29)")
+	@Option(defaultValue = "29", description = "The maximum size of a vacancy cluster in the network "
+			+ "satisfying the condition 0 <= maxVSize.. (default = 29)")
 	/**
-	 * This operation produces the required command line option '--maxVSize' which 
-	 * takes a single integer value and is defined by the previous Option annotation
+	 * This operation produces the required command line option '--maxVSize'
+	 * which takes a single integer value and is defined by the previous Option
+	 * annotation
 	 * 
-	 * @return The maxium size of a vacancy cluster in the network
+	 * @return The maximum size of a vacancy cluster in the network
 	 */
 	int getMaxVSize();
 
@@ -62,22 +63,39 @@ public interface Arguments {
 	 * 
 	 * @param defaultValue
 	 *            The default value for the maximum size of an interstitial
-	 *            cluster in the network if this option is not specified via
-	 *            the command line
+	 *            cluster in the network if this option is not specified via the
+	 *            command line
 	 * @param description
 	 *            Brief description of this option
 	 */
-	@Option(defaultValue = "6", 
-			description = "The maximum size of an interstitial cluster in the network "
-			+ "satisfying the condition 0 < maxISize < 7. (default = 6)")
+	@Option(defaultValue = "6", description = "The maximum size of an interstitial cluster in the network "
+			+ "satisfying the condition 0 <= maxISize. (default = 6)")
 	/**
-	 * This operation produces the required command line option '--maxISize' which 
-	 * takes a single integer value and is defined by the previous Option annotation
+	 * This operation produces the required command line option '--maxISize'
+	 * which takes a single integer value and is defined by the previous Option
+	 * annotation
 	 * 
-	 * @return The maximum size of an interstitial cluster in the network satisfying 
-	 * the condition 0 < maxISize < 7
+	 * @return The maximum size of an interstitial cluster in the network
+	 *         satisfying the condition 0 <= maxISize
 	 */
 	int getMaxISize();
+
+	/**
+	 * This Option annotation corresponds to the '--phaseCut' option which
+	 * doesn't have a default value because it is used as a flag.
+	 * 
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(description = "Should the network be reduced with the phase-cut " + "method?")
+	/**
+	 * This operation produces the required command line option '--phaseCut'
+	 * which doesn't take a value and is defined by the previous Option
+	 * annotation
+	 * 
+	 * @return Whether we use the phase cut or not
+	 */
+	boolean isPhaseCut();
 
 	/**
 	 * This Option annotation corresponds to the '--startTemp' option which
@@ -94,8 +112,9 @@ public interface Arguments {
 	@Option(defaultValue = "1000", description = "The temperature (in Kelvin) will be the constant "
 			+ "value specified (default = 1000)")
 	/**
-	 * This operation produces the required command line option '--startTemp' which 
-	 * takes a single string value and is defined by the previous Option annotation
+	 * This operation produces the required command line option '--startTemp'
+	 * which takes a single string value and is defined by the previous Option
+	 * annotation
 	 * 
 	 * @return The constant starting temperature as a string
 	 */
@@ -112,11 +131,11 @@ public interface Arguments {
 	 * @param description
 	 *            Brief description of this option
 	 */
-	@Option(defaultValue = "std", 
-			description = "{dummy, std}  Which set of performance handlers to use (default = std)")
+	@Option(defaultValue = "std", description = "{dummy, std, io, papi}  Which set of performance handlers to use (default = std)")
 	/**
-	 * This operation produces the required command line option '--perfHandler' which 
-	 * takes a single string value and is defined by the previous Option annotation
+	 * This operation produces the required command line option '--perfHandler'
+	 * which takes a single string value and is defined by the previous Option
+	 * annotation
 	 * 
 	 * @return The performance handler, as a string, that will be used
 	 */
@@ -133,11 +152,11 @@ public interface Arguments {
 	 * @param description
 	 *            Brief description of this option
 	 */
-	@Option(defaultValue = "dummy", 
-			description = "{dummy, std}  Which set of visualization handlers to use")
+	@Option(defaultValue = "dummy", description = "{dummy, std}  Which set of visualization handlers to use")
 	/**
-	 * This operation produces the required command line option '--vizHandler' which 
-	 * takes a single string value and is defined by the previous Option annotation
+	 * This operation produces the required command line option '--vizHandler'
+	 * which takes a single string value and is defined by the previous Option
+	 * annotation
 	 * 
 	 * @return The performance handler, as a string, that will be used
 	 */
@@ -149,21 +168,21 @@ public interface Arguments {
 	 * additionally provides a brief description of the option.
 	 * 
 	 * @param defaultValue
-	 *            The single string of Petsc arguments that will be used if this
+	 *            The single string of PETSc arguments that will be used if this
 	 *            option is not specified via the command line
 	 * @param description
 	 *            Brief description of this option
 	 */
-	@Option(defaultValue = "-da_grid_x 10 -ts_final_time 50 -ts_dt 1.0e-12 "
-			+ "-ts_max_steps 100 -ts_adapt_dt_max 10 -ts_max_snes_failures 200 "
-			+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type redundant "
-			+ "-fieldsplit_1_pc_type sor -snes_monitor -ksp_monitor -ts_monitor", 
-			description = "List of arguments to be passed to PETSc")
+	@Option(defaultValue = "-ts_final_time 1.0 -ts_dt 1.0e-12 "
+			+ "-ts_max_steps 100 -ts_adapt_dt_max 1.0e-6 -ts_max_snes_failures 200 "
+			+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type sor "
+			+ "-fieldsplit_1_pc_type redundant -ts_monitor", description = "List of arguments to be passed to PETSc")
 	/**
-	 * This operation produces the required command line option '--petscArgs' which 
-	 * takes a single string value and is defined by the previous Option annotation
+	 * This operation produces the required command line option '--petscArgs'
+	 * which takes a single string value and is defined by the previous Option
+	 * annotation
 	 * 
-	 * @return The single string of Petsc arguments
+	 * @return The single string of PETSc arguments
 	 */
 	String getPetscArgs();
 
@@ -178,41 +197,228 @@ public interface Arguments {
 	 * @param description
 	 *            Brief description of this option
 	 */
-	@Option(defaultValue = "networkInit.h5", 
-			description = "<fileName>  The HDF5 file containing the network (default = networkInit.h5)")
+	@Option(defaultValue = "networkInit.h5", description = "<fileName>  The HDF5 file containing the network (default = networkInit.h5)")
 	/**
-	 * This operation produces the required command line option '--networkFile' which 
-	 * takes a single string value and is defined by the previous Option annotation
+	 * This operation produces the required command line option '--networkFile'
+	 * which takes a single string value and is defined by the previous Option
+	 * annotation
 	 * 
 	 * @return The name of the network file
 	 */
 	String getNetworkFile();
 
 	/**
-	 * This Option annotation corresponds to the optional '--material' option
-	 * and provides a brief description of the option.
+	 * This Option annotation corresponds to the '--dimensions' option which
+	 * defines a default 1D and additionally provides a brief description of the
+	 * option.
+	 * 
+	 * @param defaultValue
+	 *            The default number of dimensions that will be used if this
+	 *            option is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "1", description = "<dimensionNumber> The number of dimensions for the simulation (default = 1)")
+	/**
+	 * This operation produces the required command line option '--dimensions'
+	 * which takes a single string value and is defined by the previous Option
+	 * annotation
+	 * 
+	 * @return The number of dimensions
+	 */
+	String getDimensions();
+
+	/**
+	 * This Option annotation corresponds to the '--nxGrid' option which defines
+	 * a default number of grid points in the x directions and additionally
+	 * provides a brief description of the option.
+	 * 
+	 * @param defaultValue
+	 *            The default number of grid points that will be used if this
+	 *            option is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "20", description = "<nxGrid> The number of grid points in the x direction "
+			+ "(default = 20)")
+	/**
+	 * This operation produces the required command line option '--nxGrid' which
+	 * takes a single string value and is defined by the previous Option
+	 * annotation
+	 * 
+	 * @return The number of grid points in the x direction
+	 */
+	int getNxGrid();
+
+	/**
+	 * This Option annotation corresponds to the '--nyGrid' option which defines
+	 * a default number of grid points in the y directions and additionally
+	 * provides a brief description of the option.
+	 * 
+	 * @param defaultValue
+	 *            The default number of grid points that will be used if this
+	 *            option is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "0", description = "<nyGrid> The number of grid points in the y direction "
+			+ "(default = 0)")
+	/**
+	 * This operation produces the required command line option '--nyGrid' which
+	 * takes a single string value and is defined by the previous Option
+	 * annotation
+	 * 
+	 * @return The number of grid points in the y direction
+	 */
+	int getNyGrid();
+
+	/**
+	 * This Option annotation corresponds to the '--nzGrid' option which defines
+	 * a default number of grid points in the z directions and additionally
+	 * provides a brief description of the option.
+	 * 
+	 * @param defaultValue
+	 *            The default number of grid points that will be used if this
+	 *            option is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "0", description = "<nzGrid> The number of grid points in the z direction "
+			+ "(default = 0)")
+	/**
+	 * This operation produces the required command line option '--nzGrid' which
+	 * takes a single string value and is defined by the previous Option
+	 * annotation
+	 * 
+	 * @return The number of grid points in the z direction
+	 */
+	int getNzGrid();
+
+	/**
+	 * This Option annotation corresponds to the '--xStepSize' option which
+	 * defines a default step size in the x direction and additionally provides
+	 * a brief description of the option.
+	 * 
+	 * @param defaultValue
+	 *            The default step size that will be used if this option is not
+	 *            specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "1.0", description = "<value>  The value of the step size in the x direction"
+			+ " in nm (default = 1.0)")
+	/**
+	 * This operation produces the required command line option '--xStepSize'
+	 * which takes a single string value and is defined by the previous Option
+	 * annotation
+	 * 
+	 * @return The value of the step size
+	 */
+	double getXStepSize();
+
+	/**
+	 * This Option annotation corresponds to the '--yStepSize' option which
+	 * defines a default step size in the y direction and additionally provides
+	 * a brief description of the option.
+	 * 
+	 * @param defaultValue
+	 *            The default step size that will be used if this option is not
+	 *            specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "0.0", description = "<value>  The value of the step size in the y direction"
+			+ " in nm (default = 0.0)")
+	/**
+	 * This operation produces the required command line option '--yStepSize'
+	 * which takes a single string value and is defined by the previous Option
+	 * annotation
+	 * 
+	 * @return The value of the step size
+	 */
+	double getYStepSize();
+
+	/**
+	 * This Option annotation corresponds to the '--zStepSize' option which
+	 * defines a default step size in the z direction and additionally provides
+	 * a brief description of the option.
+	 * 
+	 * @param defaultValue
+	 *            The default step size that will be used if this option is not
+	 *            specified via the command line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "0.0", description = "<value>  The value of the step size in the z direction"
+			+ " in nm (default = 0.0)")
+	/**
+	 * This operation produces the required command line option '--zStepSize'
+	 * which takes a single string value and is defined by the previous Option
+	 * annotation
+	 * 
+	 * @return The value of the step size
+	 */
+	double getZStepSize();
+
+	/**
+	 * This Option annotation corresponds to the '--material' option and
+	 * provides a brief description of the option.
 	 * 
 	 * @param description
 	 *            Brief description of this option
 	 */
-	@Option(description = "{W100, W110, W111, W210, W211, W221, W310, W311, W320, W321, Fe} "
-			+ "The optional option declaring which material will be used "
+	@Option(defaultValue = "W100", description = "{W100, W110, W111, W211} "
+			+ "The option declaring which material will be used "
 			+ "(W is for tungsten and the numbers correspond to the surface orientation)")
 	/**
-	 * This operation produces the optional command line option '--material' which 
-	 * takes a single string value and is defined by the previous Option annotation
+	 * This operation produces the optional command line option '--material'
+	 * which takes a single string value and is defined by the previous Option
+	 * annotation
 	 * 
 	 * @return The material
 	 */
 	String getMaterial();
 
 	/**
-	 * This operation makes the command line option '--material' optional.
+	 * This Option annotation corresponds to the '--process' option which
+	 * defines the default value to be the single string of physical processes
+	 * and additionally provides a brief description of the option.
 	 * 
-	 * @return Returns true if the option has been specified and false if it has
-	 *         not
+	 * @param defaultValue
+	 *            The single string of physical processes that will be used if
+	 *            this option is not specified via the command line
+	 * @param description
+	 *            Brief description of this option
 	 */
-	boolean isMaterial();
+	@Option(defaultValue = "diff advec movingSurface", description = "List of physical processes for the simulation "
+			+ "(diff, advec, modifiedTM, movingSurface, bursting, attenuation)")
+	/**
+	 * This operation produces the required command line option '--petscArgs'
+	 * which takes a single string value and is defined by the previous Option
+	 * annotation
+	 * 
+	 * @return The single string of processes
+	 */
+	String getProcess();
+
+	/**
+	 * This Option annotation corresponds to the '--flux' option and provides a
+	 * brief description of the option.
+	 * 
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "4.0e7", description = "This option allows the user to change the flux by "
+			+ "the factor specified (in nm).")
+
+	/**
+	 * This operation produces the optional command line option '--heFlux' which
+	 * takes a single string value and is defined by the previous Option
+	 * annotation
+	 * 
+	 * @return The flux amplitude
+	 */
+	String getFlux();
 
 	/**
 	 * This Option annotation corresponds to the optional '--tempFile' option
@@ -224,10 +430,10 @@ public interface Arguments {
 	@Option(description = "<tempFileName>  A temperature profile is given "
 			+ "by the specified file, then linear interpolation is used to fit the data")
 	/**
-	 * This operation produces the optional command line option '--tempFile' which 
-	 * takes a single string value and is defined by the previous Option annotation.
-	 * NOTE:  This option should only be used when the user wishes to pass a file 
-	 * containing a temperature profile to Xolotl.
+	 * This operation produces the optional command line option '--tempFile'
+	 * which takes a single string value and is defined by the previous Option
+	 * annotation. NOTE: This option should only be used when the user wishes to
+	 * pass a file containing a temperature profile to Xolotl.
 	 * 
 	 * @return The name of the temperature file
 	 */
@@ -242,62 +448,48 @@ public interface Arguments {
 	boolean isTempFile();
 
 	/**
-	 * This Option annotation corresponds to the optional '--heFlux' option and
-	 * provides a brief description of the option.
-	 * 
-	 * @param description
-	 *            Brief description of this option
-	 */
-	@Option(description = "This option allows the user to change the Helium flux by "
-			+ "the factor specified (in nm).")
-	/**
-	 * This operation produces the optional command line option '--heFlux' which 
-	 * takes a single string value and is defined by the previous Option annotation
-	 * 
-	 * @return The Helium flux
-	 */
-	String getHeFlux();
-
-	/**
-	 * This operation makes the command line option '--heFlux' optional.
-	 * 
-	 * @return Returns true if the option has been specified and false if it has
-	 *         not
-	 */
-	boolean isHeFlux();
-
-	/**
-	 * This Option annotation corresponds to the optional '--maxHeFluence' option
+	 * This Option annotation corresponds to the optional '--fluxFile' option
 	 * and provides a brief description of the option.
 	 * 
 	 * @param description
 	 *            Brief description of this option
 	 */
-	@Option(description = "The maxium Helium fluence value (in nm) that will be used")
-	
+	@Option(description = "<fluxFileName>  A time profile is given for the flux "
+			+ "by the specified file, then linear interpolation is used to fit the data")
 	/**
-	 * This operation produces the optional command line option '--maxHeFluence' which 
-	 * takes a single string value and is defined by the previous Option annotation
+	 * This operation produces the optional command line option '--fluxFile'
+	 * which takes a single string value and is defined by the previous Option
+	 * annotation. NOTE: This option should only be used when the user wishes to
+	 * pass a file containing a time profile profile for the flux to Xolotl.
 	 * 
-	 * @return The maximum Helium fluence value
+	 * @return The name of the flux file
 	 */
-	String getMaxHeFluence();
+	String getFluxFile();
 
 	/**
-	 * This operation makes the command line option '--maxHeFluence' optional.
+	 * This operation makes the command line option '--fluxFile' optional.
 	 * 
 	 * @return Returns true if the option has been specified and false if it has
 	 *         not
 	 */
-	boolean isMaxHeFluence();
+	boolean isFluxFile();
 
+	/**
+	 * This Option annotation corresponds to the optional '--checkpoint' option
+	 * and provides a brief description of the option.
+	 * 
+	 * @param description
+	 *            Brief description of this option
+	 */
 	@Option(description = "<HDF5FileName>  Start the solver with the concentrations, time, "
 			+ "and step size present in the HDF5 file")
 	/**
-	 * This operation produces the optional command line option '--checkpoint' which 
-	 * takes a single string value and is defined by the previous Option annotation
+	 * This operation produces the optional command line option '--checkpoint'
+	 * which takes a single string value and is defined by the previous Option
+	 * annotation
 	 * 
-	 * @return The name of the file to read from to create the new HDF5 network file
+	 * @return The name of the file to read from to create the new HDF5 network
+	 *         file
 	 */
 	String getCheckpoint();
 
@@ -308,6 +500,111 @@ public interface Arguments {
 	 *         not
 	 */
 	boolean isCheckpoint();
+
+	/**
+	 * This Option annotation corresponds to the optional '--voidPortion' option
+	 * and provides a brief description of the option.
+	 * 
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(description = "The portion of the grid (in %) that won't be material at "
+			+ "the start of the simulation. It is room for the surface to grow.")
+
+	/**
+	 * This operation produces the optional command line option '--voidPortion'
+	 * which takes a single string value and is defined by the previous Option
+	 * annotation
+	 * 
+	 * @return The portion of the grid that is NOT the material
+	 */
+	String getVoidPortion();
+
+	/**
+	 * This operation makes the command line option '--voidPortion' optional.
+	 * 
+	 * @return Returns true if the option has been specified and false if it has
+	 *         not
+	 */
+	boolean isVoidPortion();
+
+	/**
+	 * This Option annotation corresponds to the optional '--initialV' option
+	 * and provides a brief description of the option.
+	 * 
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(description = "The initial concentration of vacancies in the material (in #/nm3) " + "that will be used.")
+
+	/**
+	 * This operation produces the optional command line option '--initialV'
+	 * which takes a single string value and is defined by the previous Option
+	 * annotation
+	 * 
+	 * @return The initial vacancy concentration of the material
+	 */
+	String getInitialV();
+
+	/**
+	 * This operation makes the command line option '--initialV' optional.
+	 * 
+	 * @return Returns true if the option has been specified and false if it has
+	 *         not
+	 */
+	boolean isInitialV();
+
+	/**
+	 * This Option annotation corresponds to the optional '--regularGrid' option
+	 * and provides a brief description of the option.
+	 * 
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(description = "If the user wants to use a regular grid in the " + "x direction or not.")
+
+	/**
+	 * This operation produces the optional command line option '--regularGrid'
+	 * which takes a single string value and is defined by the previous Option
+	 * annotation
+	 * 
+	 * @return If the user wants to use a regular grid
+	 */
+	String getRegularGrid();
+
+	/**
+	 * This operation makes the command line option '--regularGrid' optional.
+	 * 
+	 * @return Returns true if the option has been specified and false if it has
+	 *         not
+	 */
+	boolean isRegularGrid();
+
+	/**
+	 * This Option annotation corresponds to the optional '--grain' option
+	 * provides a brief description of the option.
+	 * 
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(description = "List of arguments for the grain boundaries.")
+
+	/**
+	 * This operation produces the optional command line option '--grain' which
+	 * takes a single string value and is defined by the previous Option
+	 * annotation
+	 * 
+	 * @return The single string of grain boundaries
+	 */
+	String getGrain();
+
+	/**
+	 * This operation makes the command line option '--grain' optional.
+	 * 
+	 * @return Returns true if the option has been specified and false if it has
+	 *         not
+	 */
+	boolean isGrain();
 
 	/**
 	 * This produces the command line arguments '--help' or '-h' either of which

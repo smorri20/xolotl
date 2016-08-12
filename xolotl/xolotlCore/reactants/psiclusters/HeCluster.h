@@ -3,7 +3,7 @@
 
 // Includes
 #include "PSICluster.h"
-#include "../../xolotlPerf/HandlerRegistryFactory.h"
+#include <xolotlPerf.h>
 
 namespace xolotlCore {
 
@@ -19,26 +19,46 @@ private:
 	 * initialized with a size and performance handler registry
 	 */
 	HeCluster() :
-		PSICluster(1)
-	{ }
+		PSICluster(1) {}
+
+	/**
+	 * This operation "combines" clusters in the sense that it handles all of
+	 * the logic and caching required to correctly process the reaction
+	 *
+	 * (He_c)(V_b) + He_a --> [He_(a+c)][V_(b+1)] + I
+	 *
+	 * in the case of [He_(a+c)](V_b) not in the network
+	 *
+	 * This operation fills the reaction connectivity array as well as the
+	 * array of combining clusters.
+	 *
+	 * @param clusters The clusters that can combine with this cluster
+	 * (Here it will be HeV clusters and He clusters)
+	 * @param productName The name of the product produced in the reaction
+	 */
+	void combineClusters(std::vector<Reactant *> & clusters,
+			const std::string& productName);
 
 public:
 
 	/**
 	 * The constructor. All HeClusters must be initialized with a size.
+	 *
 	 * @param nHe the number of helium atoms in the cluster
+	 * @param registry The performance handler registry
 	 */
 	HeCluster(int nHe, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
 	 * Destructor
 	 */
-	~HeCluster();
+	~HeCluster() {}
 
 	/**
 	 * This operation returns a Reactant that is created using the copy
 	 * constructor of HeCluster.
-	 * @return A copy of this HeCluster.
+	 *
+	 * @return A copy of this HeCluster
 	 */
 	virtual std::shared_ptr<Reactant> clone();
 
@@ -54,7 +74,7 @@ protected:
 	void createReactionConnectivity();
 
 	/**
-	 * Computes a row (or column) of the dissociation connectivity matrix
+	 * Computes a row of the dissociation connectivity matrix
 	 * corresponding to this cluster.
 	 *
 	 * Connections are made between this cluster and any clusters it affects

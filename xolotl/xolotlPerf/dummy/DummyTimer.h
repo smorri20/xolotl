@@ -1,28 +1,27 @@
 #ifndef DUMMYTIMER_H
 #define DUMMYTIMER_H
 
-#include "ITimer.h"
-#include "Identifiable.h"
+#include "xolotlPerf/ITimer.h"
+#include "xolotlCore/Identifiable.h"
 
 using namespace std;
 
-namespace xolotlPerf{
+namespace xolotlPerf {
 
 /**
  * The DummyTimer class is instantiated by the DummerHandlerRegistry class
  * and realizes the DummyTimer interface.
  */
-class DummyTimer : public ITimer, public xolotlCore::Identifiable
-{
+class DummyTimer: public ITimer, public xolotlCore::Identifiable {
 private:
 
 	/**
 	 * The default constructor is declared as private since Timers
 	 *  must be initialized with a name.
 	 */
-    DummyTimer()
-      : xolotlCore::Identifiable("unused")
-    { }
+	DummyTimer(void) :
+			xolotlCore::Identifiable("unused") {
+	}
 
 public:
 
@@ -30,39 +29,46 @@ public:
 	 * DummyTimer constructor that takes the argument timerName
 	 * to distinguish specific DummyTimer.
 	 *
-	 * @param timerName The DummyTimer's name
+	 * @param name The DummyTimer's name
 	 */
-	DummyTimer(std::string name)
-      : xolotlCore::Identifiable("unused")
-    { }
+	DummyTimer(const std::string& name) :
+			xolotlCore::Identifiable("unused") {
+	}
 
 	/**
-	 * The destructor.
+	 * Destroy the timer.
 	 */
-	virtual ~DummyTimer() { }
-
-    /**
-     * This operations starts the ITimer.
-     */
-	virtual void start();
-
-    /**
-     * This operation stops the ITimer.
-     */
-	virtual void stop();
-
-    /**
-     * This operation returns the value of the DummyTimer.
-     */
-    virtual double getValue() const;
+	virtual ~DummyTimer(void) {
+	}
 
 	/**
-	 * This operation returns the units of the GPTLTimer.
+	 * Start the timer.
 	 */
-    virtual std::string getUnits() const;
+	virtual void start(void);
 
-};  //end class DummyTimer
+	/**
+	 * Stop the timer.
+	 */
+	virtual void stop(void);
 
-}  //end namespace xolotlPerf
+	/**
+	 * Reset the timer's value.
+	 */
+	virtual void reset(void);
+
+	/**
+	 * Obtain the timer's value.
+	 */
+	virtual ITimer::ValType getValue(void) const;
+
+	/**
+	 * Obtain a string describing the units of the timer's value.
+	 */
+	virtual std::string getUnits(void) const;
+
+};
+//end class DummyTimer
+
+}//end namespace xolotlPerf
 
 #endif

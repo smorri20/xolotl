@@ -2,6 +2,7 @@
 #define FLUXOPTIONHANDLER_H
 
 // Includes
+#include <stdlib.h>
 #include "OptionHandler.h"
 
 namespace xolotlCore {
@@ -16,10 +17,10 @@ public:
 	 * The default constructor
 	 */
     FluxOptionHandler() :
-    	OptionHandler("heFlux",
-    			"heFlux <value>              "
-    			"This option allows the user to change the Helium flux "
-    			"by the factor specified (in nm).") {}
+    	OptionHandler("flux",
+    			"flux <value>                      "
+    			"This option allows the user to change the flux "
+    			"by the factor specified (in nm).\n") {}
 
 	/**
 	 * The destructor
@@ -27,20 +28,20 @@ public:
     ~FluxOptionHandler() {}
 
     /**
-     * This method will set the IOptions heliumFluxFlag and heliumFlux
+     * This method will set the IOptions fluxFlag and fluxAmplitude
      * to the value given as the argument.
      *
      * @param opt The pointer to the option that will be modified.
      * @param arg The value for the helium flux.
      */
-    bool handler(IOptions *opt, std::string arg) {
+    bool handler(IOptions *opt, const std::string& arg) {
     	// Set the corresponding flag to true
-    	opt->setHeliumFluxFlag(true);
+    	opt->setFluxFlag(true);
 
     	// Set the value for the flux
     	double flux = strtod(arg.c_str(), NULL);
 
-    	opt->setHeliumFlux(flux);
+    	opt->setFluxAmplitude(flux);
     	return true;
     }
 

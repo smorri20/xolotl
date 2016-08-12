@@ -5,11 +5,17 @@
 #include <PetscOptionHandler.h>
 #include <ConstTempOptionHandler.h>
 #include <TempProfileOptionHandler.h>
-#include <FluenceOptionHandler.h>
 #include <FluxOptionHandler.h>
+#include <FluxProfileOptionHandler.h>
 #include <PerfOptionHandler.h>
 #include <VizOptionHandler.h>
 #include <MaterialOptionHandler.h>
+#include <VConcentrationOptionHandler.h>
+#include <VoidPortionOptionHandler.h>
+#include <DimensionsOptionHandler.h>
+#include <RegularGridOptionHandler.h>
+#include <ProcessOptionHandler.h>
+#include <GrainBoundariesOptionHandler.h>
 #include "Options.h"
 
 namespace xolotlCore {
@@ -20,13 +26,19 @@ Options::Options() :
 		petscArgc(0),
 		petscArgv(NULL),
 		constTempFlag(false),
-		tempProfileFlag(false),
 		constTemperature(1000.0),
-		heliumFluenceFlag(false),
-		heliumFluxFlag(false),
-		perfStandardHandlersFlag(true),
+		tempProfileFlag(false),
+		fluxFlag(false),
+		fluxAmplitude(0.0),
+		fluxProfileFlag(false),
+		perfRegistryType(xolotlPerf::IHandlerRegistry::std),
 		vizStandardHandlersFlag(false),
-		materialFlag(false) {
+		materialName(""),
+		initialVConcentration(0.0),
+		voidPortion(50.0),
+		dimensionNumber(1),
+		useRegularGridFlag(true), 
+		gbList("") {
 
 	// Create the network option handler
 	auto networkHandler = new NetworkOptionHandler();
@@ -36,46 +48,63 @@ Options::Options() :
 	auto constTempHandler = new ConstTempOptionHandler();
 	// Create the temperature profile option handler
 	auto tempProfileHandler = new TempProfileOptionHandler();
-	// Create the maximum fluence option handler
-	auto fluenceHandler = new FluenceOptionHandler();
 	// Create the flux option handler
 	auto fluxHandler = new FluxOptionHandler();
+	// Create the flux time profile option handler
+	auto fluxProfileHandler = new FluxProfileOptionHandler();
 	// Create the performance handler option handler
 	auto perfHandler = new PerfOptionHandler();
 	// Create the visualization handler option handler
 	auto vizHandler = new VizOptionHandler();
 	// Create the material option handler
 	auto materialHandler = new MaterialOptionHandler();
+	// Create the initial vacancy concentration option handler
+	auto vConcHandler = new VConcentrationOptionHandler();
+	// Create the void portion option handler
+	auto voidHandler = new VoidPortionOptionHandler();
+	// Create the dimensions option handler
+	auto dimHandler = new DimensionsOptionHandler();
+	// Create the regular grid option handler
+	auto gridHandler = new RegularGridOptionHandler();
+	// Create the physical processes option handler
+	auto procHandler = new ProcessOptionHandler();
+	auto gbHandler = new GrainBoundariesOptionHandler();
 
 	// Add our notion of which options we support.
 	optionsMap[networkHandler->key] = networkHandler;
 	optionsMap[petscHandler->key] = petscHandler;
 	optionsMap[constTempHandler->key] = constTempHandler;
 	optionsMap[tempProfileHandler->key] = tempProfileHandler;
-	optionsMap[fluenceHandler->key] = fluenceHandler;
 	optionsMap[fluxHandler->key] = fluxHandler;
+	optionsMap[fluxProfileHandler->key] = fluxProfileHandler;
 	optionsMap[perfHandler->key] = perfHandler;
 	optionsMap[vizHandler->key] = vizHandler;
 	optionsMap[materialHandler->key] = materialHandler;
+	optionsMap[vConcHandler->key] = vConcHandler;
+	optionsMap[voidHandler->key] = voidHandler;
+	optionsMap[dimHandler->key] = dimHandler;
+	optionsMap[gridHandler->key] = gridHandler;
+	optionsMap[procHandler->key] = procHandler;
+	optionsMap[gbHandler->key] = gbHandler;
 }
 
 Options::~Options(void) {
 	// Release the items in our map of potential options.
-	for (auto iter = optionsMap.begin(); iter != optionsMap.end(); iter++) {
+	for (auto iter = optionsMap.begin(); iter != optionsMap.end(); ++iter) {
 		auto currOpt = iter->second;
 		delete currOpt;
 	}
 	optionsMap.clear();
 
 	// release the dynamically-allocated PETSc arguments
-	for (unsigned int i = 0; i < petscArgc; ++i) {
+	for (int i = 0; i < petscArgc; ++i) {
 		delete[] petscArgv[i];
 	}
 	delete[] petscArgv;
 	petscArgv = NULL;
 }
 
-void Options::readParams(int argc, char* argv[]) {
+void Options::readParams(char* argv[]) {
 	// All the options are read from an ASCII file that is parsed
 	// with the TokenizedLineReader.
 	// We assume that the name of this file is the first and only
@@ -84,7 +113,7 @@ void Options::readParams(int argc, char* argv[]) {
 	// Load the content of the file in a stream
 	// Create the param stream
 	std::shared_ptr<std::ifstream> paramStream;
-	paramStream = std::make_shared<std::ifstream>(argv[0]);
+	paramStream = std::make_shared < std::ifstream > (argv[0]);
 
 	if (!paramStream->good()) {
 		// The file is empty.
@@ -148,12 +177,12 @@ void Options::showHelp(std::ostream& os) const {
 			<< "See the Xolotl documentation for PETSc options. \n"
 			<< "Supported options:\n";
 
+	// Loop on each option help message
 	for (OptionsMap::const_iterator iter = optionsMap.begin();
-			iter != optionsMap.end(); iter++) {
+			iter != optionsMap.end(); ++iter) {
 		os << "  " << iter->second->helpMessage << '\n';
 	}
 	os << std::endl;
 }
 
-};  // end namespace xolotlCore
-
+} // end namespace xolotlCore

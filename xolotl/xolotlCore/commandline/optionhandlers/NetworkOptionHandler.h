@@ -17,8 +17,8 @@ public:
 	 */
     NetworkOptionHandler() :
     	OptionHandler("networkFile",
-    			"networkFile <filename>      "
-    			"The network will be loaded from this HDF5 file.") {}
+    			"networkFile <filename>            "
+    			"The network will be loaded from this HDF5 file.\n") {}
 
 	/**
 	 * The destructor
@@ -32,7 +32,7 @@ public:
      * @param opt The pointer to the option that will be modified.
      * @param arg The argument for the networkFilename.
      */
-    bool handler(IOptions *opt, std::string arg) {
+    bool handler(IOptions *opt, const std::string& arg) {
     	// Set the name of the network file
     	opt->setNetworkFilename(arg);
 

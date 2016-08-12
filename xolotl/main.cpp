@@ -11,17 +11,19 @@
 #include <mpi.h>
 #include <MPIUtils.h>
 #include <Options.h>
-#include <MaterialHandlerFactory.h>
+#include <xolotlPerf.h>
+#include <IMaterialFactory.h>
 #include <TemperatureHandlerFactory.h>
-#include <HandlerRegistryFactory.h>
 #include <VizHandlerRegistryFactory.h>
-#include <HardwareQuantities.h>
 #include <HDF5NetworkLoader.h>
-#include <IVizHandlerRegistry.h>
+#include <SolverHandlerFactory.h>
+#include <ISolverHandler.h>
 #include <ctime>
 
 using namespace std;
 using std::shared_ptr;
+namespace xperf = xolotlPerf;
+
 
 //! This operation prints the start message
 void printStartMessage() {
@@ -32,31 +34,20 @@ void printStartMessage() {
 	std::cout << std::asctime(std::localtime(&currentTime)); // << std::endl;
 }
 
-std::vector<xolotlPerf::HardwareQuantities> declareHWcounters() {
+std::shared_ptr<xolotlFactory::IMaterialFactory> initMaterial(Options &options) {
+	// Create the material factory
+	auto materialFactory = xolotlFactory::IMaterialFactory::createMaterialFactory(options.getMaterial(),
+			options.getDimensionNumber());
 
-	// Indicate we want to monitor some important hardware counters.
-	std::vector<xolotlPerf::HardwareQuantities> hwq;
+	// Initialize it with the options
+	materialFactory->initializeMaterial(options);
 
-	hwq.push_back(xolotlPerf::FP_OPS);
-	hwq.push_back(xolotlPerf::L1_CACHE_MISS);
-
-	return hwq;
-}
-
-bool initMaterial(Options &options) {
-
-	bool materialInitOK = xolotlSolver::initializeMaterial(options);
-	if (!materialInitOK) {
-		std::cerr << "Unable to initialize requested material.  Aborting"
-				<< std::endl;
-		return EXIT_FAILURE;
-	} else
-		return materialInitOK;
+	return materialFactory;
 }
 
 bool initTemp(Options &options) {
 
-	bool tempInitOK = xolotlSolver::initializeTempHandler(options);
+	bool tempInitOK = xolotlFactory::initializeTempHandler(options);
 	if (!tempInitOK) {
 		std::cerr << "Unable to initialize requested temperature.  Aborting"
 				<< std::endl;
@@ -65,21 +56,10 @@ bool initTemp(Options &options) {
 		return tempInitOK;
 }
 
-bool initPerf(bool opts, std::vector<xolotlPerf::HardwareQuantities> hwq) {
-
-	bool perfInitOK = xolotlPerf::initialize(opts, hwq);
-	if (!perfInitOK) {
-		std::cerr
-				<< "Unable to initialize requested performance data infrastructure.  Aborting"
-				<< std::endl;
-		return EXIT_FAILURE;
-	} else
-		return perfInitOK;
-}
 
 bool initViz(bool opts) {
 
-	bool vizInitOK = xolotlViz::initialize(opts);
+	bool vizInitOK = xolotlFactory::initializeVizHandler(opts);
 	if (!vizInitOK) {
 		std::cerr
 				<< "Unable to initialize requested visualization infrastructure. "
@@ -90,34 +70,46 @@ bool initViz(bool opts) {
 }
 
 std::shared_ptr<xolotlSolver::PetscSolver> setUpSolver(
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry, int argc,
-		char **argv) {
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry, 
+		std::shared_ptr<xolotlFactory::IMaterialFactory> material,
+		std::shared_ptr<xolotlCore::ITemperatureHandler> tempHandler,
+		std::shared_ptr<xolotlSolver::ISolverHandler> solvHandler,
+		Options &options) {
+	// Initialize the solver handler
+	solvHandler->initializeHandlers(material, tempHandler, options);
+
 	// Setup the solver
 	auto solverInitTimer = handlerRegistry->getTimer("initSolver");
 	solverInitTimer->start();
 	std::shared_ptr<xolotlSolver::PetscSolver> solver = std::make_shared<
 			xolotlSolver::PetscSolver>(handlerRegistry);
-	solver->setCommandLineOptions(argc, argv);
-	solver->initialize();
+	solver->setCommandLineOptions(options.getPetscArgc(), options.getPetscArgv());
+	solver->initialize(solvHandler);
 	solverInitTimer->stop();
 
 	return solver;
 }
 
 void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry,
-		std::shared_ptr<xolotlSolver::IFluxHandler> materialHandler,
-		std::shared_ptr<xolotlSolver::ITemperatureHandler> tempHandler) {
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry) {
+
+    xperf::IHardwareCounter::SpecType hwctrSpec;
+    hwctrSpec.push_back( xperf::IHardwareCounter::FPOps );
+    hwctrSpec.push_back( xperf::IHardwareCounter::Cycles );
+    hwctrSpec.push_back( xperf::IHardwareCounter::L3CacheMisses );
 
 	// Launch the PetscSolver
 	auto solverTimer = handlerRegistry->getTimer("solve");
+    auto solverHwctr = handlerRegistry->getHardwareCounter( "solve", hwctrSpec );
 	solverTimer->start();
-	solver->solve(materialHandler, tempHandler);
+    solverHwctr->start();
+	solver->solve();
+    solverHwctr->stop();
 	solverTimer->stop();
 }
 
-std::shared_ptr<PSIClusterNetworkLoader> setUpNetworkLoader(int rank,
-		MPI_Comm comm, std::string networkFilename,
+std::shared_ptr<PSIClusterNetworkLoader> setUpNetworkLoader(
+		const std::string& networkFilename,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
 
 	// Create a HDF5NetworkLoader
@@ -129,6 +121,7 @@ std::shared_ptr<PSIClusterNetworkLoader> setUpNetworkLoader(int rank,
 	return networkLoader;
 }
 
+
 //! Main program
 int main(int argc, char **argv) {
 
@@ -136,11 +129,11 @@ int main(int argc, char **argv) {
 	int rank;
 
 	// Check the command line arguments.
-	// Skip the executable name before parsing.
+	// Skip the executable name before parsing
 	argc -= 1; // one for the executable name
 	argv += 1; // one for the executable name
 	Options opts;
-	opts.readParams(argc, argv);
+	opts.readParams(argv);
 	if (!opts.shouldRun()) {
 		return opts.getExitCode();
 	}
@@ -156,9 +149,7 @@ int main(int argc, char **argv) {
 
 	try {
 		// Set up our performance data infrastructure.
-		// Indicate we want to monitor some important hardware counters.
-		auto hwq = declareHWcounters();
-		auto perfInitOK = initPerf(opts.usePerfStandardHandlers(), hwq);
+		xperf::initialize(opts.getPerfHandlerType());
 
 		// Initialize MPI. We do this instead of leaving it to some
 		// other package (e.g., PETSc), because we want to avoid problems
@@ -174,60 +165,74 @@ int main(int argc, char **argv) {
 		}
 
 		// Set up the material infrastructure that is used to calculate flux
-		auto materialInitOK = initMaterial(opts);
+		auto material = initMaterial(opts);
 		// Set up the temperature infrastructure
-		auto tempInitOK = initTemp(opts);
+		bool tempInitOK = initTemp(opts);
+		if (!tempInitOK)
+			return EXIT_FAILURE;
 		// Set up the visualization infrastructure.
-		auto vizInitOK = initViz(opts.useVizStandardHandlers());
+		bool vizInitOK = initViz(opts.useVizStandardHandlers());
+		if (!vizInitOK)
+			return EXIT_FAILURE;
 
-		// Access the material handler registry to get the material
-		auto materialHandler = xolotlSolver::getMaterialHandler();
 		// Access the temperature handler registry to get the temperature
-		auto tempHandler = xolotlSolver::getTemperatureHandler(opts);
+		auto tempHandler = xolotlFactory::getTemperatureHandler();
 
 		// Access our performance handler registry to obtain a Timer
 		// measuring the runtime of the entire program.
-		// NOTE: these long template types could be replaced with 'auto'
 		auto handlerRegistry = xolotlPerf::getHandlerRegistry();
 		auto totalTimer = handlerRegistry->getTimer("total");
 		totalTimer->start();
 
+		// Initialize and get the solver handler
+		bool dimOK = xolotlFactory::initializeDimension(opts);
+		if (!dimOK)
+			return EXIT_FAILURE;
+		auto solvHandler = xolotlFactory::getSolverHandler();
+
 		// Setup the solver
-		auto solver = setUpSolver(handlerRegistry, opts.getPetscArgc(),
-				opts.getPetscArgv());
+		auto solver = setUpSolver(handlerRegistry, material,
+				tempHandler, solvHandler, opts);
 
 		// Load the network
 		auto networkLoadTimer = handlerRegistry->getTimer("loadNetwork");
 		networkLoadTimer->start();
 
 		// Set up the network loader
-		auto networkLoader = setUpNetworkLoader(rank, MPI_COMM_WORLD,
-				networkFilename, handlerRegistry);
+		auto networkLoader = setUpNetworkLoader(networkFilename, handlerRegistry);
 
 		// Give the network loader to PETSc as input
 		solver->setNetworkLoader(networkLoader);
 		networkLoadTimer->stop();
 
 		// Launch the PetscSolver
-		launchPetscSolver(solver, handlerRegistry, materialHandler,
-				tempHandler);
+		launchPetscSolver(solver, handlerRegistry);
 
 		// Finalize our use of the solver.
 		auto solverFinalizeTimer = handlerRegistry->getTimer("solverFinalize");
 		solverFinalizeTimer->start();
 		solver->finalize();
 		solverFinalizeTimer->stop();
+
 		totalTimer->stop();
-
-		// Report the performance data about the run we just completed
-		// TODO Currently, this call writes EventCounter data to the
-		// given stream, but Timer and any hardware counter data is
-		// written by the underlying timing library to files, one per process.
+		
+		// Report statistics about the performance data collected during
+		// the run we just completed.
+		xperf::PerfObjStatsMap<xperf::ITimer::ValType> timerStats;
+		xperf::PerfObjStatsMap<xperf::IEventCounter::ValType> counterStats;
+		xperf::PerfObjStatsMap<xperf::IHardwareCounter::CounterType> hwCtrStats;
+		handlerRegistry->collectStatistics( timerStats, counterStats, hwCtrStats );
 		if (rank == 0) {
-			handlerRegistry->dump(std::cout);
+			handlerRegistry->reportStatistics(std::cout,
+					timerStats,
+					counterStats,
+					hwCtrStats);
 		}
-
-	} catch (std::string & error) {
+	} catch (const std::exception& e) {
+		std::cerr << e.what() << std::endl;
+		std::cerr << "Aborting." << std::endl;
+		return EXIT_FAILURE;
+	} catch (const std::string& error) {
 		std::cout << error << std::endl;
 		std::cout << "Aborting." << std::endl;
 		return EXIT_FAILURE;
@@ -235,12 +240,6 @@ int main(int argc, char **argv) {
 
 	// finalize our use of MPI
 	MPI_Finalize();
-
-	// Uncomment if GPTL was built with pmpi disabled
-	// Output performance data if pmpi is disabled in GPTL
-	// Access the handler registry to output performance data
-	auto handlerRegistry = xolotlPerf::getHandlerRegistry();
-	handlerRegistry->dump(rank);
 
 	return EXIT_SUCCESS;
 }

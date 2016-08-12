@@ -17,9 +17,11 @@ class Plot: public IPlot, public xolotlCore::Identifiable {
 protected:
 
 	/**
-     * Declare the constructor as private to force the use of a name
+	 * Declare the constructor as private to force the use of a name
 	 */
-    Plot() : xolotlCore::Identifiable("unused") {}
+	Plot() :
+			xolotlCore::Identifiable("unused") {
+	}
 
 	/**
 	 * Choice of PlottingStyle.
@@ -46,7 +48,7 @@ public:
 	/**
 	 * The default constructor
 	 */
-	Plot(std::string name);
+	Plot(const std::string& name);
 
 	/**
 	 * The destructor.
@@ -57,13 +59,13 @@ public:
 	 * Method managing everything that is related to the rendering of a plot.
 	 * \see IPlot.h
 	 */
-	void render(std::string fileName = "fileName");
+	void render(const std::string& fileName = "fileName");
 
 	/**
 	 * Method that will save the plotted plot in a file.
 	 * \see IPlot.h
 	 */
-	void write(std::string fileName);
+	void write(const std::string& fileName);
 
 	/**
 	 * Method allowing the user to set the PlottingStyle.
@@ -93,19 +95,19 @@ public:
 	 * Gets the data provider used.
 	 * \see IPlot.h
 	 */
-	std::shared_ptr<IDataProvider> getDataProvider() const ;
+	std::shared_ptr<IDataProvider> getDataProvider() const;
 
 	/**
 	 * Method getting the i-th data provider for SeriesPlot
 	 * \see IPlot.h
 	 */
-	std::shared_ptr<IDataProvider> getDataProvider(int i) const ;
+	std::shared_ptr<IDataProvider> getDataProvider(int i) const;
 
 	/**
 	 * Method getting the total number of data providers
 	 * \see IPlot.h
 	 */
-	int getDataProviderNumber() const ;
+	int getDataProviderNumber() const;
 
 	/**
 	 * Sets the label provider used for the plots.
@@ -117,7 +119,7 @@ public:
 	 * Gets the label provider used.
 	 * \see IPlot.h
 	 */
-	std::shared_ptr<LabelProvider> getLabelProvider() const ;
+	std::shared_ptr<LabelProvider> getLabelProvider() const;
 
 	/**
 	 * Method that enables the rendering of the legend.
@@ -129,7 +131,7 @@ public:
 	 * Method getting the legend.
 	 * \see IPlot.h
 	 */
-	std::string getLegend() const ;
+	std::string getLegend() const;
 
 	/**
 	 * Method that enables the log scale.

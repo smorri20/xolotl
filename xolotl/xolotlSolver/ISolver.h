@@ -4,9 +4,8 @@
 // Includes
 #include <PSIClusterNetworkLoader.h>
 #include <map>
-#include "IFluxHandler.h"
-#include "ITemperatureHandler.h"
-#include "TemperatureHandler.h"
+#include <ISolverHandler.h>
+#include <Options.h>
 
 using namespace xolotlCore;
 
@@ -57,7 +56,7 @@ public:
 	 * for keys and associated values mapped to those keys. A relevant example
 	 * is "startTime" and "0.01" where both are of type std::string.
 	 */
-	virtual void setOptions(std::map<std::string,std::string> options) = 0;
+	virtual void setOptions(const std::map<std::string, std::string>& options) = 0;
 
 	/**
 	 * This operation sets up the mesh that will be used by the solver and
@@ -71,17 +70,15 @@ public:
 	 * possibly including but not limited to setting up MPI and loading initial
 	 * conditions. If the solver can not be initialized, this operation will
 	 * throw an exception of type std::string.
+	 * @param solverHandler The solver handler
 	 */
-	virtual void initialize() = 0;
+	virtual void initialize(std::shared_ptr<ISolverHandler> solverHandler) = 0;
 
 	/**
 	 * This operation directs the Solver to perform the solve. If the solve
 	 * fails, it will throw an exception of type std::string.
-	 * @param fluxHandler The flux handler that will be used when performing
-	 * the solve
 	 */
-	virtual void solve(std::shared_ptr<IFluxHandler> fluxHandler,
-			std::shared_ptr<ITemperatureHandler> temperatureHandler) = 0;
+	virtual void solve() = 0;
 
 	/**
 	 * This operation performs all necessary finalization for the solver

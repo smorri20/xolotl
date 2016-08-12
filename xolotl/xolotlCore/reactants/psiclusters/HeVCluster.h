@@ -3,7 +3,6 @@
 
 // Includes
 #include "PSICluster.h"
-#include "../../xolotlPerf/HandlerRegistryFactory.h"
 #include <string>
 #include <map>
 
@@ -30,60 +29,6 @@ private:
 		PSICluster(1)
 	{ numHe = 1; numV = 1; }
 
-public:
-
-	/**
-	 * The constructor. All HeVClusters must be initialized with a map
-	 * that describes the species of which the cluster is composed. The map
-	 * should contain as its keys the names of the species and the sizes of the
-	 * species as its values. The names of the species must be one of
-	 * {He,V}.
-	 */
-	HeVCluster(int numHe, int numV,
-			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
-
-	/**
-	 * Copy constructor
-	 * @param other the reactant to be copied
-	 */
-	HeVCluster(const HeVCluster &other);
-
-	//! Destructor
-	~HeVCluster();
-
-	/**
-	 * This operation returns a Reactant that is created using the copy
-	 * constructor of HeVCluster.
-	 * @return A copy of this reactant.
-	 */
-	virtual std::shared_ptr<Reactant> clone();
-
-	/**
-	 * This operation returns the total generation rate due to emission for
-	 * this cluster.
-	 */
-	double getGenByEm();
-
-	/**
-	 * This operation returns the total annihilation rate due to emission for
-	 * this cluster.
-	 */
-	double getAnnByEm();
-
-	/**
-	 * This operation returns true to signify that this cluster is a mixture of
-	 * He and V.
-	 */
-	virtual bool isMixed() const { return true; };
-
-	/**
-	 * This operation overrides Reactant's setTemperature operation to
-	 * correctly recompute the diffusion coefficient and other
-	 * temperature-dependent quantities when the temperature is set.
-	 * @param temp
-	 */
-	virtual void setTemperature(double temp);
-
 	/**
 	 * This operation handles partial replacement reactions of the form
 	 *
@@ -99,11 +44,69 @@ public:
 	 * cluster of the form C_z.
 	 * @param oldComponentName The name of the component that will be partially
 	 * replaced.
-	 * @param newComponentName The name of the component that will replace the old
-	 * component.
 	 */
 	void replaceInCompound(std::vector<Reactant *> & clusters,
-			std::string oldComponentName, std::string newComponentName);
+			const std::string& oldComponentName);
+
+	/**
+	 * This operation "combines" clusters in the sense that it handles all of
+	 * the logic and caching required to correctly process the reaction
+	 *
+	 * (He_a)(V_b) + He_c --> [He_(a+c)][V_(b+1)] + I
+	 *
+	 * in the case of [He_(a+c)](V_b) not in the network
+	 *
+	 * This operation fills the reaction connectivity array as well as the
+	 * array of combining clusters.
+	 *
+	 * @param clusters The clusters that can combine with this cluster.
+	 * (Here it will be He clusters)
+	 * @param productName The name of the product produced in the reaction.
+	 */
+	void combineClusters(std::vector<Reactant *> & clusters,
+			const std::string& productName);
+
+public:
+
+	/**
+	 * The constructor. All HeVClusters must be initialized with a map
+	 * that describes the species of which the cluster is composed. The map
+	 * should contain as its keys the names of the species and the sizes of the
+	 * species as its values. The names of the species must be one of
+	 * {He,V}.
+	 *
+	 * @param numHe The number of helium atoms in this cluster
+	 * @param numV The number of vacancies in this cluster
+	 * @param registry The performance handler registry
+	 */
+	HeVCluster(int numHe, int numV,
+			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+
+	/**
+	 * Copy constructor.
+	 *
+	 * @param other the reactant to be copied
+	 */
+	HeVCluster(const HeVCluster &other);
+
+	//! Destructor
+	~HeVCluster() {}
+
+	/**
+	 * This operation returns a Reactant that is created using the copy
+	 * constructor of HeVCluster.
+	 *
+	 * @return A copy of this reactant
+	 */
+	virtual std::shared_ptr<Reactant> clone();
+
+	/**
+	 * This operation returns true to signify that this cluster is a mixture of
+	 * He and V.
+	 *
+	 * @return True if mixed
+	 */
+	virtual bool isMixed() const {return true;}
 
 	/**
 	 * Computes a row of the reaction connectivity matrix corresponding to

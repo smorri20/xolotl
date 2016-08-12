@@ -11,9 +11,9 @@
 //Includes
 #include <map>
 #include <memory>
-#include "PSICluster.h"
+#include <PSICluster.h>
 #include <PSIClusterReactionNetwork.h>
-#include <IHandlerRegistry.h>
+#include "xolotlPerf/IHandlerRegistry.h"
 #include <string>
 
 namespace xolotlCore {
@@ -28,12 +28,7 @@ namespace xolotlCore {
  * > The number of He in the cluster
  * > The number of V in the cluster
  * > The number of I in the cluster
- * > The He binding energy
- * > The V binding energy
- * > The I binding energy
- *
- * Where appropriate, any binding energy may be specified as "Infinity" to
- * signify that the cluster does not undergo that type of dissociation.
+ * > The formation energy
  *
  * Lines of comments starting with a "#" will be ignored as will lines that do
  * not clearly provide the information above.
@@ -87,16 +82,16 @@ protected:
 	/**
 	 * Private nullary constructor.
 	 */
-	PSIClusterNetworkLoader() {
-	};
+	PSIClusterNetworkLoader() {}
 
 	/**
 	 * This operation creates a singles-species cluster of helium, vacancies or
 	 * interstitials. It adds the cluster to the appropriate internal list of
 	 * clusters for that type.
-	 * @param numHe - The number of helium atoms
-	 * @param numV - The number of atomic vacancies
-	 * @param numI - The number of interstitial defects
+	 *
+	 * @param numHe The number of helium atoms
+	 * @param numV The number of atomic vacancies
+	 * @param numI The number of interstitial defects
 	 * @return The new cluster
 	 */
 	std::shared_ptr<PSICluster> createCluster(int numHe, int numV, int numI);
@@ -106,15 +101,18 @@ public:
 	/**
 	 * The default constructor. The setInputstream() operation must be called
 	 * if this constructor is used.
+	 *
+	 * @param registry The performance handler registry
 	 */
-	PSIClusterNetworkLoader(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
-		handlerRegistry = registry;
-	}
+	PSIClusterNetworkLoader(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
+		handlerRegistry(registry) {}
 
 	/**
 	 * An alternative constructor provided for convenience.
-	 * @param inputstream The inputstream from which the cluster data should be
-	 * loaded.
+	 *
+	 * @param stream The inputstream from which the cluster data should be
+	 * loaded
+	 * @param registry The performance handler registry
 	 */
 	PSIClusterNetworkLoader(const std::shared_ptr<std::istream> stream,
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
@@ -122,27 +120,27 @@ public:
 	/**
 	 * Destructor
 	 */
-	virtual ~PSIClusterNetworkLoader() {
-	}
+	virtual ~PSIClusterNetworkLoader() {}
 
 	/**
 	 * This operation specifies the inputstream from which cluster data should
 	 * be loaded.
-	 * @param inputstream The inputstream from which the cluster data should be
-	 * loaded.
+	 *
+	 * @param stream The inputstream from which the cluster data should be
+	 * loaded
 	 */
 	void setInputstream(const std::shared_ptr<std::istream> stream);
-
-	std::shared_ptr<std::istream> getInputstream();
 
 	/**
 	 * This operation will load the reaction network from the inputstream in
 	 * the format specified previously. The network will be empty if it can not
 	 * be loaded.
-	 * @param network The reaction network
+	 *
+	 * @return network The reaction network
 	 */
 	virtual std::shared_ptr<PSIClusterReactionNetwork> load();
 };
 
 } /* namespace xolotlCore */
+
 #endif /* PSICLUSTERNETWORKLOADER_H_ */
