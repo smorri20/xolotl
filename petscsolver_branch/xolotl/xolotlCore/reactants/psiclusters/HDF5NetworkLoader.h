@@ -19,6 +19,11 @@ private:
 	std::string fileName;
 
 	/**
+	 * If we want dummy reactions or not
+	 */
+	bool dummyReactions;
+
+	/**
 	 * Private nullary constructor.
 	 */
 	HDF5NetworkLoader() {}
@@ -61,6 +66,11 @@ public:
 	 * @return The name of the file
 	 */
 	std::string getFilename () const;
+
+	/**
+	 * This operation will set the reactions to dummy reactions.
+	 */
+	void setDummyReactions ();
 };
 
 } /* namespace xolotlCore */

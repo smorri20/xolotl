@@ -3,6 +3,7 @@
 
 // Includes
 #include "IAdvectionHandler.h"
+#include <Constants.h>
 
 namespace xolotlCore {
 

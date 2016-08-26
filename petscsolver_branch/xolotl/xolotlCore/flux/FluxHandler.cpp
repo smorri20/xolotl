@@ -1,5 +1,7 @@
 #include "FluxHandler.h"
 #include <xolotlPerf.h>
+#include <PSICluster.h>
+#include <Constants.h>
 #include <iostream>
 #include <fstream>
 #include <cmath>
@@ -17,7 +19,7 @@ FluxHandler::FluxHandler() :
 	return;
 }
 
-void FluxHandler::initializeFluxHandler(PSIClusterReactionNetwork *network,
+void FluxHandler::initializeFluxHandler(IReactionNetwork *network,
 		int surfacePos, std::vector<double> grid) {
 	// Set the grid
 	xGrid = grid;
@@ -59,7 +61,7 @@ void FluxHandler::initializeFluxHandler(PSIClusterReactionNetwork *network,
 	incidentFluxVec.push_back(0.0);
 
 	// Set the flux index corresponding the the single helium cluster here
-	auto fluxCluster = (PSICluster *) network->get(heType, 1);
+	auto fluxCluster = network->get(heType, 1);
 	// Check that the helium cluster is present in the network
 	if (!fluxCluster) {
 		throw std::string(

@@ -30,7 +30,7 @@ public:
 	 *
 	 * \see IAdvectionHandler.h
 	 */
-	void initialize(PSIClusterReactionNetwork *network, int *ofill);
+	void initialize(IReactionNetwork *network, int *ofill);
 
 	/**
 	 * Initialize an array of the dimension of the physical domain times the number of advecting
@@ -52,7 +52,7 @@ public:
 	 *
 	 * \see IAdvectionHandler.h
 	 */
-	void computeAdvection(PSIClusterReactionNetwork *network,
+	void computeAdvection(IReactionNetwork *network,
 			std::vector<double> &pos, double **concVector, double *updatedConcOffset,
 			double hxLeft, double hxRight, int ix,
 			double hy = 0.0, int iy = 0, double hz = 0.0, int iz = 0);
@@ -66,7 +66,7 @@ public:
 	 *
 	 * \see IAdvectionHandler.h
 	 */
-	void computePartialsForAdvection(PSIClusterReactionNetwork *network,
+	void computePartialsForAdvection(IReactionNetwork *network,
 			double *val, int *indices, std::vector<double> &pos,
 			double hxLeft, double hxRight, int ix,
 			double hy = 0.0, int iy = 0, double hz = 0.0, int iz = 0);

@@ -8,7 +8,7 @@ using namespace xolotlCore;
 
 HeInterstitialCluster::HeInterstitialCluster(int numHelium, int numInterstitial,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(1, registry), numHe(numHelium), numI(numInterstitial) {
+		PSICluster(registry), numHe(numHelium), numI(numInterstitial) {
 	// Set the cluster size as the sum of
 	// the number of Helium and Interstitials
 	size = numHe + numI;
@@ -36,7 +36,7 @@ HeInterstitialCluster::HeInterstitialCluster(int numHelium, int numInterstitial,
 	return;
 }
 
-HeInterstitialCluster::HeInterstitialCluster(const HeInterstitialCluster &other) :
+HeInterstitialCluster::HeInterstitialCluster(HeInterstitialCluster &other) :
 		PSICluster(other) {
 	numHe = other.numHe;
 	numI = other.numI;
@@ -44,13 +44,7 @@ HeInterstitialCluster::HeInterstitialCluster(const HeInterstitialCluster &other)
 	return;
 }
 
-std::shared_ptr<Reactant> HeInterstitialCluster::clone() {
-	std::shared_ptr<Reactant> reactant = std::make_shared<HeInterstitialCluster>(*this);
-
-	return reactant;
-}
-
-void HeInterstitialCluster::replaceInCompound(std::vector<Reactant *> & reactants,
+void HeInterstitialCluster::replaceInCompound(std::vector<IReactant *> & reactants,
 		const std::string& oldComponentName) {
 	// Local Declarations
 	std::map<std::string, int> myComp = getComposition(),
@@ -210,7 +204,7 @@ void HeInterstitialCluster::createReactionConnectivity() {
 	// The single Interstitial cluster is already set
 	if (singleIReactant) {
 		// Create a container for it
-		std::vector<Reactant *> singleIInVector;
+		std::vector<IReactant *> singleIInVector;
 		singleIInVector.push_back(singleIReactant);
 		// Call the combination function even though there is only one cluster
 		// because it handles all of the work to properly connect the three

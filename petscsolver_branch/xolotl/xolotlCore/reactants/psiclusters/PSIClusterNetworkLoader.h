@@ -13,7 +13,7 @@
 #include <memory>
 #include <PSICluster.h>
 #include <PSIClusterReactionNetwork.h>
-#include "xolotlPerf/IHandlerRegistry.h"
+#include <IHandlerRegistry.h>
 #include <string>
 
 namespace xolotlCore {
@@ -67,11 +67,6 @@ protected:
 	 * The istream from which the network of clusters will be read.
 	 */
 	std::shared_ptr<std::istream> networkStream;
-
-	/**
-	 * The list of clusters that will be added to the network.
-	 */
-	std::vector<std::shared_ptr<PSICluster>> clusters;
 
 	/**
 	 * The performance handler registry used to measure runtime performance

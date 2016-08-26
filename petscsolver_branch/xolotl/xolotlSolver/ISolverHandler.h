@@ -12,6 +12,7 @@
 #include <ITrapMutationHandler.h>
 #include <IBubbleBurstingHandler.h>
 #include <IMaterialFactory.h>
+#include <IReactionNetwork.h>
 
 namespace xolotlSolver {
 
@@ -35,34 +36,20 @@ public:
 	 *
 	 * @param material The material factory
 	 * @param tempHandler The temperature handler
+	 * @param networkHandler The network handler
 	 * @param options The Xolotl options
 	 */
 	virtual void initializeHandlers(std::shared_ptr<xolotlFactory::IMaterialFactory> material,
 			std::shared_ptr<xolotlCore::ITemperatureHandler> tempHandler,
+			std::shared_ptr<xolotlCore::IReactionNetwork> networkHandler,
 			xolotlCore::Options &options) = 0;
-
-	/**
-	 * Initialize the network and network file name.
-	 *
-	 * @param fileName The name of the file from which the network was loaded
-	 * @param net The network
-	 */
-	virtual void initializeNetwork(const std::string& fileName,
-			xolotlCore::PSIClusterReactionNetwork *net) = 0;
 
 	/**
 	 * Create everything needed before starting to solve.
 	 *
 	 * @param da The PETSc distributed array
-	 * @param nx The number of grid points in the x direction (depth)
-	 * @param hx The step size in the x direction
-	 * @param ny The number of grid points in the y direction
-	 * @param hy The step size in the y direction
-	 * @param nz The number of grid points in the z direction
-	 * @param hz The step size in the z direction
 	 */
-	virtual void createSolverContext(DM &da, int nx, double hx, int ny,
-			double hy, int nz, double hz) = 0;
+	virtual void createSolverContext(DM &da) = 0;
 
 	/**
 	 * Get the diagonal fill for the Jacobian, corresponding to the reactions.
@@ -209,7 +196,7 @@ public:
 	 *
 	 * @return The network
 	 */
-	virtual xolotlCore::PSIClusterReactionNetwork *getNetwork() const = 0;
+	virtual xolotlCore::IReactionNetwork *getNetwork() const = 0;
 
 	/**
 	 * Get the network name.

@@ -8,11 +8,11 @@ SET(LIBRARY_NAME "xolotlFactory")
 #Collect all header filenames in this project 
 #and glob them in HEADERS
 file(GLOB HEADERS material/*.h vizHandler/*.h temperatureHandler/*.h
-solverHandler/*.h)
+solverHandler/*.h reactionHandler/*.h)
 
 #Grab all of the source files
 file(GLOB SRC material/*.cpp vizHandler/*.cpp temperatureHandler/*.cpp
-solverHandler/*.cpp)
+solverHandler/*.cpp reactionHandler/*.cpp)
 
 #Include directories
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})

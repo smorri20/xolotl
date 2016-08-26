@@ -2,9 +2,8 @@
 #define BUBBLEBURSTINGHANDLER_H
 
 // Includes
-#include <PSICluster.h>
-#include <PSIClusterReactionNetwork.h>
 #include <IBubbleBurstingHandler.h>
+#include <Constants.h>
 #include <memory>
 
 namespace xolotlCore {
@@ -47,7 +46,7 @@ public:
 	 * @param network The network
 	 * @param grid The grid in the x direction
 	 */
-	virtual void initialize(int surfacePos, PSIClusterReactionNetwork *network,
+	virtual void initialize(int surfacePos, IReactionNetwork *network,
 			std::vector<double> grid);
 
 	/**
@@ -57,7 +56,7 @@ public:
 	 * @param network The network
 	 * @param grid The grid on the x axis
 	 */
-	virtual void initializeIndex(int surfacePos, PSIClusterReactionNetwork *network,
+	virtual void initializeIndex(int surfacePos, IReactionNetwork *network,
 			std::vector<double> grid);
 
 	/**
@@ -66,7 +65,7 @@ public:
 	 *
 	 * @param network The network
 	 */
-	virtual void updateBurstingRate(PSIClusterReactionNetwork *network);
+	virtual void updateBurstingRate(IReactionNetwork *network);
 
 	/**
 	 * Compute the flux due to the bubble bursting for all the cluster,
@@ -84,7 +83,7 @@ public:
 	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
 	 * point where the bursting is computed used to find the next solution
 	 */
-	virtual void computeBursting(PSIClusterReactionNetwork *network,
+	virtual void computeBursting(IReactionNetwork *network,
 			int xi, double *concOffset, double *updatedConcOffset);
 
 	/**
@@ -105,7 +104,7 @@ public:
 	 *
 	 * @return The number of bubbles that can burst at this grid point
 	 */
-	virtual int computePartialsForBursting(PSIClusterReactionNetwork *network,
+	virtual int computePartialsForBursting(IReactionNetwork *network,
 			double *val, int *indices, int xi);
 
 };

@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(checkComposition) {
 	Reactant reactant(registry);
 
 	// Check its default composition
-	BOOST_REQUIRE_EQUAL(0U, reactant.getComposition().size());
+	BOOST_REQUIRE_EQUAL(3U, reactant.getComposition().size());
 
 	return;
 }
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(checkCopying) {
 	BOOST_REQUIRE_CLOSE(5.0,reactant.getTemperature(),0.0001);
 
 	// Increase the concentration
-	reactantCopy.increaseConcentration(5.0);
+	reactantCopy.setConcentration(15.0);
 
 	// The values should now be different,
 	// so check them against the known values
@@ -118,24 +118,6 @@ BOOST_AUTO_TEST_CASE(checkConcentration) {
 
 	// Make sure it was set correctly
 	BOOST_REQUIRE_EQUAL(1.0, reactant.getConcentration());
-
-	// Increase it
-	reactant.increaseConcentration(3.3);
-
-	// Make sure its correct
-	BOOST_REQUIRE_EQUAL(4.3, reactant.getConcentration());
-
-	// Decrease it
-	reactant.decreaseConcentration(1.3);
-
-	// Make sure its correct
-	BOOST_REQUIRE_EQUAL(3.0, reactant.getConcentration());
-
-	// Zero it
-	reactant.zero();
-
-	// Check it was zeroed
-	BOOST_REQUIRE_EQUAL(0.0, reactant.getConcentration());
 
 	// Make sure the base class getTotalFlux returns 0 for now
 	BOOST_REQUIRE_EQUAL(0.0, reactant.getTotalFlux());

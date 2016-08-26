@@ -1,7 +1,7 @@
 #ifndef HDF5UTILS_H
 #define HDF5UTILS_H
 
-#include <PSIClusterReactionNetwork.h>
+#include <IReactionNetwork.h>
 #include <memory>
 
 namespace xolotlCore {
@@ -42,7 +42,7 @@ namespace HDF5Utils {
 	 *
 	 * @param network The network of clusters
 	 */
-	void fillNetwork(PSIClusterReactionNetwork *network);
+	void fillNetwork(IReactionNetwork *network);
 
 	/**
 	 * Add a concentration subgroup for the given time step to the HDF5 file.

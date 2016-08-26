@@ -3,7 +3,7 @@
 
 namespace xolotlCore {
 
-void YGBAdvectionHandler::initialize(PSIClusterReactionNetwork *network,
+void YGBAdvectionHandler::initialize(IReactionNetwork *network,
 		int *ofill) {
 	// Get all the reactants and their number
 	auto reactants = network->getAll();
@@ -77,7 +77,7 @@ void YGBAdvectionHandler::initialize(PSIClusterReactionNetwork *network,
 	return;
 }
 
-void YGBAdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
+void YGBAdvectionHandler::computeAdvection(IReactionNetwork *network,
 		std::vector<double> &pos, double **concVector,
 		double *updatedConcOffset, double hxLeft, double hxRight, int ix,
 		double hy, int iy, double hz, int iz) {
@@ -132,7 +132,7 @@ void YGBAdvectionHandler::computeAdvection(PSIClusterReactionNetwork *network,
 }
 
 void YGBAdvectionHandler::computePartialsForAdvection(
-		PSIClusterReactionNetwork *network, double *val, int *indices,
+		IReactionNetwork *network, double *val, int *indices,
 		std::vector<double> &pos, double hxLeft, double hxRight, int ix,
 		double hy, int iy, double hz, int iz) {
 	// Get all the reactant

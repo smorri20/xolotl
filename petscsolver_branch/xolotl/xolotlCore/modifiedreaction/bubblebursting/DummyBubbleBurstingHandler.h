@@ -33,7 +33,7 @@ public:
 	 * @param network The network
 	 * @param grid The grid in the x direction
 	 */
-	void initialize(int surfacePos, PSIClusterReactionNetwork *network,
+	void initialize(int surfacePos, IReactionNetwork *network,
 			std::vector<double> grid) {
 		// Clear the vector of HeV bubble bursting at each grid point
 		indexVector.clear();
@@ -49,7 +49,7 @@ public:
 	 *
 	 * @param network The network
 	 */
-	void updateBurstingRate(PSIClusterReactionNetwork *network) {
+	void updateBurstingRate(IReactionNetwork *network) {
 		kBursting = 0.0;
 
 		return;
@@ -68,7 +68,7 @@ public:
 	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
 	 * point where the bursting is computed used to find the next solution
 	 */
-	void computeBursting(PSIClusterReactionNetwork *network,
+	void computeBursting(IReactionNetwork *network,
 			int xi, double *concOffset, double *updatedConcOffset) {
 		return;
 	}
@@ -91,7 +91,7 @@ public:
 	 *
 	 * @return The number of bubbles that can burst at this grid point
 	 */
-	int computePartialsForBursting(PSIClusterReactionNetwork *network,
+	int computePartialsForBursting(IReactionNetwork *network,
 			double *val, int *indices, int xi) {
 		return 0;
 	}

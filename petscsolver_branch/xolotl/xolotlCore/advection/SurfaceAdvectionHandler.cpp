@@ -82,7 +82,7 @@ void SurfaceAdvectionHandler::initializeAdvectionGrid(std::vector<IAdvectionHand
 }
 
 void SurfaceAdvectionHandler::computeAdvection(
-		PSIClusterReactionNetwork *network, std::vector<double> &pos,
+		IReactionNetwork *network, std::vector<double> &pos,
 		double **concVector, double *updatedConcOffset,
 		double hxLeft, double hxRight, int ix,
 		double hy, int iy, double hz, int iz) {
@@ -116,7 +116,7 @@ void SurfaceAdvectionHandler::computeAdvection(
 }
 
 void SurfaceAdvectionHandler::computePartialsForAdvection(
-		PSIClusterReactionNetwork *network, double *val,
+		IReactionNetwork *network, double *val,
 		int *indices, std::vector<double> &pos,
 		double hxLeft, double hxRight, int ix,
 		double hy, int iy, double hz, int iz) {

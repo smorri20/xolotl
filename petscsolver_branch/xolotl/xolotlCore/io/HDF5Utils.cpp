@@ -1,4 +1,5 @@
 #include "HDF5Utils.h"
+#include <PSICluster.h>
 #include <iostream>
 #include <sstream>
 #include <hdf5.h>
@@ -118,7 +119,7 @@ void HDF5Utils::fillHeader(int nx, double hx, int ny,
 	return;
 }
 
-void HDF5Utils::fillNetwork(PSIClusterReactionNetwork *network) {
+void HDF5Utils::fillNetwork(IReactionNetwork *network) {
 	// Create the array that will store the network
 	int networkSize = network->size();
 	double networkArray[networkSize][6];

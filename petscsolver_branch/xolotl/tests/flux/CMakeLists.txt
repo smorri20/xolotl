@@ -10,6 +10,7 @@ include_directories(${CMAKE_SOURCE_DIR}/xolotlCore)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants/psiclusters)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/flux)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf/dummy)
 include_directories(${Boost_BINARY_DIRS})
 

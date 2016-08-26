@@ -4,9 +4,6 @@
 // Includes
 #include <Reactant.h>
 #include <math.h>
-#include <vector>
-#include <set>
-#include <unordered_map>
 #include <sstream>
 
 namespace xolotlPerf {
@@ -94,52 +91,6 @@ protected:
 		CombiningCluster(PSICluster * Ptr, double k)
 		: combining(Ptr), kConstant(k) {}
 	};
-
-	/**
-	 * The total size of this cluster including the contributions from all
-	 * species.
-	 */
-	int size;
-
-	/**
-	 * The diffusion factor, D_0, that is used to calculate the diffusion
-	 * coefficient for this cluster. The default value is 0 (does not diffuse).
-	 */
-	double diffusionFactor;
-
-	/**
-	 * The diffusion coefficient computed from the diffusion factor using an
-	 * Arrhenius rate equation. It is re-computed every time the temperature is
-	 * updated.
-	 */
-	double diffusionCoefficient;
-
-	/**
-	 * The index/id of this cluster in the reaction network - 1. It is used for
-	 * indexing arrays (thus the -1).
-	 */
-	int thisNetworkIndex;
-
-	/**
-	 * The formation energy of this cluster. It will be used to compute the
-	 * binding energies appearing in the dissociation constant calculation.
-	 */
-	double formationEnergy;
-
-	/**
-	 * The migration energy for this cluster.
-	 */
-	double migrationEnergy;
-
-	/**
-	 * The reaction radius of this cluster
-	 */
-	double reactionRadius;
-
-	/**
-	 * The biggest rate for this cluster
-	 */
-	double biggestRate;
 
 	/**
 	 * A vector of ClusterPairs that represents reacting pairs of clusters
@@ -324,7 +275,7 @@ protected:
 	 * @param clusters The clusters that can combine with this cluster
 	 * @param productName The name of the product produced in the reaction
 	 */
-	virtual void combineClusters(std::vector<Reactant *> & clusters,
+	virtual void combineClusters(std::vector<IReactant *> & clusters,
 			const std::string& productName);
 
 	/**
@@ -346,7 +297,7 @@ protected:
 	 * @param oldComponentName The name of the component that will be partially
 	 * replaced
 	 */
-	virtual void replaceInCompound(std::vector<Reactant *> & clusters,
+	virtual void replaceInCompound(std::vector<IReactant *> & clusters,
 			const std::string& oldComponentName);
 
 	/** This operation handles reactions where interstitials fill vacancies,
@@ -375,31 +326,7 @@ protected:
 	 * @param clusters The set of clusters of the second type that interact
 	 * with this cluster
 	 **/
-	void fillVWithI(std::vector<Reactant *> & clusters);
-
-	/**
-	 * This operation prints a forward reaction given the three reactants in
-	 * A + B -> C.
-	 *
-	 * @param firstReactant - The first reactant in the reaction, A.
-	 * @param secondReactant - The second reactant in the reaction, B.
-	 * @param thirdReactant - The third reactant in the reaction, C.
-	 */
-	void printReaction(const PSICluster & firstReactant,
-			const PSICluster & secondReactant,
-			const PSICluster & productReactant) const;
-
-	/**
-	 * This operation prints a backward reaction given the three reactants in
-	 * A -> B + C.
-	 *
-	 * @param firstReactant - The first reactant in the reaction, A.
-	 * @param secondReactant - The second reactant in the reaction, B.
-	 * @param thirdReactant - The third reactant in the reaction, C.
-	 */
-	void printDissociation(const PSICluster & firstReactant,
-			const PSICluster & secondReactant,
-			const PSICluster & productReactant) const;
+	void fillVWithI(std::vector<IReactant *> & clusters);
 
 	/**
 
@@ -421,42 +348,7 @@ protected:
 	const std::set<int> & getDissociationConnectivitySet() const;
 
 	/**
-	 * This operation recomputes the diffusion coefficient. It is called
-	 * whenever the diffusion factor, migration energy or temperature change.
-	 *
-	 * @param temp the temperature
-	 */
-	void recomputeDiffusionCoefficient(double temp);
-
-	/**
-	 * This constructor is protected because PSIClusters must always be
-	 * initialized with a size.
-	 */
-	PSICluster(const int clusterSize);
-
-private:
-
-	/**
-	 * The row of the reaction connectivity matrix corresponding to
-	 * this PSICluster stored as a set.
-	 *
-	 * If a cluster is involved in a reaction with this PSICluster,
-	 * the cluster id is an element of this set.
-	 */
-	std::set<int> reactionConnectivitySet;
-
-	/**
-	 * The row of the dissociation connectivity matrix corresponding to
-	 * this PSICluster stored as a set.
-	 *
-	 * If this PSICluster can dissociate into a particular cluster,
-	 * the cluster id is an element of this set.
-	 */
-	std::set<int> dissociationConnectivitySet;
-
-	/**
-	 * The default constructor is private because PSIClusters must always be
-	 * initialized with a size.
+	 * The default constructor is protected
 	 */
 	PSICluster();
 
@@ -465,18 +357,16 @@ public:
 	/**
 	 * The default constructor
 	 *
-	 * @param clusterSize The cluster size
 	 * @param registry The performance handler registry
 	 */
-	PSICluster(const int clusterSize,
-			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+	PSICluster(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
 	 * The copy constructor
 	 *
 	 * @param other The cluster to copy
 	 */
-	PSICluster(const PSICluster &other);
+	PSICluster(PSICluster &other);
 
 	/**
 	 * The destructor
@@ -484,18 +374,11 @@ public:
 	virtual ~PSICluster() {}
 
 	/**
-	 * This operation returns a cluster that is created using the copy
-	 * constructor. If this cluster is actually a subclass of cluster, the
-	 * clone will be of the same type and therefore carry all of the members
-	 * and virtual functions of the subclass in addition to those of the
-	 * cluster. This type of copy is not only handy but, in fact, quite
-	 * necessary in those cases where a cluster must be copied but its exact
-	 * subclass is unknown and there is no way to make a reasonable assumption
-	 * about it.
-	 *
-	 * @return A copy of this cluster
+	 * Returns a reactant created using the copy constructor
 	 */
-	virtual std::shared_ptr<Reactant> clone();
+	virtual std::shared_ptr<IReactant> clone() {
+		return std::shared_ptr<IReactant> (new PSICluster(*this));
+	}
 
 	/**
 	 * Sets the collection of other clusters that make up
@@ -504,16 +387,7 @@ public:
 	 * @param network The reaction network of which this cluster is a part
 	 */
 	void setReactionNetwork(
-			const std::shared_ptr<ReactionNetwork> reactionNetwork);
-
-	/**
-	 * This operation signifies that the cluster with cluster Id should be
-	 * listed as connected with this cluster through forward reactions.
-	 * 
-	 * @param clusterId The integer id of the cluster that is connected
-	 * to this cluster
-	 */
-	virtual void setReactionConnectivity(int clusterId);
+			const std::shared_ptr<IReactionNetwork> reactionNetwork);
 
 	/**
 	 * This operation returns the connectivity array for this cluster for
@@ -524,15 +398,6 @@ public:
 	 * reactions
 	 */
 	virtual std::vector<int> getReactionConnectivity() const;
-
-	/**
-	 * This operation signifies that the cluster with cluster Id should be
-	 * listed as connected with this cluster through forward reactions.
-	 * 
-	 * @param clusterId The integer id of the cluster that is connected
-	 * to this cluster
-	 */
-	virtual void setDissociationConnectivity(int clusterId);
 
 	/**
 	 * This operation returns the connectivity array for this cluster for
@@ -659,36 +524,6 @@ public:
 	void resetConnectivities();
 
 	/**
-	 * This operation returns the total size of the cluster.
-	 *
-	 * @return The total size of this cluster including the contributions
-	 * from all species types
-	 */
-	virtual int getSize() const;
-
-	/**
-	 * This operation retrieves the formation energy for this cluster.
-	 *
-	 * @return The value of the formation energy
-	 */
-	double getFormationEnergy() const;
-
-	/**
-	 * This operation sets the formation energy for this cluster.
-	 *
-	 * @param energy The formation energy
-	 */
-	void setFormationEnergy(double energy);
-
-	/**
-	 * This operation retrieves the diffusion factor, D_0, that is used to
-	 * calculate the diffusion coefficient for this cluster.
-	 *
-	 * @return The diffusion factor of this cluster
-	 */
-	double getDiffusionFactor() const;
-
-	/**
 	 * This operation sets the diffusion factor, D_0, that is used to calculate
 	 * the diffusion coefficient for this cluster.
 	 *
@@ -697,42 +532,11 @@ public:
 	void setDiffusionFactor(const double factor);
 
 	/**
-	 * This operation returns the diffusion coefficient for this cluster and is
-	 * calculated from the diffusion factor.
-	 *
-	 * @return The diffusion coefficient
-	 */
-	virtual double getDiffusionCoefficient() const;
-
-	/**
-	 * This operation sets the migration energy for this cluster.
+	 * This operation sets the migration energy for this reactant.
 	 *
 	 * @param energy The migration energy
 	 */
 	void setMigrationEnergy(const double energy);
-
-	/**
-	 * This operation retrieves the migration energy for this cluster.
-	 *
-	 * @return the migration energy
-	 */
-	double getMigrationEnergy() const;
-
-	/**
-	 * This operation returns the reaction radius for the
-	 * particular cluster.
-	 *
-	 * @return The reaction radius
-	 */
-	virtual double getReactionRadius() const;
-
-	/**
-	 * This operation returns the biggest rate for this
-	 * particular cluster.
-	 *
-	 * @return The biggest rate
-	 */
-	double getBiggestRate() const;
 
 	/**
 	 * This operation returns the sum of combination rate and emission rate
@@ -766,21 +570,6 @@ public:
 	 * or CombiningCluster. Need to be called only when the temperature changes.
 	 */
 	void computeRateConstants();
-
-	/**
-	 * This operation overrides Reactant's setTemperature operation to
-	 * correctly recompute the diffusion coefficient and other
-	 * temperature-dependent quantities when the temperature is set.
-	 *
-	 * @param temp The temperature
-	 */
-	virtual void setTemperature(double temp);
-
-	/**
-	 * This operation returns true if the cluster is a mixed-species or compound
-	 * cluster and false if it is a single species cluster.
-	 */
-	virtual bool isMixed() const {return false;}
 
 };
 

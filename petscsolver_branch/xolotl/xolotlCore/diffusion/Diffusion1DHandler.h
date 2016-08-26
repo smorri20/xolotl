@@ -62,7 +62,7 @@ public:
 	 * @param sz The space parameter, depending on the grid step size in the z direction
 	 * @param iz The position on the z grid
 	 */
-	void computeDiffusion(PSIClusterReactionNetwork *network,
+	void computeDiffusion(IReactionNetwork *network,
 			double **concVector, double *updatedConcOffset,
 			double hxLeft, double hxRight, int ix,
 			double sy = 0.0, int iy = 0, double sz = 0.0, int iz = 0);
@@ -98,7 +98,7 @@ public:
 	 * @param sz The space parameter, depending on the grid step size in the z direction
 	 * @param iz The position on the z grid
 	 */
-	void computePartialsForDiffusion(PSIClusterReactionNetwork *network,
+	void computePartialsForDiffusion(IReactionNetwork *network,
 			double *val, int *indices, double hxLeft, double hxRight, int ix,
 			double sy = 0.0, int iy = 0, double sz = 0.0, int iz = 0);
 

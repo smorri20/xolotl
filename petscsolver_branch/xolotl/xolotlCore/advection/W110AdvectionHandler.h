@@ -29,7 +29,7 @@ public:
 	 * @param ofill The pointer to the array that will contain the value 1 at the indices
 	 * of the advecting clusters
 	 */
-	void initialize(PSIClusterReactionNetwork *network, int *ofill) {
+	void initialize(IReactionNetwork *network, int *ofill) {
 		// Get all the reactants and their number
 		auto reactants = network->getAll();
 		int size = reactants->size();

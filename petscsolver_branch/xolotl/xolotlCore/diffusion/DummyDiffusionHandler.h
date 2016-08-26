@@ -31,7 +31,7 @@ public:
 	 * @param ofill The pointer to the array that will contain the value 1 at the indices
 	 * of the diffusing clusters
 	 */
-	void initializeOFill(PSIClusterReactionNetwork *network, int *ofill) {
+	void initializeOFill(IReactionNetwork *network, int *ofill) {
 		// Clear the index vector
 		indexVector.clear();
 
@@ -77,7 +77,7 @@ public:
 	 * @param sz The space parameter, depending on the grid step size in the z direction
 	 * @param iz The position on the z grid
 	 */
-	void computeDiffusion(PSIClusterReactionNetwork *network,
+	void computeDiffusion(IReactionNetwork *network,
 			double **concVector, double *updatedConcOffset,
 			double hxLeft, double hxRight, int ix,
 			double sy = 0.0, int iy = 0, double sz = 0.0, int iz = 0) {return;}
@@ -102,7 +102,7 @@ public:
 	 * @param sz The space parameter, depending on the grid step size in the z direction
 	 * @param iz The position on the z grid
 	 */
-	void computePartialsForDiffusion(PSIClusterReactionNetwork *network,
+	void computePartialsForDiffusion(IReactionNetwork *network,
 			double *val, int *indices, double hxLeft, double hxRight, int ix,
 			double sy = 0.0, int iy = 0, double sz = 0.0, int iz = 0) {return;}
 

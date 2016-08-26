@@ -9,7 +9,6 @@
 #include <map>
 #include <unordered_map>
 #include <ReactionNetwork.h>
-#include <PSICluster.h>
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
@@ -52,7 +51,7 @@ private:
 	 * name of the reactant and its size.
 	 */
 	std::unordered_map< std::map< std::string, int >,
-		std::shared_ptr<PSICluster> > singleSpeciesMap;
+		std::shared_ptr<IReactant> > singleSpeciesMap;
 
 	/**
 	 * The map of mixed or compound species clusters, indexed by a map that
@@ -60,40 +59,13 @@ private:
 	 * sizes.
 	 */
 	std::unordered_map< std::map< std::string, int >,
-		std::shared_ptr<PSICluster> > mixedSpeciesMap;
+		std::shared_ptr<IReactant> > mixedSpeciesMap;
 
 	/**
 	 * This map stores all of the clusters in the network by type.
 	 */
 	std::map<std::string, std::shared_ptr<
-		std::vector< std::shared_ptr<Reactant> > > > clusterTypeMap;
-
-	/**
-	 * The names of the reactants supported by this network.
-	 */
-	std::vector<std::string> names;
-
-	/**
-	 * The names of the compound reactants supported by this network.
-	 */
-	std::vector<std::string> compoundNames;
-
-	/**
-	 * The size of the network. It is also used to set the id of new Reactants
-	 * that are added to the network.
-	 */
-	int networkSize;
-
-	/**
-	 * The current temperature at which the network's clusters exist.
-	 */
-	double temperature;
-
-	/**
-	 * The list of all of the reactants in the network. This list is filled and
-	 * maintained by the getAll() operation.
-	 */
-	std::shared_ptr< std::vector<Reactant *> > allReactants;
+		std::vector< std::shared_ptr<IReactant> > > > clusterTypeMap;
 
 	/**
 	 * This operation sets the default values of the properties table and names
@@ -148,7 +120,7 @@ public:
 	 * @param size the size of the reactant
 	 * @return A pointer to the reactant
 	 */
-	Reactant * get(const std::string& type,
+	IReactant * get(const std::string& type,
 			const int size) const;
 
 	/**
@@ -162,7 +134,7 @@ public:
 	 * and I are contained in the mixed-species cluster.
 	 * @return A pointer to the compound reactant
 	 */
-	Reactant * getCompound(const std::string& type,
+	IReactant * getCompound(const std::string& type,
 			const std::vector<int>& sizes) const;
 
 	/**
@@ -172,7 +144,7 @@ public:
 	 *
 	 * @return The list of all of the reactants in the network
 	 */
-	const std::shared_ptr<std::vector<Reactant *>> & getAll() const;
+	const std::shared_ptr<std::vector<IReactant *>> & getAll() const;
 
 	/**
 	 * This operation returns all reactants in the network with the given name.
@@ -183,7 +155,7 @@ public:
 	 * @return The list of all of the reactants in the network or null if the
 	 * name is invalid.
 	 */
-	std::vector<Reactant *> getAll(const std::string& name) const;
+	std::vector<IReactant *> getAll(const std::string& name) const;
 
 	/**
 	 * This operation adds a reactant or a compound reactant to the network.
@@ -193,7 +165,7 @@ public:
 	 * entirely before running.
 	 *
 	 * This operation sets the id of the reactant to one that is specific
-	 * to this network. Do not share Reactants across networks! This id is
+	 * to this network. Do not share reactants across networks! This id is
 	 * guaranteed to be between 1 and n, including both, for n reactants in
 	 * the network.
 	 *
@@ -204,65 +176,13 @@ public:
 	 *
 	 * @param reactant The reactant that should be added to the network.
 	 */
-	void add(std::shared_ptr<Reactant> reactant);
+	void add(std::shared_ptr<IReactant> reactant);
 
 	/**
 	 * This method redefines the connectivities for each cluster in the
 	 * allReactans vector.
 	 */
 	void reinitializeConnectivities();
-
-	/**
-	 * This operation returns the names of the reactants in the network. For a
-	 * PSIClusterReactionNetwork, these are He, V, I, HeV, HeI.
-	 *
-	 * @return A vector with one entry for each of the distinct reactant types
-	 * in the network
-	 */
-	const std::vector<std::string> & getNames() const;
-
-	/**
-	 * This operation returns the names of the compound reactants in the
-	 * network.
-	 *
-	 * @return A vector with one each for each of the distinct compound
-	 * reactant types in the network
-	 */
-	const std::vector<std::string> & getCompoundNames() const;
-
-	/**
-	 * This operation returns a map of the properties of this reaction network.
-	 *
-	 * @return The map of properties that has been configured for this
-	 * ReactionNetwork.
-	 *
-	 * The PSIClusterReactionNetwork always has the following properties:
-	 * > maxHeClusterSize - The number of He atoms in the largest single-species
-	 *  He cluster.
-	 * > maxVClusterSize - The number of atomic vacancies in the largest
-	 * single-species V cluster.
-	 * > maxIClusterSize - The number of interstitials in the largest
-	 * single-species I cluster.
-	 * > maxHeVClusterSize - The number of species of all types in the largest
-	 * mixed species in the network. It is equal to the sum of the max single
-	 * species helium and vacancy cluster sizes by default.
-	 * > maxHeIClusterSize - The number of species of all types in the largest
-	 * mixed species in the network. It is equal to the sum of the max single
-	 * species helium and vacancy cluster sizes by default.
-	 * > numHeClusters - The number of single-species He clusters of all sizes in
-	 * the network.
-	 * > numVClusters - The number of single-species V clusters of all sizes in the
-	 * network.
-	 * > numIClusters - The number of single-species I clusters of all sizes in the
-	 * network.
-	 * > numHeVClusters - The number of HeV clusters of all sizes in the
-	 * network.
-	 * > numHeIClusters - The number of HeI clusters of all sizes in the
-	 * network.
-	 *
-	 * These properties are always updated when a cluster is added.
-	 */
-	const std::map<std::string, std::string> & getProperties();
 
 	/**
 	 * This operation sets a property with the given key to the specified value
@@ -274,13 +194,6 @@ public:
 	 * @param value The value to which the key should be set
 	 */
 	void setProperty(const std::string& key, const std::string& value);
-
-	/**
-	 * This operation returns the size or number of reactants in the network.
-	 *
-	 * @return The number of reactants in the network
-	 */
-	int size();
 
 };
 

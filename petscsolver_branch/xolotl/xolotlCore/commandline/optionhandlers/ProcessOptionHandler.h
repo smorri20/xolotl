@@ -39,6 +39,7 @@ public:
 	bool handler(IOptions *opt, const std::string& arg) {
 		// Initialize the map of processes
 		std::map<std::string, bool> processMap;
+		processMap["reaction"] = false;
 		processMap["diff"] = false;
 		processMap["advec"] = false;
 		processMap["modifiedTM"] = false;

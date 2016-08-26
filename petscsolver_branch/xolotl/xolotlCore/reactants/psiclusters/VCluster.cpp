@@ -7,7 +7,9 @@
 using namespace xolotlCore;
 
 VCluster::VCluster(int nV, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(nV, registry) {
+		PSICluster(registry) {
+	// Set the size
+	size = nV;
 	// Set the reactant name appropriately
 	std::stringstream nameStream;
 	nameStream << "V_" << size;
@@ -27,11 +29,6 @@ VCluster::VCluster(int nV, std::shared_ptr<xolotlPerf::IHandlerRegistry> registr
 			- pow(
 					(3.0 * pow(xolotlCore::latticeConstant, 3.0))
 							/ (8.0 * xolotlCore::pi), (1.0 / 3.0));
-}
-
-std::shared_ptr<Reactant> VCluster::clone() {
-	std::shared_ptr<Reactant> reactant(new VCluster(*this));
-	return reactant;
 }
 
 void VCluster::createReactionConnectivity() {

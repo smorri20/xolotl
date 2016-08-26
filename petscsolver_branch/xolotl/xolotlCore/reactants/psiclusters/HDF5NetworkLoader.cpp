@@ -48,10 +48,22 @@ std::shared_ptr<PSIClusterReactionNetwork> HDF5NetworkLoader::load() {
 		// Set the diffusion factor and migration energy
 		nextCluster->setMigrationEnergy(migrationEnergy);
 		nextCluster->setDiffusionFactor(diffusionFactor);
-		// Add the cluster to the network
-		network->add(nextCluster);
-		// Add it to the list so that we can set the network later
-		reactants.push_back(nextCluster);
+
+		// Check if we want dummy reactions
+		if (dummyReactions) {
+			// Create a dummy cluster (Reactant) from the existing cluster
+			auto dummyCluster = std::static_pointer_cast<Reactant> (nextCluster->Reactant::clone());
+			// Add the cluster to the network
+			network->add(dummyCluster);
+			// Add it to the list so that we can set the network later
+			reactants.push_back(dummyCluster);
+		}
+		else {
+			// Add the cluster to the network
+			network->add(nextCluster);
+			// Add it to the list so that we can set the network later
+			reactants.push_back(nextCluster);
+		}
 	}
 
 	// Set the reaction network for each reactant
@@ -71,5 +83,11 @@ void HDF5NetworkLoader::setFilename (const std::string& name) {
 
 std::string HDF5NetworkLoader::getFilename () const {
 	return fileName;
+}
+
+void HDF5NetworkLoader::setDummyReactions () {
+	dummyReactions = true;
+
+	return;
 }
 

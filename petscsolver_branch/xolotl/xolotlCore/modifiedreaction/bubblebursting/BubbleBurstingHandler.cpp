@@ -3,7 +3,7 @@
 
 namespace xolotlCore {
 
-void BubbleBurstingHandler::initialize(int surfacePos, PSIClusterReactionNetwork *network,
+void BubbleBurstingHandler::initialize(int surfacePos, IReactionNetwork *network,
 		std::vector<double> grid) {
 	// Add the needed reaction connectivity
 	// Each V cluster connects to every HeV clusters with the same number of V
@@ -40,7 +40,7 @@ void BubbleBurstingHandler::initialize(int surfacePos, PSIClusterReactionNetwork
 	return;
 }
 
-void BubbleBurstingHandler::initializeIndex(int surfacePos, PSIClusterReactionNetwork *network,
+void BubbleBurstingHandler::initializeIndex(int surfacePos, IReactionNetwork *network,
 		std::vector<double> grid) {
 	// Clear the vector of HeV bubble bursting at each grid point
 	indexVector.clear();
@@ -85,7 +85,7 @@ void BubbleBurstingHandler::initializeIndex(int surfacePos, PSIClusterReactionNe
 	return;
 }
 
-void BubbleBurstingHandler::updateBurstingRate(PSIClusterReactionNetwork *network) {
+void BubbleBurstingHandler::updateBurstingRate(IReactionNetwork *network) {
 	// Get all the HeV bubbles from the network
 	auto bubbles = network->getAll(heVType);
 
@@ -106,7 +106,7 @@ void BubbleBurstingHandler::updateBurstingRate(PSIClusterReactionNetwork *networ
 	return;
 }
 
-void BubbleBurstingHandler::computeBursting(PSIClusterReactionNetwork *network,
+void BubbleBurstingHandler::computeBursting(IReactionNetwork *network,
 		int xi, double *concOffset, double *updatedConcOffset) {
 	// Get all the HeV bubbles
 	auto bubbles = network->getAll(heVType);
@@ -139,7 +139,7 @@ void BubbleBurstingHandler::computeBursting(PSIClusterReactionNetwork *network,
 	return;
 }
 
-int BubbleBurstingHandler::computePartialsForBursting(PSIClusterReactionNetwork *network,
+int BubbleBurstingHandler::computePartialsForBursting(IReactionNetwork *network,
 		double *val, int *indices, int xi) {
 	// Get all the HeV bubbles
 	auto bubbles = network->getAll(heVType);

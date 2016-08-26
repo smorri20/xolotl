@@ -8,7 +8,9 @@ using namespace xolotlCore;
 
 HeCluster::HeCluster(int nHe,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(nHe, registry) {
+		PSICluster(registry) {
+	// Set the size
+	size = nHe;
 	// Update the composition map
 	compositionMap["He"] = size;
 
@@ -30,13 +32,7 @@ HeCluster::HeCluster(int nHe,
 	return;
 }
 
-std::shared_ptr<Reactant> HeCluster::clone() {
-	std::shared_ptr<Reactant> reactant(new HeCluster(*this));
-
-	return reactant;
-}
-
-void HeCluster::combineClusters(std::vector<Reactant *> & clusters,
+void HeCluster::combineClusters(std::vector<IReactant *> & clusters,
 		const std::string& productName) {
 	// Initial declarations
 	std::map<std::string, int> secondComposition;

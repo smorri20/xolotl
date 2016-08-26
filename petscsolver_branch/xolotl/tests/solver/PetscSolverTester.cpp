@@ -20,6 +20,7 @@
 #include <PetscSolver3DHandler.h>
 #include <IMaterialFactory.h>
 #include <TemperatureHandlerFactory.h>
+#include <ReactionHandlerFactory.h>
 #include <VizHandlerRegistryFactory.h>
 #include <cassert>
 
@@ -44,6 +45,10 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 	// Local Declarations
 	string sourceDir(XolotlSourceDirectory);
 
+	// Create the path to the network file
+	string pathToFile("/tests/testfiles/tungsten_diminutive.h5");
+	string networkFilename = sourceDir + pathToFile;
+
 	// Create the parameter file
 	std::ofstream paramFile("param.txt");
 	paramFile << "vizHandler=dummy" << std::endl
@@ -61,8 +66,9 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 			<< "flux=4.0e5" << std::endl
 			<< "material=W100" << std::endl
 			<< "dimensions=1" << std::endl
-			<< "process=diff advec" << std::endl
-			<< "voidPortion=0.0" << std::endl;
+			<< "process=diff advec reaction" << std::endl
+			<< "voidPortion=0.0" << std::endl
+			<< "networkFile=" << networkFilename << std::endl;
 	paramFile.close();
 
 	// Create a fake command line to read the options
@@ -83,10 +89,6 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 	// Create the network loader
 	std::shared_ptr<HDF5NetworkLoader> loader =
 			std::make_shared<HDF5NetworkLoader>(make_shared<xolotlPerf::DummyHandlerRegistry>());
-
-	// Create the path to the network file
-	string pathToFile("/tests/testfiles/tungsten_diminutive.h5");
-	string networkFilename = sourceDir + pathToFile;
 
 	BOOST_TEST_MESSAGE("PetscSolverTester Message: Network filename is: "
 			<< networkFilename);
@@ -110,16 +112,17 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 	xolotlPerf::initialize(xolotlPerf::toPerfRegistryType("dummy"));
 	xolotlFactory::initializeVizHandler(false);
 
+	// Get the network handler
+	xolotlFactory::initializeReactionHandler(loader, opts);
+	auto networkHandler = xolotlFactory::getNetworkHandler();
+
 	// Create a solver handler and initialize it
 	auto solvHandler = std::make_shared<xolotlSolver::PetscSolver1DHandler>();
-	solvHandler->initializeHandlers(materialFactory, tempHandler, opts);
+	solvHandler->initializeHandlers(materialFactory, tempHandler, networkHandler, opts);
 
 	// Set the solver command line to give the PETSc options and initialize it
 	solver->setCommandLineOptions(opts.getPetscArgc(), opts.getPetscArgv());
 	solver->initialize(solvHandler);
-
-	// Give it the network loader
-	solver->setNetworkLoader(loader);
 
 	// Solve and finalize
 	solver->solve();
@@ -155,6 +158,10 @@ BOOST_AUTO_TEST_CASE(checkIrregularPetscSolver1DHandler) {
 	// Local Declarations
 	string sourceDir(XolotlSourceDirectory);
 
+	// Create the path to the network file
+	string pathToFile("/tests/testfiles/tungsten_diminutive.h5");
+	string networkFilename = sourceDir + pathToFile;
+
 	// Create the parameter file
 	std::ofstream paramFile("param.txt");
 	paramFile << "vizHandler=dummy" << std::endl
@@ -173,8 +180,9 @@ BOOST_AUTO_TEST_CASE(checkIrregularPetscSolver1DHandler) {
 			<< "material=W100" << std::endl
 			<< "dimensions=1" << std::endl
 			<< "regularGrid=no" << std::endl
-			<< "process=diff advec modifiedTM" << std::endl
-			<< "voidPortion=0.0" << std::endl;
+			<< "process=diff advec modifiedTM reaction" << std::endl
+			<< "voidPortion=0.0" << std::endl
+			<< "networkFile=" << networkFilename << std::endl;
 	paramFile.close();
 
 	// Create a fake command line to read the options
@@ -192,10 +200,6 @@ BOOST_AUTO_TEST_CASE(checkIrregularPetscSolver1DHandler) {
 	// Create the network loader
 	std::shared_ptr<HDF5NetworkLoader> loader =
 			std::make_shared<HDF5NetworkLoader>(make_shared<xolotlPerf::DummyHandlerRegistry>());
-
-	// Create the path to the network file
-	string pathToFile("/tests/testfiles/tungsten_diminutive.h5");
-	string networkFilename = sourceDir + pathToFile;
 
 	BOOST_TEST_MESSAGE("PetscSolverTester Message: Network filename is: "
 			<< networkFilename);
@@ -220,16 +224,17 @@ BOOST_AUTO_TEST_CASE(checkIrregularPetscSolver1DHandler) {
 	xolotlPerf::initialize(xolotlPerf::toPerfRegistryType("dummy"));
 	xolotlFactory::initializeVizHandler(false);
 
+	// Get the network handler
+	xolotlFactory::initializeReactionHandler(loader, opts);
+	auto networkHandler = xolotlFactory::getNetworkHandler();
+
 	// Create a solver handler and initialize it
 	auto solvHandler = std::make_shared<xolotlSolver::PetscSolver1DHandler>();
-	solvHandler->initializeHandlers(materialFactory, tempHandler, opts);
+	solvHandler->initializeHandlers(materialFactory, tempHandler, networkHandler, opts);
 
 	// Set the solver command line to give the PETSc options and initialize it
 	solver->setCommandLineOptions(opts.getPetscArgc(), opts.getPetscArgv());
 	solver->initialize(solvHandler);
-
-	// Give it the network loader
-	solver->setNetworkLoader(loader);
 
 	// Solve and finalize
 	solver->solve();
@@ -265,6 +270,10 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 	// Local Declarations
 	string sourceDir(XolotlSourceDirectory);
 
+	// Create the path to the network file
+	string pathToFile("/tests/testfiles/tungsten_diminutive_2D.h5");
+	string networkFilename = sourceDir + pathToFile;
+
 	// Create the parameter file
 	std::ofstream paramFile("param.txt");
 	paramFile << "vizHandler=dummy" << std::endl
@@ -282,8 +291,9 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 			<< "flux=4.0e5" << std::endl
 			<< "material=W100" << std::endl
 			<< "dimensions=2" << std::endl
-			<< "process=diff advec" << std::endl
-			<< "voidPortion=0.0" << std::endl;
+			<< "process=diff advec reaction" << std::endl
+			<< "voidPortion=0.0" << std::endl
+			<< "networkFile=" << networkFilename << std::endl;
 	paramFile.close();
 
 	// Create a fake command line to read the options
@@ -300,10 +310,6 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 	// Create the network loader
 	std::shared_ptr<HDF5NetworkLoader> loader =
 			std::make_shared<HDF5NetworkLoader>(make_shared<xolotlPerf::DummyHandlerRegistry>());
-
-	// Create the path to the network file
-	string pathToFile("/tests/testfiles/tungsten_diminutive_2D.h5");
-	string networkFilename = sourceDir + pathToFile;
 
 	BOOST_TEST_MESSAGE("PetscSolverTester Message: Network filename is: "
 			<< networkFilename);
@@ -329,16 +335,17 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 	xolotlPerf::initialize(xolotlPerf::toPerfRegistryType("dummy"));
 	xolotlFactory::initializeVizHandler(false);
 
+	// Get the network handler
+	xolotlFactory::initializeReactionHandler(loader, opts);
+	auto networkHandler = xolotlFactory::getNetworkHandler();
+
 	// Create a solver handler and initialize it
 	auto solvHandler = std::make_shared<xolotlSolver::PetscSolver2DHandler>();
-	solvHandler->initializeHandlers(materialFactory, tempHandler, opts);
+	solvHandler->initializeHandlers(materialFactory, tempHandler, networkHandler, opts);
 
 	// Set the solver command line to give the PETSc options and initialize it
 	solver->setCommandLineOptions(opts.getPetscArgc(), opts.getPetscArgv());
 	solver->initialize(solvHandler);
-
-	// Give it the network loader
-	solver->setNetworkLoader(loader);
 
 	// Solve and finalize
 	solver->solve();
@@ -374,6 +381,10 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 	// Local Declarations
 	string sourceDir(XolotlSourceDirectory);
 
+	// Create the path to the network file
+	string pathToFile("/tests/testfiles/tungsten_diminutive_3D.h5");
+	string networkFilename = sourceDir + pathToFile;
+
 	// Create the parameter file
 	std::ofstream paramFile("param.txt");
 	paramFile << "vizHandler=dummy" << std::endl
@@ -391,8 +402,9 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 			<< "flux=4.0e5" << std::endl
 			<< "material=W100" << std::endl
 			<< "dimensions=3" << std::endl
-			<< "process=diff advec" << std::endl
-			<< "voidPortion=0.0" << std::endl;
+			<< "process=diff advec reaction" << std::endl
+			<< "voidPortion=0.0" << std::endl
+			<< "networkFile=" << networkFilename << std::endl;
 	paramFile.close();
 
 	// Create a fake command line to read the options
@@ -409,10 +421,6 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 	// Create the network loader
 	std::shared_ptr<HDF5NetworkLoader> loader =
 			std::make_shared<HDF5NetworkLoader>(make_shared<xolotlPerf::DummyHandlerRegistry>());
-
-	// Create the path to the network file
-	string pathToFile("/tests/testfiles/tungsten_diminutive_3D.h5");
-	string networkFilename = sourceDir + pathToFile;
 
 	BOOST_TEST_MESSAGE("PetscSolverTester Message: Network filename is: "
 			<< networkFilename);
@@ -437,16 +445,17 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 	xolotlPerf::initialize(xolotlPerf::toPerfRegistryType("dummy"));
 	xolotlFactory::initializeVizHandler(false);
 
+	// Get the network handler
+	xolotlFactory::initializeReactionHandler(loader, opts);
+	auto networkHandler = xolotlFactory::getNetworkHandler();
+
 	// Create a solver handler and initialize it
 	auto solvHandler = std::make_shared<xolotlSolver::PetscSolver3DHandler>();
-	solvHandler->initializeHandlers(materialFactory, tempHandler, opts);
+	solvHandler->initializeHandlers(materialFactory, tempHandler, networkHandler, opts);
 
 	// Set the solver command line to give the PETSc options and initialize it
 	solver->setCommandLineOptions(opts.getPetscArgc(), opts.getPetscArgv());
 	solver->initialize(solvHandler);
-
-	// Give it the network loader
-	solver->setNetworkLoader(loader);
 
 	// Solve and finalize
 	solver->solve();

@@ -1,10 +1,11 @@
 // Includes
 #include <TrapMutationHandler.h>
 #include <MathUtils.h>
+#include <iostream>
 
 namespace xolotlCore {
 
-void TrapMutationHandler::initialize(PSIClusterReactionNetwork *network,
+void TrapMutationHandler::initialize(IReactionNetwork *network,
 		std::vector<double> grid, int ny, double hy, int nz, double hz) {
 	// Add the needed reaction (dissociation) connectivity
 	// Each (He_i)(V) cluster and I clusters are connected to He_i
@@ -106,7 +107,7 @@ void TrapMutationHandler::initialize(PSIClusterReactionNetwork *network,
 }
 
 void TrapMutationHandler::initializeIndex1D(int surfacePos,
-		PSIClusterReactionNetwork *network,
+		IReactionNetwork *network,
 		std::vector<IAdvectionHandler *> advectionHandlers,
 		std::vector<double> grid) {
 	// Clear the vector of HeV indices created by He undergoing trap-mutation
@@ -172,7 +173,7 @@ void TrapMutationHandler::initializeIndex1D(int surfacePos,
 }
 
 void TrapMutationHandler::initializeIndex2D(std::vector<int> surfacePos,
-		PSIClusterReactionNetwork *network,
+		IReactionNetwork *network,
 		std::vector<IAdvectionHandler *> advectionHandlers,
 		std::vector<double> grid, int ny, double hy) {
 	// Clear the vector of HeV indices created by He undergoing trap-mutation
@@ -278,7 +279,7 @@ void TrapMutationHandler::initializeIndex2D(std::vector<int> surfacePos,
 }
 
 void TrapMutationHandler::initializeIndex3D(std::vector<std::vector<int> > surfacePos,
-		PSIClusterReactionNetwork *network,
+		IReactionNetwork *network,
 		std::vector<IAdvectionHandler *> advectionHandlers,
 		std::vector<double> grid, int ny, double hy, int nz, double hz) {
 	// Clear the vector of HeV indices created by He undergoing trap-mutation
@@ -387,7 +388,7 @@ void TrapMutationHandler::initializeIndex3D(std::vector<std::vector<int> > surfa
 	return;
 }
 
-void TrapMutationHandler::updateTrapMutationRate(PSIClusterReactionNetwork *network) {
+void TrapMutationHandler::updateTrapMutationRate(IReactionNetwork *network) {
 	// Get all the He clusters from the network
 	auto heClusters = network->getAll(heType);
 
@@ -421,7 +422,7 @@ void TrapMutationHandler::updateDisappearingRate(double conc) {
 	return;
 }
 
-void TrapMutationHandler::computeTrapMutation(PSIClusterReactionNetwork *network,
+void TrapMutationHandler::computeTrapMutation(IReactionNetwork *network,
 		double *concOffset, double *updatedConcOffset,
 		int xi, int yj, int zk) {
 	// Get all the HeV bubbles
@@ -476,7 +477,7 @@ void TrapMutationHandler::computeTrapMutation(PSIClusterReactionNetwork *network
 }
 
 int TrapMutationHandler::computePartialsForTrapMutation(
-		PSIClusterReactionNetwork *network, double *val,
+		IReactionNetwork *network, double *val,
 		int *indices, int xi, int yj, int zk) {
 	// Get all the HeV bubbles
 	auto bubbles = network->getAll(heVType);

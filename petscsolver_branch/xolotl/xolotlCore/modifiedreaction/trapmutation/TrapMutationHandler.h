@@ -4,6 +4,7 @@
 // Includes
 #include <ITrapMutationHandler.h>
 #include <Sigma3TrapMutationHandler.h>
+#include <Constants.h>
 
 namespace xolotlCore {
 
@@ -99,7 +100,7 @@ public:
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
-	void initialize(PSIClusterReactionNetwork *network,
+	void initialize(IReactionNetwork *network,
 			std::vector<double> grid, int ny = 0, double hy = 0.0,
 			int nz = 0, double hz = 0.0);
 
@@ -110,7 +111,7 @@ public:
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
-	void initializeIndex1D(int surfacePos, PSIClusterReactionNetwork *network,
+	void initializeIndex1D(int surfacePos, IReactionNetwork *network,
 			std::vector<IAdvectionHandler *> advectionHandlers,
 			std::vector<double> grid);
 
@@ -121,7 +122,7 @@ public:
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
-	void initializeIndex2D(std::vector<int> surfacePos, PSIClusterReactionNetwork *network,
+	void initializeIndex2D(std::vector<int> surfacePos, IReactionNetwork *network,
 			std::vector<IAdvectionHandler *> advectionHandlers,
 			std::vector<double> grid, int ny, double hy);
 
@@ -133,7 +134,7 @@ public:
 	 * \see ITrapMutationHandler.h
 	 */
 	void initializeIndex3D(std::vector<std::vector<int> > surfacePos,
-			PSIClusterReactionNetwork *network,
+			IReactionNetwork *network,
 			std::vector<IAdvectionHandler *> advectionHandlers,
 			std::vector<double> grid, int ny, double hy,
 			int nz, double hz);
@@ -145,7 +146,7 @@ public:
 	 *
 	 * @param network The network
 	 */
-	void updateTrapMutationRate(PSIClusterReactionNetwork *network);
+	void updateTrapMutationRate(IReactionNetwork *network);
 
 	/**
 	 * This method set the boolean to remember if we want attenuation or not.
@@ -173,7 +174,7 @@ public:
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
-	void computeTrapMutation(PSIClusterReactionNetwork *network,
+	void computeTrapMutation(IReactionNetwork *network,
 			double *concOffset, double *updatedConcOffset,
 			int xi, int yj = 0, int zk = 0);
 
@@ -190,7 +191,7 @@ public:
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
-	int computePartialsForTrapMutation(PSIClusterReactionNetwork *network,
+	int computePartialsForTrapMutation(IReactionNetwork *network,
 			double *val, int *indices,
 			int xi, int yj = 0, int zk = 0);
 
