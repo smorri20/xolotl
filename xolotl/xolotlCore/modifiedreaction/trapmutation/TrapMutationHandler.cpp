@@ -2,6 +2,7 @@
 #include <TrapMutationHandler.h>
 #include <MathUtils.h>
 #include <iostream>
+#include <algorithm>
 
 namespace xolotlCore {
 
