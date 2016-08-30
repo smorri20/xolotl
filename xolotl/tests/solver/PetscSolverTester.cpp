@@ -20,7 +20,7 @@
 #include <PetscSolver3DHandler.h>
 #include <IMaterialFactory.h>
 #include <TemperatureHandlerFactory.h>
-#include <ReactionHandlerFactory.h>
+#include <IReactionHandlerFactory.h>
 #include <VizHandlerRegistryFactory.h>
 #include <cassert>
 
@@ -112,9 +112,12 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 	xolotlPerf::initialize(xolotlPerf::toPerfRegistryType("dummy"));
 	xolotlFactory::initializeVizHandler(false);
 
+	// Create the network handler factory
+	auto networkFactory =
+				xolotlFactory::IReactionHandlerFactory::createNetworkFactory(opts.getMaterial());
+	networkFactory->initializeReactionNetwork(opts, make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Get the network handler
-	xolotlFactory::initializeReactionHandler(loader, opts);
-	auto networkHandler = xolotlFactory::getNetworkHandler();
+	auto networkHandler = networkFactory->getNetworkHandler();
 
 	// Create a solver handler and initialize it
 	auto solvHandler = std::make_shared<xolotlSolver::PetscSolver1DHandler>();
@@ -224,9 +227,12 @@ BOOST_AUTO_TEST_CASE(checkIrregularPetscSolver1DHandler) {
 	xolotlPerf::initialize(xolotlPerf::toPerfRegistryType("dummy"));
 	xolotlFactory::initializeVizHandler(false);
 
+	// Create the network handler factory
+	auto networkFactory =
+				xolotlFactory::IReactionHandlerFactory::createNetworkFactory(opts.getMaterial());
+	networkFactory->initializeReactionNetwork(opts, make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Get the network handler
-	xolotlFactory::initializeReactionHandler(loader, opts);
-	auto networkHandler = xolotlFactory::getNetworkHandler();
+	auto networkHandler = networkFactory->getNetworkHandler();
 
 	// Create a solver handler and initialize it
 	auto solvHandler = std::make_shared<xolotlSolver::PetscSolver1DHandler>();
@@ -335,9 +341,12 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 	xolotlPerf::initialize(xolotlPerf::toPerfRegistryType("dummy"));
 	xolotlFactory::initializeVizHandler(false);
 
+	// Create the network handler factory
+	auto networkFactory =
+				xolotlFactory::IReactionHandlerFactory::createNetworkFactory(opts.getMaterial());
+	networkFactory->initializeReactionNetwork(opts, make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Get the network handler
-	xolotlFactory::initializeReactionHandler(loader, opts);
-	auto networkHandler = xolotlFactory::getNetworkHandler();
+	auto networkHandler = networkFactory->getNetworkHandler();
 
 	// Create a solver handler and initialize it
 	auto solvHandler = std::make_shared<xolotlSolver::PetscSolver2DHandler>();
@@ -445,9 +454,12 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 	xolotlPerf::initialize(xolotlPerf::toPerfRegistryType("dummy"));
 	xolotlFactory::initializeVizHandler(false);
 
+	// Create the network handler factory
+	auto networkFactory =
+				xolotlFactory::IReactionHandlerFactory::createNetworkFactory(opts.getMaterial());
+	networkFactory->initializeReactionNetwork(opts, make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Get the network handler
-	xolotlFactory::initializeReactionHandler(loader, opts);
-	auto networkHandler = xolotlFactory::getNetworkHandler();
+	auto networkHandler = networkFactory->getNetworkHandler();
 
 	// Create a solver handler and initialize it
 	auto solvHandler = std::make_shared<xolotlSolver::PetscSolver3DHandler>();

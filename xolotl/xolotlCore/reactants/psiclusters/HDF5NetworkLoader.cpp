@@ -3,18 +3,13 @@
 #include <limits>
 #include <algorithm>
 #include <vector>
-#include "HeCluster.h"
-#include "VCluster.h"
-#include "InterstitialCluster.h"
-#include "HeVCluster.h"
-// #include "HeInterstitialCluster.h"
 #include "PSIClusterReactionNetwork.h"
 #include <xolotlPerf.h>
 #include <HDF5Utils.h>
 
 using namespace xolotlCore;
 
-std::shared_ptr<PSIClusterReactionNetwork> HDF5NetworkLoader::load() {
+std::shared_ptr<IReactionNetwork> HDF5NetworkLoader::load() {
 	// Get the dataset from the HDF5 files
 	auto networkVector = xolotlCore::HDF5Utils::readNetwork(fileName);
 
@@ -36,7 +31,7 @@ std::shared_ptr<PSIClusterReactionNetwork> HDF5NetworkLoader::load() {
 		numV = (int) (*lineIt)[1];
 		numI = (int) (*lineIt)[2];
 		// Create the cluster
-		auto nextCluster = createCluster(numHe, numV, numI);
+		auto nextCluster = createPSICluster(numHe, numV, numI);
 
 		// Energies
 		formationEnergy = (*lineIt)[3];
@@ -73,21 +68,5 @@ std::shared_ptr<PSIClusterReactionNetwork> HDF5NetworkLoader::load() {
 	}
 
 	return network;
-}
-
-void HDF5NetworkLoader::setFilename (const std::string& name) {
-	fileName = name;
-
-	return;
-}
-
-std::string HDF5NetworkLoader::getFilename () const {
-	return fileName;
-}
-
-void HDF5NetworkLoader::setDummyReactions () {
-	dummyReactions = true;
-
-	return;
 }
 

@@ -36,21 +36,7 @@ BOOST_AUTO_TEST_CASE(checkComposition) {
 	Reactant reactant(registry);
 
 	// Check its default composition
-	BOOST_REQUIRE_EQUAL(3U, reactant.getComposition().size());
-
-	return;
-}
-
-BOOST_AUTO_TEST_CASE(checkConnectivity) {
-	// Create a reactant
-	Reactant reactant(registry);
-
-	// Create a network and set it
-	auto network = make_shared<PSIClusterReactionNetwork>(make_shared<xolotlPerf::DummyHandlerRegistry>());
-	reactant.setReactionNetwork(network);
-
-	// Check its default connectivity
-	BOOST_REQUIRE_EQUAL(0U, reactant.getConnectivity().size());
+	BOOST_REQUIRE_EQUAL(4U, reactant.getComposition().size());
 
 	return;
 }
@@ -127,7 +113,7 @@ BOOST_AUTO_TEST_CASE(checkConcentration) {
 
 BOOST_AUTO_TEST_CASE(checkIsConnected) {
 	// Create a reaction network containing only clusters with maximum size 2
-	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork(2);
+	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork(2);
 
 	// Check the connectivity matrix (8 * 8)
 	int connectivityExpected[8][8] = {

@@ -26,6 +26,8 @@ import ncsa.hdf.hdf5lib.HDF5Constants;
  * 
  * nHe - The number of helium atoms in the cluster.
  * 
+ * nXe - The number of xenon atoms in the cluster.
+ * 
  * nV - The number of vacancies in the cluster.
  * 
  * nI - The number of interstitials in the cluster.
@@ -57,6 +59,15 @@ public class Preprocessor {
 
 	// The migration energies for single species helium clusters.
 	private double[] heMigrationEnergies = { Double.POSITIVE_INFINITY, 0.13, 0.20, 0.25, 0.20, 0.12, 0.3, 0.4 };
+
+	// The maximum size of a xenon cluster in the network.
+	private int maxXe;
+
+	// The diffusion factor for a single xenon.
+	private double xeOneDiffusionFactor = 5.0e-3;
+
+	// The migration energy for a single xenon.
+	private double xeOneMigrationEnergy = 0.0;
 
 	// The maximum size of a vacancy cluster in the network.
 	private int maxV;
@@ -206,6 +217,12 @@ public class Preprocessor {
 		}
 
 		// Set the maximum size of a vacancy cluster in the network.
+		maxXe = args.getMaxXeSize();
+		if (maxXe < 0) {
+			throw new IllegalArgumentException("The maxium xenon size must be positive ( 0 <= maxXeSize )");
+		}
+
+		// Set the maximum size of a vacancy cluster in the network.
 		maxV = args.getMaxVSize();
 		if (maxV < 0) {
 			throw new IllegalArgumentException("The maxium vacancy must be positive ( 0 <= maxVSize )");
@@ -276,6 +293,36 @@ public class Preprocessor {
 			Cluster tmpCluster = clusterList.get(i);
 			tmpCluster.D_0 = heDiffusionFactors[i + 1];
 			tmpCluster.E_m = heMigrationEnergies[i + 1];
+		}
+
+		return clusterList;
+	}
+
+	/**
+	 * This operation generates all xenon clusters in the network.
+	 * 
+	 * @return A list of clusters configured to satisfy the bounds and composed
+	 *         solely of xenon.
+	 */
+	private ArrayList<Cluster> generateXe() {
+		// Local Declarations
+		ArrayList<Cluster> clusterList = new ArrayList<Cluster>();
+
+		// Create the He clusters
+		for (int i = 0; i < maxXe; i++) {
+			// Create the cluster
+			Cluster tmpCluster = new Cluster();
+			tmpCluster.nXe = i + 1;
+			tmpCluster.E_f = formationEnergyEngine.getXeFormationEnergy(i + 1);
+			// Add the cluster to the list
+			clusterList.add(tmpCluster);
+		}
+
+		// Set Xe_1 diffusion parameters. Xe_1 is the first in the list, so it is
+		// straightforward to set it.
+		if (maxXe > 0) {
+			clusterList.get(0).D_0 = xeOneDiffusionFactor;
+			clusterList.get(0).E_m = xeOneMigrationEnergy;
 		}
 
 		return clusterList;
@@ -431,6 +478,7 @@ public class Preprocessor {
 		clusterList.addAll(generateInterstitials());
 		clusterList.addAll(generateHe());
 		clusterList.addAll(generateHeV());
+		clusterList.addAll(generateXe());
 
 		return clusterList;
 	}
@@ -1404,6 +1452,7 @@ public class Preprocessor {
 			for (Cluster cluster : clusters) {
 				// Store the composition
 				networkArray[id][0] = cluster.nHe;
+				if (maxXe > 0) networkArray[id][0] = cluster.nXe;
 				networkArray[id][1] = cluster.nV;
 				networkArray[id][2] = cluster.nI;
 

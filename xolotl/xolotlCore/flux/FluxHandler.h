@@ -4,6 +4,7 @@
 #include "IFluxHandler.h"
 #include <vector>
 #include <memory>
+#include <Constants.h>
 
 namespace xolotlCore {
 
@@ -71,7 +72,9 @@ protected:
 	 * @param x The position where to evaluate the fit
 	 * @return The evaluated value
 	 */
-	virtual double FitFunction(double) {return 0.0;}
+	virtual double FitFunction(double) {
+		return 0.0;
+	}
 
 	/**
 	 * This method returns the value of the helium incident flux amplitude at the
@@ -99,52 +102,53 @@ public:
 
 	/**
 	 * Compute and store the incident flux values at each grid point.
-     * \see IFluxHandler.h
+	 * \see IFluxHandler.h
 	 */
 	virtual void initializeFluxHandler(IReactionNetwork *network,
-	int surfacePos, std::vector<double> grid);
+			int surfacePos, std::vector<double> grid);
 
 	/**
 	 * This method reads the values on the time profile file and store them in the
 	 * time and amplitude vectors.
-     * \see IFluxHandler.h
+	 * \see IFluxHandler.h
 	 */
 	virtual void initializeTimeProfile(const std::string& fileName);
 
 	/**
 	 * This operation returns the incident flux vector.
-     * \see IFluxHandler.h
+	 * \see IFluxHandler.h
 	 */
-	virtual std::vector<double> getIncidentFluxVec(double currentTime, int surfacePos);
+	virtual std::vector<double> getIncidentFluxVec(double currentTime,
+			int surfacePos);
 
 	/**
 	 * This operation returns the index of the cluster that is irradiating
 	 * the material.
-     * \see IFluxHandler.h
+	 * \see IFluxHandler.h
 	 */
 	virtual int getIncidentFluxClusterIndex();
 
 	/**
 	 * This operation increments the fluence at the current time step.
-     * \see IFluxHandler.h
+	 * \see IFluxHandler.h
 	 */
 	virtual void incrementFluence(double dt);
 
 	/**
 	 * This operation returns the fluence.
-     * \see IFluxHandler.h
+	 * \see IFluxHandler.h
 	 */
 	virtual double getFluence() const;
 
 	/**
 	 * This operation sets the factor to change the intensity of the flux.
-     * \see IFluxHandler.h
+	 * \see IFluxHandler.h
 	 */
 	virtual void setFluxAmplitude(double flux);
 
 	/**
 	 * This operation gets the factor that changes the flux intensity/amplitude.
-     * \see IFluxHandler.h
+	 * \see IFluxHandler.h
 	 */
 	virtual double getFluxAmplitude() const;
 

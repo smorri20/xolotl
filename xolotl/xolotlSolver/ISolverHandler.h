@@ -85,7 +85,7 @@ public:
 	 * @param localC The PETSc local solution vector
 	 * @param J The Jacobian
 	 */
-	virtual void computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J) const = 0;
+	virtual void computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J) = 0;
 
 	/**
 	 * Compute the diagonal part of the Jacobian which is related to cluster reactions.

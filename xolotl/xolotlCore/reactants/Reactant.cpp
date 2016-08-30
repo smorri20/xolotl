@@ -17,6 +17,7 @@ Reactant::Reactant() :
 				0.0), name("Reactant"), reactionRadius(0.0), thisNetworkIndex(
 				-1), biggestRate(0.0) {
 	// Setup the composition map.
+	compositionMap[xeType] = 0;
 	compositionMap[heType] = 0;
 	compositionMap[vType] = 0;
 	compositionMap[iType] = 0;
@@ -29,6 +30,7 @@ Reactant::Reactant(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 				0.0), name("Reactant"), reactionRadius(0.0), thisNetworkIndex(
 				-1), biggestRate(0.0) {
 	// Setup the composition map.
+	compositionMap[xeType] = 0;
 	compositionMap[heType] = 0;
 	compositionMap[vType] = 0;
 	compositionMap[iType] = 0;
@@ -37,7 +39,7 @@ Reactant::Reactant(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 Reactant::Reactant(Reactant &other) :
 		concentration(other.concentration), name(other.name), typeName(
 				other.typeName), id(other.id), temperature(other.temperature), network(
-				other.network), compositionMap(other.compositionMap), handlerRegistry(
+				other.network), handlerRegistry(
 				other.handlerRegistry), size(other.size), formationEnergy(
 				other.formationEnergy), diffusionFactor(other.diffusionFactor), diffusionCoefficient(
 				other.diffusionCoefficient), migrationEnergy(
@@ -46,6 +48,7 @@ Reactant::Reactant(Reactant &other) :
 				other.reactionConnectivitySet), dissociationConnectivitySet(
 				other.dissociationConnectivitySet) {
 	// Setup the composition map.
+	compositionMap[xeType] = other.compositionMap[xeType];
 	compositionMap[heType] = other.compositionMap[heType];
 	compositionMap[vType] = other.compositionMap[vType];
 	compositionMap[iType] = other.compositionMap[iType];
@@ -110,7 +113,7 @@ void Reactant::setDissociationConnectivity(int id) {
 std::vector<int> Reactant::getConnectivity() const {
 	// The connectivity array by default is filled with
 	// zeros.
-	int connectivityLength = network->size();
+	int connectivityLength = 0;
 	std::vector<int> connectivity = std::vector<int>(connectivityLength, 0);
 
 	// This reactant should be connected to itself

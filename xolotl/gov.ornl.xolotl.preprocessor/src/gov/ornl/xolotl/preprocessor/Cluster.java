@@ -15,6 +15,9 @@ public class Cluster {
 	// The number of helium atoms in the cluster. Default value is 0.
 	public int nHe = 0;
 
+	// The number of xenon atoms in the cluster. Default value is 0.
+	public int nXe = 0;
+
 	// The number of vacancies in the cluster. Default value is 0.
 	public int nV = 0;
 

@@ -396,7 +396,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	return;
 }
 
-void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J) const {
+void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J) {
 	PetscErrorCode ierr;
 
 	// Get the distributed array
@@ -443,6 +443,20 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 
 		// Set the grid position
 		gridPosition[0] = grid[xi];
+
+		// Get the temperature from the temperature handler
+		auto temperature = temperatureHandler->getTemperature(gridPosition,
+				0.0);
+
+		// Update the network if the temperature changed
+		if (!xolotlCore::equal(temperature, lastTemperature)) {
+			network->setTemperature(temperature);
+			// Update the modified trap-mutation rate and the bubble bursting rate
+			// that depends on the network reaction rates
+			mutationHandler->updateTrapMutationRate(network);
+			burstingHandler->updateBurstingRate(network);
+			lastTemperature = temperature;
+		}
 
 		// Get the partial derivatives for the diffusion
 		diffusionHandler->computePartialsForDiffusion(network, diffVals, diffIndices,
@@ -597,12 +611,30 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 
 	// Declarations for variables used in the loop
 	int reactantIndex;
+	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
 
 	// Loop over the grid points
 	for (int xi = xs; xi < xs + xm; xi++) {
 		// Boundary conditions
 		// Everything to the left of the surface is empty
 		if (xi <= surfacePosition || xi == xSize - 1) continue;
+
+		// Set the grid position
+		gridPosition[0] = grid[xi];
+
+		// Get the temperature from the temperature handler
+		auto temperature = temperatureHandler->getTemperature(gridPosition,
+				0.0);
+
+		// Update the network if the temperature changed
+		if (!xolotlCore::equal(temperature, lastTemperature)) {
+			network->setTemperature(temperature);
+			// Update the modified trap-mutation rate and the bubble bursting rate
+			// that depends on the network reaction rates
+			mutationHandler->updateTrapMutationRate(network);
+			burstingHandler->updateBurstingRate(network);
+			lastTemperature = temperature;
+		}
 
 		// Copy data into the ReactionNetwork so that it can
 		// compute the new concentrations.

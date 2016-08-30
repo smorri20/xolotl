@@ -6,7 +6,6 @@
 #include <memory>
 #include <typeinfo>
 #include <limits>
-#include <PSIClusterReactionNetwork.h>
 #include <DummyHandlerRegistry.h>
 
 using namespace std;
@@ -61,7 +60,7 @@ BOOST_AUTO_TEST_CASE(checkLoading) {
 	loader.setInputstream(networkStream);
 
 	// Load the network
-	shared_ptr<PSIClusterReactionNetwork> network = loader.load();
+	auto network = loader.load();
 
 	// Check the network. It should not be empty
 	auto props = network->getProperties();

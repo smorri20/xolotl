@@ -3,10 +3,26 @@
 
 // Includes
 #include "IReactionNetwork.h"
+#include <Constants.h>
 
 namespace xolotlPerf {
 class IHandlerRegistry;
 class IEventCounter;
+}
+
+// Override the hash operation for the composition maps used by the
+// PSIClusterReactionNetwork to store reactants.
+namespace std {
+template<>
+class hash<std::map<std::string, int>> {
+public:
+	long operator()(const std::map<std::string, int>& composition) const {
+		int bigNumber = 1e9;
+		return (composition.at(xolotlCore::heType) * 10
+				+ composition.at(xolotlCore::vType) * 200
+				+ composition.at(xolotlCore::iType) * 3000) * bigNumber;
+	}
+};
 }
 
 namespace xolotlCore {

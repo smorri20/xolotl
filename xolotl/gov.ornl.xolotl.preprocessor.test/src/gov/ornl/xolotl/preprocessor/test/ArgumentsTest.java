@@ -30,6 +30,9 @@ public class ArgumentsTest {
 			// Check that the default maximum Helium cluster size is 8
 			assertEquals(8, args.getMaxHeSize());
 
+			// Check that the default maximum xenon cluster size is 0
+			assertEquals(0, args.getMaxXeSize());
+
 			// Check that the default maximum vacancy cluster size is 29
 			assertEquals(29, args.getMaxVSize());
 
@@ -126,7 +129,7 @@ public class ArgumentsTest {
 		try {
 			// Parse the specified string of arguments
 			args = CliFactory.parseArguments(Arguments.class,
-					new String[] { "--maxHeSize", "7", "--maxVSize", "30", "--maxISize", "5", "--phaseCut",
+					new String[] { "--maxHeSize", "7", "--maxXeSize", "4", "--maxVSize", "30", "--maxISize", "5", "--phaseCut",
 							"--startTemp", "900", "--perfHandler", "dummy", "--vizHandler", "std", "--petscArgs=-plot",
 							"--networkFile", "net.h5", "--dimensions", "2", "--nxGrid", "50", "--nyGrid", "10",
 							"--nzGrid", "30", "--xStepSize", "0.2", "--yStepSize", "1.5", "--zStepSize", "10.0",
@@ -136,6 +139,9 @@ public class ArgumentsTest {
 
 			// Check that the maximum Helium cluster size is 7
 			assertEquals(7, args.getMaxHeSize());
+
+			// Check that the maximum xenon cluster size is 4
+			assertEquals(4, args.getMaxXeSize());
 
 			// Check that the maximum vacancy cluster size is 30
 			assertEquals(30, args.getMaxVSize());

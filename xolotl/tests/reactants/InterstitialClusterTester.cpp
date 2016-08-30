@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_SUITE(InterstitialCluster_testSuite)
  * its connectivity to other clusters.
  */
 BOOST_AUTO_TEST_CASE(checkConnectivity) {
-	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
+	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork();
 	auto props = network->getProperties();
 	
 	// Prevent dissociation from being added to the connectivity array
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
   */
  BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
  	// Local Declarations
- 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
+ 	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork();
 
  	// Get an I cluster with compostion 0,0,1.
  	auto cluster = (PSICluster *) network->get("I", 1);
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
  			-4.19101e+10, -2.90683e+11, 1.82094e+13, 5.1489e+12, 0.0, 0.0,
  			-3.86349e+10, -3.39657e+10, 0.0, 4.26504e+12};
  	// Get the simple reaction network
- 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork(3);
+ 	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork(3);
 
  	// Get an I cluster with compostion 0,0,1.
  	auto cluster = (PSICluster *) network->get("I", 1);

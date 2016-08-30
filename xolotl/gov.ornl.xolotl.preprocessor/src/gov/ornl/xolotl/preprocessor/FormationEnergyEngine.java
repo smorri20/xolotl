@@ -33,6 +33,17 @@ public class FormationEnergyEngine {
 			34.93, 38.80 };
 
 	/**
+	 * The set of xenon formation energies up to Xe_29 indexed by size. That is
+	 * E_(f,Xe_1) = xeFormationEnergies[1]. The value at index zero is just
+	 * padding to make the indexing easy.
+	 */
+	private static double[] xeFormationEnergies = { Double.POSITIVE_INFINITY,
+			7.0, 12.15, 17.15, 21.90, 26.50, 31.05, 35.30, 39.45, 43.00, 46.90,
+			50.65, 53.90, 56.90, 59.80, 62.55, 65.05, 67.45, 69.45, 71.20,
+			72.75, 74.15, 75.35, 76.40, 77.25, 77.95, 78.45, 78.80, 78.95,
+			79.0 };
+
+	/**
 	 * The set of vacancy formation energies up to V_2 indexed by size. That is
 	 * E_(f,V_1) = vFormationEnergies[1]. The value at index zero is just
 	 * padding to make the indexing easy.
@@ -199,6 +210,25 @@ public class FormationEnergyEngine {
 
 		if (size < 9 && size > 0)
 			energy = heFormationEnergies[size];
+
+		return energy;
+	}
+
+	/**
+	 * This operation computes and returns the formation energy of a xenon
+	 * cluster of the specified size.
+	 * 
+	 * @param size
+	 *            The size of the xenon cluster.
+	 * @return The formation energy.
+	 */
+	public double getXeFormationEnergy(int size) {
+		// Initialize the formation energy to infinity
+		double energy = Double.POSITIVE_INFINITY;
+
+		if (size < 30 && size > 0)
+			energy = xeFormationEnergies[size];
+		else energy = 79.0;
 
 		return energy;
 	}

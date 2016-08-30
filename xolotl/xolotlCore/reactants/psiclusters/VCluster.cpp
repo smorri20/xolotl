@@ -15,19 +15,19 @@ VCluster::VCluster(int nV, std::shared_ptr<xolotlPerf::IHandlerRegistry> registr
 	nameStream << "V_" << size;
 	name = nameStream.str();
 	// Set the typename appropriately
-	typeName = "V";
+	typeName = vType;
 
 	// Update the composition map
-	compositionMap["V"] = size;
+	compositionMap[vType] = size;
 
 	// Compute the reaction radius
 	// It is the same formula for HeV clusters
-	reactionRadius = (sqrt(3.0) / 4.0) * xolotlCore::latticeConstant
+	reactionRadius = (sqrt(3.0) / 4.0) * xolotlCore::tungstenLatticeConstant
 			+ pow(
-					(3.0 * pow(xolotlCore::latticeConstant, 3.0) * size)
+					(3.0 * pow(xolotlCore::tungstenLatticeConstant, 3.0) * size)
 							/ (8.0 * xolotlCore::pi), (1.0 / 3.0))
 			- pow(
-					(3.0 * pow(xolotlCore::latticeConstant, 3.0))
+					(3.0 * pow(xolotlCore::tungstenLatticeConstant, 3.0))
 							/ (8.0 * xolotlCore::pi), (1.0 / 3.0));
 }
 

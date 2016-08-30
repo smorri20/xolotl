@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(getSpeciesSize) {
  * its connectivity to other clusters.
  */
 BOOST_AUTO_TEST_CASE(checkConnectivity) {
-	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
+	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork();
 	auto props = network->getProperties();
 	
 	// Prevent dissociation from being added to the connectivity array
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
  */
 BOOST_AUTO_TEST_CASE(checkTotalFlux) {
 	// Local Declarations
-	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
+	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork();
 
 	// Get an HeV cluster with compostion 2,1,0.
 	vector<int> composition = {2, 1, 0};
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	double knownPartials[] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 			0.0, 0.0, 0.0, 0.0, 0.0};
 	// Get the simple reaction network
-	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork(3);
+	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork(3);
 
 	// Get an HeV cluster with compostion 2,1,0.
 	vector<int> composition = {2, 1, 0};

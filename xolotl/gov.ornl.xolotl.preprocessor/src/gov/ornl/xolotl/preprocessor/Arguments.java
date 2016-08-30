@@ -34,6 +34,30 @@ public interface Arguments {
 	int getMaxHeSize();
 
 	/**
+	 * This Option annotation corresponds to the '--maxxeSize' option which
+	 * defines a default value of 0 and additionally provides a brief
+	 * description of this option.
+	 * 
+	 * @param defaultValue
+	 *            The default value for the maximum size of a xenon cluster in
+	 *            the network if this option is not specified via the command
+	 *            line
+	 * @param description
+	 *            Brief description of this option
+	 */
+	@Option(defaultValue = "0", description = "The maximum size of a xenon cluster in the network "
+			+ "satisfying the condition 0 <= maxXeSize. (default = 0)")
+	/**
+	 * This operation produces the required command line option '--maxXeSize'
+	 * which takes a single integer value and is defined by the previous Option
+	 * annotation
+	 * 
+	 * @return The maximum size of a xenon cluster in the network satisfying
+	 *         the condition 0 <= maxXeSize
+	 */
+	int getMaxXeSize();
+
+	/**
 	 * This Option annotation corresponds to the '--maxVSize' option which
 	 * defines a default value of 29 and additionally provides a brief
 	 * description of this option.

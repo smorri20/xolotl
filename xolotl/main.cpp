@@ -14,11 +14,11 @@
 #include <IMaterialFactory.h>
 #include <TemperatureHandlerFactory.h>
 #include <VizHandlerRegistryFactory.h>
-#include <HDF5NetworkLoader.h>
+#include <INetworkLoader.h>
 #include <IReactionNetwork.h>
 #include <SolverHandlerFactory.h>
 #include <ISolverHandler.h>
-#include <ReactionHandlerFactory.h>
+#include <IReactionHandlerFactory.h>
 #include <ctime>
 
 using namespace std;
@@ -112,19 +112,6 @@ void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
 	solverTimer->stop();
 }
 
-std::shared_ptr<HDF5NetworkLoader> setUpNetworkLoader(
-		const std::string& networkFilename,
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
-
-	// Create a HDF5NetworkLoader
-	std::shared_ptr<HDF5NetworkLoader> networkLoader;
-	networkLoader = std::make_shared<HDF5NetworkLoader>(registry);
-	// Give the networkFilename to the network loader
-	networkLoader->setFilename(networkFilename);
-
-	return networkLoader;
-}
-
 //! Main program
 int main(int argc, char **argv) {
 
@@ -193,21 +180,18 @@ int main(int argc, char **argv) {
 			return EXIT_FAILURE;
 		auto solvHandler = xolotlFactory::getSolverHandler();
 
-		// Set up the network loader
-		auto networkLoader = setUpNetworkLoader(networkFilename,
-				handlerRegistry);
+		// Create the network handler factory
+		auto networkFactory =
+					xolotlFactory::IReactionHandlerFactory::createNetworkFactory(opts.getMaterial());
 
 		// Setup and load the network
 		auto networkLoadTimer = handlerRegistry->getTimer("loadNetwork");
 		networkLoadTimer->start();
-		bool networkOK = xolotlFactory::initializeReactionHandler(
-				networkLoader, opts);
-		if (!networkOK)
-			return EXIT_FAILURE;
+		networkFactory->initializeReactionNetwork(opts, handlerRegistry);
 		networkLoadTimer->stop();
 
 		// Get the network handler
-		auto networkHandler = xolotlFactory::getNetworkHandler();
+		auto networkHandler = networkFactory->getNetworkHandler();
 
 		// Setup the solver
 		auto solver = setUpSolver(handlerRegistry, material, tempHandler, networkHandler,

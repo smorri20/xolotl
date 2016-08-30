@@ -6,8 +6,6 @@
 #include <memory>
 #include <typeinfo>
 #include <limits>
-#include <PSIClusterNetworkLoader.h>
-#include <PSIClusterReactionNetwork.h>
 #include <XolotlConfig.h>
 #include <DummyHandlerRegistry.h>
 
@@ -42,7 +40,7 @@ BOOST_AUTO_TEST_CASE(checkGetReactantFluxesAndParials) {
 			> (std::make_shared<xolotlPerf::DummyHandlerRegistry>());
 	networkLoader->setInputstream(networkStream);
 	// Load the network
-	shared_ptr<ReactionNetwork> network = networkLoader->load();
+	auto network = networkLoader->load();
 
 	BOOST_TEST_MESSAGE("TungstenIntegrationTester Message: Network loaded");
 
@@ -109,7 +107,7 @@ BOOST_AUTO_TEST_CASE(checkGetReactantFluxesAndParials) {
 			> (std::make_shared<xolotlPerf::DummyHandlerRegistry>());
 	networkLoader->setInputstream(networkStream);
 	// Load the network
-	shared_ptr<ReactionNetwork> network = networkLoader->load();
+	auto network = networkLoader->load();
 
 	BOOST_TEST_MESSAGE("TungstenIntegrationTester Message: Network loaded");
 

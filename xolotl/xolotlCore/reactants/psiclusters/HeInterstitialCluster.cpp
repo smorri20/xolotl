@@ -22,15 +22,15 @@ HeInterstitialCluster::HeInterstitialCluster(int numHelium, int numInterstitial,
 	nameStream << "He_" << numHe << "I_" << numI;
 	name = nameStream.str();
 	// Set the typename appropriately
-	typeName = "HeI";
+	typeName = heIType;
 
 	// Compute the reaction radius
-	reactionRadius = (sqrt(3.0) / 4.0) * xolotlCore::latticeConstant
+	reactionRadius = (sqrt(3.0) / 4.0) * xolotlCore::tungstenLatticeConstant
 			+ pow(
-					(3.0 * pow(xolotlCore::latticeConstant, 3.0) * numI)
+					(3.0 * pow(xolotlCore::tungstenLatticeConstant, 3.0) * numI)
 							/ (8.0 * xolotlCore::pi), (1.0 / 3.0))
 			- pow(
-					(3.0 * pow(xolotlCore::latticeConstant, 3.0))
+					(3.0 * pow(xolotlCore::tungstenLatticeConstant, 3.0))
 							/ (8.0 * xolotlCore::pi), (1.0 / 3.0));
 
 	return;

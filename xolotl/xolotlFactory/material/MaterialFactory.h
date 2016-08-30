@@ -15,8 +15,8 @@
 namespace xolotlFactory {
 
 /**
- * Realizes the IMaterialFactory interface. Handles the flux and the advection
- * for a specific material.
+ * Realizes the IMaterialFactory interface. Handles the flux, the advection, modified
+ * trap mutation, and bubble bursting for a specific material.
  */
 class MaterialFactory: public IMaterialFactory {
 protected:

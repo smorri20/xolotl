@@ -42,15 +42,15 @@ void PSIClusterReactionNetwork::setDefaultPropsAndNames() {
 	names.push_back(vType);
 	names.push_back(iType);
 	// Set the compound reactant names
-	compoundNames.push_back("HeV");
-	compoundNames.push_back("HeI");
+	compoundNames.push_back(heVType);
+	compoundNames.push_back(heIType);
 
 	// Setup the cluster type map
 	clusterTypeMap[heType] = heVector;
 	clusterTypeMap[vType] = vVector;
 	clusterTypeMap[iType] = iVector;
-	clusterTypeMap["HeV"] = heVVector;
-	clusterTypeMap["HeI"] = heIVector;
+	clusterTypeMap[heVType] = heVVector;
+	clusterTypeMap[heIType] = heIVector;
 
 	return;
 }
@@ -123,10 +123,10 @@ IReactant * PSIClusterReactionNetwork::get(const std::string& type,
 		const int size) const {
 	// Local Declarations
 	static std::map<std::string, int> composition = { { heType, 0 },
-			{ vType, 0 }, { iType, 0 } };
+			{ vType, 0 }, { iType, 0 }, { xeType, 0 } };
 	std::shared_ptr<IReactant> retReactant;
 
-	// Setup the composition map to default values
+	// Initialize the values because it's static
 	composition[heType] = 0;
 	composition[vType] = 0;
 	composition[iType] = 0;
@@ -148,20 +148,21 @@ IReactant * PSIClusterReactionNetwork::getCompound(const std::string& type,
 		const std::vector<int>& sizes) const {
 	// Local Declarations
 	static std::map<std::string, int> composition = { { heType, 0 },
-			{ vType, 0 }, { iType, 0 } };
+			{ vType, 0 }, { iType, 0 }, { xeType, 0 } };
 	std::shared_ptr<IReactant> retReactant;
 
-	// Setup the composition map to default values
+	// Initialize the values because it's static
 	composition[heType] = 0;
 	composition[vType] = 0;
 	composition[iType] = 0;
 
 	// Only pull the reactant if the name is valid and there are enough sizes
 	// to fill the composition.
-	if ((type == "HeV" || type == "HeI") && sizes.size() == 3) {
+	if ((type == heVType || type == heIType) && sizes.size() == 3) {
 		composition[heType] = sizes[0];
 		composition[vType] = sizes[1];
 		composition[iType] = sizes[2];
+
 		// Make sure the reactant is in the map
 		if (mixedSpeciesMap.count(composition)) {
 			retReactant = mixedSpeciesMap.at(composition);
@@ -181,8 +182,8 @@ std::vector<IReactant *> PSIClusterReactionNetwork::getAll(
 	std::vector<IReactant *> reactants;
 
 	// Only pull the reactants if the name is valid
-	if (name == heType || name == vType || name == iType || name == "HeV"
-			|| name == "HeI") {
+	if (name == heType || name == vType || name == iType || name == heVType
+			|| name == heIType) {
 		std::shared_ptr < std::vector<std::shared_ptr<IReactant>>
 				> storedReactants = clusterTypeMap.at(name);
 		int vecSize = storedReactants->size();
@@ -298,5 +299,3 @@ void PSIClusterReactionNetwork::setProperty(const std::string& key,
 
 	return;
 }
-
-

@@ -135,8 +135,8 @@ double PSICluster::calculateDissociationConstant(
 	// the corners are shared across a total of eight cells. The fraction of
 	// the volume of the lattice cell that is filled with tungsten atoms is the
 	// atomic volume and is a_0^3/(8*1/8 + 1) = 0.5*a_0^3.
-	double atomicVolume = 0.5 * xolotlCore::latticeConstant
-			* xolotlCore::latticeConstant * xolotlCore::latticeConstant;
+	double atomicVolume = 0.5 * xolotlCore::tungstenLatticeConstant
+			* xolotlCore::tungstenLatticeConstant * xolotlCore::tungstenLatticeConstant;
 
 	// Calculate the Reaction Rate Constant
 	double kPlus = calculateReactionRateConstant(singleCluster, secondCluster);

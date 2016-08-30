@@ -31,7 +31,7 @@ static std::shared_ptr<xolotlPerf::IHandlerRegistry> registry = std::make_shared
  * its connectivity to other clusters.
  */
 BOOST_AUTO_TEST_CASE(checkConnectivity) {
-	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
+	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork();
 	auto props = network->getProperties();
 
 	// Prevent dissociation from being added to the connectivity array
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
   */
  BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
  	// Local Declarations
- 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
+ 	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork();
 
  	// Get an V cluster with compostion 0,1,0.
  	auto cluster = (PSICluster *) network->get("V", 1);
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	 	double knownPartials[] = {-2850.42, -3005.08, 0.0, -14316.7, 896815.0, 257925.0,
 	 			0.0, -2188.27, -2373.78, 356134.7, 0.0, 224717.0, 0.0, 0.0, -2054.05};
  	// Get the simple reaction network
- 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork(3);
+ 	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork(3);
 
  	// Get an V cluster with compostion 0,1,0.
  	auto cluster = (PSICluster *) network->get("V", 1);

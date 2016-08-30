@@ -33,9 +33,9 @@ BOOST_AUTO_TEST_SUITE(HeCluster_testSuite)
  * its connectivity to other clusters.
  */
 BOOST_AUTO_TEST_CASE(checkConnectivity) {
-	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
+	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork();
 	auto props = network->getProperties();
-	
+
 	// Prevent dissociation from being added to the connectivity array
 	props["dissociationsEnabled"] = "false";
 	
@@ -46,18 +46,18 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	// Check the type name
 	BOOST_REQUIRE_EQUAL("He",reactant->getType());
 	auto reactionConnectivity = reactant->getConnectivity();
-		
+
 	// Check the connectivity for He, V, and I
 	int connectivityExpected[] = {
 		// He
 		1, 1, 1, 1, 1, 1, 1, 0, 0, 0,
-			
+
 		// V
 		1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
 
 		// I
 		1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
-			
+
 		// HeV
 		1, 1, 1, 0, 0, 0, 0, 0, 0,
 		1, 1, 0, 0, 0, 0, 0, 0,
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 		0, 0, 0,
 		0, 0,
 		0,
-			
+
 		// HeI
 		1, 1, 1, 0, 0, 0, 0, 0, 0,
 		1, 1, 0, 0, 0, 0, 0, 0,
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
  */
 BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 	// Local Declarations
-	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
+	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork();
 
 	// Get an He cluster with compostion 1,0,0.
 	auto cluster = (PSICluster *) network->get("He", 1);
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 			-1.79298e+10, -1.95933e+10, 0.0, -1.87741e+10, -2.04376e+10, 0.0, 2.23350e+12,
 			2.25143e+12, 2.46031e+12, -1.79298e+10, 2.25143e+12, 0.0};
 	// Get the simple reaction network
-	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork(3);
+	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork(3);
 
 	// Get an He cluster with compostion 1,0,0.
 	auto cluster = (PSICluster *) network->get("He", 1);

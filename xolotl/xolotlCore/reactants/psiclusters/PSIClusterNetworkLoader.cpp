@@ -34,7 +34,7 @@ static inline double convertStrToDouble(const std::string& inString) {
 			strtod(inString.c_str(), NULL);
 }
 
-std::shared_ptr<PSICluster> PSIClusterNetworkLoader::createCluster(int numHe,
+std::shared_ptr<PSICluster> PSIClusterNetworkLoader::createPSICluster(int numHe,
 		int numV, int numI) {
 	// Local Declarations
 	std::shared_ptr<PSICluster> cluster;
@@ -66,23 +66,26 @@ std::shared_ptr<PSICluster> PSIClusterNetworkLoader::createCluster(int numHe,
 	return cluster;
 }
 
-PSIClusterNetworkLoader::PSIClusterNetworkLoader(
-		const std::shared_ptr<std::istream> stream,
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-	handlerRegistry(registry) {
-	setInputstream(stream);
+PSIClusterNetworkLoader::PSIClusterNetworkLoader(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
+	networkStream = nullptr;
+	handlerRegistry = registry;
+	fileName = "";
+	dummyReactions = false;
 
 	return;
 }
 
-void PSIClusterNetworkLoader::setInputstream(
-		const std::shared_ptr<std::istream> stream) {
+PSIClusterNetworkLoader::PSIClusterNetworkLoader(const std::shared_ptr<std::istream> stream,
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
 	networkStream = stream;
+	handlerRegistry = registry;
+	fileName = "";
+	dummyReactions = false;
 
 	return;
 }
 
-std::shared_ptr<PSIClusterReactionNetwork> PSIClusterNetworkLoader::load() {
+std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::load() {
 	// Local Declarations
 	TokenizedLineReader<std::string> reader;
 	std::vector<std::string> loadedLine;
@@ -114,7 +117,7 @@ std::shared_ptr<PSIClusterReactionNetwork> PSIClusterNetworkLoader::load() {
 				numV = std::stoi(loadedLine[1]);
 				numI = std::stoi(loadedLine[2]);
 				// Create the cluster
-				auto nextCluster = createCluster(numHe, numV, numI);
+				auto nextCluster = createPSICluster(numHe, numV, numI);
 				// Load the energies
 				formationEnergy = convertStrToDouble(loadedLine[3]);
 				migrationEnergy = convertStrToDouble(loadedLine[4]);

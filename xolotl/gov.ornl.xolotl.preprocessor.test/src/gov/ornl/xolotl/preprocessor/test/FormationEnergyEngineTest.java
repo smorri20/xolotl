@@ -44,6 +44,26 @@ public class FormationEnergyEngineTest {
 	}
 
 	/**
+	 * This operation checks the xenon formation energies.
+	 */
+	@Test
+	public void testXeEnergies() {
+		// Local Declarations
+		FormationEnergyEngine engine = new FormationEnergyEngine();
+
+		// Check the code for He_2.
+		assertEquals(11.44, engine.getXeFormationEnergy(2), 1.0e-2);
+
+		// Check the code for He_8.
+		assertEquals(38.80, engine.getXeFormationEnergy(8), 1.0e-2);
+
+		// Check the code for the invalid case with size = 0.
+		assertEquals(Double.POSITIVE_INFINITY, engine.getXeFormationEnergy(0), 1.0e-16);
+
+		return;
+	}
+
+	/**
 	 * This operation checks the vacancy formation energies.
 	 */
 	@Test

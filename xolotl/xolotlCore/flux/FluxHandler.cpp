@@ -1,7 +1,6 @@
 #include "FluxHandler.h"
 #include <xolotlPerf.h>
-#include <PSICluster.h>
-#include <Constants.h>
+#include <Reactant.h>
 #include <iostream>
 #include <fstream>
 #include <cmath>
@@ -59,16 +58,6 @@ void FluxHandler::initializeFluxHandler(IReactionNetwork *network,
 
 	// The last value should always be 0.0 because of boundary conditions
 	incidentFluxVec.push_back(0.0);
-
-	// Set the flux index corresponding the the single helium cluster here
-	auto fluxCluster = network->get(heType, 1);
-	// Check that the helium cluster is present in the network
-	if (!fluxCluster) {
-		throw std::string(
-				"\nThe single helium cluster is not present in the network, "
-				"cannot use the flux option!");
-	}
-	fluxIndex = fluxCluster->getId() - 1;
 
 	return;
 }

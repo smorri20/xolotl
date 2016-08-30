@@ -510,7 +510,7 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *) {
 	PetscErrorCode ierr;
 	const double **solutionArray, *gridPointSolution;
-	int xs, xm, xi;
+	PetscInt xs, xm, xi, Mx;
 	double x = 0.0;
 
 	PetscFunctionBeginUser;
@@ -521,7 +521,7 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Gets the process ID (important when it is running in parallel)
 	int procId;
-	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
+	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
 
 	// Get the da from ts
 	DM da;
@@ -533,67 +533,56 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the corners of the grid
 	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
 
+	// Get the size of the total grid
+	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
+	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
+	PETSC_IGNORE);
+	checkPetscError(ierr, "setupPetsc1DMonitor: DMDAGetInfo failed.");
+
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
 
-	// Get the network
+	// Get the network and its size
 	auto network = solverHandler->getNetwork();
-
-	// Get the physical grid
-	auto grid = solverHandler->getXGrid();
+	int networkSize = network->size();
 
 	// Choice of the cluster to be plotted
-	int iCluster = 15;
+	int ix = Mx / 2;
 
 	if (procId == 0) {
 		// Create a Point vector to store the data to give to the data provider
 		// for the visualization
 		auto myPoints = std::make_shared<std::vector<xolotlViz::Point> >();
 
-		// Loop on the grid
-		for (xi = xs; xi < xs + xm; xi++) {
+		// If the middle is on this process
+		if (ix >= xs && ix < xs + xm) {
 			// Get the pointer to the beginning of the solution data for this grid point
-			gridPointSolution = solutionArray[xi];
+			gridPointSolution = solutionArray[ix];
 
-			double value = gridPointSolution[iCluster] + gridPointSolution[iCluster + 1]
-			               + gridPointSolution[iCluster + 2] + gridPointSolution[iCluster + 3]
-			               + gridPointSolution[iCluster + 4] + gridPointSolution[iCluster + 5]
-			               + gridPointSolution[iCluster + 6] + gridPointSolution[iCluster + 7]
-			               + gridPointSolution[iCluster + 8];
-
-			// Create a Point with the concentration[iCluster] as the value
-			// and add it to myPoints
-			xolotlViz::Point aPoint;
-			aPoint.value = value;
-			aPoint.t = time;
-			aPoint.x = grid[xi];
-			myPoints->push_back(aPoint);
+			for (int i = 0; i < networkSize; i++) {
+				// Create a Point with the concentration[i] as the value
+				// and add it to myPoints
+				xolotlViz::Point aPoint;
+				aPoint.value = gridPointSolution[i];
+				aPoint.t = time;
+				aPoint.x = (double) i + 1.0;
+				myPoints->push_back(aPoint);
+			}
 		}
 
-		// Loop on the other processes
-		for (int i = 1; i < worldSize; i++) {
-			// Get the size of the local grid of that process
-			int localSize = 0;
-			MPI_Recv(&localSize, 1, MPI_INT, i, 10, PETSC_COMM_WORLD,
-					MPI_STATUS_IGNORE);
-
-			// Loop on their grid
-			for (int k = 0; k < localSize; k++) {
-				// Get the position
-				MPI_Recv(&x, 1, MPI_DOUBLE, i, 11, PETSC_COMM_WORLD,
-						MPI_STATUS_IGNORE);
-
-				// and the concentration
+		// else receive the values from another process
+		else {
+			for (int i = 0; i < networkSize; i++) {
 				double conc = 0.0;
-				MPI_Recv(&conc, 1, MPI_DOUBLE, i, 12, PETSC_COMM_WORLD,
-						MPI_STATUS_IGNORE);
-
-				// Create a Point with the concentration[iCluster] as the value
+				MPI_Recv(&conc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 10, MPI_COMM_WORLD,
+									MPI_STATUS_IGNORE);
+				// Create a Point with conc as the value
 				// and add it to myPoints
 				xolotlViz::Point aPoint;
 				aPoint.value = conc;
 				aPoint.t = time;
-				aPoint.x = x;
+				aPoint.x = (double) i + 1.0;
 				myPoints->push_back(aPoint);
 			}
 		}
@@ -601,15 +590,10 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 		// Get the data provider and give it the points
 		scatterPlot1D->getDataProvider()->setPoints(myPoints);
 
-		// Get the iCluster cluster to have access to its name
-		auto reactants = network->getAll();
-		auto cluster = reactants->at(iCluster);
-
 		// Change the title of the plot and the name of the data
 		std::stringstream title;
-		title << cluster->getName();
+		title << "Size Distribution";
 		scatterPlot1D->getDataProvider()->setDataName(title.str());
-		title << " concentration";
 		scatterPlot1D->plotLabelProvider->titleLabel = title.str();
 		// Give the time to the label provider
 		std::stringstream timeLabel;
@@ -626,34 +610,20 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 
 		// Render and save in file
 		std::stringstream fileName;
-		fileName << cluster->getName() << "_scatter_TS" << timestep << ".png";
+		fileName << "Scatter_TS" << timestep << ".png";
 		scatterPlot1D->write(fileName.str());
 	}
 
 	else {
-		// Send the value of the local grid size to the master process
-		MPI_Send(&xm, 1, MPI_DOUBLE, 0, 10, PETSC_COMM_WORLD);
-
-		// Loop on the grid
-		for (xi = xs; xi < xs + xm; xi++) {
-			// Dump x
-			x = grid[xi];
-
+		// If the middle is on this process
+		if (ix >= xs && ix < xs + xm) {
 			// Get the pointer to the beginning of the solution data for this grid point
-			gridPointSolution = solutionArray[xi];
+			gridPointSolution = solutionArray[ix];
 
-			// Send the value of the local position to the master process
-			MPI_Send(&x, 1, MPI_DOUBLE, 0, 11, PETSC_COMM_WORLD);
-
-			double value = gridPointSolution[iCluster] + gridPointSolution[iCluster + 1]
-			               + gridPointSolution[iCluster + 2] + gridPointSolution[iCluster + 3]
-			               + gridPointSolution[iCluster + 4] + gridPointSolution[iCluster + 5]
-			               + gridPointSolution[iCluster + 6] + gridPointSolution[iCluster + 7]
-			               + gridPointSolution[iCluster + 8];
-
-			// Send the value of the concentration to the master process
-			MPI_Send(&value, 1, MPI_DOUBLE, 0, 12,
-					PETSC_COMM_WORLD);
+			for (int i = 0; i < networkSize; i++) {
+				// Send the value of each concentration to the master process
+				MPI_Send(&gridPointSolution[i], 1, MPI_DOUBLE, 0, 10, MPI_COMM_WORLD);
+			}
 		}
 	}
 
@@ -1437,7 +1407,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 			scatterPlot1D = vizHandlerRegistry->getPlot("scatterPlot1D",
 					xolotlViz::PlotType::SCATTER);
 
-			scatterPlot1D->setLogScale();
+//			scatterPlot1D->setLogScale();
 
 			// Create and set the label provider
 			auto labelProvider = std::make_shared<xolotlViz::LabelProvider>(

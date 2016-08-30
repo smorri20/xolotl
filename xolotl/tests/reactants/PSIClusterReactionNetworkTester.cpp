@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE(checkCopying) {
  */
 BOOST_AUTO_TEST_CASE(checkArrayOperations) {
 	// Local Declarations
-	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
+	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork();
 	int size = network->size();
 	double * concentrations = new double[size];
 
@@ -340,7 +340,7 @@ BOOST_AUTO_TEST_CASE(checkArrayOperations) {
 BOOST_AUTO_TEST_CASE(checkRefCounts) {
     // Obtain a network to work with.
     // This network was built programmatically.
-	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
+	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork();
     
     // Because each Reactant in the network is given a pointer
     // (a shared_ptr) to the network, and we have one shared_ptr to it,
