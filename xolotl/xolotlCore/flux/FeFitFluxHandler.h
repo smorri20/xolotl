@@ -116,6 +116,46 @@ private:
 	 */
 	std::vector<double> damageVector;
 
+	/**
+	 * Value of the damage function integrated on the grid.
+	 */
+	double damFactor;
+
+protected:
+
+	void recomputeFluxHandler(int surfacePos) {
+		// Factor the incident flux will be multiplied by
+		double fluxNormalized = fluxAmplitude / normFactor;
+
+		// Starts a i = surfacePos + 1 because the first values were already put in the vector
+		for (int i = surfacePos + 1; i < xGrid.size() - 1; i++) {
+			// Get the x position
+			auto x = xGrid[i] - xGrid[surfacePos];
+
+			// Compute the flux value
+			double incidentFlux = fluxNormalized * FitFunction(x);
+			// Add it to the vector
+			incidentFluxVec[i - surfacePos] = incidentFlux;
+		}
+
+		// Factor the incident flux will be multiplied by to get
+		// the wanted intensity
+		fluxNormalized = fluxAmplitude / damFactor;
+
+		// Starts a i = surfacePos + 1 because the first value was already put in the vector
+		for (int i = surfacePos + 1; i < xGrid.size() - 1; i++) {
+			// Get the x position
+			auto x = xGrid[i] - xGrid[surfacePos];
+
+			// Compute the flux value
+			double incidentFlux = fluxNormalized * DamageFunction(x);
+			// Add it to the vector
+			damageVector[i - surfacePos] = incidentFlux;
+		}
+
+		return;
+	}
+
 public:
 
 	/**
@@ -183,7 +223,7 @@ public:
 
 		// Compute the norm factor because the damage function has an
 		// arbitrary amplitude
-		double damFactor = 0.0;
+		damFactor = 0.0;
 		// Loop on the x grid points skipping the first after the surface position
 		// and last because of the boundary conditions
 		for (int i = surfacePos + 1; i < xGrid.size() - 1; i++) {

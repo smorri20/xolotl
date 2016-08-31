@@ -238,7 +238,7 @@ double InterstitialCluster::getEmissionFlux() const {
 	double flux = PSICluster::getEmissionFlux();
 
 	// Compute the loss to dislocation sinks
-	if (diffusionCoefficient > 0.0) {
+	if (size < 3) {
 		// bias * rho_dis * D * C
 		flux += 1.15 * 0.0001 * diffusionCoefficient * concentration;
 	}
@@ -251,7 +251,7 @@ void InterstitialCluster::getEmissionPartialDerivatives(std::vector<double> & pa
 	PSICluster::getEmissionPartialDerivatives(partials);
 
 	// Compute the loss to dislocation sinks
-	if (diffusionCoefficient > 0.0) {
+	if (size < 3) {
 		// bias * rho_dis * D * C
 		partials[id -1] -= 1.15 * 0.0001 * diffusionCoefficient;
 	}

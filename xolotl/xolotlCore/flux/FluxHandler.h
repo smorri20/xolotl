@@ -90,7 +90,7 @@ protected:
 	 *
 	 * @param surfacePos The current position of the surface
 	 */
-	void recomputeFluxHandler(int surfacePos);
+	virtual void recomputeFluxHandler(int surfacePos);
 
 public:
 

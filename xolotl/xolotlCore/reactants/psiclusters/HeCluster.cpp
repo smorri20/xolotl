@@ -200,32 +200,3 @@ void HeCluster::createDissociationConnectivity() {
 
 	return;
 }
-
-double HeCluster::getEmissionFlux() const {
-	// Initial declarations
-	double flux = PSICluster::getEmissionFlux();
-
-	// Compute the loss to dislocation sinks
-	if (size == 1) {
-		// Compute the thermal equilibrium density
-		// rho_fe exp((-E_V / (k T)))
-		double concEq = 84.6 * exp(-2.07/(xolotlCore::kBoltzmann * temperature));
-		// rho_dis * D * (C - C_eq)
-		flux += 0.0001 * diffusionCoefficient * (concentration - concEq);
-	}
-
-	return flux;
-}
-
-void HeCluster::getEmissionPartialDerivatives(std::vector<double> & partials) const {
-	// Initial declarations
-	PSICluster::getEmissionPartialDerivatives(partials);
-
-	// Compute the loss to dislocation sinks
-	if (diffusionCoefficient > 0.0) {
-		// bias * rho_dis * D * C
-		partials[id -1] -= 0.0001 * diffusionCoefficient;
-	}
-
-	return;
-}
