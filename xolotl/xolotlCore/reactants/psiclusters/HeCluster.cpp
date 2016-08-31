@@ -20,12 +20,7 @@ HeCluster::HeCluster(int nHe,
 	typeName = "He";
 
 	// Compute the reaction radius
-	double FourPi = 4.0 * xolotlCore::pi;
-	double aCubed = pow(xolotlCore::latticeConstant, 3);
-	double termOne = pow((3.0 / FourPi) * (1.0 / 10.0) * aCubed * size,
-			(1.0 / 3.0));
-	double termTwo = pow((3.0 / FourPi) * (1.0 / 10.0) * aCubed, (1.0 / 3.0));
-	reactionRadius = 0.3 + termOne - termTwo;
+	reactionRadius = 0.035;
 
 	return;
 }
@@ -201,6 +196,35 @@ void HeCluster::createDissociationConnectivity() {
 			auto smallerReactant = (PSICluster *) network->getCompound(heIType, compositionVec);
 			dissociateCluster(cluster, smallerReactant);
 		}
+	}
+
+	return;
+}
+
+double HeCluster::getEmissionFlux() const {
+	// Initial declarations
+	double flux = PSICluster::getEmissionFlux();
+
+	// Compute the loss to dislocation sinks
+	if (size == 1) {
+		// Compute the thermal equilibrium density
+		// rho_fe exp((-E_V / (k T)))
+		double concEq = 84.6 * exp(-2.07/(xolotlCore::kBoltzmann * temperature));
+		// rho_dis * D * (C - C_eq)
+		flux += 0.0001 * diffusionCoefficient * (concentration - concEq);
+	}
+
+	return flux;
+}
+
+void HeCluster::getEmissionPartialDerivatives(std::vector<double> & partials) const {
+	// Initial declarations
+	PSICluster::getEmissionPartialDerivatives(partials);
+
+	// Compute the loss to dislocation sinks
+	if (diffusionCoefficient > 0.0) {
+		// bias * rho_dis * D * C
+		partials[id -1] -= 0.0001 * diffusionCoefficient;
 	}
 
 	return;

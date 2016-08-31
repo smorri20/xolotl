@@ -1616,23 +1616,23 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 					"there is no helium or helium-vacancy cluster in the network.");
 		}
 
-		// Get the last time step written in the HDF5 file
-		int tempTimeStep = -2;
-		std::string networkName = solverHandler->getNetworkName();
-		bool hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
-				networkName, tempTimeStep);
-
-		// Get the previous time if concentrations were stored and initialize the fluence
-		if (hasConcentrations) {
-			// Get the previous time from the HDF5 file
-			double time = xolotlCore::HDF5Utils::readPreviousTime(networkName, tempTimeStep);
-			// Initialize the fluence
-			auto fluxHandler = solverHandler->getFluxHandler();
-			// The length of the time step
-			double dt = time;
-			// Increment the fluence with the value at this current timestep
-			fluxHandler->incrementFluence(dt);
-		}
+//		// Get the last time step written in the HDF5 file
+//		int tempTimeStep = -2;
+//		std::string networkName = solverHandler->getNetworkName();
+//		bool hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
+//				networkName, tempTimeStep);
+//
+//		// Get the previous time if concentrations were stored and initialize the fluence
+//		if (hasConcentrations) {
+//			// Get the previous time from the HDF5 file
+//			double time = xolotlCore::HDF5Utils::readPreviousTime(networkName, tempTimeStep);
+//			// Initialize the fluence
+//			auto fluxHandler = solverHandler->getFluxHandler();
+//			// The length of the time step
+//			double dt = time;
+//			// Increment the fluence with the value at this current timestep
+//			fluxHandler->incrementFluence(dt);
+//		}
 
 		// computeHeliumFluence will be called at each timestep
 		ierr = TSMonitorSet(ts, computeHeliumFluence, NULL, NULL);

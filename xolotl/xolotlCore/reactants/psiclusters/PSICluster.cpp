@@ -175,8 +175,8 @@ double PSICluster::calculateReactionRateConstant(
 } 
 
 double PSICluster::calculateDissociationConstant(
-		const PSICluster & dissociatingCluster,
-		const PSICluster & singleCluster, const PSICluster & secondCluster) const {
+		PSICluster & dissociatingCluster,
+		const PSICluster & singleCluster, const PSICluster & secondCluster) {
 	// The atomic volume is computed by considering the BCC structure of the
 	// tungsten. In a given lattice cell in tungsten there are tungsten atoms
 	// at each corner and a tungsten atom in the center. The tungsten atoms at
@@ -199,15 +199,16 @@ double PSICluster::calculateDissociationConstant(
 	return k_minus;
 }
 
-double PSICluster::computeBindingEnergy(const PSICluster & dissociatingCluster,
+double PSICluster::computeBindingEnergy(PSICluster & dissociatingCluster,
 		const PSICluster & singleCluster,
-		const PSICluster & secondCluster) const {
-	// for the dissociation A --> B + C we need A binding energy
-	// E_b(A) = E_f(B) + E_f(C) - E_f(A) where E_f is the formation energy
-	double bindingEnergy = singleCluster.formationEnergy
-			+ secondCluster.formationEnergy
-			- dissociatingCluster.formationEnergy;
-	return bindingEnergy;
+		const PSICluster & secondCluster) {
+//	// for the dissociation A --> B + C we need A binding energy
+//	// E_b(A) = E_f(B) + E_f(C) - E_f(A) where E_f is the formation energy
+//	double bindingEnergy = singleCluster.formationEnergy
+//			+ secondCluster.formationEnergy
+//			- dissociatingCluster.formationEnergy;
+	double bindingEnergy = dissociatingCluster.bindingEnergyIndexMap[singleCluster.typeName];
+	return max(bindingEnergy, -1.0);
 }
 
 void PSICluster::dissociateCluster(PSICluster * dissociatingCluster,
@@ -804,6 +805,14 @@ double PSICluster::getFormationEnergy() const {
 void PSICluster::setFormationEnergy(double energy) {
 	// Set the formation energy
 	formationEnergy = energy;
+	return;
+}
+
+void PSICluster::setBindingEnergy(double energy1, double energy2, double energy3) {
+	// Set the binding energy
+	bindingEnergyIndexMap["He"] = energy1;
+	bindingEnergyIndexMap["V"] = energy2;
+	bindingEnergyIndexMap["I"] = energy3;
 	return;
 }
 

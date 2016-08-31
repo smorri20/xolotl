@@ -76,35 +76,12 @@ protected:
 		// If it is not regular do a fine mesh close to the surface and
 		// increase the step size when away from the surface
 		else {
-			// Initialize the value of the previous point
-			double previousPoint = 0.0;
-			// The first grid point will be at x = 0.0
-			grid.push_back(0.0);
-
-			// The loop starts at 1 because the first grid point was
-			// already added to the grid vector
-			for (int l = 1; l < nx; l++) {
-				// 0.1nm step near the surface (x < 2.5nm)
-				if (l < surfacePos + 26) {
-					grid.push_back(previousPoint + 0.1);
-					previousPoint += 0.1;
-				}
-				// Then 0.25nm (2.5nm < x < 5.0nm)
-				else if (l < surfacePos + 36) {
-					grid.push_back(previousPoint + 0.25);
-					previousPoint += 0.25;
-				}
-				// Then 0.5nm (5.0nm < x < 7.5nm)
-				else if (l < surfacePos + 41) {
-					grid.push_back(previousPoint + 0.5);
-					previousPoint += 0.5;
-				}
-				// 1.0nm step size for all the other ones
-				// (7.5nm < x)
-				else {
-					grid.push_back(previousPoint + 1.0);
-					previousPoint += 1.0;
-				}
+			if (nx != 38) throw std::string("Wrong size of grid here!! ");
+			else {
+				grid = {0.0, 2.0, 4.0, 7.0, 12.0, 17.0, 22.0, 27.0, 32.0, 37.0,
+						42.0, 47.0, 52.0, 57.0, 62.0, 67.0, 72.0, 77.0, 82.0, 87.0,
+						92.0, 97.0, 102.0, 107.0, 112.0, 117.0, 128.0, 158.0, 188.0,
+						218.0, 248.0, 278.0, 350.0, 420.0, 490.0, 496.0, 498.0, 500.0};
 			}
 		}
 

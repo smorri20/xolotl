@@ -45,6 +45,15 @@ public:
 	virtual std::vector<double> getIncidentFluxVec(double currentTime, int surfacePos) = 0;
 
 	/**
+	 * This operation returns the damage flux vector.
+	 *
+	 * @param currentTime The time
+	 * @param surfacePos The current position of the surface
+	 * @return The incident flux vector
+	 */
+	virtual std::vector<double> getDamageFluxVec(double currentTime, int surfacePos) = 0;
+
+	/**
 	 * This operation returns the index of the cluster that is irradiating
 	 * the material.
 	 *

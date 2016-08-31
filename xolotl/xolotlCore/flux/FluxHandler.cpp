@@ -149,6 +149,19 @@ std::vector<double> FluxHandler::getIncidentFluxVec(double currentTime, int surf
 	return incidentFluxVec;
 }
 
+std::vector<double> FluxHandler::getDamageFluxVec(double currentTime, int surfacePos) {
+	// Create the damage vector
+	std::vector<double> damageVector;
+
+	// Starts a i = surfacePos + 1 because the first value was already put in the vector
+	for (int i = surfacePos; i < xGrid.size(); i++) {
+		// Add 0.0 to the vector
+		damageVector.push_back(0.0);
+	}
+
+	return damageVector;
+}
+
 int FluxHandler::getIncidentFluxClusterIndex() {
 	return fluxIndex;
 }

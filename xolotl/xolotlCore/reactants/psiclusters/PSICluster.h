@@ -121,6 +121,11 @@ protected:
 	int thisNetworkIndex;
 
 	/**
+	 * A map used to look up binding energy indices quickly.
+	 */
+	std::unordered_map<std::string, double> bindingEnergyIndexMap;
+
+	/**
 	 * The formation energy of this cluster. It will be used to compute the
 	 * binding energies appearing in the dissociation constant calculation.
 	 */
@@ -261,8 +266,8 @@ protected:
 	 * @param secondCluster The second cluster that dissociated from the parent
 	 * @return The dissociation constant
 	 */
-	double calculateDissociationConstant(const PSICluster & dissociatingCluster,
-			const PSICluster & singleCluster, const PSICluster & secondCluster) const;
+	double calculateDissociationConstant(PSICluster & dissociatingCluster,
+			const PSICluster & singleCluster, const PSICluster & secondCluster);
 			
 	/**
 	 * Calculate the binding energy for the dissociation cluster to emit the single
@@ -273,8 +278,8 @@ protected:
 	 * @param secondCluster The second cluster that dissociated from the parent
 	 * @return The binding energy corresponding to this dissociation
 	 */
-	double computeBindingEnergy(const PSICluster & dissociatingCluster,
-			const PSICluster & singleCluster, const PSICluster & secondCluster) const;
+	double computeBindingEnergy(PSICluster & dissociatingCluster,
+			const PSICluster & singleCluster, const PSICluster & secondCluster);
 			
 	/**
 	 * This operation adds the dissociating cluster to the list of dissociatingPairs.
@@ -679,6 +684,15 @@ public:
 	 * @param energy The formation energy
 	 */
 	void setFormationEnergy(double energy);
+
+	/**
+	 * This operation sets the binding energy for this cluster.
+	 *
+	 * @param energy1 The he binding energy
+	 * @param energy2 The v binding energy
+	 * @param energy3 The i binding energy
+	 */
+	void setBindingEnergy(double energy1, double energy2, double energy3);
 
 	/**
 	 * This operation retrieves the diffusion factor, D_0, that is used to

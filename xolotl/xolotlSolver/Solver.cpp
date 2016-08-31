@@ -45,12 +45,12 @@ void Solver::setNetworkLoader(
 				<< network->size() << "." << std::endl;
 	}
 
-	// Get the name of the HDF5 file to give to the solver handler
-	auto HDF5Loader = (HDF5NetworkLoader *) this->networkLoader;
-	auto fileName = HDF5Loader->getFilename();
+//	// Get the name of the HDF5 file to give to the solver handler
+//	auto HDF5Loader = (HDF5NetworkLoader *) this->networkLoader;
+//	auto fileName = HDF5Loader->getFilename();
 
 	// Set the network in the solver handler
-	Solver::solverHandler->initializeNetwork(fileName, network);
+	Solver::solverHandler->initializeNetwork("bla", network);
 
 	return;
 }

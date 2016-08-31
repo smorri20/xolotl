@@ -3,6 +3,7 @@
 #include <W110MaterialFactory.h>
 #include <W111MaterialFactory.h>
 #include <W211MaterialFactory.h>
+#include <FeMaterialFactory.h>
 
 namespace xolotlFactory {
 
@@ -18,6 +19,8 @@ std::shared_ptr<IMaterialFactory> IMaterialFactory::createMaterialFactory(const 
 	else if (materialType == "W111") theMaterialFactory = std::make_shared<W111MaterialFactory>(dimension);
 	// W211 case
 	else if (materialType == "W211") theMaterialFactory = std::make_shared<W211MaterialFactory>(dimension);
+	// Fe case
+	else if (materialType == "Fe") theMaterialFactory = std::make_shared<FeMaterialFactory>(dimension);
 	// The type is not supported
 	else {
 		throw std::string(

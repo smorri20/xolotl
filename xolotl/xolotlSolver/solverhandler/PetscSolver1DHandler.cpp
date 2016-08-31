@@ -132,8 +132,9 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) {
 
 	// Get the last time step written in the HDF5 file
 	int tempTimeStep = -2;
-	bool hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(networkName,
-			tempTimeStep);
+//	bool hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(networkName,
+//			tempTimeStep);
+	bool hasConcentrations = false;
 
 	// Get the actual surface position if concentrations were stored
 	if (hasConcentrations)
@@ -284,10 +285,12 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 	// Get the incident flux vector
 	auto incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime, surfacePosition);
+	auto damageVector = fluxHandler->getDamageFluxVec(ftime, surfacePosition);
 
 	// Declarations for variables used in the loop
 	double flux;
 	int fluxIndex = fluxHandler->getIncidentFluxClusterIndex(), reactantIndex;
+	int iIndex = network->get("I", 1)->getId() - 1, vIndex = network->get("V", 1)->getId() - 1;
 	xolotlCore::PSICluster *cluster = NULL;
 	double **concVector = new double*[3];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
@@ -342,6 +345,11 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 		// ----- Account for flux of incoming He of cluster size 1 -----
 		updatedConcOffset[fluxIndex] += incidentFluxVector[xi - surfacePosition];
+		updatedConcOffset[iIndex] += damageVector[xi - surfacePosition];
+		updatedConcOffset[vIndex] += damageVector[xi - surfacePosition];
+
+//		std::cout << grid[xi] << " " << incidentFluxVector[xi - surfacePosition]
+//														   << " " << damageVector[xi - surfacePosition] << std::endl;
 
 		// ---- Compute diffusion over the locally owned part of the grid -----
 		diffusionHandler->computeDiffusion(network, concVector,

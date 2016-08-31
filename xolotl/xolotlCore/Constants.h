@@ -21,9 +21,8 @@ static const double kBoltzmann = 8.61733240000000000E-5;
 //! at http://www.geom.uiuc.edu/~huberty/math5337/groupe/digits.html
 static const double pi = 3.1415926535897932;
 
-//! Lattice Parameter. Equal to 3.17 Angstroms, taken from Becquart et. al.
-//! Journal of Nuclear Materials 403 (2010) 75–88. Given in units here of nm.
-static const double latticeConstant = 0.31700000000000000;
+//! Lattice Parameter. Fe : 2.856 A
+static const double latticeConstant = 0.2856000000000000;
 
 /**
  * Statically defined type names. This are used to optimize the lookup

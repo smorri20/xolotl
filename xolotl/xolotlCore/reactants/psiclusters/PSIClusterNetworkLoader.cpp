@@ -101,7 +101,8 @@ std::shared_ptr<PSIClusterReactionNetwork> PSIClusterNetworkLoader::load() {
 	std::string error(
 			"PSIClusterNetworkLoader Exception: Insufficient or erroneous data.");
 	int numHe = 0, numV = 0, numI = 0;
-	double formationEnergy = 0.0, migrationEnergy = 0.0;
+	double heBindingEnergy = 0.0, vBindingEnergy = 0.0, iBindingEnergy = 0.0,
+			migrationEnergy = 0.0;
 	double diffusionFactor = 0.0;
 	std::vector<std::shared_ptr<Reactant> > reactants;
 
@@ -114,7 +115,7 @@ std::shared_ptr<PSIClusterReactionNetwork> PSIClusterNetworkLoader::load() {
 		loadedLine = reader.loadLine();
 		while (loadedLine.size() > 0) {
 			// Check the size of the loaded line
-			if (loadedLine.size() < 6)
+			if (loadedLine.size() < 8)
 				// And notify the calling function if the size is insufficient
 				throw error;
 			// Load the sizes
@@ -125,11 +126,13 @@ std::shared_ptr<PSIClusterReactionNetwork> PSIClusterNetworkLoader::load() {
 				// Create the cluster
 				auto nextCluster = createCluster(numHe, numV, numI);
 				// Load the energies
-				formationEnergy = convertStrToDouble(loadedLine[3]);
-				migrationEnergy = convertStrToDouble(loadedLine[4]);
-				diffusionFactor = convertStrToDouble(loadedLine[5]);
+				heBindingEnergy = convertStrToDouble(loadedLine[3]);
+				vBindingEnergy = convertStrToDouble(loadedLine[4]);
+				iBindingEnergy = convertStrToDouble(loadedLine[5]);
+				migrationEnergy = convertStrToDouble(loadedLine[6]);
+				diffusionFactor = convertStrToDouble(loadedLine[7]);
 				// Set the formation energy
-				nextCluster->setFormationEnergy(formationEnergy);
+				nextCluster->setBindingEnergy(heBindingEnergy, vBindingEnergy, iBindingEnergy);
 				// Set the diffusion factor and migration energy
 				nextCluster->setMigrationEnergy(migrationEnergy);
 				nextCluster->setDiffusionFactor(diffusionFactor);

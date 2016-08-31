@@ -18,12 +18,7 @@ InterstitialCluster::InterstitialCluster(int nI,
 	typeName = "I";
 
 	// Compute the reaction radius
-	double EightPi = 8.0 * xolotlCore::pi;
-	double aCubed = pow(xolotlCore::latticeConstant, 3.0);
-	double termOne = 1.15 * (sqrt(3.0) / 4.0) * xolotlCore::latticeConstant;
-	double termTwo = pow((3.0 / EightPi) * aCubed * size, (1.0 / 3.0));
-	double termThree = pow((3.0 / EightPi) * aCubed, (1.0 / 3.0));
-	reactionRadius = termOne + termTwo - termThree;
+	reactionRadius = pow(size, (1.0 / 3.0)) * 0.126;
 
 	return;
 }
@@ -233,6 +228,32 @@ void InterstitialCluster::createDissociationConnectivity() {
 					compositionVec);
 			dissociateCluster(cluster, smallerReactant);
 		}
+	}
+
+	return;
+}
+
+double InterstitialCluster::getEmissionFlux() const {
+	// Initial declarations
+	double flux = PSICluster::getEmissionFlux();
+
+	// Compute the loss to dislocation sinks
+	if (diffusionCoefficient > 0.0) {
+		// bias * rho_dis * D * C
+		flux += 1.15 * 0.0001 * diffusionCoefficient * concentration;
+	}
+
+	return flux;
+}
+
+void InterstitialCluster::getEmissionPartialDerivatives(std::vector<double> & partials) const {
+	// Initial declarations
+	PSICluster::getEmissionPartialDerivatives(partials);
+
+	// Compute the loss to dislocation sinks
+	if (diffusionCoefficient > 0.0) {
+		// bias * rho_dis * D * C
+		partials[id -1] -= 1.15 * 0.0001 * diffusionCoefficient;
 	}
 
 	return;

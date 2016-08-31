@@ -182,18 +182,18 @@ void PetscSolver::solve() {
 		throw std::string("PetscSolver Exception: Network not set!");
 	}
 
-	// Get the name of the HDF5 file to read the concentrations from
-	auto HDF5Loader = (HDF5NetworkLoader *) networkLoader;
-	auto fileName = HDF5Loader->getFilename();
-
-	// Get starting conditions from HDF5 file
-	int nx = 0, ny = 0, nz = 0;
-	double hx = 0.0, hy = 0.0, hz = 0.0;
-	HDF5Utils::readHeader(fileName, nx, hx, ny, hy, nz, hz);
+//	// Get the name of the HDF5 file to read the concentrations from
+//	auto HDF5Loader = (HDF5NetworkLoader *) networkLoader;
+//	auto fileName = HDF5Loader->getFilename();
+//
+//	// Get starting conditions from HDF5 file
+//	int nx = 0, ny = 0, nz = 0;
+//	double hx = 0.0, hy = 0.0, hz = 0.0;
+//	HDF5Utils::readHeader(fileName, nx, hx, ny, hy, nz, hz);
 
 	// Create the solver context
 	DM da;
-	Solver::solverHandler->createSolverContext(da, nx, hx, ny, hy, nz, hz);
+	Solver::solverHandler->createSolverContext(da, 38, 1.0, 0, 0.0, 0, 0.0);
 
 	/*  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Extract global vector from DMDA to hold solution
@@ -227,12 +227,12 @@ void PetscSolver::solve() {
 	 Set solver options
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-	// Read the times if the information is in the HDF5 file
+//	// Read the times if the information is in the HDF5 file
 	double time = 0.0, deltaTime = 1.0e-12;
-	int tempTimeStep = -2;
-	if (HDF5Utils::hasConcentrationGroup(fileName, tempTimeStep)) {
-		HDF5Utils::readTimes(fileName, tempTimeStep, time, deltaTime);
-	}
+//	int tempTimeStep = -2;
+//	if (HDF5Utils::hasConcentrationGroup(fileName, tempTimeStep)) {
+//		HDF5Utils::readTimes(fileName, tempTimeStep, time, deltaTime);
+//	}
 
 	ierr = TSSetInitialTimeStep(ts, time, deltaTime);
 	checkPetscError(ierr, "PetscSolver::solve: TSSetInitialTimeStep failed.");
