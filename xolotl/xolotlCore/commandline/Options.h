@@ -55,6 +55,11 @@ protected:
 	double constTemperature;
 
 	/**
+	 * Value for the temperature gradient
+	 */
+	double temperatureGradient;
+
+	/**
 	 * Use the temperature profile set of handlers?
 	 */
 	bool tempProfileFlag;
@@ -264,6 +269,22 @@ public:
 	 */
 	void setConstTemperature(double temp) {
 		constTemperature = temp;
+	}
+
+	/**
+	 * Obtain the value of the temperature gradient to be used.
+	 * \see IOptions.h
+	 */
+	double getTemperatureGradient() const {
+		return temperatureGradient;
+	}
+
+	/**
+	 * Set the temperature gradient.
+	 * \see IOptions.h
+	 */
+	void setTemperatureGradient(double grad) {
+		temperatureGradient = grad;
 	}
 
 	/**

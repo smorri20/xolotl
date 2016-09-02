@@ -134,7 +134,8 @@ public interface Arguments {
 	 *            Brief description of this option
 	 */
 	@Option(defaultValue = "1000", description = "The temperature (in Kelvin) will be the constant "
-			+ "value specified (default = 1000)")
+			+ "value specified (default = 1000). If a second value is given this value will be used "
+			+ "for a temperature gradient")
 	/**
 	 * This operation produces the required command line option '--startTemp'
 	 * which takes a single string value and is defined by the previous Option

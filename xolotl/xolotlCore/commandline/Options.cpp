@@ -27,6 +27,7 @@ Options::Options() :
 		petscArgv(NULL),
 		constTempFlag(false),
 		constTemperature(1000.0),
+		temperatureGradient(0.0),
 		tempProfileFlag(false),
 		fluxFlag(false),
 		fluxAmplitude(0.0),

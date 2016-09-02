@@ -63,11 +63,6 @@ BOOST_AUTO_TEST_CASE(checkReactants) {
 	auto reactants = neNetwork->getAll();
 	BOOST_REQUIRE_EQUAL(1U, reactants->size());
 
-	// Set the reaction networks for all of the clusters
-	for (unsigned int i = 0; i < reactants->size(); i++) {
-		reactants->at(i)->setReactionNetwork(neNetwork);
-	}
-
 	// Try changing the temperature and make sure it works
 	neNetwork->setTemperature(1000.0);
 	BOOST_REQUIRE_CLOSE(1000.0, reactants->at(0)->getTemperature(), 0.0001);

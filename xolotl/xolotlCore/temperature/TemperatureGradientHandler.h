@@ -1,5 +1,5 @@
-#ifndef TEMPERATUREHANDLER_H
-#define TEMPERATUREHANDLER_H
+#ifndef TEMPERATUREGRADIENTHANDLER_H
+#define TEMPERATUREGRADIENTHANDLER_H
 
 #include "ITemperatureHandler.h"
 
@@ -7,38 +7,44 @@ namespace xolotlCore{
 
 /**
  * This class realizes the ITemperatureHandler, it is responsible for the
- * handling of a temperature constant with time.
+ * handling of a temperature constant with time but changing with location.
  */
-class TemperatureHandler: public ITemperatureHandler {
+class TemperatureGradientHandler: public ITemperatureHandler {
 
 private:
 
 	/**
-	 * The temperature in Kelvin
+	 * The surface temperature in Kelvin
 	 */
-	double temperature;
+	double surfaceTemperature;
+
+	/**
+	 * The temperature gradient
+	 */
+	double gradient;
 
 	/**
 	 * The default constructor is private because the TemperatureHandler
 	 * must be initialized with a temperature
 	 */
-	TemperatureHandler() :
-		temperature(0.0) {}
+	TemperatureGradientHandler() :
+		surfaceTemperature(0.0), gradient(0.0) {}
 
 public:
 
 	/**
 	 * The constructor
 	 *
-	 * @param constTemperature the temperature
+	 * @param temp The surface temperature
+	 * @param grad The temperature gradient
 	 */
-	TemperatureHandler(double constTemperature) :
-		temperature(constTemperature) {}
+	TemperatureGradientHandler(double temp, double grad) :
+		surfaceTemperature(temp), gradient(grad) {}
 
 	/**
 	 * The destructor.
 	 */
-	virtual ~TemperatureHandler() {}
+	virtual ~TemperatureGradientHandler() {}
 
 	/**
 	 * This operation reads in the time and temperature data from the input
@@ -54,9 +60,9 @@ public:
 	 * @return The temperature
 	 */
 	virtual double getTemperature(const std::vector<double>& position,
-			double) const {return temperature;}
+			double) const {return surfaceTemperature - position[0] * gradient;}
 
-}; //end class TemperatureHandler
+}; //end class TemperatureGradientHandler
 
 }
 
