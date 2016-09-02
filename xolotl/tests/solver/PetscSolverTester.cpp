@@ -47,7 +47,8 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 	// Create the parameter file
 	std::ofstream paramFile("params.txt");
 	paramFile << "vizHandler=dummy" << std::endl
-			<< "petscArgs=-fieldsplit_0_pc_type redundant "
+			<< "petscArgs=-ts_exact_final_time stepover "
+					"-fieldsplit_0_pc_type redundant "
 					"-ts_max_snes_failures 200 "
 					"-pc_fieldsplit_detect_coupling "
 					"-ts_adapt_dt_max 10 "
@@ -154,7 +155,8 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 	// Create the parameter file
 	std::ofstream paramFile("params.txt");
 	paramFile << "vizHandler=dummy" << std::endl
-			<< "petscArgs=-fieldsplit_0_pc_type redundant "
+			<< "petscArgs=-ts_exact_final_time stepover "
+					"-fieldsplit_0_pc_type redundant "
 					"-ts_max_snes_failures 200 "
 					"-pc_fieldsplit_detect_coupling "
 					"-ts_adapt_dt_max 10 "
@@ -261,7 +263,8 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 	// Create the parameter file
 	std::ofstream paramFile("params.txt");
 	paramFile << "vizHandler=dummy" << std::endl
-			<< "petscArgs=-fieldsplit_0_pc_type redundant "
+			<< "petscArgs=-ts_exact_final_time stepover "
+					"-fieldsplit_0_pc_type redundant "
 					"-ts_max_snes_failures 200 "
 					"-pc_fieldsplit_detect_coupling "
 					"-ts_adapt_dt_max 10 "
