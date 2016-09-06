@@ -30,6 +30,7 @@ public:
 		heSectionWidth = 1;
 		vSectionWidth = 1;
 		handlerRegistry = registry;
+		dummyReactions = false;
 
 		return;
 	}
@@ -48,7 +49,6 @@ public:
 	 * @return The reaction network.
 	 */
 	std::shared_ptr<PSIClusterReactionNetwork> load();
-
 };
 
 } /* namespace xolotlCore */

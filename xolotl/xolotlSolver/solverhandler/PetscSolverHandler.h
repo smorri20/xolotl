@@ -3,6 +3,7 @@
 
 // Includes
 #include "SolverHandler.h"
+#include <unordered_map>
 
 namespace xolotlSolver {
 
@@ -49,7 +50,7 @@ protected:
 	 * A pointer to all of the reactants in the network. It is retrieved from the
 	 * network after it is set.
 	 */
-	std::shared_ptr<std::vector<xolotlCore::Reactant *>> allReactants;
+	std::shared_ptr<std::vector<xolotlCore::IReactant *>> allReactants;
 
 	/**
 	 * A vector for holding the partial derivatives of one cluster. It is sized in

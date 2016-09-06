@@ -19,7 +19,7 @@ std::vector<double> vMomentumPartials;
 
 SuperCluster::SuperCluster(double numHe, double numV, int nTot, int heWidth,
 		int vWidth, double radius, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(1, registry), numHe(numHe), numV(numV), nTot(nTot), l0(0.0), l1He(
+		PSICluster(registry), numHe(numHe), numV(numV), nTot(nTot), l0(0.0), l1He(
 				0.0), l1V(0.0), dispersionHe(0.0), dispersionV(0.0) {
 	// Set the cluster size as the sum of
 	// the number of Helium and Vacancies
@@ -51,7 +51,7 @@ SuperCluster::SuperCluster(double numHe, double numV, int nTot, int heWidth,
 	return;
 }
 
-SuperCluster::SuperCluster(const SuperCluster &other) :
+SuperCluster::SuperCluster(SuperCluster &other) :
 		PSICluster(other) {
 	numHe = other.numHe;
 	numV = other.numV;
@@ -79,8 +79,8 @@ SuperCluster::SuperCluster(const SuperCluster &other) :
 	return;
 }
 
-std::shared_ptr<Reactant> SuperCluster::clone() {
-	std::shared_ptr<Reactant> reactant(new SuperCluster(*this));
+std::shared_ptr<IReactant> SuperCluster::clone() {
+	std::shared_ptr<IReactant> reactant(new SuperCluster(*this));
 
 	return reactant;
 }

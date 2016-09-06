@@ -36,9 +36,6 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	shared_ptr<ReactionNetwork> network = getSimpleReactionNetwork();
 	auto props = network->getProperties();
 
-	// Prevent dissociation from being added to the connectivity array
-	props["dissociationsEnabled"] = "false";
-
 	// Check the reaction connectivity of the 6th He reactant (numHe=6)
 	// Get the connectivity array from the reactant
 	auto reactant = (PSICluster *) network->get("He", 6);
@@ -127,6 +124,7 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 
 	// Get an He cluster with composition 1,0,0.
 	auto cluster = (PSICluster *) network->get("He", 1);
+
 	// Set the diffusion factor and migration energy based on the
 	// values from the tungsten benchmark for this problem.
 	cluster->setDiffusionFactor(2.950E+10);

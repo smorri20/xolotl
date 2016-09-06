@@ -3,7 +3,7 @@
 
 // Includes
 #include <PSICluster.h>
-#include <PSIClusterReactionNetwork.h>
+#include <IReactionNetwork.h>
 #include <IAdvectionHandler.h>
 #include <memory>
 
@@ -31,7 +31,7 @@ public:
 	 * @param ofill The pointer to the array that will contain the value 1 at the indices
 	 * of the diffusing clusters
 	 */
-	virtual void initializeOFill(PSIClusterReactionNetwork *network,
+	virtual void initializeOFill(IReactionNetwork *network,
 			int *ofill) = 0;
 
 	/**
@@ -67,7 +67,7 @@ public:
 	 * @param sz The space parameter, depending on the grid step size in the z direction
 	 * @param iz The position on the z grid
 	 */
-	virtual void computeDiffusion(PSIClusterReactionNetwork *network,
+	virtual void computeDiffusion(IReactionNetwork *network,
 			double **concVector, double *updatedConcOffset,
 			double hxLeft, double hxRight, int ix,
 			double sy = 0.0, int iy = 0, double sz = 0.0, int iz = 0) = 0;
@@ -90,7 +90,7 @@ public:
 	 * @param sz The space parameter, depending on the grid step size in the z direction
 	 * @param iz The position on the z grid
 	 */
-	virtual void computePartialsForDiffusion(PSIClusterReactionNetwork *network,
+	virtual void computePartialsForDiffusion(IReactionNetwork *network,
 			double *val, int *indices, double hxLeft, double hxRight, int ix,
 			double sy = 0.0, int iy = 0, double sz = 0.0, int iz = 0) = 0;
 

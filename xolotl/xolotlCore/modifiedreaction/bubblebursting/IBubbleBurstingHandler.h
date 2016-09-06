@@ -3,7 +3,7 @@
 
 // Includes
 #include <PSICluster.h>
-#include <PSIClusterReactionNetwork.h>
+#include <IReactionNetwork.h>
 #include <memory>
 
 namespace xolotlCore {
@@ -33,7 +33,7 @@ public:
 	 * @param network The network
 	 * @param grid The grid on the x axis
 	 */
-	virtual void initialize(int surfacePos, PSIClusterReactionNetwork *network,
+	virtual void initialize(int surfacePos, IReactionNetwork *network,
 			std::vector<double> grid) = 0;
 
 	/**
@@ -43,7 +43,7 @@ public:
 	 * @param network The network
 	 * @param grid The grid on the x axis
 	 */
-	virtual void initializeIndex(int surfacePos, PSIClusterReactionNetwork *network,
+	virtual void initializeIndex(int surfacePos, IReactionNetwork *network,
 			std::vector<double> grid) = 0;
 
 	/**
@@ -52,7 +52,7 @@ public:
 	 *
 	 * @param network The network
 	 */
-	virtual void updateBurstingRate(PSIClusterReactionNetwork *network) = 0;
+	virtual void updateBurstingRate(IReactionNetwork *network) = 0;
 
 	/**
 	 * Compute the flux due to the bubble bursting for all the cluster,
@@ -64,8 +64,8 @@ public:
 	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
 	 * point where the bursting is computed used to find the next solution
 	 */
-	virtual void computeBursting(PSIClusterReactionNetwork *network, int xi,
-			double *updatedConcOffset) = 0;
+	virtual void computeBursting(IReactionNetwork *network,
+			int xi, double *updatedConcOffset) = 0;
 
 	/**
 	 * Compute the partials due to the bubble bursting for all the clusters given
@@ -81,7 +81,7 @@ public:
 	 *
 	 * @return The number of bubbles that can burst at this grid point
 	 */
-	virtual int computePartialsForBursting(PSIClusterReactionNetwork *network,
+	virtual int computePartialsForBursting(IReactionNetwork *network,
 			double *val, int *indices, int xi) = 0;
 
 	/**
@@ -94,7 +94,7 @@ public:
 	 *
 	 * @return The number of bubbles that can burst at this grid point
 	 */
-	virtual int getNBursting(PSIClusterReactionNetwork *network,
+	virtual int getNBursting(IReactionNetwork *network,
 			int xi) = 0;
 
 };

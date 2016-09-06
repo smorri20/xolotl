@@ -1,5 +1,6 @@
 // Includes
 #include "Diffusion1DHandler.h"
+#include <iostream>
 
 namespace xolotlCore {
 
@@ -58,7 +59,7 @@ void Diffusion1DHandler::initializeDiffusionGrid(std::vector<IAdvectionHandler *
 	return;
 }
 
-void Diffusion1DHandler::computeDiffusion(PSIClusterReactionNetwork *network,
+void Diffusion1DHandler::computeDiffusion(IReactionNetwork *network,
 		double **concVector, double *updatedConcOffset,
 		double hxLeft, double hxRight, int ix,
 		double, int, double, int) {
@@ -92,7 +93,7 @@ void Diffusion1DHandler::computeDiffusion(PSIClusterReactionNetwork *network,
 }
 
 void Diffusion1DHandler::computePartialsForDiffusion(
-		PSIClusterReactionNetwork *network,
+		IReactionNetwork *network,
 		double *val, int *indices, double hxLeft, double hxRight, int ix,
 		double, int, double, int) {
 	// Get all the reactants

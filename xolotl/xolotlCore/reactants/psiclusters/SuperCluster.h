@@ -206,8 +206,7 @@ private:
 	 * initialized with a size.
 	 */
 	SuperCluster() :
-		PSICluster(1)
-	{ numHe = 1.0; numV = 1.0; }
+		PSICluster() {}
 
 	/**
 	 * Group the same reactions together.
@@ -239,7 +238,7 @@ public:
 	 *
 	 * @param other the reactant to be copied
 	 */
-	SuperCluster(const SuperCluster &other);
+	SuperCluster(SuperCluster &other);
 
 	//! Destructor
 	~SuperCluster() {}
@@ -250,7 +249,7 @@ public:
 	 *
 	 * @return A copy of this reactant
 	 */
-	virtual std::shared_ptr<Reactant> clone();
+	virtual std::shared_ptr<IReactant> clone();
 
 	/**
 	 * This operation returns true to signify that this cluster is a mixture of

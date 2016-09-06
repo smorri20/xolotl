@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_SUITE (PSICluster_testSuite)
 /** This operation checks the loader. */
 BOOST_AUTO_TEST_CASE(checkDiffusionCoefficient) {
 	// Local Declarations
-	PSICluster cluster(1, registry);
+	PSICluster cluster(registry);
 
 	// Check E_m = 0.0
 	cluster.setMigrationEnergy(0.0);
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(checkDiffusionCoefficient) {
  */
 BOOST_AUTO_TEST_CASE(checkCopying) {
 	// Local Declarations
-	PSICluster cluster(1, registry);
+	PSICluster cluster(registry);
 	cluster.setDiffusionFactor(1.0);
 	cluster.setMigrationEnergy(2.0);
 
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(checkCopying) {
  */
 BOOST_AUTO_TEST_CASE(checkDefaultFluxes) {
 	// Local Declarations
-	PSICluster cluster(1, registry);
+	PSICluster cluster(registry);
 
 	// Check the default values of the fluxes
 	BOOST_REQUIRE_CLOSE(cluster.getProductionFlux(), 0.0, 1e-5);
@@ -129,6 +129,7 @@ BOOST_AUTO_TEST_CASE(checkDefaultFluxes) {
 	BOOST_REQUIRE_CLOSE(cluster.getDissociationFlux(), 0.0, 1e-5);
 	BOOST_REQUIRE_CLOSE(cluster.getTotalFlux(), 0.0, 1e-5);
 
+	return;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -45,8 +45,6 @@ std::shared_ptr<PSICluster> PSIClusterNetworkLoader::createCluster(int numHe,
 	if (numHe > 0 && numV > 0) {
 		// Create a new HeVCluster
 		cluster = std::make_shared<HeVCluster>(numHe, numV, handlerRegistry);
-
-		clusters.push_back(cluster);
 	}
 	else if (numHe > 0 && numI > 0) {
 		throw std::string("HeliumInterstitialCluster is not yet implemented.");
@@ -55,21 +53,14 @@ std::shared_ptr<PSICluster> PSIClusterNetworkLoader::createCluster(int numHe,
 	else if (numHe > 0) {
 		// Create a new HeCluster
 		cluster = std::make_shared<HeCluster>(numHe, handlerRegistry);
-
-		clusters.push_back(cluster);
 	}
 	else if (numV > 0) {
 		// Create a new VCluster
 		cluster = std::make_shared<VCluster>(numV, handlerRegistry);
-
-		clusters.push_back(cluster);
 	}
 	else if (numI > 0) {
 		// Create a new ICluster
 		cluster = std::make_shared<InterstitialCluster>(numI, handlerRegistry);
-
-		// Add it to the ICluster list
-		clusters.push_back(cluster);
 	}
 
 	return cluster;
@@ -150,8 +141,11 @@ std::shared_ptr<PSIClusterReactionNetwork> PSIClusterNetworkLoader::load() {
 		}
 	}
 
-	// Apply sectional grouping
-	applySectionalGrouping(network);
+	// Check if we want dummy reactions
+	if (!dummyReactions) {
+		// Apply sectional grouping
+		applySectionalGrouping(network);
+	}
 
 	return network;
 }
@@ -214,7 +208,6 @@ void PSIClusterNetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterR
 		superCluster->setHeVVector(tempVector);
 		// Add this cluster to the network and clusters
 		network->addSuper(superCluster);
-		clusters.push_back(superCluster);
 		// Keep the information of the group
 		superGroupMap[std::make_pair(-1, k)] = superCluster.get();
 
@@ -349,7 +342,6 @@ void PSIClusterNetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterR
 			superCluster->setHeVVector(tempVector);
 			// Add this cluster to the network and clusters
 			network->addSuper(superCluster);
-			clusters.push_back(superCluster);
 			// Keep the information of the group
 			superGroupMap[std::make_pair(j, k)] = superCluster.get();
 
@@ -366,8 +358,6 @@ void PSIClusterNetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterR
 	SuperCluster * newCluster;
 	// Loop on all the reactants to update the pairs vector with super clusters
 	auto reactants = network->getAll();
-	// Get the super cluster map
-	auto superMap = network->getAll(superType);
 	for (int i = 0; i < reactants->size(); i++) {
 		// Get the cluster
 		cluster = (PSICluster *) reactants->at(i);
@@ -501,6 +491,8 @@ void PSIClusterNetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterR
 		cluster->emissionPairs = emi;
 	}
 
+	// Get the super cluster map
+	auto superMap = network->getAll(superType);
 	// Set the reaction network for each super reactant
 	for (auto reactantsIt = superMap.begin(); reactantsIt != superMap.end();
 			++reactantsIt) {

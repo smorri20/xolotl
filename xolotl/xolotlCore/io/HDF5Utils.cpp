@@ -1,4 +1,5 @@
 #include "HDF5Utils.h"
+#include <PSICluster.h>
 #include <iostream>
 #include <sstream>
 #include <hdf5.h>

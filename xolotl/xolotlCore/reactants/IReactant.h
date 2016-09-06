@@ -1,16 +1,15 @@
-#ifndef REACTANT_H
-#define REACTANT_H
+#ifndef IREACTANT_H
+#define IREACTANT_H
 
 // Includes
-#include "IReactant.h"
-#include <set>
-
-namespace xolotlPerf {
-class IHandlerRegistry;
-class IEventCounter;
-}
+#include "IReactionNetwork.h"
+#include <memory>
+#include <vector>
+#include <map>
 
 namespace xolotlCore {
+
+class IReactionNetwork;
 
 /**
  * A reactant is a general reacting body in a reaction network. It represents
@@ -26,166 +25,19 @@ namespace xolotlCore {
  * manipulating the concentration, etc. It should be subclassed to add
  * functionality for calculate fluxes and computing connectivity.
  */
-class Reactant : public IReactant {
-
-protected:
-
-	/**
-	 * The total concentration of this reactant.
-	 */
-	double concentration;
-
-	/**
-	 * The name of this reactant.
-	 */
-	std::string name;
-
-	/**
-	 * The type name of the reactant.
-	 */
-	std::string typeName;
-
-	/**
-	 * An integer identification number for this reactant.
-	 */
-	int id;
-
-	/**
-	 * An integer identification number for this reactant helium momentum.
-	 */
-	int heMomId;
-
-	/**
-	 * An integer identification number for this reactant vacancy momentum.
-	 */
-	int vMomId;
-
-	/**
-	 * The temperature at which the cluster currently exists. The diffusion
-	 * coefficient is recomputed each time the temperature is changed.
-	 */
-	double temperature;
-
-	/**
-	 * The reaction network that includes this reactant.
-	 */
-	std::shared_ptr<IReactionNetwork> network;
-
-	/**
-	 * The map that contains the composition of this cluster.
-	 */
-	std::map<std::string, int> compositionMap;
-
-	/**
-	 * The performance handler registry that will be used with
-	 * this class.
-	 */
-	std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry;
-
-	/**
-	 * The total size of this cluster including the contributions from all
-	 * species.
-	 */
-	int size;
-
-	/**
-	 * The diffusion factor, D_0, that is used to calculate the diffusion
-	 * coefficient for this cluster. The default value is 0 (does not diffuse).
-	 */
-	double diffusionFactor;
-
-	/**
-	 * The diffusion coefficient computed from the diffusion factor using an
-	 * Arrhenius rate equation. It is re-computed every time the temperature is
-	 * updated.
-	 */
-	double diffusionCoefficient;
-
-	/**
-	 * The index/id of this cluster in the reaction network - 1. It is used for
-	 * indexing arrays (thus the -1).
-	 */
-	int thisNetworkIndex;
-
-	/**
-	 * The formation energy of this cluster. It will be used to compute the
-	 * binding energies appearing in the dissociation constant calculation.
-	 */
-	double formationEnergy;
-
-	/**
-	 * The migration energy for this cluster.
-	 */
-	double migrationEnergy;
-
-	/**
-	 * The reaction radius of this cluster
-	 */
-	double reactionRadius;
-
-	/**
-	 * The biggest rate for this cluster
-	 */
-	double biggestRate;
-
-	/**
-	 * The row of the reaction connectivity matrix corresponding to
-	 * this PSICluster stored as a set.
-	 *
-	 * If a cluster is involved in a reaction with this PSICluster,
-	 * the cluster id is an element of this set.
-	 */
-	std::set<int> reactionConnectivitySet;
-
-	/**
-	 * The row of the dissociation connectivity matrix corresponding to
-	 * this PSICluster stored as a set.
-	 *
-	 * If this PSICluster can dissociate into a particular cluster,
-	 * the cluster id is an element of this set.
-	 */
-	std::set<int> dissociationConnectivitySet;
-
-	/**
-	 * This operation recomputes the diffusion coefficient. It is called
-	 * whenever the diffusion factor, migration energy or temperature change.
-	 *
-	 * @param temp the temperature
-	 */
-	void recomputeDiffusionCoefficient(double temp);
-
-	/**
-	 * The constructor.
-	 */
-	Reactant();
+class IReactant {
 
 public:
 
 	/**
-	 * The constructor.
-	 *
-	 * @param registry The performance handler registry to use
-	 */
-	Reactant(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
-
-	/**
-	 * The copy constructor. All reactants MUST be deep copied.
-	 *
-	 * @param other The reactant to copy
-	 */
-	Reactant(Reactant &other);
-
-	/**
 	 * The destructor
 	 */
-	virtual ~Reactant() {}
+	virtual ~IReactant() {}
 
 	/**
 	 * Returns a reactant created using the copy constructor
 	 */
-	virtual std::shared_ptr<IReactant> clone() {
-		return std::shared_ptr<IReactant> (new Reactant(*this));
-	}
+	virtual std::shared_ptr<IReactant> clone() = 0;
 
 	/**
 	 * This operation returns the current concentration.
@@ -194,21 +46,7 @@ public:
 	 * @param distV The vacancy distance in the group
 	 * @return The concentration of this reactant
 	 */
-	virtual double getConcentration(double distHe, double distV) const;
-
-	/**
-	 * This operation returns the first helium momentum.
-	 *
-	 * @return The momentum
-	 */
-	virtual double getHeMomentum() const;
-
-	/**
-	 * This operation returns the first vacancy momentum.
-	 *
-	 * @return The momentum
-	 */
-	virtual double getVMomentum() const;
+	virtual double getConcentration(double distHe, double distV) const = 0;
 
 	/**
 	 * This operation sets the concentration of the reactant to the
@@ -216,31 +54,28 @@ public:
 	 *
 	 * @param conc The new concentation
 	 */
-	void setConcentration(double conc);
+	virtual void setConcentration(double conc) = 0;
 
 	/**
-	 * This operation sets the zeroth order momentum. It doesn't do
-	 * anything except for Super clusters
+	 * This operation sets the zeroth order momentum.
 	 *
 	 * @param mom The momentum
 	 */
-	virtual void setZerothMomentum(double mom);
+	virtual void setZerothMomentum(double mom) = 0;
 
 	/**
-	 * This operation sets the first order helium momentum. It doesn't do
-	 * anything except for Super clusters
+	 * This operation sets the first order momentum in the helium direction.
 	 *
 	 * @param mom The momentum
 	 */
-	virtual void setHeMomentum(double mom);
+	virtual void setHeMomentum(double mom) = 0;
 
 	/**
-	 * This operation sets the first order vacancy momentum. It doesn't do
-	 * anything except for Super clusters
+	 * This operation sets the first order momentum in the vacancy direction.
 	 *
 	 * @param mom The momentum
 	 */
-	virtual void setVMomentum(double mom);
+	virtual void setVMomentum(double mom) = 0;
 
 	/**
 	 * This operation returns the total flux of this reactant in the
@@ -249,7 +84,7 @@ public:
 	 * @return The total change in flux for this reactant due to all
 	 * reactions
 	 */
-	virtual double getTotalFlux();
+	virtual double getTotalFlux() = 0;
 
 	/**
 	 * This operation returns the helium moment flux of this cluster in the
@@ -257,7 +92,7 @@ public:
 	 *
 	 * @return The total change in the moment flux
 	 */
-	virtual double getHeMomentFlux() const;
+	virtual double getHeMomentFlux() const = 0;
 
 	/**
 	 * This operation returns the moment vacancy flux of this cluster in the
@@ -265,7 +100,7 @@ public:
 	 *
 	 * @return The total change in the moment flux
 	 */
-	virtual double getVMomentFlux() const;
+	virtual double getVMomentFlux() const = 0;
 
 	/**
 	 * This operation sets the collection of other reactants that make up
@@ -274,7 +109,7 @@ public:
 	 * @param network The reaction network of which this reactant is a part
 	 */
 	virtual void setReactionNetwork(
-			std::shared_ptr<IReactionNetwork> reactionNetwork);
+			std::shared_ptr<IReactionNetwork> reactionNetwork) = 0;
 
 	/**
 	 * Release the reaction network object.
@@ -283,7 +118,7 @@ public:
 	 * by the program, and is done to break dependence cycles that would
 	 * otherwise keep the network and reactant objects from being destroyed.
 	 */
-	void releaseReactionNetwork();
+	virtual void releaseReactionNetwork() = 0;
 
 	/**
 	 * This operation signifies that the reactant with reactant Id should be
@@ -292,7 +127,7 @@ public:
 	 * @param id The integer id of the reactant that is connected
 	 * to this reactant
 	 */
-	void setReactionConnectivity(int id);
+	virtual void setReactionConnectivity(int id) = 0;
 
 	/**
 	 * This operation signifies that the reactant with reactant Id should be
@@ -301,13 +136,13 @@ public:
 	 * @param id The integer id of the reactant that is connected
 	 * to this reactant
 	 */
-	void setDissociationConnectivity(int id);
+	virtual void setDissociationConnectivity(int id) = 0;
 
 	/**
 	 * This operation reset the connectivity sets based on the information
 	 * in the effective production and dissociation vectors.
 	 */
-	virtual void resetConnectivities() {return;}
+	virtual void resetConnectivities() = 0;
 
 	/**
 	 * This operation returns a list that represents the connectivity
@@ -322,7 +157,7 @@ public:
 	 * with the i-th reactant in the ReactionNetwork and a "0" indicates
 	 * that it does not.
 	 */
-	virtual std::vector<int> getConnectivity() const;
+	virtual std::vector<int> getConnectivity() const = 0;
 
 	/**
 	 * This operation returns the list of partial derivatives of this reactant
@@ -334,7 +169,7 @@ public:
 	 * corresponds to the first reactant in the list returned by the
 	 * ReactionNetwork::getAll() operation.
 	 */
-	virtual std::vector<double> getPartialDerivatives() const;
+	virtual std::vector<double> getPartialDerivatives() const = 0;
 
 	/**
 	 * This operation works as getPartialDerivatives above, but instead of
@@ -350,14 +185,14 @@ public:
 	 * the list returned by the ReactionNetwork::getAll() operation. The size of
 	 * the vector should be equal to ReactionNetwork::size().
 	 */
-	virtual void getPartialDerivatives(std::vector<double> & partials) const;
+	virtual void getPartialDerivatives(std::vector<double> & partials) const = 0;
 
 	/**
 	 * This operation returns the name of the reactant.
 	 *
 	 * @return The name
 	 */
-	const std::string getName() const;
+	virtual const std::string getName() const = 0;
 
 	/**
 	 * This operation returns the reactant's type. It is up to subclasses to
@@ -365,7 +200,7 @@ public:
 	 *
 	 * @return The type of this reactant as a string
 	 */
-	std::string getType() const;
+	virtual std::string getType() const = 0;
 
 	/**
 	 * This operation returns the composition of this reactant. This map is empty
@@ -374,7 +209,7 @@ public:
 	 * @return The composition returned as a map with keys naming distinct
 	 * elements and values indicating the amount of the element present.
 	 */
-	virtual const std::map<std::string, int> & getComposition() const;
+	virtual const std::map<std::string, int> & getComposition() const = 0;
 
 	/**
 	 * This operation sets the id of the reactant, The id is zero by default
@@ -383,14 +218,21 @@ public:
 	 *
 	 * @param nId The new id for this reactant
 	 */
-	void setId(int nId);
+	virtual void setId(int nId) = 0;
 
 	/**
 	 * This operation returns the id for this reactant.
 	 *
 	 * @return The id
 	 */
-	int getId() const;
+	virtual int getId() const = 0;
+
+	/**
+	 * This operation returns the helium momentum id for this reactant.
+	 *
+	 * @return The id
+	 */
+	virtual int getHeMomentumId() const = 0;
 
 	/**
 	 * This operation sets the helium momentum id of the reactant, The id is zero by default
@@ -399,21 +241,14 @@ public:
 	 *
 	 * @param nId The new momentum id for this reactant
 	 */
-	void setHeMomentumId(int nId) {heMomId = nId;}
-
-	/**
-	 * This operation returns the helium momentum id for this reactant.
-	 *
-	 * @return The id
-	 */
-	int getHeMomentumId() const {return heMomId;}
+	virtual void setHeMomentumId(int nId) = 0;
 
 	/**
 	 * This operation returns the vacancy momentum id for this reactant.
 	 *
 	 * @return The id
 	 */
-	int getVMomentumId() const {return vMomId;}
+	virtual int getVMomentumId() const = 0;
 
 	/**
 	 * This operation sets the vacancy momentum id of the reactant, The id is zero by default
@@ -422,7 +257,7 @@ public:
 	 *
 	 * @param nId The new momentum id for this reactant
 	 */
-	void setVMomentumId(int nId) {vMomId = nId;}
+	virtual void setVMomentumId(int nId) = 0;
 
 	/**
 	 * This operation sets the temperature at which the reactant currently
@@ -436,16 +271,16 @@ public:
 	 * Subclasses are responsible for implementing their own update
 	 * calculations and for calling setTemperature() in their copy constructors.
 	 *
-	 * @param temp The new cluster temperature
+	 * @param temp The new reactant temperature
 	 */
-	void setTemperature(double temp);
+	virtual void setTemperature(double temp) = 0;
 
 	/**
 	 * This operation returns the temperature at which the reactant currently exists.
 	 *
 	 * @return The temperature.
 	 */
-	double getTemperature() const;
+	virtual double getTemperature() const = 0;
 
 	/**
 	 * This operation returns the total size of the reactant.
@@ -453,21 +288,21 @@ public:
 	 * @return The total size of this reactant including the contributions
 	 * from all species types
 	 */
-	int getSize() const;
+	virtual int getSize() const = 0;
 
 	/**
 	 * This operation retrieves the formation energy for this reactant.
 	 *
 	 * @return The value of the formation energy
 	 */
-	double getFormationEnergy() const;
+	virtual double getFormationEnergy() const = 0;
 
 	/**
 	 * This operation sets the formation energy for this reactant.
 	 *
 	 * @param energy The formation energy
 	 */
-	void setFormationEnergy(double energy);
+	virtual void setFormationEnergy(double energy) = 0;
 
 	/**
 	 * This operation retrieves the diffusion factor, D_0, that is used to
@@ -475,7 +310,7 @@ public:
 	 *
 	 * @return The diffusion factor of this reactant
 	 */
-	double getDiffusionFactor() const;
+	virtual double getDiffusionFactor() const = 0;
 
 	/**
 	 * This operation sets the diffusion factor, D_0, that is used to calculate
@@ -483,7 +318,7 @@ public:
 	 *
 	 * @param factor The diffusion factor
 	 */
-	void setDiffusionFactor(const double factor);
+	virtual void setDiffusionFactor(const double factor) = 0;
 
 	/**
 	 * This operation returns the diffusion coefficient for this reactant and is
@@ -491,21 +326,21 @@ public:
 	 *
 	 * @return The diffusion coefficient
 	 */
-	double getDiffusionCoefficient() const;
+	virtual double getDiffusionCoefficient() const = 0;
 
 	/**
 	 * This operation sets the migration energy for this reactant.
 	 *
 	 * @param energy The migration energy
 	 */
-	void setMigrationEnergy(const double energy);
+	virtual void setMigrationEnergy(const double energy) = 0;
 
 	/**
 	 * This operation retrieves the migration energy for this reactant.
 	 *
 	 * @return the migration energy
 	 */
-	double getMigrationEnergy() const;
+	virtual double getMigrationEnergy() const = 0;
 
 	/**
 	 * This operation returns the reaction radius for the
@@ -513,7 +348,7 @@ public:
 	 *
 	 * @return The reaction radius
 	 */
-	double getReactionRadius() const;
+	virtual double getReactionRadius() const = 0;
 
 	/**
 	 * This operation returns the biggest rate for this
@@ -521,7 +356,7 @@ public:
 	 *
 	 * @return The biggest rate
 	 */
-	double getBiggestRate() const;
+	virtual double getBiggestRate() const = 0;
 
 	/**
 	 * This operation returns the sum of combination rate and emission rate
@@ -532,28 +367,29 @@ public:
 	 *
 	 * @return The rate
 	 */
-	virtual double getLeftSideRate() const {return 0.0;}
+	virtual double getLeftSideRate() const = 0;
 
 	/**
 	 * Calculate all the rate constants for the reactions and dissociations in which this
 	 * reactant is taking part.
 	 */
-	virtual void computeRateConstants() {return;}
+	virtual void computeRateConstants() = 0;
 
 	/**
 	 * Calculate all the rate constants for the reactions and dissociations in which this
 	 * cluster is taking part. Store these values in the kConstant field of ClusterPair
 	 * or CombiningCluster. Need to be called only when the temperature changes.
 	 */
-	virtual void updateRateConstants() {return;}
+	virtual void updateRateConstants() = 0;
 
 	/**
 	 * This operation returns true if the cluster is a mixed-species or compound
 	 * cluster and false if it is a single species cluster.
 	 */
-	virtual bool isMixed() const {return false;}
+	virtual bool isMixed() const = 0;
 
 };
 
 } // end namespace xolotlCore
+
 #endif

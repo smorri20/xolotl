@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(checkIO) {
 	loader.setFilename(filename);
 
 	// Load the network
-	auto network = (PSIClusterReactionNetwork *) loader.load().get();
+	auto network = loader.load().get();
 
 	// Get the size of the network
 	int networkSize = network->size();

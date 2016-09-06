@@ -6,11 +6,13 @@
 #include <CvsXDataProvider.h>
 #include <CvsXYDataProvider.h>
 #include <LabelProvider.h>
+#include <Constants.h>
 #include <petscts.h>
 #include <petscsys.h>
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <memory>
 #include <HDF5Utils.h>
@@ -661,7 +663,7 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 
 		// Get the iCluster cluster to have access to its name
 		auto reactants = network->getAll();
-		auto cluster = (PSICluster *) reactants->at(iCluster);
+		auto cluster = reactants->at(iCluster);
 
 		// Change the title of the plot and the name of the data
 		std::stringstream title;
@@ -821,7 +823,7 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 		auto reactants = network->getAll();
 
 		for (int i = 0; i < loopSize; i++) {
-			auto cluster = (PSICluster *) reactants->at(i);
+			auto cluster = reactants->at(i);
 			// Get the data provider and give it the points
 			auto thePoints = std::make_shared<std::vector<xolotlViz::Point> >(
 					myPoints[i]);
@@ -915,8 +917,7 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 	auto grid = solverHandler->getXGrid();
 
 	// Get the maximum size of HeV clusters
-	auto psiNetwork = (PSIClusterReactionNetwork *) network;
-	std::map<std::string, std::string> props = psiNetwork->getProperties();
+	std::map<std::string, std::string> props = network->getProperties();
 	int maxHeVClusterSize = std::stoi(props["maxHeVClusterSize"]);
 	int maxVClusterSize = std::stoi(props["maxVClusterSize"]);
 
@@ -933,7 +934,7 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 		gridPointSolution = solutionArray[xi];
 
 		// A pointer for the clusters used below
-		PSICluster * cluster;
+		IReactant * cluster;
 
 		// Loop on Y = V number
 		for (int i = 0; i <= maxVClusterSize; i++) {
@@ -942,7 +943,7 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 				double conc = 0.0;
 				// V clusters
 				if (j == 0) {
-					cluster = (PSICluster *) network->get("V",
+					cluster = network->get("V",
 							i);
 					if (cluster) {
 						// Get the ID of the cluster
@@ -955,7 +956,7 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 				}
 				// He clusters
 				else if (i == 0) {
-					cluster = (PSICluster *) network->get(
+					cluster = network->get(
 							"He", j);
 					if (cluster) {
 						// Get the ID of the cluster
@@ -969,7 +970,7 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 				// HeV clusters
 				else {
 					cluster =
-							(PSICluster *) network->getCompound(
+							network->getCompound(
 									"HeV", { j, i, 0 });
 					if (cluster) {
 						// Get the ID of the cluster
@@ -1190,16 +1191,15 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 	auto network = solverHandler->getNetwork();
 
 	// Get the maximum size of HeV clusters
-	auto psiNetwork = (PSIClusterReactionNetwork *) network;
-	std::map<std::string, std::string> props = psiNetwork->getProperties();
+	std::map<std::string, std::string> props = network->getProperties();
 	int maxHeVClusterSize = std::stoi(props["maxHeVClusterSize"]);
 	// Get the maximum size of V clusters
 	int maxVClusterSize = std::stoi(props["maxVClusterSize"]);
 	// Get the number of He in the max HeV cluster
 	int maxHeSize = (maxHeVClusterSize - maxVClusterSize);
 	// Get the maximum stable HeV cluster
-	PSICluster * maxHeV;
-	maxHeV = (PSICluster *) network->getCompound(
+	IReactant * maxHeV;
+	maxHeV = network->getCompound(
 			"HeV", { maxHeSize, maxVClusterSize, 0 });
 
 	// Boolean to know if the concentration is too big
@@ -1230,7 +1230,7 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 		if (tooBig) {
 			std::cout << std::endl;
 			std::cout << "At time step: " << timestep << " and time: " << time
-					<< " the biggest cluster: " << *maxHeV
+					<< " the biggest cluster: " << maxHeV->getName()
 					<< " reached a concentration above 1.0e-16 at at least one grid point."
 					<< std::endl << std::endl;
 
@@ -1320,7 +1320,7 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt, PetscReal time,
 		// Loop on them
 		for (unsigned int i = 0; i < interstitials.size(); i++) {
 			// Get the cluster
-			auto cluster = (PSICluster *) interstitials.at(i);
+			auto cluster = interstitials.at(i);
 			// Get its id and concentration
 			int id = cluster->getId() - 1;
 			double conc = gridPointSolution[id];
@@ -1643,7 +1643,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 		// Loop on the helium clusters
 		for (unsigned int i = 0; i < heClusters.size(); i++) {
-			auto cluster = (PSICluster *) heClusters[i];
+			auto cluster = heClusters[i];
 			int id = cluster->getId() - 1;
 			// Add the Id to the vector
 			heIndices1D.push_back(id);
@@ -1655,7 +1655,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 		// Loop on the helium-vacancy clusters
 		for (unsigned int i = 0; i < heVClusters.size(); i++) {
-			auto cluster = (PSICluster *) heVClusters[i];
+			auto cluster = heVClusters[i];
 			int id = cluster->getId() - 1;
 			// Add the Id to the vector
 			heIndices1D.push_back(id);
@@ -1668,7 +1668,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 		// Loop on the vacancy clusters
 		for (int i = 0; i < vClusters.size(); i++) {
-			auto cluster = (PSICluster *) vClusters[i];
+			auto cluster = vClusters[i];
 			int id = cluster->getId() - 1;
 			// Add the Id to the vector
 			heIndices1D.push_back(id);

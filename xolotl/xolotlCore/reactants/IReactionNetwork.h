@@ -1,95 +1,28 @@
-#ifndef REACTION_NETWORK_H
-#define REACTION_NETWORK_H
+#ifndef IREACTIONNETWORK_H
+#define IREACTIONNETWORK_H
 
-// Includes
-#include "IReactionNetwork.h"
-
-namespace xolotlPerf {
-class IHandlerRegistry;
-class IEventCounter;
-}
+#include "IReactant.h"
+#include <string>
+#include <vector>
+#include <map>
 
 namespace xolotlCore {
+
+class IReactant;
 
 /**
  *  This class manages the set of reactants and compound reactants
  *  (combinations of normal reactants). It also manages a set of properties
  *  that describe both.
  */
-class ReactionNetwork : public IReactionNetwork {
-
-protected:
-
-	/**
-	 * The properties of this network. The exact configuration of the map is
-	 * specified by the class that loaded the network.
-	 */
-	std::shared_ptr<std::map<std::string, std::string>> properties;
-
-	/**
-	 * The performance handler registry that will be used with
-	 * this class.
-	 */
-	std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry;
-
-	/**
-	 * Counter for the number of times the network concentration is updated.
-	 */
-	std::shared_ptr<xolotlPerf::IEventCounter> concUpdateCounter;
-
-	/**
-	 * The list of all of the reactants in the network. This list is filled and
-	 * maintained by the getAll() operation.
-	 */
-	std::shared_ptr< std::vector<IReactant *> > allReactants;
-
-	/**
-	 * The current temperature at which the network's clusters exist.
-	 */
-	double temperature;
-
-	/**
-	 * The size of the network. It is also used to set the id of new reactants
-	 * that are added to the network.
-	 */
-	int networkSize;
-
-	/**
-	 * The names of the reactants supported by this network.
-	 */
-	std::vector<std::string> names;
-
-	/**
-	 * The names of the compound reactants supported by this network.
-	 */
-	std::vector<std::string> compoundNames;
-
-	/**
-	 * The default constructor. It initializes the properties map and reactants vector.
-	 */
-	ReactionNetwork();
+class IReactionNetwork {
 
 public:
 
 	/**
-	 * The constructor that takes the performance handler registry.
-	 * It initializes the properties map and reactants vector.
-	 *
-	 * @param registry The performance handler registry
-	 */
-	ReactionNetwork(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
-
-	/**
-	 * The copy constructor.
-	 *
-	 * @param other The ReactionNetwork to copy
-	 */
-	ReactionNetwork(const ReactionNetwork &other);
-
-	/**
 	 * The destructor.
 	 */
-	virtual ~ReactionNetwork() {
+	virtual ~IReactionNetwork() {
 	}
 
 	/**
@@ -100,14 +33,14 @@ public:
 	 *
 	 * @param temp The new temperature
 	 */
-	virtual void setTemperature(double temp);
+	virtual void setTemperature(double temp) = 0;
 
 	/**
 	 * This operation returns the temperature at which the cluster currently exists.
 	 *
 	 * @return The temperature
 	 */
-	virtual double getTemperature() const;
+	virtual double getTemperature() const = 0;
 
 	/**
 	 * This operation returns a reactant with the given type and size if it
@@ -117,7 +50,7 @@ public:
 	 * @param size The size of the reactant
 	 * @return A pointer to the reactant
 	 */
-	virtual IReactant * get(const std::string& type, const int size) const;
+	virtual IReactant * get(const std::string& type, const int size) const = 0;
 
 	/**
 	 * This operation returns a compound reactant with the given type and size if it
@@ -128,7 +61,7 @@ public:
 	 * @return A pointer to the compound reactant
 	 */
 	virtual IReactant * getCompound(const std::string& type,
-			const std::vector<int>& sizes) const;
+			const std::vector<int>& sizes) const = 0;
 
 	/**
 	 * This operation returns all reactants in the network without regard for
@@ -137,7 +70,7 @@ public:
 	 *
 	 * @return The list of all of the reactants in the network
 	 */
-	virtual const std::shared_ptr<std::vector<IReactant *>> & getAll() const;
+	virtual const std::shared_ptr<std::vector<IReactant *>> & getAll() const = 0;
 
 	/**
 	 * This operation returns all reactants in the network with the given type.
@@ -148,7 +81,7 @@ public:
 	 * @return The list of all of the reactants in the network or null if the
 	 * type is invalid
 	 */
-	virtual std::vector<IReactant *> getAll(const std::string& type) const;
+	virtual std::vector<IReactant *> getAll(const std::string& type) const = 0;
 
 	/**
 	 * This operation adds a reactant or a compound reactant to the network.
@@ -159,7 +92,13 @@ public:
 	 *
 	 * @param reactant The reactant that should be added to the network
 	 */
-	virtual void add(std::shared_ptr<IReactant> reactant) {return;}
+	virtual void add(std::shared_ptr<IReactant> reactant) = 0;
+
+	/**
+	 * This method redefines the connectivities for each cluster in the
+	 * allReactans vector.
+	 */
+	virtual void reinitializeConnectivities() = 0;
 
 	/**
 	 * This operation returns the names of the reactants in the network.
@@ -167,7 +106,7 @@ public:
 	 * @return A vector with one entry for each of the distinct reactant types
 	 * in the network
 	 */
-	const std::vector<std::string> & getNames() const;
+	virtual const std::vector<std::string> & getNames() const = 0;
 
 	/**
 	 * This operation returns the names of the compound reactants in the
@@ -176,7 +115,7 @@ public:
 	 * @return A vector with one each for each of the distinct compound
 	 * reactant types in the network
 	 */
-	const std::vector<std::string> & getCompoundNames() const;
+	virtual const std::vector<std::string> & getCompoundNames() const = 0;
 
 	/**
 	 * This operation returns a map of the properties of this reaction network.
@@ -184,7 +123,7 @@ public:
 	 * @return The map of properties that has been configured for this
 	 * ReactionNetwork.
 	 */
-	const std::map<std::string, std::string> & getProperties();
+	virtual const std::map<std::string, std::string> & getProperties() = 0;
 
 	/**
 	 * This operation sets a property with the given key to the specified value
@@ -196,14 +135,14 @@ public:
 	 * @param value The value to which the key should be set
 	 */
 	virtual void setProperty(const std::string& key,
-			const std::string& value) {return;}
+			const std::string& value) = 0;
 
 	/**
 	 * This operation returns the size or number of reactants in the network.
 	 *
 	 * @return The number of reactants in the network
 	 */
-	int size();
+	virtual int size() = 0;
 
 	/**
 	 * This operation fills an array of doubles with the concentrations of all
@@ -214,7 +153,7 @@ public:
 	 * array. If the array is too small to hold the concentrations, SIGSEGV will
 	 * be thrown.
 	 */
-	void fillConcentrationsArray(double * concentrations);
+	virtual void fillConcentrationsArray(double * concentrations) = 0;
 
 	/**
 	 * This operation updates the concentrations for all reactants in the
@@ -225,7 +164,7 @@ public:
 	 * array. Properly aligning the array in memory so that this operation
 	 * does not overrun is up to the caller.
 	 */
-	void updateConcentrationsFromArray(double * concentrations);
+	virtual void updateConcentrationsFromArray(double * concentrations) = 0;
 
 	/**
 	 * Request that all reactants in the network release their
@@ -241,7 +180,7 @@ public:
 	 * object it owns will never be destroyed.  (Hence, the
 	 * reactant objects will also never be destroyed.)
 	 */
-	void askReactantsToReleaseNetwork();
+	virtual void askReactantsToReleaseNetwork() = 0;
 
 };
 

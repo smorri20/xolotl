@@ -6,11 +6,13 @@
 #include <CvsXDataProvider.h>
 #include <CvsXYDataProvider.h>
 #include <LabelProvider.h>
+#include <Constants.h>
 #include <petscts.h>
 #include <petscsys.h>
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <memory>
 #include <HDF5Utils.h>
@@ -429,7 +431,7 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 
 		// Get the iCluster cluster to have access to its name
 		auto reactants = network->getAll();
-		auto cluster = (PSICluster *) reactants->at(iCluster);
+		auto cluster = reactants->at(iCluster);
 
 		// Change the title of the plot and the name of the data
 		std::stringstream title;
@@ -563,7 +565,7 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 
 		// Get the iCluster cluster to have access to its name
 		auto reactants = network->getAll();
-		auto cluster = (PSICluster *) reactants->at(iCluster);
+		auto cluster = reactants->at(iCluster);
 
 		// Change the title of the plot and the name of the data
 		std::stringstream title;
@@ -686,7 +688,7 @@ PetscErrorCode monitorInterstitial3D(TS ts, PetscInt timestep, PetscReal time,
 				// Loop on all the interstitial clusters
 				for (int i = 0; i < interstitials.size(); i++) {
 					// Get the cluster
-					auto cluster = (PSICluster *) interstitials.at(i);
+					auto cluster = interstitials.at(i);
 					// Get its id and concentration
 					int id = cluster->getId() - 1;
 					double conc = gridPointSolution[id];
@@ -926,7 +928,7 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 
 		// Loop on the helium clusters
 		for (unsigned int i = 0; i < heClusters.size(); i++) {
-			auto cluster = (PSICluster *) heClusters[i];
+			auto cluster = heClusters[i];
 			int id = cluster->getId() - 1;
 			// Add the Id to the vector
 			heIndices3D.push_back(id);
@@ -936,7 +938,7 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 
 		// Loop on the helium-vacancy clusters
 		for (unsigned int i = 0; i < heVClusters.size(); i++) {
-			auto cluster = (PSICluster *) heVClusters[i];
+			auto cluster = heVClusters[i];
 			int id = cluster->getId() - 1;
 			// Add the Id to the vector
 			heIndices3D.push_back(id);

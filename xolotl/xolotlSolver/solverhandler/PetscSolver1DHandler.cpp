@@ -7,8 +7,7 @@
 
 namespace xolotlSolver {
 
-void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int,
-		double, int, double) {
+void PetscSolver1DHandler::createSolverContext(DM &da) {
 	PetscErrorCode ierr;
 
 	// Initialize the all reactants pointer
@@ -49,6 +48,12 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int,
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Create distributed array (DMDA) to manage parallel grid and vectors
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+	// Get starting conditions from HDF5 file
+	int nx = 0, ny = 0, nz = 0;
+	double hx = 0.0, hy = 0.0, hz = 0.0;
+	xolotlCore::HDF5Utils::readHeader(networkName, nx, hx, ny, hy, nz, hz);
+
 	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, nx, dof, 1,
 	NULL, &da);
 	checkPetscError(ierr, "PetscSolver1DHandler::createSolverContext: "
@@ -270,7 +275,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	// Get all the HeV clusters in the network
 	auto bubbles = network->getAll(xolotlCore::heVType);
 	// Initialize for the loop
-	xolotlCore::PSICluster * bubble;
+	xolotlCore::IReactant * bubble;
 	xolotlCore::SuperCluster * super;
 	int index = 0;
 	int heComp = 0;
@@ -321,7 +326,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	// Declarations for variables used in the loop
 	double flux;
 	int fluxIndex = fluxHandler->getIncidentFluxClusterIndex(), reactantIndex;
-	xolotlCore::PSICluster *cluster = NULL;
+	xolotlCore::IReactant *cluster = NULL;
 	double **concVector = new double*[3];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
 
@@ -363,7 +368,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			lastTemperature = temperature;
 		}
 
-		// Copy data into the PSIClusterReactionNetwork so that it can
+		// Copy data into the ReactionNetwork so that it can
 		// compute the fluxes properly. The network is only used to compute the
 		// fluxes and hold the state data from the last time step. I'm reusing
 		// it because it cuts down on memory significantly (about 400MB per
@@ -392,7 +397,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 		// ----- Compute all of the new fluxes -----
 		for (int i = 0; i < networkSize; i++) {
-			cluster = (xolotlCore::PSICluster *) allReactants->at(i);
+			cluster = allReactants->at(i);
 			// Compute the flux
 			flux = cluster->getTotalFlux();
 			// Update the concentration of the cluster
@@ -592,7 +597,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	// Get all the HeV clusters in the network
 	auto bubbles = network->getAll(xolotlCore::heVType);
 	// Initialize for the loop
-	xolotlCore::PSICluster * bubble;
+	xolotlCore::IReactant * bubble;
 	xolotlCore::SuperCluster * super;
 	int index = 0;
 	int heComp = 0;
@@ -655,7 +660,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 		// Everything to the left of the surface is empty
 		if (xi <= surfacePosition || xi == xSize - 1) continue;
 
-		// Copy data into the PSIClusterReactionNetwork so that it can
+		// Copy data into the ReactionNetwork so that it can
 		// compute the new concentrations.
 		concOffset = concs[xi];
 		network->updateConcentrationsFromArray(concOffset);

@@ -6,7 +6,6 @@
 #include <fstream>
 #include <cassert>
 #include <Reactant.h>
-#include <PSIClusterNetworkLoader.h>
 #include <PetscSolver.h>
 #include <mpi.h>
 #include <MPIUtils.h>
@@ -16,8 +15,10 @@
 #include <TemperatureHandlerFactory.h>
 #include <VizHandlerRegistryFactory.h>
 #include <HDF5NetworkLoader.h>
+#include <IReactionNetwork.h>
 #include <SolverHandlerFactory.h>
 #include <ISolverHandler.h>
+#include <ReactionHandlerFactory.h>
 #include <ctime>
 
 using namespace std;
@@ -26,17 +27,20 @@ namespace xperf = xolotlPerf;
 
 //! This operation prints the start message
 void printStartMessage() {
-	std::cout << "Starting Xolotl Plasma-Surface Interactions Simulator" << std::endl;
+	std::cout << "Starting Xolotl Plasma-Surface Interactions Simulator"
+			<< std::endl;
 	// TODO! Print copyright message
 	// Print date and time
 	std::time_t currentTime = std::time(NULL);
 	std::cout << std::asctime(std::localtime(&currentTime)); // << std::endl;
 }
 
-std::shared_ptr<xolotlFactory::IMaterialFactory> initMaterial(Options &options) {
+std::shared_ptr<xolotlFactory::IMaterialFactory> initMaterial(
+		Options &options) {
 	// Create the material factory
-	auto materialFactory = xolotlFactory::IMaterialFactory::createMaterialFactory(options.getMaterial(),
-			options.getDimensionNumber());
+	auto materialFactory =
+			xolotlFactory::IMaterialFactory::createMaterialFactory(
+					options.getMaterial(), options.getDimensionNumber());
 
 	// Initialize it with the options
 	materialFactory->initializeMaterial(options);
@@ -68,20 +72,22 @@ bool initViz(bool opts) {
 }
 
 std::shared_ptr<xolotlSolver::PetscSolver> setUpSolver(
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry, 
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry,
 		std::shared_ptr<xolotlFactory::IMaterialFactory> material,
 		std::shared_ptr<xolotlCore::ITemperatureHandler> tempHandler,
+		std::shared_ptr<xolotlCore::IReactionNetwork> networkHandler,
 		std::shared_ptr<xolotlSolver::ISolverHandler> solvHandler,
 		Options &options) {
 	// Initialize the solver handler
-	solvHandler->initializeHandlers(material, tempHandler, options);
+	solvHandler->initializeHandlers(material, tempHandler, networkHandler, options);
 
 	// Setup the solver
 	auto solverInitTimer = handlerRegistry->getTimer("initSolver");
 	solverInitTimer->start();
 	std::shared_ptr<xolotlSolver::PetscSolver> solver = std::make_shared<
 			xolotlSolver::PetscSolver>(handlerRegistry);
-	solver->setCommandLineOptions(options.getPetscArgc(), options.getPetscArgv());
+	solver->setCommandLineOptions(options.getPetscArgc(),
+			options.getPetscArgv());
 	solver->initialize(solvHandler);
 	solverInitTimer->stop();
 
@@ -91,13 +97,13 @@ std::shared_ptr<xolotlSolver::PetscSolver> setUpSolver(
 void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry) {
 	xperf::IHardwareCounter::SpecType hwctrSpec;
-	hwctrSpec.push_back( xperf::IHardwareCounter::FPOps );
-	hwctrSpec.push_back( xperf::IHardwareCounter::Cycles );
-	hwctrSpec.push_back( xperf::IHardwareCounter::L3CacheMisses );
+	hwctrSpec.push_back(xperf::IHardwareCounter::FPOps);
+	hwctrSpec.push_back(xperf::IHardwareCounter::Cycles);
+	hwctrSpec.push_back(xperf::IHardwareCounter::L3CacheMisses);
 
 	// Launch the PetscSolver
 	auto solverTimer = handlerRegistry->getTimer("solve");
-	auto solverHwctr = handlerRegistry->getHardwareCounter( "solve", hwctrSpec );
+	auto solverHwctr = handlerRegistry->getHardwareCounter("solve", hwctrSpec);
 	solverTimer->start();
 	solverHwctr->start();
 	solver->solve();
@@ -105,7 +111,9 @@ void launchPetscSolver(std::shared_ptr<xolotlSolver::PetscSolver> solver,
 	solverTimer->stop();
 }
 
-std::shared_ptr<PSIClusterNetworkLoader> setUpNetworkLoader(Options &options,
+std::shared_ptr<HDF5NetworkLoader> setUpNetworkLoader(
+		const std::string& networkFilename,
+		Options &options,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
 	// Create a HDF5NetworkLoader
 	std::shared_ptr<HDF5NetworkLoader> networkLoader;
@@ -187,20 +195,25 @@ int main(int argc, char **argv) {
 			return EXIT_FAILURE;
 		auto solvHandler = xolotlFactory::getSolverHandler();
 
-		// Setup the solver
-		auto solver = setUpSolver(handlerRegistry, material,
-				tempHandler, solvHandler, opts);
+		// Set up the network loader
+		auto networkLoader = setUpNetworkLoader(networkFilename, opts,
+				handlerRegistry);
 
-		// Load the network
+		// Setup and load the network
 		auto networkLoadTimer = handlerRegistry->getTimer("loadNetwork");
 		networkLoadTimer->start();
-
-		// Set up the network loader
-		auto networkLoader = setUpNetworkLoader(opts, handlerRegistry);
-
-		// Give the network loader to PETSc as input
-		solver->setNetworkLoader(networkLoader);
+		bool networkOK = xolotlFactory::initializeReactionHandler(
+				networkLoader, opts);
+		if (!networkOK)
+			return EXIT_FAILURE;
 		networkLoadTimer->stop();
+
+		// Get the network handler
+		auto networkHandler = xolotlFactory::getNetworkHandler();
+
+		// Setup the solver
+		auto solver = setUpSolver(handlerRegistry, material, tempHandler, networkHandler,
+				solvHandler, opts);
 
 		// Launch the PetscSolver
 		launchPetscSolver(solver, handlerRegistry);
@@ -212,18 +225,17 @@ int main(int argc, char **argv) {
 		solverFinalizeTimer->stop();
 
 		totalTimer->stop();
-		
+
 		// Report statistics about the performance data collected during
 		// the run we just completed.
 		xperf::PerfObjStatsMap<xperf::ITimer::ValType> timerStats;
 		xperf::PerfObjStatsMap<xperf::IEventCounter::ValType> counterStats;
 		xperf::PerfObjStatsMap<xperf::IHardwareCounter::CounterType> hwCtrStats;
-		handlerRegistry->collectStatistics( timerStats, counterStats, hwCtrStats );
+		handlerRegistry->collectStatistics(timerStats, counterStats,
+				hwCtrStats);
 		if (rank == 0) {
-			handlerRegistry->reportStatistics(std::cout,
-					timerStats,
-					counterStats,
-					hwCtrStats);
+			handlerRegistry->reportStatistics(std::cout, timerStats,
+					counterStats, hwCtrStats);
 		}
 	} catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;

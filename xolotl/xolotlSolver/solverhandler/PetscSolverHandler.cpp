@@ -6,23 +6,6 @@
 
 namespace xolotlSolver {
 
-// Definitions of some external variables (declared in PetscSolver1DHandler.h)
-double lastTemperature = 0.0;
-std::unordered_map<int, std::vector<int> > dFillMap;
-std::shared_ptr<std::vector<xolotlCore::Reactant *>> allReactants;
-std::vector<double> clusterPartials;
-
-/**
- * A vector for holding the partial derivatives for one cluster in the order
- * that PETSc expects. It is sized in the createSolverContext() operation.
- *
- * The vector is used for every cluster and immediately reset to zero before
- * being used for the next. This allows the acquisition of the partial
- * derivatives to take up minimal memory and require no additional dynamic
- * allocations.
- */
-std::vector<double> reactingPartialsForCluster;
-
 void PetscSolverHandler::getDiagonalFill(PetscInt *diagFill,
 		int diagFillSize) {
 	// Get all the super clusters

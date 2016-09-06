@@ -14,7 +14,7 @@
 #include <PSICluster.h>
 #include "SuperCluster.h"
 #include <PSIClusterReactionNetwork.h>
-#include "xolotlPerf/IHandlerRegistry.h"
+#include <IHandlerRegistry.h>
 #include <string>
 
 namespace xolotlCore {
@@ -70,11 +70,6 @@ protected:
 	std::shared_ptr<std::istream> networkStream;
 
 	/**
-	 * The list of clusters that will be added to the network.
-	 */
-	std::vector<std::shared_ptr<PSICluster>> clusters;
-
-	/**
 	 * The performance handler registry used to measure runtime performance
 	 * during loads.
 	 */
@@ -99,6 +94,11 @@ protected:
 	 * The width of the group in the vacancy direction.
 	 */
 	int vSectionWidth;
+
+	/**
+	 * If we want dummy reactions or not
+	 */
+	bool dummyReactions;
 
 	/**
 	 * Private nullary constructor.
@@ -130,6 +130,7 @@ public:
 		vMin(1000000),
 		heSectionWidth(1),
 		vSectionWidth(1),
+		dummyReactions(false),
 		handlerRegistry(registry) {}
 
 	/**
@@ -206,6 +207,12 @@ public:
 	 * @param w The value of the width
 	 */
 	void setVWidth (int w) {vSectionWidth = w;}
+
+
+	/**
+	 * This operation will set the reactions to dummy reactions.
+	 */
+	void setDummyReactions () {dummyReactions = true;}
 };
 
 } /* namespace xolotlCore */

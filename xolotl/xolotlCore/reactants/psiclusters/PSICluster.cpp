@@ -9,79 +9,31 @@ using namespace xolotlCore;
 
 PSICluster::PSICluster() :
 		Reactant() {
-	// Set the size
-	size = 1;
-	// Zero out the formation energy
-	formationEnergy = 0.0;
-	// Zero out the diffusion factor and migration energy
-	diffusionFactor = 0.0;
-	diffusionCoefficient = 0.0;
-	migrationEnergy = 0.0;
 	// Set the reactant name appropriately
 	name = "PSICluster";
-	// No type name to set. Leave it empty.
-	// Setup the composition map.
-	compositionMap[heType] = 0;
-	compositionMap[vType] = 0;
-	compositionMap[iType] = 0;
-	// Set the default reaction radius to 0. (Doesn't react.)
-	reactionRadius = 0.0;
-	// Set the initial index/id to -1
-	thisNetworkIndex = -1;
 
 	return;
 }
 
-PSICluster::PSICluster(const int clusterSize,
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
+PSICluster::PSICluster(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		Reactant(registry) {
-	// Set the size
-	size = (clusterSize > 0) ? clusterSize : 1;
-	// Zero out the formation energy
-	formationEnergy = 0.0;
-	// Zero out the diffusion factor and migration energy
-	diffusionFactor = 0.0;
-	diffusionCoefficient = 0.0;
-	migrationEnergy = 0.0;
 	// Set the reactant name appropriately
 	name = "PSICluster";
-	// Setup the composition map.
-	compositionMap[heType] = 0;
-	compositionMap[vType] = 0;
-	compositionMap[iType] = 0;
-	// Set the default reaction radius to 0. (Doesn't react.)
-	reactionRadius = 0.0;
-	// Set the initial index/id to -1
-	thisNetworkIndex = -1;
 
 	return;
 }
 
-// The copy constructor with a huge initialization list!
-PSICluster::PSICluster(const PSICluster &other) :
+// The copy constructor
+PSICluster::PSICluster(PSICluster &other) :
 		Reactant(other),
-		size(other.size),
-		diffusionFactor(other.diffusionFactor),
-		thisNetworkIndex(other.thisNetworkIndex),
-		formationEnergy(other.formationEnergy),
-		migrationEnergy(other.migrationEnergy),
-		reactionRadius(other.reactionRadius),
 		reactingPairs(other.reactingPairs),
 		combiningReactants(other.combiningReactants),
 		dissociatingPairs(other.dissociatingPairs),
-		emissionPairs(other.emissionPairs),
-		reactionConnectivitySet(other.reactionConnectivitySet),
-		dissociationConnectivitySet(other.dissociationConnectivitySet) {
+		emissionPairs(other.emissionPairs) {
 	// Recompute all of the temperature-dependent quantities
 	setTemperature(other.getTemperature());
 
 	return;
-}
-
-std::shared_ptr<Reactant> PSICluster::clone() {
-	std::shared_ptr<Reactant> reactant(new PSICluster(*this));
-
-	return reactant;
 }
 
 void PSICluster::reset() {
@@ -263,7 +215,7 @@ void PSICluster::emitClusters(PSICluster * firstEmittedCluster,
 	return;
 }
 
-void PSICluster::combineClusters(std::vector<Reactant *> & reactants,
+void PSICluster::combineClusters(std::vector<IReactant *> & reactants,
 		const std::string& productName) {
 	// Initial declarations
 	std::map<std::string, int> myComposition = getComposition(),
@@ -316,7 +268,7 @@ void PSICluster::combineClusters(std::vector<Reactant *> & reactants,
 	return;
 }
 
-void PSICluster::replaceInCompound(std::vector<Reactant *> & reactants,
+void PSICluster::replaceInCompound(std::vector<IReactant *> & reactants,
 		const std::string& oldComponentName) {
 	// Local Declarations
 	std::map<std::string, int> secondReactantComp, productReactantComp;
@@ -356,7 +308,7 @@ void PSICluster::replaceInCompound(std::vector<Reactant *> & reactants,
 	return;
 }
 
-void PSICluster::fillVWithI(std::vector<Reactant *> & reactants) {
+void PSICluster::fillVWithI(std::vector<IReactant *> & reactants) {
 	// Local Declarations
 	std::string productClusterName;
 	int firstClusterSize = 0, secondClusterSize = 0, productClusterSize = 0,
@@ -418,42 +370,6 @@ void PSICluster::fillVWithI(std::vector<Reactant *> & reactants) {
 	return;
 }
 
-void PSICluster::printReaction(const PSICluster & firstReactant,
-		const PSICluster & secondReactant,
-		const PSICluster & productReactant) const {
-	auto firstComp = firstReactant.getComposition();
-	auto secondComp = secondReactant.getComposition();
-	auto productComp = productReactant.getComposition();
-
-	std::cout << firstReactant.getName() << "(" << firstComp[heType] << ", "
-			<< firstComp[vType] << ", " << firstComp[iType] << ") + "
-			<< secondReactant.getName() << "(" << secondComp[heType] << ", "
-			<< secondComp[vType] << ", " << secondComp[iType] << ") -> "
-			<< productReactant.getName() << "(" << productComp[heType] << ", "
-			<< productComp[vType] << ", " << productComp[iType] << ")"
-			<< std::endl;
-
-	return;
-}
-
-void PSICluster::printDissociation(const PSICluster & firstReactant,
-		const PSICluster & secondReactant,
-		const PSICluster & productReactant) const {
-	auto firstComp = firstReactant.getComposition();
-	auto secondComp = secondReactant.getComposition();
-	auto productComp = productReactant.getComposition();
-
-	std::cout << firstReactant.getName() << "(" << firstComp[heType] << ", "
-			<< firstComp[vType] << ", " << firstComp[iType] << ") -> "
-			<< secondReactant.getName() << "(" << secondComp[heType] << ", "
-			<< secondComp[vType] << ", " << secondComp[iType] << ") + "
-			<< productReactant.getName() << "(" << productComp[heType] << ", "
-			<< productComp[vType] << ", " << productComp[iType] << ")"
-			<< std::endl;
-
-	return;
-}
-
 static std::vector<int> getFullConnectivityVector(std::set<int> connectivitySet,
 		int size) {
 	// Create a vector of zeroes with size equal to the network size
@@ -469,23 +385,9 @@ static std::vector<int> getFullConnectivityVector(std::set<int> connectivitySet,
 	return connectivity;
 }
 
-void PSICluster::setReactionConnectivity(int clusterId) {
-	// Add the cluster to the set.
-	reactionConnectivitySet.insert(clusterId);
-
-	return;
-}
-
 std::vector<int> PSICluster::getReactionConnectivity() const {
 	// Create the full vector from the set and return it
 	return getFullConnectivityVector(reactionConnectivitySet, network->size() + 2 * network->getAll(superType).size());
-}
-
-void PSICluster::setDissociationConnectivity(int clusterId) {
-	// Add the cluster to the set.
-	dissociationConnectivitySet.insert(clusterId);
-
-	return;
 }
 
 std::vector<int> PSICluster::getDissociationConnectivity() const {
@@ -541,13 +443,8 @@ void PSICluster::resetConnectivities() {
 	return;
 }
 
-int PSICluster::getSize() const {
-	// Return this cluster's size
-	return size;
-}
-
 void PSICluster::setReactionNetwork(
-		const std::shared_ptr<ReactionNetwork> reactionNetwork) {
+		const std::shared_ptr<IReactionNetwork> reactionNetwork) {
 	// Call the superclass's method to actually set the reference
 	Reactant::setReactionNetwork(reactionNetwork);
 
@@ -856,56 +753,6 @@ void PSICluster::getVMomentPartialDerivatives(std::vector<double> & partials) co
 	return;
 }
 
-double PSICluster::getDiffusionFactor() const {
-	// Return the diffusion factor
-	return diffusionFactor;
-}
-
-void PSICluster::setDiffusionFactor(const double factor) {
-	// Set the diffusion factor
-	diffusionFactor = factor;
-	// Update the diffusion coefficient
-	recomputeDiffusionCoefficient(temperature);
-
-	return;
-}
-
-double PSICluster::getDiffusionCoefficient() const {
-	return diffusionCoefficient;
-}
-
-double PSICluster::getFormationEnergy() const {
-	return formationEnergy;
-}
-
-void PSICluster::setFormationEnergy(double energy) {
-	// Set the formation energy
-	formationEnergy = energy;
-	return;
-}
-
-double PSICluster::getMigrationEnergy() const {
-	// Return the migration energy
-	return migrationEnergy;
-}
-
-void PSICluster::setMigrationEnergy(const double energy) {
-	// Set the migration energy
-	migrationEnergy = energy;
-	// Update the diffusion coefficient
-	recomputeDiffusionCoefficient(temperature);
-
-	return;
-}
-
-double PSICluster::getReactionRadius() const {
-	return reactionRadius; // Computed by subclasses in constructors.
-}
-
-double PSICluster::getBiggestRate() const {
-	return biggestRate; // Computed by computeRateConstants
-}
-
 double PSICluster::getLeftSideRate() const {
 	// Initialize the rate and the cluster pointer
 	double totalRate = 0.0;
@@ -952,21 +799,6 @@ std::vector<int> PSICluster::getConnectivity() const {
 	}
 
 	return connectivity;
-}
-
-void PSICluster::recomputeDiffusionCoefficient(double temp) {
-	// Return zero if the diffusion factor is zero.
-	if (xolotlCore::equal(diffusionFactor, 0.0)) {
-		diffusionCoefficient = 0.0;
-	} else {
-		// Otherwise use the Arrhenius equation to compute the diffusion
-		// coefficient
-		double k_b = xolotlCore::kBoltzmann;
-		double kernel = -1.0 * migrationEnergy / (k_b * temp);
-		diffusionCoefficient = diffusionFactor * exp(kernel);
-	}
-
-	return;
 }
 
 void PSICluster::computeRateConstants() {
@@ -1185,16 +1017,6 @@ void PSICluster::updateRateConstants() {
 
 	// Set the biggest rate to the biggest production rate
 	biggestRate = biggestProductionRate;
-
-	return;
-}
-
-void PSICluster::setTemperature(double temp) {
-	// Set the temperature
-	Reactant::setTemperature(temp);
-
-	// Recompute the diffusion coefficient
-	recomputeDiffusionCoefficient(temp);
 
 	return;
 }

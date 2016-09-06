@@ -3,7 +3,7 @@
 
 // Includes
 #include <PSICluster.h>
-#include <PSIClusterReactionNetwork.h>
+#include <IReactionNetwork.h>
 #include <memory>
 
 namespace xolotlCore {
@@ -30,7 +30,7 @@ public:
 	 * @param ofill The pointer to the array that will contain the value 1 at the indices
 	 * of the advecting clusters
 	 */
-	virtual void initialize(PSIClusterReactionNetwork *network, int *ofill) = 0;
+	virtual void initialize(IReactionNetwork *network, int *ofill) = 0;
 
 	/**
 	 * Set the number of dimension
@@ -80,7 +80,7 @@ public:
 	 * @param hz The step size in the z direction
 	 * @param iz The position on the z grid
 	 */
-	virtual void computeAdvection(PSIClusterReactionNetwork *network,
+	virtual void computeAdvection(IReactionNetwork *network,
 			std::vector<double> &pos, double **concVector, double *updatedConcOffset,
 			double hxLeft, double hxRight, int ix,
 			double hy = 0.0, int iy = 0, double hz = 0.0, int iz = 0) = 0;
@@ -104,7 +104,7 @@ public:
 	 * @param hz The step size in the z direction
 	 * @param iz The position on the z grid
 	 */
-	virtual void computePartialsForAdvection(PSIClusterReactionNetwork *network,
+	virtual void computePartialsForAdvection(IReactionNetwork *network,
 			double *val, int *indices, std::vector<double> &pos,
 			double hxLeft, double hxRight, int ix,
 			double hy = 0.0, int iy = 0, double hz = 0.0, int iz = 0) = 0;

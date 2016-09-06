@@ -1,7 +1,7 @@
 #ifndef HDF5UTILS_H
 #define HDF5UTILS_H
 
-#include <PSIClusterReactionNetwork.h>
+#include <IReactionNetwork.h>
 #include <memory>
 
 namespace xolotlCore {

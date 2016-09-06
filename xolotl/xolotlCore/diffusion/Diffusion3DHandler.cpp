@@ -75,7 +75,7 @@ void Diffusion3DHandler::initializeDiffusionGrid(std::vector<IAdvectionHandler *
 	return;
 }
 
-void Diffusion3DHandler::computeDiffusion(PSIClusterReactionNetwork *network,
+void Diffusion3DHandler::computeDiffusion(IReactionNetwork *network,
 		double **concVector, double *updatedConcOffset,
 		double hxLeft, double hxRight, int ix,
 		double sy, int iy, double sz, int iz) {
@@ -115,7 +115,7 @@ void Diffusion3DHandler::computeDiffusion(PSIClusterReactionNetwork *network,
 }
 
 void Diffusion3DHandler::computePartialsForDiffusion(
-		PSIClusterReactionNetwork *network,
+		IReactionNetwork *network,
 		double *val, int *indices, double hxLeft, double hxRight, int ix,
 		double sy, int iy, double sz, int iz) {
 	// Get all the reactants
