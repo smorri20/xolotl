@@ -105,7 +105,7 @@ void Diffusion2DHandler::computeDiffusion(IReactionNetwork *network,
 
 void Diffusion2DHandler::computePartialsForDiffusion(
 		IReactionNetwork *network,
-		double *val, int *indices, double hxLeft, double hxRight, int ix,
+		double *val, long int *indices, double hxLeft, double hxRight, int ix,
 		double sy, int iy, double, int) {
 	// Get all the reactant
 	auto reactants = network->getAll();

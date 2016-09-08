@@ -59,7 +59,7 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 		void *) {
 	PetscErrorCode ierr;
 	const double ****solutionArray, *gridPointSolution;
-	int xs, xm, Mx, ys, ym, My, zs, zm, Mz;
+	PetscInt xs, xm, Mx, ys, ym, My, zs, zm, Mz;
 
 	PetscFunctionBeginUser;
 
@@ -127,9 +127,9 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 			nInterstitial3D, previousIFlux3D);
 
 	// Loop on the full grid
-	for (int k = 0; k < Mz; k++) {
-		for (int j = 0; j < My; j++) {
-			for (int i = 0; i < Mx; i++) {
+	for (PetscInt k = 0; k < Mz; k++) {
+		for (PetscInt j = 0; j < My; j++) {
+			for (PetscInt i = 0; i < Mx; i++) {
 				// Wait for all the processes
 				MPI_Barrier(PETSC_COMM_WORLD);
 				// Size of the concentration that will be stored
@@ -212,7 +212,7 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt, PetscReal time,
 		Vec solution, void *) {
 	PetscErrorCode ierr;
-	int xs, xm, ys, ym, zs, zm;
+	PetscInt xs, xm, ys, ym, zs, zm;
 
 	PetscFunctionBeginUser;
 
@@ -244,9 +244,9 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt, PetscReal time,
 	double heConcentration = 0;
 
 	// Loop on the grid
-	for (int k = zs; k < zs + zm; k++) {
-		for (int j = ys; j < ys + ym; j++) {
-			for (int i = xs; i < xs + xm; i++) {
+	for (PetscInt k = zs; k < zs + zm; k++) {
+		for (PetscInt j = ys; j < ys + ym; j++) {
+			for (PetscInt i = xs; i < xs + xm; i++) {
 				// Get the pointer to the beginning of the solution data for
 				// this grid point
 				gridPointSolution = solutionArray[k][j][i];
@@ -274,7 +274,7 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt, PetscReal time,
 	if (procId == 0) {
 
 		// Get the total size of the grid rescale the concentrations
-		int Mx, My, Mz;
+		PetscInt Mx, My, Mz;
 		ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, &Mz,
 		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
@@ -321,7 +321,7 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *) {
 	PetscErrorCode ierr;
 	const double ****solutionArray, *gridPointSolution;
-	int xs, xm, Mx, ys, ym, My, zs, zm, Mz;
+	PetscInt xs, xm, Mx, ys, ym, My, zs, zm, Mz;
 	double x, y;
 
 	PetscFunctionBeginUser;
@@ -367,18 +367,18 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 	xolotlViz::Point thePoint;
 
 	// Loop on the full grid, Y and X first because they are the axis of the plot
-	for (int j = 0; j < My; j++) {
+	for (PetscInt j = 0; j < My; j++) {
 		// Compute y
 		y = (double) j * hy;
 
-		for (int i = 0; i < Mx; i++) {
+		for (PetscInt i = 0; i < Mx; i++) {
 			// Compute x
 			x = grid[i];
 
 			// Initialize the value of the concentration to integrate over Z
 			double conc = 0.0;
 
-			for (int k = 0; k < Mz; k++) {
+			for (PetscInt k = 0; k < Mz; k++) {
 				// If it is the locally owned part of the grid
 				if (i >= xs && i < xs + xm && j >= ys && j < ys + ym
 						&& k >= zs && k < zs + zm) {
@@ -455,7 +455,7 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *) {
 	PetscErrorCode ierr;
 	const double ****solutionArray, *gridPointSolution;
-	int xs, xm, Mx, ys, ym, My, zs, zm, Mz;
+	PetscInt xs, xm, Mx, ys, ym, My, zs, zm, Mz;
 	double x, z;
 
 	PetscFunctionBeginUser;
@@ -501,18 +501,18 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 	xolotlViz::Point thePoint;
 
 	// Loop on the full grid, Z and X first because they are the axis of the plot
-	for (int k = 0; k < Mz; k++) {
+	for (PetscInt k = 0; k < Mz; k++) {
 		// Compute z
 		z = (double) k * hz;
 
-		for (int i = 0; i < Mx; i++) {
+		for (PetscInt i = 0; i < Mx; i++) {
 			// Compute x
 			x = grid[i];
 
 			// Initialize the value of the concentration to integrate over Y
 			double conc = 0.0;
 
-			for (int j = 0; j < My; j++) {
+			for (PetscInt j = 0; j < My; j++) {
 				// If it is the locally owned part of the grid
 				if (i >= xs && i < xs + xm && j >= ys && j < ys + ym
 						&& k >= zs && k < zs + zm) {
@@ -587,7 +587,7 @@ PetscErrorCode monitorInterstitial3D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	PetscErrorCode ierr;
 	double ****solutionArray, *gridPointSolution;
-	int xs, xm, xi, ys, ym, yj, zs, zm, zk, Mx, My, Mz;
+	PetscInt xs, xm, xi, ys, ym, yj, zs, zm, zk, Mx, My, Mz;
 	bool surfaceHasMoved = false;
 
 	PetscFunctionBeginUser;
@@ -768,7 +768,7 @@ PetscErrorCode monitorInterstitial3D(TS ts, PetscInt timestep, PetscReal time,
 		for (int i = 0; i < My; i++) {
 			// Create a temporary vector
 			std::vector<int> temp;
-			for (int j = 0; j < Mz; j++) {
+			for (PetscInt j = 0; j < Mz; j++) {
 				temp.push_back(solverHandler->getSurfacePosition(i, j));
 			}
 			// Add the temporary vector to the vector of surface indices
@@ -862,7 +862,7 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 	checkPetscError(ierr, "setupPetsc3DMonitor: TSGetDM failed.");
 
 	// Get the total size of the grid
-	int Mx, My, Mz;
+	PetscInt Mx, My, Mz;
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, &Mz,
 			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
@@ -1068,10 +1068,10 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 	if (solverHandler->moveSurface()) {
 		// Initialize nInterstitial3D and previousIFlux3D before monitoring the
 		// interstitial flux
-		for (int j = 0; j < My; j++) {
+		for (PetscInt j = 0; j < My; j++) {
 			// Create a one dimensional vector of double
 			std::vector<double> tempVector;
-			for (int k = 0; k < Mz; k++) {
+			for (PetscInt k = 0; k < Mz; k++) {
 				tempVector.push_back(0.0);
 			}
 			// Add the tempVector to nInterstitial3D and previousIFlux3D

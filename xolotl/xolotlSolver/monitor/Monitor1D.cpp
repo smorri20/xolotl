@@ -65,7 +65,7 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 		void *) {
 	PetscErrorCode ierr;
 	const double **solutionArray, *gridPointSolution;
-	int xs, xm, Mx;
+	PetscInt xs, xm, Mx;
 
 	PetscFunctionBeginUser;
 
@@ -125,7 +125,7 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 			nInterstitial1D, previousIFlux1D);
 
 	// Loop on the full grid
-	for (int i = 0; i < Mx; i++) {
+	for (PetscInt i = 0; i < Mx; i++) {
 		// Wait for all the processes
 		MPI_Barrier(PETSC_COMM_WORLD);
 		// Size of the concentration that will be stored
@@ -202,7 +202,7 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 		Vec solution, void *) {
 	PetscErrorCode ierr;
-	int xs, xm;
+	PetscInt xs, xm;
 
 	PetscFunctionBeginUser;
 
@@ -233,7 +233,7 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 	PetscReal *gridPointSolution;
 
 	// Loop on the grid
-	for (int xi = xs; xi < xs + xm; xi++) {
+	for (PetscInt xi = xs; xi < xs + xm; xi++) {
 		// Get the pointer to the beginning of the solution data for this grid point
 		gridPointSolution = solutionArray[xi];
 
@@ -289,7 +289,7 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 PetscErrorCode computeHeliumConc1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	PetscErrorCode ierr;
-	int xs, xm;
+	PetscInt xs, xm;
 
 	PetscFunctionBeginUser;
 
@@ -315,7 +315,7 @@ PetscErrorCode computeHeliumConc1D(TS ts, PetscInt timestep, PetscReal time,
 	auto grid = solverHandler->getXGrid();
 
 	// Get the total size of the grid rescale the concentrations
-	int Mx;
+	PetscInt Mx;
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
@@ -343,7 +343,7 @@ PetscErrorCode computeHeliumConc1D(TS ts, PetscInt timestep, PetscReal time,
 	}
 
 	// Loop on the full grid
-	for (int xi = 0; xi < Mx; xi++) {
+	for (PetscInt xi = 0; xi < Mx; xi++) {
 		// Wait for everybody at each grid point
 		MPI_Barrier(PETSC_COMM_WORLD);
 
@@ -401,7 +401,7 @@ PetscErrorCode computeHeliumConc1D(TS ts, PetscInt timestep, PetscReal time,
 PetscErrorCode computeCumulativeHelium1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	PetscErrorCode ierr;
-	int xs, xm;
+	PetscInt xs, xm;
 
 	PetscFunctionBeginUser;
 
@@ -642,7 +642,7 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *) {
 	PetscErrorCode ierr;
 	const double **solutionArray, *gridPointSolution;
-	int xs, xm, xi;
+	PetscInt xs, xm, xi;
 	double x = 0.0;
 
 	PetscFunctionBeginUser;
@@ -803,7 +803,7 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *) {
 	PetscErrorCode ierr;
 	const double **solutionArray, *gridPointSolution;
-	int xs, xm, xi;
+	PetscInt xs, xm, xi;
 
 	PetscFunctionBeginUser;
 
@@ -946,7 +946,7 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	PetscErrorCode ierr;
 	const double **solutionArray, *gridPointSolution;
-	int xs, xm, xi;
+	PetscInt xs, xm, xi;
 	double x = 0.0;
 
 	PetscFunctionBeginUser;
@@ -1068,7 +1068,7 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *) {
 	PetscErrorCode ierr;
 	const double **solutionArray, *gridPointSolution;
-	int xs, xm, xi;
+	PetscInt xs, xm, xi;
 
 	PetscFunctionBeginUser;
 
@@ -1159,7 +1159,7 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt, PetscReal time,
 		Vec solution, void *) {
 	PetscErrorCode ierr;
 	double **solutionArray, *gridPointSolution;
-	int xs, xm, xi;
+	PetscInt xs, xm, xi;
 
 	PetscFunctionBeginUser;
 

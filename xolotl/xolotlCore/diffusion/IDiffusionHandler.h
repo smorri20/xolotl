@@ -32,7 +32,7 @@ public:
 	 * of the diffusing clusters
 	 */
 	virtual void initializeOFill(IReactionNetwork *network,
-			long long int *ofill) = 0;
+			long int *ofill) = 0;
 
 	/**
 	 * Initialize an array of the dimension of the physical domain times the number of diffusion
@@ -91,7 +91,7 @@ public:
 	 * @param iz The position on the z grid
 	 */
 	virtual void computePartialsForDiffusion(IReactionNetwork *network,
-			double *val, int *indices, double hxLeft, double hxRight, int ix,
+			double *val, long int *indices, double hxLeft, double hxRight, int ix,
 			double sy = 0.0, int iy = 0, double sz = 0.0, int iz = 0) = 0;
 
 	/**

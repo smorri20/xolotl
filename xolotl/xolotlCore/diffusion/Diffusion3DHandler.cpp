@@ -116,7 +116,7 @@ void Diffusion3DHandler::computeDiffusion(IReactionNetwork *network,
 
 void Diffusion3DHandler::computePartialsForDiffusion(
 		IReactionNetwork *network,
-		double *val, int *indices, double hxLeft, double hxRight, int ix,
+		double *val, long int *indices, double hxLeft, double hxRight, int ix,
 		double sy, int iy, double sz, int iz) {
 	// Get all the reactants
 	auto reactants = network->getAll();

@@ -57,7 +57,7 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 		void *) {
 	PetscErrorCode ierr;
 	const double ***solutionArray, *gridPointSolution;
-	int xs, xm, Mx, ys, ym, My;
+	PetscInt xs, xm, Mx, ys, ym, My;
 
 	PetscFunctionBeginUser;
 
@@ -99,7 +99,7 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 
 	// Get the vector of positions of the surface
 	std::vector<int> surfaceIndices;
-	for (int i = 0; i < My; i++) {
+	for (PetscInt i = 0; i < My; i++) {
 		surfaceIndices.push_back(solverHandler->getSurfacePosition(i));
 	}
 
@@ -120,8 +120,8 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 			nInterstitial2D, previousIFlux2D);
 
 	// Loop on the full grid
-	for (int j = 0; j < My; j++) {
-		for (int i = 0; i < Mx; i++) {
+	for (PetscInt j = 0; j < My; j++) {
+		for (PetscInt i = 0; i < Mx; i++) {
 			// Wait for all the processes
 			MPI_Barrier(PETSC_COMM_WORLD);
 			// Size of the concentration that will be stored
@@ -199,7 +199,7 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt, PetscReal time,
 		Vec solution, void *) {
 	PetscErrorCode ierr;
-	int xs, xm, ys, ym;
+	PetscInt xs, xm, ys, ym;
 
 	PetscFunctionBeginUser;
 
@@ -230,8 +230,8 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt, PetscReal time,
 	double heConcentration = 0.0;
 
 	// Loop on the grid
-	for (int j = ys; j < ys + ym; j++) {
-		for (int i = xs; i < xs + xm; i++) {
+	for (PetscInt j = ys; j < ys + ym; j++) {
+		for (PetscInt i = xs; i < xs + xm; i++) {
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[j][i];
 
@@ -256,7 +256,7 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt, PetscReal time,
 	// Master process
 	if (procId == 0) {
 		// Get the total size of the grid rescale the concentrations
-		int Mx, My;
+		PetscInt Mx, My;
 		ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
 		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
@@ -301,7 +301,7 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt, PetscReal time,
 PetscErrorCode computeHeliumConc2D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	PetscErrorCode ierr;
-	int xs, xm, ys, ym;
+	PetscInt xs, xm, ys, ym;
 
 	PetscFunctionBeginUser;
 
@@ -330,7 +330,7 @@ PetscErrorCode computeHeliumConc2D(TS ts, PetscInt timestep, PetscReal time,
 	double hy = solverHandler->getStepSizeY();
 
 	// Get the total size of the grid rescale the concentrations
-	int Mx, My;
+	PetscInt Mx, My;
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
@@ -358,7 +358,7 @@ PetscErrorCode computeHeliumConc2D(TS ts, PetscInt timestep, PetscReal time,
 	}
 
 	// Loop on the full grid
-	for (int xi = 0; xi < Mx; xi++) {
+	for (PetscInt xi = 0; xi < Mx; xi++) {
 		// Wait for everybody at each grid point
 		MPI_Barrier(PETSC_COMM_WORLD);
 
@@ -366,7 +366,7 @@ PetscErrorCode computeHeliumConc2D(TS ts, PetscInt timestep, PetscReal time,
 		double x = grid[xi];
 
 		// Loop on Y to integrate
-		for (int yj = 0; yj < My; yj++) {
+		for (PetscInt yj = 0; yj < My; yj++) {
 			// If we are on the right process
 			if (xi >= xs && xi < xs + xm && yj >= ys && yj < ys + ym) {
 				// Get the pointer to the beginning of the solution data for this grid point
@@ -421,7 +421,7 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *) {
 	PetscErrorCode ierr;
 	const double ***solutionArray, *gridPointSolution;
-	int xs, xm, Mx, ys, ym, My;
+	PetscInt xs, xm, Mx, ys, ym, My;
 	double x = 0.0, y = 0.0;
 
 	PetscFunctionBeginUser;
@@ -467,8 +467,8 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 	xolotlViz::Point thePoint;
 
 	// Loop on the full grid
-	for (int j = 0; j < My; j++) {
-		for (int i = 0; i < Mx; i++) {
+	for (PetscInt j = 0; j < My; j++) {
+		for (PetscInt i = 0; i < Mx; i++) {
 			// If it is the locally owned part of the grid
 			if (i >= xs && i < xs + xm && j >= ys && j < ys + ym) {
 				// Get the pointer to the beginning of the solution data for this grid point
@@ -574,7 +574,7 @@ PetscErrorCode monitorInterstitial2D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
 	PetscErrorCode ierr;
 	double ***solutionArray, *gridPointSolution;
-	int xs, xm, xi, ys, ym, yj, Mx, My;
+	PetscInt xs, xm, xi, ys, ym, yj, Mx, My;
 	bool surfaceHasMoved = false;
 
 	PetscFunctionBeginUser;
@@ -746,7 +746,7 @@ PetscErrorCode monitorInterstitial2D(TS ts, PetscInt timestep, PetscReal time,
 
 		// Get the vector of positions of the surface
 		std::vector<int> surfaceIndices;
-		for (int i = 0; i < My; i++) {
+		for (PetscInt i = 0; i < My; i++) {
 			surfaceIndices.push_back(solverHandler->getSurfacePosition(i));
 		}
 
@@ -810,7 +810,7 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 	checkPetscError(ierr, "setupPetsc2DMonitor: TSGetDM failed.");
 
 	// Get the total size of the grid
-	int Mx, My;
+	PetscInt Mx, My;
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE,
 			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
@@ -991,7 +991,7 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 	if (solverHandler->moveSurface()) {
 		// Initialize nInterstitial2D and previousIFlux2D before monitoring the
 		// interstitial flux
-		for (int j = 0; j < My; j++) {
+		for (PetscInt j = 0; j < My; j++) {
 			nInterstitial2D.push_back(0.0);
 			previousIFlux2D.push_back(0.0);
 		}

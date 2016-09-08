@@ -52,15 +52,6 @@ void PetscSolver1DHandler::createSolverContext(DM &da) {
 	// Generate the grid in the x direction
 	generateGrid(nx, hx, surfacePosition);
 
-	// Initialize the surface of the first advection handler corresponding to the
-	// advection toward the surface (or a dummy one if it is deactivated)
-	advectionHandlers[0]->setLocation(grid[surfacePosition]);
-
-//	for (int i = 0; i < grid.size(); i++) {
-//		std::cout << grid[i] - grid[surfacePosition] << " ";
-//	}
-//	std::cout << std::endl;
-
 	// Set the size of the partial derivatives vectors
 	clusterPartials.resize(dof, 0.0);
 	reactingPartialsForCluster.resize(dof, 0.0);
@@ -90,16 +81,6 @@ void PetscSolver1DHandler::createSolverContext(DM &da) {
 
 	// Fill ofill, the matrix of "off-diagonal" elements that represents diffusion
 	diffusionHandler->initializeOFill(network, ofill);
-	// Loop on the advection handlers to account the other "off-diagonal" elements
-	for (int i = 0; i < advectionHandlers.size(); i++) {
-		advectionHandlers[i]->initialize(network, ofill);
-	}
-
-	// Initialize the modified trap-mutation handler and the bubble bursting one here
-	// because they add connectivity
-	mutationHandler->initialize(network, grid);
-	mutationHandler->initializeIndex1D(surfacePosition, network, advectionHandlers, grid);
-	burstingHandler->initialize(surfacePosition, network, grid);
 
 	// Get the diagonal fill
 	getDiagonalFill(dfill, dof * dof);
@@ -153,9 +134,6 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) {
 	// Initialize the grid for the diffusion
 	diffusionHandler->initializeDiffusionGrid(advectionHandlers, grid);
 
-	// Initialize the grid for the advection
-	advectionHandlers[0]->initializeAdvectionGrid(advectionHandlers, grid);
-
 	// Pointer for the concentration vector at a specific grid point
 	PetscScalar *concOffset;
 
@@ -169,7 +147,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) {
 		vacancyIndex = singleVacancyCluster->getId() - 1;
 
 	// Loop on all the grid points
-	for (int i = xs; i < xs + xm; i++) {
+	for (PetscInt i = xs; i < xs + xm; i++) {
 		concOffset = concentrations[i];
 
 		// Loop on all the clusters to initialize at 0.0
@@ -248,45 +226,6 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	// current grid point. They are accessed just like regular arrays.
 	PetscScalar *concOffset, *updatedConcOffset;
 
-	// Compute the total concentration of helium contained in HeV bubbles
-	double heConc = 0.0;
-	// Get all the HeV clusters in the network
-	auto bubbles = network->getAll(xolotlCore::heVType);
-	// Initialize for the loop
-	xolotlCore::IReactant * bubble;
-	int index = 0;
-	int heComp = 0;
-	// Loop on the bubbles
-	for (int i = 0; i < bubbles.size(); i++) {
-		// Get the bubble, its id, and its helium composition
-		bubble = bubbles.at(i);
-		index = bubble->getId() - 1;
-		auto comp = bubble->getComposition();
-		heComp = comp[xolotlCore::heType];
-
-		// Loop over grid points
-		for (int xi = xs; xi < xs + xm; xi++) {
-			// Boundary conditions
-			if (xi <= surfacePosition || xi == xSize - 1) continue;
-
-			// We are only interested in the helium near the surface
-			if (grid[xi] - grid[surfacePosition] > 2.0) continue;
-
-			// Get the concentrations at this grid point
-			concOffset = concs[xi];
-
-			// Sum the helium concentration
-			heConc += concOffset[index] * (double) heComp * (grid[xi] - grid[xi-1]);
-		}
-	}
-
-	// Share the concentration with all the processes
-	double totalHeConc = 0.0;
-	MPI_Allreduce(&heConc, &totalHeConc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
-	// Set the disappearing rate in the modified TM handler
-	mutationHandler->updateDisappearingRate(totalHeConc);
-
 	// Get the incident flux vector
 	auto incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime, surfacePosition);
 
@@ -301,7 +240,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	const int dof = network->size();
 
 	// Loop over grid points computing ODE terms for each grid point
-	for (int xi = xs; xi < xs + xm; xi++) {
+	for (PetscInt xi = xs; xi < xs + xm; xi++) {
 		// Compute the old and new array offsets
 		concOffset = concs[xi];
 		updatedConcOffset = updatedConcs[xi];
@@ -331,10 +270,6 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		// Update the network if the temperature changed
 		if (!xolotlCore::equal(temperature, lastTemperature)) {
 			network->setTemperature(temperature);
-			// Update the modified trap-mutation rate and the bubble bursting rate
-			// that depends on the network reaction rates
-			mutationHandler->updateTrapMutationRate(network);
-			burstingHandler->updateBurstingRate(network);
 			lastTemperature = temperature;
 		}
 
@@ -351,20 +286,6 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		// ---- Compute diffusion over the locally owned part of the grid -----
 		diffusionHandler->computeDiffusion(network, concVector,
 				updatedConcOffset, grid[xi] - grid[xi-1], grid[xi+1] - grid[xi], xi);
-
-		// ---- Compute advection over the locally owned part of the grid -----
-		for (int i = 0; i < advectionHandlers.size(); i++) {
-			advectionHandlers[i]->computeAdvection(network, gridPosition,
-					concVector, updatedConcOffset, grid[xi] - grid[xi-1], grid[xi+1] - grid[xi], xi);
-		}
-
-		// ----- Compute the modified trap-mutation over the locally owned part of the grid -----
-		mutationHandler->computeTrapMutation(network, concOffset,
-				updatedConcOffset, xi);
-
-		// ----- Compute the bubble bursting over the locally owned part of the grid -----
-		burstingHandler->computeBursting(network, xi, concOffset,
-				updatedConcOffset);
 
 		// ----- Compute all of the new fluxes -----
 		for (int i = 0; i < dof; i++) {
@@ -417,26 +338,17 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	// Get the total number of diffusing clusters
 	const int nDiff = diffusionHandler->getNumberOfDiffusing();
 
-	// Get the total number of advecting clusters
-	int nAdvec = 0;
-	for (int l = 0; l < advectionHandlers.size(); l++) {
-		int n = advectionHandlers[l]->getNumberOfAdvecting();
-		if (n > nAdvec) nAdvec = n;
-	}
-
 	// Arguments for MatSetValuesStencil called below
 	MatStencil row, cols[3];
 	PetscScalar diffVals[3 * nDiff];
 	PetscInt diffIndices[nDiff];
-	PetscScalar advecVals[2 * nAdvec];
-	PetscInt advecIndices[nAdvec];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
 
 	/*
 	 Loop over grid points computing Jacobian terms for diffusion and advection
 	 at each grid point
 	 */
-	for (int xi = xs; xi < xs + xm; xi++) {
+	for (PetscInt xi = xs; xi < xs + xm; xi++) {
 		// Boundary conditions
 		// Everything to the left of the surface is empty
 		if (xi <= surfacePosition || xi == xSize - 1) continue;
@@ -451,10 +363,6 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 		// Update the network if the temperature changed
 		if (!xolotlCore::equal(temperature, lastTemperature)) {
 			network->setTemperature(temperature);
-			// Update the modified trap-mutation rate and the bubble bursting rate
-			// that depends on the network reaction rates
-			mutationHandler->updateTrapMutationRate(network);
-			burstingHandler->updateBurstingRate(network);
 			lastTemperature = temperature;
 		}
 
@@ -480,47 +388,6 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 			ierr = MatSetValuesStencil(J, 1, &row, 3, cols, diffVals + (3 * i), ADD_VALUES);
 			checkPetscError(ierr, "PetscSolver1DHandler::computeOffDiagonalJacobian: "
 					"MatSetValuesStencil (diffusion) failed.");
-		}
-
-		// Get the partial derivatives for the advection
-		for (int l = 0; l < advectionHandlers.size(); l++) {
-			advectionHandlers[l]->computePartialsForAdvection(network, advecVals,
-					advecIndices, gridPosition, grid[xi] - grid[xi-1], grid[xi+1] - grid[xi], xi);
-
-			// Get the stencil indices to know where to put the partial derivatives in the Jacobian
-			auto advecStencil = advectionHandlers[l]->getStencilForAdvection(gridPosition);
-
-			// Get the number of advecting clusters
-			nAdvec = advectionHandlers[l]->getNumberOfAdvecting();
-
-			// Loop on the number of advecting cluster to set the values in the Jacobian
-			for (int i = 0; i < nAdvec; i++) {
-				// Set grid coordinate and component number for the row
-				row.i = xi;
-				row.c = advecIndices[i];
-
-				// If we are on the sink, the partial derivatives are not the same
-				// Both sides are giving their concentrations to the center
-				if (advectionHandlers[l]->isPointOnSink(gridPosition)) {
-					cols[0].i = xi - advecStencil[0]; // left?
-					cols[0].c = advecIndices[i];
-					cols[1].i = xi + advecStencil[0]; // right?
-					cols[1].c = advecIndices[i];
-				}
-				else {
-					// Set grid coordinates and component numbers for the columns
-					// corresponding to the middle and other grid points
-					cols[0].i = xi; // middle
-					cols[0].c = advecIndices[i];
-					cols[1].i = xi + advecStencil[0]; // left or right
-					cols[1].c = advecIndices[i];
-				}
-
-				// Update the matrix
-				ierr = MatSetValuesStencil(J, 1, &row, 2, cols, advecVals + (2 * i), ADD_VALUES);
-				checkPetscError(ierr, "PetscSolver1DHandler::computeOffDiagonalJacobian: "
-						"MatSetValuesStencil (advection) failed.");
-			}
 		}
 	}
 
@@ -557,45 +424,6 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	// Pointer to the concentrations at a given grid point
 	PetscScalar *concOffset;
 
-	// Compute the total concentration of helium contained in HeV bubbles
-	double heConc = 0.0;
-	// Get all the HeV clusters in the network
-	auto bubbles = network->getAll(xolotlCore::heVType);
-	// Initialize for the loop
-	xolotlCore::IReactant * bubble;
-	int index = 0;
-	int heComp = 0;
-	// Loop on the bubbles
-	for (int i = 0; i < bubbles.size(); i++) {
-		// Get the bubble, its id, and its helium composition
-		bubble = bubbles.at(i);
-		index = bubble->getId() - 1;
-		auto comp = bubble->getComposition();
-		heComp = comp[xolotlCore::heType];
-
-		// Loop over grid points
-		for (int xi = xs; xi < xs + xm; xi++) {
-			// Boundary conditions
-			if (xi <= surfacePosition || xi == xSize - 1) continue;
-
-			// We are only interested in the helium near the surface
-			if (grid[xi] - grid[surfacePosition] > 2.0) continue;
-
-			// Get the concentrations at this grid point
-			concOffset = concs[xi];
-
-			// Sum the helium concentration
-			heConc += concOffset[index] * (double) heComp * (grid[xi] - grid[xi-1]);
-		}
-	}
-
-	// Share the concentration with all the processes
-	double totalHeConc = 0.0;
-	MPI_Allreduce(&heConc, &totalHeConc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
-	// Set the disappearing rate in the modified TM handler
-	mutationHandler->updateDisappearingRate(totalHeConc);
-
 	// Arguments for MatSetValuesStencil called below
 	MatStencil rowId;
 	MatStencil colIds[dof];
@@ -605,16 +433,12 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	// modified trap-mutation
 	int nHelium = network->getAll(xolotlCore::heType).size();
 
-	// Store the total number of HeV bubbles in the network for the
-	// bubble bursting
-	int nBubble = network->getAll(xolotlCore::heVType).size();
-
 	// Declarations for variables used in the loop
 	int reactantIndex;
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
 
 	// Loop over the grid points
-	for (int xi = xs; xi < xs + xm; xi++) {
+	for (PetscInt xi = xs; xi < xs + xm; xi++) {
 		// Boundary conditions
 		// Everything to the left of the surface is empty
 		if (xi <= surfacePosition || xi == xSize - 1) continue;
@@ -629,10 +453,6 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 		// Update the network if the temperature changed
 		if (!xolotlCore::equal(temperature, lastTemperature)) {
 			network->setTemperature(temperature);
-			// Update the modified trap-mutation rate and the bubble bursting rate
-			// that depends on the network reaction rates
-			mutationHandler->updateTrapMutationRate(network);
-			burstingHandler->updateBurstingRate(network);
 			lastTemperature = temperature;
 		}
 
@@ -674,86 +494,6 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 					colIds, reactingPartialsForCluster.data(), ADD_VALUES);
 			checkPetscError(ierr, "PetscSolver1DHandler::computeDiagonalJacobian: "
 					"MatSetValuesStencil (reactions) failed.");
-		}
-
-		// ----- Take care of the modified trap-mutation for all the reactants -----
-
-		// Arguments for MatSetValuesStencil called below
-		MatStencil row, col;
-		PetscScalar mutationVals[3 * nHelium];
-		PetscInt mutationIndices[3 * nHelium];
-
-		// Compute the partial derivative from modified trap-mutation at this grid point
-		int nMutating = mutationHandler->computePartialsForTrapMutation(network,
-				mutationVals, mutationIndices, xi);
-
-		// Loop on the number of helium undergoing trap-mutation to set the values
-		// in the Jacobian
-		for (int i = 0; i < nMutating; i++) {
-			// Set grid coordinate and component number for the row and column
-			// corresponding to the helium cluster
-			row.i = xi;
-			row.c = mutationIndices[3 * i];
-			col.i = xi;
-			col.c = mutationIndices[3 * i];
-
-			ierr = MatSetValuesStencil(J, 1, &row, 1, &col,
-					mutationVals + (3 * i), ADD_VALUES);
-			checkPetscError(ierr, "PetscSolver1DHandler::computeDiagonalJacobian: "
-					"MatSetValuesStencil (He trap-mutation) failed.");
-
-			// Set component number for the row
-			// corresponding to the HeV cluster created through trap-mutation
-			row.c = mutationIndices[(3 * i) + 1];
-
-			ierr = MatSetValuesStencil(J, 1, &row, 1, &col,
-					mutationVals + (3 * i) + 1, ADD_VALUES);
-			checkPetscError(ierr, "PetscSolver1DHandler::computeDiagonalJacobian: "
-					"MatSetValuesStencil (HeV trap-mutation) failed.");
-
-			// Set component number for the row
-			// corresponding to the interstitial created through trap-mutation
-			row.c = mutationIndices[(3 * i) + 2];
-
-			ierr = MatSetValuesStencil(J, 1, &row, 1, &col,
-					mutationVals + (3 * i) + 2, ADD_VALUES);
-			checkPetscError(ierr, "PetscSolver1DHandler::computeDiagonalJacobian: "
-					"MatSetValuesStencil (I trap-mutation) failed.");
-		}
-
-		// ----- Take care of the bubble bursting for all the reactants -----
-
-		// Arguments for MatSetValuesStencil called below
-		PetscScalar burstingVals[2 * nBubble];
-		PetscInt burstingIndices[2 * nBubble];
-
-		// Compute the partial derivative from bubble bursting at this grid point
-		int nBursting = burstingHandler->computePartialsForBursting(network,
-				burstingVals, burstingIndices, xi);
-
-		// Loop on the number of bubbles bursting to set the values
-		// in the Jacobian
-		for (int i = 0; i < nBursting; i++) {
-			// Set grid coordinate and component number for the row and column
-			// corresponding to the bursting cluster (bubble)
-			row.i = xi;
-			row.c = burstingIndices[2 * i];
-			col.i = xi;
-			col.c = burstingIndices[2 * i];
-
-			ierr = MatSetValuesStencil(J, 1, &row, 1, &col,
-					burstingVals + (2 * i), ADD_VALUES);
-			checkPetscError(ierr, "PetscSolver1DHandler::computeDiagonalJacobian: "
-					"MatSetValuesStencil (HeV bursting) failed.");
-
-			// Set component number for the row
-			// corresponding to the V cluster created by bursting a bubble
-			row.c = burstingIndices[(2 * i) + 1];
-
-			ierr = MatSetValuesStencil(J, 1, &row, 1, &col,
-					burstingVals + (2 * i) + 1, ADD_VALUES);
-			checkPetscError(ierr, "PetscSolver1DHandler::computeDiagonalJacobian: "
-					"MatSetValuesStencil (V bursting) failed.");
 		}
 	}
 

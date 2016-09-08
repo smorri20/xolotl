@@ -36,7 +36,7 @@ public:
 	 * @param ofill The pointer to the array that will contain the value 1 at the indices
 	 * of the diffusing clusters
 	 */
-	virtual void initializeOFill(IReactionNetwork *network, long long int *ofill) {
+	virtual void initializeOFill(IReactionNetwork *network, long int *ofill) {
 		// Get all the reactants
 		auto reactants = network->getAll();
 		int size = reactants->size();

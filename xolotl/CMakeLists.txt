@@ -53,13 +53,13 @@ add_subdirectory(xolotlFactory)
 add_subdirectory(xolotlSolver)
 
 # Add the tests is Boost is available
-FIND_PACKAGE(Boost)
-IF (Boost_FOUND)
-    message(STATUS "Boost version ${Boost_VERSION} found.")
-    message(STATUS "Tests will be built since Boost was found.")
-    INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
-    add_subdirectory(tests)
-ENDIF()
+#FIND_PACKAGE(Boost)
+#IF (Boost_FOUND)
+#    message(STATUS "Boost version ${Boost_VERSION} found.")
+#    message(STATUS "Tests will be built since Boost was found.")
+#    INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+#    add_subdirectory(tests)
+#ENDIF()
 
 # Report package information
 message(STATUS "----- Configuration Information -----")
