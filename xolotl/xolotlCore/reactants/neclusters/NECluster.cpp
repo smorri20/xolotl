@@ -180,6 +180,9 @@ void NECluster::dissociateCluster(NECluster * dissociatingCluster,
 
 		// Take care of the connectivity
 		setDissociationConnectivity(dissociatingCluster->id);
+
+		// Add it to the list again if it the same as the other emitted cluster
+		if (id == emittedCluster->id) dissociatingPairs.push_back(pair);
 	}
 
 	return;
@@ -249,6 +252,9 @@ void NECluster::combineClusters(std::vector<IReactant *> & reactants,
 			CombiningCluster combCluster(secondCluster, 0.0);
 			// Push the product into the list of clusters that combine with this one
 			combiningReactants.push_back(combCluster);
+
+			// Add it again if it is combining with itself
+			if (secondCluster->id == id) combiningReactants.push_back(combCluster);
 		}
 	}
 
@@ -289,6 +295,9 @@ void NECluster::replaceInCompound(std::vector<IReactant *> & reactants,
 			CombiningCluster combCluster(secondReactant, 0.0);
 			// Push the product onto the list of clusters that combine with this one
 			combiningReactants.push_back(combCluster);
+
+			// Add it again if it is combining with itself
+			if (secondReactant->id == id) combiningReactants.push_back(combCluster);
 		}
 	}
 
@@ -350,6 +359,9 @@ void NECluster::fillVWithI(std::vector<IReactant *> & reactants) {
 				// Push the second cluster onto the list of clusters that combine
 				// with this one
 				combiningReactants.push_back(combCluster);
+
+				// Add it again if it is combining with itself
+				if (secondCluster->id == id) combiningReactants.push_back(combCluster);
 			}
 		}
 	}
@@ -383,36 +395,7 @@ std::vector<int> NECluster::getDissociationConnectivity() const {
 }
 
 void NECluster::resetConnectivities() {
-	// Clear both sets
-	reactionConnectivitySet.clear();
-	dissociationConnectivitySet.clear();
-
-	// Connect this cluster to itself since any reaction will affect it
-	setReactionConnectivity(id);
-	setDissociationConnectivity(id);
-
-	// Loop on the effective reacting pairs
-	for (auto it = effReactingPairs.begin(); it != effReactingPairs.end(); ++it) {
-		// The cluster is connecting to both clusters in the pair
-		setReactionConnectivity((*it)->first->id);
-		setReactionConnectivity((*it)->second->id);
-	}
-
-	// Loop on the effective combining reactants
-	for (auto it = effCombiningReactants.begin(); it != effCombiningReactants.end(); ++it) {
-		// The cluster is connecting to the combining cluster
-		setReactionConnectivity((*it)->combining->id);
-	}
-
-	// Loop on the effective dissociating pairs
-	for (auto it = effDissociatingPairs.begin(); it != effDissociatingPairs.end(); ++it) {
-		// The cluster is connecting to the dissociating cluster which
-		// is the first one by definition
-		setDissociationConnectivity((*it)->first->id);
-	}
-
-	// Don't loop on the effective emission pairs because
-	// this cluster is not connected to them
+	// Doesn't do anything because we are not using effective reactions anymore
 
 	return;
 }
@@ -485,13 +468,13 @@ double NECluster::getDissociationFlux() const {
 	NECluster *dissociatingCluster;
 
 	// Set the total number of reactants that dissociate to form this one
-	nPairs = effDissociatingPairs.size();
+	nPairs = dissociatingPairs.size();
 	// Loop over all dissociating clusters that form this cluster
 	for (int j = 0; j < nPairs; j++) {
 		// Get the dissociating cluster
-		dissociatingCluster = effDissociatingPairs[j]->first;
+		dissociatingCluster = dissociatingPairs[j].first;
 		// Calculate the Dissociation flux
-		flux += effDissociatingPairs[j]->kConstant
+		flux += dissociatingPairs[j].kConstant
 				* dissociatingCluster->concentration;
 	}
 
@@ -505,11 +488,11 @@ double NECluster::getEmissionFlux() const {
 	double flux = 0.0;
 
 	// Set the total number of emission pairs
-	nPairs = effEmissionPairs.size();
+	nPairs = emissionPairs.size();
 	// Loop over all the pairs
 	for (int i = 0; i < nPairs; i++) {
 		// Update the flux
-		flux += effEmissionPairs[i]->kConstant;
+		flux += emissionPairs[i].kConstant;
 	}
 
 	return flux * concentration;
@@ -522,14 +505,14 @@ double NECluster::getProductionFlux() const {
 	NECluster *firstReactant, *secondReactant;
 
 	// Set the total number of reacting pairs
-	nPairs = effReactingPairs.size();
+	nPairs = reactingPairs.size();
 	// Loop over all the reacting pairs
 	for (int i = 0; i < nPairs; i++) {
 		// Get the two reacting clusters
-		firstReactant = effReactingPairs[i]->first;
-		secondReactant = effReactingPairs[i]->second;
+		firstReactant = reactingPairs[i].first;
+		secondReactant = reactingPairs[i].second;
 		// Update the flux
-		flux += effReactingPairs[i]->kConstant * firstReactant->concentration
+		flux += reactingPairs[i].kConstant * firstReactant->concentration
 				* secondReactant->concentration;
 	}
 
@@ -544,13 +527,13 @@ double NECluster::getCombinationFlux() const {
 	NECluster *combiningCluster;
 
 	// Set the total number of reactants that combine to form this one
-	nReactants = effCombiningReactants.size();
+	nReactants = combiningReactants.size();
 	// Loop over all possible clusters
 	for (int j = 0; j < nReactants; j++) {
 		// Get the cluster that combines with this one
-		combiningCluster = effCombiningReactants[j]->combining;
+		combiningCluster = combiningReactants[j].combining;
 		// Calculate Second term of production flux
-		flux += effCombiningReactants[j]->kConstant
+		flux += combiningReactants[j].kConstant
 				* combiningCluster->concentration;
 	}
 
@@ -591,16 +574,16 @@ void NECluster::getProductionPartialDerivatives(std::vector<double> & partials) 
 	// Thus, the partial derivatives
 	// dF(C_D)/dC_A = k+_(A,B)*C_B
 	// dF(C_D)/dC_B = k+_(A,B)*C_A
-	numReactants = effReactingPairs.size();
+	numReactants = reactingPairs.size();
 	for (int i = 0; i < numReactants; i++) {
 		// Compute the contribution from the first part of the reacting pair
-		index = effReactingPairs[i]->first->id - 1;
-		partials[index] += effReactingPairs[i]->kConstant
-				* effReactingPairs[i]->second->concentration;
+		index = reactingPairs[i].first->id - 1;
+		partials[index] += reactingPairs[i].kConstant
+				* reactingPairs[i].second->concentration;
 		// Compute the contribution from the second part of the reacting pair
-		index = effReactingPairs[i]->second->id - 1;
-		partials[index] += effReactingPairs[i]->kConstant
-				* effReactingPairs[i]->first->concentration;
+		index = reactingPairs[i].second->id - 1;
+		partials[index] += reactingPairs[i].kConstant
+				* reactingPairs[i].first->concentration;
 	}
 
 	return;
@@ -619,17 +602,17 @@ void NECluster::getCombinationPartialDerivatives(
 	// Thus, the partial derivatives
 	// dF(C_A)/dC_A = - k+_(A,B)*C_B
 	// dF(C_A)/dC_B = - k+_(A,B)*C_A
-	numReactants = effCombiningReactants.size();
+	numReactants = combiningReactants.size();
 	for (int i = 0; i < numReactants; i++) {
-		cluster = (NECluster *) effCombiningReactants[i]->combining;
+		cluster = (NECluster *) combiningReactants[i].combining;
 		// Get the index of cluster
 		otherIndex = cluster->id - 1;
 		// Remember that the flux due to combinations is OUTGOING (-=)!
 		// Compute the contribution from this cluster
-		partials[thisNetworkIndex] -= effCombiningReactants[i]->kConstant
+		partials[thisNetworkIndex] -= combiningReactants[i].kConstant
 				* cluster->concentration;
 		// Compute the contribution from the combining cluster
-		partials[otherIndex] -= effCombiningReactants[i]->kConstant
+		partials[otherIndex] -= combiningReactants[i].kConstant
 				* concentration;
 	}
 
@@ -648,12 +631,12 @@ void NECluster::getDissociationPartialDerivatives(
 	// F(C_B) = k-_(B,D)*C_A
 	// Thus, the partial derivatives
 	// dF(C_B)/dC_A = k-_(B,D)
-	numPairs = effDissociatingPairs.size();
+	numPairs = dissociatingPairs.size();
 	for (int i = 0; i < numPairs; i++) {
 		// Get the dissociating cluster
-		cluster = effDissociatingPairs[i]->first;
+		cluster = dissociatingPairs[i].first;
 		index = cluster->id - 1;
-		partials[index] += effDissociatingPairs[i]->kConstant;
+		partials[index] += dissociatingPairs[i].kConstant;
 	}
 
 	return;
@@ -669,12 +652,12 @@ void NECluster::getEmissionPartialDerivatives(std::vector<double> & partials) co
 	// F(C_A) = - k-_(B,D)*C_A
 	// Thus, the partial derivatives
 	// dF(C_A)/dC_A = - k-_(B,D)
-	numPairs = effEmissionPairs.size();
+	numPairs = emissionPairs.size();
 	for (int i = 0; i < numPairs; i++) {
 		// Modify the partial derivative. Remember that the flux
 		// due to emission is OUTGOING (-=)!
 		index = id - 1;
-		partials[index] -= effEmissionPairs[i]->kConstant;
+		partials[index] -= emissionPairs[i].kConstant;
 	}
 
 	return;
@@ -704,17 +687,17 @@ double NECluster::getLeftSideRate() const {
 	NECluster *cluster;
 
 	// Loop on the combining reactants
-	for (int i = 0; i < effCombiningReactants.size(); i++) {
-		cluster = (NECluster *) effCombiningReactants[i]->combining;
+	for (int i = 0; i < combiningReactants.size(); i++) {
+		cluster = (NECluster *) combiningReactants[i].combining;
 		// Add the rate to the total rate
-		totalRate += effCombiningReactants[i]->kConstant
+		totalRate += combiningReactants[i].kConstant
 				* cluster->concentration;
 	}
 
 	// Loop on the emission pairs
-	for (int i = 0; i < effEmissionPairs.size(); i++) {
+	for (int i = 0; i < emissionPairs.size(); i++) {
 		// Add the rate to the total rate
-		totalRate += effEmissionPairs[i]->kConstant;
+		totalRate += emissionPairs[i].kConstant;
 	}
 
 	return totalRate;
@@ -747,12 +730,6 @@ std::vector<int> NECluster::getConnectivity() const {
 }
 
 void NECluster::computeRateConstants() {
-	// Initialize all the effective vectors
-	effReactingPairs.clear();
-	effCombiningReactants.clear();
-	effDissociatingPairs.clear();
-	effEmissionPairs.clear();
-
 	// Local declarations
 	NECluster *firstReactant, *secondReactant, *combiningReactant,
 		*dissociatingCluster, *otherEmittedCluster, *firstCluster,
@@ -775,15 +752,8 @@ void NECluster::computeRateConstants() {
 		// Set it in the pair
 		reactingPairs[i].kConstant = rate;
 
-		// Add the reacting pair to the effective vector
-		// if the rate is not 0.0
-		if (!xolotlCore::equal(rate, 0.0)) {
-			effReactingPairs.push_back(&reactingPairs[i]);
-
-			// Check if the rate is the biggest one up to now
-			if (rate > biggestProductionRate)
-				biggestProductionRate = rate;
-		}
+		// Check if the rate is the biggest one up to now
+		if (rate > biggestProductionRate) biggestProductionRate = rate;
 	}
 
 	// Compute the reaction constant associated to the combining reactants
@@ -797,16 +767,6 @@ void NECluster::computeRateConstants() {
 		rate = calculateReactionRateConstant(*this, *combiningReactant);
 		// Set it in the combining cluster
 		combiningReactants[i].kConstant = rate;
-
-		// Add the combining reactant to the effective vector
-		// if the rate is not 0.0
-		if (!xolotlCore::equal(rate, 0.0)) {
-			effCombiningReactants.push_back(&combiningReactants[i]);
-
-			// Add itself to the list again to account for the correct rate
-			if (id == combiningReactant->id)
-				effCombiningReactants.push_back(&combiningReactants[i]);
-		}
 	}
 
 	// Compute the dissociation constant associated to the dissociating clusters
@@ -834,16 +794,6 @@ void NECluster::computeRateConstants() {
 		}
 		// Set it in the pair
 		dissociatingPairs[i].kConstant = rate;
-
-		// Add the dissociating pair to the effective vector
-		// if the rate is not 0.0
-		if (!xolotlCore::equal(rate, 0.0)) {
-			effDissociatingPairs.push_back(&dissociatingPairs[i]);
-
-			// Add itself to the list again to account for the correct rate
-			if (id == otherEmittedCluster->id)
-				effDissociatingPairs.push_back(&dissociatingPairs[i]);
-		}
 	}
 
 	// Compute the dissociation constant associated to the emission of pairs of clusters
@@ -858,19 +808,13 @@ void NECluster::computeRateConstants() {
 				*secondCluster);
 		// Set it in the pair
 		emissionPairs[i].kConstant = rate;
-
-		// Add the emission pair to the effective vector
-		// if the rate is not 0.0
-		if (!xolotlCore::equal(rate, 0.0)) {
-			effEmissionPairs.push_back(&emissionPairs[i]);
-		}
 	}
 
 	// Shrink the arrays to save some space
-	effReactingPairs.shrink_to_fit();
-	effCombiningReactants.shrink_to_fit();
-	effDissociatingPairs.shrink_to_fit();
-	effEmissionPairs.shrink_to_fit();
+	reactingPairs.shrink_to_fit();
+	combiningReactants.shrink_to_fit();
+	dissociatingPairs.shrink_to_fit();
+	emissionPairs.shrink_to_fit();
 
 	// Set the biggest rate to the biggest production rate
 	biggestRate = biggestProductionRate;

@@ -101,26 +101,12 @@ protected:
 	std::vector<ClusterPair> reactingPairs;
 
 	/**
-	 * A vector of pointers to ClusterPairs that represents the effective reacting
-	 * pairs, i.e. those for which the reaction rate is not 0.0. Should be filled
-	 * every time the temperature changes.
-	 */
-	std::vector<ClusterPair *> effReactingPairs;
-
-	/**
 	 * A vector of clusters that combine with this cluster to produce other
 	 * clusters. This vector should be populated early in the cluster's
 	 * lifecycle by subclasses. In the standard Xolotl clusters, this vector is
 	 * filled in createReactionConnectivity.
 	 */
 	std::vector<CombiningCluster> combiningReactants;
-
-	/**
-	 * A vector of pointers to CombiningCluster that represents the effective
-	 * combining clusters, i.e. those for which the reaction rate is not 0.0.
-	 * Should be filled every time the temperature changes.
-	 */
-	std::vector<CombiningCluster *> effCombiningReactants;
 
 	/**
 	 * A vector of pairs of clusters: the first one is the one dissociation into
@@ -133,13 +119,6 @@ protected:
 	std::vector<ClusterPair> dissociatingPairs;
 
 	/**
-	 * A vector of pointers to ClusterPairs that represents the effective dissociating
-	 * pairs, i.e. those for which the dissociation rate is not 0.0. Should be filled
-	 * every time the temperature changes.
-	 */
-	std::vector<ClusterPair *> effDissociatingPairs;
-
-	/**
 	 * A vector of ClusterPairs that represent pairs of clusters that are emitted
 	 * from the dissociation of this cluster. This vector should be populated early
 	 * in the cluster's lifecycle by subclasses. In the standard Xolotl clusters,
@@ -147,13 +126,6 @@ protected:
 	 * createDissociationConnectivity.
 	 */
 	std::vector<ClusterPair> emissionPairs;
-
-	/**
-	 * A vector of pointers to ClusterPairs that represents the effective emission
-	 * pairs, i.e. those for which the dissociation rate is not 0.0. Should be filled
-	 * every time the temperature changes.
-	 */
-	std::vector<ClusterPair *> effEmissionPairs;
 
 	/**
 	 * Computes a row (or column) of the reaction connectivity matrix
@@ -519,7 +491,7 @@ public:
 
 	/**
 	 * This operation reset the connectivity sets based on the information
-	 * in the effective production and dissociation vectors.
+	 * in the production and dissociation vectors.
 	 */
 	void resetConnectivities();
 
