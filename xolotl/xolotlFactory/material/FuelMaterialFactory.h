@@ -9,7 +9,7 @@
 #include <Diffusion1DHandler.h>
 #include <Diffusion2DHandler.h>
 #include <Diffusion3DHandler.h>
-#include <BubbleBurstingHandler.h>
+#include <DummyBubbleBurstingHandler.h>
 
 namespace xolotlFactory {
 
@@ -35,7 +35,7 @@ public:
 		theFluxHandler = std::make_shared<xolotlCore::FuelFitFluxHandler>();
 		theAdvectionHandler.push_back(std::make_shared<xolotlCore::DummyAdvectionHandler>());
 		theTrapMutationHandler = std::make_shared<xolotlCore::DummyTrapMutationHandler>();
-		theBubbleBurstingHandler = std::make_shared<xolotlCore::BubbleBurstingHandler>();
+		theBubbleBurstingHandler = std::make_shared<xolotlCore::DummyBubbleBurstingHandler>();
 
 		// Switch on the dimension for the diffusion handler
 		switch (dim) {
