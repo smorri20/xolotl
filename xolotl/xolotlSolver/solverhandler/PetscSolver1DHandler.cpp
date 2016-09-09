@@ -169,7 +169,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) {
 		vacancyIndex = singleVacancyCluster->getId() - 1;
 
 	// Loop on all the grid points
-	for (int i = xs; i < xs + xm; i++) {
+	for (PetscInt i = xs; i < xs + xm; i++) {
 		concOffset = concentrations[i];
 
 		// Loop on all the clusters to initialize at 0.0
@@ -265,7 +265,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		heComp = comp[xolotlCore::heType];
 
 		// Loop over grid points
-		for (int xi = xs; xi < xs + xm; xi++) {
+		for (PetscInt xi = xs; xi < xs + xm; xi++) {
 			// Boundary conditions
 			if (xi <= surfacePosition || xi == xSize - 1) continue;
 
@@ -301,7 +301,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	const int dof = network->size();
 
 	// Loop over grid points computing ODE terms for each grid point
-	for (int xi = xs; xi < xs + xm; xi++) {
+	for (PetscInt xi = xs; xi < xs + xm; xi++) {
 		// Compute the old and new array offsets
 		concOffset = concs[xi];
 		updatedConcOffset = updatedConcs[xi];
@@ -436,7 +436,7 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	 Loop over grid points computing Jacobian terms for diffusion and advection
 	 at each grid point
 	 */
-	for (int xi = xs; xi < xs + xm; xi++) {
+	for (PetscInt xi = xs; xi < xs + xm; xi++) {
 		// Boundary conditions
 		// Everything to the left of the surface is empty
 		if (xi <= surfacePosition || xi == xSize - 1) continue;
@@ -574,7 +574,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 		heComp = comp[xolotlCore::heType];
 
 		// Loop over grid points
-		for (int xi = xs; xi < xs + xm; xi++) {
+		for (PetscInt xi = xs; xi < xs + xm; xi++) {
 			// Boundary conditions
 			if (xi <= surfacePosition || xi == xSize - 1) continue;
 
@@ -614,7 +614,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
 
 	// Loop over the grid points
-	for (int xi = xs; xi < xs + xm; xi++) {
+	for (PetscInt xi = xs; xi < xs + xm; xi++) {
 		// Boundary conditions
 		// Everything to the left of the surface is empty
 		if (xi <= surfacePosition || xi == xSize - 1) continue;

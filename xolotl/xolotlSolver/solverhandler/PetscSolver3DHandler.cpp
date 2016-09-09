@@ -107,11 +107,9 @@ void PetscSolver3DHandler::createSolverContext(DM &da) {
 		advectionHandlers[i]->initialize(network, ofill);
 	}
 
-	// Initialize the modified trap-mutation handler and the bubble bursting one here
-	// because they add connectivity
+	// Initialize the modified trap-mutation handler because it adds connectivity
 	mutationHandler->initialize(network, grid, ny, hy, nz, hz);
 	mutationHandler->initializeIndex3D(surfacePosition, network, advectionHandlers, grid, ny, hy, nz, hz);
-	burstingHandler->initialize(surfacePosition[0][0], network, grid);
 
 	// Get the diagonal fill
 	getDiagonalFill(dfill, dof * dof);
@@ -195,9 +193,9 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) {
 		vacancyIndex = singleVacancyCluster->getId() - 1;
 
 	// Loop on all the grid points
-	for (int k = zs; k < zs + zm; k++) {
-		for (int j = ys; j < ys + ym; j++) {
-			for (int i = xs; i < xs + xm; i++) {
+	for (PetscInt k = zs; k < zs + zm; k++) {
+		for (PetscInt j = ys; j < ys + ym; j++) {
+			for (PetscInt i = xs; i < xs + xm; i++) {
 				concOffset = concentrations[k][j][i];
 
 				// Loop on all the clusters to initialize at 0.0
@@ -216,9 +214,9 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) {
 	// If the concentration must be set from the HDF5 file
 	if (hasConcentrations) {
 		// Loop on the full grid
-		for (int k = 0; k < Mz; k++) {
-			for (int j = 0; j < My; j++) {
-				for (int i = 0; i < Mx; i++) {
+		for (PetscInt k = 0; k < Mz; k++) {
+			for (PetscInt j = 0; j < My; j++) {
+				for (PetscInt i = 0; i < Mx; i++) {
 					// Read the concentrations from the HDF5 file
 					auto concVector = xolotlCore::HDF5Utils::readGridPoint(networkName,
 							tempTimeStep, i, j, k);
@@ -280,7 +278,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			"DMDAGetCorners failed.");
 
 	// Get the total size of the grid
-	int Mx, My, Mz;
+	PetscInt Mx, My, Mz;
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, &Mz,
 			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
@@ -316,11 +314,11 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	const int dof = network->size();
 
 	// Loop over grid points computing ODE terms for each grid point
-	for (int zk = 0; zk < Mz; zk++) {
+	for (PetscInt zk = 0; zk < Mz; zk++) {
 		// Set the grid position
 		gridPosition[2] = zk * hZ;
 
-		for (int yj = 0; yj < My; yj++) {
+		for (PetscInt yj = 0; yj < My; yj++) {
 			// Set the grid position
 			gridPosition[1] = yj * hY;
 
@@ -335,7 +333,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				heComp = comp[xolotlCore::heType];
 
 				// Loop over grid points
-				for (int xi = 0; xi < Mx; xi++) {
+				for (PetscInt xi = 0; xi < Mx; xi++) {
 					// We are only interested in the helium near the surface
 					if (grid[xi] - grid[surfacePosition[yj][zk]] > 2.0) continue;
 
@@ -369,7 +367,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			// Get the flux vector which can be different at each Y position
 			incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime, surfacePosition[yj][zk]);
 
-			for (int xi = xs; xi < xs + xm; xi++) {
+			for (PetscInt xi = xs; xi < xs + xm; xi++) {
 				// Compute the old and new array offsets
 				concOffset = concs[zk][yj][xi];
 				updatedConcOffset = updatedConcs[zk][yj][xi];
@@ -512,10 +510,10 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	 Loop over grid points computing Jacobian terms for diffusion and advection
 	 at each grid point
 	 */
-	for (int zk = zs; zk < zs + zm; zk++) {
+	for (PetscInt zk = zs; zk < zs + zm; zk++) {
 		// Set the grid position
 		gridPosition[2] = zk * hZ;
-		for (int yj = ys; yj < ys + ym; yj++) {
+		for (PetscInt yj = ys; yj < ys + ym; yj++) {
 			// Set the grid position
 			gridPosition[1] = yj * hY;
 
@@ -523,15 +521,26 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 			// on the surface position at Y
 			advectionHandlers[0]->setLocation(grid[surfacePosition[yj][zk]]);
 
-			for (int xi = xs; xi < xs + xm; xi++) {
+			for (PetscInt xi = xs; xi < xs + xm; xi++) {
 				// Boundary conditions
 				// Everything to the left of the surface is empty
 				if (xi <= surfacePosition[yj][zk] || xi == xSize - 1) continue;
 
 				// Set the grid position
 				gridPosition[0] = grid[xi];
-				gridPosition[1] = yj * hY;
-				gridPosition[2] = zk * hZ;
+
+				// Get the temperature from the temperature handler
+				auto temperature = temperatureHandler->getTemperature(gridPosition,
+						0.0);
+
+				// Update the network if the temperature changed
+				if (!xolotlCore::equal(temperature, lastTemperature)) {
+					network->setTemperature(temperature);
+					// Update the modified trap-mutation rate that depends on the
+					// network reaction rates
+					mutationHandler->updateTrapMutationRate(network);
+					lastTemperature = temperature;
+				}
 
 				// Get the partial derivatives for the diffusion
 				diffusionHandler->computePartialsForDiffusion(network, diffVals, diffIndices,
@@ -665,7 +674,7 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 			"DMDAGetCorners failed.");
 
 	// Get the total size of the grid
-	int Mx, My, Mz;
+	PetscInt Mx, My, Mz;
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, &Mz,
 			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 			PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
@@ -698,10 +707,11 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	double totalHeConc = 0.0;
 	// Get all the HeV clusters in the network
 	auto bubbles = network->getAll(xolotlCore::heVType);
+	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
 
 	// Loop over the grid points
-	for (int zk = 0; zk < Mz; zk++) {
-		for (int yj = 0; yj < My; yj++) {
+	for (PetscInt zk = 0; zk < Mz; zk++) {
+		for (PetscInt yj = 0; yj < My; yj++) {
 			// Loop on the bubbles to compute the helium concentration near
 			// the surface
 			heConc = 0.0;
@@ -713,7 +723,7 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 				heComp = comp[xolotlCore::heType];
 
 				// Loop over grid points
-				for (int xi = 0; xi < Mx; xi++) {
+				for (PetscInt xi = 0; xi < Mx; xi++) {
 					// We are only interested in the helium near the surface
 					if (grid[xi] - grid[surfacePosition[yj][zk]] > 2.0) continue;
 
@@ -739,10 +749,30 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 			// Skip if we are not on the right process
 			if (yj < ys || yj >= ys + ym || zk < zs || zk >= zs + zm) continue;
 
-			for (int xi = xs; xi < xs + xm; xi++) {
+			// Set the grid position
+			gridPosition[1] = yj * hY;
+			gridPosition[2] = zk * hZ;
+
+			for (PetscInt xi = xs; xi < xs + xm; xi++) {
 				// Boundary conditions
 				// Everything to the left of the surface is empty
 				if (xi <= surfacePosition[yj][zk] || xi == xSize - 1) continue;
+
+				// Set the grid position
+				gridPosition[0] = grid[xi];
+
+				// Get the temperature from the temperature handler
+				auto temperature = temperatureHandler->getTemperature(gridPosition,
+						0.0);
+
+				// Update the network if the temperature changed
+				if (!xolotlCore::equal(temperature, lastTemperature)) {
+					network->setTemperature(temperature);
+					// Update the modified trap-mutation rate that depends on the
+					// network reaction rates
+					mutationHandler->updateTrapMutationRate(network);
+					lastTemperature = temperature;
+				}
 
 				// Copy data into the ReactionNetwork so that it can
 				// compute the new concentrations.
