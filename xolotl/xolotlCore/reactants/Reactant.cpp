@@ -11,7 +11,7 @@
 using namespace xolotlCore;
 
 Reactant::Reactant() :
-		concentration(0.0), id(0), temperature(0.0), typeName(""), network(
+		concentration(0.0), id(0), momId(0), temperature(0.0), typeName(""), network(
 				nullptr), handlerRegistry(nullptr), size(0), formationEnergy(
 				0.0), diffusionFactor(0.0), diffusionCoefficient(0.0), migrationEnergy(
 				0.0), name("Reactant"), reactionRadius(0.0), thisNetworkIndex(
@@ -24,7 +24,7 @@ Reactant::Reactant() :
 }
 
 Reactant::Reactant(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		concentration(0.0), id(0), temperature(0.0), typeName(""), network(
+		concentration(0.0), id(0), momId(0), temperature(0.0), typeName(""), network(
 				nullptr), handlerRegistry(registry), size(0), formationEnergy(
 				0.0), diffusionFactor(0.0), diffusionCoefficient(0.0), migrationEnergy(
 				0.0), name("Reactant"), reactionRadius(0.0), thisNetworkIndex(
@@ -38,7 +38,7 @@ Reactant::Reactant(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 
 Reactant::Reactant(Reactant &other) :
 		concentration(other.concentration), name(other.name), typeName(
-				other.typeName), id(other.id), temperature(other.temperature), network(
+				other.typeName), id(other.id), momId(other.momId), temperature(other.temperature), network(
 				other.network), handlerRegistry(
 				other.handlerRegistry), size(other.size), formationEnergy(
 				other.formationEnergy), diffusionFactor(other.diffusionFactor), diffusionCoefficient(
@@ -69,7 +69,7 @@ void Reactant::recomputeDiffusionCoefficient(double temp) {
 	return;
 }
 
-double Reactant::getConcentration() const {
+double Reactant::getConcentration(double dist) const {
 	return concentration;
 }
 
@@ -157,6 +157,16 @@ void Reactant::setId(int nId) {
 
 int Reactant::getId() const {
 	return id;
+}
+
+void Reactant::setMomentumId(int nId) {
+	momId = nId;
+
+	return;
+}
+
+int Reactant::getMomentumId() const {
+	return momId;
 }
 
 void Reactant::setTemperature(double temp) {

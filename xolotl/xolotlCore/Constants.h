@@ -43,6 +43,7 @@ static const std::string heIType = "HeI";
 static const std::string xeType = "Xe";
 static const std::string xeVType = "XeV";
 static const std::string xeIType = "XeI";
+static const std::string NESuperType = "NESuper";
 
 } /* end namespace xolotlCore */
 #endif /* CONSTANTS_H_ */

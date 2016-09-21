@@ -42,9 +42,10 @@ public:
 	/**
 	 * This operation returns the current concentration.
 	 *
+	 * @param dist The distance for super clusters
 	 * @return The concentration of this reactant
 	 */
-	virtual double getConcentration() const = 0;
+	virtual double getConcentration(double dist = 0.0) const = 0;
 
 	/**
 	 * This operation sets the concentration of the reactant to the
@@ -187,6 +188,20 @@ public:
 	 * @return The id
 	 */
 	virtual int getId() const = 0;
+
+	/**
+	 * This operation sets the id of the momentum of the reactant.
+	 *
+	 * @param nId The new id for this momentum
+	 */
+	virtual void setMomentumId(int nId) = 0;
+
+	/**
+	 * This operation returns the id for this reactant momentum.
+	 *
+	 * @return The id
+	 */
+	virtual int getMomentumId() const = 0;
 
 	/**
 	 * This operation sets the temperature at which the reactant currently

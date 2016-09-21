@@ -134,6 +134,16 @@ protected:
 	 */
 	std::string gbList;
 
+	/**
+	 * Minimum size for the grouping.
+	 */
+	int groupingMin;
+
+	/**
+	 * Width for the grouping.
+	 */
+	int groupingWidth;
+
 public:
 
 	/**
@@ -530,6 +540,38 @@ public:
 	 */
 	void setGbString(const std::string& gbString) {
 		gbList = gbString;
+	}
+
+	/**
+	 * Obtain the minimum size for the grouping.
+	 * \see IOptions.h
+	 */
+	int getGroupingMin() const {
+		return groupingMin;
+	}
+
+	/**
+	 * Set the minimum size for the grouping.
+	 * \see IOptions.h
+	 */
+	void setGroupingMin(int size) {
+		groupingMin = size;
+	}
+
+	/**
+	 * Obtain the width for the grouping.
+	 * \see IOptions.h
+	 */
+	int getGroupingWidth() const {
+		return groupingWidth;
+	}
+
+	/**
+	 * Set the width for the grouping.
+	 * \see IOptions.h
+	 */
+	void setGroupingWidth(int width) {
+		groupingWidth = width;
 	}
 
 };

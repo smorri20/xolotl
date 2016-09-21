@@ -51,6 +51,11 @@ protected:
 	int id;
 
 	/**
+	 * An integer identification number for this momentum.
+	 */
+	int momId;
+
+	/**
 	 * The temperature at which the cluster currently exists. The diffusion
 	 * coefficient is recomputed each time the temperature is changed.
 	 */
@@ -180,9 +185,10 @@ public:
 	/**
 	 * This operation returns the current concentration.
 	 *
+	 * @param dist The distance for super clusters
 	 * @return The concentration of this reactant
 	 */
-	double getConcentration() const;
+	virtual double getConcentration(double dist = 0.0) const;
 
 	/**
 	 * This operation sets the concentration of the reactant to the
@@ -325,6 +331,20 @@ public:
 	 * @return The id
 	 */
 	int getId() const;
+
+	/**
+	 * This operation sets the id of the momentum of the reactant.
+	 *
+	 * @param nId The new id for this momentum
+	 */
+	void setMomentumId(int nId);
+
+	/**
+	 * This operation returns the id for this reactant momentum.
+	 *
+	 * @return The id
+	 */
+	int getMomentumId() const;
 
 	/**
 	 * This operation sets the temperature at which the reactant currently

@@ -3,6 +3,7 @@
 
 //Includes
 #include <NECluster.h>
+#include <NESuperCluster.h>
 #include <NetworkLoader.h>
 #include <NEClusterReactionNetwork.h>
 
@@ -54,6 +55,16 @@ class NEClusterNetworkLoader : public NetworkLoader {
 protected:
 
 	/**
+	 * The xenon size at which the grouping scheme starts
+	 */
+	int xeMin;
+
+	/**
+	 * The width of the group in the xenon direction.
+	 */
+	int sectionWidth;
+
+	/**
 	 * Private nullary constructor.
 	 */
 	NEClusterNetworkLoader() {}
@@ -103,6 +114,27 @@ public:
 	 * @return network The reaction network
 	 */
 	virtual std::shared_ptr<IReactionNetwork> load();
+
+	/**
+	 * This operation will apply a grouping method to the network.
+	 *
+	 * @param The network to be modified.
+	 */
+	void applyGrouping(std::shared_ptr<IReactionNetwork> network);
+
+	/**
+	 * This operation will set the xenon size at which the grouping scheme starts.
+	 *
+	 * @param min The value for the size
+	 */
+	void setXeMin (int min) {xeMin = min;}
+
+	/**
+	 * This operation will set the xenon width for the grouping scheme.
+	 *
+	 * @param w The value of the width
+	 */
+	void setWidth (int w) {sectionWidth = w;}
 };
 
 } /* namespace xolotlCore */

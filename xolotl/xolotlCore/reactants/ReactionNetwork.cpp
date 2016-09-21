@@ -66,7 +66,7 @@ void ReactionNetwork::updateConcentrationsFromArray(double * concentrations) {
 	// Local Declarations
 	auto reactants = getAll();
 	int size = reactants->size();
-	int id = 1;
+	int id = 0;
 
 	// Set the concentrations
 	concUpdateCounter->increment();	// increment the update concentration counter

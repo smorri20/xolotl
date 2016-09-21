@@ -47,6 +47,14 @@ private:
 		std::shared_ptr<IReactant> > mixedSpeciesMap;
 
 	/**
+	 * The map of super species clusters, indexed by a map that
+	 * contains the name of the constituents of the compound reactant and their
+	 * sizes.
+	 */
+	std::unordered_map< std::map< std::string, int >,
+		std::shared_ptr<IReactant> > superSpeciesMap;
+
+	/**
 	 * This map stores all of the clusters in the network by type.
 	 */
 	std::map<std::string, std::shared_ptr<
@@ -123,6 +131,17 @@ public:
 			const std::vector<int>& sizes) const;
 
 	/**
+	 * This operation returns a super reactant with the given type and size
+	 * if it exists in the network or null if not.
+	 *
+	 * @param type The type of the compound reactant
+	 * @param size The size of the reactant.
+	 * @return A pointer to the super reactant
+	 */
+	IReactant * getSuper(const std::string& type,
+			const int size) const;
+
+	/**
 	 * This operation returns all reactants in the network without regard for
 	 * their composition or whether they are compound reactants. The list may
 	 * or may not be ordered and the decision is left to implementers.
@@ -164,6 +183,41 @@ public:
 	void add(std::shared_ptr<IReactant> reactant);
 
 	/**
+	 * This operation adds a super reactant to the network.
+	 * Adding a reactant to the network does not set the network as the
+	 * reaction network for the reactant. This step must be performed
+	 * separately to allow for the scenario where the network is generated
+	 * entirely before running.
+	 *
+	 * This operation sets the id of the reactant to one that is specific
+	 * to this network. Do not share Reactants across networks! This id is
+	 * guaranteed to be between 1 and n, including both, for n reactants in
+	 * the network.
+	 *
+	 * The reactant will not be added to the network if the NECluster does
+	 * not recognize it as a type of reactant that it cares about (including
+	 * adding null). This operation throws an exception of type std::string
+	 * if the reactant is  already in the network.
+	 *
+	 * @param reactant The reactant that should be added to the network.
+	 */
+	void addSuper(std::shared_ptr<IReactant> reactant);
+
+	/**
+	 * This operation removes the reactant from the network.
+	 *
+	 * @param reactant The reactant that should be removed.
+	 */
+	void removeReactant(IReactant * reactant);
+
+	/**
+	 * This operation reinitializes the network.
+	 *
+	 * It computes the cluster Ids and network size from the allReactants vector.
+	 */
+	void reinitializeNetwork();
+
+	/**
 	 * This method redefines the connectivities for each cluster in the
 	 * allReactans vector.
 	 */
@@ -179,6 +233,17 @@ public:
 	 * @param value The value to which the key should be set
 	 */
 	void setProperty(const std::string& key, const std::string& value);
+
+	/**
+	 * This operation updates the concentrations for all reactants in the
+	 * network from an array.
+	 *
+	 * @param concentrations The array of doubles that will be for the
+	 * concentrations. This operation does NOT create, destroy or resize the
+	 * array. Properly aligning the array in memory so that this operation
+	 * does not overrun is up to the caller.
+	 */
+	void updateConcentrationsFromArray(double * concentrations);
 
 };
 

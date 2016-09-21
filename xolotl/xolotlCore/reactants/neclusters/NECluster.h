@@ -56,6 +56,16 @@ protected:
 		NECluster * second;
 
 		/**
+		 * The first cluster distance in the group (0.0 for non-super clusters)
+		 */
+		double firstDistance;
+
+		/**
+		 * The second cluster distance in the group (0.0 for non-super clusters)
+		 */
+		double secondDistance;
+
+		/**
 		 * The reaction/dissociation constant associated to this
 		 * reaction or dissociation
 		 */
@@ -63,7 +73,7 @@ protected:
 
 		//! The constructor
 		ClusterPair(NECluster * firstPtr, NECluster * secondPtr, double k)
-		: first(firstPtr), second(secondPtr), kConstant(k) {}
+		: first(firstPtr), second(secondPtr), kConstant(k), firstDistance(0.0), secondDistance(0.0) {}
 	};
 
 	/**
@@ -87,45 +97,15 @@ protected:
 		 */
 		double kConstant;
 
+		/**
+		 * The cluster distance in the group (0.0 for non-super clusters)
+		 */
+		double distance;
+
 		//! The constructor
 		CombiningCluster(NECluster * Ptr, double k)
-		: combining(Ptr), kConstant(k) {}
+		: combining(Ptr), kConstant(k), distance(0.0) {}
 	};
-
-	/**
-	 * A vector of ClusterPairs that represents reacting pairs of clusters
-	 * that produce this cluster. This vector should be populated early in the
-	 * cluster's lifecycle by subclasses. In the standard Xolotl clusters,
-	 * this vector is filled in createReactionConnectivity.
-	 */
-	std::vector<ClusterPair> reactingPairs;
-
-	/**
-	 * A vector of clusters that combine with this cluster to produce other
-	 * clusters. This vector should be populated early in the cluster's
-	 * lifecycle by subclasses. In the standard Xolotl clusters, this vector is
-	 * filled in createReactionConnectivity.
-	 */
-	std::vector<CombiningCluster> combiningReactants;
-
-	/**
-	 * A vector of pairs of clusters: the first one is the one dissociation into
-	 * this cluster, the second one is the one that is emitted at the same time
-	 * during the dissociation. This vector should be populated early in the
-	 * cluster's lifecycle by subclasses. In the standard Xolotl clusters, this
-	 * vector is filled in dissociateCluster that is called by
-	 * createDissociationConnectivity.
-	 */
-	std::vector<ClusterPair> dissociatingPairs;
-
-	/**
-	 * A vector of ClusterPairs that represent pairs of clusters that are emitted
-	 * from the dissociation of this cluster. This vector should be populated early
-	 * in the cluster's lifecycle by subclasses. In the standard Xolotl clusters,
-	 * this vector is filled in emitClusters that is called by
-	 * createDissociationConnectivity.
-	 */
-	std::vector<ClusterPair> emissionPairs;
 
 	/**
 	 * Computes a row (or column) of the reaction connectivity matrix
@@ -251,56 +231,6 @@ protected:
 			const std::string& productName);
 
 	/**
-	 * This operation handles partial replacement reactions of the form
-	 *
-	 * (A_x)(B_y) + C_z --> (A_x)[B_(y-z)]
-	 *
-	 * for each compound cluster in the set.
-	 *
-	 * This operation fills the reaction connectivity array as well as the
-	 * array of combining clusters.
-	 *
-	 * Works only if "this" is not a mixed species. Needs to be overridden
-	 * for the other ones.
-	 *
-	 * @param clusters The clusters that have part of their B components
-	 * replaced. It is assumed that each element of this set represents a
-	 * cluster of the form (A_x)(B_y).
-	 * @param oldComponentName The name of the component that will be partially
-	 * replaced
-	 */
-	virtual void replaceInCompound(std::vector<IReactant *> & clusters,
-			const std::string& oldComponentName);
-
-	/** This operation handles reactions where interstitials fill vacancies,
-	 * sometimes referred to vacancy-interstitial annihilation. The reaction
-	 * is of the form
-	 *
-	 * I_a + V_b
-	 * --> I_(a-b), if a > b
-	 * --> V_(b-a), if a < b
-	 * --> 0, if a = b
-	 *
-	 * It is important to note that I_a + V_b = V_b + I_a.
-	 *
-	 * The operation assumes "this" is the first cluster in the reaction and
-	 * relies on the caller to specify the second cluster name/type.
-	 *
-	 * This operation fills the reaction connectivity array as well as the
-	 * array of combining clusters.
-	 *
-	 * This operation also I_a and V_b as a reacting pair of the product. It
-	 * is simpler and cheaper (O(C)) to do this operation here and quite
-	 * computationally difficult by comparison (O(numI*numV)) to do this
-	 * operation on the child since it has to search all of the possible
-	 * parents.
-	 *
-	 * @param clusters The set of clusters of the second type that interact
-	 * with this cluster
-	 **/
-	void fillVWithI(std::vector<IReactant *> & clusters);
-
-	/**
 
 	 * This operation returns a set that contains only the entries of the
 	 * reaction connectivity array that are non-zero.
@@ -325,6 +255,41 @@ protected:
 	NECluster();
 
 public:
+
+	/**
+	 * A vector of ClusterPairs that represents reacting pairs of clusters
+	 * that produce this cluster. This vector should be populated early in the
+	 * cluster's lifecycle by subclasses. In the standard Xolotl clusters,
+	 * this vector is filled in createReactionConnectivity.
+	 */
+	std::vector<ClusterPair> reactingPairs;
+
+	/**
+	 * A vector of clusters that combine with this cluster to produce other
+	 * clusters. This vector should be populated early in the cluster's
+	 * lifecycle by subclasses. In the standard Xolotl clusters, this vector is
+	 * filled in createReactionConnectivity.
+	 */
+	std::vector<CombiningCluster> combiningReactants;
+
+	/**
+	 * A vector of pairs of clusters: the first one is the one dissociation into
+	 * this cluster, the second one is the one that is emitted at the same time
+	 * during the dissociation. This vector should be populated early in the
+	 * cluster's lifecycle by subclasses. In the standard Xolotl clusters, this
+	 * vector is filled in dissociateCluster that is called by
+	 * createDissociationConnectivity.
+	 */
+	std::vector<ClusterPair> dissociatingPairs;
+
+	/**
+	 * A vector of ClusterPairs that represent pairs of clusters that are emitted
+	 * from the dissociation of this cluster. This vector should be populated early
+	 * in the cluster's lifecycle by subclasses. In the standard Xolotl clusters,
+	 * this vector is filled in emitClusters that is called by
+	 * createDissociationConnectivity.
+	 */
+	std::vector<ClusterPair> emissionPairs;
 
 	/**
 	 * The default constructor
@@ -380,6 +345,13 @@ public:
 	 * reactions
 	 */
 	virtual std::vector<int> getDissociationConnectivity() const;
+
+	/**
+	 * This operation returns the first xenon momentum.
+	 *
+	 * @return The momentum
+	 */
+	virtual double getMomentum() const;
 
 	/**
 	 * This operation returns the total flux of this cluster in the

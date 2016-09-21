@@ -261,114 +261,6 @@ void NECluster::combineClusters(std::vector<IReactant *> & reactants,
 	return;
 }
 
-void NECluster::replaceInCompound(std::vector<IReactant *> & reactants,
-		const std::string& oldComponentName) {
-	// Local Declarations
-	std::map<std::string, int> secondReactantComp, productReactantComp;
-	int numReactants = reactants.size();
-	std::vector<int> productCompositionVector { 0, 0, 0 };
-	NECluster *secondReactant, *productReactant;
-
-	// Loop over all of the extra reactants in this reaction and handle the replacement
-	for (int i = 0; i < numReactants; i++) {
-		// Get the second reactant and its composition
-		secondReactant = (NECluster *) reactants[i];
-		secondReactantComp = secondReactant->getComposition();
-		// Create the composition vector
-		productReactantComp = secondReactantComp;
-		// Updated the modified components
-		productReactantComp[oldComponentName] =
-				secondReactantComp[oldComponentName] - size;
-		// Create the composition vector -- FIXME! This should be general!
-		productCompositionVector = {productReactantComp[xeType],
-				productReactantComp[vType],
-				productReactantComp[iType] };
-		// Get the product of the same type as the second reactant
-		productReactant = (NECluster *) network->getCompound(secondReactant->typeName,
-				productCompositionVector);
-		// If the product exists, mark the proper reaction arrays and add it to the list
-		if (productReactant) {
-			// Setup the connectivity array for the second reactant
-			setReactionConnectivity(secondReactant->id);
-			// Creates the combining cluster
-			// The reaction constant will be computed later and is set to 0.0 for now
-			CombiningCluster combCluster(secondReactant, 0.0);
-			// Push the product onto the list of clusters that combine with this one
-			combiningReactants.push_back(combCluster);
-
-			// Add it again if it is combining with itself
-			if (secondReactant->id == id) combiningReactants.push_back(combCluster);
-		}
-	}
-
-	return;
-}
-
-void NECluster::fillVWithI(std::vector<IReactant *> & reactants) {
-	// Local Declarations
-	std::string productClusterName;
-	int firstClusterSize = 0, secondClusterSize = 0, productClusterSize = 0,
-			reactantVecSize = 0;
-	NECluster *secondCluster, *productCluster;
-
-	// Get the number of V or I in this cluster (the "first")
-	firstClusterSize = size;
-	// Look at all of the second clusters, either V or I, and determine
-	// if a connection exists.
-	reactantVecSize = reactants.size();
-	for (int i = 0; i < reactantVecSize; i++) {
-		// Get the second cluster its size
-		secondCluster = (NECluster *) reactants[i];
-		secondClusterSize = (secondCluster->size);
-		// The only way this reaction is allowed is if the sizes are not equal.
-		if (firstClusterSize != secondClusterSize) {
-			// We have to switch on cluster type to make sure that the annihilation
-			// is computed correctly.
-			if (typeName == vType) {
-				// Compute the product size and set the product name for the case
-				// where I is the second cluster
-				if (secondClusterSize > firstClusterSize) {
-					productClusterSize = secondClusterSize - firstClusterSize;
-					productClusterName = iType;
-				} else if (secondClusterSize < firstClusterSize) {
-					productClusterSize = firstClusterSize - secondClusterSize;
-					productClusterName = vType;
-				}
-			} else if (typeName == iType) {
-				// Compute the product size and set the product name for the case
-				// where V is the second cluster
-				if (firstClusterSize > secondClusterSize) {
-					productClusterSize = firstClusterSize - secondClusterSize;
-					productClusterName = iType;
-				} else if (firstClusterSize < secondClusterSize) {
-					productClusterSize = secondClusterSize - firstClusterSize;
-					productClusterName = vType;
-				}
-			}
-			// Get the product
-			productCluster = (NECluster *) network->get(
-					productClusterName, productClusterSize);
-			// Only deal with this reaction if the product exists. Otherwise the
-			// whole reaction is forbidden.
-			if (productCluster) {
-				// Setup the connectivity array to handle the second reactant
-				setReactionConnectivity(secondCluster->id);
-				// Creates the combining cluster
-				// The reaction constant will be computed later and is set to 0.0 for now
-				CombiningCluster combCluster(secondCluster, 0.0);
-				// Push the second cluster onto the list of clusters that combine
-				// with this one
-				combiningReactants.push_back(combCluster);
-
-				// Add it again if it is combining with itself
-				if (secondCluster->id == id) combiningReactants.push_back(combCluster);
-			}
-		}
-	}
-
-	return;
-}
-
 static std::vector<int> getFullConnectivityVector(std::set<int> connectivitySet,
 		int size) {
 	// Create a vector of zeroes with size equal to the network size
@@ -377,7 +269,7 @@ static std::vector<int> getFullConnectivityVector(std::set<int> connectivitySet,
 	// Set the value of the connectivity array to one for each element that is
 	// in the set.
 	for (auto it = connectivitySet.begin(); it != connectivitySet.end(); ++it) {
-		connectivity[*it - 1] = 1;
+		connectivity[(*it) - 1] = 1;
 	}
 
 	return connectivity;
@@ -385,17 +277,52 @@ static std::vector<int> getFullConnectivityVector(std::set<int> connectivitySet,
 
 std::vector<int> NECluster::getReactionConnectivity() const {
 	// Create the full vector from the set and return it
-	return getFullConnectivityVector(reactionConnectivitySet, network->size());
+	return getFullConnectivityVector(reactionConnectivitySet, network->size() + network->getAll(NESuperType).size());
 }
 
 std::vector<int> NECluster::getDissociationConnectivity() const {
 	// Create the full vector from the set and return it
 	return getFullConnectivityVector(dissociationConnectivitySet,
-			network->size());
+			network->size() + network->getAll(NESuperType).size());
 }
 
 void NECluster::resetConnectivities() {
-	// Doesn't do anything because we are not using effective reactions anymore
+	// Clear both sets
+	reactionConnectivitySet.clear();
+	dissociationConnectivitySet.clear();
+
+	// Connect this cluster to itself since any reaction will affect it
+	setReactionConnectivity(id);
+	setDissociationConnectivity(id);
+	setReactionConnectivity(momId);
+	setDissociationConnectivity(momId);
+
+	// Loop on the reacting pairs
+	for (auto it = reactingPairs.begin(); it != reactingPairs.end(); ++it) {
+		// The cluster is connecting to both clusters in the pair
+		setReactionConnectivity((*it).first->id);
+		setReactionConnectivity((*it).first->momId);
+		setReactionConnectivity((*it).second->id);
+		setReactionConnectivity((*it).second->momId);
+	}
+
+	// Loop on the combining reactants
+	for (auto it = combiningReactants.begin(); it != combiningReactants.end(); ++it) {
+		// The cluster is connecting to the combining cluster
+		setReactionConnectivity((*it).combining->id);
+		setReactionConnectivity((*it).combining->momId);
+	}
+
+	// Loop on the effective dissociating pairs
+	for (auto it = dissociatingPairs.begin(); it != dissociatingPairs.end(); ++it) {
+		// The cluster is connecting to the dissociating cluster which
+		// is the first one by definition
+		setDissociationConnectivity((*it).first->id);
+		setDissociationConnectivity((*it).first->momId);
+	}
+
+	// Don't loop on the emission pairs because
+	// this cluster is not connected to them
 
 	return;
 }
@@ -441,6 +368,10 @@ void NECluster::setReactionNetwork(
 	emissionPairs.shrink_to_fit();
 
 	return;
+}
+
+double NECluster::getMomentum() const {
+	return 0.0;
 }
 
 double NECluster::getTotalFlux() {
@@ -542,7 +473,7 @@ double NECluster::getCombinationFlux() const {
 
 std::vector<double> NECluster::getPartialDerivatives() const {
 	// Local Declarations
-	std::vector<double> partials(network->size(), 0.0);
+	std::vector<double> partials(network->size() + network->getAll(NESuperType).size(), 0.0);
 
 	// Get the partial derivatives for each reaction type
 	getProductionPartialDerivatives(partials);
@@ -609,7 +540,7 @@ void NECluster::getCombinationPartialDerivatives(
 		otherIndex = cluster->id - 1;
 		// Remember that the flux due to combinations is OUTGOING (-=)!
 		// Compute the contribution from this cluster
-		partials[thisNetworkIndex] -= combiningReactants[i].kConstant
+		partials[id - 1] -= combiningReactants[i].kConstant
 				* cluster->concentration;
 		// Compute the contribution from the combining cluster
 		partials[otherIndex] -= combiningReactants[i].kConstant
@@ -704,7 +635,7 @@ double NECluster::getLeftSideRate() const {
 }
 
 std::vector<int> NECluster::getConnectivity() const {
-	int connectivityLength = network->size();
+	int connectivityLength = network->size() + network->getAll(NESuperType).size();
 	std::vector<int> connectivity = std::vector<int>(connectivityLength, 0);
 	auto reactionConnVector = getReactionConnectivity();
 	auto dissociationConnVector = getDissociationConnectivity();
@@ -712,10 +643,10 @@ std::vector<int> NECluster::getConnectivity() const {
 	// The reaction and dissociation vectors must have a length equal to the
 	// number of clusters
 	if (reactionConnVector.size() != (unsigned int)connectivityLength) {
-		throw std::string("The reaction vector is an incorrect length");
+		throw std::string("The reaction vector has an incorrect length");
 	}
 	if (dissociationConnVector.size() != (unsigned int)connectivityLength) {
-		throw std::string("The dissociation vector is an incorrect length");
+		throw std::string("The dissociation vector has an incorrect length");
 	}
 
 	// Merge the two vectors such that the final vector contains

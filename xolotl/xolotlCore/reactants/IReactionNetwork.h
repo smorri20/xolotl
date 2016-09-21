@@ -96,6 +96,28 @@ public:
 	virtual void add(std::shared_ptr<IReactant> reactant) = 0;
 
 	/**
+	 * This operation adds a super reactant to the network.
+	 * Used with a grouping method.
+	 *
+	 * @param reactant The reactant that should be added to the network
+	 */
+	virtual void addSuper(std::shared_ptr<IReactant> reactant) = 0;
+
+	/**
+	 * This operation removes the reactant from the network.
+	 *
+	 * @param reactant The reactant that should be removed.
+	 */
+	virtual void removeReactant(IReactant * reactant) = 0;
+
+	/**
+	 * This operation reinitializes the network.
+	 *
+	 * It computes the cluster Ids and network size from the allReactants vector.
+	 */
+	virtual void reinitializeNetwork() = 0;
+
+	/**
 	 * This method redefines the connectivities for each cluster in the
 	 * allReactans vector.
 	 */

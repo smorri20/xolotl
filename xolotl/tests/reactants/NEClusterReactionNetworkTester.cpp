@@ -145,8 +145,10 @@ BOOST_AUTO_TEST_CASE(checkNames) {
 			++marker;
 		else if (names[i] == "I")
 			++marker;
+		else if (names[i] == "NESuper")
+			++marker;
 	}
-	BOOST_REQUIRE_EQUAL(3U, marker);
+	BOOST_REQUIRE_EQUAL(4U, marker);
 	BOOST_REQUIRE_EQUAL(marker, names.size());
 
 	// Check the names of the compound cluster types. Use the same counting

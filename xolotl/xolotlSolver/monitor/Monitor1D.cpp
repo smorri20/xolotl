@@ -16,6 +16,7 @@
 #include <vector>
 #include <memory>
 #include <HDF5Utils.h>
+#include <NESuperCluster.h>
 
 namespace xolotlSolver {
 
@@ -46,10 +47,10 @@ PetscInt hdf5Stride1D = 0;
 //! HDF5 output file name
 std::string hdf5OutputName1D = "xolotlStop.h5";
 // Declare the vector that will store the Id of the helium clusters
-std::vector<int> heIndices1D;
+std::vector<int> indices1D;
 // Declare the vector that will store the weight of the helium clusters
 // (their He composition)
-std::vector<int> heWeights1D;
+std::vector<int> weights1D;
 // Variable to indicate whether or not the fact that the concentration of the biggest
 // cluster in the network is higher than 1.0e-16 should be printed.
 // Becomes false once it is printed.
@@ -221,13 +222,20 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 
 	// Get the physical grid
 	auto grid = solverHandler->getXGrid();
+	// Get the position of the surface
+	int surfacePos = solverHandler->getSurfacePosition();
+
+	// Get the network
+	auto network = solverHandler->getNetwork();
+	// Get all the super clusters
+	auto superClusters = network->getAll(NESuperType);
 
 	// Get the array of concentration
 	PetscReal **solutionArray;
 	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
 
 	// Store the concentration over the grid
-	double heConcentration = 0;
+	double heConcentration = 0.0, bubbleConcentration = 0.0;
 
 	// Declare the pointer for the concentrations at a specific grid point
 	PetscReal *gridPointSolution;
@@ -237,12 +245,34 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 		// Get the pointer to the beginning of the solution data for this grid point
 		gridPointSolution = solutionArray[xi];
 
+		// Boundary conditions
+		if (xi <= surfacePos || xi == grid.size() - 1) continue;
+
+		// Update the concentration in the network
+		network->updateConcentrationsFromArray(gridPointSolution);
+
 		// Loop on all the indices
-		for (unsigned int i = 0; i < heIndices1D.size(); i++) {
+		for (unsigned int i = 0; i < indices1D.size(); i++) {
 			// Add the current concentration times the number of helium in the cluster
 			// (from the weight vector)
-			heConcentration += gridPointSolution[heIndices1D[i]] * heWeights1D[i]
+			heConcentration += gridPointSolution[indices1D[i]] * weights1D[i]
 			                                     * (grid[xi] - grid[xi-1]);
+			bubbleConcentration += gridPointSolution[indices1D[i]] * (grid[xi] - grid[xi-1]);
+
+//			if (xi != 30) continue;
+//
+//			std::cout << i << " " << gridPointSolution[indices1D[i]] * weights1D[i] << std::endl;
+		}
+
+		// Loop on all the super clusters
+		for (int i = 0; i < superClusters.size(); i++) {
+			auto cluster = (xolotlCore::NESuperCluster *) superClusters[i];
+			heConcentration += cluster->getTotalXenonConcentration() * (grid[xi] - grid[xi-1]);
+			bubbleConcentration += cluster->getTotalConcentration() * (grid[xi] - grid[xi-1]);
+
+//			if (xi != 30) continue;
+//
+//			std::cout << i << " " << cluster->getTotalXenonConcentration() << std::endl;
 		}
 	}
 
@@ -253,6 +283,8 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 	// Sum all the concentrations through MPI reduce
 	double totalHeConcentration = 0.0;
 	MPI_Reduce(&heConcentration, &totalHeConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
+	double totalBubbleConcentration = 0.0;
+	MPI_Reduce(&bubbleConcentration, &totalBubbleConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
 	// Master process
 	if (procId == 0) {
@@ -270,8 +302,10 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 		// Uncomment to write the retention and the fluence in a file
 		std::ofstream outputFile;
 		outputFile.open("retentionOut.txt", ios::app);
-		outputFile << heliumFluence << " "
-				<< 100.0 * (totalHeConcentration / heliumFluence) << std::endl;
+		outputFile << time << " "
+				<< 100.0 * (totalHeConcentration / heliumFluence) << " "
+				<< totalHeConcentration << " "
+				<< totalHeConcentration / totalBubbleConcentration << std::endl;
 		outputFile.close();
 	}
 
@@ -356,9 +390,9 @@ PetscErrorCode computeHeliumConc1D(TS ts, PetscInt timestep, PetscReal time,
 			gridPointSolution = solutionArray[xi];
 
 			// Loop on all the indices
-			for (int l = 0; l < heIndices1D.size(); l++) {
+			for (int l = 0; l < indices1D.size(); l++) {
 				// Add the current concentration
-				heConcLocal[heWeights1D[l]] += gridPointSolution[heIndices1D[l]]
+				heConcLocal[weights1D[l]] += gridPointSolution[indices1D[l]]
 																	  * (grid[xi] - grid[xi-1]);
 			}
 		}
@@ -465,10 +499,10 @@ PetscErrorCode computeCumulativeHelium1D(TS ts, PetscInt timestep, PetscReal tim
 			gridPointSolution = solutionArray[xi];
 			// Compute the total helium concentration at this grid point
 			// Loop on all the indices
-			for (int i = 0; i < heIndices1D.size(); i++) {
+			for (int i = 0; i < indices1D.size(); i++) {
 				// Add the current concentration times the number of helium in the cluster
 				// (from the weight vector)
-				heLocalConc += gridPointSolution[heIndices1D[i]] * heWeights1D[i]
+				heLocalConc += gridPointSolution[indices1D[i]] * weights1D[i]
 						                                     * (grid[xi] - grid[xi-1]);
 			}
 
@@ -509,7 +543,7 @@ PetscErrorCode computeCumulativeHelium1D(TS ts, PetscInt timestep, PetscReal tim
 PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *) {
 	PetscErrorCode ierr;
-	const double **solutionArray, *gridPointSolution;
+	double **solutionArray, *gridPointSolution;
 	PetscInt xs, xm, xi, Mx;
 	double x = 0.0;
 
@@ -546,6 +580,8 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network and its size
 	auto network = solverHandler->getNetwork();
 	int networkSize = network->size();
+	auto superClusters = network->getAll(NESuperType);
+	int dof = networkSize + superClusters.size();
 
 	// Choice of the cluster to be plotted
 	PetscInt ix = Mx / 2;
@@ -560,7 +596,10 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[ix];
 
-			for (int i = 0; i < networkSize; i++) {
+			// Update the concentration in the network
+			network->updateConcentrationsFromArray(gridPointSolution);
+
+			for (int i = 0; i < networkSize - superClusters.size(); i++) {
 				// Create a Point with the concentration[i] as the value
 				// and add it to myPoints
 				xolotlViz::Point aPoint;
@@ -569,11 +608,34 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 				aPoint.x = (double) i + 1.0;
 				myPoints->push_back(aPoint);
 			}
+			int nXe = networkSize - superClusters.size() + 1;
+			for (int i = 0; i < superClusters.size(); i++) {
+				// Get the cluster
+				auto cluster = (NESuperCluster *) superClusters[i];
+				// Width is 40 except for the last one
+				int width = 20;
+				if (i == superClusters.size() - 1) width = 20;
+				// Loop on the width
+				for (int k = 0; k < width; k++) {
+					// Compute the distance
+					double dist = cluster->getDistance(nXe + k);
+					// Create a Point with the concentration[i] as the value
+					// and add it to myPoints
+					xolotlViz::Point aPoint;
+					aPoint.value = cluster->getConcentration(dist);
+					aPoint.t = time;
+					aPoint.x = (double) nXe + k;
+					myPoints->push_back(aPoint);
+				}
+
+				// update nXe
+				nXe += width;
+			}
 		}
 
 		// else receive the values from another process
 		else {
-			for (int i = 0; i < networkSize; i++) {
+			for (int i = 0; i < networkSize - superClusters.size(); i++) {
 				double conc = 0.0;
 				MPI_Recv(&conc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 10, MPI_COMM_WORLD,
 									MPI_STATUS_IGNORE);
@@ -584,6 +646,28 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 				aPoint.t = time;
 				aPoint.x = (double) i + 1.0;
 				myPoints->push_back(aPoint);
+			}
+			int nXe = networkSize - superClusters.size() + 1;
+			for (int i = 0; i < superClusters.size(); i++) {
+				// Width is 40 except for the last one
+				int width = 20;
+				if (i == superClusters.size() - 1) width = 20;
+				// Loop on the width
+				for (int k = 0; k < width; k++) {
+					double conc = 0.0;
+					MPI_Recv(&conc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 10, MPI_COMM_WORLD,
+										MPI_STATUS_IGNORE);
+					// Create a Point with conc as the value
+					// and add it to myPoints
+					xolotlViz::Point aPoint;
+					aPoint.value = conc;
+					aPoint.t = time;
+					aPoint.x = (double) nXe + k;
+					myPoints->push_back(aPoint);
+				}
+
+				// update nXe
+				nXe += width;
 			}
 		}
 
@@ -620,9 +704,28 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[ix];
 
-			for (int i = 0; i < networkSize; i++) {
+			for (int i = 0; i < networkSize - superClusters.size(); i++) {
 				// Send the value of each concentration to the master process
 				MPI_Send(&gridPointSolution[i], 1, MPI_DOUBLE, 0, 10, MPI_COMM_WORLD);
+			}
+			int nXe = networkSize - superClusters.size() + 1;
+			for (int i = 0; i < superClusters.size(); i++) {
+				// Get the cluster
+				auto cluster = (NESuperCluster *) superClusters[i];
+				// Width is 40 except for the last one
+				int width = 20;
+				if (i == superClusters.size() - 1) width = 20;
+				// Loop on the width
+				for (int k = 0; k < width; k++) {
+					// Compute the distance
+					double dist = cluster->getDistance(nXe + k);
+					double conc = cluster->getConcentration(dist);
+					// Send the value of each concentration to the master process
+					MPI_Send(&conc, 1, MPI_DOUBLE, 0, 10, MPI_COMM_WORLD);
+				}
+
+				// update nXe
+				nXe += width;
 			}
 		}
 	}
@@ -975,6 +1078,9 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network
 	auto network = solverHandler->getNetwork();
 
+	// Get all the super clusters
+	auto superClusters = network->getAll(NESuperType);
+
 	// Get the physical grid
 	auto grid = solverHandler->getXGrid();
 
@@ -1008,9 +1114,16 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 			double concTot = 0.0, heliumTot = 0.0;
 
 			// Loop on all the indices to compute the mean
-			for (int i = 0; i < heIndices1D.size(); i++) {
-				concTot += gridPointSolution[heIndices1D[i]];
-				heliumTot += gridPointSolution[heIndices1D[i]] * heWeights1D[i];
+			for (int i = 0; i < indices1D.size(); i++) {
+				concTot += gridPointSolution[indices1D[i]];
+				heliumTot += gridPointSolution[indices1D[i]] * weights1D[i];
+			}
+
+			// Loop on all the super clusters
+			for (int i = 0; i < superClusters.size(); i++) {
+				auto cluster = (xolotlCore::NESuperCluster *) superClusters[i];
+				concTot += cluster->getTotalConcentration();
+				heliumTot += cluster->getTotalXenonConcentration();
 			}
 
 			// Compute the mean size of helium at this depth
@@ -1021,9 +1134,9 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 			double deviation = 0.0;
 
 			// Loop on all the indices to compute the standard deviation
-			for (int i = 0; i < heIndices1D.size(); i++) {
-				deviation = (heWeights1D[i] - heliumMean);
-				standardDev += deviation * deviation * gridPointSolution[heIndices1D[i]];
+			for (int i = 0; i < indices1D.size(); i++) {
+				deviation = (weights1D[i] - heliumMean);
+				standardDev += deviation * deviation * gridPointSolution[indices1D[i]];
 			}
 
 			// Compute the standard deviation at this depth
@@ -1532,7 +1645,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorPerf) failed.");
 	}
 
-	// Initialize heIndices1D and heWeights1D if we want to compute the
+	// Initialize indices1D and weights1D if we want to compute the
 	// retention or the cumulative value
 	if (flagRetention || flagCumul || flagMeanSize || flagConc) {
 		// Get all the helium clusters
@@ -1549,9 +1662,9 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 			auto cluster = heClusters[i];
 			int id = cluster->getId() - 1;
 			// Add the Id to the vector
-			heIndices1D.push_back(id);
+			indices1D.push_back(id);
 			// Add the number of heliums of this cluster to the weight
-			heWeights1D.push_back(cluster->getSize());
+			weights1D.push_back(cluster->getSize());
 		}
 
 		// Loop on the helium-vacancy clusters
@@ -1559,10 +1672,10 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 			auto cluster = heVClusters[i];
 			int id = cluster->getId() - 1;
 			// Add the Id to the vector
-			heIndices1D.push_back(id);
+			indices1D.push_back(id);
 			// Add the number of heliums of this cluster to the weight
 			auto comp = cluster->getComposition();
-			heWeights1D.push_back(comp[heType]);
+			weights1D.push_back(comp[heType]);
 		}
 
 		// Loop on the vacancy clusters
@@ -1570,17 +1683,33 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 			auto cluster = vClusters[i];
 			int id = cluster->getId() - 1;
 			// Add the Id to the vector
-			heIndices1D.push_back(id);
+			indices1D.push_back(id);
 			// Add the number of heliums of this cluster to the weight
 			auto comp = cluster->getComposition();
-			heWeights1D.push_back(comp[heType]);
+			weights1D.push_back(comp[heType]);
+		}
+
+		if (indices1D.size() == 0) {
+			// Try with Xenon
+			// Get all the xenon clusters
+			auto xeClusters = network->getAll(xeType);
+
+			// Loop on the xenon clusters
+			for (unsigned int i = 0; i < xeClusters.size(); i++) {
+				auto cluster = xeClusters[i];
+				int id = cluster->getId() - 1;
+				// Add the Id to the vector
+				indices1D.push_back(id);
+				// Add the number of heliums of this cluster to the weight
+				weights1D.push_back(cluster->getSize());
+			}
 		}
 	}
 
 	// Set the monitor to compute the helium fluence and the retention
 	// for the retention calculation
 	if (flagRetention) {
-		if (heIndices1D.size() == 0) {
+		if (indices1D.size() == 0) {
 			throw std::string(
 					"PetscSolver Exception: Cannot compute the retention because "
 					"there is no helium or helium-vacancy cluster in the network.");
@@ -1620,7 +1749,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 	// Set the monitor to compute the cumulative helium concentration
 	if (flagCumul) {
-		if (heIndices1D.size() == 0) {
+		if (indices1D.size() == 0) {
 			throw std::string(
 					"PetscSolver Exception: Cannot compute the cumulative "
 					"concentration because there is no helium or helium-vacancy "
