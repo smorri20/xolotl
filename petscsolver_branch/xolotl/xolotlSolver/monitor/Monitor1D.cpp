@@ -1427,8 +1427,7 @@ PetscErrorCode monitorBursting1D(TS ts, PetscInt, PetscReal time,
 		for (unsigned int i = 0; i < heIndices1D.size(); i++) {
 			// Add the current concentration times the number of helium in the cluster
 			// (from the weight vector)
-			heDensity += gridPointSolution[heIndices1D[i]] * heWeights1D[i]
-			                                     * (grid[xi] - grid[xi-1]);
+			heDensity += gridPointSolution[heIndices1D[i]] * heWeights1D[i];
 		}
 
 		// Add randomness
