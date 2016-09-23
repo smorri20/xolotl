@@ -107,11 +107,10 @@ void PetscSolver3DHandler::createSolverContext(DM &da) {
 		advectionHandlers[i]->initialize(network, ofill);
 	}
 
-	// Initialize the modified trap-mutation handler and the bubble bursting one here
-	// because they add connectivity
+	// Initialize the modified trap-mutation handler here
+	// because it adds connectivity
 	mutationHandler->initialize(network, grid, ny, hy, nz, hz);
 	mutationHandler->initializeIndex3D(surfacePosition, network, advectionHandlers, grid, ny, hy, nz, hz);
-	burstingHandler->initialize(surfacePosition[0][0], network, grid);
 
 	// Get the diagonal fill
 	getDiagonalFill(dfill, dof * dof);

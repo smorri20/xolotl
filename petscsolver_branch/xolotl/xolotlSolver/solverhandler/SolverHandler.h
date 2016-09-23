@@ -46,9 +46,6 @@ protected:
 	//! The original modified trap-mutation handler created.
 	xolotlCore::ITrapMutationHandler *mutationHandler;
 
-	//! The original bubble bursting handler created.
-	xolotlCore::IBubbleBurstingHandler *burstingHandler;
-
 	//! The number of dimensions for the problem.
 	int dimension;
 
@@ -60,6 +57,9 @@ protected:
 
 	//! If the user wants to move the surface.
 	bool movingSurface;
+
+	//! If the user wants to use the bubble bursting.
+	bool bubbleBursting;
 
 	//! Method generating the grid in the x direction
 	void generateGrid(int nx, double hx, int surfacePos) {
@@ -158,10 +158,6 @@ public:
 		mutationHandler =
 				(xolotlCore::ITrapMutationHandler *) material->getTrapMutationHandler().get();
 
-		// Set the bubble bursting handler
-		burstingHandler =
-				(xolotlCore::IBubbleBurstingHandler *) material->getBubbleBurstingHandler().get();
-
 		// Set the initial vacancy concentration
 		initialVConc = options.getInitialVConcentration();
 
@@ -177,6 +173,9 @@ public:
 		// Should we be able to move the surface?
 		auto map = options.getProcesses();
 		movingSurface = map["movingSurface"];
+
+		// Should we be able to burst bubble?
+		bubbleBursting = map["bursting"];
 
 		return;
 	}
@@ -230,6 +229,14 @@ public:
 	}
 
 	/**
+	 * To know if the bubble bursting should be used.
+	 * \see ISolverHandler.h
+	 */
+	bool burstBubbles() const {
+		return bubbleBursting;
+	}
+
+	/**
 	 * Get the flux handler.
 	 * \see ISolverHandler.h
 	 */
@@ -259,14 +266,6 @@ public:
 	 */
 	xolotlCore::ITrapMutationHandler *getMutationHandler() const {
 		return mutationHandler;
-	}
-
-	/**
-	 * Get the bubble bursting handler.
-	 * \see ISolverHandler.h
-	 */
-	xolotlCore::IBubbleBurstingHandler *getBurstingHandler() const {
-		return burstingHandler;
 	}
 
 	/**

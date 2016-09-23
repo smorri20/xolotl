@@ -6,7 +6,6 @@
 #include <DummyDiffusionHandler.h>
 #include <DummyAdvectionHandler.h>
 #include <DummyTrapMutationHandler.h>
-#include <DummyBubbleBurstingHandler.h>
 #include <TokenizedLineReader.h>
 #include <XGBAdvectionHandler.h>
 #include <YGBAdvectionHandler.h>
@@ -32,9 +31,6 @@ protected:
 
 	//! The modified trap-mutation handler
 	std::shared_ptr<xolotlCore::ITrapMutationHandler> theTrapMutationHandler;
-
-	//! The bubble bursting handler
-	std::shared_ptr<xolotlCore::IBubbleBurstingHandler> theBubbleBurstingHandler;
 
 public:
 
@@ -84,8 +80,6 @@ public:
 		}
 		if (!map["modifiedTM"])
 			theTrapMutationHandler = std::make_shared<xolotlCore::DummyTrapMutationHandler>();
-		if (!map["bursting"])
-			theBubbleBurstingHandler = std::make_shared<xolotlCore::DummyBubbleBurstingHandler>();
 		if (!map["attenuation"])
 			theTrapMutationHandler->setAttenuation(false);
 
@@ -178,15 +172,6 @@ public:
 	 */
 	std::shared_ptr<xolotlCore::ITrapMutationHandler> getTrapMutationHandler() const {
 		return theTrapMutationHandler;
-	}
-
-	/**
-	 * Return the bubble bursting handler.
-	 *
-	 *  @return The bubble bursting handler.
-	 */
-	std::shared_ptr<xolotlCore::IBubbleBurstingHandler> getBubbleBurstingHandler() const {
-		return theBubbleBurstingHandler;
 	}
 };
 
