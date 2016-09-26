@@ -203,7 +203,7 @@ void PSIClusterNetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterR
 		radius = radius / (double) count;
 		// Create the cluster
 		superCluster = std::make_shared<SuperCluster>(heSize, vSize,
-				count, heSectionWidth, vSectionWidth, radius, handlerRegistry);
+				count, 4, 1, radius, handlerRegistry);
 		// Set the HeV vector
 		superCluster->setHeVVector(tempVector);
 		// Add this cluster to the network and clusters

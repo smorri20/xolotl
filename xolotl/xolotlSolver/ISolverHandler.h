@@ -10,7 +10,6 @@
 #include <IDiffusionHandler.h>
 #include <IAdvectionHandler.h>
 #include <ITrapMutationHandler.h>
-#include <IBubbleBurstingHandler.h>
 #include <IMaterialFactory.h>
 #include <IReactionNetwork.h>
 
@@ -157,6 +156,13 @@ public:
 	virtual bool moveSurface() const = 0;
 
 	/**
+	 * To know if the bubble bursting should be used.
+	 *
+	 * @return True if we want the bubble bursting.
+	 */
+	virtual bool burstBubbles() const = 0;
+
+	/**
 	 * Get the flux handler.
 	 *
 	 * @return The flux handler
@@ -183,13 +189,6 @@ public:
 	 * @return The modified trap-mutation handler
 	 */
 	virtual xolotlCore::ITrapMutationHandler *getMutationHandler() const = 0;
-
-	/**
-	 * Get the bubble bursting handler.
-	 *
-	 * @return The bubble bursting handler
-	 */
-	virtual xolotlCore::IBubbleBurstingHandler *getBurstingHandler() const = 0;
 
 	/**
 	 * Get the network.

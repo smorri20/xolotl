@@ -485,72 +485,11 @@ public:
 	void getVMomentPartialDerivatives(std::vector<double> & partials) const;
 
 	/**
-	 * The initialize method has to add connectivity between the V clusters and HeV clusters
-	 * of same number of V. It must also initialize the rates of the reactions and define
-	 * which bubbles can burst at each grid point.
+	 * Returns the average number of vacancies.
 	 *
-	 * @param surfacePos The index of the position of the surface
-	 * @param grid The grid on the x axis
+	 * @return The average number of vacancies
 	 */
-	void initializeBursting(int surfacePos,
-			std::vector<double> grid);
-
-	/**
-	 * This method defines which bursting is allowed at each grid point.
-	 *
-	 * @param surfacePos The index of the position of the surface
-	 * @param grid The grid on the x axis
-	 */
-	void initializeBurstingIndex(int surfacePos,
-			std::vector<double> grid);
-
-	/**
-	 * Compute the flux due to the bubble bursting for all the cluster,
-	 * given the position index xi.
-	 * This method is called by the RHSFunction from the PetscSolver.
-	 *
-	 * A --> B
-	 *
-	 * F(B) = -F(A) = kBursting * C_A
-	 *
-	 * @param xi The index of the position on the grid
-	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
-	 * point where the bursting is computed used to find the next solution
-	 * @param kBursting The bursting rate
-	 */
-	void computeBurstingFlux(int xi, double *updatedConcOffset, double kBursting);
-
-	/**
-	 * Compute the partials due to the bubble bursting for all the clusters given
-	 * the position index xi. Returns the number of bubbles that can possibly burst at
-	 * this grid point.
-	 * This method is called by the RHSJacobian from the PetscSolver.
-	 *
-	 * A --> B
-	 *
-	 * dF(B)/dC_A = -dF(A)/dC_A = kBursting
-	 *
-	 * @param val The pointer to the array that will contain the values of partials
-	 * for the bursting
-	 * @param indices The pointer to the array that will contain the indices of the clusters
-	 * @param xi The index of the grip point
-	 *
-	 * @return The number of bubbles that can burst at this grid point
-	 * @param kBursting The bursting rate
-	 * @param iStart The index at which to start
-	 */
-	int computePartialsForBursting(double *val, int *indices, int xi, double kBursting,
-			int iStart);
-
-	/**
-	 * Returns the number of bubbles that can possibly burst at
-	 * this grid point.
-	 *
-	 * @param xi The index of the grip point
-	 *
-	 * @return The number of bubbles that can burst at this grid point
-	 */
-	int getNBursting(int xi);
+	double getNumV() {return numV;}
 
 };
 //end class SuperCluster
