@@ -66,6 +66,37 @@ public:
 		return;
 	}
 
+	// 64 bit version for ofill
+	void initializeOFill(PSIClusterReactionNetwork *network, int64_t *ofill) {
+		// Get all the reactants
+		auto reactants = network->getAll();
+		int size = reactants->size();
+
+		// Clear the index vector
+		indexVector.clear();
+
+		// Loop on the reactants
+		for (int i = 0; i < size; i++) {
+			// Get the i-th cluster
+			auto cluster = (PSICluster *) reactants->at(i);
+			// Get its diffusion coefficient
+			double diffFactor = cluster->getDiffusionFactor();
+
+			// Don't do anything if the diffusion factor is 0.0
+			if (xolotlCore::equal(diffFactor, 0.0)) continue;
+
+			// Add its index (i) to the vector of indices
+			indexVector.push_back(i);
+
+			// Get its id
+			int index = cluster->getId() - 1;
+			// Set the ofill value to 1 for this cluster
+			ofill[index * size + index] = 1;
+		}
+
+		return;
+	}
+
 	/**
 	 * Get the total number of diffusing clusters in the network.
 	 *

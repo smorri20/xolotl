@@ -38,6 +38,10 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int,
 	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, nx, dof, 1,
 	NULL, &da);
 	checkPetscError(ierr, "PetscSolver1DHandler::createSolverContext: DMDACreate1d failed.");
+	ierr = DMSetFromOptions(da);
+	checkPetscError(ierr, "PetscSolver1DHandler::createSolverContext: DMSetFromOptions failed.");
+	ierr = DMSetUp(da);
+	checkPetscError(ierr, "PetscSolver1DHandler::createSolverContext: DMSetUp failed.");
 
 	// Set the step size
 	hX = hx;
@@ -66,7 +70,13 @@ void PetscSolver1DHandler::createSolverContext(DM &da, int nx, double hx, int,
 	checkPetscError(ierr, "PetscSolver1DHandler::createSolverContext: PetscMemzero (dfill) failed.");
 
 	// Fill ofill, the matrix of "off-diagonal" elements that represents diffusion
+#if defined(PETSC_USE_64BIT_INDICES)
+	// PetscInt is int64_t (or long long)
+	diffusionHandler->initializeOFill(network, (int64_t*)ofill);
+#else
+	// PetscInt is int
 	diffusionHandler->initializeOFill(network, ofill);
+#endif
 
 	// Get the diagonal fill
 	getDiagonalFill(dfill, dof * dof);

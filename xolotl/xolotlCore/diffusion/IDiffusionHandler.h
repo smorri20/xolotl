@@ -5,6 +5,7 @@
 #include <PSICluster.h>
 #include <PSIClusterReactionNetwork.h>
 #include <memory>
+#include <stdint.h>
 
 namespace xolotlCore {
 
@@ -32,6 +33,9 @@ public:
 	 */
 	virtual void initializeOFill(PSIClusterReactionNetwork *network,
 			int *ofill) = 0;
+	// 64 bit version for ofill
+	virtual void initializeOFill(PSIClusterReactionNetwork *network,
+			int64_t *ofill) = 0;
 
 	/**
 	 * Compute the flux due to the diffusion for all the cluster that are diffusing,
