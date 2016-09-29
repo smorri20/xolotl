@@ -139,7 +139,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 		vacancyIndex = singleVacancyCluster->getId() - 1;
 
 	// Loop on all the grid points
-	for (int i = xs; i < xs + xm; i++) {
+	for (PetscInt i = xs; i < xs + xm; i++) {
 		concOffset = concentrations[i];
 
 		// Loop on all the clusters to initialize at 0.0
@@ -156,7 +156,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 	// If the concentration must be set from the HDF5 file
 	if (hasConcentrations) {
 		// Loop on the full grid
-		for (int i = 0; i < Mx; i++) {
+		for (PetscInt i = 0; i < Mx; i++) {
 			// Read the concentrations from the HDF5 file
 			auto concVector = xolotlCore::HDF5Utils::readGridPoint(networkName,
 					tempTimeStep, i);
@@ -235,7 +235,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	const int dof = network->size();
 
 	// Loop over grid points computing ODE terms for each grid point
-	for (int xi = xs; xi < xs + xm; xi++) {
+	for (PetscInt xi = xs; xi < xs + xm; xi++) {
 		// Compute the old and new array offsets
 		concOffset = concs[xi];
 		updatedConcOffset = updatedConcs[xi];
@@ -360,7 +360,7 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	 Loop over grid points computing Jacobian terms for diffusion and advection
 	 at each grid point
 	 */
-	for (int xi = xs; xi < xs + xm; xi++) {
+	for (PetscInt xi = xs; xi < xs + xm; xi++) {
 		// Boundary conditions
 		if (xi == 0 || xi == Mx - 1) continue;
 
@@ -467,7 +467,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	int reactantIndex;
 
 	// Loop over the grid points
-	for (int xi = xs; xi < xs + xm; xi++) {
+	for (PetscInt xi = xs; xi < xs + xm; xi++) {
 		// Boundary conditions
 		if (xi == 0 || xi == Mx - 1) continue;
 

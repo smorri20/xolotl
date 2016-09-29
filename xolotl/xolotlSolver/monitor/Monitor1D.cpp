@@ -113,7 +113,7 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 			currentTimeStep);
 
 	// Loop on the full grid
-	for (int i = 0; i < Mx; i++) {
+	for (PetscInt i = 0; i < Mx; i++) {
 		// Size of the concentration that will be stored
 		int concSize = -1;
 		// Vector for the concentrations
@@ -219,7 +219,7 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 	PetscReal *gridPointSolution;
 
 	// Loop on the grid
-	for (int xi = xs; xi < xs + xm; xi++) {
+	for (PetscInt xi = xs; xi < xs + xm; xi++) {
 		// Get the pointer to the beginning of the solution data for this grid point
 		gridPointSolution = solutionArray[xi];
 
@@ -876,7 +876,7 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt, PetscReal,
 	// Restore the solutionArray
 	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
 
-    PetscFunctionReturn(0);
+	PetscFunctionReturn(0);
 }
 
 /**

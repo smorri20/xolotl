@@ -103,8 +103,8 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 			currentTimeStep);
 
 	// Loop on the full grid
-	for (int j = 0; j < My; j++) {
-		for (int i = 0; i < Mx; i++) {
+	for (PetscInt j = 0; j < My; j++) {
+		for (PetscInt i = 0; i < Mx; i++) {
 			// Size of the concentration that will be stored
 			int concSize = -1;
 			// Vector for the concentrations
@@ -209,8 +209,8 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt, PetscReal time,
 	double heConcentration = 0.0;
 
 	// Loop on the grid
-	for (int j = ys; j < ys + ym; j++) {
-		for (int i = xs; i < xs + xm; i++) {
+	for (PetscInt j = ys; j < ys + ym; j++) {
+		for (PetscInt i = xs; i < xs + xm; i++) {
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[j][i];
 
@@ -326,8 +326,8 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 	xolotlViz::Point thePoint;
 
 	// Loop on the full grid
-	for (int j = 0; j < My; j++) {
-		for (int i = 0; i < Mx; i++) {
+	for (PetscInt j = 0; j < My; j++) {
+		for (PetscInt i = 0; i < Mx; i++) {
 			// If it is the locally owned part of the grid
 			if (i >= xs && i < xs + xm && j >= ys && j < ys + ym) {
 				// Get the pointer to the beginning of the solution data for this grid point

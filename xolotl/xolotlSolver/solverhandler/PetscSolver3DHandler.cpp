@@ -142,9 +142,9 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 		vacancyIndex = singleVacancyCluster->getId() - 1;
 
 	// Loop on all the grid points
-	for (int k = zs; k < zs + zm; k++) {
-		for (int j = ys; j < ys + ym; j++) {
-			for (int i = xs; i < xs + xm; i++) {
+	for (PetscInt k = zs; k < zs + zm; k++) {
+		for (PetscInt j = ys; j < ys + ym; j++) {
+			for (PetscInt i = xs; i < xs + xm; i++) {
 				concOffset = concentrations[k][j][i];
 
 				// Loop on all the clusters to initialize at 0.0
@@ -163,9 +163,9 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) const {
 	// If the concentration must be set from the HDF5 file
 	if (hasConcentrations) {
 		// Loop on the full grid
-		for (int k = 0; k < Mz; k++) {
-			for (int j = 0; j < My; j++) {
-				for (int i = 0; i < Mx; i++) {
+		for (PetscInt k = 0; k < Mz; k++) {
+			for (PetscInt j = 0; j < My; j++) {
+				for (PetscInt i = 0; i < Mx; i++) {
 					// Read the concentrations from the HDF5 file
 					auto concVector = xolotlCore::HDF5Utils::readGridPoint(networkName,
 							tempTimeStep, i, j, k);
@@ -250,9 +250,9 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	const int dof = network->size();
 
 	// Loop over grid points computing ODE terms for each grid point
-	for (int zk = zs; zk < zs + zm; zk++) {
-		for (int yj = ys; yj < ys + ym; yj++) {
-			for (int xi = xs; xi < xs + xm; xi++) {
+	for (PetscInt zk = zs; zk < zs + zm; zk++) {
+		for (PetscInt yj = ys; yj < ys + ym; yj++) {
+			for (PetscInt xi = xs; xi < xs + xm; xi++) {
 				// Compute the old and new array offsets
 				concOffset = concs[zk][yj][xi];
 				updatedConcOffset = updatedConcs[zk][yj][xi];
@@ -388,9 +388,9 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &
 	 Loop over grid points computing Jacobian terms for diffusion and advection
 	 at each grid point
 	 */
-	for (int zk = zs; zk < zs + zm; zk++) {
-		for (int yj = ys; yj < ys + ym; yj++) {
-			for (int xi = xs; xi < xs + xm; xi++) {
+	for (PetscInt zk = zs; zk < zs + zm; zk++) {
+		for (PetscInt yj = ys; yj < ys + ym; yj++) {
+			for (PetscInt xi = xs; xi < xs + xm; xi++) {
 				// Boundary conditions
 				if (xi == 0 || xi == Mx - 1) continue;
 
@@ -533,9 +533,9 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) 
 	int reactantIndex;
 
 	// Loop over the grid points
-	for (int zk = zs; zk < zs + zm; zk++) {
-		for (int yj = ys; yj < ys + ym; yj++) {
-			for (int xi = xs; xi < xs + xm; xi++) {
+	for (PetscInt zk = zs; zk < zs + zm; zk++) {
+		for (PetscInt yj = ys; yj < ys + ym; yj++) {
+			for (PetscInt xi = xs; xi < xs + xm; xi++) {
 				// Boundary conditions
 				if (xi == 0 || xi == Mx - 1) continue;
 
