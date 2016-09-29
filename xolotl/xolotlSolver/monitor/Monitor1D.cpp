@@ -1447,8 +1447,7 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt, PetscReal time,
 #undef __FUNCT__
 #define __FUNCT__ Actual__FUNCT__("xolotlSolver", "monitorBursting1D")
 /**
- * This is a monitoring method that will compute the flux of interstitials
- * at the surface
+ * This is a monitoring method that bursts bubbles
  */
 PetscErrorCode monitorBursting1D(TS ts, PetscInt, PetscReal,
 		Vec solution, void *) {
