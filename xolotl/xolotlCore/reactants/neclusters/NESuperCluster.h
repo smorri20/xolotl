@@ -175,9 +175,10 @@ public:
 	 * @param nTot The total number of clusters in this cluster
 	 * @param width The width of this super cluster in the xenon direction
 	 * @param radius The mean radius
+	 * @param energy The formation energy
 	 * @param registry The performance handler registry
 	 */
-	NESuperCluster(double numXe, int nTot, int width, double radius,
+	NESuperCluster(double numXe, int nTot, int width, double radius, double energy,
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
@@ -414,6 +415,13 @@ public:
 	 * inserted.
 	 */
 	void getMomentPartialDerivatives(std::vector<double> & partials) const;
+
+	/**
+	 * This operation returns the section width.
+	 *
+	 * @return The width of the section
+	 */
+	int getSectionWidth() const {return sectionWidth;}
 
 };
 //end class NESuperCluster

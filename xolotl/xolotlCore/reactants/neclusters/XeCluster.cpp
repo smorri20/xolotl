@@ -23,7 +23,8 @@ XeCluster::XeCluster(int nXe,
 
 	// Compute the reaction radius
 	double FourPi = 4.0 * xolotlCore::pi;
-	reactionRadius = pow((3.0 * 85.0 * (double) size) / FourPi, (1.0/3.0)) / 10.0;
+	reactionRadius = 1.05 * pow((3.0 * 85.0 * (double) size) / FourPi, (1.0/3.0)) / 10.0;
+	if (size == 1) reactionRadius = 0.3;
 
 	return;
 }

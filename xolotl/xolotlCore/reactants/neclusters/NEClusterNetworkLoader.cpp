@@ -140,7 +140,7 @@ void NEClusterNetworkLoader::applyGrouping(
 	NECluster * cluster;
 	std::shared_ptr<NESuperCluster> superCluster;
 	int count = 0, superCount = 0, index = 0, width = sectionWidth;
-	double size = 0.0, radius = 0.0;
+	double size = 0.0, radius = 0.0, energy = 0.0;
 
 	// Map to know which cluster is in which group
 	std::map<int, int> clusterGroupMap;
@@ -163,6 +163,7 @@ void NEClusterNetworkLoader::applyGrouping(
 		tempVector.push_back(cluster);
 		size += (double) k;
 		radius += cluster->getReactionRadius();
+		energy += cluster->getFormationEnergy();
 
 		// Save in which group it is
 		clusterGroupMap[k] = superCount;
@@ -174,9 +175,10 @@ void NEClusterNetworkLoader::applyGrouping(
 		// Average all values
 		size = size / (double) count;
 		radius = radius / (double) count;
+		energy = energy / (double) count;
 		// Create the cluster
 		superCluster = std::make_shared<NESuperCluster>(size, count, count,
-				radius, handlerRegistry);
+				radius, energy, handlerRegistry);
 		// Set the HeV vector
 		superCluster->setXeVector(tempVector);
 		// Add this cluster to the network and clusters
@@ -184,15 +186,14 @@ void NEClusterNetworkLoader::applyGrouping(
 		// Keep the information of the group
 		superGroupMap[superCount] = superCluster.get();
 
-		std::cout << superCount << " " << count << " " << superCluster->getName() << " "
-				<< radius << std::endl;
+		std::cout << superCount << " " << count << " " << superCluster->getName() << std::endl;
 
 		// Reinitialize everything
-		size = 0.0, radius = 0.0;
+		size = 0.0, radius = 0.0, energy = 0.0;
 		count = 0;
 		tempVector.clear();
 		superCount++;
-//		width = max(sectionWidth * (int) (superCount / 40), sectionWidth);
+		width = max(sectionWidth * (int) (superCount / 10), sectionWidth);
 	}
 
 	// Initialize variables for the loop

@@ -549,6 +549,10 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 
 	PetscFunctionBeginUser;
 
+	// Don't do anything if it is not on the stride
+	if (timestep % 10 != 0)
+		PetscFunctionReturn(0);
+
 	// Get the number of processes
 	int worldSize;
 	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
@@ -612,9 +616,8 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 			for (int i = 0; i < superClusters.size(); i++) {
 				// Get the cluster
 				auto cluster = (NESuperCluster *) superClusters[i];
-				// Width is 40 except for the last one
-				int width = 20;
-				if (i == superClusters.size() - 1) width = 20;
+				// Get the width
+				int width = cluster->getSectionWidth();
 				// Loop on the width
 				for (int k = 0; k < width; k++) {
 					// Compute the distance
@@ -649,9 +652,10 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 			}
 			int nXe = networkSize - superClusters.size() + 1;
 			for (int i = 0; i < superClusters.size(); i++) {
-				// Width is 40 except for the last one
-				int width = 20;
-				if (i == superClusters.size() - 1) width = 20;
+				// Get the cluster
+				auto cluster = (NESuperCluster *) superClusters[i];
+				// Get the width
+				int width = cluster->getSectionWidth();
 				// Loop on the width
 				for (int k = 0; k < width; k++) {
 					double conc = 0.0;
@@ -712,9 +716,8 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 			for (int i = 0; i < superClusters.size(); i++) {
 				// Get the cluster
 				auto cluster = (NESuperCluster *) superClusters[i];
-				// Width is 40 except for the last one
-				int width = 20;
-				if (i == superClusters.size() - 1) width = 20;
+				// Get the width
+				int width = cluster->getSectionWidth();
 				// Loop on the width
 				for (int k = 0; k < width; k++) {
 					// Compute the distance

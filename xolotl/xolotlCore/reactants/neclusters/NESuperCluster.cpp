@@ -13,7 +13,7 @@ using namespace xolotlCore;
 std::vector<double> momentumPartials;
 
 NESuperCluster::NESuperCluster(double num, int nTot, int width, double radius,
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
+		double energy, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		NECluster(registry), numXe(num), nTot(nTot), l0(0.0), l1(0.0), dispersion(
 				0.0) {
 	// Set the cluster size
@@ -27,7 +27,7 @@ NESuperCluster::NESuperCluster(double num, int nTot, int width, double radius,
 
 	// Set the reaction radius and formation energy
 	reactionRadius = radius;
-	formationEnergy = 0.0;
+	formationEnergy = energy;
 
 	// Set the diffusion factor and the migration energy
 	migrationEnergy = std::numeric_limits<double>::infinity();
@@ -126,7 +126,7 @@ double NESuperCluster::getTotalXenonConcentration() const {
 }
 
 double NESuperCluster::getDistance(int xe) const {
-	return 2.0 * (double) (xe - numXe) / (double) sectionWidth;
+	return 2.0 * (double) (xe - numXe) / ((double) sectionWidth - 1.0);
 }
 
 void NESuperCluster::createReactionConnectivity() {
@@ -274,13 +274,14 @@ void NESuperCluster::computeRateConstants() {
 	biggestRate = biggestProductionRate;
 
 	// Compute the dispersion
-	dispersion = 2.0
-			* ((double) nXeSquare
-					- (double) (compositionMap[xeType] * compositionMap[xeType])
-							/ (double) nTot) / ((double) (nTot * sectionWidth));
-
-	if (equal(dispersion, 0.0))
+	if (sectionWidth == 1)
 		dispersion = 1.0;
+	else {
+		dispersion = 2.0
+			* ((double) nXeSquare
+					- ((double) compositionMap[xeType] * ((double) compositionMap[xeType]
+							/ (double) sectionWidth))) / ((double) (sectionWidth * (sectionWidth - 1)));
+	}
 
 	// Method to optimize the reaction vectors
 	optimizeReactions();
@@ -333,10 +334,10 @@ void NESuperCluster::optimizeReactions() {
 							&& secondReactantBis == secondReactant) {
 						superPair.a000 += 1.0;
 						superPair.a001 += factor;
-						superPair.a010 += (*itBis).firstDistance;
-						superPair.a011 += (*itBis).firstDistance * factor;
-						superPair.a100 += (*itBis).secondDistance;
-						superPair.a101 += (*itBis).secondDistance * factor;
+						superPair.a100 += (*itBis).firstDistance;
+						superPair.a101 += (*itBis).firstDistance * factor;
+						superPair.a010 += (*itBis).secondDistance;
+						superPair.a011 += (*itBis).secondDistance * factor;
 						superPair.a110 += (*itBis).firstDistance
 								* (*itBis).secondDistance;
 						superPair.a111 += (*itBis).firstDistance
@@ -388,8 +389,7 @@ void NESuperCluster::optimizeReactions() {
 					++mapItBis) {
 				// Compute the xenon index
 				index = mapItBis->first;
-				distance = 2.0 * (double) (index - numXe)
-						/ (double) sectionWidth;
+				distance = getDistance(index);
 				factor = (double) (index - numXe) / dispersion;
 
 				// Get the pairs
@@ -524,8 +524,7 @@ void NESuperCluster::optimizeReactions() {
 					++mapItBis) {
 				// Compute the xenon index
 				index = mapItBis->first;
-				distance = 2.0 * (double) (index - numXe)
-						/ (double) sectionWidth;
+				distance = getDistance(index);
 				factor = (double) (index - numXe) / dispersion;
 
 				// Get the pairs
@@ -771,12 +770,12 @@ double NESuperCluster::getProductionFlux() {
 		// Update the flux
 		value = (*it).kConstant;
 		flux += value
-				* ((*it).a000 * l0A * l0B + (*it).a100 * l0A * l1B
-						+ (*it).a010 * l1A * l0B + (*it).a110 * l1A);
+				* ((*it).a000 * l0A * l0B + (*it).a010 * l0A * l1B
+						+ (*it).a100 * l1A * l0B + (*it).a110 * l1A);
 		// Compute the momentum flux
 		momentumFlux += value
-				* ((*it).a001 * l0A * l0B + (*it).a101 * l0A * l1B
-						+ (*it).a011 * l1A * l0B + (*it).a111 * l1A);
+				* ((*it).a001 * l0A * l0B + (*it).a011 * l0A * l1B
+						+ (*it).a101 * l1A * l0B + (*it).a111 * l1A);
 	}
 
 	// Return the production flux
@@ -785,9 +784,7 @@ double NESuperCluster::getProductionFlux() {
 
 double NESuperCluster::getCombinationFlux() {
 	// Local declarations
-	double flux = 0.0, heDistance = 0.0, vDistance = 0.0, heFactor = 0.0,
-			vFactor = 0.0, value = 0.0;
-	int nReactants = 0, heIndex = 0, vIndex = 0;
+	double flux = 0.0, value = 0.0;
 	NECluster *combiningCluster;
 
 	// Loop over all the combining clusters
@@ -853,22 +850,22 @@ void NESuperCluster::getProductionPartialDerivatives(
 		// Compute the contribution from the first part of the reacting pair
 		value = (*it).kConstant;
 		index = firstReactant->getId() - 1;
-		partials[index] += value * ((*it).a000 * l0B + (*it).a100 * l1B);
+		partials[index] += value * ((*it).a000 * l0B + (*it).a010 * l1B);
 		momentumPartials[index] += value
-				* ((*it).a001 * l0B + (*it).a101 * l1B);
+				* ((*it).a001 * l0B + (*it).a011 * l1B);
 		index = firstReactant->getMomentumId() - 1;
-		partials[index] += value * ((*it).a010 * l0B + (*it).a110 * l1B);
+		partials[index] += value * ((*it).a100 * l0B + (*it).a110 * l1B);
 		momentumPartials[index] += value
-				* ((*it).a011 * l0B + (*it).a111 * l1B);
+				* ((*it).a101 * l0B + (*it).a111 * l1B);
 		// Compute the contribution from the second part of the reacting pair
 		index = secondReactant->getId() - 1;
-		partials[index] += value * ((*it).a000 * l0A + (*it).a010 * l1A);
+		partials[index] += value * ((*it).a000 * l0A + (*it).a100 * l1A);
 		momentumPartials[index] += value
-				* ((*it).a001 * l0A + (*it).a011 * l1A);
+				* ((*it).a001 * l0A + (*it).a101 * l1A);
 		index = secondReactant->getMomentumId() - 1;
-		partials[index] += value * ((*it).a100 * l0A + (*it).a110 * l1A);
+		partials[index] += value * ((*it).a010 * l0A + (*it).a110 * l1A);
 		momentumPartials[index] += value
-				* ((*it).a101 * l0A + (*it).a111 * l1A);
+				* ((*it).a011 * l0A + (*it).a111 * l1A);
 	}
 
 	return;
