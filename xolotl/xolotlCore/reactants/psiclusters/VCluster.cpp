@@ -131,9 +131,17 @@ void VCluster::createDissociationConnectivity() {
 			// (He_c)(V_b) is the dissociating one, (He_c)[V_(b-a)] is the one
 			// that is also emitted during the dissociation
 			auto comp = cluster->getComposition();
+
+			// Skip He_1V_1 because it was counted in the He dissociation
+			if (comp[heType] == 1 && comp[vType] == 1) continue;
+
 			std::vector<int> compositionVec = { comp[heType], comp[vType] - size,
 					0 };
 			auto smallerReactant = (PSICluster *) network->getCompound(heVType, compositionVec);
+			// Special case for numV = 1
+			if (comp[vType] == 1) {
+				smallerReactant = (PSICluster *) network->get(heType, comp[heType]);
+			}
 			dissociateCluster(cluster, smallerReactant);
 		}
 	}

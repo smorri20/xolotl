@@ -199,5 +199,16 @@ void HeCluster::createDissociationConnectivity() {
 		}
 	}
 
+	// Vacancy Dissociation
+	// (He_a)(V_b) --> He_(a)[V_(b-1)] + V
+	// for b == 1
+	// Get the HeV cluster
+	std::vector<int> compositionVec = { size, 1, 0 };
+	auto biggerReactant = (PSICluster *) network->getCompound(heVType, compositionVec);
+	// Get the single vacancy
+	auto singleVacancy = (PSICluster *) network->get(vType, 1);
+	// Dissociate
+	dissociateCluster(biggerReactant, singleVacancy);
+
 	return;
 }

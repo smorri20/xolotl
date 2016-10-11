@@ -44,42 +44,55 @@ protected:
 
 		/**
 		 * All the coefficient needed to compute each element
+		 * The first number represent the momentum of A, the second of B
+		 * in A + B -> C
+		 *
+		 * The third number represent which momentum we are computing.
+		 *
+		 * 0 -> l0
+		 * 1 -> He
+		 * 2 -> V
 		 */
-		double a00000;
-		double a00001;
-		double a00010;
-		double a00011;
-		double a00100;
-		double a00101;
-		double a00110;
-		double a00111;
-		double a01000;
-		double a01001;
-		double a01010;
-		double a01011;
-		double a01100;
-		double a01101;
-		double a01110;
-		double a01111;
-		double a10000;
-		double a10001;
-		double a10010;
-		double a10011;
-		double a10100;
-		double a10101;
-		double a10110;
-		double a10111;
-		double a11000;
-		double a11001;
-		double a11010;
+		double a000;
+		double a001;
+		double a002;
+		double a100;
+		double a101;
+		double a102;
+		double a200;
+		double a201;
+		double a202;
+		double a010;
+		double a011;
+		double a012;
+		double a020;
+		double a021;
+		double a022;
+		double a110;
+		double a111;
+		double a112;
+		double a120;
+		double a121;
+		double a122;
+		double a210;
+		double a211;
+		double a212;
+		double a220;
+		double a221;
+		double a222;
 
 		//! The constructor
-		SuperClusterProductionPair(PSICluster * firstPtr, PSICluster * secondPtr, double k)
-		: first(firstPtr), second(secondPtr), kConstant(k), a00000(0.0), a00001(0.0), a00010(0.0),
-		  a00011(0.0), a00100(0.0), a00101(0.0), a00110(0.0), a00111(0.0), a01000(0.0), a01001(0.0),
-		  a01010(0.0), a01011(0.0), a01100(0.0), a01101(0.0), a01110(0.0), a01111(0.0), a10000(0.0),
-		  a10001(0.0), a10010(0.0), a10011(0.0), a10100(0.0), a10101(0.0), a10110(0.0), a10111(0.0),
-		  a11000(0.0), a11001(0.0), a11010(0.0) {}
+		SuperClusterProductionPair(PSICluster * firstPtr,
+				PSICluster * secondPtr, double k) :
+				first(firstPtr), second(secondPtr), kConstant(k), a000(0.0), a001(
+						0.0), a002(0.0), a100(0.0), a101(0.0), a102(
+						0.0), a200(0.0), a201(0.0), a202(0.0), a010(
+						0.0), a011(0.0), a012(0.0), a020(0.0), a021(
+						0.0), a022(0.0), a110(0.0), a111(0.0), a112(
+						0.0), a120(0.0), a121(0.0), a122(0.0), a210(
+						0.0), a211(0.0), a212(0.0), a220(0.0), a221(
+						0.0), a222(0.0) {
+		}
 	};
 
 	/**
@@ -111,21 +124,32 @@ protected:
 
 		/**
 		 * All the coefficient needed to compute each element
+		 * The first number represent the momentum of A
+		 * in A -> B + C
+		 *
+		 * The second number represent which momentum we are computing.
+		 *
+		 * 0 -> l0
+		 * 1 -> He
+		 * 2 -> V
 		 */
-		double a0000;
-		double a0001;
-		double a0010;
-		double a0011;
-		double a0100;
-		double a0101;
-		double a0110;
-		double a0111;
-		double a1000;
+		double a00;
+		double a01;
+		double a02;
+		double a10;
+		double a11;
+		double a12;
+		double a20;
+		double a21;
+		double a22;
 
 		//! The constructor
-		SuperClusterDissociationPair(PSICluster * firstPtr, PSICluster * secondPtr, double k)
-		: first(firstPtr), second(secondPtr), kConstant(k), a0000(0.0), a0001(0.0), a0010(0.0),
-		  a0011(0.0), a0100(0.0), a0101(0.0), a0110(0.0), a0111(0.0), a1000(0.0) {}
+		SuperClusterDissociationPair(PSICluster * firstPtr,
+				PSICluster * secondPtr, double k) :
+				first(firstPtr), second(secondPtr), kConstant(k), a00(0.0), a01(
+						0.0), a02(0.0), a10(0.0), a11(0.0), a12(0.0), a20(
+						0.0), a21(0.0), a22(0.0) {
+		}
 	};
 
 private:

@@ -836,7 +836,7 @@ PetscErrorCode monitorInterstitial3D(TS ts, PetscInt timestep, PetscReal time,
 /**
  * This is a monitoring method that bursts bubbles
  */
-PetscErrorCode monitorBursting3D(TS ts, PetscInt, PetscReal,
+PetscErrorCode monitorBursting3D(TS ts, PetscInt, PetscReal time,
 		Vec solution, void *) {
 	PetscErrorCode ierr;
 	double ****solutionArray, *gridPointSolution;
@@ -874,6 +874,16 @@ PetscErrorCode monitorBursting3D(TS ts, PetscInt, PetscReal,
 
 	// Get the physical grid
 	auto grid = solverHandler->getXGrid();
+
+	// Get the flux handler to know the flux amplitude.
+	auto fluxHandler = solverHandler->getFluxHandler();
+	double fluxAmplitude = fluxHandler->getFluxAmplitude();
+
+	// Get the delta time from the previous timestep to this timestep
+	double dt = time - previousTime;
+
+	// Compute the prefactor for the probability (arbitrary)
+	double prefactor = fluxAmplitude * dt * 5.0;
 
 	// Loop on the grid
 	for (zk = zs; zk < zs + zm; zk++) {
@@ -914,7 +924,7 @@ PetscErrorCode monitorBursting3D(TS ts, PetscInt, PetscReal,
 				}
 
 				// Add randomness
-				double prob = heDensity * (grid[xi] - grid[xi-1]) * hy * hz / nHe;
+				double prob = prefactor * heDensity * (grid[xi] - grid[xi-1]) * hy * hz / nHe;
 				double test = (double) rand() / (double) RAND_MAX;
 
 				// Burst if the density is higher than the number of helium

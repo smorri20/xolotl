@@ -396,6 +396,10 @@ void HeVCluster::createDissociationConnectivity() {
 	// Get the cluster with one less vacancy
 	compositionVec = {numHe, numV - 1, 0};
 	auto heVClusterLessV = (PSICluster *) network->getCompound(typeName, compositionVec);
+	// Special case for numV = 1
+	if (numV == 1) {
+		heVClusterLessV = (PSICluster *) network->get(heType, numHe);
+	}
 	// Get the single vacancy cluster
 	singleCluster = (PSICluster *) network->get(vType, 1);
 	emitClusters(singleCluster, heVClusterLessV);

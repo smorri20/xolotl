@@ -117,8 +117,8 @@ double SuperCluster::getTotalConcentration() const {
 				continue;
 
 			// Compute the distances
-			heDistance = 2.0 * (double) (heIndex - numHe) / (double) sectionHeWidth;
-			vDistance = 2.0 * (double) (vIndex - numV) / (double) sectionVWidth;
+			heDistance = getHeDistance(heIndex);
+			vDistance = getVDistance(vIndex);
 
 			// Add the concentration of each cluster in the group times its number of helium
 			conc += getConcentration(heDistance, vDistance);
@@ -148,8 +148,8 @@ double SuperCluster::getTotalHeliumConcentration() const {
 				continue;
 
 			// Compute the distances
-			heDistance = 2.0 * (double) (heIndex - numHe) / (double) sectionHeWidth;
-			vDistance = 2.0 * (double) (vIndex - numV) / (double) sectionVWidth;
+			heDistance = getHeDistance(heIndex);
+			vDistance = getVDistance(vIndex);
 
 			// Add the concentration of each cluster in the group times its number of helium
 			conc += getConcentration(heDistance, vDistance) * (double) heIndex;
@@ -160,11 +160,13 @@ double SuperCluster::getTotalHeliumConcentration() const {
 }
 
 double SuperCluster::getHeDistance(int he) const {
-	return 2.0 * (double) (he - numHe) / (double) sectionHeWidth;
+	if (sectionHeWidth == 1) return 0.0;
+	return 2.0 * (double) (he - numHe) / ((double) sectionHeWidth - 1.0);
 }
 
 double SuperCluster::getVDistance(int v) const {
-	return 2.0 * (double) (v - numV) / (double) sectionVWidth;
+	if (sectionVWidth == 1) return 0.0;
+	return 2.0 * (double) (v - numV) / ((double) sectionVWidth - 1.0);
 }
 
 void SuperCluster::createReactionConnectivity() {
@@ -386,18 +388,17 @@ void SuperCluster::computeRateConstants() {
 	biggestRate = biggestProductionRate;
 
 	// Compute the dispersions
-	dispersionHe = 2.0 * ((double) nHeSquare
-			- (double) (compositionMap[heType] * compositionMap[heType])
-					/ (double) nTot) / ((double) (nTot * sectionHeWidth));
-	dispersionV = 2.0 * ((double) nVSquare
-			- (double) (compositionMap[vType] * compositionMap[vType])
-					/ (double) nTot) / ((double) (nTot * sectionVWidth));
+	if (sectionHeWidth == 1) dispersionHe = 1.0;
+	else
+		dispersionHe = 2.0 * ((double) nHeSquare
+			- ((double) compositionMap[heType] * ((double) compositionMap[heType]
+					/ (double) nTot))) / ((double) (nTot * (sectionHeWidth - 1)));
 
-	if (equal(dispersionHe, 0.0))
-		dispersionHe = 1.0;
-
-	if (equal(dispersionV, 0.0))
-		dispersionV = 1.0;
+	if (sectionVWidth == 1) dispersionV = 1.0;
+	else
+		dispersionV = 2.0 * ((double) nVSquare
+			- ((double) compositionMap[vType] * ((double) compositionMap[vType]
+					/ (double) nTot))) / ((double) (nTot * (sectionVWidth - 1)));
 
 	// Method to optimize the reaction vectors
 	optimizeReactions();
@@ -447,33 +448,34 @@ void SuperCluster::optimizeReactions() {
 
 					// Check if it is the same reaction
 					if (firstReactantBis == firstReactant && secondReactantBis == secondReactant) {
-						superPair.a00000 += 1.0;
-						superPair.a00001 += heFactor;
-						superPair.a00010 += vFactor;
-						superPair.a00011 += (*itBis)->firstHeDistance;
-						superPair.a00100 += (*itBis)->firstHeDistance * heFactor;
-						superPair.a00101 += (*itBis)->firstHeDistance * vFactor;
-						superPair.a00110 += (*itBis)->firstVDistance;
-						superPair.a00111 += (*itBis)->firstVDistance * heFactor;
-						superPair.a01000 += (*itBis)->firstVDistance * vFactor;
-						superPair.a01001 += (*itBis)->secondHeDistance;
-						superPair.a01010 += (*itBis)->secondHeDistance * heFactor;
-						superPair.a01011 += (*itBis)->secondHeDistance * vFactor;
-						superPair.a01100 += (*itBis)->secondVDistance;
-						superPair.a01101 += (*itBis)->secondVDistance * heFactor;
-						superPair.a01110 += (*itBis)->secondVDistance * vFactor;
-						superPair.a01111 += (*itBis)->firstHeDistance * (*itBis)->secondHeDistance;
-						superPair.a10000 += (*itBis)->firstHeDistance * (*itBis)->secondHeDistance * heFactor;
-						superPair.a10001 += (*itBis)->firstHeDistance * (*itBis)->secondHeDistance * vFactor;
-						superPair.a10010 += (*itBis)->firstHeDistance * (*itBis)->secondVDistance;
-						superPair.a10011 += (*itBis)->firstHeDistance * (*itBis)->secondVDistance * heFactor;
-						superPair.a10100 += (*itBis)->firstHeDistance * (*itBis)->secondVDistance * vFactor;
-						superPair.a10101 += (*itBis)->firstVDistance * (*itBis)->secondHeDistance;
-						superPair.a10110 += (*itBis)->firstVDistance * (*itBis)->secondHeDistance * heFactor;
-						superPair.a10111 += (*itBis)->firstVDistance * (*itBis)->secondHeDistance * vFactor;
-						superPair.a11000 += (*itBis)->firstVDistance * (*itBis)->secondVDistance;
-						superPair.a11001 += (*itBis)->firstVDistance * (*itBis)->secondVDistance * heFactor;
-						superPair.a11010 += (*itBis)->firstVDistance * (*itBis)->secondVDistance * vFactor;
+						// First is A, second is B, in A + B -> this
+						superPair.a000 += 1.0;
+						superPair.a001 += heFactor;
+						superPair.a002 += vFactor;
+						superPair.a100 += (*itBis)->firstHeDistance;
+						superPair.a101 += (*itBis)->firstHeDistance * heFactor;
+						superPair.a102 += (*itBis)->firstHeDistance * vFactor;
+						superPair.a200 += (*itBis)->firstVDistance;
+						superPair.a201 += (*itBis)->firstVDistance * heFactor;
+						superPair.a202 += (*itBis)->firstVDistance * vFactor;
+						superPair.a010 += (*itBis)->secondHeDistance;
+						superPair.a011 += (*itBis)->secondHeDistance * heFactor;
+						superPair.a012 += (*itBis)->secondHeDistance * vFactor;
+						superPair.a020 += (*itBis)->secondVDistance;
+						superPair.a021 += (*itBis)->secondVDistance * heFactor;
+						superPair.a022 += (*itBis)->secondVDistance * vFactor;
+						superPair.a110 += (*itBis)->firstHeDistance * (*itBis)->secondHeDistance;
+						superPair.a111 += (*itBis)->firstHeDistance * (*itBis)->secondHeDistance * heFactor;
+						superPair.a112 += (*itBis)->firstHeDistance * (*itBis)->secondHeDistance * vFactor;
+						superPair.a120 += (*itBis)->firstHeDistance * (*itBis)->secondVDistance;
+						superPair.a121 += (*itBis)->firstHeDistance * (*itBis)->secondVDistance * heFactor;
+						superPair.a122 += (*itBis)->firstHeDistance * (*itBis)->secondVDistance * vFactor;
+						superPair.a210 += (*itBis)->firstVDistance * (*itBis)->secondHeDistance;
+						superPair.a211 += (*itBis)->firstVDistance * (*itBis)->secondHeDistance * heFactor;
+						superPair.a212 += (*itBis)->firstVDistance * (*itBis)->secondHeDistance * vFactor;
+						superPair.a220 += (*itBis)->firstVDistance * (*itBis)->secondVDistance;
+						superPair.a221 += (*itBis)->firstVDistance * (*itBis)->secondVDistance * heFactor;
+						superPair.a222 += (*itBis)->firstVDistance * (*itBis)->secondVDistance * vFactor;
 
 						// Do not delete the element if it is the original one
 						if (itBis == it) {
@@ -517,11 +519,11 @@ void SuperCluster::optimizeReactions() {
 			for (auto mapItBis = mapIt; mapItBis != effCombiningMap.end(); ++mapItBis) {
 				// Compute the helium index
 				heIndex = mapItBis->first.first;
-				heDistance = 2.0 * (double) (heIndex - numHe) / (double) sectionHeWidth;
+				heDistance = getHeDistance(heIndex);
 				heFactor = (double) (heIndex - numHe) / dispersionHe;
 				// Compute the vacancy index
 				vIndex = mapItBis->first.second;
-				vDistance = 2.0 * (double) (vIndex - numV) / (double) sectionVWidth;
+				vDistance = getVDistance(vIndex);
 				vFactor = (double) (vIndex - numV) / dispersionV;
 
 				// Get the pairs
@@ -534,33 +536,34 @@ void SuperCluster::optimizeReactions() {
 
 					// Check if it is the same reaction
 					if (combiningReactantBis == combiningReactant) {
-						superPair.a00000 += 1.0;
-						superPair.a00001 += heFactor;
-						superPair.a00010 += vFactor;
-						superPair.a00011 += (*itBis)->heDistance;
-						superPair.a00100 += (*itBis)->heDistance * heFactor;
-						superPair.a00101 += (*itBis)->heDistance * vFactor;
-						superPair.a00110 += (*itBis)->vDistance;
-						superPair.a00111 += (*itBis)->vDistance * heFactor;
-						superPair.a01000 += (*itBis)->vDistance * vFactor;
-						superPair.a01001 += heDistance;
-						superPair.a01010 += heDistance * heFactor;
-						superPair.a01011 += heDistance * vFactor;
-						superPair.a01100 += vDistance;
-						superPair.a01101 += vDistance * heFactor;
-						superPair.a01110 += vDistance * vFactor;
-						superPair.a01111 += (*itBis)->heDistance * heDistance;
-						superPair.a10000 += (*itBis)->heDistance * heDistance * heFactor;
-						superPair.a10001 += (*itBis)->heDistance * heDistance * vFactor;
-						superPair.a10010 += (*itBis)->heDistance * vDistance;
-						superPair.a10011 += (*itBis)->heDistance * vDistance * heFactor;
-						superPair.a10100 += (*itBis)->heDistance * vDistance * vFactor;
-						superPair.a10101 += (*itBis)->vDistance * heDistance;
-						superPair.a10110 += (*itBis)->vDistance * heDistance * heFactor;
-						superPair.a10111 += (*itBis)->vDistance * heDistance * vFactor;
-						superPair.a11000 += (*itBis)->vDistance * vDistance;
-						superPair.a11001 += (*itBis)->vDistance * vDistance * heFactor;
-						superPair.a11010 += (*itBis)->vDistance * vDistance * vFactor;
+						// This is A, itBis is B, in this + B -> C
+						superPair.a000 += 1.0;
+						superPair.a001 += heFactor;
+						superPair.a002 += vFactor;
+						superPair.a010 += (*itBis)->heDistance;
+						superPair.a011 += (*itBis)->heDistance * heFactor;
+						superPair.a012 += (*itBis)->heDistance * vFactor;
+						superPair.a020 += (*itBis)->vDistance;
+						superPair.a021 += (*itBis)->vDistance * heFactor;
+						superPair.a022 += (*itBis)->vDistance * vFactor;
+						superPair.a100 += heDistance;
+						superPair.a101 += heDistance * heFactor;
+						superPair.a102 += heDistance * vFactor;
+						superPair.a200 += vDistance;
+						superPair.a201 += vDistance * heFactor;
+						superPair.a202 += vDistance * vFactor;
+						superPair.a110 += (*itBis)->heDistance * heDistance;
+						superPair.a111 += (*itBis)->heDistance * heDistance * heFactor;
+						superPair.a112 += (*itBis)->heDistance * heDistance * vFactor;
+						superPair.a210 += (*itBis)->heDistance * vDistance;
+						superPair.a211 += (*itBis)->heDistance * vDistance * heFactor;
+						superPair.a212 += (*itBis)->heDistance * vDistance * vFactor;
+						superPair.a120 += (*itBis)->vDistance * heDistance;
+						superPair.a121 += (*itBis)->vDistance * heDistance * heFactor;
+						superPair.a122 += (*itBis)->vDistance * heDistance * vFactor;
+						superPair.a220 += (*itBis)->vDistance * vDistance;
+						superPair.a221 += (*itBis)->vDistance * vDistance * heFactor;
+						superPair.a222 += (*itBis)->vDistance * vDistance * vFactor;
 
 						// Do not delete the element if it is the original one
 						if (itBis == it) {
@@ -620,15 +623,16 @@ void SuperCluster::optimizeReactions() {
 
 					// Check if it is the same reaction
 					if (dissociatingClusterBis == dissociatingCluster && otherEmittedClusterBis == otherEmittedCluster) {
-						superPair.a0000 += 1.0;
-						superPair.a0001 += heFactor;
-						superPair.a0010 += vFactor;
-						superPair.a0011 += (*itBis)->firstHeDistance;
-						superPair.a0100 += (*itBis)->firstHeDistance * heFactor;
-						superPair.a0101 += (*itBis)->firstHeDistance * vFactor;
-						superPair.a0110 += (*itBis)->firstVDistance;
-						superPair.a0111 += (*itBis)->firstVDistance * heFactor;
-						superPair.a1000 += (*itBis)->firstVDistance * vFactor;
+						// A is the dissociating cluster
+						superPair.a00 += 1.0;
+						superPair.a01 += heFactor;
+						superPair.a02 += vFactor;
+						superPair.a10 += (*itBis)->firstHeDistance;
+						superPair.a11 += (*itBis)->firstHeDistance * heFactor;
+						superPair.a12 += (*itBis)->firstHeDistance * vFactor;
+						superPair.a20 += (*itBis)->firstVDistance;
+						superPair.a21 += (*itBis)->firstVDistance * heFactor;
+						superPair.a22 += (*itBis)->firstVDistance * vFactor;
 
 						// Do not delete the element if it is the original one
 						if (itBis == it) {
@@ -672,11 +676,11 @@ void SuperCluster::optimizeReactions() {
 			for (auto mapItBis = mapIt; mapItBis != effEmissionMap.end(); ++mapItBis) {
 				// Compute the helium index
 				heIndex = mapItBis->first.first;
-				heDistance = 2.0 * (double) (heIndex - numHe) / (double) sectionHeWidth;
+				heDistance = getHeDistance(heIndex);
 				heFactor = (double) (heIndex - numHe) / dispersionHe;
 				// Compute the vacancy index
 				vIndex = mapItBis->first.second;
-				vDistance = 2.0 * (double) (vIndex - numV) / (double) sectionVWidth;
+				vDistance = getVDistance(vIndex);
 				vFactor = (double) (vIndex - numV) / dispersionV;
 
 				// Get the pairs
@@ -690,15 +694,16 @@ void SuperCluster::optimizeReactions() {
 
 					// Check if it is the same reaction
 					if (firstClusterBis == firstCluster && secondClusterBis == secondCluster) {
-						superPair.a0000 += 1.0;
-						superPair.a0001 += heFactor;
-						superPair.a0010 += vFactor;
-						superPair.a0011 += heDistance;
-						superPair.a0100 += heDistance * heFactor;
-						superPair.a0101 += heDistance * vFactor;
-						superPair.a0110 += vDistance;
-						superPair.a0111 += vDistance * heFactor;
-						superPair.a1000 += vDistance * vFactor;
+						// A is the dissociating cluster
+						superPair.a00 += 1.0;
+						superPair.a01 += heFactor;
+						superPair.a02 += vFactor;
+						superPair.a10 += heDistance;
+						superPair.a11 += heDistance * heFactor;
+						superPair.a12 += heDistance * vFactor;
+						superPair.a20 += vDistance;
+						superPair.a21 += vDistance * heFactor;
+						superPair.a22 += vDistance * vFactor;
 
 						// Do not delete the element if it is the original one
 						if (itBis == it) {
@@ -872,16 +877,16 @@ double SuperCluster::getDissociationFlux() {
 		double lVA = dissociatingCluster->getVMomentum();
 		// Update the flux
 		value = (*it).kConstant;
-		flux += value * ((*it).a0000 * l0A
-				+ (*it).a0011 * lHeA
-				+ (*it).a0110 * lVA);
+		flux += value * ((*it).a00 * l0A
+				+ (*it).a10 * lHeA
+				+ (*it).a20 * lVA);
 		// Compute the momentum fluxes
-		heMomentumFlux += value * ((*it).a0001 * l0A
-				+ (*it).a0100 * lHeA
-				+ (*it).a0111 * lVA);
-		vMomentumFlux += value * ((*it).a0010 * l0A
-				+ (*it).a0101 * lHeA
-				+ (*it).a1000 * lVA);
+		heMomentumFlux += value * ((*it).a01 * l0A
+				+ (*it).a11 * lHeA
+				+ (*it).a21 * lVA);
+		vMomentumFlux += value * ((*it).a02 * l0A
+				+ (*it).a12 * lHeA
+				+ (*it).a22 * lVA);
 	}
 
 	// Return the flux
@@ -896,16 +901,16 @@ double SuperCluster::getEmissionFlux() {
 	for (auto it = effEmissionList.begin(); it != effEmissionList.end(); ++it) {
 		// Update the flux
 		value = (*it).kConstant;
-		flux += value * ((*it).a0000 * l0
-				+ (*it).a0011 * l1He
-				+ (*it).a0110 * l1V);
+		flux += value * ((*it).a00 * l0
+				+ (*it).a10 * l1He
+				+ (*it).a20 * l1V);
 		// Compute the momentum fluxes
-		heMomentumFlux -= value * ((*it).a0001 * l0
-				+ (*it).a0100 * l1He
-				+ (*it).a0111 * l1V);
-		vMomentumFlux -= value * ((*it).a0010 * l0
-				+ (*it).a0101 * l1He
-				+ (*it).a1000 * l1V);
+		heMomentumFlux -= value * ((*it).a01 * l0
+				+ (*it).a11 * l1He
+				+ (*it).a21 * l1V);
+		vMomentumFlux -= value * ((*it).a02 * l0
+				+ (*it).a12 * l1He
+				+ (*it).a22 * l1V);
 	}
 
 	return flux;
@@ -929,34 +934,34 @@ double SuperCluster::getProductionFlux() {
 		double lVB = secondReactant->getVMomentum();
 		// Update the flux
 		value = (*it).kConstant;
-		flux += value * ((*it).a00000 * l0A * l0B
-				+ (*it).a01001 * l0A * lHeB
-				+ (*it).a01100 * l0A * lVB
-				+ (*it).a00011 * lHeA * l0B
-				+ (*it).a01111 * lHeA * lHeB
-				+ (*it).a10010 * lHeA * lVB
-				+ (*it).a00110 * lVA * l0B
-				+ (*it).a10101 * lVA * lHeB
-				+ (*it).a11000 * lVA * lVB);
+		flux += value * ((*it).a000 * l0A * l0B
+				+ (*it).a010 * l0A * lHeB
+				+ (*it).a020 * l0A * lVB
+				+ (*it).a100 * lHeA * l0B
+				+ (*it).a110 * lHeA * lHeB
+				+ (*it).a120 * lHeA * lVB
+				+ (*it).a200 * lVA * l0B
+				+ (*it).a210 * lVA * lHeB
+				+ (*it).a220 * lVA * lVB);
 		// Compute the momentum fluxes
-		heMomentumFlux += value * ((*it).a00001 * l0A * l0B
-				+ (*it).a01010 * l0A * lHeB
-				+ (*it).a01101 * l0A * lVB
-				+ (*it).a00100 * lHeA * l0B
-				+ (*it).a10000 * lHeA * lHeB
-				+ (*it).a10011 * lHeA * lVB
-				+ (*it).a00111 * lVA * l0B
-				+ (*it).a10110 * lVA * lHeB
-				+ (*it).a11001 * lVA * lVB);
-		vMomentumFlux += value * ((*it).a00010 * l0A * l0B
-				+ (*it).a01011 * l0A * lHeB
-				+ (*it).a01110 * l0A * lVB
-				+ (*it).a00101 * lHeA * l0B
-				+ (*it).a10001 * lHeA * lHeB
-				+ (*it).a10100 * lHeA * lVB
-				+ (*it).a01000 * lVA * l0B
-				+ (*it).a10111 * lVA * lHeB
-				+ (*it).a11010 * lVA * lVB);
+		heMomentumFlux += value * ((*it).a001 * l0A * l0B
+				+ (*it).a011 * l0A * lHeB
+				+ (*it).a021 * l0A * lVB
+				+ (*it).a101 * lHeA * l0B
+				+ (*it).a111 * lHeA * lHeB
+				+ (*it).a121 * lHeA * lVB
+				+ (*it).a201 * lVA * l0B
+				+ (*it).a211 * lVA * lHeB
+				+ (*it).a221 * lVA * lVB);
+		vMomentumFlux += value * ((*it).a002 * l0A * l0B
+				+ (*it).a012 * l0A * lHeB
+				+ (*it).a022 * l0A * lVB
+				+ (*it).a102 * lHeA * l0B
+				+ (*it).a112 * lHeA * lHeB
+				+ (*it).a122 * lHeA * lVB
+				+ (*it).a202 * lVA * l0B
+				+ (*it).a212 * lVA * lHeB
+				+ (*it).a222 * lVA * lVB);
 	}
 
 	// Return the production flux
@@ -965,48 +970,47 @@ double SuperCluster::getProductionFlux() {
 
 double SuperCluster::getCombinationFlux() {
 	// Local declarations
-	double flux = 0.0, heDistance = 0.0, vDistance = 0.0, heFactor = 0.0,
-			vFactor = 0.0, value = 0.0;
-	int nReactants = 0, heIndex = 0, vIndex = 0;
+	double flux = 0.0, value = 0.0;
+	int nReactants = 0;
 	PSICluster *combiningCluster;
 
 	// Loop over all the combining clusters
 	for (auto it = effCombiningList.begin(); it != effCombiningList.end(); ++it) {
 		// Get the two reacting clusters
 		combiningCluster = (*it).first;
-		double l0A = combiningCluster->getConcentration(0.0, 0.0);
-		double lHeA = combiningCluster->getHeMomentum();
-		double lVA = combiningCluster->getVMomentum();
+		double l0B = combiningCluster->getConcentration(0.0, 0.0);
+		double lHeB = combiningCluster->getHeMomentum();
+		double lVB = combiningCluster->getVMomentum();
 		// Update the flux
 		value = (*it).kConstant;
-		flux += value * ((*it).a00000 * l0A * l0
-				+ (*it).a01001 * l0A * l1He
-				+ (*it).a01100 * l0A * l1V
-				+ (*it).a00011 * lHeA * l0
-				+ (*it).a01111 * lHeA * l1He
-				+ (*it).a10010 * lHeA * l1V
-				+ (*it).a00110 * lVA * l0
-				+ (*it).a10101 * lVA * l1He
-				+ (*it).a11000 * lVA * l1V);
+		flux += value * ((*it).a000 * l0B * l0
+				+ (*it).a100 * l0B * l1He
+				+ (*it).a200 * l0B * l1V
+				+ (*it).a010 * lHeB * l0
+				+ (*it).a110 * lHeB * l1He
+				+ (*it).a210 * lHeB * l1V
+				+ (*it).a020 * lVB * l0
+				+ (*it).a120 * lVB * l1He
+				+ (*it).a220 * lVB * l1V);
 		// Compute the momentum fluxes
-		heMomentumFlux -= value * ((*it).a00001 * l0A * l0
-				+ (*it).a01010 * l0A * l1He
-				+ (*it).a01101 * l0A * l1V
-				+ (*it).a00100 * lHeA * l0
-				+ (*it).a10000 * lHeA * l1He
-				+ (*it).a10011 * lHeA * l1V
-				+ (*it).a00111 * lVA * l0
-				+ (*it).a10110 * lVA * l1He
-				+ (*it).a11001 * lVA * l1V);
-		vMomentumFlux -= value * ((*it).a00010 * l0A * l0
-				+ (*it).a01011 * l0A * l1He
-				+ (*it).a01110 * l0A * l1V
-				+ (*it).a00101 * lHeA * l0
-				+ (*it).a10001 * lHeA * l1He
-				+ (*it).a10100 * lHeA * l1V
-				+ (*it).a01000 * lVA * l0
-				+ (*it).a10111 * lVA * l1He
-				+ (*it).a11010 * lVA * l1V);
+		heMomentumFlux -= value * ((*it).a001 * l0B * l0
+				+ (*it).a101 * l0B * l1He
+				+ (*it).a201 * l0B * l1V
+				+ (*it).a011 * lHeB * l0
+				+ (*it).a111 * lHeB * l1He
+				+ (*it).a211 * lHeB * l1V
+				+ (*it).a021 * lVB * l0
+				+ (*it).a121 * lVB * l1He
+				+ (*it).a221 * lVB * l1V);
+		vMomentumFlux -= value * ((*it).a002 * l0B * l0
+				+ (*it).a102 * l0B * l1He
+				+ (*it).a202 * l0B * l1V
+				+ (*it).a012 * lHeB * l0
+				+ (*it).a112 * lHeB * l1He
+				+ (*it).a212 * lHeB * l1V
+				+ (*it).a022 * lVB * l0
+				+ (*it).a122 * lVB * l1He
+				+ (*it).a222 * lVB * l1V);
 	}
 
 	return flux;
@@ -1056,66 +1060,66 @@ void SuperCluster::getProductionPartialDerivatives(
 		// Compute the contribution from the first part of the reacting pair
 		value = (*it).kConstant;
 		index = firstReactant->getId() - 1;
-		partials[index] += value * ((*it).a00000 * l0B
-				+ (*it).a01001 * lHeB
-				+ (*it).a01100 * lVB);
-		heMomentumPartials[index] += value * ((*it).a00001 * l0B
-				+ (*it).a01010 * lHeB
-				+ (*it).a01101 * lVB);
-		vMomentumPartials[index] += value * ((*it).a00010 * l0B
-				+ (*it).a01011 * lHeB
-				+ (*it).a01110 * lVB);
+		partials[index] += value * ((*it).a000 * l0B
+				+ (*it).a010 * lHeB
+				+ (*it).a020 * lVB);
+		heMomentumPartials[index] += value * ((*it).a001 * l0B
+				+ (*it).a011 * lHeB
+				+ (*it).a021 * lVB);
+		vMomentumPartials[index] += value * ((*it).a002 * l0B
+				+ (*it).a012 * lHeB
+				+ (*it).a022 * lVB);
 		index = firstReactant->getHeMomentumId() - 1;
-		partials[index] += value * ((*it).a00011 * l0B
-				+ (*it).a01111 * lHeB
-				+ (*it).a10010 * lVB);
-		heMomentumPartials[index] += value * ((*it).a00100 * l0B
-				+ (*it).a10000 * lHeB
-				+ (*it).a10011 * lVB);
-		vMomentumPartials[index] += value * ((*it).a00101 * l0B
-				+ (*it).a10001 * lHeB
-				+ (*it).a10100 * lVB);
+		partials[index] += value * ((*it).a100 * l0B
+				+ (*it).a110 * lHeB
+				+ (*it).a120 * lVB);
+		heMomentumPartials[index] += value * ((*it).a101 * l0B
+				+ (*it).a111 * lHeB
+				+ (*it).a121 * lVB);
+		vMomentumPartials[index] += value * ((*it).a102 * l0B
+				+ (*it).a112 * lHeB
+				+ (*it).a122 * lVB);
 		index = firstReactant->getVMomentumId() - 1;
-		partials[index] += value * ((*it).a00110 * l0B
-				+ (*it).a10101 * lHeB
-				+ (*it).a11000 * lVB);
-		heMomentumPartials[index] += value * ((*it).a00111 * l0B
-				+ (*it).a10110 * lHeB
-				+ (*it).a11001 * lVB);
-		vMomentumPartials[index] += value * ((*it).a01000 * l0B
-				+ (*it).a10111 * lHeB
-				+ (*it).a11010 * lVB);
+		partials[index] += value * ((*it).a200 * l0B
+				+ (*it).a210 * lHeB
+				+ (*it).a220 * lVB);
+		heMomentumPartials[index] += value * ((*it).a201 * l0B
+				+ (*it).a211 * lHeB
+				+ (*it).a221 * lVB);
+		vMomentumPartials[index] += value * ((*it).a202 * l0B
+				+ (*it).a212 * lHeB
+				+ (*it).a222 * lVB);
 		// Compute the contribution from the second part of the reacting pair
 		index = secondReactant->getId() - 1;
-		partials[index] += value * ((*it).a00000 * l0A
-				+ (*it).a00011 * lHeA
-				+ (*it).a00110 * lVA);
-		heMomentumPartials[index] += value * ((*it).a00001 * l0A
-				+ (*it).a00100 * lHeA
-				+ (*it).a00111 * lVA);
-		vMomentumPartials[index] += value * ((*it).a00010 * l0A
-				+ (*it).a00101 * lHeA
-				+ (*it).a01000 * lVA);
+		partials[index] += value * ((*it).a000 * l0A
+				+ (*it).a100 * lHeA
+				+ (*it).a200* lVA);
+		heMomentumPartials[index] += value * ((*it).a001 * l0A
+				+ (*it).a101 * lHeA
+				+ (*it).a201 * lVA);
+		vMomentumPartials[index] += value * ((*it).a002 * l0A
+				+ (*it).a102 * lHeA
+				+ (*it).a202 * lVA);
 		index = secondReactant->getHeMomentumId() - 1;
-		partials[index] += value * ((*it).a01001 * l0A
-				+ (*it).a01111 * lHeA
-				+ (*it).a10101 * lVA);
-		heMomentumPartials[index] += value * ((*it).a01010 * l0A
-				+ (*it).a10000 * lHeA
-				+ (*it).a10110 * lVA);
-		vMomentumPartials[index] += value * ((*it).a01011 * l0A
-				+ (*it).a10001 * lHeA
-				+ (*it).a10111 * lVA);
+		partials[index] += value * ((*it).a010 * l0A
+				+ (*it).a110 * lHeA
+				+ (*it).a210 * lVA);
+		heMomentumPartials[index] += value * ((*it).a011 * l0A
+				+ (*it).a111 * lHeA
+				+ (*it).a211 * lVA);
+		vMomentumPartials[index] += value * ((*it).a012 * l0A
+				+ (*it).a112 * lHeA
+				+ (*it).a212 * lVA);
 		index = secondReactant->getVMomentumId() - 1;
-		partials[index] += value * ((*it).a01100 * l0A
-				+ (*it).a10010 * lHeA
-				+ (*it).a11000 * lVA);
-		heMomentumPartials[index] += value * ((*it).a01101 * l0A
-				+ (*it).a10011 * lHeA
-				+ (*it).a11001 * lVA);
-		vMomentumPartials[index] += value * ((*it).a01110 * l0A
-				+ (*it).a10100 * lHeA
-				+ (*it).a11010 * lVA);
+		partials[index] += value * ((*it).a020 * l0A
+				+ (*it).a120 * lHeA
+				+ (*it).a220 * lVA);
+		heMomentumPartials[index] += value * ((*it).a021 * l0A
+				+ (*it).a121 * lHeA
+				+ (*it).a221 * lVA);
+		vMomentumPartials[index] += value * ((*it).a022 * l0A
+				+ (*it).a122 * lHeA
+				+ (*it).a222 * lVA);
 	}
 
 	return;
@@ -1140,73 +1144,73 @@ void SuperCluster::getCombinationPartialDerivatives(
 		for (auto it = effCombiningList.begin(); it != effCombiningList.end(); ++it) {
 		// Get the two reacting clusters
 		cluster = (*it).first;
-		double l0A = cluster->getConcentration(0.0, 0.0);
-		double lHeA = cluster->getHeMomentum();
-		double lVA = cluster->getVMomentum();
+		double l0B = cluster->getConcentration(0.0, 0.0);
+		double lHeB = cluster->getHeMomentum();
+		double lVB = cluster->getVMomentum();
 
 		// Compute the contribution from the combining cluster
 		value = (*it).kConstant;
 		index = cluster->getId() - 1;
-		partials[index] -= value * ((*it).a00000 * l0
-				+ (*it).a01001 * l1He
-				+ (*it).a01100 * l1V);
-		heMomentumPartials[index] -= value * ((*it).a00001 * l0
-				+ (*it).a01010 * l1He
-				+ (*it).a01101 * l1V);
-		vMomentumPartials[index] -= value * ((*it).a00010 * l0
-				+ (*it).a01011 * l1He
-				+ (*it).a01110 * l1V);
+		partials[index] -= value * ((*it).a000 * l0
+				+ (*it).a100 * l1He
+				+ (*it).a200 * l1V);
+		heMomentumPartials[index] -= value * ((*it).a001 * l0
+				+ (*it).a101 * l1He
+				+ (*it).a201 * l1V);
+		vMomentumPartials[index] -= value * ((*it).a002 * l0
+				+ (*it).a102 * l1He
+				+ (*it).a202 * l1V);
 		index = cluster->getHeMomentumId() - 1;
-		partials[index] -= value * ((*it).a00011 * l0
-				+ (*it).a01111 * l1He
-				+ (*it).a10010 * l1V);
-		heMomentumPartials[index] -= value * ((*it).a00100 * l0
-				+ (*it).a10000 * l1He
-				+ (*it).a10011 * l1V);
-		vMomentumPartials[index] -= value * ((*it).a00101 * l0
-				+ (*it).a10001 * l1He
-				+ (*it).a10100 * l1V);
+		partials[index] -= value * ((*it).a010 * l0
+				+ (*it).a110 * l1He
+				+ (*it).a210 * l1V);
+		heMomentumPartials[index] -= value * ((*it).a011 * l0
+				+ (*it).a111 * l1He
+				+ (*it).a211 * l1V);
+		vMomentumPartials[index] -= value * ((*it).a012 * l0
+				+ (*it).a112 * l1He
+				+ (*it).a212 * l1V);
 		index = cluster->getVMomentumId() - 1;
-		partials[index] -= value * ((*it).a00110 * l0
-				+ (*it).a10101 * l1He
-				+ (*it).a11000 * l1V);
-		heMomentumPartials[index] -= value * ((*it).a00111 * l0
-				+ (*it).a10110 * l1He
-				+ (*it).a11001 * l1V);
-		vMomentumPartials[index] -= value * ((*it).a01000 * l0
-				+ (*it).a10111 * l1He
-				+ (*it).a11010 * l1V);
+		partials[index] -= value * ((*it).a020 * l0
+				+ (*it).a120 * l1He
+				+ (*it).a220 * l1V);
+		heMomentumPartials[index] -= value * ((*it).a021 * l0
+				+ (*it).a121 * l1He
+				+ (*it).a221 * l1V);
+		vMomentumPartials[index] -= value * ((*it).a022 * l0
+				+ (*it).a122 * l1He
+				+ (*it).a222 * l1V);
 		// Compute the contribution from this cluster
 		index = id - 1;
-		partials[index] -= value * ((*it).a00000 * l0A
-				+ (*it).a00011 * lHeA
-				+ (*it).a00110 * lVA);
-		heMomentumPartials[index] -= value * ((*it).a00001 * l0A
-				+ (*it).a00100 * lHeA
-				+ (*it).a00111 * lVA);
-		vMomentumPartials[index] -= value * ((*it).a00010 * l0A
-				+ (*it).a00101 * lHeA
-				+ (*it).a01000 * lVA);
+		partials[index] -= value * ((*it).a000 * l0B
+				+ (*it).a010 * lHeB
+				+ (*it).a020 * lVB);
+		heMomentumPartials[index] -= value * ((*it).a001 * l0B
+				+ (*it).a011 * lHeB
+				+ (*it).a021 * lVB);
+		vMomentumPartials[index] -= value * ((*it).a002 * l0B
+				+ (*it).a012 * lHeB
+				+ (*it).a022 * lVB);
 		index = heMomId - 1;
-		partials[index] -= value * ((*it).a01001 * l0A
-				+ (*it).a01111 * lHeA
-				+ (*it).a10101 * lVA);
-		heMomentumPartials[index] -= value * ((*it).a01010 * l0A
-				+ (*it).a10000 * lHeA
-				+ (*it).a10110 * lVA);
-		vMomentumPartials[index] -= value * ((*it).a01011 * l0A
-				+ (*it).a10001 * lHeA
-				+ (*it).a10111 * lVA);
+		partials[index] -= value * ((*it).a100 * l0B
+				+ (*it).a110 * lHeB
+				+ (*it).a120 * lVB);
+		heMomentumPartials[index] -= value * ((*it).a101 * l0B
+				+ (*it).a111 * lHeB
+				+ (*it).a121 * lVB);
+		vMomentumPartials[index] -= value * ((*it).a102 * l0B
+				+ (*it).a112 * lHeB
+				+ (*it).a122 * lVB);
 		index = vMomId - 1;
-		partials[index] -= value * ((*it).a01100 * l0A
-				+ (*it).a10010 * lHeA
-				+ (*it).a11000 * lVA);
-		heMomentumPartials[index] -= value * ((*it).a01101 * l0A
-				+ (*it).a10011 * lHeA
-				+ (*it).a11001 * lVA);
-		vMomentumPartials[index] -= value * ((*it).a01110 * l0A
-				+ (*it).a10100 * lHeA
-				+ (*it).a11010 * lVA);
+		partials[index] -= value * ((*it).a200 * l0B
+				+ (*it).a210 * lHeB
+				+ (*it).a220 * lVB);
+		heMomentumPartials[index] -= value * ((*it).a201 * l0B
+				+ (*it).a211 * lHeB
+				+ (*it).a221 * lVB);
+		vMomentumPartials[index] -= value * ((*it).a202 * l0B
+				+ (*it).a212 * lHeB
+				+ (*it).a222 * lVB);
 	}
 
 	return;
@@ -1230,21 +1234,20 @@ void SuperCluster::getDissociationPartialDerivatives(
 	for (auto it = effDissociatingList.begin(); it != effDissociatingList.end(); ++it) {
 		// Get the dissociating clusters
 		cluster = (*it).first;
-
 		// Compute the contribution from the dissociating cluster
 		value = (*it).kConstant;
 		index = cluster->getId() - 1;
-		partials[index] += value * ((*it).a0000);
-		heMomentumPartials[index] += value * ((*it).a0001);
-		vMomentumPartials[index] += value * ((*it).a0010);
+		partials[index] += value * ((*it).a00);
+		heMomentumPartials[index] += value * ((*it).a01);
+		vMomentumPartials[index] += value * ((*it).a02);
 		index = cluster->getHeMomentumId() - 1;
-		partials[index] += value * ((*it).a0011);
-		heMomentumPartials[index] += value * ((*it).a0100);
-		vMomentumPartials[index] += value * ((*it).a0101);
+		partials[index] += value * ((*it).a10);
+		heMomentumPartials[index] += value * ((*it).a11);
+		vMomentumPartials[index] += value * ((*it).a12);
 		index = cluster->getVMomentumId() - 1;
-		partials[index] += value * ((*it).a0110);
-		heMomentumPartials[index] += value * ((*it).a0111);
-		vMomentumPartials[index] += value * ((*it).a1000);
+		partials[index] += value * ((*it).a20);
+		heMomentumPartials[index] += value * ((*it).a21);
+		vMomentumPartials[index] += value * ((*it).a22);
 	}
 
 	return;
@@ -1268,17 +1271,17 @@ void SuperCluster::getEmissionPartialDerivatives(
 		// Compute the contribution from the dissociating cluster
 		value = (*it).kConstant;
 		index = id - 1;
-		partials[index] -= value * ((*it).a0000);
-		heMomentumPartials[index] -= value * ((*it).a0001);
-		vMomentumPartials[index] -= value * ((*it).a0010);
+		partials[index] -= value * ((*it).a00);
+		heMomentumPartials[index] -= value * ((*it).a01);
+		vMomentumPartials[index] -= value * ((*it).a02);
 		index = heMomId - 1;
-		partials[index] -= value * ((*it).a0011);
-		heMomentumPartials[index] -= value * ((*it).a0100);
-		vMomentumPartials[index] -= value * ((*it).a0101);
+		partials[index] -= value * ((*it).a10);
+		heMomentumPartials[index] -= value * ((*it).a11);
+		vMomentumPartials[index] -= value * ((*it).a12);
 		index = vMomId - 1;
-		partials[index] -= value * ((*it).a0110);
-		heMomentumPartials[index] -= value * ((*it).a0111);
-		vMomentumPartials[index] -= value * ((*it).a1000);
+		partials[index] -= value * ((*it).a20);
+		heMomentumPartials[index] -= value * ((*it).a21);
+		vMomentumPartials[index] -= value * ((*it).a22);
 	}
 
 	return;

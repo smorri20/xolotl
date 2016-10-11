@@ -495,13 +495,8 @@ double PSICluster::getTotalFlux() {
 	// Get the fluxes
 	prodFlux = getProductionFlux();
 	dissFlux = getDissociationFlux();
-
-	// Don't compute the combination and emission flux if the
-	// concentration is 0.0 because they are proportional to it
-	if (!xolotlCore::equal(concentration, 0.0)) {
-		combFlux = getCombinationFlux();
-		emissFlux = getEmissionFlux();
-	}
+	combFlux = getCombinationFlux();
+	emissFlux = getEmissionFlux();
 
 	return prodFlux - combFlux + dissFlux - emissFlux;
 }

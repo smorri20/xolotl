@@ -161,7 +161,7 @@ void PSIClusterNetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterR
 	PSICluster * cluster;
 	std::shared_ptr<SuperCluster> superCluster;
 	static std::map<std::string, int> composition;
-	int count = 0, superCount = 0, heIndex = 0, vIndex = vMin, heWidth = heSectionWidth, vWidth = vSectionWidth;
+	int count = 0, superCount = 0, heIndex = 1, vIndex = vMin, heWidth = heSectionWidth, vWidth = vSectionWidth;
 	double heSize = 0.0, vSize = 0.0, radius = 0.0;
 
 	// Map to know which cluster is in which group
@@ -211,7 +211,7 @@ void PSIClusterNetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterR
 		// Keep the information of the group
 		superGroupMap[std::make_pair(-1, k)] = superCluster.get();
 
-		std::cout << -1 << " " << k << " " << count << " " << superCluster->getName() << " " << radius << std::endl;
+		std::cout << "super: " << superCluster->getName() << " 4 1" << std::endl;
 
 		// Reinitialize everything
 		heSize = 0.0, vSize = 0.0, radius = 0.0;
@@ -301,9 +301,12 @@ void PSIClusterNetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterR
 	for (int k = 0; k < nVGroup; k++) {
 		// Loop on the helium groups
 		for (int j = 0; j < nHeGroup; j++) {
+			// To check if the group is full
+			int heLow = 100000, heHigh = -1, vLow = 100000, vHigh = -1;
+
 			// Loop within the group
-			for (int n = k * vSectionWidth + vMin; n < (k + 1) * vSectionWidth + vMin; n++) {
-				for (int m = j * heSectionWidth + 1; m < (j + 1) * heSectionWidth + 1; m++) {
+			for (int n = vIndex; n < vIndex + vWidth; n++) {
+				for (int m = heIndex; m < heIndex + heWidth; m++) {
 					// Get the corresponding cluster
 					std::vector<int> compositionVector = { m, n, 0 };
 					// Get the product of the same type as the second reactant
@@ -314,6 +317,12 @@ void PSIClusterNetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterR
 
 					// Verify it was not already used
 					if (clusterGroupMap.find(compositionVector) != clusterGroupMap.end()) continue;
+
+					// Will be used to know if the group was full
+					if (m < heLow) heLow = m;
+					if (m > heHigh) heHigh = m;
+					if (n < vLow) vLow = n;
+					if (n > vHigh) vHigh = n;
 
 					// Increment the counter
 					count++;
@@ -329,15 +338,35 @@ void PSIClusterNetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterR
 			}
 
 			// Check if there were clusters in this group
-			if (count == 0) continue;
+			if (count == 0) {
+				// Reinitialize the group indices for the helium direction
+				heIndex += heWidth;
+//				heWidth = std::max((int) std::pow((double) (j * heSectionWidth), 3.0) / 400000, heSectionWidth);
+//				heWidth -= heWidth % heSectionWidth;
+				continue;
+			}
 
 			// Average all values
 			heSize = heSize / (double) count;
 			vSize = vSize / (double) count;
 			radius = radius / (double) count;
-			// Create the cluster
-			superCluster = std::make_shared<SuperCluster>(heSize, vSize,
-					count, heSectionWidth, vSectionWidth, radius, handlerRegistry);
+			// Create the super cluster
+			if (heHigh - heLow + 1 == heWidth && vHigh - vLow + 1 == vWidth) {
+				// Everything is fine, the cluster is full
+				superCluster = std::make_shared<SuperCluster>(heSize, vSize,
+						count, heWidth, vWidth, radius,
+						handlerRegistry);
+
+				std::cout << "normal: " << superCluster->getName() << " "
+						<< heWidth << " " << vWidth << std::endl;
+			} else {
+				// The cluster is smaller than we thought because we are at the edge
+				superCluster = std::make_shared<SuperCluster>(heSize, vSize,
+						count, heHigh - heLow + 1, vHigh - vLow + 1, radius, handlerRegistry);
+
+				std::cout << "irregular: " << superCluster->getName() << " "
+						<< heHigh - heLow + 1 << " " << vHigh - vLow + 1<< std::endl;
+			}
 			// Set the HeV vector
 			superCluster->setHeVVector(tempVector);
 			// Add this cluster to the network and clusters
@@ -345,13 +374,22 @@ void PSIClusterNetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterR
 			// Keep the information of the group
 			superGroupMap[std::make_pair(j, k)] = superCluster.get();
 
-			std::cout << j << " " << k << " " << count << " " << superCluster->getName() << std::endl;
-
 			// Reinitialize everything
 			heSize = 0.0, vSize = 0.0, radius = 0.0;
 			count = 0;
 			tempVector.clear();
+			// Reinitialize the group indices for the helium direction
+			heIndex += heWidth;
+//			heWidth = std::max((int) std::pow((double) (j * heSectionWidth), 3.0) / 400000, heSectionWidth);
+//			heWidth -= heWidth % heSectionWidth;
 		}
+
+		// Reinitialize the group indices for the vacancy direction
+		vIndex += vWidth;
+//		vWidth = std::max((int) std::pow((double) (k * vSectionWidth), 3.0) / 100000, vSectionWidth);
+//		vWidth -= vWidth % vSectionWidth;
+//		heWidth = heSectionWidth;
+		heIndex = 1;
 	}
 
 	// Initialize variables for the loop
