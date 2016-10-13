@@ -2,6 +2,7 @@
 #define REACTION_NETWORK_H
 
 // Includes
+#include <set>
 #include "IReactionNetwork.h"
 #include <Constants.h>
 
@@ -35,6 +36,59 @@ namespace xolotlCore {
 class ReactionNetwork : public IReactionNetwork {
 
 protected:
+
+    /**
+     * A functor useful for identifying a set of reactants by their
+     * composition from a container, e.g., when removing a collection
+     * of doomed reactants from a vector of reactants.
+     */
+    class ReactantMatcher
+    {
+    private:
+        /**
+         * The canonical composition string representations of the reactants
+         * we are to find.
+         */
+        std::set<std::string> compStrings;
+
+    public:
+        /**
+         * Build a ReactantMatcher.
+         * @param reactants The collection of reactants we are to recognize.
+         */
+        ReactantMatcher(const std::vector<IReactant*>& reactants)
+        {
+            for(auto reactant : reactants)
+            {
+                compStrings.insert(reactant->getCompositionString());
+            }
+        }
+
+        /**
+         * Determine if the given reactant is in our set.
+         * @param testReactant The reactant to check.
+         * @return true iff the reactant's composition's canonical string
+         * representation is in our set.
+         */
+        bool operator()(const IReactant* testReactant) const
+        {
+            auto iter = compStrings.find(testReactant->getCompositionString());
+            return (iter != compStrings.end());
+        }
+
+        /**
+         * Determine if the given reactant is in our set.
+         * @param testReactant The reactant to check.
+         * @return true iff the reactant's composition's canonical string
+         * representation is in our set.
+         */
+        bool operator()(const std::shared_ptr<IReactant> testReactant) const
+        {
+            return this->operator()(testReactant.get());
+        }
+    };
+
+
 
 	/**
 	 * The properties of this network. The exact configuration of the map is
@@ -186,11 +240,11 @@ public:
 	virtual void addSuper(std::shared_ptr<IReactant> reactant) {return;}
 
 	/**
-	 * This operation removes the reactant from the network.
+	 * This operation removes the reactants from the network.
 	 *
-	 * @param reactant The reactant that should be removed.
+	 * @param reactant The reactants that should be removed.
 	 */
-	virtual void removeReactant(IReactant * reactant) {return;}
+	virtual void removeReactants(const std::vector<IReactant*>& reactant) {return;}
 
 	/**
 	 * This operation reinitializes the network.

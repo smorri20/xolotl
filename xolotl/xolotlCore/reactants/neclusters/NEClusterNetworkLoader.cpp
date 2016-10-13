@@ -374,21 +374,23 @@ void NEClusterNetworkLoader::applyGrouping(
 
 	// Remove Xe clusters bigger than xeMin from the network
 	// Loop on the Xe clusters
-	for (int i = 0; i < xeMap.size(); i++) {
-		// Get the cluster and its size
-		cluster = (NECluster *) xeMap.at(i);
-		nXe = cluster->getSize();
+    std::vector<IReactant*> doomedReactants;
+    for(auto currCluster : xeMap) {
 
-		// Skip the clusters that are too small
-		if (nXe < xeMin)
-			continue;
+		// Get the cluster's size.
+		nXe = currCluster->getSize();
 
-		// Remove the reactant from the network
-		network->removeReactant(xeMap.at(i));
+		// Check if the cluster is too large.
+        if(nXe >= xeMin) {
+            // The cluster is too large.  Add it to the ones we will remove.
+            doomedReactants.push_back(currCluster);
+        }
 	}
+    network->removeReactants(doomedReactants);
 
 	// Recompute Ids and network size and redefine the connectivities
 	network->reinitializeNetwork();
 
 	return;
 }
+

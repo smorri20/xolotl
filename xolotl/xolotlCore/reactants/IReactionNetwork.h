@@ -104,11 +104,11 @@ public:
 	virtual void addSuper(std::shared_ptr<IReactant> reactant) = 0;
 
 	/**
-	 * This operation removes the reactant from the network.
+	 * This operation removes the reactants from the network.
 	 *
-	 * @param reactant The reactant that should be removed.
+	 * @param reactant The reactants that should be removed.
 	 */
-	virtual void removeReactant(IReactant * reactant) = 0;
+	virtual void removeReactants(const std::vector<IReactant*>& reactant) = 0;
 
 	/**
 	 * This operation reinitializes the network.

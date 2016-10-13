@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <set>
 #include <Constants.h>
 #include <NESuperCluster.h>
 
@@ -365,43 +366,65 @@ void NEClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 	return;
 }
 
-void NEClusterReactionNetwork::removeReactant(IReactant * reactant) {
-	auto comp = reactant->getComposition();
-	std::string type = reactant->getType();
+void NEClusterReactionNetwork::removeReactants(const std::vector<IReactant*>& doomedReactants) {
 
-	// Look for the reactant in allReactants
-	for (auto it = allReactants->begin(); it != allReactants->end(); ++it) {
-		auto tempType = (*it)->getType();
-		// Compare the types and skip if necessary
-		if (tempType != type) continue;
+    // Build a ReactantMatcher functor for the doomed reactants.
+    // Doing this here allows us to construct the canonical composition
+    // strings for the doomed reactants once and reuse them.
+    // If we used an anonymous functor object in the std::remove_if
+    // calls we would build these strings several times in this function.
+    ReactionNetwork::ReactantMatcher doomedReactantMatcher(doomedReactants);
 
-		auto tempComp = (*it)->getComposition();
-		// Compare the compositions and skip if necessary
-		if (tempComp[xeType] != comp[xeType] || tempComp[vType] != comp[vType]
-						|| tempComp[iType] != comp[iType]) continue;
 
-		allReactants->erase(it);
-		break;
-	}
+    // Remove the doomed reactants from allReactants.
+    for(auto reactant : doomedReactants)
+    {
+        // TODO Handle removal safely with std::remove_if/erase.
+        auto comp = reactant->getComposition();
+        std::string type = reactant->getType();
 
-	// Look for the reactant in clusterTypeMap
-	auto clusters = clusterTypeMap[type];
-	for (auto it = clusters->begin(); it != clusters->end(); ++it) {
-		auto tempType = (*it)->getType();
-		// Compare the types and skip if necessary
-		if (tempType != type) continue;
+        // Look for the reactant in allReactants
+        for (auto it = allReactants->begin(); it != allReactants->end(); ++it) {
+            auto tempType = (*it)->getType();
+            // Compare the types and skip if necessary
+            if (tempType != type) continue;
 
-		auto tempComp = (*it)->getComposition();
-		// Compare the compositions and skip if necessary
-		if (tempComp[xeType] != comp[xeType] || tempComp[vType] != comp[vType]
-						|| tempComp[iType] != comp[iType]) continue;
+            auto tempComp = (*it)->getComposition();
+            // Compare the compositions and skip if necessary
+            if (tempComp[xeType] != comp[xeType] || tempComp[vType] != comp[vType]
+                            || tempComp[iType] != comp[iType]) continue;
 
-		clusters->erase(it);
-		break;
-	}
+            allReactants->erase(it);
+            break;
+        }
+    }
 
-	// Look for the reactant in mixedSpeciesMap
-	mixedSpeciesMap.erase(reactant->getCompositionString());
+    // Remove the doomed reactants from the type-specific cluster vectors.
+    // First, determine all cluster types used by clusters in the collection 
+    // of doomed reactants...
+    std::set<std::string> typesUsed;
+    for(auto reactant : doomedReactants)
+    {
+        typesUsed.insert(reactant->getType());        
+    }
+
+    // ...Next, examine each type's collection of clusters and remove the
+    // doomed reactants.
+    for(auto currType : typesUsed)
+    {
+        auto clusters = clusterTypeMap[currType];
+        auto citer = std::remove_if(clusters->begin(), clusters->end(),
+                                    doomedReactantMatcher);
+        clusters->erase(citer, clusters->end());
+    }
+
+    // Remove the doomed reactants from the mixedSpeciesMap.
+    // We cannot use std::remove_if here because remove_if 
+    // reorders the elements in the underlying container, and
+    // the map doesn't support reordering.
+    for(auto reactant : doomedReactants) {
+        mixedSpeciesMap.erase(reactant->getCompositionString());
+    }
 
 	return;
 }
