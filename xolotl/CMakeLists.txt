@@ -27,7 +27,7 @@ FIND_PACKAGE(PETSc REQUIRED)
 # Make sure that we only pull the static HDF5
 #set(HDF5_USE_STATIC_LIBRARIES yes)
 # Find HDF5 - Optional for now until we actually require it
-FIND_PACKAGE(HDF5 REQUIRED)
+FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C)
 # Check for parallel I/O support in the HDF5 installation.
 IF (NOT HDF5_IS_PARALLEL)
    message(STATUS "WARNING! Detected HDF5 installation does not support parallel I/O!")

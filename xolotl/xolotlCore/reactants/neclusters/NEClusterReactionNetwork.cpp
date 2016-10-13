@@ -147,8 +147,9 @@ IReactant * NEClusterReactionNetwork::get(const std::string& type,
 		composition[type] = size;
 		//std::string encodedName = NECluster::encodeCompositionAsName(composition);
 		// Make sure the reactant is in the map
-		if (singleSpeciesMap.count(composition)) {
-			retReactant = singleSpeciesMap.at(composition);
+        std::string compstr = Reactant::toCanonicalString(composition);
+		if (singleSpeciesMap.count(compstr)) {
+			retReactant = singleSpeciesMap.at(compstr);
 		}
 	}
 
@@ -174,8 +175,9 @@ IReactant * NEClusterReactionNetwork::getCompound(const std::string& type,
 		composition[vType] = sizes[1];
 		composition[iType] = sizes[2];
 		// Make sure the reactant is in the map
-		if (mixedSpeciesMap.count(composition)) {
-			retReactant = mixedSpeciesMap.at(composition);
+        std::string compstr = Reactant::toCanonicalString(composition);
+		if (mixedSpeciesMap.count(compstr)) {
+			retReactant = mixedSpeciesMap.at(compstr);
 		}
 	}
 
@@ -198,8 +200,9 @@ IReactant * NEClusterReactionNetwork::getSuper(const std::string& type,
 	if (type == NESuperType && size >= 1) {
 		composition[xeType] = size;
 		// Make sure the reactant is in the map
-		if (superSpeciesMap.count(composition)) {
-			retReactant = superSpeciesMap.at(composition);
+        std::string compstr = Reactant::toCanonicalString(composition);
+		if (superSpeciesMap.count(compstr)) {
+			retReactant = superSpeciesMap.at(compstr);
 		}
 	}
 
@@ -239,6 +242,8 @@ void NEClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 	if (reactant != NULL) {
 		// Get the composition
 		auto composition = reactant->getComposition();
+        std::string compstr = reactant->getCompositionString();
+
 		// Get the species sizes
 		numXe = composition.at(xeType);
 		numV = composition.at(vType);
@@ -250,9 +255,9 @@ void NEClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 		isMixed = ((numXe > 0) + (numV > 0) + (numI > 0)) > 1;
 		// Only add the element if we don't already have it
 		// Add the compound or regular reactant.
-		if (isMixed && mixedSpeciesMap.count(composition) == 0) {
+		if (isMixed && mixedSpeciesMap.count(compstr) == 0) {
 			// Put the compound in its map
-			mixedSpeciesMap[composition] = reactant;
+			mixedSpeciesMap[compstr] = reactant;
 			// Figure out whether we have XeV or XeI and set the keys
 			if (numV > 0) {
 				numClusterKey = "numXeVClusters";
@@ -261,9 +266,9 @@ void NEClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 				numClusterKey = "numXeIClusters";
 				clusterSizeKey = "maxXeIClusterSize";
 			}
-		} else if (!isMixed && singleSpeciesMap.count(composition) == 0) {
+		} else if (!isMixed && singleSpeciesMap.count(compstr) == 0) {
 			/// Put the reactant in its map
-			singleSpeciesMap[composition] = reactant;
+			singleSpeciesMap[compstr] = reactant;
 
 			// Figure out whether we have Xe, V or I and set the keys
 			if (numXe > 0) {
@@ -328,9 +333,10 @@ void NEClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 		isMixed = ((numXe > 0) + (numV > 0) + (numI > 0)) > 1;
 		// Only add the element if we don't already have it
 		// Add the compound or regular reactant.
-		if (!isMixed && superSpeciesMap.count(composition) == 0) {
+        std::string compstr = reactant->getCompositionString();
+		if (!isMixed && superSpeciesMap.count(compstr) == 0) {
 			// Put the compound in its map
-			superSpeciesMap[composition] = reactant;
+			superSpeciesMap[compstr] = reactant;
 			// Set the key
 			numClusterKey = "numSuperClusters";
 		} else {
@@ -395,7 +401,7 @@ void NEClusterReactionNetwork::removeReactant(IReactant * reactant) {
 	}
 
 	// Look for the reactant in mixedSpeciesMap
-	mixedSpeciesMap.erase(comp);
+	mixedSpeciesMap.erase(reactant->getCompositionString());
 
 	return;
 }
@@ -471,3 +477,5 @@ void NEClusterReactionNetwork::updateConcentrationsFromArray(double * concentrat
 
 	return;
 }
+
+

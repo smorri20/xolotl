@@ -136,8 +136,9 @@ IReactant * PSIClusterReactionNetwork::get(const std::string& type,
 		composition[type] = size;
 		//std::string encodedName = PSICluster::encodeCompositionAsName(composition);
 		// Make sure the reactant is in the map
-		if (singleSpeciesMap.count(composition)) {
-			retReactant = singleSpeciesMap.at(composition);
+        std::string compositionstr = Reactant::toCanonicalString(composition);
+		if (singleSpeciesMap.count(compositionstr)) {
+			retReactant = singleSpeciesMap.at(compositionstr);
 		}
 	}
 
@@ -164,8 +165,9 @@ IReactant * PSIClusterReactionNetwork::getCompound(const std::string& type,
 		composition[iType] = sizes[2];
 
 		// Make sure the reactant is in the map
-		if (mixedSpeciesMap.count(composition)) {
-			retReactant = mixedSpeciesMap.at(composition);
+        std::string compositionstr = Reactant::toCanonicalString(composition);
+		if (mixedSpeciesMap.count(compositionstr)) {
+			retReactant = mixedSpeciesMap.at(compositionstr);
 		}
 	}
 
@@ -205,6 +207,7 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 	if (reactant != NULL) {
 		// Get the composition
 		auto composition = reactant->getComposition();
+        std::string compositionstr = reactant->getCompositionString();
 		// Get the species sizes
 		numHe = composition.at(heType);
 		numV = composition.at(vType);
@@ -216,9 +219,9 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 		isMixed = ((numHe > 0) + (numV > 0) + (numI > 0)) > 1;
 		// Only add the element if we don't already have it
 		// Add the compound or regular reactant.
-		if (isMixed && mixedSpeciesMap.count(composition) == 0) {
+		if (isMixed && mixedSpeciesMap.count(compositionstr) == 0) {
 			// Put the compound in its map
-			mixedSpeciesMap[composition] = reactant;
+			mixedSpeciesMap[compositionstr] = reactant;
 			// Figure out whether we have HeV or HeI and set the keys
 			if (numV > 0) {
 				numClusterKey = "numHeVClusters";
@@ -228,9 +231,9 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 				clusterSizeKey = "maxHeIClusterSize";
 			}
 		}
-		else if (!isMixed && singleSpeciesMap.count(composition) == 0) {
+		else if (!isMixed && singleSpeciesMap.count(compositionstr) == 0) {
 			/// Put the reactant in its map
-			singleSpeciesMap[composition] = reactant;
+			singleSpeciesMap[compositionstr] = reactant;
 
 			// Figure out whether we have He, V or I and set the keys
 			if (numHe > 0) {

@@ -32,19 +32,17 @@ class PSIClusterReactionNetwork: public ReactionNetwork {
 private:
 
 	/**
-	 * The map of single-species clusters, indexed by a map that contains the
-	 * name of the reactant and its size.
+	 * The map of single-species clusters, indexed by a string representation
+     * of a map that contains the name of the reactant and its size.
 	 */
-	std::unordered_map< std::map< std::string, int >,
-		std::shared_ptr<IReactant> > singleSpeciesMap;
+	std::unordered_map<std::string, std::shared_ptr<IReactant> > singleSpeciesMap;
 
 	/**
-	 * The map of mixed or compound species clusters, indexed by a map that
-	 * contains the name of the constituents of the compound reactant and their
-	 * sizes.
+	 * The map of mixed or compound species clusters, indexed by a string
+     * representation of a map that contains the name of the constituents 
+     * of the compound reactant and their sizes.
 	 */
-	std::unordered_map< std::map< std::string, int >,
-		std::shared_ptr<IReactant> > mixedSpeciesMap;
+	std::unordered_map<std::string, std::shared_ptr<IReactant> > mixedSpeciesMap;
 
 	/**
 	 * This map stores all of the clusters in the network by type.

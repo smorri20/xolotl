@@ -149,6 +149,7 @@ protected:
 	 */
 	void recomputeDiffusionCoefficient(double temp);
 
+
 	/**
 	 * The constructor.
 	 */
@@ -316,6 +317,20 @@ public:
 	 */
 	virtual const std::map<std::string, int> & getComposition() const;
 
+
+    /**
+     * Get a string containing the canonical representation of the 
+     * composition of this reactant.  The string is not intended to
+     * be human-readable, but rather is useful for keys in reactant maps
+     * and for composition match tests (as opposed to comparisons of
+     * the composition maps themselves).
+     *
+     * @return A string containing the canonical representation of our
+     * composition.
+     */
+    virtual std::string getCompositionString() const;
+
+
 	/**
 	 * This operation sets the id of the reactant, The id is zero by default
 	 * and clients, most likely the ReactionNetwork, are expected to set the
@@ -467,6 +482,19 @@ public:
 	 * cluster and false if it is a single species cluster.
 	 */
 	virtual bool isMixed() const {return false;}
+
+
+    /**
+     * Get a string containing the canonical representation of the 
+     * given composition.  The string is not intended to
+     * be human-readable, but rather is useful for keys in reactant maps
+     * and for composition match tests (as opposed to comparisons of
+     * the composition maps themselves).
+     *
+     * @return A string containing the canonical representation of our
+     * composition.
+     */
+    static std::string toCanonicalString(const std::map<std::string, int>& composition);
 
 };
 

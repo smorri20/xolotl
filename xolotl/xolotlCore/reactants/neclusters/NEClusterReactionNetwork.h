@@ -32,33 +32,31 @@ class NEClusterReactionNetwork: public ReactionNetwork {
 private:
 
 	/**
-	 * The map of single-species clusters, indexed by a map that contains the
-	 * name of the reactant and its size.
+	 * The map of single-species clusters, indexed by a string representation
+     * of a map that contains the name of the reactant and its size.
 	 */
-	std::unordered_map< std::map< std::string, int >,
-		std::shared_ptr<IReactant> > singleSpeciesMap;
+	std::unordered_map<std::string, std::shared_ptr<IReactant> > singleSpeciesMap;
 
 	/**
-	 * The map of mixed or compound species clusters, indexed by a map that
-	 * contains the name of the constituents of the compound reactant and their
-	 * sizes.
+	 * The map of mixed or compound species clusters, indexed by a 
+     * string representation of a map that contains the name of the 
+     * constituents of the compound reactant and their sizes.
 	 */
-	std::unordered_map< std::map< std::string, int >,
-		std::shared_ptr<IReactant> > mixedSpeciesMap;
+	std::unordered_map<std::string, std::shared_ptr<IReactant> > mixedSpeciesMap;
 
 	/**
-	 * The map of super species clusters, indexed by a map that
-	 * contains the name of the constituents of the compound reactant and their
-	 * sizes.
+	 * The map of super species clusters, indexed by a string representation
+     * of a map that contains the name of the constituents of the 
+     * compound reactant and their sizes.
 	 */
-	std::unordered_map< std::map< std::string, int >,
-		std::shared_ptr<IReactant> > superSpeciesMap;
+	std::unordered_map<std::string, std::shared_ptr<IReactant> > superSpeciesMap;
 
 	/**
 	 * This map stores all of the clusters in the network by type.
 	 */
 	std::map<std::string, std::shared_ptr<
 		std::vector< std::shared_ptr<IReactant> > > > clusterTypeMap;
+
 
 	/**
 	 * This operation sets the default values of the properties table and names

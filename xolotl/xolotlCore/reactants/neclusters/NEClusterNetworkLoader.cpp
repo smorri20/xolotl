@@ -61,7 +61,23 @@ NEClusterNetworkLoader::NEClusterNetworkLoader(
 }
 
 std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::load() {
+
+#if READY
+#else
+    int myRank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
+#endif // READY
+
 	// Get the dataset from the HDF5 files
+#if READY
+#else
+    if(myRank == 0)
+    {
+        std::cerr << "reading network from " 
+            << fileName
+            << std::endl;
+    }
+#endif // READY
 	auto networkVector = xolotlCore::HDF5Utils::readNetwork(fileName);
 
 	// Initialization
@@ -75,6 +91,15 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::load() {
 			NEClusterReactionNetwork>(handlerRegistry);
 
 	// Loop on the networkVector
+#if READY
+#else
+    if(myRank == 0)
+    {
+        std::cerr << "creating clusters, nClusters = "
+            << networkVector.size()
+            << std::endl;
+    }
+#endif // READY
 	for (auto lineIt = networkVector.begin(); lineIt != networkVector.end();
 			lineIt++) {
 
@@ -114,6 +139,15 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::load() {
 	}
 
 	// Set the reaction network for each reactant
+#if READY
+#else
+    if(myRank == 0)
+    {
+        std::cerr << "setting network on reactants, nReactants = "
+            << reactants.size()
+            << std::endl;
+    }
+#endif // READY
 	for (auto reactantsIt = reactants.begin(); reactantsIt != reactants.end();
 			++reactantsIt) {
 		(*reactantsIt)->setReactionNetwork(network);
@@ -121,6 +155,14 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::load() {
 
 	// Check if we want dummy reactions
 	if (!dummyReactions) {
+#if READY
+#else
+        if(myRank == 0)
+        {
+            std::cerr << "applying grouping" 
+                << std::endl;
+        }
+#endif // READY
 		// Apply grouping
 		applyGrouping(network);
 	}
@@ -186,7 +228,9 @@ void NEClusterNetworkLoader::applyGrouping(
 		// Keep the information of the group
 		superGroupMap[superCount] = superCluster.get();
 
+#if READY
 		std::cout << superCount << " " << count << " " << superCluster->getName() << std::endl;
+#endif // READY
 
 		// Reinitialize everything
 		size = 0.0, radius = 0.0, energy = 0.0;

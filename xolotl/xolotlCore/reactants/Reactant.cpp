@@ -149,6 +149,41 @@ const std::map<std::string, int> & Reactant::getComposition() const {
 	return compositionMap;
 }
 
+
+std::string Reactant::toCanonicalString(const std::map<std::string, int>& composition) {
+
+    // Construct the canonical string representation of the given composition.
+    // Note that this can only be considered to produce a canonical
+    // representation of the reactant map's contents if the reactant map
+    // is kept in a collection where we are guaranteed that iterating
+    // over its contents will always be done in the same order, regardless
+    // of how the map was produced.  Thankfully, std::map is an 
+    // ordered map and gives this guarantee.
+    std::ostringstream ostr;
+    for(auto iter = composition.begin(); iter != composition.end(); ++iter)
+    {
+        // Add the current reactant's name and size to the string.
+        // Note that we don't really care about nice formatting, since
+        // this isn't intended to be a human-readable string.
+        ostr << iter->first << iter->second;        
+    }
+    return ostr.str();
+}
+
+
+std::string Reactant::getCompositionString() const {
+
+    // Return the canonical string representation of our composition.
+    //
+    // TODO Would it be better to cache the composition string as a member
+    // variable?  It would require us to have control over the composition map,
+    // so that no changes to it could be made without us knowing about it.
+    // (I.e., need a protected function for derived classes to make changes,
+    // and the map itself becomes private to us.)
+    return toCanonicalString(compositionMap);
+}
+
+
 void Reactant::setId(int nId) {
 	id = nId;
 
