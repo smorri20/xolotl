@@ -491,10 +491,13 @@ public:
      * and for composition match tests (as opposed to comparisons of
      * the composition maps themselves).
      *
+     * @param type The type that will be used with the given composition.
+     * @param composition A map containing the names and amounts of each 
+     * part of the reactant.
      * @return A string containing the canonical representation of our
      * composition.
      */
-    static std::string toCanonicalString(const std::map<std::string, int>& composition);
+    static std::string toCanonicalString(std::string type, const std::map<std::string, int>& composition);
 
 };
 

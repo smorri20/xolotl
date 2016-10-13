@@ -150,7 +150,8 @@ const std::map<std::string, int> & Reactant::getComposition() const {
 }
 
 
-std::string Reactant::toCanonicalString(const std::map<std::string, int>& composition) {
+std::string Reactant::toCanonicalString(std::string type,
+                                const std::map<std::string, int>& composition) {
 
     // Construct the canonical string representation of the given composition.
     // Note that this can only be considered to produce a canonical
@@ -160,6 +161,7 @@ std::string Reactant::toCanonicalString(const std::map<std::string, int>& compos
     // of how the map was produced.  Thankfully, std::map is an 
     // ordered map and gives this guarantee.
     std::ostringstream ostr;
+    ostr << type << ':';
     for(auto iter = composition.begin(); iter != composition.end(); ++iter)
     {
         // Add the current reactant's name and size to the string.
@@ -180,7 +182,7 @@ std::string Reactant::getCompositionString() const {
     // so that no changes to it could be made without us knowing about it.
     // (I.e., need a protected function for derived classes to make changes,
     // and the map itself becomes private to us.)
-    return toCanonicalString(compositionMap);
+    return toCanonicalString(getType(), compositionMap);
 }
 
 

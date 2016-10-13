@@ -148,7 +148,7 @@ IReactant * NEClusterReactionNetwork::get(const std::string& type,
 		composition[type] = size;
 		//std::string encodedName = NECluster::encodeCompositionAsName(composition);
 		// Make sure the reactant is in the map
-        std::string compstr = Reactant::toCanonicalString(composition);
+        std::string compstr = Reactant::toCanonicalString(type, composition);
 		if (singleSpeciesMap.count(compstr)) {
 			retReactant = singleSpeciesMap.at(compstr);
 		}
@@ -176,7 +176,7 @@ IReactant * NEClusterReactionNetwork::getCompound(const std::string& type,
 		composition[vType] = sizes[1];
 		composition[iType] = sizes[2];
 		// Make sure the reactant is in the map
-        std::string compstr = Reactant::toCanonicalString(composition);
+        std::string compstr = Reactant::toCanonicalString(type, composition);
 		if (mixedSpeciesMap.count(compstr)) {
 			retReactant = mixedSpeciesMap.at(compstr);
 		}
@@ -201,7 +201,7 @@ IReactant * NEClusterReactionNetwork::getSuper(const std::string& type,
 	if (type == NESuperType && size >= 1) {
 		composition[xeType] = size;
 		// Make sure the reactant is in the map
-        std::string compstr = Reactant::toCanonicalString(composition);
+        std::string compstr = Reactant::toCanonicalString(type, composition);
 		if (superSpeciesMap.count(compstr)) {
 			retReactant = superSpeciesMap.at(compstr);
 		}
@@ -375,29 +375,11 @@ void NEClusterReactionNetwork::removeReactants(const std::vector<IReactant*>& do
     // calls we would build these strings several times in this function.
     ReactionNetwork::ReactantMatcher doomedReactantMatcher(doomedReactants);
 
+    // Remove the doomed reactants from our collection of all known reactants.
+    auto ariter = std::remove_if(allReactants->begin(), allReactants->end(),
+                                    doomedReactantMatcher);
+    allReactants->erase(ariter, allReactants->end());
 
-    // Remove the doomed reactants from allReactants.
-    for(auto reactant : doomedReactants)
-    {
-        // TODO Handle removal safely with std::remove_if/erase.
-        auto comp = reactant->getComposition();
-        std::string type = reactant->getType();
-
-        // Look for the reactant in allReactants
-        for (auto it = allReactants->begin(); it != allReactants->end(); ++it) {
-            auto tempType = (*it)->getType();
-            // Compare the types and skip if necessary
-            if (tempType != type) continue;
-
-            auto tempComp = (*it)->getComposition();
-            // Compare the compositions and skip if necessary
-            if (tempComp[xeType] != comp[xeType] || tempComp[vType] != comp[vType]
-                            || tempComp[iType] != comp[iType]) continue;
-
-            allReactants->erase(it);
-            break;
-        }
-    }
 
     // Remove the doomed reactants from the type-specific cluster vectors.
     // First, determine all cluster types used by clusters in the collection 
@@ -419,9 +401,10 @@ void NEClusterReactionNetwork::removeReactants(const std::vector<IReactant*>& do
     }
 
     // Remove the doomed reactants from the mixedSpeciesMap.
-    // We cannot use std::remove_if here because remove_if 
-    // reorders the elements in the underlying container, and
-    // the map doesn't support reordering.
+    // We cannot use std::remove_if and our ReactantMatcher here 
+    // because std::remove_if reorders the elements in the underlying 
+    // container to move the doomed elements to the end of the container,
+    // but the std::map doesn't support reordering.
     for(auto reactant : doomedReactants) {
         mixedSpeciesMap.erase(reactant->getCompositionString());
     }

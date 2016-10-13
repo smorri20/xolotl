@@ -136,7 +136,7 @@ IReactant * PSIClusterReactionNetwork::get(const std::string& type,
 		composition[type] = size;
 		//std::string encodedName = PSICluster::encodeCompositionAsName(composition);
 		// Make sure the reactant is in the map
-        std::string compositionstr = Reactant::toCanonicalString(composition);
+        std::string compositionstr = Reactant::toCanonicalString(type, composition);
 		if (singleSpeciesMap.count(compositionstr)) {
 			retReactant = singleSpeciesMap.at(compositionstr);
 		}
@@ -165,7 +165,7 @@ IReactant * PSIClusterReactionNetwork::getCompound(const std::string& type,
 		composition[iType] = sizes[2];
 
 		// Make sure the reactant is in the map
-        std::string compositionstr = Reactant::toCanonicalString(composition);
+        std::string compositionstr = Reactant::toCanonicalString(type, composition);
 		if (mixedSpeciesMap.count(compositionstr)) {
 			retReactant = mixedSpeciesMap.at(compositionstr);
 		}
