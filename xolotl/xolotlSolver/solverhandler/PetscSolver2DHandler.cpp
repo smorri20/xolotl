@@ -367,7 +367,7 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		// Skip if we are not on the right process
 		if (yj < ys || yj >= ys + ym) continue;
 
-		// Initialize the flux, advection, and trap-mutation handlers which depend
+		// Initialize the flux and advection handlers which depend
 		// on the surface position at Y
 		fluxHandler->initializeFluxHandler(network, surfacePosition[yj], grid);
 		advectionHandlers[0]->setLocation(grid[surfacePosition[yj]]);

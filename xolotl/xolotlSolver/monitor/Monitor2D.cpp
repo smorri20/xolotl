@@ -226,7 +226,7 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt, PetscReal time,
 	double hy = solverHandler->getStepSizeY();
 
 	// Get the array of concentration
-	const double ***solutionArray, *gridPointSolution;
+	double ***solutionArray, *gridPointSolution;
 	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
 
 	// Store the concentration over the grid
@@ -249,16 +249,19 @@ PetscErrorCode computeHeliumRetention2D(TS ts, PetscInt, PetscReal time,
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[j][i];
 
+			// Update the concentration in the network
+			network->updateConcentrationsFromArray(gridPointSolution);
+
 			// Loop on all the indices
 			for (unsigned int l = 0; l < heIndices2D.size(); l++) {
 				// Add the current concentration times the number of helium in the cluster
 				// (from the weight vector)
-				heConcentration += gridPointSolution[heIndices2D[l]] * heWeights2D[l]
+				heConcentration += gridPointSolution[heIndices2D[l]] * (double) heWeights2D[l]
 																				   * (grid[i] - grid[i-1]) * hy;
 			}
 			// Loop on all the super clusters
-			for (int i = 0; i < superClusters.size(); i++) {
-				auto cluster = (xolotlCore::SuperCluster *) superClusters[i];
+			for (int l = 0; l < superClusters.size(); l++) {
+				auto cluster = (xolotlCore::SuperCluster *) superClusters[l];
 				heConcentration += cluster->getTotalHeliumConcentration() * (grid[i] - grid[i-1]) * hy;
 			}
 		}

@@ -240,7 +240,7 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt, PetscReal time,
 	double hz = solverHandler->getStepSizeZ();
 
 	// Get the array of concentration
-	const double ****solutionArray, *gridPointSolution;
+	double ****solutionArray, *gridPointSolution;
 	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
 
 	// Store the concentration over the grid
@@ -259,23 +259,26 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt, PetscReal time,
 			int surfacePos = solverHandler->getSurfacePosition(j, k);
 
 			for (int i = xs; i < xs + xm; i++) {
+				// Boundary conditions
+				if (i <= surfacePos || i == grid.size() - 1) continue;
+				
 				// Get the pointer to the beginning of the solution data for
 				// this grid point
 				gridPointSolution = solutionArray[k][j][i];
 
-				// Boundary conditions
-				if (i <= surfacePos || i == grid.size() - 1) continue;
+				// Update the concentration in the network
+				network->updateConcentrationsFromArray(gridPointSolution);
 
 				// Loop on all the indices
 				for (unsigned int l = 0; l < heIndices3D.size(); l++) {
 					// Add the current concentration times the number of helium in the cluster
 					// (from the weight vector)
-					heConcentration += gridPointSolution[heIndices3D[l]] * heWeights3D[l]
+					heConcentration += gridPointSolution[heIndices3D[l]] * (double) heWeights3D[l]
 																					   * (grid[i] - grid[i-1]) * hy * hz;
 				}
 				// Loop on all the super clusters
-				for (int i = 0; i < superClusters.size(); i++) {
-					auto cluster = (xolotlCore::SuperCluster *) superClusters[i];
+				for (int l = 0; l < superClusters.size(); l++) {
+					auto cluster = (xolotlCore::SuperCluster *) superClusters[l];
 					heConcentration += cluster->getTotalHeliumConcentration() * (grid[i] - grid[i-1]) * hy * hz;
 				}
 			}
