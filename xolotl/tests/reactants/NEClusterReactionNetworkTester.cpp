@@ -77,16 +77,16 @@ BOOST_AUTO_TEST_CASE(checkProperties) {
 	// Grab the map of properties from the network
 	auto props = neNetwork->getProperties();
 	// Convert the property strings so we can use them
-	int numXeClusters = stoi(props["numXeClusters"]);
-	int numVClusters = stoi(props["numVClusters"]);
-	int numIClusters = stoi(props["numIClusters"]);
-	int numXeVClusters = stoi(props["numXeVClusters"]);
-	int numXeIClusters = stoi(props["numXeIClusters"]);
-	int maxXeVClusterSize = stoi(props["maxXeVClusterSize"]);
-	int maxXeIClusterSize = stoi(props["maxXeIClusterSize"]);
-	int maxXeClusterSize = stoi(props["maxXeClusterSize"]);
-	int maxVClusterSize = stoi(props["maxVClusterSize"]);
-	int maxIClusterSize = stoi(props["maxIClusterSize"]);
+	auto numXeClusters = props["numXeClusters"];
+	auto numVClusters = props["numVClusters"];
+	auto numIClusters = props["numIClusters"];
+	auto numXeVClusters = props["numXeVClusters"];
+	auto numXeIClusters = props["numXeIClusters"];
+	auto maxXeVClusterSize = props["maxXeVClusterSize"];
+	auto maxXeIClusterSize = props["maxXeIClusterSize"];
+	auto maxXeClusterSize = props["maxXeClusterSize"];
+	auto maxVClusterSize = props["maxVClusterSize"];
+	auto maxIClusterSize = props["maxIClusterSize"];
 
 	// Check the properties
 	BOOST_REQUIRE_EQUAL(0, numXeClusters);
@@ -101,8 +101,8 @@ BOOST_AUTO_TEST_CASE(checkProperties) {
 	BOOST_REQUIRE_EQUAL(0, maxIClusterSize);
 
 	// Set a couple of properties
-	neNetwork->setProperty("rangePenalty", "5");
-	neNetwork->setProperty("agility", "d8");
+	neNetwork->setProperty("rangePenalty", 5);
+	neNetwork->setProperty("agility", 8);
 
 	// Grab the properties afresh
 	auto modifiedProps = neNetwork->getProperties();
@@ -110,8 +110,8 @@ BOOST_AUTO_TEST_CASE(checkProperties) {
 	// Check for the new properties
 	auto rangePenalty = modifiedProps["rangePenalty"];
 	auto agility = modifiedProps["agility"];
-	BOOST_REQUIRE_EQUAL("5", rangePenalty);
-	BOOST_REQUIRE_EQUAL("d8", agility);
+	BOOST_REQUIRE_EQUAL(5, rangePenalty);
+	BOOST_REQUIRE_EQUAL(8, agility);
 
 	// Add a cluster
 	auto heCluster = make_shared<XeCluster>(5, registry);
@@ -119,8 +119,8 @@ BOOST_AUTO_TEST_CASE(checkProperties) {
 
 	// Grab the properties afresh
 	auto propsWithClusters = neNetwork->getProperties();
-	numXeClusters = stoi(propsWithClusters["numXeClusters"]);
-	maxXeClusterSize = stoi(propsWithClusters["maxXeClusterSize"]);
+	numXeClusters = propsWithClusters["numXeClusters"];
+	maxXeClusterSize = propsWithClusters["maxXeClusterSize"];
 
 	// Check the properties again
 	BOOST_REQUIRE_EQUAL(1, numXeClusters);

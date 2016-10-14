@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	auto props = network->getProperties();
 
 	// Prevent dissociation from being added to the connectivity array
-	props["dissociationsEnabled"] = "false";
+	props["dissociationsEnabled"] = 0;
 	
 	// Check the reaction connectivity of the 6th He reactant (numHe=6)
 	// Get the connectivity array from the reactant

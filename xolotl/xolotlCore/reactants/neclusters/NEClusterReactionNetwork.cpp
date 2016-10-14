@@ -26,19 +26,19 @@ void NEClusterReactionNetwork::setDefaultPropsAndNames() {
 	= std::make_shared<std::vector<std::shared_ptr<IReactant>>>();
 
 	// Initialize default properties
-	(*properties)["reactionsEnabled"] = "true";
-	(*properties)["dissociationsEnabled"] = "true";
-	(*properties)["numXeClusters"] = "0";
-	(*properties)["numVClusters"] = "0";
-	(*properties)["numIClusters"] = "0";
-	(*properties)["numXeVClusters"] = "0";
-	(*properties)["numXeIClusters"] = "0";
-	(*properties)["numSuperClusters"] = "0";
-	(*properties)["maxXeClusterSize"] = "0";
-	(*properties)["maxVClusterSize"] = "0";
-	(*properties)["maxIClusterSize"] = "0";
-	(*properties)["maxXeVClusterSize"] = "0";
-	(*properties)["maxXeIClusterSize"] = "0";
+	(*properties)["reactionsEnabled"] = 1;
+	(*properties)["dissociationsEnabled"] = 1;
+	(*properties)["numXeClusters"] = 0;
+	(*properties)["numVClusters"] = 0;
+	(*properties)["numIClusters"] = 0;
+	(*properties)["numXeVClusters"] = 0;
+	(*properties)["numXeIClusters"] = 0;
+	(*properties)["numSuperClusters"] = 0;
+	(*properties)["maxXeClusterSize"] = 0;
+	(*properties)["maxVClusterSize"] = 0;
+	(*properties)["maxIClusterSize"] = 0;
+	(*properties)["maxXeVClusterSize"] = 0;
+	(*properties)["maxXeIClusterSize"] = 0;
 
 	// Initialize the current and last size to 0
 	networkSize = 0;
@@ -291,14 +291,14 @@ void NEClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 		}
 
 		// Increment the number of total clusters of this type
-		int numClusters = std::stoi(properties->at(numClusterKey));
+        auto numClusters = properties->at(numClusterKey);
 		numClusters++;
-		(*properties)[numClusterKey] = std::to_string((long long) numClusters);
+		(*properties)[numClusterKey] = numClusters;
 		// Increment the max cluster size key
-		int maxSize = std::stoi(properties->at(clusterSizeKey));
+		auto maxSize = properties->at(clusterSizeKey);
 		int clusterSize = numXe + numV + numI;
-		maxSize = std::max(clusterSize, maxSize);
-		(*properties)[clusterSizeKey] = std::to_string((long long) maxSize);
+		maxSize = std::max((PropertyMap::mapped_type)clusterSize, maxSize);
+		(*properties)[clusterSizeKey] = maxSize;
 		// Update the size
 		++networkSize;
 		// Set the id for this cluster
@@ -349,9 +349,9 @@ void NEClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 		}
 
 		// Increment the number of total clusters of this type
-		int numClusters = std::stoi(properties->at(numClusterKey));
+		auto numClusters = properties->at(numClusterKey);
 		numClusters++;
-		(*properties)[numClusterKey] = std::to_string((long long) numClusters);
+		(*properties)[numClusterKey] = numClusters;
 		// Update the size
 		++networkSize;
 		// Set the id for this cluster
@@ -443,15 +443,13 @@ void NEClusterReactionNetwork::reinitializeConnectivities() {
 }
 
 void NEClusterReactionNetwork::setProperty(const std::string& key,
-		const std::string& value) {
-	// Check the keys and value before trying to set the property
-	if (!key.empty() && !value.empty() && key != "numXeClusters"
-			&& key != "numVClusters" && key != "numIClusters"
-			&& key != "numSuperClusters" && key != "maxXeClusterSize"
-			&& key != "maxVClusterSize" && key != "maxIClusterSize"
-			&& key != "maxXeVClusterSize" && key != "maxXeIClusterSize") {
-		// Add the property if it made it through that!
-		(*properties)[key] = value;
+		const IReactionNetwork::PropertyMap::mapped_type& value) {
+
+    // Check if we know about the key.
+    auto iter = properties->find(key);
+    if(iter != properties->end()) {
+        // We know about the key, so update its value.
+        (*properties)[key] = value;
 	}
 
 	return;
@@ -471,7 +469,7 @@ void NEClusterReactionNetwork::updateConcentrationsFromArray(double * concentrat
 	}
 
 	// Set the moments
-	int numSuperClusters = stoi(properties->at("numSuperClusters"));
+	auto numSuperClusters = properties->at("numSuperClusters");
 	for (int i = size - numSuperClusters; i < size; i++) {
 		// Get the superCluster
 		auto cluster = (NESuperCluster *) reactants->at(i);

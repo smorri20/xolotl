@@ -933,9 +933,12 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 	auto grid = solverHandler->getXGrid();
 
 	// Get the maximum size of HeV clusters
-	std::map<std::string, std::string> props = network->getProperties();
-	int maxHeVClusterSize = std::stoi(props["maxHeVClusterSize"]);
-	int maxVClusterSize = std::stoi(props["maxVClusterSize"]);
+    // FIXME this is specific to PSI problems.  We need a capability
+    // in this monitor for the type-specific network to indicate
+    // and/or provide the variables of interest.
+    auto props = network->getProperties();
+	auto maxHeVClusterSize = props["maxHeVClusterSize"];
+	auto maxVClusterSize = props["maxVClusterSize"];
 
 	// Loop on the grid points
 	for (xi = xs; xi < xs + xm; xi++) {
@@ -1208,16 +1211,16 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 	auto network = solverHandler->getNetwork();
 
 	// Get the maximum size of HeV clusters
-	std::map<std::string, std::string> props = network->getProperties();
-	int maxHeVClusterSize = std::stoi(props["maxHeVClusterSize"]);
+    auto props = network->getProperties();
+	auto maxHeVClusterSize = props["maxHeVClusterSize"];
 	// Get the maximum size of V clusters
-	int maxVClusterSize = std::stoi(props["maxVClusterSize"]);
+	auto maxVClusterSize = props["maxVClusterSize"];
 	// Get the number of He in the max HeV cluster
 	int maxHeSize = (maxHeVClusterSize - maxVClusterSize);
 	// Get the maximum stable HeV cluster
 	IReactant * maxHeV;
 	maxHeV = network->getCompound(
-			"HeV", { maxHeSize, maxVClusterSize, 0 });
+			"HeV", { maxHeSize, (int)maxVClusterSize, 0 });
 
 	// Boolean to know if the concentration is too big
 	bool maxHeVTooBig = false;

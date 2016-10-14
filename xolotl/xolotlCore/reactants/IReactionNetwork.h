@@ -20,6 +20,12 @@ class IReactionNetwork {
 
 public:
 
+    /**
+     * A nice name for our properties map type.
+     */
+    typedef std::map<std::string, int64_t> PropertyMap;
+
+
 	/**
 	 * The destructor.
 	 */
@@ -146,7 +152,7 @@ public:
 	 * @return The map of properties that has been configured for this
 	 * ReactionNetwork.
 	 */
-	virtual const std::map<std::string, std::string> & getProperties() = 0;
+    virtual const PropertyMap& getProperties() = 0;
 
 	/**
 	 * This operation sets a property with the given key to the specified value
@@ -158,7 +164,7 @@ public:
 	 * @param value The value to which the key should be set
 	 */
 	virtual void setProperty(const std::string& key,
-			const std::string& value) = 0;
+            const PropertyMap::mapped_type& value) = 0;
 
 	/**
 	 * This operation returns the size or number of reactants in the network.
