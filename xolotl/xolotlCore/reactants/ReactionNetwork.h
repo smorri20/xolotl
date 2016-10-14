@@ -94,7 +94,7 @@ protected:
 	 * The properties of this network. The exact configuration of the map is
 	 * specified by the class that loaded the network.
 	 */
-	std::shared_ptr<std::map<std::string, std::string>> properties;
+    std::shared_ptr<PropertyMap> properties;
 
 	/**
 	 * The performance handler registry that will be used with
@@ -276,7 +276,7 @@ public:
 	 * @return The map of properties that has been configured for this
 	 * ReactionNetwork.
 	 */
-	const std::map<std::string, std::string> & getProperties();
+    const PropertyMap& getProperties();
 
 	/**
 	 * This operation sets a property with the given key to the specified value
@@ -288,7 +288,7 @@ public:
 	 * @param value The value to which the key should be set
 	 */
 	virtual void setProperty(const std::string& key,
-			const std::string& value) {return;}
+            const PropertyMap::mapped_type& value) {return;}
 
 	/**
 	 * This operation returns the size or number of reactants in the network.

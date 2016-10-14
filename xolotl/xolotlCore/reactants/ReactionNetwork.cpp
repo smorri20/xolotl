@@ -6,7 +6,7 @@
 using namespace xolotlCore;
 
 ReactionNetwork::ReactionNetwork() :
-		properties(new std::map<std::string, std::string>()),
+		properties(new PropertyMap()),
 		temperature(0.0), networkSize(0) {
 //    concUpdateCounter = xolotlPerf::getHandlerRegistry()->getEventCounter("net_conc_updates");
 	// Setup the vector to hold all of the reactants
@@ -16,7 +16,7 @@ ReactionNetwork::ReactionNetwork() :
 
 ReactionNetwork::ReactionNetwork(
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		properties(new std::map<std::string, std::string>()), handlerRegistry(
+		properties(new PropertyMap()), handlerRegistry(
 				registry),
 				temperature(0.0), networkSize(0) {
 	// Counter for the number of times the network concentration is updated.
@@ -29,7 +29,7 @@ ReactionNetwork::ReactionNetwork(
 
 ReactionNetwork::ReactionNetwork(const ReactionNetwork &other) {
 	// The copy constructor of std::map copies each of the keys and values.
-	properties.reset(new std::map<std::string, std::string>(*other.properties));
+	properties.reset(new PropertyMap(*other.properties));
 
 	handlerRegistry = other.handlerRegistry;
 	allReactants = other.allReactants;
@@ -146,7 +146,7 @@ const std::vector<std::string> & ReactionNetwork::getCompoundNames() const {
 	return compoundNames;
 }
 
-const std::map<std::string, std::string> & ReactionNetwork::getProperties() {
+const IReactionNetwork::PropertyMap & ReactionNetwork::getProperties() {
 	return *properties;
 }
 

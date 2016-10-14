@@ -69,24 +69,28 @@ BOOST_AUTO_TEST_CASE(checkLoading) {
 	
 	// Print the properties list to debug
 	for (auto it = props.begin(); it != props.end(); ++it) {
-		printf("\"%s\" => \"%s\"\n", it->first.c_str(), it->second.c_str());
+        std::ostringstream ostr;
+        ostr << '\"' << it->first
+            << "\" => \"" << it->second
+            << '\"';
+        std::cout << ostr.str() << std::endl;
 	}
 
 	// Check the properties
 	BOOST_TEST_MESSAGE("Maximum He Cluster Size = " << props["maxHeClusterSize"]);
-	BOOST_REQUIRE(strtol(props["maxHeClusterSize"].c_str(),NULL,10) == 1);
+	BOOST_REQUIRE(props["maxHeClusterSize"] == 1);
 	BOOST_TEST_MESSAGE("Maximum V Cluster Size = " << props["maxVClusterSize"]);
-	BOOST_REQUIRE(strtol(props["maxVClusterSize"].c_str(),NULL,10) == 50);
+	BOOST_REQUIRE(props["maxVClusterSize"] == 50);
 	BOOST_TEST_MESSAGE("Maximum Interstitial Cluster Size = " << props["maxIClusterSize"]);
-	BOOST_REQUIRE(strtol(props["maxIClusterSize"].c_str(),NULL,10) == 1);
+	BOOST_REQUIRE(props["maxIClusterSize"] == 1);
 	BOOST_TEST_MESSAGE("Maximum Mixed Species Cluster Size = " << props["maxMixedClusterSize"]);
-	BOOST_REQUIRE(strtol(props["maxHeVClusterSize"].c_str(),NULL,10) == 51);
+	BOOST_REQUIRE(props["maxHeVClusterSize"] == 51);
 	BOOST_TEST_MESSAGE("Number of He clusters = " << props["numHeClusters"]);
-	BOOST_REQUIRE(strtol(props["numHeClusters"].c_str(),NULL,10) == 1);
+	BOOST_REQUIRE(props["numHeClusters"] == 1);
 	BOOST_TEST_MESSAGE("Number of V clusters = " << props["numVClusters"]);
-	BOOST_REQUIRE(strtol(props["numVClusters"].c_str(),NULL,10) == 1);
+	BOOST_REQUIRE(props["numVClusters"] == 1);
 	BOOST_TEST_MESSAGE("Number of I clusters = " << props["numIClusters"]);
-	BOOST_REQUIRE(strtol(props["numIClusters"].c_str(),NULL,10) == 1);
+	BOOST_REQUIRE(props["numIClusters"] == 1);
 
 	// Check the reactants - He first
 	auto heCluster = (PSICluster *) network->get("He",1);

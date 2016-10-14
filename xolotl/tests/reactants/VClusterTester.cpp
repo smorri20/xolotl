@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	auto props = network->getProperties();
 
 	// Prevent dissociation from being added to the connectivity array
-	props["dissociationsEnabled"] = "false";
+	props["dissociationsEnabled"] = 0;
 
 	// Get the connectivity array from the reactant for a vacancy cluster of size 2.
 	auto reactant = (PSICluster *) network->get("V", 2);

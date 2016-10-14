@@ -336,8 +336,8 @@ void NECluster::setReactionNetwork(
 	auto properties = network->getProperties();
 
 	// Get the enabled reaction type flags
-	bool reactionsEnabled = (properties["reactionsEnabled"] == "true");
-	bool dissociationsEnabled = (properties["dissociationsEnabled"] == "true");
+	bool reactionsEnabled = (properties["reactionsEnabled"] != 0);
+	bool dissociationsEnabled = (properties["dissociationsEnabled"] != 0);
 
 	// Clear the flux-related arrays
 	reactingPairs.clear();

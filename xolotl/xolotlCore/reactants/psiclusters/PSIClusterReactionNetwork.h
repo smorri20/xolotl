@@ -176,7 +176,8 @@ public:
 	 * @param key The key for the property
 	 * @param value The value to which the key should be set
 	 */
-	void setProperty(const std::string& key, const std::string& value);
+	void setProperty(const std::string& key, 
+                        const PropertyMap::mapped_type& value);
 
 };
 

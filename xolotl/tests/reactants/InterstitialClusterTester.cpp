@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	auto props = network->getProperties();
 	
 	// Prevent dissociation from being added to the connectivity array
-	props["dissociationsEnabled"] = "false";
+	props["dissociationsEnabled"] = 0;
 	
 	// Check the reaction connectivity of the 4th interstitial cluster (4I)
 	// Get the connectivity array from the reactant
