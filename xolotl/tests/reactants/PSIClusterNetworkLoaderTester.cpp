@@ -61,32 +61,22 @@ BOOST_AUTO_TEST_CASE(checkLoading) {
 
 	// Load the network
 	auto network = loader.load();
-
-	// Check the network. It should not be empty
-	auto props = network->getProperties();
-	BOOST_TEST_MESSAGE("Number of properties = " << props.size());
-	BOOST_REQUIRE(!props.empty());
-	
-	// Print the properties list to debug
-	for (auto it = props.begin(); it != props.end(); ++it) {
-		printf("\"%s\" => \"%s\"\n", it->first.c_str(), it->second.c_str());
-	}
+    auto psiNetwork = std::dynamic_pointer_cast<PSIClusterReactionNetwork>(network);
 
 	// Check the properties
-	BOOST_TEST_MESSAGE("Maximum He Cluster Size = " << props["maxHeClusterSize"]);
-	BOOST_REQUIRE(strtol(props["maxHeClusterSize"].c_str(),NULL,10) == 1);
-	BOOST_TEST_MESSAGE("Maximum V Cluster Size = " << props["maxVClusterSize"]);
-	BOOST_REQUIRE(strtol(props["maxVClusterSize"].c_str(),NULL,10) == 50);
-	BOOST_TEST_MESSAGE("Maximum Interstitial Cluster Size = " << props["maxIClusterSize"]);
-	BOOST_REQUIRE(strtol(props["maxIClusterSize"].c_str(),NULL,10) == 1);
-	BOOST_TEST_MESSAGE("Maximum Mixed Species Cluster Size = " << props["maxMixedClusterSize"]);
-	BOOST_REQUIRE(strtol(props["maxHeVClusterSize"].c_str(),NULL,10) == 51);
-	BOOST_TEST_MESSAGE("Number of He clusters = " << props["numHeClusters"]);
-	BOOST_REQUIRE(strtol(props["numHeClusters"].c_str(),NULL,10) == 1);
-	BOOST_TEST_MESSAGE("Number of V clusters = " << props["numVClusters"]);
-	BOOST_REQUIRE(strtol(props["numVClusters"].c_str(),NULL,10) == 1);
-	BOOST_TEST_MESSAGE("Number of I clusters = " << props["numIClusters"]);
-	BOOST_REQUIRE(strtol(props["numIClusters"].c_str(),NULL,10) == 1);
+	BOOST_TEST_MESSAGE("Maximum He Cluster Size = " << psiNetwork->getMaxHeClusterSize());
+	BOOST_REQUIRE(psiNetwork->getMaxHeClusterSize() == 1);
+	BOOST_TEST_MESSAGE("Maximum V Cluster Size = " << psiNetwork->getMaxVClusterSize());
+	BOOST_REQUIRE(psiNetwork->getMaxVClusterSize() == 50);
+	BOOST_TEST_MESSAGE("Maximum Interstitial Cluster Size = " << psiNetwork->getMaxIClusterSize());
+	BOOST_REQUIRE(psiNetwork->getMaxIClusterSize() == 1);
+	BOOST_REQUIRE(psiNetwork->getMaxHeVClusterSize() == 51);
+	BOOST_TEST_MESSAGE("Number of He clusters = " << psiNetwork->getNumHeClusters());
+	BOOST_REQUIRE(psiNetwork->getNumHeClusters() == 1);
+	BOOST_TEST_MESSAGE("Number of V clusters = " << psiNetwork->getNumVClusters());
+	BOOST_REQUIRE(psiNetwork->getNumVClusters() == 1);
+	BOOST_TEST_MESSAGE("Number of I clusters = " << psiNetwork->getNumIClusters());
+	BOOST_REQUIRE(psiNetwork->getNumIClusters() == 1);
 
 	// Check the reactants - He first
 	auto heCluster = (PSICluster *) network->get("He",1);

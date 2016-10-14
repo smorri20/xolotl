@@ -54,10 +54,9 @@ BOOST_AUTO_TEST_CASE(getSpeciesSize) {
  */
 BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork();
-	auto props = network->getProperties();
 	
 	// Prevent dissociation from being added to the connectivity array
-	props["dissociationsEnabled"] = "false";
+    network->disableDissociations();
 	
 	// Check the reaction connectivity of the HeV cluster
 	// with 3He and 2V

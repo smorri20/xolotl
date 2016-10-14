@@ -58,6 +58,41 @@ private:
 		std::vector< std::shared_ptr<IReactant> > > > clusterTypeMap;
 
 
+    /**
+     * Number of Xe clusters in our network.
+     */
+    int numXeClusters;
+
+    /**
+     * Number of XeV clusters in our network.
+     */
+    int numXeVClusters;
+
+    /**
+     * Number of XeI clusters in our network.
+     */
+    int numXeIClusters;
+
+    /**
+     * Number of superclusters in our network.
+     */
+    int numSuperClusters;
+
+    /**
+     * Maximum size of Xe clusters in our network.
+     */
+    int maxXeClusterSize;
+    
+    /**
+     * Maximum size of XeV clusters in our network.
+     */
+    int maxXeVClusterSize;
+    
+    /**
+     * Maximum size of XeI clusters in our network.
+     */
+    int maxXeIClusterSize;
+
 	/**
 	 * This operation sets the default values of the properties table and names
 	 * for this network. It is used on construction and during a copy.
@@ -221,16 +256,6 @@ public:
 	 */
 	void reinitializeConnectivities();
 
-	/**
-	 * This operation sets a property with the given key to the specified value
-	 * for the network. ReactionNetworks may reserve the right to ignore this
-	 * operation for special key types, most especially those that they manage
-	 * on their own.
-	 *
-	 * @param key The key for the property
-	 * @param value The value to which the key should be set
-	 */
-	void setProperty(const std::string& key, const std::string& value);
 
 	/**
 	 * This operation updates the concentrations for all reactants in the
@@ -242,6 +267,41 @@ public:
 	 * does not overrun is up to the caller.
 	 */
 	void updateConcentrationsFromArray(double * concentrations);
+
+    /**
+     * Number of Xe clusters in our network.
+     */
+    int getNumXeClusters() const    {return numXeClusters;}
+
+    /**
+     * Number of XeV clusters in our network.
+     */
+    int getNumXeVClusters() const   {return numXeVClusters;}
+
+    /**
+     * Number of XeI clusters in our network.
+     */
+    int getNumXeIClusters() const   {return numXeIClusters;}
+
+    /**
+     * Number of superclusters in our network.
+     */
+    int getNumSuperClusters() const {return numSuperClusters;}
+
+    /**
+     * Maximum size of Xe clusters in our network.
+     */
+    int getMaxXeClusterSize() const {return maxXeClusterSize;}
+
+    /**
+     * Maximum size of XeV clusters in our network.
+     */
+    int getMaxXeVClusterSize() const {return maxXeVClusterSize;}
+
+    /**
+     * Maximum size of XeI clusters in our network.
+     */
+    int getMaxXeIClusterSize() const {return maxXeIClusterSize;}
 
 };
 

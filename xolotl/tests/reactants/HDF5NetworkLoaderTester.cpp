@@ -45,17 +45,15 @@ BOOST_AUTO_TEST_CASE(checkLoad) {
 	// Check the value
 	BOOST_REQUIRE_EQUAL(networkSize, 9);
 
-	// Get the properties
-	auto props = network->getProperties();
-
 	// Check the properties
-	BOOST_REQUIRE_EQUAL(strtol(props["maxHeClusterSize"].c_str(),NULL,10), 8);
-	BOOST_REQUIRE_EQUAL(strtol(props["maxVClusterSize"].c_str(),NULL,10), 1);
-	BOOST_REQUIRE_EQUAL(strtol(props["maxIClusterSize"].c_str(),NULL,10), 0);
-	BOOST_REQUIRE_EQUAL(strtol(props["maxHeVClusterSize"].c_str(),NULL,10), 0);
-	BOOST_REQUIRE_EQUAL(strtol(props["numHeClusters"].c_str(),NULL,10), 8);
-	BOOST_REQUIRE_EQUAL(strtol(props["numVClusters"].c_str(),NULL,10), 1);
-	BOOST_REQUIRE_EQUAL(strtol(props["numIClusters"].c_str(),NULL,10), 0);
+    auto psiNetwork = std::dynamic_pointer_cast<PSIClusterReactionNetwork>(network);
+	BOOST_REQUIRE_EQUAL(psiNetwork->getMaxHeClusterSize(), 8);
+	BOOST_REQUIRE_EQUAL(psiNetwork->getMaxVClusterSize(), 1);
+	BOOST_REQUIRE_EQUAL(psiNetwork->getMaxIClusterSize(), 0);
+	BOOST_REQUIRE_EQUAL(psiNetwork->getMaxHeVClusterSize(), 0);
+	BOOST_REQUIRE_EQUAL(psiNetwork->getNumHeClusters(), 8);
+	BOOST_REQUIRE_EQUAL(psiNetwork->getNumVClusters(), 1);
+	BOOST_REQUIRE_EQUAL(psiNetwork->getNumIClusters(), 0);
 
 	// Get all the reactants
 	auto reactants = network->getAll();
