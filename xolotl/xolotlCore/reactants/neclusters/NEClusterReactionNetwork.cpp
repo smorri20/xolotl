@@ -26,8 +26,8 @@ void NEClusterReactionNetwork::setDefaultPropsAndNames() {
 	= std::make_shared<std::vector<std::shared_ptr<IReactant>>>();
 
 	// Initialize default properties
-	(*properties)["reactionsEnabled"] = 1;
-	(*properties)["dissociationsEnabled"] = 1;
+	(*properties)["reactionsEnabled"] = true;
+	(*properties)["dissociationsEnabled"] = true;
 	(*properties)["numXeClusters"] = 0;
 	(*properties)["numVClusters"] = 0;
 	(*properties)["numIClusters"] = 0;
@@ -291,13 +291,13 @@ void NEClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 		}
 
 		// Increment the number of total clusters of this type
-        auto numClusters = properties->at(numClusterKey);
+        auto numClusters = boost::any_cast<int>(properties->at(numClusterKey));
 		numClusters++;
 		(*properties)[numClusterKey] = numClusters;
 		// Increment the max cluster size key
-		auto maxSize = properties->at(clusterSizeKey);
+		auto maxSize = boost::any_cast<int>(properties->at(clusterSizeKey));
 		int clusterSize = numXe + numV + numI;
-		maxSize = std::max((PropertyMap::mapped_type)clusterSize, maxSize);
+		maxSize = std::max(clusterSize, maxSize);
 		(*properties)[clusterSizeKey] = maxSize;
 		// Update the size
 		++networkSize;
@@ -349,7 +349,7 @@ void NEClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 		}
 
 		// Increment the number of total clusters of this type
-		auto numClusters = properties->at(numClusterKey);
+		auto numClusters = boost::any_cast<int>(properties->at(numClusterKey));
 		numClusters++;
 		(*properties)[numClusterKey] = numClusters;
 		// Update the size
@@ -469,7 +469,7 @@ void NEClusterReactionNetwork::updateConcentrationsFromArray(double * concentrat
 	}
 
 	// Set the moments
-	auto numSuperClusters = properties->at("numSuperClusters");
+	auto numSuperClusters = boost::any_cast<int>(properties->at("numSuperClusters"));
 	for (int i = size - numSuperClusters; i < size; i++) {
 		// Get the superCluster
 		auto cluster = (NESuperCluster *) reactants->at(i);

@@ -49,13 +49,13 @@ BOOST_AUTO_TEST_CASE(checkLoad) {
 	auto props = network->getProperties();
 
 	// Check the properties
-	BOOST_REQUIRE_EQUAL(props["maxHeClusterSize"], 8);
-	BOOST_REQUIRE_EQUAL(props["maxVClusterSize"], 1);
-	BOOST_REQUIRE_EQUAL(props["maxIClusterSize"], 0);
-	BOOST_REQUIRE_EQUAL(props["maxHeVClusterSize"], 0);
-	BOOST_REQUIRE_EQUAL(props["numHeClusters"], 8);
-	BOOST_REQUIRE_EQUAL(props["numVClusters"], 1);
-	BOOST_REQUIRE_EQUAL(props["numIClusters"], 0);
+	BOOST_REQUIRE_EQUAL(boost::any_cast<int>(props["maxHeClusterSize"]), 8);
+	BOOST_REQUIRE_EQUAL(boost::any_cast<int>(props["maxVClusterSize"]), 1);
+	BOOST_REQUIRE_EQUAL(boost::any_cast<int>(props["maxIClusterSize"]), 0);
+	BOOST_REQUIRE_EQUAL(boost::any_cast<int>(props["maxHeVClusterSize"]), 0);
+	BOOST_REQUIRE_EQUAL(boost::any_cast<int>(props["numHeClusters"]), 8);
+	BOOST_REQUIRE_EQUAL(boost::any_cast<int>(props["numVClusters"]), 1);
+	BOOST_REQUIRE_EQUAL(boost::any_cast<int>(props["numIClusters"]), 0);
 
 	// Get all the reactants
 	auto reactants = network->getAll();

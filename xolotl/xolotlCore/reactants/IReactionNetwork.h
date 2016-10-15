@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <boost/any.hpp>
 
 namespace xolotlCore {
 
@@ -23,7 +24,7 @@ public:
     /**
      * A nice name for our properties map type.
      */
-    typedef std::map<std::string, int64_t> PropertyMap;
+    typedef std::map<std::string, boost::any> PropertyMap;
 
 
 	/**

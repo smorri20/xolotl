@@ -166,16 +166,16 @@ BOOST_AUTO_TEST_CASE(checkProperties) {
 	// Grab the map of properties from the network
 	auto props = psiNetwork->getProperties();
 	// Convert the property strings so we can use them
-	auto numHeClusters = props["numHeClusters"];
-	auto numVClusters = props["numVClusters"];
-	auto numIClusters = props["numIClusters"];
-	auto numHeVClusters = props["numHeVClusters"];
-	auto numHeIClusters = props["numHeIClusters"];
-	auto maxHeVClusterSize = props["maxHeVClusterSize"];
-	auto maxHeIClusterSize = props["maxHeIClusterSize"];
-	auto maxHeClusterSize = props["maxHeClusterSize"];
-	auto maxVClusterSize = props["maxVClusterSize"];
-	auto maxIClusterSize = props["maxIClusterSize"];
+	auto numHeClusters = boost::any_cast<int>(props["numHeClusters"]);
+	auto numVClusters = boost::any_cast<int>(props["numVClusters"]);
+	auto numIClusters = boost::any_cast<int>(props["numIClusters"]);
+	auto numHeVClusters = boost::any_cast<int>(props["numHeVClusters"]);
+	auto numHeIClusters = boost::any_cast<int>(props["numHeIClusters"]);
+	auto maxHeVClusterSize = boost::any_cast<int>(props["maxHeVClusterSize"]);
+	auto maxHeIClusterSize = boost::any_cast<int>(props["maxHeIClusterSize"]);
+	auto maxHeClusterSize = boost::any_cast<int>(props["maxHeClusterSize"]);
+	auto maxVClusterSize = boost::any_cast<int>(props["maxVClusterSize"]);
+	auto maxIClusterSize = boost::any_cast<int>(props["maxIClusterSize"]);
 
 	// Check the properties
 	BOOST_REQUIRE_EQUAL(0, numHeClusters);
@@ -197,8 +197,8 @@ BOOST_AUTO_TEST_CASE(checkProperties) {
 	auto modifiedProps = psiNetwork->getProperties();
 
 	// Check for the new properties
-	auto rangePenalty = modifiedProps["rangePenalty"];
-	auto agility = modifiedProps["agility"];
+	auto rangePenalty = boost::any_cast<int>(modifiedProps["rangePenalty"]);
+	auto agility = boost::any_cast<int>(modifiedProps["agility"]);
 	BOOST_REQUIRE_EQUAL(5, rangePenalty);
 	BOOST_REQUIRE_EQUAL(8, agility);
 
@@ -210,10 +210,10 @@ BOOST_AUTO_TEST_CASE(checkProperties) {
 
 	// Grab the properties afresh
 	auto propsWithClusters = psiNetwork->getProperties();
-	numHeClusters = propsWithClusters["numHeClusters"];
-	maxHeClusterSize = propsWithClusters["maxHeClusterSize"];
-	numHeVClusters = propsWithClusters["numHeVClusters"];
-	maxHeVClusterSize = propsWithClusters["maxHeVClusterSize"];
+	numHeClusters = boost::any_cast<int>(propsWithClusters["numHeClusters"]);
+	maxHeClusterSize = boost::any_cast<int>(propsWithClusters["maxHeClusterSize"]);
+	numHeVClusters = boost::any_cast<int>(propsWithClusters["numHeVClusters"]);
+	maxHeVClusterSize = boost::any_cast<int>(propsWithClusters["maxHeVClusterSize"]);
 
 	// Check the properties again
 	BOOST_REQUIRE_EQUAL(1, numHeClusters);
@@ -279,8 +279,8 @@ BOOST_AUTO_TEST_CASE(checkCopying) {
 	auto properties = network.getProperties();
 	auto copiedProperties = networkCopy.getProperties();
 	BOOST_REQUIRE_EQUAL(properties.size(), copiedProperties.size());
-	BOOST_REQUIRE_EQUAL(properties["numHeClusters"],
-			copiedProperties["numHeClusters"]);
+	BOOST_REQUIRE_EQUAL(boost::any_cast<int>(properties["numHeClusters"]),
+			boost::any_cast<int>(copiedProperties["numHeClusters"]));
 
 	// Check that changing the concentration of a copy does not update the
 	// original. Start by updating the copy.

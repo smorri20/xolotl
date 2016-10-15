@@ -937,8 +937,8 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
     // in this monitor for the type-specific network to indicate
     // and/or provide the variables of interest.
     auto props = network->getProperties();
-	auto maxHeVClusterSize = props["maxHeVClusterSize"];
-	auto maxVClusterSize = props["maxVClusterSize"];
+	auto maxHeVClusterSize = boost::any_cast<int>(props["maxHeVClusterSize"]);
+	auto maxVClusterSize = boost::any_cast<int>(props["maxVClusterSize"]);
 
 	// Loop on the grid points
 	for (xi = xs; xi < xs + xm; xi++) {
@@ -1212,15 +1212,15 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the maximum size of HeV clusters
     auto props = network->getProperties();
-	auto maxHeVClusterSize = props["maxHeVClusterSize"];
+	auto maxHeVClusterSize = boost::any_cast<int>(props["maxHeVClusterSize"]);
 	// Get the maximum size of V clusters
-	auto maxVClusterSize = props["maxVClusterSize"];
+	auto maxVClusterSize = boost::any_cast<int>(props["maxVClusterSize"]);
 	// Get the number of He in the max HeV cluster
 	int maxHeSize = (maxHeVClusterSize - maxVClusterSize);
 	// Get the maximum stable HeV cluster
 	IReactant * maxHeV;
 	maxHeV = network->getCompound(
-			"HeV", { maxHeSize, (int)maxVClusterSize, 0 });
+			"HeV", { maxHeSize, maxVClusterSize, 0 });
 
 	// Boolean to know if the concentration is too big
 	bool maxHeVTooBig = false;

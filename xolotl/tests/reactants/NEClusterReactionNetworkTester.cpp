@@ -77,16 +77,16 @@ BOOST_AUTO_TEST_CASE(checkProperties) {
 	// Grab the map of properties from the network
 	auto props = neNetwork->getProperties();
 	// Convert the property strings so we can use them
-	auto numXeClusters = props["numXeClusters"];
-	auto numVClusters = props["numVClusters"];
-	auto numIClusters = props["numIClusters"];
-	auto numXeVClusters = props["numXeVClusters"];
-	auto numXeIClusters = props["numXeIClusters"];
-	auto maxXeVClusterSize = props["maxXeVClusterSize"];
-	auto maxXeIClusterSize = props["maxXeIClusterSize"];
-	auto maxXeClusterSize = props["maxXeClusterSize"];
-	auto maxVClusterSize = props["maxVClusterSize"];
-	auto maxIClusterSize = props["maxIClusterSize"];
+	auto numXeClusters = boost::any_cast<int>(props["numXeClusters"]);
+	auto numVClusters = boost::any_cast<int>(props["numVClusters"]);
+	auto numIClusters = boost::any_cast<int>(props["numIClusters"]);
+	auto numXeVClusters = boost::any_cast<int>(props["numXeVClusters"]);
+	auto numXeIClusters = boost::any_cast<int>(props["numXeIClusters"]);
+	auto maxXeVClusterSize = boost::any_cast<int>(props["maxXeVClusterSize"]);
+	auto maxXeIClusterSize = boost::any_cast<int>(props["maxXeIClusterSize"]);
+	auto maxXeClusterSize = boost::any_cast<int>(props["maxXeClusterSize"]);
+	auto maxVClusterSize = boost::any_cast<int>(props["maxVClusterSize"]);
+	auto maxIClusterSize = boost::any_cast<int>(props["maxIClusterSize"]);
 
 	// Check the properties
 	BOOST_REQUIRE_EQUAL(0, numXeClusters);
@@ -108,8 +108,8 @@ BOOST_AUTO_TEST_CASE(checkProperties) {
 	auto modifiedProps = neNetwork->getProperties();
 
 	// Check for the new properties
-	auto rangePenalty = modifiedProps["rangePenalty"];
-	auto agility = modifiedProps["agility"];
+	auto rangePenalty = boost::any_cast<int>(modifiedProps["rangePenalty"]);
+	auto agility = boost::any_cast<int>(modifiedProps["agility"]);
 	BOOST_REQUIRE_EQUAL(5, rangePenalty);
 	BOOST_REQUIRE_EQUAL(8, agility);
 
@@ -119,8 +119,8 @@ BOOST_AUTO_TEST_CASE(checkProperties) {
 
 	// Grab the properties afresh
 	auto propsWithClusters = neNetwork->getProperties();
-	numXeClusters = propsWithClusters["numXeClusters"];
-	maxXeClusterSize = propsWithClusters["maxXeClusterSize"];
+	numXeClusters = boost::any_cast<int>(propsWithClusters["numXeClusters"]);
+	maxXeClusterSize = boost::any_cast<int>(propsWithClusters["maxXeClusterSize"]);
 
 	// Check the properties again
 	BOOST_REQUIRE_EQUAL(1, numXeClusters);
@@ -186,8 +186,8 @@ BOOST_AUTO_TEST_CASE(checkCopying) {
 	auto properties = network.getProperties();
 	auto copiedProperties = networkCopy.getProperties();
 	BOOST_REQUIRE_EQUAL(properties.size(), copiedProperties.size());
-	BOOST_REQUIRE_EQUAL(properties["numXeClusters"],
-			copiedProperties["numXeClusters"]);
+	BOOST_REQUIRE_EQUAL(boost::any_cast<int>(properties["numXeClusters"]),
+			boost::any_cast<int>(copiedProperties["numXeClusters"]));
 
 	// Check that changing the concentration of a copy does not update the
 	// original. Start by updating the copy.

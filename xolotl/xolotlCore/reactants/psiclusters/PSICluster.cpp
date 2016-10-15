@@ -422,8 +422,8 @@ void PSICluster::setReactionNetwork(
 	auto properties = network->getProperties();
 
 	// Get the enabled reaction type flags
-	bool reactionsEnabled = (properties["reactionsEnabled"] != 0);
-	bool dissociationsEnabled = (properties["dissociationsEnabled"] != 0);
+	bool reactionsEnabled = boost::any_cast<bool>(properties["reactionsEnabled"]);
+	bool dissociationsEnabled = boost::any_cast<bool>(properties["dissociationsEnabled"]);
 
 	// Clear the flux-related arrays
 	reactingPairs.clear();

@@ -38,6 +38,15 @@ INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR})
 # Enable testing.
 enable_testing()
 
+# Add the tests is Boost is available
+FIND_PACKAGE(Boost REQUIRED)
+IF (Boost_FOUND)
+    message(STATUS "Boost version ${Boost_VERSION} found.")
+    message(STATUS "Tests will be built since Boost was found.")
+    INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+    add_subdirectory(tests)
+ENDIF()
+
 # Add the preprocessor first, it is independent of the other parts of the code
 add_subdirectory(gov.ornl.xolotl.preprocessor)
 
@@ -51,15 +60,6 @@ add_subdirectory(xolotlCore)
 add_subdirectory(xolotlFactory)
 # Keep the solver for the end (it uses everything else)
 add_subdirectory(xolotlSolver)
-
-# Add the tests is Boost is available
-FIND_PACKAGE(Boost)
-IF (Boost_FOUND)
-    message(STATUS "Boost version ${Boost_VERSION} found.")
-    message(STATUS "Tests will be built since Boost was found.")
-    INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
-    add_subdirectory(tests)
-ENDIF()
 
 # Report package information
 message(STATUS "----- Configuration Information -----")
