@@ -45,6 +45,10 @@ void PetscSolver1DHandler::createSolverContext(DM &da) {
 	NULL, &da);
 	checkPetscError(ierr, "PetscSolver1DHandler::createSolverContext: "
 			"DMDACreate1d failed.");
+	ierr = DMSetFromOptions(da);
+	checkPetscError(ierr, "PetscSolver1DHandler::createSolverContext: DMSetFromOptions failed.");
+	ierr = DMSetUp(da);
+	checkPetscError(ierr, "PetscSolver1DHandler::createSolverContext: DMSetUp failed.");
 
 	// Set the position of the surface
 	surfacePosition = 0;

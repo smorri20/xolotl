@@ -43,6 +43,10 @@ void PetscSolver2DHandler::createSolverContext(DM &da) {
 	DMDA_STENCIL_STAR, nx, ny, PETSC_DECIDE, PETSC_DECIDE, dof, 1, NULL, NULL, &da);
 	checkPetscError(ierr, "PetscSolver2DHandler::createSolverContext: "
 			"DMDACreate2d failed.");
+	ierr = DMSetFromOptions(da);
+	checkPetscError(ierr, "PetscSolver2DHandler::createSolverContext: DMSetFromOptions failed.");
+	ierr = DMSetUp(da);
+	checkPetscError(ierr, "PetscSolver2DHandler::createSolverContext: DMSetUp failed.");
 
 	// Set the position of the surface
 	for (int j = 0; j < ny; j++) {

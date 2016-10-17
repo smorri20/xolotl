@@ -44,6 +44,10 @@ void PetscSolver3DHandler::createSolverContext(DM &da) {
 			PETSC_DECIDE, PETSC_DECIDE, dof, 1, NULL, NULL, NULL, &da);
 	checkPetscError(ierr, "PetscSolver3DHandler::createSolverContext: "
 			"DMDACreate3d failed.");
+	ierr = DMSetFromOptions(da);
+	checkPetscError(ierr, "PetscSolver3DHandler::createSolverContext: DMSetFromOptions failed.");
+	ierr = DMSetUp(da);
+	checkPetscError(ierr, "PetscSolver3DHandler::createSolverContext: DMSetUp failed.");
 
 	// Set the position of the surface
 	// Loop on Y
