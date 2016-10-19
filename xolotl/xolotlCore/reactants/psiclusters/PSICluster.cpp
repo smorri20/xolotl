@@ -1,6 +1,5 @@
 #include "PSICluster.h"
 #include <xolotlPerf.h>
-#include <Constants.h>
 #include <iostream>
 #include <limits>
 #include <MathUtils.h>

@@ -5,6 +5,7 @@
 #include <Reactant.h>
 #include <math.h>
 #include <sstream>
+#include <Constants.h>
 
 namespace xolotlPerf {
 	class ITimer;
@@ -624,6 +625,16 @@ public:
 	 * or CombiningCluster. Need to be called only when the temperature changes.
 	 */
 	virtual void updateRateConstants();
+
+	virtual std::vector<int> getBoundaries() const {
+		std::vector<int> boundaries;
+		auto comp = getComposition();
+		boundaries.push_back(comp[heType]);
+		boundaries.push_back(comp[heType]);
+		boundaries.push_back(comp[vType]);
+		boundaries.push_back(comp[vType]);
+		return boundaries;
+	}
 
 };
 

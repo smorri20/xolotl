@@ -85,13 +85,12 @@ protected:
 		SuperClusterProductionPair(PSICluster * firstPtr,
 				PSICluster * secondPtr, double k) :
 				first(firstPtr), second(secondPtr), kConstant(k), a000(0.0), a001(
-						0.0), a002(0.0), a100(0.0), a101(0.0), a102(
-						0.0), a200(0.0), a201(0.0), a202(0.0), a010(
-						0.0), a011(0.0), a012(0.0), a020(0.0), a021(
-						0.0), a022(0.0), a110(0.0), a111(0.0), a112(
-						0.0), a120(0.0), a121(0.0), a122(0.0), a210(
-						0.0), a211(0.0), a212(0.0), a220(0.0), a221(
-						0.0), a222(0.0) {
+						0.0), a002(0.0), a100(0.0), a101(0.0), a102(0.0), a200(
+						0.0), a201(0.0), a202(0.0), a010(0.0), a011(0.0), a012(
+						0.0), a020(0.0), a021(0.0), a022(0.0), a110(0.0), a111(
+						0.0), a112(0.0), a120(0.0), a121(0.0), a122(0.0), a210(
+						0.0), a211(0.0), a212(0.0), a220(0.0), a221(0.0), a222(
+						0.0) {
 		}
 	};
 
@@ -147,8 +146,8 @@ protected:
 		SuperClusterDissociationPair(PSICluster * firstPtr,
 				PSICluster * secondPtr, double k) :
 				first(firstPtr), second(secondPtr), kConstant(k), a00(0.0), a01(
-						0.0), a02(0.0), a10(0.0), a11(0.0), a12(0.0), a20(
-						0.0), a21(0.0), a22(0.0) {
+						0.0), a02(0.0), a10(0.0), a11(0.0), a12(0.0), a20(0.0), a21(
+						0.0), a22(0.0) {
 		}
 	};
 
@@ -185,40 +184,40 @@ private:
 	double dispersionV;
 
 	//! The map containing all the reacting pairs separated by original composition.
-	std::map <std::pair<int, int>, std::vector<ClusterPair> > reactingMap;
+	std::map<std::pair<int, int>, std::vector<ClusterPair> > reactingMap;
 
 	//! The map containing all the combining clusters separated by original composition.
-	std::map <std::pair<int, int>, std::vector<CombiningCluster> > combiningMap;
+	std::map<std::pair<int, int>, std::vector<CombiningCluster> > combiningMap;
 
 	//! The map containing all the dissociating pairs separated by original composition.
-	std::map <std::pair<int, int>, std::vector<ClusterPair> > dissociatingMap;
+	std::map<std::pair<int, int>, std::vector<ClusterPair> > dissociatingMap;
 
 	//! The map containing all the emission pairs separated by original composition.
-	std::map <std::pair<int, int>, std::vector<ClusterPair> > emissionMap;
+	std::map<std::pair<int, int>, std::vector<ClusterPair> > emissionMap;
 
 	//! The map containing all the effective reacting pairs separated by original composition.
-	std::map <std::pair<int, int>, std::vector<ClusterPair *> > effReactingMap;
+	std::map<std::pair<int, int>, std::vector<ClusterPair *> > effReactingMap;
 
 	//! The map containing all the effective combining clusters separated by original composition.
-	std::map <std::pair<int, int>, std::vector<CombiningCluster *> > effCombiningMap;
+	std::map<std::pair<int, int>, std::vector<CombiningCluster *> > effCombiningMap;
 
 	//! The map containing all the effective dissociating pairs separated by original composition.
-	std::map <std::pair<int, int>, std::vector<ClusterPair *> > effDissociatingMap;
+	std::map<std::pair<int, int>, std::vector<ClusterPair *> > effDissociatingMap;
 
 	//! The map containing all the effective emission pairs separated by original composition.
-	std::map <std::pair<int, int>, std::vector<ClusterPair *> > effEmissionMap;
+	std::map<std::pair<int, int>, std::vector<ClusterPair *> > effEmissionMap;
 
 	//! The list of optimized effective reacting pairs.
-	std::forward_list <SuperClusterProductionPair> effReactingList;
+	std::forward_list<SuperClusterProductionPair> effReactingList;
 
 	//! The list of optimized effective combining pairs.
-	std::forward_list <SuperClusterProductionPair> effCombiningList;
+	std::forward_list<SuperClusterProductionPair> effCombiningList;
 
 	//! The list of optimized effective dissociating pairs.
-	std::forward_list <SuperClusterDissociationPair> effDissociatingList;
+	std::forward_list<SuperClusterDissociationPair> effDissociatingList;
 
 	//! The list of optimized effective emission pairs.
-	std::forward_list <SuperClusterDissociationPair> effEmissionList;
+	std::forward_list<SuperClusterDissociationPair> effEmissionList;
 
 	/**
 	 * The vector containing a boolean to know if this super cluster burst at each depth.
@@ -230,7 +229,8 @@ private:
 	 * initialized with a size.
 	 */
 	SuperCluster() :
-		PSICluster() {}
+			PSICluster() {
+	}
 
 	/**
 	 * Group the same reactions together.
@@ -254,7 +254,8 @@ public:
 	 * @param radius The mean radius
 	 * @param registry The performance handler registry
 	 */
-	SuperCluster(double numHe, double numV, int nTot, int heWidth, int vWidth,  double radius,
+	SuperCluster(double numHe, double numV, int nTot, int heWidth, int vWidth,
+			double radius,
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
@@ -265,7 +266,8 @@ public:
 	SuperCluster(SuperCluster &other);
 
 	//! Destructor
-	~SuperCluster() {}
+	~SuperCluster() {
+	}
 
 	/**
 	 * This operation returns a Reactant that is created using the copy
@@ -281,13 +283,16 @@ public:
 	 *
 	 * @return True if mixed
 	 */
-	virtual bool isMixed() const {return true;}
+	virtual bool isMixed() const {
+		return true;
+	}
 
 	/**
 	 * Set the HeV vector
 	 */
-	void setHeVVector(std::vector<PSICluster *> vec)
-		{heVVector = vec;}
+	void setHeVVector(std::vector<PSICluster *> vec) {
+		heVVector = vec;
+	}
 
 	/**
 	 * This operation returns the current concentration.
@@ -379,21 +384,27 @@ public:
 	 *
 	 * @param mom The momentum
 	 */
-	void setZerothMomentum(double mom) {l0 = mom;}
+	void setZerothMomentum(double mom) {
+		l0 = mom;
+	}
 
 	/**
 	 * This operation sets the first order momentum in the helium direction.
 	 *
 	 * @param mom The momentum
 	 */
-	void setHeMomentum(double mom) {l1He = mom;}
+	void setHeMomentum(double mom) {
+		l1He = mom;
+	}
 
 	/**
 	 * This operation sets the first order momentum in the vacancy direction.
 	 *
 	 * @param mom The momentum
 	 */
-	void setVMomentum(double mom) {l1V = mom;}
+	void setVMomentum(double mom) {
+		l1V = mom;
+	}
 
 	/**
 	 * This operation reset the connectivity sets based on the information
@@ -480,7 +491,8 @@ public:
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
 	 */
-	void getDissociationPartialDerivatives(std::vector<double> & partials) const;
+	void getDissociationPartialDerivatives(
+			std::vector<double> & partials) const;
 
 	/**
 	 * This operation computes the partial derivatives due to emission
@@ -513,9 +525,233 @@ public:
 	 *
 	 * @return The average number of vacancies
 	 */
-	double getNumV() {return numV;}
+	double getNumV() {
+		return numV;
+	}
 
-};
+	std::vector<int> getBoundaries() const {
+		std::vector<int> boundaries;
+		boundaries.push_back((int) (numHe - (double) sectionHeWidth / 2.0) + 1);
+		boundaries.push_back(
+				(int) (numHe - (double) sectionHeWidth / 2.0) + sectionHeWidth);
+		boundaries.push_back((int) (numV - (double) sectionVWidth / 2.0) + 1);
+		boundaries.push_back(
+				(int) (numV - (double) sectionVWidth / 2.0) + sectionVWidth);
+		return boundaries;
+	}
+
+	/**
+	 * I examine reactions of the form A + B -> C
+	 * I accept the three component arrays heMin, heMax, vacMin, vacMax
+	 * The first component of each is for A, the last for C, i.e.
+	 * bounds on A : heMin[0], heMax[0], vacMin[0], vacMax[0]
+	 * bounds on B : heMin[1], heMax[1], vacMin[1], vacMax[1]
+	 * bounds on C : heMin[2], heMax[2], vacMin[2], vacMax[2]
+	 * I accept a three component array m
+	 * The first component of m is the moment of A, the second is the moment of B
+	 * The moment should be
+	 * 0 for the 0th moment,
+	 * 1 for the first moment in the direction of He,
+	 * 2 for the first moment in the direction of Vac.
+	 * I accept an integer called 'active'
+	 * If active is 1 I compute the change in the m[2] moment for A
+	 * If active is 2 I compute the change in the m[2] moment for B
+	 *
+	 *
+	 * dL_(A,m[2])
+	 * -----------  = -4*\pi*D_A*r_(A,B)*[this function]*L_(A,m[0])*L_(B,m[1])
+	 * dt
+	 *
+	 * More information:
+	 * I implicity assume D_A, r_(A,B) are constant for the input groups
+	 *
+	 */
+	double reactantLossFactor(std::vector<int> bounds, std::vector<int> m,
+			int active);
+
+	/**
+	 * I examine reactions of the form A + B -> C
+	 * I accept the three component arrays heMin, heMax, vacMin, vacMax
+	 * The first component of each is for A, the last for C, i.e.
+	 * -bounds on A : heMin[0], heMax[0], vacMin[0], vacMax[0]
+	 * -bounds on B : heMin[1], heMax[1], vacMin[1], vacMax[1]
+	 * -bounds on C : heMin[2], heMax[2], vacMin[2], vacMax[2]
+	 * I accept a three component array m
+	 * The first component of m is the moment of A, the second is the moment of B
+	 * The moment should be
+	 * 0 for the 0th moment,
+	 * 1 for the first moment in the direction of He,
+	 * 2 for the first moment in the direction of Vac.
+	 * The thrid entry is the moment of the product group C
+	 * I compute the rate of change multiplier for the product group, i.e.
+	 *
+	 * dL_(C,m[2])
+	 * -----------  = 4*\pi*D_A*r_(A,B)*[this function]*L_(A,m[0])*L_(B,m[1])
+	 * dt
+	 *
+	 */
+	double productGainFactor(std::vector<int> bounds, std::vector<int> m,
+			int active);
+
+	/**
+	 * I examine dissociations of the form A -> B + C
+	 * I compute the rate of loss for A
+	 * I accept the two component arrays heMin, heMax, vacMin, vacMax
+	 * The first component of each is for A, the last for C, i.e.
+	 * -bounds on A : heMin[0], heMax[0], vacMin[0], vacMax[0]
+	 * -bounds on C : heMin[1], heMax[1], vacMin[1], vacMax[1]
+	 * I accept a two component array m
+	 * The first component of m is the moment of A that is querried,
+	 * the second determines the moment of A for which a rate is being computed
+	 * e.g. m={0,1} indicates that the contribution to the change in A0 due to A1
+	 * The moment should be
+	 * 0 for the 0th moment,
+	 * 1 for the first moment in the direction of He,
+	 * 2 for the first moment in the direction of Vac.
+	 * I accept the Helium and Vacancy content of the monomer in question
+	 * The monomer should be a single cluster and !NOT! be part of a grouped space
+	 * I compute the rate of change multiplier for the emitting group, i.e.
+	 *
+	 * dL_(A,m[1])
+	 * -----------  = -k-_A*[this function]*L_(A,m[0])
+	 * dt
+	 *
+	 */
+	double analyticEmitFactor(std::vector<int> bounds, std::vector<int> m,
+			int bHe, int bVac);
+
+	/**
+	 * I examine dissociations of the form A -> B + C
+	 * I compute the rate of gain for B
+	 * I accept the two component arrays heMin, heMax, vacMin, vacMax
+	 * The first component of each is for A, the last for C, i.e.
+	 * -bounds on A : heMin[0], heMax[0], vacMin[0], vacMax[0]
+	 * -bounds on C : heMin[1], heMax[1], vacMin[1], vacMax[1]
+	 * I accept a two component array m
+	 * The first component of m is the moment of A that is querried,
+	 * the second determines the moment of B for which a rate is being computed
+	 * NOTE: for this implementation B should alwas be a singular cluster so the second entry of m=0
+	 * The moment should be
+	 * 0 for the 0th moment,
+	 * 1 for the first moment in the direction of He,
+	 * 2 for the first moment in the direction of Vac.
+	 * I accept the Helium and Vacancy content of the monomer in question
+	 * The monomer should be a single cluster and !NOT! be part of a grouped space
+	 * I compute the rate of change multiplier for the monomer group, i.e.
+	 *
+	 * dL_(B,0)
+	 * -----------  = k-_A*[this function]*L_(A,m[0])
+	 * dt
+	 *
+	 */
+	double analyticMonoFactor(std::vector<int> bounds, std::vector<int> m,
+			int bHe, int bVac);
+
+	/**
+	 * I examine dissociations of the form A -> B + C
+	 * I compute the rate of gain for C
+	 * I accept the two component arrays heMin, heMax, vacMin, vacMax
+	 * The first component of each is for A, the last for C, i.e.
+	 * -bounds on A : heMin[0], heMax[0], vacMin[0], vacMax[0]
+	 * -bounds on C : heMin[1], heMax[1], vacMin[1], vacMax[1]
+	 * I accept a two component array m
+	 * The first component of m is the moment of A that is querried,
+	 * the second determines the moment of C for which a rate is being computed
+	 * The moment should be
+	 * 0 for the 0th moment,
+	 * 1 for the first moment in the direction of He,
+	 * 2 for the first moment in the direction of Vac.
+	 * I accept the Helium and Vacancy content of the monomer in question
+	 * The monomer should be a single cluster and !NOT! be part of a grouped space
+	 * I compute the rate of change multiplier for the monomer group, i.e.
+	 *
+	 * dL_(C,m[1])
+	 * -----------  = k-_A*[this function]*L_(A,m[0])
+	 * dt
+	 *
+	 */
+	double analyticDaughterFactor(std::vector<int> bounds, std::vector<int> m,
+			int bHe, int bVac);
+
+	/**
+	 * Find the boundaries on a reaction triplet.  Four bounds must be computes for each reaction triplet.
+	 * Also computes the group center (s0) and group width paramater (w) for each memeber of the triplet
+	 *
+	 * This routine is used by the main drivers and does not need to be called externally
+	 */
+	void setReactLimits(int aMin, int aMax, int bMin, int bMax, int cMin,
+			int cMax, std::vector<int> luBounds, std::vector<double> group);
+
+	/**
+	 * Find the boundaries on an emission triplet.  Only one set of bounds needed here
+	 * Also computes the group center (s0) and group width paramater (w) for emmiter and daughter groups
+	 *
+	 * In this implementation the monomer is assumed to be non-grouped
+	 * This routine is used by the main drivers and does not need to be called externally
+	 */
+	void setEmitLimits(int aMin, int aMax, int cMin, int cMax, int b0,
+			std::vector<int> luBounds, std::vector<double> group);
+
+	/**
+	 * Computes case identifier code used by the component fucntion to represent
+	 * the orientation of the cluster moments.  Chooses which expressions are
+	 * selected by the drivers to compute the rate multiplier.
+	 */
+	int computeIndex(int m1, int m2, int m3, int axisdir);
+
+	double analyticProduct(int p, double s01, double s02, double s03, double w1,
+			double w2, double w3, std::vector<int> luBounds, int active);
+
+	double analyticReact(int p, double s01, double s02, double s03, double w1,
+			double w2, double w3, std::vector<int> luBounds, int active);
+
+	double ap1(int p, double s01, double s02, double s03, double w1, double w2,
+			double w3, int x1, int x2);
+
+	double ap2(int p, double s01, double s02, double s03, double w1, double w2,
+			double w3, int x1, int x2);
+
+	double ap3(int p, double s01, double s02, double s03, double w1, double w2,
+			double w3, int x1, int x2);
+
+	double ap4(int p, double s01, double s02, double s03, double w1, double w2,
+			double w3, int x1, int x2);
+
+	double a1r1(int p, double s01, double s02, double s03, double w1, double w2,
+			double w3, int x1, int x2);
+
+	double a1r2(int p, double s01, double s02, double s03, double w1, double w2,
+			double w3, int x1, int x2);
+
+	double a1r3(int p, double s01, double s02, double s03, double w1, double w2,
+			double w3, int x1, int x2);
+
+	double a1r4(int p, double s01, double s02, double s03, double w1, double w2,
+			double w3, int x1, int x2);
+
+	double a2r1(int p, double s01, double s02, double s03, double w1, double w2,
+			double w3, int x1, int x2);
+
+	double a2r2(int p, double s01, double s02, double s03, double w1, double w2,
+			double w3, int x1, int x2);
+
+	double a2r3(int p, double s01, double s02, double s03, double w1, double w2,
+			double w3, int x1, int x2);
+
+	double a2r4(int p, double s01, double s02, double s03, double w1, double w2,
+			double w3, int x1, int x2);
+
+	double ae(int p, double s01, double s02, double s03, double w1, double w2,
+			double w3, int x1, int x2);
+
+	double am(int p, double s01, double s02, double s03, double w1, double w2,
+			double w3, int x1, int x2);
+
+	double ad(int p, double s01, double s02, double s03, double w1, double w2,
+			double w3, int x1, int x2);
+
+}
+;
 //end class SuperCluster
 
 } /* end namespace xolotlCore */

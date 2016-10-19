@@ -219,80 +219,6 @@ void PSIClusterNetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterR
 		tempVector.clear();
 	}
 
-//	// Get the number of groups in the helium and vacancy directions
-//	int nVGroup = (network->getAll(vType).size() - vMin) / vSectionWidth + 1;
-//	int nHeGroup = (network->getAll(vType).size() * 4) / heSectionWidth + 1;
-//
-//	// Loop on the vacancy groups
-//	for (int k = 0; k < nVGroup; k++) {
-//		// Loop on the helium groups
-//		for (int j = 0; j < nHeGroup; j++) {
-//			// Loop within the group
-//			for (int n = vIndex; n < vIndex + vWidth; n++) {
-//				for (int m = heIndex + 1; m < heIndex + heWidth + 1; m++) {
-//					// Get the corresponding cluster
-//					std::vector<int> compositionVector = { m, n, 0 };
-//					// Get the product of the same type as the second reactant
-//					cluster = (PSICluster *) network->getCompound(heVType, compositionVector);
-//
-//					// Verify if the cluster exists
-//					if (!cluster) continue;
-//
-//					// Verify it was not already used
-//					if (clusterGroupMap.find(compositionVector) != clusterGroupMap.end()) continue;
-//
-//					// Increment the counter
-//					count++;
-//
-//					// Add this cluster to the temporary vector
-//					tempVector.push_back(cluster);
-//					heSize += (double) m;
-//					vSize += (double) n;
-//					radius += cluster->getReactionRadius();
-//					// Keep the information of the group
-//					clusterGroupMap[compositionVector] = std::make_pair(j, k);
-//				}
-//			}
-//
-//			// Check if there were clusters in this group
-//			if (count == 0) continue;
-//
-//			// Average all values
-//			heSize = heSize / (double) count;
-//			vSize = vSize / (double) count;
-//			radius = radius / (double) count;
-//			// Create the cluster
-//			superCluster = std::make_shared<SuperCluster>(heSize, vSize,
-//					count, heWidth, vWidth, radius, handlerRegistry);
-//			// Set the HeV vector
-//			superCluster->setHeVVector(tempVector);
-//			// Add this cluster to the network and clusters
-//			network->addSuper(superCluster);
-//			clusters.push_back(superCluster);
-//			// Keep the information of the group
-//			superGroupMap[std::make_pair(j, k)] = superCluster.get();
-//
-//			std::cout << j << " " << k << " " << count << " " << superCluster->getName() << std::endl;
-//
-//			// Reinitialize everything
-//			heSize = 0.0, vSize = 0.0, radius = 0.0;
-//			count = 0;
-//			tempVector.clear();
-//
-//			// Reinitialize the group indices for the helium direction
-//			heIndex += heWidth;
-//			heWidth = std::max((int) std::pow((double) (j * heSectionWidth), 3.0) / 400000, heSectionWidth);
-//			heWidth -= heWidth % 4;
-//		}
-//
-//		// Reinitialize the group indices for the vacancy direction
-//		vIndex += vWidth;
-//		vWidth = std::max((int) std::pow((double) (k * vSectionWidth), 3.0) / 100000, vSectionWidth);
-//		vWidth -= vWidth % 4;
-//		heWidth = heSectionWidth;
-//		heIndex = 0;
-//	}
-
 	// Get the number of groups in the helium and vacancy directions
 	int nVGroup = (network->getAll(vType).size() - vMin) / vSectionWidth + 1;
 	int nHeGroup = (network->getAll(vType).size() * 4) / heSectionWidth + 1;
@@ -341,8 +267,8 @@ void PSIClusterNetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterR
 			if (count == 0) {
 				// Reinitialize the group indices for the helium direction
 				heIndex += heWidth;
-//				heWidth = std::max((int) std::pow((double) (j * heSectionWidth), 3.0) / 400000, heSectionWidth);
-//				heWidth -= heWidth % heSectionWidth;
+				heWidth = std::max((int) std::pow((double) (j * heSectionWidth), 3.0) / 400000, heSectionWidth);
+				heWidth -= heWidth % heSectionWidth;
 				continue;
 			}
 
@@ -380,15 +306,15 @@ void PSIClusterNetworkLoader::applySectionalGrouping(std::shared_ptr<PSIClusterR
 			tempVector.clear();
 			// Reinitialize the group indices for the helium direction
 			heIndex += heWidth;
-//			heWidth = std::max((int) std::pow((double) (j * heSectionWidth), 3.0) / 400000, heSectionWidth);
-//			heWidth -= heWidth % heSectionWidth;
+			heWidth = std::max((int) std::pow((double) (j * heSectionWidth), 3.0) / 400000, heSectionWidth);
+			heWidth -= heWidth % heSectionWidth;
 		}
 
 		// Reinitialize the group indices for the vacancy direction
 		vIndex += vWidth;
-//		vWidth = std::max((int) std::pow((double) (k * vSectionWidth), 3.0) / 100000, vSectionWidth);
-//		vWidth -= vWidth % vSectionWidth;
-//		heWidth = heSectionWidth;
+		vWidth = std::max((int) std::pow((double) (k * vSectionWidth), 3.0) / 100000, vSectionWidth);
+		vWidth -= vWidth % vSectionWidth;
+		heWidth = heSectionWidth;
 		heIndex = 1;
 	}
 

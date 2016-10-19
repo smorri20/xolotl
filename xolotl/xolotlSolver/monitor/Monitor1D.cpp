@@ -897,7 +897,7 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *) {
 	PetscErrorCode ierr;
-	const double **solutionArray, *gridPointSolution;
+	double **solutionArray, *gridPointSolution;
 	int xs, xm, xi;
 
 	PetscFunctionBeginUser;
@@ -917,6 +917,8 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the network
 	auto network = solverHandler->getNetwork();
+	// Get all the super clusters
+	auto superClusters = network->getAll("Super");
 
 	// Get the physical grid
 	auto grid = solverHandler->getXGrid();
@@ -929,7 +931,7 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 	// Loop on the grid points
 	for (xi = xs; xi < xs + xm; xi++) {
 
-		if (xi != 145) continue;
+		if (xi != 24) continue;
 
 		// Create a Point vector to store the data to give to the data provider
 		// for the visualization
@@ -937,6 +939,9 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 
 		// Get the pointer to the beginning of the solution data for this grid point
 		gridPointSolution = solutionArray[xi];
+
+		// Update the concentration in the network
+		network->updateConcentrationsFromArray(gridPointSolution);
 
 		// A pointer for the clusters used below
 		IReactant * cluster;
@@ -954,9 +959,6 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 						// Get the ID of the cluster
 						int id = cluster->getId() - 1;
 						conc = gridPointSolution[id];
-
-//						if (conc > 1.0e-16)
-//							std::cout << "0 " << i << " " << conc << std::endl;
 					}
 				}
 				// He clusters
@@ -967,9 +969,6 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 						// Get the ID of the cluster
 						int id = cluster->getId() - 1;
 						conc = gridPointSolution[id];
-
-//						if (conc > 1.0e-16)
-//							std::cout << j << " 0 " << conc << std::endl;
 					}
 				}
 				// HeV clusters
@@ -981,9 +980,23 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 						// Get the ID of the cluster
 						int id = cluster->getId() - 1;
 						conc = gridPointSolution[id];
+					}
 
-//						if (conc > 1.0e-16)
-//							std::cout << j << " " << i << " " << conc << std::endl;
+					if (i > 30) {
+						// Look for superClusters !
+						SuperCluster * superCluster = nullptr;
+						// Loop on the super clusters
+						for (int l = 0; l < superClusters.size(); l++) {
+							// Get the super cluster
+							superCluster = (SuperCluster *) superClusters[l];
+							// Get its boundaries
+							auto boundaries = superCluster->getBoundaries();
+							// Is it the right one?
+							if (j >= boundaries[0] && j <= boundaries[1] && i >= boundaries[2] && i <= boundaries[3]) {
+								conc = superCluster->getConcentration(superCluster->getHeDistance(j), superCluster->getVDistance(i));
+								break;
+							}
+						}
 					}
 				}
 
@@ -1493,7 +1506,7 @@ PetscErrorCode monitorBursting1D(TS ts, PetscInt, PetscReal time,
 	double dt = time - previousTime;
 
 	// Compute the prefactor for the probability (arbitrary)
-	double prefactor = fluxAmplitude * dt * 5.0;
+	double prefactor = fluxAmplitude * dt * 0.05;
 
 	// Loop on the grid
 	for (xi = xs; xi < xs + xm; xi++) {
@@ -1507,13 +1520,6 @@ PetscErrorCode monitorBursting1D(TS ts, PetscInt, PetscReal time,
 
 		// Get the distance from the surface
 		double distance = grid[xi] - grid[surfacePos];
-		// Compute the number of V we can put in a bubble of this radius
-		double nV = pow(distance + pow((3.0 * pow(xolotlCore::latticeConstant, 3.0))
-				/ (8.0 * xolotlCore::pi), (1.0 / 3.0))
-				- (sqrt(3.0) / 4.0) * xolotlCore::latticeConstant, 3.0) * 8.0 * xolotlCore::pi
-						/ (3.0 * pow(xolotlCore::latticeConstant, 3.0));
-		// We say we have 4 He per V
-		double nHe = 4 * nV;
 
 		// Compute the helium density at this grid point
 		double heDensity = 0.0;
@@ -1528,12 +1534,27 @@ PetscErrorCode monitorBursting1D(TS ts, PetscInt, PetscReal time,
 			heDensity += cluster->getTotalHeliumConcentration();
 		}
 
-		// Add randomness
-		double prob = prefactor * heDensity * (grid[xi] - grid[xi-1]) / nHe;
-		double test = (double) rand() / (double) RAND_MAX;
+		// Compute the radius of the bubble from the number of helium
+		double nV = heDensity * (grid[xi] - grid[xi-1]) / 4.0;
+		double radius = (sqrt(3.0) / 4.0) * xolotlCore::latticeConstant
+				+ pow(
+						(3.0 * pow(xolotlCore::latticeConstant, 3.0) * nV)
+								/ (8.0 * xolotlCore::pi), (1.0 / 3.0))
+				- pow(
+						(3.0 * pow(xolotlCore::latticeConstant, 3.0))
+								/ (8.0 * xolotlCore::pi), (1.0 / 3.0));
 
-		// Burst if the density is higher than the number of helium
-		if (prob > test) {
+		// Check if it should burst
+		bool burst = false;
+		// If the radius is larger than the distance to the surface, burst
+		if (radius > distance) burst = true;
+		// Add randomness
+		double prob = prefactor * (1.0 - (distance - radius) / distance);
+		double test = (double) rand() / (double) RAND_MAX;
+		if (prob > test) burst = true;
+
+		// Burst
+		if (burst) {
 
 			std::cout << "bursting at: " << distance << " " << prob << " " << test << std::endl;
 
