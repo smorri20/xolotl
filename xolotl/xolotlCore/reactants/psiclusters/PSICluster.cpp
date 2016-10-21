@@ -4,6 +4,7 @@
 #include <iostream>
 #include <limits>
 #include <MathUtils.h>
+#include "PSIClusterReactionNetwork.h"
 
 using namespace xolotlCore;
 
@@ -418,12 +419,10 @@ void PSICluster::setReactionNetwork(
 	// Call the superclass's method to actually set the reference
 	Reactant::setReactionNetwork(reactionNetwork);
 
-	// Extract properties from the network
-	auto properties = network->getProperties();
-
 	// Get the enabled reaction type flags
-	bool reactionsEnabled = (properties["reactionsEnabled"] == "true");
-	bool dissociationsEnabled = (properties["dissociationsEnabled"] == "true");
+    auto psiNetwork = std::dynamic_pointer_cast<PSIClusterReactionNetwork>(reactionNetwork);
+	bool reactionsEnabled = psiNetwork->getReactionsEnabled();
+	bool dissociationsEnabled = psiNetwork->getDissociationsEnabled();
 
 	// Clear the flux-related arrays
 	reactingPairs.clear();

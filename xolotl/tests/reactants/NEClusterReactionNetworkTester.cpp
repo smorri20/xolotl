@@ -74,19 +74,17 @@ BOOST_AUTO_TEST_CASE(checkProperties) {
 	// Create the network
 	auto neNetwork = make_shared<NEClusterReactionNetwork>(registry);
 
-	// Grab the map of properties from the network
-	auto props = neNetwork->getProperties();
-	// Convert the property strings so we can use them
-	int numXeClusters = stoi(props["numXeClusters"]);
-	int numVClusters = stoi(props["numVClusters"]);
-	int numIClusters = stoi(props["numIClusters"]);
-	int numXeVClusters = stoi(props["numXeVClusters"]);
-	int numXeIClusters = stoi(props["numXeIClusters"]);
-	int maxXeVClusterSize = stoi(props["maxXeVClusterSize"]);
-	int maxXeIClusterSize = stoi(props["maxXeIClusterSize"]);
-	int maxXeClusterSize = stoi(props["maxXeClusterSize"]);
-	int maxVClusterSize = stoi(props["maxVClusterSize"]);
-	int maxIClusterSize = stoi(props["maxIClusterSize"]);
+    // Access network "properties."
+	auto numXeClusters = neNetwork->getNumXeClusters();
+	auto numVClusters = neNetwork->getNumVClusters();
+	auto numIClusters = neNetwork->getNumIClusters();
+	auto numXeVClusters = neNetwork->getNumXeVClusters();
+	auto numXeIClusters = neNetwork->getNumXeIClusters();
+	auto maxXeVClusterSize = neNetwork->getMaxXeVClusterSize();
+	auto maxXeIClusterSize = neNetwork->getMaxXeIClusterSize();
+	auto maxXeClusterSize = neNetwork->getMaxXeClusterSize();
+	auto maxVClusterSize = neNetwork->getMaxVClusterSize();
+	auto maxIClusterSize = neNetwork->getMaxIClusterSize();
 
 	// Check the properties
 	BOOST_REQUIRE_EQUAL(0, numXeClusters);
@@ -100,27 +98,13 @@ BOOST_AUTO_TEST_CASE(checkProperties) {
 	BOOST_REQUIRE_EQUAL(0, maxVClusterSize);
 	BOOST_REQUIRE_EQUAL(0, maxIClusterSize);
 
-	// Set a couple of properties
-	neNetwork->setProperty("rangePenalty", "5");
-	neNetwork->setProperty("agility", "d8");
-
-	// Grab the properties afresh
-	auto modifiedProps = neNetwork->getProperties();
-
-	// Check for the new properties
-	auto rangePenalty = modifiedProps["rangePenalty"];
-	auto agility = modifiedProps["agility"];
-	BOOST_REQUIRE_EQUAL("5", rangePenalty);
-	BOOST_REQUIRE_EQUAL("d8", agility);
-
 	// Add a cluster
 	auto heCluster = make_shared<XeCluster>(5, registry);
 	neNetwork->add(heCluster);
 
 	// Grab the properties afresh
-	auto propsWithClusters = neNetwork->getProperties();
-	numXeClusters = stoi(propsWithClusters["numXeClusters"]);
-	maxXeClusterSize = stoi(propsWithClusters["maxXeClusterSize"]);
+	numXeClusters = neNetwork->getNumXeClusters();
+	maxXeClusterSize = neNetwork->getMaxXeClusterSize();
 
 	// Check the properties again
 	BOOST_REQUIRE_EQUAL(1, numXeClusters);
@@ -183,11 +167,8 @@ BOOST_AUTO_TEST_CASE(checkCopying) {
 	NEClusterReactionNetwork networkCopy = network;
 
 	// Check that the ReactionNetwork fields are copied
-	auto properties = network.getProperties();
-	auto copiedProperties = networkCopy.getProperties();
-	BOOST_REQUIRE_EQUAL(properties.size(), copiedProperties.size());
-	BOOST_REQUIRE_EQUAL(properties["numXeClusters"],
-			copiedProperties["numXeClusters"]);
+	BOOST_REQUIRE_EQUAL(network.getNumXeClusters(),
+			networkCopy.getNumXeClusters());
 
 	// Check that changing the concentration of a copy does not update the
 	// original. Start by updating the copy.

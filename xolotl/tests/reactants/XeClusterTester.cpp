@@ -28,10 +28,9 @@ BOOST_AUTO_TEST_SUITE(XeCluster_testSuite)
  */
 BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	shared_ptr<ReactionNetwork> network = getSimpleNEReactionNetwork();
-	auto props = network->getProperties();
 
 	// Prevent dissociation from being added to the connectivity array
-	props["dissociationsEnabled"] = "false";
+    network->disableDissociations();
 
 	// Check the reaction connectivity of the 6th Xe reactant (numXe=6)
 	// Get the connectivity array from the reactant

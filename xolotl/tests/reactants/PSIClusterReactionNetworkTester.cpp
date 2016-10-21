@@ -163,19 +163,17 @@ BOOST_AUTO_TEST_CASE(checkProperties) {
 	// Create the network
 	auto psiNetwork = make_shared<PSIClusterReactionNetwork>(registry);
 
-	// Grab the map of properties from the network
-	auto props = psiNetwork->getProperties();
-	// Convert the property strings so we can use them
-	int numHeClusters = stoi(props["numHeClusters"]);
-	int numVClusters = stoi(props["numVClusters"]);
-	int numIClusters = stoi(props["numIClusters"]);
-	int numHeVClusters = stoi(props["numHeVClusters"]);
-	int numHeIClusters = stoi(props["numHeIClusters"]);
-	int maxHeVClusterSize = stoi(props["maxHeVClusterSize"]);
-	int maxHeIClusterSize = stoi(props["maxHeIClusterSize"]);
-	int maxHeClusterSize = stoi(props["maxHeClusterSize"]);
-	int maxVClusterSize = stoi(props["maxVClusterSize"]);
-	int maxIClusterSize = stoi(props["maxIClusterSize"]);
+	// Access the network "properties."
+	auto numHeClusters = psiNetwork->getNumHeClusters();
+	auto numVClusters = psiNetwork->getNumVClusters();
+	auto numIClusters = psiNetwork->getNumIClusters();
+	auto numHeVClusters = psiNetwork->getNumHeVClusters();
+	auto numHeIClusters = psiNetwork->getNumHeIClusters();
+	auto maxHeVClusterSize = psiNetwork->getMaxHeVClusterSize();
+	auto maxHeIClusterSize = psiNetwork->getMaxHeIClusterSize();
+	auto maxHeClusterSize = psiNetwork->getMaxHeClusterSize();
+	auto maxVClusterSize = psiNetwork->getMaxVClusterSize();
+	auto maxIClusterSize = psiNetwork->getMaxIClusterSize();
 
 	// Check the properties
 	BOOST_REQUIRE_EQUAL(0, numHeClusters);
@@ -189,19 +187,6 @@ BOOST_AUTO_TEST_CASE(checkProperties) {
 	BOOST_REQUIRE_EQUAL(0, maxVClusterSize);
 	BOOST_REQUIRE_EQUAL(0, maxIClusterSize);
 
-	// Set a couple of properties
-	psiNetwork->setProperty("rangePenalty", "5");
-	psiNetwork->setProperty("agility", "d8");
-
-	// Grab the properties afresh
-	auto modifiedProps = psiNetwork->getProperties();
-
-	// Check for the new properties
-	auto rangePenalty = modifiedProps["rangePenalty"];
-	auto agility = modifiedProps["agility"];
-	BOOST_REQUIRE_EQUAL("5", rangePenalty);
-	BOOST_REQUIRE_EQUAL("d8", agility);
-
 	// Add a couple of clusters
 	auto heCluster = make_shared<HeCluster>(5, registry);
 	psiNetwork->add(heCluster);
@@ -209,11 +194,10 @@ BOOST_AUTO_TEST_CASE(checkProperties) {
 	psiNetwork->add(heVCluster);
 
 	// Grab the properties afresh
-	auto propsWithClusters = psiNetwork->getProperties();
-	numHeClusters = stoi(propsWithClusters["numHeClusters"]);
-	maxHeClusterSize = stoi(propsWithClusters["maxHeClusterSize"]);
-	numHeVClusters = stoi(propsWithClusters["numHeVClusters"]);
-	maxHeVClusterSize = stoi(propsWithClusters["maxHeVClusterSize"]);
+	numHeClusters = psiNetwork->getNumHeClusters();
+	maxHeClusterSize = psiNetwork->getMaxHeClusterSize();
+	numHeVClusters = psiNetwork->getNumHeVClusters();
+	maxHeVClusterSize = psiNetwork->getMaxHeVClusterSize();
 
 	// Check the properties again
 	BOOST_REQUIRE_EQUAL(1, numHeClusters);
@@ -276,11 +260,8 @@ BOOST_AUTO_TEST_CASE(checkCopying) {
 	PSIClusterReactionNetwork networkCopy = network;
 
 	// Check that the ReactionNetwork fields are copied
-	auto properties = network.getProperties();
-	auto copiedProperties = networkCopy.getProperties();
-	BOOST_REQUIRE_EQUAL(properties.size(), copiedProperties.size());
-	BOOST_REQUIRE_EQUAL(properties["numHeClusters"],
-			copiedProperties["numHeClusters"]);
+	BOOST_REQUIRE_EQUAL(network.getNumHeClusters(),
+			networkCopy.getNumHeClusters());
 
 	// Check that changing the concentration of a copy does not update the
 	// original. Start by updating the copy.

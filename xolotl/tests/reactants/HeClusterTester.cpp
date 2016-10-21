@@ -34,10 +34,9 @@ BOOST_AUTO_TEST_SUITE(HeCluster_testSuite)
  */
 BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork();
-	auto props = network->getProperties();
 
 	// Prevent dissociation from being added to the connectivity array
-	props["dissociationsEnabled"] = "false";
+    network->disableDissociations();
 	
 	// Check the reaction connectivity of the 6th He reactant (numHe=6)
 	// Get the connectivity array from the reactant

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <limits>
 #include <MathUtils.h>
+#include "NEClusterReactionNetwork.h"
 
 using namespace xolotlCore;
 
@@ -332,12 +333,10 @@ void NECluster::setReactionNetwork(
 	// Call the superclass's method to actually set the reference
 	Reactant::setReactionNetwork(reactionNetwork);
 
-	// Extract properties from the network
-	auto properties = network->getProperties();
-
 	// Get the enabled reaction type flags
-	bool reactionsEnabled = (properties["reactionsEnabled"] == "true");
-	bool dissociationsEnabled = (properties["dissociationsEnabled"] == "true");
+    auto neNetwork = std::dynamic_pointer_cast<NEClusterReactionNetwork>(reactionNetwork);
+	bool reactionsEnabled = neNetwork->getReactionsEnabled();
+	bool dissociationsEnabled = neNetwork->getDissociationsEnabled();
 
 	// Clear the flux-related arrays
 	reactingPairs.clear();

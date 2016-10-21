@@ -32,10 +32,9 @@ static std::shared_ptr<xolotlPerf::IHandlerRegistry> registry = std::make_shared
  */
 BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork();
-	auto props = network->getProperties();
 
 	// Prevent dissociation from being added to the connectivity array
-	props["dissociationsEnabled"] = "false";
+    network->disableDissociations();
 
 	// Get the connectivity array from the reactant for a vacancy cluster of size 2.
 	auto reactant = (PSICluster *) network->get("V", 2);

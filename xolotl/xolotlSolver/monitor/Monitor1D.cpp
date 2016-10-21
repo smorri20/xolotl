@@ -17,6 +17,7 @@
 #include <memory>
 #include <HDF5Utils.h>
 #include <NESuperCluster.h>
+#include "PSIClusterReactionNetwork.h"
 
 namespace xolotlSolver {
 
@@ -933,9 +934,11 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 	auto grid = solverHandler->getXGrid();
 
 	// Get the maximum size of HeV clusters
-	std::map<std::string, std::string> props = network->getProperties();
-	int maxHeVClusterSize = std::stoi(props["maxHeVClusterSize"]);
-	int maxVClusterSize = std::stoi(props["maxVClusterSize"]);
+    // FIXME the HeV is specific to PSI.  We need a way to extend
+    // this to take problem-specific values.
+    auto psiNetwork = dynamic_cast<PSIClusterReactionNetwork*>(network);
+    auto maxHeVClusterSize = psiNetwork->getMaxHeVClusterSize();
+    auto maxVClusterSize = psiNetwork->getMaxVClusterSize();
 
 	// Loop on the grid points
 	for (xi = xs; xi < xs + xm; xi++) {
@@ -1208,12 +1211,14 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 	auto network = solverHandler->getNetwork();
 
 	// Get the maximum size of HeV clusters
-	std::map<std::string, std::string> props = network->getProperties();
-	int maxHeVClusterSize = std::stoi(props["maxHeVClusterSize"]);
+    // FIXME the HeV is specific to PSI.  We need a way to extend
+    // this to take problem-specific values.
+    auto psiNetwork = dynamic_cast<PSIClusterReactionNetwork*>(network);
+    auto maxHeVClusterSize = psiNetwork->getMaxHeVClusterSize();
 	// Get the maximum size of V clusters
-	int maxVClusterSize = std::stoi(props["maxVClusterSize"]);
+    auto maxVClusterSize = psiNetwork->getMaxVClusterSize();
 	// Get the number of He in the max HeV cluster
-	int maxHeSize = (maxHeVClusterSize - maxVClusterSize);
+	auto maxHeSize = (maxHeVClusterSize - maxVClusterSize);
 	// Get the maximum stable HeV cluster
 	IReactant * maxHeV;
 	maxHeV = network->getCompound(
