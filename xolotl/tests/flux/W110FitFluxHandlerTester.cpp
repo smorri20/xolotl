@@ -23,8 +23,8 @@ BOOST_AUTO_TEST_CASE(checkgetIncidentFlux) {
 	MPI_Init(&argc, &argv);
 
 	// Create the network loader
-	HDF5NetworkLoader loader =
-			HDF5NetworkLoader(make_shared<xolotlPerf::DummyHandlerRegistry>());
+	HDF5NetworkLoader loader = HDF5NetworkLoader(
+			make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Define the filename to load the network from
 	string sourceDir(XolotlSourceDirectory);
 	string pathToFile("/tests/testfiles/tungsten_diminutive.h5");
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(checkgetIncidentFlux) {
 	loader.setFilename(filename);
 
 	// Load the network
-	auto network = (PSIClusterReactionNetwork *) loader.load().get();
+	auto network = loader.load().get();
 
 	// Create a grid
 	std::vector<double> grid;
@@ -44,11 +44,11 @@ BOOST_AUTO_TEST_CASE(checkgetIncidentFlux) {
 	int surfacePos = 0;
 
 	// Create the W110 flux handler
-    auto testFitFlux = make_shared<W110FitFluxHandler>();
-    // Set the flux amplitude
-    testFitFlux->setFluxAmplitude(1.0);
-    // Initialize the flux handler
-    testFitFlux->initializeFluxHandler(network, surfacePos, grid);
+	auto testFitFlux = make_shared<W110FitFluxHandler>();
+	// Set the flux amplitude
+	testFitFlux->setFluxAmplitude(1.0);
+	// Initialize the flux handler
+	testFitFlux->initializeFluxHandler(network, surfacePos, grid);
 
 	// Create a time
 	double currTime = 1.0;

@@ -39,11 +39,25 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	loader.setFilename(filename);
 
 	// Load the network
-	auto network = (PSIClusterReactionNetwork *) loader.load().get();
+	auto network = loader.load().get();
+	// Get all the reactants
+	auto allReactants = network->getAll();
 	// Get its size
-	const int size = network->getAll()->size();
-	// Set the temperature to 1000.0 K
-	network->setTemperature(1000.0);
+	const int size = network->size();
+	const int dof = network->getDOF();
+	// Initialize the rate constants
+	for (int i = 0; i < size; i++) {
+		// This part will set the temperature in each reactant
+		// and recompute the diffusion coefficient
+		allReactants->at(i)->setTemperature(1000.0);
+	}
+	for (int i = 0; i < size; i++) {
+		// Now that the diffusion coefficients of all the reactants
+		// are updated, the reaction and dissociation rates can be
+		// recomputed
+		auto cluster = (xolotlCore::PSICluster *) allReactants->at(i);
+		cluster->computeRateConstants();
+	}
 
 	// Suppose we have a grid with 13 grip points and distance of
 	// 0.1 nm between grid points
@@ -70,11 +84,11 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	trapMutationHandler.initializeIndex2D(surfacePos, network, advectionHandlers, grid, 5, 0.5);
 
 	// The arrays of concentration
-	double concentration[13*5*size];
-	double newConcentration[13*5*size];
+	double concentration[13*5*dof];
+	double newConcentration[13*5*dof];
 
 	// Initialize their values
-	for (int i = 0; i < 13*5*size; i++) {
+	for (int i = 0; i < 13*5*dof; i++) {
 		concentration[i] = (double) i * i;
 		newConcentration[i] = 0.0;
 	}
@@ -84,8 +98,8 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	double *updatedConc = &newConcentration[0];
 
 	// Get the offset for the sixth grid point on the second row
-	double *concOffset = conc + (13 * 1 + 5) * size;
-	double *updatedConcOffset = updatedConc + (13 * 1 + 5) * size;
+	double *concOffset = conc + (13 * 1 + 5) * dof;
+	double *updatedConcOffset = updatedConc + (13 * 1 + 5) * dof;
 
 	// Putting the concentrations in the network so that the rate for
 	// desorption is computed correctly
@@ -101,8 +115,8 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[18], 1.33984e+23, 0.01); // Create He4V
 
 	// Get the offset for the ninth grid point on the fourth row
-	concOffset = conc + (13 * 3 + 8) * size;
-	updatedConcOffset = updatedConc + (13 * 3 + 8) * size;
+	concOffset = conc + (13 * 3 + 8) * dof;
+	updatedConcOffset = updatedConc + (13 * 3 + 8) * dof;
 
 	// Putting the concentrations in the network so that the rate for
 	// desorption is computed correctly

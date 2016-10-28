@@ -975,7 +975,7 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 			hdf5Stride3D = 1;
 
 		// Initialize the HDF5 file for all the processes
-		xolotlCore::HDF5Utils::initializeFile(hdf5OutputName3D, networkSize);
+		xolotlCore::HDF5Utils::initializeFile(hdf5OutputName3D);
 
 		// Get the solver handler
 		auto solverHandler = PetscSolver::getSolverHandler();
@@ -992,7 +992,7 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 				My, hy, Mz, hz);
 
 		// Save the network in the HDF5 file
-		xolotlCore::HDF5Utils::fillNetwork(network);
+		xolotlCore::HDF5Utils::fillNetwork(solverHandler->getNetworkName());
 
 		// Finalize the HDF5 file
 		xolotlCore::HDF5Utils::finalizeFile();

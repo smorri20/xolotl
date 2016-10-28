@@ -7,7 +7,6 @@
 #include <IAdvectionHandler.h>
 #include <IDiffusionHandler.h>
 #include <ITrapMutationHandler.h>
-#include <IBubbleBurstingHandler.h>
 
 namespace xolotlFactory {
 
@@ -57,13 +56,6 @@ public:
 	 * @return The trap mutation handler.
 	 */
 	virtual std::shared_ptr<xolotlCore::ITrapMutationHandler> getTrapMutationHandler() const = 0;
-
-	/**
-	 * Return the bubble bursting handler.
-	 *
-	 * @return The bubble bursting handler.
-	 */
-	virtual std::shared_ptr<xolotlCore::IBubbleBurstingHandler> getBubbleBurstingHandler() const = 0;
 
 	/**
 	 * Function that create the wanted material factory depending on the given type.

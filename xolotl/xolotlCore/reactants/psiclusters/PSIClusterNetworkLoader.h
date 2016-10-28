@@ -11,7 +11,6 @@
 //Includes
 #include <PSICluster.h>
 #include <NetworkLoader.h>
-#include <PSIClusterReactionNetwork.h>
 
 namespace xolotlCore {
 
@@ -59,6 +58,21 @@ namespace xolotlCore {
 class PSIClusterNetworkLoader : public NetworkLoader {
 
 protected:
+
+	/**
+	 * The vacancy size at which the grouping scheme starts
+	 */
+	int vMin;
+
+	/**
+	 * The width of the group in the helium direction.
+	 */
+	int heSectionWidth;
+
+	/**
+	 * The width of the group in the vacancy direction.
+	 */
+	int vSectionWidth;
 
 	/**
 	 * Private nullary constructor.
@@ -110,6 +124,34 @@ public:
 	 * @return network The reaction network
 	 */
 	virtual std::shared_ptr<IReactionNetwork> load();
+
+	/**
+	 * This operation will apply a sectional grouping method to the network.
+	 *
+	 * @param The network to be modified.
+	 */
+	void applySectionalGrouping(std::shared_ptr<IReactionNetwork> network);
+
+	/**
+	 * This operation will set the helium size at which the grouping scheme starts.
+	 *
+	 * @param min The value for the size
+	 */
+	void setVMin (int min) {vMin = min;}
+
+	/**
+	 * This operation will set the helium width for the grouping scheme.
+	 *
+	 * @param w The value of the width
+	 */
+	void setHeWidth (int w) {heSectionWidth = w;}
+
+	/**
+	 * This operation will set the vacancy width for the grouping scheme.
+	 *
+	 * @param w The value of the width
+	 */
+	void setVWidth (int w) {vSectionWidth = w;}
 };
 
 } /* namespace xolotlCore */

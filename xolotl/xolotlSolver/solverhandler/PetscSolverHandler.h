@@ -3,7 +3,6 @@
 
 // Includes
 #include "SolverHandler.h"
-#include <unordered_map>
 
 namespace xolotlSolver {
 
@@ -37,14 +36,6 @@ protected:
 	 * array or map, but for now the temperature is isotropic.
 	 */
 	double lastTemperature;
-
-	/**
-	 * A map for storing the dfill configuration and accelerating the formation of
-	 * the Jacobian. Its keys are reactant/cluster ids and its values are integer
-	 * vectors of the column ids that are marked as connected for that cluster in
-	 * the dfill array.
-	 */
-	std::unordered_map<int, std::vector<int> > dFillMap;
 
 	/**
 	 * A pointer to all of the reactants in the network. It is retrieved from the
@@ -81,12 +72,6 @@ public:
 
 	//! The Destructor
 	~PetscSolverHandler() {}
-
-	/**
-	 * Get the diagonal fill for the Jacobian, corresponding to the reactions.
-	 * \see ISolverHandler.h
-	 */
-	void getDiagonalFill(PetscInt *diagFill, int diagFillSize);
 
 }; //end class PetscSolverHandler
 

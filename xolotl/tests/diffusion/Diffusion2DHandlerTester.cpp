@@ -37,9 +37,9 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	loader.setFilename(filename);
 
 	// Load the network
-	auto network = (PSIClusterReactionNetwork *) loader.load().get();
+	auto network = loader.load().get();
 	// Get its size
-	const int size = network->getAll()->size();
+	const int dof = network->getDOF();
 
 	// Create a grid
 	std::vector<double> grid;
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	std::vector<IAdvectionHandler *> advectionHandlers;
 
 	// Create ofill
-	int mat[size*size];
+	int mat[dof*dof];
 	int *ofill = &mat[0];
 
 	// Initialize it
@@ -70,18 +70,18 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	double sy = 1.0;
 
 	// The arrays of concentration
-	double concentration[9*size];
-	double newConcentration[9*size];
+	double concentration[9*dof];
+	double newConcentration[9*dof];
 
 	// Initialize their values
-	for (int i = 0; i < 9*size; i++) {
+	for (int i = 0; i < 9*dof; i++) {
 		concentration[i] = (double) i * i;
 		newConcentration[i] = 0.0;
 	}
 
 	// Set the temperature to 1000K to initialize the diffusion coefficients
 	auto reactants = network->getAll();
-	for (int i = 0; i < size; i++) {
+	for (int i = 0; i < dof; i++) {
 		auto cluster = (PSICluster *) reactants->at(i);
 		cluster->setTemperature(1000.0);
 	}
@@ -95,16 +95,16 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	// 6 | 7 | 8
 	// 3 | 4 | 5
 	// 0 | 1 | 2
-	double *concOffset = conc + 4 * size;
-	double *updatedConcOffset = updatedConc + 4 * size;
+	double *concOffset = conc + 4 * dof;
+	double *updatedConcOffset = updatedConc + 4 * dof;
 
 	// Fill the concVector with the pointer to the middle, left, right, bottom, and top grid points
 	double **concVector = new double*[5];
 	concVector[0] = concOffset; // middle
-	concVector[1] = conc + 3 * size; // left
-	concVector[2] = conc + 5 * size; // right
-	concVector[3] = conc + 1 * size; // bottom
-	concVector[4] = conc + 7 * size; // top
+	concVector[1] = conc + 3 * dof; // left
+	concVector[2] = conc + 5 * dof; // right
+	concVector[3] = conc + 1 * dof; // bottom
+	concVector[4] = conc + 7 * dof; // top
 
 	// Compute the diffusion at this grid point
 	diffusionHandler.computeDiffusion(network, concVector,

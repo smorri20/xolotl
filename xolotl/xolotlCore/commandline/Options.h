@@ -140,9 +140,14 @@ protected:
 	int groupingMin;
 
 	/**
-	 * Width for the grouping.
+	 * Width for the grouping in the first direction.
 	 */
-	int groupingWidth;
+	int groupingWidthA;
+
+	/**
+	 * Width for the grouping in the second direction.
+	 */
+	int groupingWidthB;
 
 public:
 
@@ -559,19 +564,35 @@ public:
 	}
 
 	/**
-	 * Obtain the width for the grouping.
+	 * Obtain the first width for the grouping.
 	 * \see IOptions.h
 	 */
-	int getGroupingWidth() const {
-		return groupingWidth;
+	int getGroupingWidthA() const {
+		return groupingWidthA;
 	}
 
 	/**
-	 * Set the width for the grouping.
+	 * Set the first width for the grouping.
 	 * \see IOptions.h
 	 */
-	void setGroupingWidth(int width) {
-		groupingWidth = width;
+	void setGroupingWidthA(int width) {
+		groupingWidthA = width;
+	}
+
+	/**
+	 * Obtain the second width for the grouping.
+	 * \see IOptions.h
+	 */
+	int getGroupingWidthB() const {
+		return groupingWidthB;
+	}
+
+	/**
+	 * Set the second width for the grouping.
+	 * \see IOptions.h
+	 */
+	void setGroupingWidthB(int width) {
+		groupingWidthB = width;
 	}
 
 };

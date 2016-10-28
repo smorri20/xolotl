@@ -32,14 +32,15 @@ public:
 	void initialize(IReactionNetwork *network, int *ofill) {
 		// Get all the reactants and their number
 		auto reactants = network->getAll();
-		int size = reactants->size();
+		int networkSize = reactants->size();
+		int dof = network->getDOF();
 
 		// Clear the index and sink strength vectors
 		indexVector.clear();
 		sinkStrengthVector.clear();
 
 		// Loop on all the reactants
-		for (int i = 0; i < size; i++) {
+		for (int i = 0; i < networkSize; i++) {
 			// Get the i-th cluster
 			auto cluster = (PSICluster *) reactants->at(i);
 			// Get its diffusion coefficient
@@ -93,7 +94,7 @@ public:
 			// Get its id
 			int index = cluster->getId() - 1;
 			// Set the ofill value to 1 for this cluster
-			ofill[index * size + index] = 1;
+			ofill[index * dof + index] = 1;
 		}
 
 		return;

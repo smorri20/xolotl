@@ -17,6 +17,7 @@
 #include <memory>
 #include <HDF5Utils.h>
 #include <NESuperCluster.h>
+#include <PSISuperCluster.h>
 
 namespace xolotlSolver {
 
@@ -228,7 +229,7 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 	// Get the network
 	auto network = solverHandler->getNetwork();
 	// Get all the super clusters
-	auto superClusters = network->getAll(NESuperType);
+	auto superClusters = network->getAll(PSISuperType);
 
 	// Get the array of concentration
 	PetscReal **solutionArray;
@@ -266,8 +267,8 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 
 		// Loop on all the super clusters
 		for (int i = 0; i < superClusters.size(); i++) {
-			auto cluster = (xolotlCore::NESuperCluster *) superClusters[i];
-			heConcentration += cluster->getTotalXenonConcentration() * (grid[xi] - grid[xi-1]);
+			auto cluster = (xolotlCore::PSISuperCluster *) superClusters[i];
+			heConcentration += cluster->getTotalHeliumConcentration() * (grid[xi] - grid[xi-1]);
 			bubbleConcentration += cluster->getTotalConcentration() * (grid[xi] - grid[xi-1]);
 
 //			if (xi != 30) continue;
@@ -940,7 +941,7 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 	// Loop on the grid points
 	for (xi = xs; xi < xs + xm; xi++) {
 
-		if (xi != 145) continue;
+		if (xi != 5) continue;
 
 		// Create a Point vector to store the data to give to the data provider
 		// for the visualization
@@ -1415,10 +1416,6 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt, PetscReal time,
 		auto advecHandlers = solverHandler->getAdvectionHandlers();
 		mutationHandler->initializeIndex1D(surfacePos, network, advecHandlers, grid);
 
-		// Get the bubble bursting handler to reinitialize it
-		auto burstingHandler = solverHandler->getBurstingHandler();
-		burstingHandler->initializeIndex(surfacePos, network, grid);
-
 		// Initialize the vacancy concentration on the new grid points
 		// Get the single vacancy ID
 		auto singleVacancyCluster = network->get(xolotlCore::vType, 1);
@@ -1796,7 +1793,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		checkPetscError(ierr, "setupPetsc1DMonitor: DMDAGetInfo failed.");
 
 		// Initialize the HDF5 file for all the processes
-		xolotlCore::HDF5Utils::initializeFile(hdf5OutputName1D, networkSize);
+		xolotlCore::HDF5Utils::initializeFile(hdf5OutputName1D);
 
 		// Get the solver handler
 		auto solverHandler = PetscSolver::getSolverHandler();
@@ -1808,7 +1805,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		xolotlCore::HDF5Utils::fillHeader(Mx, grid[1] - grid[0]);
 
 		// Save the network in the HDF5 file
-		xolotlCore::HDF5Utils::fillNetwork(network);
+		xolotlCore::HDF5Utils::fillNetwork(solverHandler->getNetworkName());
 
 		// Finalize the HDF5 file
 		xolotlCore::HDF5Utils::finalizeFile();

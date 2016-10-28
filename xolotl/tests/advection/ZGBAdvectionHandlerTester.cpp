@@ -36,12 +36,12 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	loader.setFilename(filename);
 
 	// Load the network
-	auto network = (PSIClusterReactionNetwork *) loader.load().get();
+	auto network = loader.load().get();
 	// Get its size
-	const int size = network->getAll()->size();
+	const int dof = network->getDOF();
 
 	// Create ofill
-	int mat[size*size];
+	int mat[dof*dof];
 	int *ofill = &mat[0];
 
 	// Create the advection handler and initialize it with a sink at
@@ -66,18 +66,18 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	double hz = 2.0;
 
 	// The arrays of concentration
-	double concentration[27*size];
-	double newConcentration[27*size];
+	double concentration[27*dof];
+	double newConcentration[27*dof];
 
 	// Initialize their values
-	for (int i = 0; i < 27*size; i++) {
+	for (int i = 0; i < 27*dof; i++) {
 		concentration[i] = (double) i * i;
 		newConcentration[i] = 0.0;
 	}
 
 	// Set the temperature to 1000K to initialize the diffusion coefficients
 	auto reactants = network->getAll();
-	for (int i = 0; i < size; i++) {
+	for (int i = 0; i < dof; i++) {
 		auto cluster = (PSICluster *) reactants->at(i);
 		cluster->setTemperature(1000.0);
 	}
@@ -92,18 +92,18 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	// 3 | 4 | 5    12 | 13 | 14    21 | 22 | 23
 	// 0 | 1 | 2    9  | 10 | 11    18 | 19 | 20
 	//   front         middle           back
-	double *concOffset = conc + 13 * size;
-	double *updatedConcOffset = updatedConc + 13 * size;
+	double *concOffset = conc + 13 * dof;
+	double *updatedConcOffset = updatedConc + 13 * dof;
 
 	// Fill the concVector with the pointer to the middle, left, right, bottom, top, front, and back grid points
 	double **concVector = new double*[7];
 	concVector[0] = concOffset; // middle
-	concVector[1] = conc + 12 * size; // left
-	concVector[2] = conc + 14 * size; // right
-	concVector[3] = conc + 10 * size; // bottom
-	concVector[4] = conc + 16 * size; // top
-	concVector[5] = conc + 4 * size; // front
-	concVector[6] = conc + 22 * size; // back
+	concVector[1] = conc + 12 * dof; // left
+	concVector[2] = conc + 14 * dof; // right
+	concVector[3] = conc + 10 * dof; // bottom
+	concVector[4] = conc + 16 * dof; // top
+	concVector[5] = conc + 4 * dof; // front
+	concVector[6] = conc + 22 * dof; // back
 
 	// Set the grid position
 	std::vector<double> gridPosition = { hx, hy, hz };

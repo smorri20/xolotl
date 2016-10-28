@@ -12,9 +12,8 @@ namespace HDF5Utils {
 	 * Create the HDF5 file with the needed structure.
 	 *
 	 * @param fileName The name of the file to create
-	 * @param networkSize The total number of cluster in the network
 	 */
-	void initializeFile(const std::string& fileName, int networkSize);
+	void initializeFile(const std::string& fileName);
 
 	/**
 	 * Open the already existing HDF5 file.
@@ -40,9 +39,9 @@ namespace HDF5Utils {
 	/**
 	 * Fill the network dataset.
 	 *
-	 * @param network The network of clusters
+	 * @param fileName The name of the file from which the network will be taken
 	 */
-	void fillNetwork(IReactionNetwork *network);
+	void fillNetwork(const std::string& fileName);
 
 	/**
 	 * Add a concentration subgroup for the given time step to the HDF5 file.

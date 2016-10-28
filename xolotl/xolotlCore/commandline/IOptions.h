@@ -379,18 +379,32 @@ public:
 	virtual void setGroupingMin(int size) = 0;
 
 	/**
-	 * Obtain the width for the grouping.
+	 * Obtain the first width for the grouping.
 	 *
 	 * @return The width
 	 */
-	virtual int getGroupingWidth() const = 0;
+	virtual int getGroupingWidthA() const = 0;
 
 	/**
-	 * Set the width for the grouping.
+	 * Set the first width for the grouping.
 	 *
 	 * @param width The width
 	 */
-	virtual void setGroupingWidth(int width) = 0;
+	virtual void setGroupingWidthA(int width) = 0;
+
+	/**
+	 * Obtain the second width for the grouping.
+	 *
+	 * @return The width
+	 */
+	virtual int getGroupingWidthB() const = 0;
+
+	/**
+	 * Set the second width for the grouping.
+	 *
+	 * @param width The width
+	 */
+	virtual void setGroupingWidthB(int width) = 0;
 
 };
 //end class IOptions

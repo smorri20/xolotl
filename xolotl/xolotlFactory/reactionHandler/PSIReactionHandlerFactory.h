@@ -47,9 +47,14 @@ public:
 		MPI_Comm_rank(MPI_COMM_WORLD, &procId);
 
 		// Create a HDF5NetworkLoader
-		theNetworkLoaderHandler = std::make_shared<xolotlCore::HDF5NetworkLoader>(registry);
+		auto tempNetworkLoader = std::make_shared<xolotlCore::HDF5NetworkLoader>(registry);
 		// Give the networkFilename to the network loader
-		theNetworkLoaderHandler->setFilename(options.getNetworkFilename());
+		tempNetworkLoader->setFilename(options.getNetworkFilename());
+		// Set the options for the grouping scheme
+		tempNetworkLoader->setVMin(options.getGroupingMin());
+		tempNetworkLoader->setHeWidth(options.getGroupingWidthA());
+		tempNetworkLoader->setVWidth(options.getGroupingWidthB());
+		theNetworkLoaderHandler = tempNetworkLoader;
 
 		// Check if we want dummy reactions
 		auto map = options.getProcesses();

@@ -149,7 +149,3 @@ const std::vector<std::string> & ReactionNetwork::getCompoundNames() const {
 const std::map<std::string, std::string> & ReactionNetwork::getProperties() {
 	return *properties;
 }
-
-int ReactionNetwork::size() {
-	return networkSize;
-}

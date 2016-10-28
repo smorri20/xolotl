@@ -1,6 +1,7 @@
 #include "NEClusterNetworkLoader.h"
 #include <NEClusterReactionNetwork.h>
 #include <XeCluster.h>
+#include <NESuperCluster.h>
 #include <HDF5Utils.h>
 #include <xolotlPerf.h>
 

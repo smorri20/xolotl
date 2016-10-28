@@ -3,9 +3,7 @@
 
 //Includes
 #include <NECluster.h>
-#include <NESuperCluster.h>
 #include <NetworkLoader.h>
-#include <NEClusterReactionNetwork.h>
 
 namespace xolotlCore {
 

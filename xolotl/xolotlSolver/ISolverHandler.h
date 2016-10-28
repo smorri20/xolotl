@@ -10,7 +10,6 @@
 #include <IDiffusionHandler.h>
 #include <IAdvectionHandler.h>
 #include <ITrapMutationHandler.h>
-#include <IBubbleBurstingHandler.h>
 #include <IMaterialFactory.h>
 #include <IReactionNetwork.h>
 
@@ -50,14 +49,6 @@ public:
 	 * @param da The PETSc distributed array
 	 */
 	virtual void createSolverContext(DM &da) = 0;
-
-	/**
-	 * Get the diagonal fill for the Jacobian, corresponding to the reactions.
-	 *
-	 * @param diagFill The pointer to the vector where the connectivity information is kept
-	 * @param diagFillSize The size of this vector
-	 */
-	virtual void getDiagonalFill(PetscInt *diagFill, int diagFillSize) = 0;
 
 	/**
 	 * Initialize the concentration solution vector.
@@ -183,13 +174,6 @@ public:
 	 * @return The modified trap-mutation handler
 	 */
 	virtual xolotlCore::ITrapMutationHandler *getMutationHandler() const = 0;
-
-	/**
-	 * Get the bubble bursting handler.
-	 *
-	 * @return The bubble bursting handler
-	 */
-	virtual xolotlCore::IBubbleBurstingHandler *getBurstingHandler() const = 0;
 
 	/**
 	 * Get the network.

@@ -51,9 +51,19 @@ protected:
 	int id;
 
 	/**
-	 * An integer identification number for this momentum.
+	 * An integer identification number for the xenon momentum.
 	 */
-	int momId;
+	int xeMomId;
+
+	/**
+	 * An integer identification number for the helium momentum.
+	 */
+	int heMomId;
+
+	/**
+	 * An integer identification number for the vacancy momentum.
+	 */
+	int vMomId;
 
 	/**
 	 * The temperature at which the cluster currently exists. The diffusion
@@ -185,10 +195,11 @@ public:
 	/**
 	 * This operation returns the current concentration.
 	 *
-	 * @param dist The distance for super clusters
+	 * @param distA The first distance for super clusters
+	 * @param distB The second distance for super clusters
 	 * @return The concentration of this reactant
 	 */
-	virtual double getConcentration(double dist = 0.0) const;
+	virtual double getConcentration(double distA = 0.0, double distB = 0.0) const;
 
 	/**
 	 * This operation sets the concentration of the reactant to the
@@ -333,18 +344,46 @@ public:
 	int getId() const;
 
 	/**
-	 * This operation sets the id of the momentum of the reactant.
+	 * This operation sets the id of the xenon momentum of the reactant.
 	 *
 	 * @param nId The new id for this momentum
 	 */
-	void setMomentumId(int nId);
+	void setXeMomentumId(int nId);
 
 	/**
-	 * This operation returns the id for this reactant momentum.
+	 * This operation returns the id for this reactant xenon momentum.
 	 *
 	 * @return The id
 	 */
-	int getMomentumId() const;
+	int getXeMomentumId() const;
+
+	/**
+	 * This operation sets the id of the helium momentum of the reactant.
+	 *
+	 * @param nId The new id for this momentum
+	 */
+	void setHeMomentumId(int nId);
+
+	/**
+	 * This operation returns the id for this reactant helium momentum.
+	 *
+	 * @return The id
+	 */
+	int getHeMomentumId() const;
+
+	/**
+	 * This operation sets the id of the vacancy momentum of the reactant.
+	 *
+	 * @param nId The new id for this momentum
+	 */
+	void setVMomentumId(int nId);
+
+	/**
+	 * This operation returns the id for this reactant vacancy momentum.
+	 *
+	 * @return The id
+	 */
+	int getVMomentumId() const;
 
 	/**
 	 * This operation sets the temperature at which the reactant currently
@@ -461,6 +500,12 @@ public:
 	 * reactant is taking part.
 	 */
 	virtual void computeRateConstants() {return;}
+
+	/**
+	 * Update all the rate constants for the reactions and dissociations in which this
+	 * reactant is taking part when the temperature changes.
+	 */
+	virtual void updateRateConstants();
 
 	/**
 	 * This operation returns true if the cluster is a mixed-species or compound

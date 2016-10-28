@@ -61,14 +61,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 					"-ts_final_time 1000 "
 					"-ts_max_steps 5 "
 					"-ts_exact_final_time stepover" << std::endl
-			<< "startTemp=900" << std::endl
-			<< "perfHandler=dummy" << std::endl
-			<< "flux=4.0e5" << std::endl
-			<< "material=W100" << std::endl
-			<< "dimensions=1" << std::endl
-			<< "process=diff advec reaction" << std::endl
-			<< "voidPortion=0.0" << std::endl
-			<< "networkFile=" << networkFilename << std::endl;
+			<< "startTemp=900" << std::endl << "perfHandler=dummy" << std::endl
+			<< "flux=4.0e5" << std::endl << "material=W100" << std::endl
+			<< "dimensions=1" << std::endl << "process=diff advec reaction"
+			<< std::endl << "voidPortion=0.0" << std::endl << "networkFile="
+			<< networkFilename << std::endl;
 	paramFile.close();
 
 	// Create a fake command line to read the options
@@ -87,22 +84,24 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 	opts.setRegularXGrid(true);
 
 	// Create the network loader
-	std::shared_ptr<HDF5NetworkLoader> loader =
-			std::make_shared<HDF5NetworkLoader>(make_shared<xolotlPerf::DummyHandlerRegistry>());
+	std::shared_ptr<HDF5NetworkLoader> loader = std::make_shared<
+			HDF5NetworkLoader>(make_shared<xolotlPerf::DummyHandlerRegistry>());
 
-	BOOST_TEST_MESSAGE("PetscSolverTester Message: Network filename is: "
-			<< networkFilename);
+	BOOST_TEST_MESSAGE(
+			"PetscSolverTester Message: Network filename is: " << networkFilename);
 
 	// Give the filename to the network loader
 	loader->setFilename(networkFilename);
 
 	// Create the solver
-	std::shared_ptr<xolotlSolver::PetscSolver> solver =
-			std::make_shared<xolotlSolver::PetscSolver>(make_shared<xolotlPerf::DummyHandlerRegistry>());
+	std::shared_ptr<xolotlSolver::PetscSolver> solver = std::make_shared<
+			xolotlSolver::PetscSolver>(
+			make_shared<xolotlPerf::DummyHandlerRegistry>());
 
 	// Create the material factory
 	auto materialFactory =
-			xolotlFactory::IMaterialFactory::createMaterialFactory(opts.getMaterial(), opts.getDimensionNumber());
+			xolotlFactory::IMaterialFactory::createMaterialFactory(
+					opts.getMaterial(), opts.getDimensionNumber());
 
 	// Initialize and get the temperature handler
 	bool tempInitOK = xolotlFactory::initializeTempHandler(opts);
@@ -114,14 +113,17 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 
 	// Create the network handler factory
 	auto networkFactory =
-				xolotlFactory::IReactionHandlerFactory::createNetworkFactory(opts.getMaterial());
-	networkFactory->initializeReactionNetwork(opts, make_shared<xolotlPerf::DummyHandlerRegistry>());
+			xolotlFactory::IReactionHandlerFactory::createNetworkFactory(
+					opts.getMaterial());
+	networkFactory->initializeReactionNetwork(opts,
+			make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Get the network handler
 	auto networkHandler = networkFactory->getNetworkHandler();
 
 	// Create a solver handler and initialize it
 	auto solvHandler = std::make_shared<xolotlSolver::PetscSolver1DHandler>();
-	solvHandler->initializeHandlers(materialFactory, tempHandler, networkHandler, opts);
+	solvHandler->initializeHandlers(materialFactory, tempHandler,
+			networkHandler, opts);
 
 	// Set the solver command line to give the PETSc options and initialize it
 	solver->setCommandLineOptions(opts.getPetscArgc(), opts.getPetscArgv());
@@ -137,11 +139,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver1DHandler) {
 	network->fillConcentrationsArray(concs);
 
 	// Check some concentrations
-    BOOST_REQUIRE_SMALL(concs[0], 1.0e-10);
-    BOOST_REQUIRE_SMALL(concs[1], 1.0e-17);
-    BOOST_REQUIRE_SMALL(concs[2], 1.0e-25);
-    BOOST_REQUIRE_SMALL(concs[7], 1.0e-61);
-    BOOST_REQUIRE_CLOSE(concs[8], 0.0, 0.01);
+	BOOST_REQUIRE_SMALL(concs[0], 1.0e-10);
+	BOOST_REQUIRE_SMALL(concs[1], 1.0e-17);
+	BOOST_REQUIRE_SMALL(concs[2], 1.0e-25);
+	BOOST_REQUIRE_SMALL(concs[7], 1.0e-61);
+	BOOST_REQUIRE_CLOSE(concs[8], 0.0, 0.01);
 
 	// Remove the created file
 	std::string tempFile = "param.txt";
@@ -177,15 +179,12 @@ BOOST_AUTO_TEST_CASE(checkIrregularPetscSolver1DHandler) {
 					"-ts_final_time 1000 "
 					"-ts_max_steps 5 "
 					"-ts_exact_final_time stepover" << std::endl
-			<< "startTemp=900" << std::endl
-			<< "perfHandler=dummy" << std::endl
-			<< "flux=4.0e5" << std::endl
-			<< "material=W100" << std::endl
-			<< "dimensions=1" << std::endl
-			<< "regularGrid=no" << std::endl
+			<< "startTemp=900" << std::endl << "perfHandler=dummy" << std::endl
+			<< "flux=4.0e5" << std::endl << "material=W100" << std::endl
+			<< "dimensions=1" << std::endl << "regularGrid=no" << std::endl
 			<< "process=diff advec modifiedTM reaction" << std::endl
-			<< "voidPortion=0.0" << std::endl
-			<< "networkFile=" << networkFilename << std::endl;
+			<< "voidPortion=0.0" << std::endl << "networkFile="
+			<< networkFilename << std::endl;
 	paramFile.close();
 
 	// Create a fake command line to read the options
@@ -201,22 +200,24 @@ BOOST_AUTO_TEST_CASE(checkIrregularPetscSolver1DHandler) {
 	opts.readParams(argv);
 
 	// Create the network loader
-	std::shared_ptr<HDF5NetworkLoader> loader =
-			std::make_shared<HDF5NetworkLoader>(make_shared<xolotlPerf::DummyHandlerRegistry>());
+	std::shared_ptr<HDF5NetworkLoader> loader = std::make_shared<
+			HDF5NetworkLoader>(make_shared<xolotlPerf::DummyHandlerRegistry>());
 
-	BOOST_TEST_MESSAGE("PetscSolverTester Message: Network filename is: "
-			<< networkFilename);
+	BOOST_TEST_MESSAGE(
+			"PetscSolverTester Message: Network filename is: " << networkFilename);
 
 	// Give the filename to the network loader
 	loader->setFilename(networkFilename);
 
 	// Create the solver
-	std::shared_ptr<xolotlSolver::PetscSolver> solver =
-			std::make_shared<xolotlSolver::PetscSolver>(make_shared<xolotlPerf::DummyHandlerRegistry>());
+	std::shared_ptr<xolotlSolver::PetscSolver> solver = std::make_shared<
+			xolotlSolver::PetscSolver>(
+			make_shared<xolotlPerf::DummyHandlerRegistry>());
 
 	// Create the material factory
 	auto materialFactory =
-			xolotlFactory::IMaterialFactory::createMaterialFactory(opts.getMaterial(), opts.getDimensionNumber());
+			xolotlFactory::IMaterialFactory::createMaterialFactory(
+					opts.getMaterial(), opts.getDimensionNumber());
 
 	// Initialize and get the temperature handler
 	bool tempInitOK = xolotlFactory::initializeTempHandler(opts);
@@ -229,14 +230,17 @@ BOOST_AUTO_TEST_CASE(checkIrregularPetscSolver1DHandler) {
 
 	// Create the network handler factory
 	auto networkFactory =
-				xolotlFactory::IReactionHandlerFactory::createNetworkFactory(opts.getMaterial());
-	networkFactory->initializeReactionNetwork(opts, make_shared<xolotlPerf::DummyHandlerRegistry>());
+			xolotlFactory::IReactionHandlerFactory::createNetworkFactory(
+					opts.getMaterial());
+	networkFactory->initializeReactionNetwork(opts,
+			make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Get the network handler
 	auto networkHandler = networkFactory->getNetworkHandler();
 
 	// Create a solver handler and initialize it
 	auto solvHandler = std::make_shared<xolotlSolver::PetscSolver1DHandler>();
-	solvHandler->initializeHandlers(materialFactory, tempHandler, networkHandler, opts);
+	solvHandler->initializeHandlers(materialFactory, tempHandler,
+			networkHandler, opts);
 
 	// Set the solver command line to give the PETSc options and initialize it
 	solver->setCommandLineOptions(opts.getPetscArgc(), opts.getPetscArgv());
@@ -292,14 +296,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 					"-ts_final_time 1000 "
 					"-ts_max_steps 5 "
 					"-ts_exact_final_time stepover" << std::endl
-			<< "startTemp=900" << std::endl
-			<< "perfHandler=dummy" << std::endl
-			<< "flux=4.0e5" << std::endl
-			<< "material=W100" << std::endl
-			<< "dimensions=2" << std::endl
-			<< "process=diff advec reaction" << std::endl
-			<< "voidPortion=0.0" << std::endl
-			<< "networkFile=" << networkFilename << std::endl;
+			<< "startTemp=900" << std::endl << "perfHandler=dummy" << std::endl
+			<< "flux=4.0e5" << std::endl << "material=W100" << std::endl
+			<< "dimensions=2" << std::endl << "process=diff advec reaction"
+			<< std::endl << "voidPortion=0.0" << std::endl << "networkFile="
+			<< networkFilename << std::endl;
 	paramFile.close();
 
 	// Create a fake command line to read the options
@@ -314,18 +315,19 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 	opts.readParams(argv);
 
 	// Create the network loader
-	std::shared_ptr<HDF5NetworkLoader> loader =
-			std::make_shared<HDF5NetworkLoader>(make_shared<xolotlPerf::DummyHandlerRegistry>());
+	std::shared_ptr<HDF5NetworkLoader> loader = std::make_shared<
+			HDF5NetworkLoader>(make_shared<xolotlPerf::DummyHandlerRegistry>());
 
-	BOOST_TEST_MESSAGE("PetscSolverTester Message: Network filename is: "
-			<< networkFilename);
+	BOOST_TEST_MESSAGE(
+			"PetscSolverTester Message: Network filename is: " << networkFilename);
 
 	// Give the filename to the network loader
 	loader->setFilename(networkFilename);
 
 	// Create the solver
-	std::shared_ptr<xolotlSolver::PetscSolver> solver =
-			std::make_shared<xolotlSolver::PetscSolver>(make_shared<xolotlPerf::DummyHandlerRegistry>());
+	std::shared_ptr<xolotlSolver::PetscSolver> solver = std::make_shared<
+			xolotlSolver::PetscSolver>(
+			make_shared<xolotlPerf::DummyHandlerRegistry>());
 
 	// Create the material factory
 	auto materialFactory =
@@ -343,14 +345,17 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver2DHandler) {
 
 	// Create the network handler factory
 	auto networkFactory =
-				xolotlFactory::IReactionHandlerFactory::createNetworkFactory(opts.getMaterial());
-	networkFactory->initializeReactionNetwork(opts, make_shared<xolotlPerf::DummyHandlerRegistry>());
+			xolotlFactory::IReactionHandlerFactory::createNetworkFactory(
+					opts.getMaterial());
+	networkFactory->initializeReactionNetwork(opts,
+			make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Get the network handler
 	auto networkHandler = networkFactory->getNetworkHandler();
 
 	// Create a solver handler and initialize it
 	auto solvHandler = std::make_shared<xolotlSolver::PetscSolver2DHandler>();
-	solvHandler->initializeHandlers(materialFactory, tempHandler, networkHandler, opts);
+	solvHandler->initializeHandlers(materialFactory, tempHandler,
+			networkHandler, opts);
 
 	// Set the solver command line to give the PETSc options and initialize it
 	solver->setCommandLineOptions(opts.getPetscArgc(), opts.getPetscArgv());
@@ -406,14 +411,11 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 					"-ts_final_time 1000 "
 					"-ts_max_steps 5 "
 					"-ts_exact_final_time stepover" << std::endl
-			<< "startTemp=900" << std::endl
-			<< "perfHandler=dummy" << std::endl
-			<< "flux=4.0e5" << std::endl
-			<< "material=W100" << std::endl
-			<< "dimensions=3" << std::endl
-			<< "process=diff advec reaction" << std::endl
-			<< "voidPortion=0.0" << std::endl
-			<< "networkFile=" << networkFilename << std::endl;
+			<< "startTemp=900" << std::endl << "perfHandler=dummy" << std::endl
+			<< "flux=4.0e5" << std::endl << "material=W100" << std::endl
+			<< "dimensions=3" << std::endl << "process=diff advec reaction"
+			<< std::endl << "voidPortion=0.0" << std::endl << "networkFile="
+			<< networkFilename << std::endl;
 	paramFile.close();
 
 	// Create a fake command line to read the options
@@ -428,22 +430,24 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 	opts.readParams(argv);
 
 	// Create the network loader
-	std::shared_ptr<HDF5NetworkLoader> loader =
-			std::make_shared<HDF5NetworkLoader>(make_shared<xolotlPerf::DummyHandlerRegistry>());
+	std::shared_ptr<HDF5NetworkLoader> loader = std::make_shared<
+			HDF5NetworkLoader>(make_shared<xolotlPerf::DummyHandlerRegistry>());
 
-	BOOST_TEST_MESSAGE("PetscSolverTester Message: Network filename is: "
-			<< networkFilename);
+	BOOST_TEST_MESSAGE(
+			"PetscSolverTester Message: Network filename is: " << networkFilename);
 
 	// Give the filename to the network loader
 	loader->setFilename(networkFilename);
 
 	// Create the solver
-	std::shared_ptr<xolotlSolver::PetscSolver> solver =
-			std::make_shared<xolotlSolver::PetscSolver>(make_shared<xolotlPerf::DummyHandlerRegistry>());
+	std::shared_ptr<xolotlSolver::PetscSolver> solver = std::make_shared<
+			xolotlSolver::PetscSolver>(
+			make_shared<xolotlPerf::DummyHandlerRegistry>());
 
 	// Create the material factory
 	auto materialFactory =
-			xolotlFactory::IMaterialFactory::createMaterialFactory(opts.getMaterial(), opts.getDimensionNumber());
+			xolotlFactory::IMaterialFactory::createMaterialFactory(
+					opts.getMaterial(), opts.getDimensionNumber());
 
 	// Initialize and get the temperature handler
 	bool tempInitOK = xolotlFactory::initializeTempHandler(opts);
@@ -456,14 +460,17 @@ BOOST_AUTO_TEST_CASE(checkPetscSolver3DHandler) {
 
 	// Create the network handler factory
 	auto networkFactory =
-				xolotlFactory::IReactionHandlerFactory::createNetworkFactory(opts.getMaterial());
-	networkFactory->initializeReactionNetwork(opts, make_shared<xolotlPerf::DummyHandlerRegistry>());
+			xolotlFactory::IReactionHandlerFactory::createNetworkFactory(
+					opts.getMaterial());
+	networkFactory->initializeReactionNetwork(opts,
+			make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Get the network handler
 	auto networkHandler = networkFactory->getNetworkHandler();
 
 	// Create a solver handler and initialize it
 	auto solvHandler = std::make_shared<xolotlSolver::PetscSolver3DHandler>();
-	solvHandler->initializeHandlers(materialFactory, tempHandler, networkHandler, opts);
+	solvHandler->initializeHandlers(materialFactory, tempHandler,
+			networkHandler, opts);
 
 	// Set the solver command line to give the PETSc options and initialize it
 	solver->setCommandLineOptions(opts.getPetscArgc(), opts.getPetscArgv());

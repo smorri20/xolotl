@@ -17,7 +17,7 @@ public:
 	 */
 	GroupingOptionHandler() :
 			OptionHandler("grouping",
-					"grouping <min> <width>                "
+					"grouping <min> <width> <width>           "
 					"This option allows the use a grouping scheme starting at the cluster "
 					"with 'min' size and with the given width.  \n") {
 	}
@@ -45,8 +45,10 @@ public:
 
 		// Set grouping minimum size
 		opt->setGroupingMin(strtol(tokens[0].c_str(), NULL, 10));
-		// Set the grouping width
-		opt->setGroupingWidth(strtol(tokens[1].c_str(), NULL, 10));
+		// Set the grouping width in the first direction
+		opt->setGroupingWidthA(strtol(tokens[1].c_str(), NULL, 10));
+		// Set the grouping width in the second direction
+		opt->setGroupingWidthB(strtol(tokens[1].c_str(), NULL, 10));
 
 		return true;
 	}

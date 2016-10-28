@@ -67,6 +67,12 @@ std::shared_ptr<IReactionNetwork> HDF5NetworkLoader::load() {
 		(*reactantsIt)->setReactionNetwork(network);
 	}
 
+	// Check if we want dummy reactions
+	if (!dummyReactions) {
+		// Apply sectional grouping
+		applySectionalGrouping(network);
+	}
+
 	return network;
 }
 

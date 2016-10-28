@@ -41,8 +41,9 @@ Options::Options() :
 		dimensionNumber(1),
 		useRegularGridFlag(true), 
 		gbList(""),
-		groupingMin(0),
-		groupingWidth(0) {
+		groupingMin(std::numeric_limits<int>::max()),
+		groupingWidthA(1),
+		groupingWidthB(1) {
 
 	// Create the network option handler
 	auto networkHandler = new NetworkOptionHandler();

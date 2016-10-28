@@ -52,7 +52,7 @@ public:
 		tempNetworkLoader->setFilename(options.getNetworkFilename());
 		// Set the options for the grouping scheme
 		tempNetworkLoader->setXeMin(options.getGroupingMin());
-		tempNetworkLoader->setWidth(options.getGroupingWidth());
+		tempNetworkLoader->setWidth(options.getGroupingWidthA());
 		theNetworkLoaderHandler = tempNetworkLoader;
 
 		// Check if we want dummy reactions

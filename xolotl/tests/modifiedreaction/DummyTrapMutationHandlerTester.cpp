@@ -37,11 +37,25 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	loader.setFilename(filename);
 
 	// Load the network
-	auto network = (PSIClusterReactionNetwork *) loader.load().get();
+	auto network = loader.load().get();
+	// Get all the reactants
+	auto allReactants = network->getAll();
 	// Get its size
-	const int size = network->getAll()->size();
-	// Set the temperature to 1000.0 K
-	network->setTemperature(1000.0);
+	const int size = network->size();
+	const int dof = network->getDOF();
+	// Initialize the rate constants
+	for (int i = 0; i < size; i++) {
+		// This part will set the temperature in each reactant
+		// and recompute the diffusion coefficient
+		allReactants->at(i)->setTemperature(1000.0);
+	}
+	for (int i = 0; i < size; i++) {
+		// Now that the diffusion coefficients of all the reactants
+		// are updated, the reaction and dissociation rates can be
+		// recomputed
+		auto cluster = (xolotlCore::PSICluster *) allReactants->at(i);
+		cluster->computeRateConstants();
+	}
 
 	// Suppose we have a grid with 13 grip points and distance of
 	// 0.1 nm between grid points
@@ -64,11 +78,11 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	trapMutationHandler.initializeIndex1D(surfacePos, network, advectionHandlers, grid);
 
 	// The arrays of concentration
-	double concentration[13*size];
-	double newConcentration[13*size];
+	double concentration[13*dof];
+	double newConcentration[13*dof];
 
 	// Initialize their values
-	for (int i = 0; i < 13*size; i++) {
+	for (int i = 0; i < 13*dof; i++) {
 		concentration[i] = (double) i * i;
 		newConcentration[i] = 0.0;
 	}
@@ -78,8 +92,8 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	double *updatedConc = &newConcentration[0];
 
 	// Get the offset for the second grid point
-	double *concOffset = conc + size;
-	double *updatedConcOffset = updatedConc + size;
+	double *concOffset = conc + dof;
+	double *updatedConcOffset = updatedConc + dof;
 
 	// Compute the modified trap mutation at the second grid point
 	trapMutationHandler.computeTrapMutation(network,

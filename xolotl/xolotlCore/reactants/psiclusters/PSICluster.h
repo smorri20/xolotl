@@ -56,6 +56,26 @@ protected:
 		PSICluster * second;
 
 		/**
+		 * The first cluster helium distance in the group (0.0 for non-super clusters)
+		 */
+		double firstHeDistance;
+
+		/**
+		 * The first cluster vacancy distance in the group (0.0 for non-super clusters)
+		 */
+		double firstVDistance;
+
+		/**
+		 * The second cluster helium distance in the group (0.0 for non-super clusters)
+		 */
+		double secondHeDistance;
+
+		/**
+		 * The second cluster vacancy distance in the group (0.0 for non-super clusters)
+		 */
+		double secondVDistance;
+
+		/**
 		 * The reaction/dissociation constant associated to this
 		 * reaction or dissociation
 		 */
@@ -63,7 +83,8 @@ protected:
 
 		//! The constructor
 		ClusterPair(PSICluster * firstPtr, PSICluster * secondPtr, double k)
-		: first(firstPtr), second(secondPtr), kConstant(k) {}
+		: first(firstPtr), second(secondPtr), kConstant(k), firstHeDistance(0.0), firstVDistance(0.0),
+		  secondHeDistance(0.0), secondVDistance(0.0) {}
 	};
 
 	/**
@@ -83,77 +104,24 @@ protected:
 		PSICluster * combining;
 
 		/**
+		 * The combining cluster helium distance in the group (0.0 for non-super clusters)
+		 */
+		double heDistance;
+
+		/**
+		 * The combining cluster vacancy distance in the group (0.0 for non-super clusters)
+		 */
+		double vDistance;
+
+		/**
 		 * The reaction constant associated to this reaction
 		 */
 		double kConstant;
 
 		//! The constructor
 		CombiningCluster(PSICluster * Ptr, double k)
-		: combining(Ptr), kConstant(k) {}
+		: combining(Ptr), kConstant(k), heDistance(0.0), vDistance(0.0) {}
 	};
-
-	/**
-	 * A vector of ClusterPairs that represents reacting pairs of clusters
-	 * that produce this cluster. This vector should be populated early in the
-	 * cluster's lifecycle by subclasses. In the standard Xolotl clusters,
-	 * this vector is filled in createReactionConnectivity.
-	 */
-	std::vector<ClusterPair> reactingPairs;
-
-	/**
-	 * A vector of pointers to ClusterPairs that represents the effective reacting
-	 * pairs, i.e. those for which the reaction rate is not 0.0. Should be filled
-	 * every time the temperature changes.
-	 */
-	std::vector<ClusterPair *> effReactingPairs;
-
-	/**
-	 * A vector of clusters that combine with this cluster to produce other
-	 * clusters. This vector should be populated early in the cluster's
-	 * lifecycle by subclasses. In the standard Xolotl clusters, this vector is
-	 * filled in createReactionConnectivity.
-	 */
-	std::vector<CombiningCluster> combiningReactants;
-
-	/**
-	 * A vector of pointers to CombiningCluster that represents the effective
-	 * combining clusters, i.e. those for which the reaction rate is not 0.0.
-	 * Should be filled every time the temperature changes.
-	 */
-	std::vector<CombiningCluster *> effCombiningReactants;
-
-	/**
-	 * A vector of pairs of clusters: the first one is the one dissociation into
-	 * this cluster, the second one is the one that is emitted at the same time
-	 * during the dissociation. This vector should be populated early in the
-	 * cluster's lifecycle by subclasses. In the standard Xolotl clusters, this
-	 * vector is filled in dissociateCluster that is called by
-	 * createDissociationConnectivity.
-	 */
-	std::vector<ClusterPair> dissociatingPairs;
-
-	/**
-	 * A vector of pointers to ClusterPairs that represents the effective dissociating
-	 * pairs, i.e. those for which the dissociation rate is not 0.0. Should be filled
-	 * every time the temperature changes.
-	 */
-	std::vector<ClusterPair *> effDissociatingPairs;
-
-	/**
-	 * A vector of ClusterPairs that represent pairs of clusters that are emitted
-	 * from the dissociation of this cluster. This vector should be populated early
-	 * in the cluster's lifecycle by subclasses. In the standard Xolotl clusters,
-	 * this vector is filled in emitClusters that is called by
-	 * createDissociationConnectivity.
-	 */
-	std::vector<ClusterPair> emissionPairs;
-
-	/**
-	 * A vector of pointers to ClusterPairs that represents the effective emission
-	 * pairs, i.e. those for which the dissociation rate is not 0.0. Should be filled
-	 * every time the temperature changes.
-	 */
-	std::vector<ClusterPair *> effEmissionPairs;
 
 	/**
 	 * Computes a row (or column) of the reaction connectivity matrix
@@ -355,6 +323,69 @@ protected:
 public:
 
 	/**
+	 * A vector of ClusterPairs that represents reacting pairs of clusters
+	 * that produce this cluster. This vector should be populated early in the
+	 * cluster's lifecycle by subclasses. In the standard Xolotl clusters,
+	 * this vector is filled in createReactionConnectivity.
+	 */
+	std::vector<ClusterPair> reactingPairs;
+
+	/**
+	 * A vector of pointers to ClusterPairs that represents the effective reacting
+	 * pairs, i.e. those for which the reaction rate is not 0.0. Should be filled
+	 * every time the temperature changes.
+	 */
+	std::vector<ClusterPair *> effReactingPairs;
+
+	/**
+	 * A vector of clusters that combine with this cluster to produce other
+	 * clusters. This vector should be populated early in the cluster's
+	 * lifecycle by subclasses. In the standard Xolotl clusters, this vector is
+	 * filled in createReactionConnectivity.
+	 */
+	std::vector<CombiningCluster> combiningReactants;
+
+	/**
+	 * A vector of pointers to CombiningCluster that represents the effective
+	 * combining clusters, i.e. those for which the reaction rate is not 0.0.
+	 * Should be filled every time the temperature changes.
+	 */
+	std::vector<CombiningCluster *> effCombiningReactants;
+
+	/**
+	 * A vector of pairs of clusters: the first one is the one dissociation into
+	 * this cluster, the second one is the one that is emitted at the same time
+	 * during the dissociation. This vector should be populated early in the
+	 * cluster's lifecycle by subclasses. In the standard Xolotl clusters, this
+	 * vector is filled in dissociateCluster that is called by
+	 * createDissociationConnectivity.
+	 */
+	std::vector<ClusterPair> dissociatingPairs;
+
+	/**
+	 * A vector of pointers to ClusterPairs that represents the effective dissociating
+	 * pairs, i.e. those for which the dissociation rate is not 0.0. Should be filled
+	 * every time the temperature changes.
+	 */
+	std::vector<ClusterPair *> effDissociatingPairs;
+
+	/**
+	 * A vector of ClusterPairs that represent pairs of clusters that are emitted
+	 * from the dissociation of this cluster. This vector should be populated early
+	 * in the cluster's lifecycle by subclasses. In the standard Xolotl clusters,
+	 * this vector is filled in emitClusters that is called by
+	 * createDissociationConnectivity.
+	 */
+	std::vector<ClusterPair> emissionPairs;
+
+	/**
+	 * A vector of pointers to ClusterPairs that represents the effective emission
+	 * pairs, i.e. those for which the dissociation rate is not 0.0. Should be filled
+	 * every time the temperature changes.
+	 */
+	std::vector<ClusterPair *> effEmissionPairs;
+
+	/**
 	 * The default constructor
 	 *
 	 * @param registry The performance handler registry
@@ -408,6 +439,20 @@ public:
 	 * reactions
 	 */
 	virtual std::vector<int> getDissociationConnectivity() const;
+
+	/**
+	 * This operation returns the first helium momentum.
+	 *
+	 * @return The momentum
+	 */
+	virtual double getHeMomentum() const;
+
+	/**
+	 * This operation returns the first vacancy momentum.
+	 *
+	 * @return The momentum
+	 */
+	virtual double getVMomentum() const;
 
 	/**
 	 * This operation returns the total flux of this cluster in the
@@ -567,9 +612,16 @@ public:
 	/**
 	 * Calculate all the rate constants for the reactions and dissociations in which this
 	 * cluster is taking part. Store these values in the kConstant field of ClusterPair
-	 * or CombiningCluster. Need to be called only when the temperature changes.
+	 * or CombiningCluster. Need to be called only at the beginning of the simulation.
 	 */
-	void computeRateConstants();
+	virtual void computeRateConstants();
+
+	/**
+	 * Update all the rate constants for the reactions and dissociations in which this
+	 * cluster is taking part. Store these values in the kConstant field of ClusterPair
+	 * or CombiningCluster. Need to be called when the temperature changes.
+	 */
+	virtual void updateRateConstants();
 
 };
 

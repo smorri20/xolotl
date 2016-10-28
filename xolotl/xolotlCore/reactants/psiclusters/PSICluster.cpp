@@ -369,13 +369,13 @@ static std::vector<int> getFullConnectivityVector(std::set<int> connectivitySet,
 
 std::vector<int> PSICluster::getReactionConnectivity() const {
 	// Create the full vector from the set and return it
-	return getFullConnectivityVector(reactionConnectivitySet, network->size());
+	return getFullConnectivityVector(reactionConnectivitySet, network->getDOF());
 }
 
 std::vector<int> PSICluster::getDissociationConnectivity() const {
 	// Create the full vector from the set and return it
 	return getFullConnectivityVector(dissociationConnectivitySet,
-			network->size());
+			network->getDOF());
 }
 
 void PSICluster::resetConnectivities() {
@@ -386,18 +386,28 @@ void PSICluster::resetConnectivities() {
 	// Connect this cluster to itself since any reaction will affect it
 	setReactionConnectivity(id);
 	setDissociationConnectivity(id);
+	setReactionConnectivity(heMomId);
+	setDissociationConnectivity(heMomId);
+	setReactionConnectivity(vMomId);
+	setDissociationConnectivity(vMomId);
 
 	// Loop on the effective reacting pairs
 	for (auto it = effReactingPairs.begin(); it != effReactingPairs.end(); ++it) {
 		// The cluster is connecting to both clusters in the pair
 		setReactionConnectivity((*it)->first->id);
 		setReactionConnectivity((*it)->second->id);
+		setReactionConnectivity((*it)->first->heMomId);
+		setReactionConnectivity((*it)->second->heMomId);
+		setReactionConnectivity((*it)->first->vMomId);
+		setReactionConnectivity((*it)->second->vMomId);
 	}
 
 	// Loop on the effective combining reactants
 	for (auto it = effCombiningReactants.begin(); it != effCombiningReactants.end(); ++it) {
 		// The cluster is connecting to the combining cluster
 		setReactionConnectivity((*it)->combining->id);
+		setReactionConnectivity((*it)->combining->heMomId);
+		setReactionConnectivity((*it)->combining->vMomId);
 	}
 
 	// Loop on the effective dissociating pairs
@@ -405,6 +415,8 @@ void PSICluster::resetConnectivities() {
 		// The cluster is connecting to the dissociating cluster which
 		// is the first one by definition
 		setDissociationConnectivity((*it)->first->id);
+		setDissociationConnectivity((*it)->first->heMomId);
+		setDissociationConnectivity((*it)->first->vMomId);
 	}
 
 	// Don't loop on the effective emission pairs because
@@ -456,6 +468,14 @@ void PSICluster::setReactionNetwork(
 	return;
 }
 
+double PSICluster::getHeMomentum() const {
+	return 0.0;
+}
+
+double PSICluster::getVMomentum() const {
+	return 0.0;
+}
+
 double PSICluster::getTotalFlux() {
 	// Initialize the fluxes
 	double prodFlux = 0.0, combFlux = 0.0, dissFlux = 0.0, emissFlux = 0.0;
@@ -463,13 +483,8 @@ double PSICluster::getTotalFlux() {
 	// Get the fluxes
 	prodFlux = getProductionFlux();
 	dissFlux = getDissociationFlux();
-
-	// Don't compute the combination and emission flux if the
-	// concentration is 0.0 because they are proportional to it
-	if (!xolotlCore::equal(concentration, 0.0)) {
-		combFlux = getCombinationFlux();
-		emissFlux = getEmissionFlux();
-	}
+	combFlux = getCombinationFlux();
+	emissFlux = getEmissionFlux();
 
 	return prodFlux - combFlux + dissFlux - emissFlux;
 }
@@ -488,7 +503,8 @@ double PSICluster::getDissociationFlux() const {
 		dissociatingCluster = effDissociatingPairs[j]->first;
 		// Calculate the Dissociation flux
 		flux += effDissociatingPairs[j]->kConstant
-				* dissociatingCluster->concentration;
+				* dissociatingCluster->getConcentration(effDissociatingPairs[j]->firstHeDistance,
+						effDissociatingPairs[j]->firstVDistance);
 	}
 
 	// Return the flux
@@ -525,8 +541,11 @@ double PSICluster::getProductionFlux() const {
 		firstReactant = effReactingPairs[i]->first;
 		secondReactant = effReactingPairs[i]->second;
 		// Update the flux
-		flux += effReactingPairs[i]->kConstant * firstReactant->concentration
-				* secondReactant->concentration;
+		flux += effReactingPairs[i]->kConstant
+				* firstReactant->getConcentration(effReactingPairs[i]->firstHeDistance,
+						effReactingPairs[i]->firstVDistance)
+				* secondReactant->getConcentration(effReactingPairs[i]->secondHeDistance,
+						effReactingPairs[i]->secondVDistance);
 	}
 
 	// Return the production flux
@@ -545,9 +564,10 @@ double PSICluster::getCombinationFlux() const {
 	for (int j = 0; j < nReactants; j++) {
 		// Get the cluster that combines with this one
 		combiningCluster = effCombiningReactants[j]->combining;
-		// Calculate Second term of production flux
+		// Calculate the combination flux
 		flux += effCombiningReactants[j]->kConstant
-				* combiningCluster->concentration;
+				* combiningCluster->getConcentration(effCombiningReactants[j]->heDistance,
+						effCombiningReactants[j]->vDistance);
 	}
 
 	return flux * concentration;
@@ -555,7 +575,7 @@ double PSICluster::getCombinationFlux() const {
 
 std::vector<double> PSICluster::getPartialDerivatives() const {
 	// Local Declarations
-	std::vector<double> partials(network->size(), 0.0);
+	std::vector<double> partials(network->getDOF(), 0.0);
 
 	// Get the partial derivatives for each reaction type
 	getProductionPartialDerivatives(partials);
@@ -579,6 +599,7 @@ void PSICluster::getPartialDerivatives(std::vector<double> & partials) const {
 void PSICluster::getProductionPartialDerivatives(std::vector<double> & partials) const {
 	// Initial declarations
 	int numReactants = 0, index = 0;
+	double value = 0.0;
 
 	// Production
 	// A + B --> D, D being this cluster
@@ -590,13 +611,25 @@ void PSICluster::getProductionPartialDerivatives(std::vector<double> & partials)
 	numReactants = effReactingPairs.size();
 	for (int i = 0; i < numReactants; i++) {
 		// Compute the contribution from the first part of the reacting pair
+		value = effReactingPairs[i]->kConstant
+				* effReactingPairs[i]->second->getConcentration(effReactingPairs[i]->secondHeDistance,
+						effReactingPairs[i]->secondVDistance);
 		index = effReactingPairs[i]->first->id - 1;
-		partials[index] += effReactingPairs[i]->kConstant
-				* effReactingPairs[i]->second->concentration;
+		partials[index] += value;
+		index = effReactingPairs[i]->first->heMomId - 1;
+		partials[index] += value * effReactingPairs[i]->firstHeDistance;
+		index = effReactingPairs[i]->first->vMomId - 1;
+		partials[index] += value * effReactingPairs[i]->firstVDistance;
 		// Compute the contribution from the second part of the reacting pair
+		value = effReactingPairs[i]->kConstant
+				* effReactingPairs[i]->first->getConcentration(effReactingPairs[i]->firstHeDistance,
+						effReactingPairs[i]->firstVDistance);
 		index = effReactingPairs[i]->second->id - 1;
-		partials[index] += effReactingPairs[i]->kConstant
-				* effReactingPairs[i]->first->concentration;
+		partials[index] += value;
+		index = effReactingPairs[i]->second->heMomId - 1;
+		partials[index] += value * effReactingPairs[i]->secondHeDistance;
+		index = effReactingPairs[i]->second->vMomId - 1;
+		partials[index] += value * effReactingPairs[i]->secondVDistance;
 	}
 
 	return;
@@ -607,6 +640,7 @@ void PSICluster::getCombinationPartialDerivatives(
 	// Initial declarations
 	int numReactants = 0, otherIndex = 0;
 	PSICluster *cluster;
+	double value = 0.0;
 
 	// Combination
 	// A + B --> D, A being this cluster
@@ -618,15 +652,19 @@ void PSICluster::getCombinationPartialDerivatives(
 	numReactants = effCombiningReactants.size();
 	for (int i = 0; i < numReactants; i++) {
 		cluster = (PSICluster *) effCombiningReactants[i]->combining;
-		// Get the index of cluster
-		otherIndex = cluster->id - 1;
 		// Remember that the flux due to combinations is OUTGOING (-=)!
 		// Compute the contribution from this cluster
-		partials[thisNetworkIndex] -= effCombiningReactants[i]->kConstant
-				* cluster->concentration;
+		partials[id - 1] -= effCombiningReactants[i]->kConstant
+				* cluster->getConcentration(effCombiningReactants[i]->heDistance,
+						effCombiningReactants[i]->vDistance);
 		// Compute the contribution from the combining cluster
-		partials[otherIndex] -= effCombiningReactants[i]->kConstant
-				* concentration;
+		value = effCombiningReactants[i]->kConstant * concentration;
+		otherIndex = cluster->id - 1;
+		partials[otherIndex] -= value;
+		otherIndex = cluster->heMomId - 1;
+		partials[otherIndex] -= value * effCombiningReactants[i]->heDistance;
+		otherIndex = cluster->vMomId - 1;
+		partials[otherIndex] -= value * effCombiningReactants[i]->vDistance;
 	}
 
 	return;
@@ -637,6 +675,7 @@ void PSICluster::getDissociationPartialDerivatives(
 	// Initial declarations
 	int numPairs = 0, index = 0;
 	PSICluster *cluster;
+	double value = 0.0;
 
 	// Dissociation
 	// A --> B + D, B being this cluster
@@ -648,8 +687,13 @@ void PSICluster::getDissociationPartialDerivatives(
 	for (int i = 0; i < numPairs; i++) {
 		// Get the dissociating cluster
 		cluster = effDissociatingPairs[i]->first;
+		value = effDissociatingPairs[i]->kConstant;
 		index = cluster->id - 1;
-		partials[index] += effDissociatingPairs[i]->kConstant;
+		partials[index] += value;
+		index = cluster->heMomId - 1;
+		partials[index] += value * effDissociatingPairs[i]->firstHeDistance;
+		index = cluster->vMomId - 1;
+		partials[index] += value * effDissociatingPairs[i]->firstVDistance;
 	}
 
 	return;
@@ -717,7 +761,7 @@ double PSICluster::getLeftSideRate() const {
 }
 
 std::vector<int> PSICluster::getConnectivity() const {
-	int connectivityLength = network->size();
+	int connectivityLength = network->getDOF();
 	std::vector<int> connectivity = std::vector<int>(connectivityLength, 0);
 	auto reactionConnVector = getReactionConnectivity();
 	auto dissociationConnVector = getDissociationConnectivity();
@@ -867,6 +911,94 @@ void PSICluster::computeRateConstants() {
 	effCombiningReactants.shrink_to_fit();
 	effDissociatingPairs.shrink_to_fit();
 	effEmissionPairs.shrink_to_fit();
+
+	// Set the biggest rate to the biggest production rate
+	biggestRate = biggestProductionRate;
+
+	return;
+}
+
+void PSICluster::updateRateConstants() {
+	// Local declarations
+	PSICluster *firstReactant, *secondReactant, *combiningReactant,
+		*dissociatingCluster, *otherEmittedCluster, *firstCluster,
+		*secondCluster;
+	double rate = 0.0;
+	// Initialize the value for the biggest production rate
+	double biggestProductionRate = 0.0;
+
+	// Compute the reaction constant associated to the reacting pairs
+	// Set the total number of reacting pairs
+	int nPairs = effReactingPairs.size();
+	// Loop on them
+	for (int i = 0; i < nPairs; i++) {
+		// Get the reactants
+		firstReactant = effReactingPairs[i]->first;
+		secondReactant = effReactingPairs[i]->second;
+		// Compute the reaction constant
+		rate = calculateReactionRateConstant(*firstReactant,
+				*secondReactant);
+		// Set it in the pair
+		effReactingPairs[i]->kConstant = rate;
+
+		// Check if the rate is the biggest one up to now
+		if (rate > biggestProductionRate)
+			biggestProductionRate = rate;
+	}
+
+	// Compute the reaction constant associated to the combining reactants
+	// Set the total number of combining reactants
+	int nReactants = effCombiningReactants.size();
+	// Loop on them
+	for (int i = 0; i < nReactants; i++) {
+		// Get the reactants
+		combiningReactant = effCombiningReactants[i]->combining;
+		// Compute the reaction constant
+		rate = calculateReactionRateConstant(*this, *combiningReactant);
+		// Set it in the combining cluster
+		effCombiningReactants[i]->kConstant = rate;
+	}
+
+	// Compute the dissociation constant associated to the dissociating clusters
+	// Set the total number of dissociating clusters
+	nPairs = effDissociatingPairs.size();
+	// Loop on them
+	for (int i = 0; i < nPairs; i++) {
+		dissociatingCluster = effDissociatingPairs[i]->first;
+		// The second element of the pair is the cluster that is also
+		// emitted by the dissociation
+		otherEmittedCluster = effDissociatingPairs[i]->second;
+		// Compute the dissociation constant
+		// The order of the cluster is important here because of the binding
+		// energy used in the computation. It is taken from the type of the first cluster
+		// which must be the single one
+		if (size == 1) {
+			// "this" is the single size one
+			rate = calculateDissociationConstant(*dissociatingCluster, *this,
+					*otherEmittedCluster);
+		} else {
+			// otherEmittedCluster is the single size one
+			rate = calculateDissociationConstant(*dissociatingCluster,
+					*otherEmittedCluster, *this);
+
+		}
+		// Set it in the pair
+		effDissociatingPairs[i]->kConstant = rate;
+	}
+
+	// Compute the dissociation constant associated to the emission of pairs of clusters
+	// Set the total number of emission pairs
+	nPairs = effEmissionPairs.size();
+	// Loop on them
+	for (int i = 0; i < nPairs; i++) {
+		firstCluster = effEmissionPairs[i]->first;
+		secondCluster = effEmissionPairs[i]->second;
+		// Compute the dissociation rate
+		rate = calculateDissociationConstant(*this, *firstCluster,
+				*secondCluster);
+		// Set it in the pair
+		effEmissionPairs[i]->kConstant = rate;
+	}
 
 	// Set the biggest rate to the biggest production rate
 	biggestRate = biggestProductionRate;

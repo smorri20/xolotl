@@ -36,9 +36,9 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	loader.setFilename(filename);
 
 	// Load the network
-	auto network = (PSIClusterReactionNetwork *) loader.load().get();
+	auto network = loader.load().get();
 	// Get its size
-	const int size = network->getAll()->size();
+	const int dof = network->getDOF();
 
 	// Create a grid
 	std::vector<double> grid;
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	}
 
 	// Create ofill
-	int mat[size*size];
+	int mat[dof*dof];
 	int *ofill = &mat[0];
 
 	// Create a collection of advection handlers
@@ -73,18 +73,18 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	double hx = 1.0;
 
 	// Create the arrays of concentration
-	double concentration[3*size];
-	double newConcentration[3*size];
+	double concentration[3*dof];
+	double newConcentration[3*dof];
 
 	// Initialize their values
-	for (int i = 0; i < 3*size; i++) {
+	for (int i = 0; i < 3*dof; i++) {
 		concentration[i] = (double) i * i;
 		newConcentration[i] = 0.0;
 	}
 
 	// Set the temperature to 1000K to initialize the diffusion coefficients
 	auto reactants = network->getAll();
-	for (int i = 0; i < size; i++) {
+	for (int i = 0; i < dof; i++) {
 		auto cluster = (PSICluster *) reactants->at(i);
 		cluster->setTemperature(1000.0);
 	}
@@ -94,14 +94,14 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	double *updatedConc = &newConcentration[0];
 
 	// Get the offset for the grid point in the middle
-	double *concOffset = conc + size;
-	double *updatedConcOffset = updatedConc + size;
+	double *concOffset = conc + dof;
+	double *updatedConcOffset = updatedConc + dof;
 
 	// Fill the concVector with the pointer to the middle, left, and right grid points
 	double **concVector = new double*[3];
 	concVector[0] = concOffset; // middle
 	concVector[1] = conc; // left
-	concVector[2] = conc + 2 * size; // right
+	concVector[2] = conc + 2 * dof; // right
 
 	// Set the grid position
 	std::vector<double> gridPosition = { hx, 0.0, 0.0 };
