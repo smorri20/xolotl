@@ -274,48 +274,35 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = network->getDOF();
 
-	// Compute the total concentration of helium contained in HeV bubbles
-	double heConc = 0.0;
-	// Get all the HeV clusters in the network
-	auto bubbles = network->getAll(xolotlCore::heVType);
-	// Initialize for the loop
-	xolotlCore::IReactant * bubble;
-	int index = 0;
-	int heComp = 0;
-	// Loop on the bubbles
-	for (int i = 0; i < bubbles.size(); i++) {
-		// Get the bubble, its id, and its helium composition
-		bubble = bubbles.at(i);
-		index = bubble->getId() - 1;
-		auto comp = bubble->getComposition();
-		heComp = comp[xolotlCore::heType];
+	// Compute the total concentration of atoms contained in bubbles
+	double atomConc = 0.0;
 
-		// Loop over grid points
-		for (PetscInt xi = xs; xi < xs + xm; xi++) {
-			// Boundary conditions
-			if (xi <= surfacePosition || xi == xSize - 1)
-				continue;
+	// Loop over grid points to get the atom concentration
+	// near the surface
+	for (int xi = xs; xi < xs + xm; xi++) {
+		// Boundary conditions
+		if (xi <= surfacePosition || xi == xSize - 1) continue;
 
-			// We are only interested in the helium near the surface
-			if (grid[xi] - grid[surfacePosition] > 2.0)
-				continue;
+		// We are only interested in the helium near the surface
+		if (grid[xi] - grid[surfacePosition] > 2.0) continue;
 
-			// Get the concentrations at this grid point
-			concOffset = concs[xi];
+		// Get the concentrations at this grid point
+		concOffset = concs[xi];
+		// Copy data into the PSIClusterReactionNetwork
+		network->updateConcentrationsFromArray(concOffset);
 
-			// Sum the helium concentration
-			heConc += concOffset[index] * (double) heComp
+		// Sum the total atom concentration
+		atomConc += network->getTotalAtomConcentration()
 					* (grid[xi] - grid[xi - 1]);
-		}
 	}
 
 	// Share the concentration with all the processes
-	double totalHeConc = 0.0;
-	MPI_Allreduce(&heConc, &totalHeConc, 1, MPI_DOUBLE, MPI_SUM,
+	double totalAtomConc = 0.0;
+	MPI_Allreduce(&atomConc, &totalAtomConc, 1, MPI_DOUBLE, MPI_SUM,
 			MPI_COMM_WORLD);
 
 	// Set the disappearing rate in the modified TM handler
-	mutationHandler->updateDisappearingRate(totalHeConc);
+	mutationHandler->updateDisappearingRate(totalAtomConc);
 
 	// Get the incident flux vector
 	auto incidentFluxVector = fluxHandler->getIncidentFluxVec(ftime,
@@ -585,50 +572,38 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC,
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = network->getDOF();
 
-	// Compute the total concentration of helium contained in HeV bubbles
-	double heConc = 0.0;
 	// Get all the He clusters in the network
 	auto heliums = network->getAll(xolotlCore::heType);
-	// Get all the HeV clusters in the network
-	auto bubbles = network->getAll(xolotlCore::heVType);
-	// Initialize for the loop
-	xolotlCore::IReactant * bubble;
-	int index = 0;
-	int heComp = 0;
-	// Loop on the bubbles
-	for (int i = 0; i < bubbles.size(); i++) {
-		// Get the bubble, its id, and its helium composition
-		bubble = bubbles.at(i);
-		index = bubble->getId() - 1;
-		auto comp = bubble->getComposition();
-		heComp = comp[xolotlCore::heType];
 
-		// Loop over grid points
-		for (PetscInt xi = xs; xi < xs + xm; xi++) {
-			// Boundary conditions
-			if (xi <= surfacePosition || xi == xSize - 1)
-				continue;
+	// Compute the total concentration of atoms contained in bubbles
+	double atomConc = 0.0;
 
-			// We are only interested in the helium near the surface
-			if (grid[xi] - grid[surfacePosition] > 2.0)
-				continue;
+	// Loop over grid points to get the atom concentration
+	// near the surface
+	for (int xi = xs; xi < xs + xm; xi++) {
+		// Boundary conditions
+		if (xi <= surfacePosition || xi == xSize - 1) continue;
 
-			// Get the concentrations at this grid point
-			concOffset = concs[xi];
+		// We are only interested in the helium near the surface
+		if (grid[xi] - grid[surfacePosition] > 2.0) continue;
 
-			// Sum the helium concentration
-			heConc += concOffset[index] * (double) heComp
+		// Get the concentrations at this grid point
+		concOffset = concs[xi];
+		// Copy data into the PSIClusterReactionNetwork
+		network->updateConcentrationsFromArray(concOffset);
+
+		// Sum the total atom concentration
+		atomConc += network->getTotalAtomConcentration()
 					* (grid[xi] - grid[xi - 1]);
-		}
 	}
 
 	// Share the concentration with all the processes
-	double totalHeConc = 0.0;
-	MPI_Allreduce(&heConc, &totalHeConc, 1, MPI_DOUBLE, MPI_SUM,
+	double totalAtomConc = 0.0;
+	MPI_Allreduce(&atomConc, &totalAtomConc, 1, MPI_DOUBLE, MPI_SUM,
 			MPI_COMM_WORLD);
 
 	// Set the disappearing rate in the modified TM handler
-	mutationHandler->updateDisappearingRate(totalHeConc);
+	mutationHandler->updateDisappearingRate(totalAtomConc);
 
 	// Arguments for MatSetValuesStencil called below
 	MatStencil rowId;
