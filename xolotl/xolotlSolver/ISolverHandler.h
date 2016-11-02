@@ -148,6 +148,13 @@ public:
 	virtual bool moveSurface() const = 0;
 
 	/**
+	 * To know if the bubble bursting should be used.
+	 *
+	 * @return True if we want the bubble bursting.
+	 */
+	virtual bool burstBubbles() const = 0;
+
+	/**
 	 * Get the flux handler.
 	 *
 	 * @return The flux handler

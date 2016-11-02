@@ -42,7 +42,7 @@ PetscErrorCode monitorTime(TS, PetscInt, PetscReal time, Vec, void *) {
 /**
  * This is a monitoring method that will compute the total helium fluence
  */
-PetscErrorCode computeHeliumFluence(TS, PetscInt, PetscReal time, Vec, void *) {
+PetscErrorCode computeFluence(TS, PetscInt, PetscReal time, Vec, void *) {
 	PetscFunctionBeginUser;
 
 	// Get the solver handler and the flux handler

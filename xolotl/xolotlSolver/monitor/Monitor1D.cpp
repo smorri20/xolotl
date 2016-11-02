@@ -24,7 +24,7 @@ namespace xolotlSolver {
 // Declaration of the functions defined in Monitor.cpp
 extern PetscErrorCode monitorTime(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx);
-extern PetscErrorCode computeHeliumFluence(TS ts, PetscInt timestep, PetscReal time,
+extern PetscErrorCode computeFluence(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx);
 extern PetscErrorCode monitorPerf(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx);
@@ -52,6 +52,8 @@ std::vector<int> indices1D;
 // Declare the vector that will store the weight of the helium clusters
 // (their He composition)
 std::vector<int> weights1D;
+// Declare the vector that will store the radii of bubbles
+std::vector<double> radii1D;
 // Variable to indicate whether or not the fact that the concentration of the biggest
 // cluster in the network is higher than 1.0e-16 should be printed.
 // Becomes false once it is printed.
@@ -60,11 +62,11 @@ bool printMaxClusterConc1D = true;
 #undef __FUNCT__
 #define __FUNCT__ Actual__FUNCT__("xolotlSolver", "startStop1D")
 /**
- * This is a monitoring method that will save an hdf5 file at each time step.
- * HDF5 is handling the parallel part, so no call to MPI here.
+ * This is a monitoring method that update an hdf5 file at each time step.
  */
-PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solution,
-		void *) {
+PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time,
+		Vec solution, void *) {
+	// Initial declaration
 	PetscErrorCode ierr;
 	const double **solutionArray, *gridPointSolution;
 	PetscInt xs, xm, Mx;
@@ -85,27 +87,29 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 
 	// Get the da from ts
 	DM da;
-	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
+	ierr = TSGetDM(ts, &da);
+	CHKERRQ(ierr);
 
 	// Get the solutionArray
-	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
 	// Get the corners of the grid
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
+	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
+	CHKERRQ(ierr);
 	// Get the size of the total grid
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);CHKERRQ(ierr);
+	PETSC_IGNORE);
+	CHKERRQ(ierr);
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
 
-	// Get the network
+	// Get the network and dof
 	auto network = solverHandler->getNetwork();
-
-	// Network size
-	const int networkSize = network->size();
+	const int dof = network->getDOF();
 
 	// Get the position of the surface
 	int surfacePos = solverHandler->getSurfacePosition();
@@ -115,7 +119,8 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 
 	// Get the current time step
 	double currentTimeStep;
-	ierr = TSGetTimeStep(ts, &currentTimeStep);CHKERRQ(ierr);
+	ierr = TSGetTimeStep(ts, &currentTimeStep);
+	CHKERRQ(ierr);
 
 	// Add a concentration sub group
 	xolotlCore::HDF5Utils::addConcentrationSubGroup(timestep, time,
@@ -123,8 +128,8 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 
 	// Write the surface positions and the associated interstitial quantities
 	// in the concentration sub group
-	xolotlCore::HDF5Utils::writeSurface1D(timestep, surfacePos,
-			nInterstitial1D, previousIFlux1D);
+	xolotlCore::HDF5Utils::writeSurface1D(timestep, surfacePos, nInterstitial1D,
+			previousIFlux1D);
 
 	// Loop on the full grid
 	for (PetscInt i = 0; i < Mx; i++) {
@@ -142,8 +147,9 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 
 			// Loop on the concentrations
 			concVector.clear();
-			for (int l = 0; l < networkSize; l++) {
-				if (gridPointSolution[l] > 1.0e-16 || gridPointSolution[l] < -1.0e-16) {
+			for (int l = 0; l < dof; l++) {
+				if (gridPointSolution[l] > 1.0e-16
+						|| gridPointSolution[l] < -1.0e-16) {
 					// Create the concentration vector for this cluster
 					std::vector<double> conc;
 					conc.push_back((double) l);
@@ -191,7 +197,8 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
 	xolotlCore::HDF5Utils::closeFile();
 
 	// Restore the solutionArray
-	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
 	PetscFunctionReturn(0);
 }
@@ -203,6 +210,7 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time, Vec solutio
  */
 PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 		Vec solution, void *) {
+	// Initial declarations
 	PetscErrorCode ierr;
 	PetscInt xs, xm;
 
@@ -211,15 +219,17 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
 
-	// Get the flux handler that will be used to compute fluxes.
+	// Get the flux handler that will be used to know the fluence
 	auto fluxHandler = solverHandler->getFluxHandler();
 
 	// Get the da from ts
 	DM da;
-	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
+	ierr = TSGetDM(ts, &da);
+	CHKERRQ(ierr);
 
 	// Get the corners of the grid
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
+	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
+	CHKERRQ(ierr);
 
 	// Get the physical grid
 	auto grid = solverHandler->getXGrid();
@@ -233,7 +243,8 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 
 	// Get the array of concentration
 	PetscReal **solutionArray;
-	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
 	// Store the concentration over the grid
 	double heConcentration = 0.0, bubbleConcentration = 0.0;
@@ -243,37 +254,34 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 
 	// Loop on the grid
 	for (PetscInt xi = xs; xi < xs + xm; xi++) {
-		// Get the pointer to the beginning of the solution data for this grid point
-		gridPointSolution = solutionArray[xi];
 
 		// Boundary conditions
-		if (xi <= surfacePos || xi == grid.size() - 1) continue;
+		if (xi <= surfacePos || xi == grid.size() - 1)
+			continue;
+
+		// Get the pointer to the beginning of the solution data for this grid point
+		gridPointSolution = solutionArray[xi];
 
 		// Update the concentration in the network
 		network->updateConcentrationsFromArray(gridPointSolution);
 
 		// Loop on all the indices
-		for (unsigned int i = 0; i < indices1D.size(); i++) {
+		for (unsigned int l = 0; l < indices1D.size(); l++) {
 			// Add the current concentration times the number of helium in the cluster
 			// (from the weight vector)
-			heConcentration += gridPointSolution[indices1D[i]] * weights1D[i]
-			                                     * (grid[xi] - grid[xi-1]);
-			bubbleConcentration += gridPointSolution[indices1D[i]] * (grid[xi] - grid[xi-1]);
-
-//			if (xi != 30) continue;
-//
-//			std::cout << i << " " << gridPointSolution[indices1D[i]] * weights1D[i] << std::endl;
+			heConcentration += gridPointSolution[indices1D[l]] * weights1D[l]
+					* (grid[xi] - grid[xi - 1]);
+			bubbleConcentration += gridPointSolution[indices1D[l]]
+					* (grid[xi] - grid[xi - 1]);
 		}
 
 		// Loop on all the super clusters
-		for (int i = 0; i < superClusters.size(); i++) {
-			auto cluster = (xolotlCore::PSISuperCluster *) superClusters[i];
-			heConcentration += cluster->getTotalHeliumConcentration() * (grid[xi] - grid[xi-1]);
-			bubbleConcentration += cluster->getTotalConcentration() * (grid[xi] - grid[xi-1]);
-
-//			if (xi != 30) continue;
-//
-//			std::cout << i << " " << cluster->getTotalXenonConcentration() << std::endl;
+		for (int l = 0; l < superClusters.size(); l++) {
+			auto cluster = (xolotlCore::PSISuperCluster *) superClusters[l];
+			heConcentration += cluster->getTotalHeliumConcentration()
+					* (grid[xi] - grid[xi - 1]);
+			bubbleConcentration += cluster->getTotalConcentration()
+					* (grid[xi] - grid[xi - 1]);
 		}
 	}
 
@@ -283,9 +291,11 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 
 	// Sum all the concentrations through MPI reduce
 	double totalHeConcentration = 0.0;
-	MPI_Reduce(&heConcentration, &totalHeConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
+	MPI_Reduce(&heConcentration, &totalHeConcentration, 1, MPI_DOUBLE, MPI_SUM,
+			0, PETSC_COMM_WORLD);
 	double totalBubbleConcentration = 0.0;
-	MPI_Reduce(&bubbleConcentration, &totalBubbleConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&bubbleConcentration, &totalBubbleConcentration, 1, MPI_DOUBLE,
+	MPI_SUM, 0, MPI_COMM_WORLD);
 
 	// Master process
 	if (procId == 0) {
@@ -297,13 +307,14 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 		std::cout << "Helium retention = "
 				<< 100.0 * (totalHeConcentration / heliumFluence) << " %"
 				<< std::endl;
-		std::cout << "Helium concentration = " << totalHeConcentration << std::endl;
+		std::cout << "Helium concentration = " << totalHeConcentration
+				<< std::endl;
 		std::cout << "Helium fluence = " << heliumFluence << "\n" << std::endl;
 
 		// Uncomment to write the retention and the fluence in a file
 		std::ofstream outputFile;
 		outputFile.open("retentionOut.txt", ios::app);
-		outputFile << time << " "
+		outputFile << heliumFluence << " "
 				<< 100.0 * (totalHeConcentration / heliumFluence) << " "
 				<< totalHeConcentration << " "
 				<< totalHeConcentration / totalBubbleConcentration << std::endl;
@@ -311,7 +322,138 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 	}
 
 	// Restore the solutionArray
-	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
+
+	PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "computeXenonRetention1D")
+/**
+ * This is a monitoring method that will compute the xenon retention
+ */
+PetscErrorCode computeXenonRetention1D(TS ts, PetscInt, PetscReal time,
+		Vec solution, void *) {
+	// Initial declarations
+	PetscErrorCode ierr;
+	PetscInt xs, xm;
+
+	PetscFunctionBeginUser;
+
+	// Get the solver handler
+	auto solverHandler = PetscSolver::getSolverHandler();
+
+	// Get the flux handler that will be used to get the fluence
+	auto fluxHandler = solverHandler->getFluxHandler();
+
+	// Get the da from ts
+	DM da;
+	ierr = TSGetDM(ts, &da);
+	CHKERRQ(ierr);
+
+	// Get the corners of the grid
+	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
+	CHKERRQ(ierr);
+
+	// Get the physical grid
+	auto grid = solverHandler->getXGrid();
+	// Get the position of the surface
+	int surfacePos = solverHandler->getSurfacePosition();
+
+	// Get the network
+	auto network = solverHandler->getNetwork();
+	// Get all the super clusters
+	auto superClusters = network->getAll(NESuperType);
+
+	// Get the array of concentration
+	PetscReal **solutionArray;
+	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
+
+	// Store the concentration and other values over the grid
+	double xeConcentration = 0.0, bubbleConcentration = 0.0, radii = 0.0;
+
+	// Declare the pointer for the concentrations at a specific grid point
+	PetscReal *gridPointSolution;
+
+	// Loop on the grid
+	for (PetscInt xi = xs; xi < xs + xm; xi++) {
+
+		// Boundary conditions
+		if (xi <= surfacePos || xi == grid.size() - 1)
+			continue;
+
+		// Get the pointer to the beginning of the solution data for this grid point
+		gridPointSolution = solutionArray[xi];
+
+		// Update the concentration in the network
+		network->updateConcentrationsFromArray(gridPointSolution);
+
+		// Loop on all the indices
+		for (unsigned int i = 0; i < indices1D.size(); i++) {
+			// Add the current concentration times the number of xenon in the cluster
+			// (from the weight vector)
+			xeConcentration += gridPointSolution[indices1D[i]] * weights1D[i]
+					* (grid[xi] - grid[xi - 1]);
+			bubbleConcentration += gridPointSolution[indices1D[i]]
+					* (grid[xi] - grid[xi - 1]);
+			radii += gridPointSolution[indices1D[i]] * radii1D[i]
+					* (grid[xi] - grid[xi - 1]);
+		}
+
+		// Loop on all the super clusters
+		for (int i = 0; i < superClusters.size(); i++) {
+			auto cluster = (xolotlCore::NESuperCluster *) superClusters[i];
+			xeConcentration += cluster->getTotalXenonConcentration()
+					* (grid[xi] - grid[xi - 1]);
+			bubbleConcentration += cluster->getTotalConcentration()
+					* (grid[xi] - grid[xi - 1]);
+			radii += cluster->getTotalConcentration()
+					* cluster->getReactionRadius() * (grid[xi] - grid[xi - 1]);
+		}
+	}
+
+	// Get the current process ID
+	int procId;
+	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
+
+	// Sum all the concentrations through MPI reduce
+	double totalXeConcentration = 0.0;
+	MPI_Reduce(&xeConcentration, &totalXeConcentration, 1, MPI_DOUBLE, MPI_SUM,
+			0, PETSC_COMM_WORLD);
+	double totalBubbleConcentration = 0.0;
+	MPI_Reduce(&bubbleConcentration, &totalBubbleConcentration, 1, MPI_DOUBLE,
+	MPI_SUM, 0, MPI_COMM_WORLD);
+	double totalRadii = 0.0;
+	MPI_Reduce(&radii, &totalRadii, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
+	// Master process
+	if (procId == 0) {
+		// Get the fluence
+		double fluence = fluxHandler->getFluence();
+
+		// Print the result
+		std::cout << "\nTime: " << time << std::endl;
+		std::cout << "Xenon retention = "
+				<< 100.0 * (totalXeConcentration / fluence) << " %"
+				<< std::endl;
+		std::cout << "Xenon concentration = " << totalXeConcentration
+				<< std::endl << std::endl;
+
+		// Uncomment to write the retention and the fluence in a file
+		std::ofstream outputFile;
+		outputFile.open("retentionOut.txt", ios::app);
+		outputFile << time << " " << 100.0 * (totalXeConcentration / fluence)
+				<< " " << totalXeConcentration << " "
+				<< fluence - totalXeConcentration << " "
+				<< totalRadii / totalBubbleConcentration << std::endl;
+		outputFile.close();
+	}
+
+	// Restore the solutionArray
+	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
 	PetscFunctionReturn(0);
 }
@@ -323,6 +465,7 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
  */
 PetscErrorCode computeHeliumConc1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
+	// Initial declarations
 	PetscErrorCode ierr;
 	PetscInt xs, xm;
 
@@ -332,7 +475,7 @@ PetscErrorCode computeHeliumConc1D(TS ts, PetscInt timestep, PetscReal time,
 	int worldSize;
 	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
 
-	// Gets the process ID (important when it is running in parallel)
+	// Gets the process ID
 	int procId;
 	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
 
@@ -341,30 +484,44 @@ PetscErrorCode computeHeliumConc1D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the da from ts
 	DM da;
-	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
+	ierr = TSGetDM(ts, &da);
+	CHKERRQ(ierr);
 
 	// Get the corners of the grid
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
+	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
+	CHKERRQ(ierr);
 
 	// Get the physical grid in the x direction
 	auto grid = solverHandler->getXGrid();
 
-	// Get the total size of the grid rescale the concentrations
+	// Get the network
+	auto network = solverHandler->getNetwork();
+	// Get all the super clusters
+	auto superClusters = network->getAll(PSISuperType);
+
+	// Get the position of the surface
+	int surfacePos = solverHandler->getSurfacePosition();
+
+	// Get the total size of the grid
 	PetscInt Mx;
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
 	PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-	PETSC_IGNORE);CHKERRQ(ierr);
+	PETSC_IGNORE);
+	CHKERRQ(ierr);
 
 	// Get the array of concentration
-	const double **solutionArray, *gridPointSolution;
-	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	double **solutionArray, *gridPointSolution;
+	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
-	// Store the concentration over the grid
+	// Create the vectors that will hold the concentrations
+	// as a function of helium size
 	std::vector<double> heConcLocal;
 	std::vector<double> heConcentrations;
+	int maxSize = 1001;
 	// Initialize
-	for (int i = 0; i < 1001; i++) {
+	for (int i = 0; i < maxSize; i++) {
 		heConcLocal.push_back(0.0);
 		heConcentrations.push_back(0.0);
 	}
@@ -378,7 +535,7 @@ PetscErrorCode computeHeliumConc1D(TS ts, PetscInt timestep, PetscReal time,
 	}
 
 	// Loop on the full grid
-	for (PetscInt xi = 0; xi < Mx; xi++) {
+	for (PetscInt xi = surfacePos; xi < Mx; xi++) {
 		// Wait for everybody at each grid point
 		MPI_Barrier(PETSC_COMM_WORLD);
 
@@ -390,30 +547,52 @@ PetscErrorCode computeHeliumConc1D(TS ts, PetscInt timestep, PetscReal time,
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[xi];
 
+			// Update the concentration in the network
+			network->updateConcentrationsFromArray(gridPointSolution);
+
 			// Loop on all the indices
 			for (int l = 0; l < indices1D.size(); l++) {
 				// Add the current concentration
 				heConcLocal[weights1D[l]] += gridPointSolution[indices1D[l]]
-																	  * (grid[xi] - grid[xi-1]);
+						* (grid[xi] - grid[xi - 1]);
+			}
+
+			// Loop on the super clusters
+			for (int l = 0; l < superClusters.size(); l++) {
+				// Get the super cluster
+				auto superCluster = (PSISuperCluster *) superClusters[l];
+				// Get its boundaries
+				auto boundaries = superCluster->getBoundaries();
+				// Is it the right one?
+				for (int i = boundaries[0]; i <= boundaries[1]; i++) {
+					for (int j = boundaries[2]; j <= boundaries[3]; j++) {
+						heConcLocal[i] += superCluster->getConcentration(
+								superCluster->getHeDistance(i),
+								superCluster->getVDistance(j))
+								* (grid[xi] - grid[xi - 1]);
+					}
+				}
 			}
 		}
 
 		// Gather all the data
-		for (int i = 0; i < 1001; i++) {
-			MPI_Reduce(&heConcLocal[i], &heConcentrations[i], 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
+		for (int i = 0; i < maxSize; i++) {
+			MPI_Reduce(&heConcLocal[i], &heConcentrations[i], 1, MPI_DOUBLE,
+			MPI_SUM, 0, PETSC_COMM_WORLD);
 		}
 
 		// Print it from the main proc
 		if (procId == 0) {
-			for (int i = 0; i < 1001; i++) {
+			for (int i = 0; i < maxSize; i++) {
 				if (heConcentrations[i] > 1.0e-16) {
-					outputFile << x << " " << i << " " << heConcentrations[i] << std::endl;
+					outputFile << x << " " << i << " " << heConcentrations[i]
+							<< std::endl;
 				}
 			}
 		}
 
 		// Reinitialize the concentrations
-		for (int i = 0; i < 1001; i++) {
+		for (int i = 0; i < maxSize; i++) {
 			heConcLocal[i] = 0.0;
 			heConcentrations[i] = 0.0;
 		}
@@ -423,7 +602,8 @@ PetscErrorCode computeHeliumConc1D(TS ts, PetscInt timestep, PetscReal time,
 	outputFile.close();
 
 	// Restore the solutionArray
-	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
 	PetscFunctionReturn(0);
 }
@@ -433,8 +613,9 @@ PetscErrorCode computeHeliumConc1D(TS ts, PetscInt timestep, PetscReal time,
 /**
  * This is a monitoring method that will compute the cumulative distribution of helium
  */
-PetscErrorCode computeCumulativeHelium1D(TS ts, PetscInt timestep, PetscReal time,
-		Vec solution, void *ictx) {
+PetscErrorCode computeCumulativeHelium1D(TS ts, PetscInt timestep,
+		PetscReal time, Vec solution, void *ictx) {
+	// Initial declarations
 	PetscErrorCode ierr;
 	PetscInt xs, xm;
 
@@ -444,22 +625,29 @@ PetscErrorCode computeCumulativeHelium1D(TS ts, PetscInt timestep, PetscReal tim
 	int worldSize;
 	MPI_Comm_size(PETSC_COMM_WORLD, &worldSize);
 
-	// Gets the process ID (important when it is running in parallel)
+	// Gets the process ID
 	int procId;
 	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
 
-	// Get the flux handler that will be used to compute fluxes.
-	auto fluxHandler = solverHandler->getFluxHandler();
+	// Get the network
+	auto network = solverHandler->getNetwork();
+	// Get all the super clusters
+	auto superClusters = network->getAll(PSISuperType);
+
+	// Get the position of the surface
+	int surfacePos = solverHandler->getSurfacePosition();
 
 	// Get the da from ts
 	DM da;
-	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
+	ierr = TSGetDM(ts, &da);
+	CHKERRQ(ierr);
 
 	// Get the corners of the grid
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
+	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
+	CHKERRQ(ierr);
 
 	// Get the physical grid and its length
 	auto grid = solverHandler->getXGrid();
@@ -467,7 +655,8 @@ PetscErrorCode computeCumulativeHelium1D(TS ts, PetscInt timestep, PetscReal tim
 
 	// Get the array of concentration
 	PetscReal **solutionArray;
-	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
 	// Store the concentration over the grid
 	double heConcentration = 0.0;
@@ -484,7 +673,7 @@ PetscErrorCode computeCumulativeHelium1D(TS ts, PetscInt timestep, PetscReal tim
 	}
 
 	// Loop on the entire grid
-	for (int xi = 0; xi < xSize; xi++) {
+	for (int xi = surfacePos; xi < xSize; xi++) {
 		// Wait for everybody at each grid point
 		MPI_Barrier(PETSC_COMM_WORLD);
 
@@ -498,13 +687,25 @@ PetscErrorCode computeCumulativeHelium1D(TS ts, PetscInt timestep, PetscReal tim
 		if (xi >= xs && xi < xs + xm) {
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[xi];
+
+			// Update the concentration in the network
+			network->updateConcentrationsFromArray(gridPointSolution);
+
 			// Compute the total helium concentration at this grid point
 			// Loop on all the indices
 			for (int i = 0; i < indices1D.size(); i++) {
 				// Add the current concentration times the number of helium in the cluster
 				// (from the weight vector)
 				heLocalConc += gridPointSolution[indices1D[i]] * weights1D[i]
-						                                     * (grid[xi] - grid[xi-1]);
+						* (grid[xi] - grid[xi - 1]);
+			}
+
+			// Loop on the super clusters
+			for (int l = 0; l < superClusters.size(); l++) {
+				// Get the super cluster
+				auto superCluster = (PSISuperCluster *) superClusters[l];
+				heLocalConc += superCluster->getTotalHeliumConcentration()
+						* (grid[xi] - grid[xi - 1]);
 			}
 
 			// If this is not the master process, send the value
@@ -514,14 +715,15 @@ PetscErrorCode computeCumulativeHelium1D(TS ts, PetscInt timestep, PetscReal tim
 		}
 		// If this process is not in charge of xi but is the master one, receive the value
 		else if (procId == 0) {
-			MPI_Recv(&heLocalConc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 2, PETSC_COMM_WORLD,
-					MPI_STATUS_IGNORE);
+			MPI_Recv(&heLocalConc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 2,
+					PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
 		}
 
 		// The master process writes computes the cumulative value and writes in the file
 		if (procId == 0) {
 			heConcentration += heLocalConc;
-			outputFile << x << " " << heConcentration << std::endl;
+			outputFile << x - grid[surfacePos] << " " << heConcentration
+					<< std::endl;
 		}
 	}
 
@@ -531,7 +733,8 @@ PetscErrorCode computeCumulativeHelium1D(TS ts, PetscInt timestep, PetscReal tim
 	}
 
 	// Restore the solutionArray
-	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
 	PetscFunctionReturn(0);
 }
@@ -539,10 +742,12 @@ PetscErrorCode computeCumulativeHelium1D(TS ts, PetscInt timestep, PetscReal tim
 #undef __FUNCT__
 #define __FUNCT__ Actual__FUNCT__("xolotlSolver", "monitorScatter1D")
 /**
- * This is a monitoring method that will save 1D plots of one concentration
+ * This is a monitoring method that will save 1D plots of the xenon concentration
+ * distribution at the middle of the grid.
  */
 PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *) {
+	// Initial declarations
 	PetscErrorCode ierr;
 	double **solutionArray, *gridPointSolution;
 	PetscInt xs, xm, xi, Mx;
@@ -564,13 +769,16 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the da from ts
 	DM da;
-	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
+	ierr = TSGetDM(ts, &da);
+	CHKERRQ(ierr);
 
 	// Get the solutionArray
-	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
 	// Get the corners of the grid
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
+	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
+	CHKERRQ(ierr);
 
 	// Get the size of the total grid
 	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE,
@@ -586,9 +794,9 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 	auto network = solverHandler->getNetwork();
 	int networkSize = network->size();
 	auto superClusters = network->getAll(NESuperType);
-	int dof = networkSize + superClusters.size();
+	int dof = network->getDOF();
 
-	// Choice of the cluster to be plotted
+	// Get the index of the middle of the grid
 	PetscInt ix = Mx / 2;
 
 	if (procId == 0) {
@@ -641,8 +849,8 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 		else {
 			for (int i = 0; i < networkSize - superClusters.size(); i++) {
 				double conc = 0.0;
-				MPI_Recv(&conc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 10, MPI_COMM_WORLD,
-									MPI_STATUS_IGNORE);
+				MPI_Recv(&conc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 10,
+						MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 				// Create a Point with conc as the value
 				// and add it to myPoints
 				xolotlViz::Point aPoint;
@@ -660,8 +868,8 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 				// Loop on the width
 				for (int k = 0; k < width; k++) {
 					double conc = 0.0;
-					MPI_Recv(&conc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 10, MPI_COMM_WORLD,
-										MPI_STATUS_IGNORE);
+					MPI_Recv(&conc, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 10,
+							MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 					// Create a Point with conc as the value
 					// and add it to myPoints
 					xolotlViz::Point aPoint;
@@ -690,7 +898,8 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 		scatterPlot1D->plotLabelProvider->timeLabel = timeLabel.str();
 		// Get the current time step
 		PetscReal currentTimeStep;
-		ierr = TSGetTimeStep(ts, &currentTimeStep);CHKERRQ(ierr);
+		ierr = TSGetTimeStep(ts, &currentTimeStep);
+		CHKERRQ(ierr);
 		// Give the timestep to the label provider
 		std::stringstream timeStepLabel;
 		timeStepLabel << "dt: " << std::setprecision(4) << currentTimeStep
@@ -711,7 +920,8 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 
 			for (int i = 0; i < networkSize - superClusters.size(); i++) {
 				// Send the value of each concentration to the master process
-				MPI_Send(&gridPointSolution[i], 1, MPI_DOUBLE, 0, 10, MPI_COMM_WORLD);
+				MPI_Send(&gridPointSolution[i], 1, MPI_DOUBLE, 0, 10,
+						MPI_COMM_WORLD);
 			}
 			int nXe = networkSize - superClusters.size() + 1;
 			for (int i = 0; i < superClusters.size(); i++) {
@@ -735,7 +945,8 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 	}
 
 	// Restore the solutionArray
-	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
 	PetscFunctionReturn(0);
 }
@@ -747,12 +958,17 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
  */
 PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *) {
+	// Initial declarations
 	PetscErrorCode ierr;
 	const double **solutionArray, *gridPointSolution;
 	PetscInt xs, xm, xi;
 	double x = 0.0;
 
 	PetscFunctionBeginUser;
+
+	// Don't do anything if it is not on the stride
+	if (timestep % 10 != 0)
+		PetscFunctionReturn(0);
 
 	// Get the number of processes
 	int worldSize;
@@ -764,13 +980,16 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the da from ts
 	DM da;
-	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
+	ierr = TSGetDM(ts, &da);
+	CHKERRQ(ierr);
 
 	// Get the solutionArray
-	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
 	// Get the corners of the grid
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
+	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
+	CHKERRQ(ierr);
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -796,7 +1015,7 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 			gridPointSolution = solutionArray[xi];
 
 			for (int i = 0; i < loopSize; i++) {
-				// Create a Point with the concentration[iCluster] as the value
+				// Create a Point with the concentration[i] as the value
 				// and add it to myPoints
 				xolotlViz::Point aPoint;
 				aPoint.value = gridPointSolution[i];
@@ -825,7 +1044,7 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 					MPI_Recv(&conc, 1, MPI_DOUBLE, i, 22, PETSC_COMM_WORLD,
 							MPI_STATUS_IGNORE);
 
-					// Create a Point with the concentration[iCluster] as the value
+					// Create a Point with the concentration[i] as the value
 					// and add it to myPoints
 					xolotlViz::Point aPoint;
 					aPoint.value = conc; // He
@@ -858,7 +1077,8 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 		seriesPlot1D->plotLabelProvider->timeLabel = timeLabel.str();
 		// Get the current time step
 		PetscReal currentTimeStep;
-		ierr = TSGetTimeStep(ts, &currentTimeStep);CHKERRQ(ierr);
+		ierr = TSGetTimeStep(ts, &currentTimeStep);
+		CHKERRQ(ierr);
 		// Give the timestep to the label provider
 		std::stringstream timeStepLabel;
 		timeStepLabel << "dt: " << std::setprecision(4) << currentTimeStep
@@ -895,7 +1115,8 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 	}
 
 	// Restore the solutionArray
-	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
 	PetscFunctionReturn(0);
 }
@@ -908,27 +1129,37 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
  */
 PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *) {
+	// Initial declarations
 	PetscErrorCode ierr;
 	const double **solutionArray, *gridPointSolution;
 	PetscInt xs, xm, xi;
 
 	PetscFunctionBeginUser;
 
+	// Don't do anything if it is not on the stride
+	if (timestep % 10 != 0)
+		PetscFunctionReturn(0);
+
 	// Get the da from ts
 	DM da;
-	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
+	ierr = TSGetDM(ts, &da);
+	CHKERRQ(ierr);
 
 	// Get the solutionArray
-	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
 	// Get the corners of the grid
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
+	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
+	CHKERRQ(ierr);
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
 
 	// Get the network
 	auto network = solverHandler->getNetwork();
+	// Get all the super clusters
+	auto superClusters = network->getAll(PSISuperType);
 
 	// Get the physical grid
 	auto grid = solverHandler->getXGrid();
@@ -941,7 +1172,8 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 	// Loop on the grid points
 	for (xi = xs; xi < xs + xm; xi++) {
 
-		if (xi != 5) continue;
+		if (xi != 5)
+			continue;
 
 		// Create a Point vector to store the data to give to the data provider
 		// for the visualization
@@ -960,42 +1192,50 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 				double conc = 0.0;
 				// V clusters
 				if (j == 0) {
-					cluster = network->get("V",
-							i);
+					cluster = network->get("V", i);
 					if (cluster) {
 						// Get the ID of the cluster
 						int id = cluster->getId() - 1;
 						conc = gridPointSolution[id];
-
-//						if (conc > 1.0e-16)
-//							std::cout << "0 " << i << " " << conc << std::endl;
 					}
 				}
 				// He clusters
 				else if (i == 0) {
-					cluster = network->get(
-							"He", j);
+					cluster = network->get("He", j);
 					if (cluster) {
 						// Get the ID of the cluster
 						int id = cluster->getId() - 1;
 						conc = gridPointSolution[id];
-
-//						if (conc > 1.0e-16)
-//							std::cout << j << " 0 " << conc << std::endl;
 					}
 				}
 				// HeV clusters
 				else {
-					cluster =
-							network->getCompound(
-									"HeV", { j, i, 0 });
+					cluster = network->getCompound("HeV", { j, i, 0 });
 					if (cluster) {
 						// Get the ID of the cluster
 						int id = cluster->getId() - 1;
 						conc = gridPointSolution[id];
+					}
 
-//						if (conc > 1.0e-16)
-//							std::cout << j << " " << i << " " << conc << std::endl;
+					else {
+						// Look for superClusters !
+						PSISuperCluster * superCluster = nullptr;
+						// Loop on the super clusters
+						for (int l = 0; l < superClusters.size(); l++) {
+							// Get the super cluster
+							superCluster = (PSISuperCluster *) superClusters[l];
+							// Get its boundaries
+							auto boundaries = superCluster->getBoundaries();
+							// Is it the right one?
+							if (j >= boundaries[0] && j <= boundaries[1]
+									&& i >= boundaries[2]
+									&& i <= boundaries[3]) {
+								conc = superCluster->getConcentration(
+										superCluster->getHeDistance(j),
+										superCluster->getVDistance(i));
+								break;
+							}
+						}
 					}
 				}
 
@@ -1024,7 +1264,8 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 		surfacePlot1D->plotLabelProvider->timeLabel = timeLabel.str();
 		// Get the current time step
 		PetscReal currentTimeStep;
-		ierr = TSGetTimeStep(ts, &currentTimeStep);CHKERRQ(ierr);
+		ierr = TSGetTimeStep(ts, &currentTimeStep);
+		CHKERRQ(ierr);
 		// Give the timestep to the label provider
 		std::stringstream timeStepLabel;
 		timeStepLabel << "dt: " << std::setprecision(4) << currentTimeStep
@@ -1038,7 +1279,8 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 	}
 
 	// Restore the solutionArray
-	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
 	PetscFunctionReturn(0);
 }
@@ -1051,6 +1293,7 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
  */
 PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *ictx) {
+	// Initial declaration
 	PetscErrorCode ierr;
 	const double **solutionArray, *gridPointSolution;
 	PetscInt xs, xm, xi;
@@ -1068,13 +1311,16 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the da from ts
 	DM da;
-	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
+	ierr = TSGetDM(ts, &da);
+	CHKERRQ(ierr);
 
 	// Get the solutionArray
-	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
 	// Get the corners of the grid
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
+	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
+	CHKERRQ(ierr);
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -1083,7 +1329,7 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 	auto network = solverHandler->getNetwork();
 
 	// Get all the super clusters
-	auto superClusters = network->getAll(NESuperType);
+	auto superClusters = network->getAll(PSISuperType);
 
 	// Get the physical grid
 	auto grid = solverHandler->getXGrid();
@@ -1125,46 +1371,28 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 
 			// Loop on all the super clusters
 			for (int i = 0; i < superClusters.size(); i++) {
-				auto cluster = (xolotlCore::NESuperCluster *) superClusters[i];
+				auto cluster = (xolotlCore::PSISuperCluster *) superClusters[i];
 				concTot += cluster->getTotalConcentration();
-				heliumTot += cluster->getTotalXenonConcentration();
+				heliumTot += cluster->getTotalHeliumConcentration();
 			}
 
 			// Compute the mean size of helium at this depth
 			heliumMean = heliumTot / concTot;
 
-			// Initialize the standard deviation
-			standardDev = 0.0;
-			double deviation = 0.0;
-
-			// Loop on all the indices to compute the standard deviation
-			for (int i = 0; i < indices1D.size(); i++) {
-				deviation = (weights1D[i] - heliumMean);
-				standardDev += deviation * deviation * gridPointSolution[indices1D[i]];
-			}
-
-			// Compute the standard deviation at this depth
-			standardDev = standardDev / concTot;
-			standardDev = sqrt(standardDev);
-
 			// If this is not the master process, send the values
 			if (procId != 0) {
 				MPI_Send(&heliumMean, 1, MPI_DOUBLE, 0, 5, PETSC_COMM_WORLD);
-				MPI_Send(&standardDev, 1, MPI_DOUBLE, 0, 5, PETSC_COMM_WORLD);
 			}
 		}
 		// If this process is not in charge of xi but is the master one, receive the value
 		else if (procId == 0) {
-			MPI_Recv(&heliumMean, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 5, PETSC_COMM_WORLD,
-					MPI_STATUS_IGNORE);
-			MPI_Recv(&standardDev, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 5, PETSC_COMM_WORLD,
-					MPI_STATUS_IGNORE);
+			MPI_Recv(&heliumMean, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 5,
+					PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
 		}
 
 		// The master process writes in the file
 		if (procId == 0) {
-			outputFile << x << " " << heliumMean << " "
-					<< standardDev << std::endl;
+			outputFile << x << " " << heliumMean << std::endl;
 		}
 	}
 
@@ -1174,15 +1402,21 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 	}
 
 	// Restore the solutionArray
-	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
 	PetscFunctionReturn(0);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ Actual__FUNCT__("xolotlSolver", "monitorMaxClusterConc1D")
+/**
+ * This is a monitoring method that will print a message when the biggest cluster
+ * in the network reaches a non-negligible concentration value.
+ */
 PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 		Vec solution, void *) {
+	// Initial declarations
 	PetscErrorCode ierr;
 	const double **solutionArray, *gridPointSolution;
 	PetscInt xs, xm, xi;
@@ -1190,17 +1424,21 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 	PetscFunctionBeginUser;
 
 	// Don't do anything if it was already printed
-	if (!printMaxClusterConc1D) PetscFunctionReturn(0);
+	if (!printMaxClusterConc1D)
+		PetscFunctionReturn(0);
 
 	// Get the da from ts
 	DM da;
-	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
+	ierr = TSGetDM(ts, &da);
+	CHKERRQ(ierr);
 
 	// Get the solutionArray
-	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
 	// Get the corners of the grid
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
+	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
+	CHKERRQ(ierr);
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -1216,12 +1454,17 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the number of He in the max HeV cluster
 	int maxHeSize = (maxHeVClusterSize - maxVClusterSize);
 	// Get the maximum stable HeV cluster
-	IReactant * maxHeV;
-	maxHeV = network->getCompound(
-			"HeV", { maxHeSize, maxVClusterSize, 0 });
+	IReactant * maxCluster;
+	maxCluster = network->getCompound(heVType,
+			{ maxHeSize, maxVClusterSize, 0 });
+	if (!maxCluster) {
+		// Get the maximum size of Xe clusters
+		int maxXeClusterSize = std::stoi(props["maxXeClusterSize"]);
+		maxCluster = network->get(xeType, maxXeClusterSize);
+	}
 
 	// Boolean to know if the concentration is too big
-	bool maxHeVTooBig = false;
+	bool maxClusterTooBig = false;
 
 	// Check the concentration of the biggest cluster at each grid point
 	for (xi = xs; xi < xs + xm; xi++) {
@@ -1229,9 +1472,10 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 		gridPointSolution = solutionArray[xi];
 
 		// Get the concentration of the maximum HeV cluster
-		auto maxHeVConc = gridPointSolution[maxHeV->getId() - 1];
+		auto maxClusterConc = gridPointSolution[maxCluster->getId() - 1];
 
-		if (maxHeVConc > 1.0e-16) maxHeVTooBig = true;
+		if (maxClusterConc > 1.0e-16)
+			maxClusterTooBig = true;
 	}
 
 	// Get the current process ID
@@ -1240,7 +1484,8 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Is the concentration too big on any process?
 	bool tooBig = false;
-	MPI_Reduce(&maxHeVTooBig, &tooBig, 1, MPI_C_BOOL, MPI_LOR, 0, PETSC_COMM_WORLD);
+	MPI_Reduce(&maxClusterTooBig, &tooBig, 1, MPI_C_BOOL, MPI_LOR, 0,
+			PETSC_COMM_WORLD);
 
 	// Main process
 	if (procId == 0) {
@@ -1248,7 +1493,7 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 		if (tooBig) {
 			std::cout << std::endl;
 			std::cout << "At time step: " << timestep << " and time: " << time
-					<< " the biggest cluster: " << maxHeV->getName()
+					<< " the biggest cluster: " << maxCluster->getName()
 					<< " reached a concentration above 1.0e-16 at at least one grid point."
 					<< std::endl << std::endl;
 
@@ -1261,19 +1506,21 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 	MPI_Bcast(&printMaxClusterConc1D, 1, MPI_C_BOOL, 0, PETSC_COMM_WORLD);
 
 	// Restore the solutionArray
-	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
 	PetscFunctionReturn(0);
 }
 
 #undef __FUNCT__
-#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "monitorInterstitial1D")
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "monitorMovingSurface1D")
 /**
- * This is a monitoring method that will compute the flux of interstitials
- * at the surface
+ * This is a monitoring method that will move the surface depending on the
+ * interstitial flux
  */
-PetscErrorCode monitorInterstitial1D(TS ts, PetscInt, PetscReal time,
+PetscErrorCode monitorMovingSurface1D(TS ts, PetscInt, PetscReal time,
 		Vec solution, void *) {
+	// Initial declaration
 	PetscErrorCode ierr;
 	double **solutionArray, *gridPointSolution;
 	PetscInt xs, xm, xi;
@@ -1286,13 +1533,16 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt, PetscReal time,
 
 	// Get the da from ts
 	DM da;
-	ierr = TSGetDM(ts, &da);CHKERRQ(ierr);
+	ierr = TSGetDM(ts, &da);
+	CHKERRQ(ierr);
 
 	// Get the solutionArray
-	ierr = DMDAVecGetArrayDOF(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecGetArrayDOF(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
 	// Get the corners of the grid
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);CHKERRQ(ierr);
+	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
+	CHKERRQ(ierr);
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -1312,7 +1562,7 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt, PetscReal time,
 	int surfaceProc = 0;
 
 	// if xi is on this process
-	if (xi >= xs && xi < xs + xm ) {
+	if (xi >= xs && xi < xs + xm) {
 		// Get the concentrations at xi = surfacePos + 1
 		gridPointSolution = solutionArray[xi];
 
@@ -1323,12 +1573,11 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt, PetscReal time,
 		// surface since last timestep using the stored flux
 		nInterstitial1D += previousIFlux1D * dt;
 
-		// Uncomment to write the interstitial and the fluence in a file
-		std::ofstream outputFile;
-		outputFile.open("interstitialOut.txt", ios::app);
-		outputFile << time << " "
-				<< previousIFlux1D * dt << std::endl;
-		outputFile.close();
+//		// Uncomment to write the interstitial and the fluence in a file
+//		std::ofstream outputFile;
+//		outputFile.open("interstitialOut.txt", ios::app);
+//		outputFile << time << " " << previousIFlux1D * dt << std::endl;
+//		outputFile.close();
 
 		// Initialize the value for the flux
 		double newFlux = 0.0;
@@ -1347,8 +1596,8 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt, PetscReal time,
 			double coef = cluster->getDiffusionCoefficient();
 
 			// Factor for finite difference
-			double hxLeft = grid[xi] - grid[xi-1];
-			double hxRight = grid[xi+1] - grid[xi];
+			double hxLeft = grid[xi] - grid[xi - 1];
+			double hxRight = grid[xi + 1] - grid[xi];
 			double factor = 2.0 / (hxLeft * (hxLeft + hxRight));
 			// Compute the flux going to the left
 			newFlux += (double) size * factor * coef * conc * hxLeft;
@@ -1363,7 +1612,8 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt, PetscReal time,
 
 	// Get which processor will send the information
 	int surfaceId = 0;
-	MPI_Allreduce(&surfaceProc, &surfaceId, 1, MPI_INT, MPI_SUM, PETSC_COMM_WORLD);
+	MPI_Allreduce(&surfaceProc, &surfaceId, 1, MPI_INT, MPI_SUM,
+			PETSC_COMM_WORLD);
 
 	// Send the information about nInterstitial1D and previousFlux1D
 	// to the other processes
@@ -1377,7 +1627,7 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt, PetscReal time,
 	double initialVConc = solverHandler->getInitialVConc();
 
 	// The density of tungsten is 62.8 atoms/nm3, thus the threshold is
-	double threshold = (62.8 - initialVConc) * (grid[xi] - grid[xi-1]);
+	double threshold = (62.8 - initialVConc) * (grid[xi] - grid[xi - 1]);
 	if (nInterstitial1D > threshold) {
 		// Compute the number of grid points to move the surface of
 		int nGridPoints = (int) (nInterstitial1D / threshold);
@@ -1396,8 +1646,9 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt, PetscReal time,
 
 		// Printing information about the extension of the material
 		if (procId == 0) {
-			std::cout << "Adding " << nGridPoints << " points to the grid at time: "
-					<< time << " s." << std::endl;
+			std::cout << "Adding " << nGridPoints
+					<< " points to the grid at time: " << time << " s."
+					<< std::endl;
 		}
 
 		// Set it in the solver
@@ -1414,7 +1665,8 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt, PetscReal time,
 		// Get the modified trap-mutation handler to reinitialize it
 		auto mutationHandler = solverHandler->getMutationHandler();
 		auto advecHandlers = solverHandler->getAdvectionHandlers();
-		mutationHandler->initializeIndex1D(surfacePos, network, advecHandlers, grid);
+		mutationHandler->initializeIndex1D(surfacePos, network, advecHandlers,
+				grid);
 
 		// Initialize the vacancy concentration on the new grid points
 		// Get the single vacancy ID
@@ -1441,13 +1693,176 @@ PetscErrorCode monitorInterstitial1D(TS ts, PetscInt, PetscReal time,
 	}
 
 	// Restore the solutionArray
-	ierr = DMDAVecRestoreArrayDOF(da, solution, &solutionArray);CHKERRQ(ierr);
+	ierr = DMDAVecRestoreArrayDOF(da, solution, &solutionArray);
+	CHKERRQ(ierr);
 
-    PetscFunctionReturn(0);
+	PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "monitorBursting1D")
+/**
+ * This is a monitoring method that bursts bubbles.
+ */
+PetscErrorCode monitorBursting1D(TS ts, PetscInt, PetscReal time, Vec solution,
+		void *) {
+	// Initial declarations
+	PetscErrorCode ierr;
+	double **solutionArray, *gridPointSolution;
+	int xs, xm, xi;
+
+	PetscFunctionBeginUser;
+
+	// Gets the process ID
+	int procId;
+	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
+
+	// Get the da from ts
+	DM da;
+	ierr = TSGetDM(ts, &da);
+	CHKERRQ(ierr);
+
+	// Get the solutionArray
+	ierr = DMDAVecGetArrayDOF(da, solution, &solutionArray);
+	CHKERRQ(ierr);
+
+	// Get the corners of the grid
+	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL);
+	CHKERRQ(ierr);
+
+	// Get the solver handler
+	auto solverHandler = PetscSolver::getSolverHandler();
+
+	// Get the position of the surface
+	int surfacePos = solverHandler->getSurfacePosition();
+
+	// Get the network
+	auto network = solverHandler->getNetwork();
+	// Get all the super clusters
+	auto superClusters = network->getAll(PSISuperType);
+
+	// Get the physical grid
+	auto grid = solverHandler->getXGrid();
+
+	// Get the flux handler to know the flux amplitude.
+	auto fluxHandler = solverHandler->getFluxHandler();
+	double fluxAmplitude = fluxHandler->getFluxAmplitude();
+
+	// Get the delta time from the previous timestep to this timestep
+	double dt = time - previousTime;
+
+	// Compute the prefactor for the probability (arbitrary)
+	double prefactor = fluxAmplitude * dt * 0.05;
+
+	// Loop on the grid
+	for (xi = xs; xi < xs + xm; xi++) {
+		// Skip everything before the surface
+		if (xi <= surfacePos)
+			continue;
+
+		// Get the pointer to the beginning of the solution data for this grid point
+		gridPointSolution = solutionArray[xi];
+		// Update the concentration in the network
+		network->updateConcentrationsFromArray(gridPointSolution);
+
+		// Get the distance from the surface
+		double distance = grid[xi] - grid[surfacePos];
+
+		// Compute the helium density at this grid point
+		double heDensity = 0.0;
+		for (unsigned int i = 0; i < indices1D.size(); i++) {
+			// Add the current concentration times the number of helium in the cluster
+			// (from the weight vector)
+			heDensity += gridPointSolution[indices1D[i]] * weights1D[i];
+		}
+		// Loop on all the super clusters
+		for (int i = 0; i < superClusters.size(); i++) {
+			auto cluster = (xolotlCore::PSISuperCluster *) superClusters[i];
+			heDensity += cluster->getTotalHeliumConcentration();
+		}
+
+		// Compute the radius of the bubble from the number of helium
+		double nV = heDensity * (grid[xi] - grid[xi - 1]) / 4.0;
+		double radius = (sqrt(3.0) / 4.0) * xolotlCore::tungstenLatticeConstant
+				+ pow(
+						(3.0 * pow(xolotlCore::tungstenLatticeConstant, 3.0)
+								* nV) / (8.0 * xolotlCore::pi), (1.0 / 3.0))
+				- pow(
+						(3.0 * pow(xolotlCore::tungstenLatticeConstant, 3.0))
+								/ (8.0 * xolotlCore::pi), (1.0 / 3.0));
+
+		// Check if it should burst
+		bool burst = false;
+		// If the radius is larger than the distance to the surface, burst
+		if (radius > distance)
+			burst = true;
+		// Add randomness
+		double prob = prefactor * (1.0 - (distance - radius) / distance);
+		double test = (double) rand() / (double) RAND_MAX;
+		if (prob > test)
+			burst = true;
+
+		// Burst
+		if (burst) {
+
+			std::cout << "bursting at: " << distance << " " << prob << " "
+					<< test << std::endl;
+
+			// Get all the helium clusters
+			auto clusters = network->getAll(heType);
+			// Loop on them to reset their concentration at this grid point
+			for (int i = 0; i < clusters.size(); i++) {
+				auto cluster = clusters[i];
+				int id = cluster->getId() - 1;
+				gridPointSolution[id] = 0.0;
+			}
+
+			// Get all the HeV clusters
+			clusters = network->getAll(heVType);
+			// Loop on them to transfer their concentration to the V cluster of the
+			// same size at this grid point
+			for (int i = 0; i < clusters.size(); i++) {
+				auto cluster = clusters[i];
+				// Get the V cluster of the same size
+				auto comp = cluster->getComposition();
+				auto vCluster = network->get(vType, comp[vType]);
+				int vId = vCluster->getId() - 1;
+				int id = cluster->getId() - 1;
+				gridPointSolution[vId] = gridPointSolution[id];
+				gridPointSolution[id] = 0.0;
+			}
+
+			// Loop on the super clusters to transfer their concentration to the V cluster of the
+			// same size at this grid point
+			for (int i = 0; i < superClusters.size(); i++) {
+				auto cluster = (PSISuperCluster *) superClusters[i];
+				// Get the V cluster of the same size
+				double numV = cluster->getNumV();
+				int truncV = (int) numV;
+				auto vCluster = network->get(vType, truncV);
+				int vId = vCluster->getId() - 1;
+				int id = cluster->getId() - 1;
+				double conc = cluster->getTotalConcentration();
+				gridPointSolution[vId] = conc * numV / (double) truncV;
+				gridPointSolution[id] = 0.0;
+				id = cluster->getHeMomentumId() - 1;
+				gridPointSolution[id] = 0.0;
+				id = cluster->getVMomentumId() - 1;
+				gridPointSolution[id] = 0.0;
+			}
+		}
+	}
+
+	// Restore the solutionArray
+	ierr = DMDAVecRestoreArrayDOF(da, solution, &solutionArray);
+	CHKERRQ(ierr);
+
+	PetscFunctionReturn(0);
 }
 
 /**
- * This operation sets up a monitor that will call monitorSolve
+ * This operation sets up different monitors
+ *  depending on the options.
  * @param ts The time stepper
  * @return A standard PETSc error code
  */
@@ -1462,48 +1877,67 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 	auto vizHandlerRegistry = xolotlFactory::getVizHandlerRegistry();
 
 	// Flags to launch the monitors or not
-	PetscBool flag2DPlot, flag1DPlot, flagSeries, flagPerf, flagRetention,
-			flagStatus, flagMaxClusterConc, flagCumul, flagMeanSize, flagConc;
+	PetscBool flag2DPlot, flag1DPlot, flagSeries, flagPerf, flagHeRetention,
+			flagStatus, flagMaxClusterConc, flagCumul, flagMeanSize, flagConc,
+			flagXeRetention;
 
 	// Check the option -plot_perf
 	ierr = PetscOptionsHasName(NULL, NULL, "-plot_perf", &flagPerf);
-	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-plot_perf) failed.");
+	checkPetscError(ierr,
+			"setupPetsc1DMonitor: PetscOptionsHasName (-plot_perf) failed.");
 
 	// Check the option -plot_series
 	ierr = PetscOptionsHasName(NULL, NULL, "-plot_series", &flagSeries);
-	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-plot_series) failed.");
+	checkPetscError(ierr,
+			"setupPetsc1DMonitor: PetscOptionsHasName (-plot_series) failed.");
 
 	// Check the option -plot_1d
 	ierr = PetscOptionsHasName(NULL, NULL, "-plot_1d", &flag1DPlot);
-	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-plot_1d) failed.");
+	checkPetscError(ierr,
+			"setupPetsc1DMonitor: PetscOptionsHasName (-plot_1d) failed.");
 
 	// Check the option -plot_2d
 	ierr = PetscOptionsHasName(NULL, NULL, "-plot_2d", &flag2DPlot);
-	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-plot_2d) failed.");
+	checkPetscError(ierr,
+			"setupPetsc1DMonitor: PetscOptionsHasName (-plot_2d) failed.");
 
 	// Check the option -helium_retention
-	ierr = PetscOptionsHasName(NULL, NULL, "-helium_retention", &flagRetention);
-	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-helium_retention) failed.");
+	ierr = PetscOptionsHasName(NULL, NULL, "-helium_retention",
+			&flagHeRetention);
+	checkPetscError(ierr,
+			"setupPetsc1DMonitor: PetscOptionsHasName (-helium_retention) failed.");
+
+	// Check the option -helium_retention
+	ierr = PetscOptionsHasName(NULL, NULL, "-xenon_retention",
+			&flagXeRetention);
+	checkPetscError(ierr,
+			"setupPetsc1DMonitor: PetscOptionsHasName (-xenon_retention) failed.");
 
 	// Check the option -start_stop
 	ierr = PetscOptionsHasName(NULL, NULL, "-start_stop", &flagStatus);
-	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-start_stop) failed.");
+	checkPetscError(ierr,
+			"setupPetsc1DMonitor: PetscOptionsHasName (-start_stop) failed.");
 
 	// Check the option -max_cluster_conc
-	ierr = PetscOptionsHasName(NULL, NULL, "-max_cluster_conc", &flagMaxClusterConc);
-	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-max_cluster_conc) failed.");
+	ierr = PetscOptionsHasName(NULL, NULL, "-max_cluster_conc",
+			&flagMaxClusterConc);
+	checkPetscError(ierr,
+			"setupPetsc1DMonitor: PetscOptionsHasName (-max_cluster_conc) failed.");
 
 	// Check the option -helium_cumul
 	ierr = PetscOptionsHasName(NULL, NULL, "-helium_cumul", &flagCumul);
-	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-helium_cumul) failed.");
+	checkPetscError(ierr,
+			"setupPetsc1DMonitor: PetscOptionsHasName (-helium_cumul) failed.");
 
 	// Check the option -helium_conc
 	ierr = PetscOptionsHasName(NULL, NULL, "-helium_conc", &flagConc);
-	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-helium_conc) failed.");
+	checkPetscError(ierr,
+			"setupPetsc1DMonitor: PetscOptionsHasName (-helium_conc) failed.");
 
 	// Check the option -mean_size
 	ierr = PetscOptionsHasName(NULL, NULL, "-mean_size", &flagMeanSize);
-	checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsHasName (-mean_size) failed.");
+	checkPetscError(ierr,
+			"setupPetsc1DMonitor: PetscOptionsHasName (-mean_size) failed.");
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
@@ -1512,7 +1946,51 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 	auto network = solverHandler->getNetwork();
 	const int networkSize = network->size();
 
-	// Set the monitor to save 1D plot of one concentration
+	// If the user wants the surface to be able to move
+	if (solverHandler->moveSurface()) {
+
+		// Get the last time step written in the HDF5 file
+		int tempTimeStep = -2;
+		std::string networkName = solverHandler->getNetworkName();
+		bool hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
+				networkName, tempTimeStep);
+
+		// Get the interstitial information at the surface if concentrations were stored
+		if (hasConcentrations) {
+			// Get the interstitial quantity from the HDF5 file
+			nInterstitial1D = xolotlCore::HDF5Utils::readNInterstitial1D(
+					networkName, tempTimeStep);
+			// Get the previous I flux from the HDF5 file
+			previousIFlux1D = xolotlCore::HDF5Utils::readPreviousIFlux1D(
+					networkName, tempTimeStep);
+			// Get the previous time from the HDF5 file
+			previousTime = xolotlCore::HDF5Utils::readPreviousTime(networkName,
+					tempTimeStep);
+		}
+
+		// Set the monitor on moving surface
+		// monitorMovingSurface1D will be called at each timestep
+		ierr = TSMonitorSet(ts, monitorMovingSurface1D, NULL, NULL);
+		checkPetscError(ierr,
+				"setupPetsc1DMonitor: TSMonitorSet (monitorMovingSurface1D) failed.");
+
+//		// Uncomment to clear the file where the interstitial will be written
+//		std::ofstream outputFile;
+//		outputFile.open("interstitialOut.txt");
+//		outputFile.close();
+	}
+
+	// If the user wants bubble bursting
+	if (solverHandler->burstBubbles()) {
+		// Set the monitor on the bubble bursting
+		// monitorBursting1D will be called at each timestep
+		ierr = TSMonitorSet(ts, monitorBursting1D, NULL, NULL);
+		checkPetscError(ierr,
+				"setupPetsc1DMonitor: TSMonitorSet (monitorBursting1D) failed.");
+		std::srand(time(NULL));
+	}
+
+	// Set the monitor to save 1D plot of xenon distribution
 	if (flag1DPlot) {
 		// Only the master process will create the plot
 		if (procId == 0) {
@@ -1525,7 +2003,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 			// Create and set the label provider
 			auto labelProvider = std::make_shared<xolotlViz::LabelProvider>(
 					"labelProvider");
-			labelProvider->axis1Label = "x Position on the Grid";
+			labelProvider->axis1Label = "Xenon Size";
 			labelProvider->axis2Label = "Concentration";
 
 			// Give it to the plot
@@ -1539,9 +2017,10 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 			scatterPlot1D->setDataProvider(dataProvider);
 		}
 
-		// monitorSolve will be called at each timestep
+		// monitorScatter1D will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorScatter1D, NULL, NULL);
-		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorScatter1D) failed.");
+		checkPetscError(ierr,
+				"setupPetsc1DMonitor: TSMonitorSet (monitorScatter1D) failed.");
 	}
 
 	// Set the monitor to save 1D plot of many concentrations
@@ -1573,8 +2052,9 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 				std::stringstream dataProviderName;
 				dataProviderName << "dataprovider" << i;
 				// Create the data provider
-				auto dataProvider = std::make_shared<xolotlViz::CvsXDataProvider>(
-						dataProviderName.str());
+				auto dataProvider =
+						std::make_shared<xolotlViz::CvsXDataProvider>(
+								dataProviderName.str());
 
 				// Give it to the plot
 				seriesPlot1D->addDataProvider(dataProvider);
@@ -1583,7 +2063,8 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 		// monitorSeries1D will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorSeries1D, NULL, NULL);
-		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorSeries1D) failed.");
+		checkPetscError(ierr,
+				"setupPetsc1DMonitor: TSMonitorSet (monitorSeries1D) failed.");
 	}
 
 	// Set the monitor to save surface plots of clusters concentration
@@ -1612,7 +2093,8 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 		// monitorSurface1D will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorSurface1D, NULL, NULL);
-		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorSurface1D) failed.");
+		checkPetscError(ierr,
+				"setupPetsc1DMonitor: TSMonitorSet (monitorSurface1D) failed.");
 	}
 
 	// Set the monitor to save performance plots (has to be in parallel)
@@ -1642,20 +2124,19 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 		// monitorPerf will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorPerf, NULL, NULL);
-		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorPerf) failed.");
+		checkPetscError(ierr,
+				"setupPetsc1DMonitor: TSMonitorSet (monitorPerf) failed.");
 	}
 
 	// Initialize indices1D and weights1D if we want to compute the
-	// retention or the cumulative value
-	if (flagRetention || flagCumul || flagMeanSize || flagConc) {
+	// retention or the cumulative value and others
+	if (flagCumul || flagMeanSize || flagConc || flagHeRetention
+			|| solverHandler->burstBubbles()) {
 		// Get all the helium clusters
 		auto heClusters = network->getAll(heType);
 
 		// Get all the helium-vacancy clusters
 		auto heVClusters = network->getAll(heVType);
-
-		// Get all the vacancy clusters
-		auto vClusters = network->getAll(vType);
 
 		// Loop on the helium clusters
 		for (unsigned int i = 0; i < heClusters.size(); i++) {
@@ -1665,6 +2146,7 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 			indices1D.push_back(id);
 			// Add the number of heliums of this cluster to the weight
 			weights1D.push_back(cluster->getSize());
+			radii1D.push_back(cluster->getReactionRadius());
 		}
 
 		// Loop on the helium-vacancy clusters
@@ -1676,43 +2158,65 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 			// Add the number of heliums of this cluster to the weight
 			auto comp = cluster->getComposition();
 			weights1D.push_back(comp[heType]);
-		}
-
-		// Loop on the vacancy clusters
-		for (int i = 0; i < vClusters.size(); i++) {
-			auto cluster = vClusters[i];
-			int id = cluster->getId() - 1;
-			// Add the Id to the vector
-			indices1D.push_back(id);
-			// Add the number of heliums of this cluster to the weight
-			auto comp = cluster->getComposition();
-			weights1D.push_back(comp[heType]);
-		}
-
-		if (indices1D.size() == 0) {
-			// Try with Xenon
-			// Get all the xenon clusters
-			auto xeClusters = network->getAll(xeType);
-
-			// Loop on the xenon clusters
-			for (unsigned int i = 0; i < xeClusters.size(); i++) {
-				auto cluster = xeClusters[i];
-				int id = cluster->getId() - 1;
-				// Add the Id to the vector
-				indices1D.push_back(id);
-				// Add the number of heliums of this cluster to the weight
-				weights1D.push_back(cluster->getSize());
-			}
+			radii1D.push_back(cluster->getReactionRadius());
 		}
 	}
 
 	// Set the monitor to compute the helium fluence and the retention
 	// for the retention calculation
-	if (flagRetention) {
-		if (indices1D.size() == 0) {
-			throw std::string(
-					"PetscSolver Exception: Cannot compute the retention because "
-					"there is no helium or helium-vacancy cluster in the network.");
+	if (flagHeRetention) {
+
+		// Get the last time step written in the HDF5 file
+		int tempTimeStep = -2;
+		std::string networkName = solverHandler->getNetworkName();
+		bool hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
+				networkName, tempTimeStep);
+
+		// Get the previous time if concentrations were stored and initialize the fluence
+		if (hasConcentrations) {
+			// Get the previous time from the HDF5 file
+			double time = xolotlCore::HDF5Utils::readPreviousTime(networkName,
+					tempTimeStep);
+			// Initialize the fluence
+			auto fluxHandler = solverHandler->getFluxHandler();
+			// The length of the time step
+			double dt = time;
+			// Increment the fluence with the value at this current timestep
+			fluxHandler->incrementFluence(dt);
+		}
+
+		// computeFluence will be called at each timestep
+		ierr = TSMonitorSet(ts, computeFluence, NULL, NULL);
+		checkPetscError(ierr,
+				"setupPetsc1DMonitor: TSMonitorSet (computeFluence) failed.");
+
+		// computeHeliumRetention1D will be called at each timestep
+		ierr = TSMonitorSet(ts, computeHeliumRetention1D, NULL, NULL);
+		checkPetscError(ierr,
+				"setupPetsc1DMonitor: TSMonitorSet (computeHeliumRetention1D) failed.");
+
+		// Uncomment to clear the file where the retention will be written
+		std::ofstream outputFile;
+		outputFile.open("retentionOut.txt");
+		outputFile.close();
+	}
+
+	// Set the monitor to compute the xenon fluence and the retention
+	// for the retention calculation
+	if (flagXeRetention) {
+
+		// Get all the xenon clusters
+		auto xeClusters = network->getAll(xeType);
+
+		// Loop on the xenon clusters
+		for (unsigned int i = 0; i < xeClusters.size(); i++) {
+			auto cluster = xeClusters[i];
+			int id = cluster->getId() - 1;
+			// Add the Id to the vector
+			indices1D.push_back(id);
+			// Add the number of heliums of this cluster to the weight
+			weights1D.push_back(cluster->getSize());
+			radii1D.push_back(cluster->getReactionRadius());
 		}
 
 		// Get the last time step written in the HDF5 file
@@ -1724,7 +2228,8 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		// Get the previous time if concentrations were stored and initialize the fluence
 		if (hasConcentrations) {
 			// Get the previous time from the HDF5 file
-			double time = xolotlCore::HDF5Utils::readPreviousTime(networkName, tempTimeStep);
+			double time = xolotlCore::HDF5Utils::readPreviousTime(networkName,
+					tempTimeStep);
 			// Initialize the fluence
 			auto fluxHandler = solverHandler->getFluxHandler();
 			// The length of the time step
@@ -1733,13 +2238,15 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 			fluxHandler->incrementFluence(dt);
 		}
 
-		// computeHeliumFluence will be called at each timestep
-		ierr = TSMonitorSet(ts, computeHeliumFluence, NULL, NULL);
-		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (computeHeliumFluence) failed.");
+		// computeFluence will be called at each timestep
+		ierr = TSMonitorSet(ts, computeFluence, NULL, NULL);
+		checkPetscError(ierr,
+				"setupPetsc1DMonitor: TSMonitorSet (computeFluence) failed.");
 
-		// computeHeliumRetention1D will be called at each timestep
-		ierr = TSMonitorSet(ts, computeHeliumRetention1D, NULL, NULL);
-		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (computeHeliumRetention1D) failed.");
+		// computeXenonRetention1D will be called at each timestep
+		ierr = TSMonitorSet(ts, computeXenonRetention1D, NULL, NULL);
+		checkPetscError(ierr,
+				"setupPetsc1DMonitor: TSMonitorSet (computeXenonRetention1D) failed.");
 
 		// Uncomment to clear the file where the retention will be written
 		std::ofstream outputFile;
@@ -1749,31 +2256,29 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 	// Set the monitor to compute the cumulative helium concentration
 	if (flagCumul) {
-		if (indices1D.size() == 0) {
-			throw std::string(
-					"PetscSolver Exception: Cannot compute the cumulative "
-					"concentration because there is no helium or helium-vacancy "
-					"cluster in the network.");
-		}
 
 		// computeCumulativeHelium1D will be called at each timestep
 		ierr = TSMonitorSet(ts, computeCumulativeHelium1D, NULL, NULL);
-		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (computeCumulativeHelium1D) failed.");
+		checkPetscError(ierr,
+				"setupPetsc1DMonitor: TSMonitorSet (computeCumulativeHelium1D) failed.");
 	}
 
 	// Set the monitor to save text file of the mean helium size
 	if (flagMeanSize) {
 		// monitorMeanSize1D will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorMeanSize1D, NULL, NULL);
-		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorMeanSize1D) failed.");
+		checkPetscError(ierr,
+				"setupPetsc1DMonitor: TSMonitorSet (monitorMeanSize1D) failed.");
 	}
 
 	// Set the monitor to save the status of the simulation in hdf5 file
 	if (flagStatus) {
 		// Find the stride to know how often the HDF5 file has to be written
 		PetscBool flag;
-		ierr = PetscOptionsGetInt(NULL, NULL, "-start_stop", &hdf5Stride1D, &flag);
-		checkPetscError(ierr, "setupPetsc1DMonitor: PetscOptionsGetInt (-start_stop) failed.");
+		ierr = PetscOptionsGetInt(NULL, NULL, "-start_stop", &hdf5Stride1D,
+				&flag);
+		checkPetscError(ierr,
+				"setupPetsc1DMonitor: PetscOptionsGetInt (-start_stop) failed.");
 		if (!flag)
 			hdf5Stride1D = 1;
 
@@ -1812,58 +2317,32 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 
 		// startStop1D will be called at each timestep
 		ierr = TSMonitorSet(ts, startStop1D, NULL, NULL);
-		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (startStop1D) failed.");
+		checkPetscError(ierr,
+				"setupPetsc1DMonitor: TSMonitorSet (startStop1D) failed.");
 	}
 
-	// Set the monitor to output information about when the maximum stable HeV
+	// Set the monitor to output information about when the maximum stable
 	// cluster in the network first becomes greater than 1.0e-16
 	if (flagMaxClusterConc) {
 		// monitorMaxClusterConc1D will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorMaxClusterConc1D, NULL, NULL);
-		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorMaxClusterConc1D) failed.");
+		checkPetscError(ierr,
+				"setupPetsc1DMonitor: TSMonitorSet (monitorMaxClusterConc1D) failed.");
 	}
 
 	// Set the monitor to compute the helium concentrations
 	if (flagConc) {
 		// computeHeliumConc1D will be called at each timestep
 		ierr = TSMonitorSet(ts, computeHeliumConc1D, NULL, NULL);
-		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (computeHeliumConc1D) failed.");
-	}
-
-	// If the user wants the surface to be able to move
-	if (solverHandler->moveSurface()) {
-
-		// Get the last time step written in the HDF5 file
-		int tempTimeStep = -2;
-		std::string networkName = solverHandler->getNetworkName();
-		bool hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
-				networkName, tempTimeStep);
-
-		// Get the interstitial information at the surface if concentrations were stored
-		if (hasConcentrations) {
-			// Get the interstitial quantity from the HDF5 file
-			nInterstitial1D = xolotlCore::HDF5Utils::readNInterstitial1D(networkName, tempTimeStep);
-			// Get the previous I flux from the HDF5 file
-			previousIFlux1D = xolotlCore::HDF5Utils::readPreviousIFlux1D(networkName, tempTimeStep);
-			// Get the previous time from the HDF5 file
-			previousTime = xolotlCore::HDF5Utils::readPreviousTime(networkName, tempTimeStep);
-		}
-
-		// Set the monitor on the outgoing flux of interstitials at the surface
-		// monitorInterstitial1D will be called at each timestep
-		ierr = TSMonitorSet(ts, monitorInterstitial1D, NULL, NULL);
-		checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorInterstitial1D) failed.");
-
-		// Uncomment to clear the file where the interstitial will be written
-		std::ofstream outputFile;
-		outputFile.open("interstitialOut.txt");
-		outputFile.close();
+		checkPetscError(ierr,
+				"setupPetsc1DMonitor: TSMonitorSet (computeHeliumConc1D) failed.");
 	}
 
 	// Set the monitor to simply change the previous time to the new time
 	// monitorTime will be called at each timestep
 	ierr = TSMonitorSet(ts, monitorTime, NULL, NULL);
-	checkPetscError(ierr, "setupPetsc1DMonitor: TSMonitorSet (monitorTime) failed.");
+	checkPetscError(ierr,
+			"setupPetsc1DMonitor: TSMonitorSet (monitorTime) failed.");
 
 	PetscFunctionReturn(0);
 }

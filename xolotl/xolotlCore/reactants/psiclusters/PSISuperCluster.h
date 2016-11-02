@@ -256,10 +256,11 @@ public:
 	 * @param heWidth The width of this super cluster in the helium direction
 	 * @param vWidth The width of this super cluster in the vacancy direction
 	 * @param radius The mean radius
+	 * @param energy The mean formation energy
 	 * @param registry The performance handler registry
 	 */
 	PSISuperCluster(double numHe, double numV, int nTot, int heWidth, int vWidth,
-			double radius,
+			double radius, double energy,
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**

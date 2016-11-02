@@ -47,8 +47,7 @@ HeVCluster::HeVCluster(HeVCluster &other) :
 void HeVCluster::replaceInCompound(std::vector<IReactant *> & reactants,
 		const std::string& oldComponentName) {
 	// Local Declarations
-	std::map<std::string, int> myComp = getComposition(),
-			productReactantComp;
+	std::map<std::string, int> myComp = getComposition(), productReactantComp;
 	int myComponentNumber = myComp[oldComponentName];
 	int secondId = 0;
 
@@ -60,11 +59,11 @@ void HeVCluster::replaceInCompound(std::vector<IReactant *> & reactants,
 		// Create the composition vector
 		productReactantComp = myComp;
 		// Updated the modified components
-		productReactantComp[oldComponentName] =
-				myComponentNumber - secondReactantSize;
+		productReactantComp[oldComponentName] = myComponentNumber
+				- secondReactantSize;
 		// Create the composition vector -- FIXME! This should be general!
-		std::vector<int> productCompositionVector = { productReactantComp[heType],
-				productReactantComp[vType], 0 };
+		std::vector<int> productCompositionVector = {
+				productReactantComp[heType], productReactantComp[vType], 0 };
 		// Get the product of the same type as the second reactant
 		auto productReactant = network->getCompound(typeName,
 				productCompositionVector);
@@ -96,17 +95,19 @@ void HeVCluster::combineClusters(std::vector<IReactant *> & clusters,
 		auto secondCluster = (PSICluster *) clusters[i];
 		secondComposition = secondCluster->getComposition();
 		// Check that the simple product [He_(a+c)](V_b) doesn't exist
-		std::vector<int> comp = {myComposition[heType] + secondComposition[heType],
-			myComposition[vType] + secondComposition[vType],
-			myComposition[iType] + secondComposition[iType]};
+		std::vector<int> comp = { myComposition[heType]
+				+ secondComposition[heType], myComposition[vType]
+				+ secondComposition[vType], myComposition[iType]
+				+ secondComposition[iType] };
 		auto simpleProduct = network->getCompound(productName, comp);
-		if (simpleProduct) continue;
+		if (simpleProduct)
+			continue;
 		// The simple product doesn't exist so it will go though trap-mutation
 		// The reaction is
 		// (He_a)(V_b) + He_c --> [He_(a+c)][V_(b+1)] + I
 		comp = {myComposition[heType] + secondComposition[heType],
-				myComposition[vType] + secondComposition[vType] + 1,
-				myComposition[iType] + secondComposition[iType]};
+			myComposition[vType] + secondComposition[vType] + 1,
+			myComposition[iType] + secondComposition[iType]};
 		auto firstProduct = network->getCompound(productName, comp);
 		auto secondProduct = network->get(iType, 1);
 		// If both products exist
@@ -123,12 +124,13 @@ void HeVCluster::combineClusters(std::vector<IReactant *> & clusters,
 		// Case with I_2
 		// (He_a)(V_b) + He_c --> [He_(a+c)][V_(b+2)] + I_2
 		// If [He_(a+c)][V_(b+1)] does not exist
-		if (firstProduct) continue;
+		if (firstProduct)
+			continue;
 
 		// Get the new products [He_(a+c)][V_(b+2)] and I_2
 		comp = {myComposition[heType] + secondComposition[heType],
-				myComposition[vType] + secondComposition[vType] + 2,
-				myComposition[iType] + secondComposition[iType]};
+			myComposition[vType] + secondComposition[vType] + 2,
+			myComposition[iType] + secondComposition[iType]};
 		firstProduct = network->getCompound(productName, comp);
 		secondProduct = network->get(iType, 2);
 		// If both products exist
@@ -164,7 +166,8 @@ void HeVCluster::createReactionConnectivity() {
 		auto comp = getComposition();
 		std::vector<int> compositionVec = { comp[heType] - heliumReactantSize,
 				comp[vType], 0 };
-		auto secondReactant = (PSICluster *) network->getCompound(typeName, compositionVec);
+		auto secondReactant = (PSICluster *) network->getCompound(typeName,
+				compositionVec);
 		// Create a ReactingPair with the two reactants if they both exist
 		if (secondReactant) {
 			// The reaction constant will be computed later, it is set to 0.0 for now
@@ -185,9 +188,9 @@ void HeVCluster::createReactionConnectivity() {
 	auto singleVReactant = (PSICluster *) network->get(vType, 1);
 	// Get the second reactant, i.e. HeV cluster with one less V
 	auto comp = getComposition();
-	std::vector<int> compositionVec = { comp[heType], comp[vType] - 1,
-			0 };
-	auto secondReactant = (PSICluster *) network->getCompound(typeName, compositionVec);
+	std::vector<int> compositionVec = { comp[heType], comp[vType] - 1, 0 };
+	auto secondReactant = (PSICluster *) network->getCompound(typeName,
+			compositionVec);
 	// Create a ReactingPair with the two reactants if they both exist
 	if (singleVReactant && secondReactant) {
 		// The reaction constant will be computed later, it is set to 0.0 for now
@@ -231,9 +234,10 @@ void HeVCluster::createReactionConnectivity() {
 		int interstitialReactantSize = interstitialReactant->getSize();
 		// Get the second reactant, i.e. HeV cluster with V number bigger
 		// by the size of the interstitial reactant
-		std::vector<int> compositionVec = { comp[heType],
-				comp[vType] + interstitialReactantSize, 0 };
-		auto secondReactant = (PSICluster *) network->getCompound(typeName, compositionVec);
+		std::vector<int> compositionVec = { comp[heType], comp[vType]
+				+ interstitialReactantSize, 0 };
+		auto secondReactant = (PSICluster *) network->getCompound(typeName,
+				compositionVec);
 		// Create a ReactingPair with the two reactants if they both exist
 		if (secondReactant) {
 			// The reaction constant will be computed later, it is set to 0.0 for now
@@ -291,11 +295,10 @@ void HeVCluster::createReactionConnectivity() {
 	// (b-1) can be 0 so (He_a)[V_(b-1)] can be a helium cluster
 	if (comp[vType] == 1) {
 		smallerCluster = (PSICluster *) network->get(heType, comp[heType]);
-	}
-	else {
-		std::vector<int> compositionVec = {comp[heType],
-				comp[vType] - 1, 0};
-		smallerCluster = (PSICluster *) network->getCompound(typeName, compositionVec);
+	} else {
+		std::vector<int> compositionVec = { comp[heType], comp[vType] - 1, 0 };
+		smallerCluster = (PSICluster *) network->getCompound(typeName,
+				compositionVec);
 	}
 	if (!smallerCluster) {
 		// Loop on the possible He reactants He_c
@@ -307,14 +310,16 @@ void HeVCluster::createReactionConnectivity() {
 			PSICluster * otherReactant;
 			if (comp[vType] == 1) {
 				// We want (a-c) to be smaller or equal to c in order to avoid double counting
-				if (comp[heType] > 2 * heReactant->getSize()) continue;
+				if (comp[heType] > 2 * heReactant->getSize())
+					continue;
 
-				otherReactant = (PSICluster *) network->get(heType, comp[heType] - heReactant->getSize());
-			}
-			else {
-				std::vector<int> compositionVec = {comp[heType] - heReactant->getSize(),
-						comp[vType] - 1, 0};
-				otherReactant = (PSICluster *) network->getCompound(typeName, compositionVec);
+				otherReactant = (PSICluster *) network->get(heType,
+						comp[heType] - heReactant->getSize());
+			} else {
+				std::vector<int> compositionVec = { comp[heType]
+						- heReactant->getSize(), comp[vType] - 1, 0 };
+				otherReactant = (PSICluster *) network->getCompound(typeName,
+						compositionVec);
 			}
 			// Get I the other product
 			auto iCluster = (PSICluster *) network->get(iType, 1);
@@ -337,14 +342,16 @@ void HeVCluster::createReactionConnectivity() {
 			// Get the other reactant [He_(a-c)][V_(b-2)] that can be He or HeV
 			if (comp[vType] == 2) {
 				// We want (a-c) to be smaller or equal to c in order to avoid double counting
-				if (comp[heType] > 2 * heReactant->getSize()) continue;
+				if (comp[heType] > 2 * heReactant->getSize())
+					continue;
 
-				otherReactant = (PSICluster *) network->get(heType, comp[heType] - heReactant->getSize());
-			}
-			else {
-				std::vector<int> compositionVec = {comp[heType] - heReactant->getSize(),
-						comp[vType] - 2, 0};
-				otherReactant = (PSICluster *) network->getCompound(typeName, compositionVec);
+				otherReactant = (PSICluster *) network->get(heType,
+						comp[heType] - heReactant->getSize());
+			} else {
+				std::vector<int> compositionVec = { comp[heType]
+						- heReactant->getSize(), comp[vType] - 2, 0 };
+				otherReactant = (PSICluster *) network->getCompound(typeName,
+						compositionVec);
 			}
 			// Get I_2 the other product
 			iCluster = (PSICluster *) network->get(iType, 2);
@@ -375,7 +382,8 @@ void HeVCluster::createDissociationConnectivity() {
 	// (He_a)(V_b) --> [He_(a-1)](V_b) + He
 	// Get the cluster with one less helium
 	std::vector<int> compositionVec = { numHe - 1, numV, 0 };
-	auto heVClusterLessHe = (PSICluster *) network->getCompound(typeName, compositionVec);
+	auto heVClusterLessHe = (PSICluster *) network->getCompound(typeName,
+			compositionVec);
 	// Special case for numHe = 1
 	if (numHe == 1) {
 		heVClusterLessHe = (PSICluster *) network->get(vType, numV);
@@ -385,8 +393,9 @@ void HeVCluster::createDissociationConnectivity() {
 	emitClusters(singleCluster, heVClusterLessHe);
 	// [He_(a+1)](V_b) --> (He_a)(V_b) + He
 	// Get the cluster with one more helium
-	compositionVec = { numHe + 1, numV, 0 };
-	auto heVClusterMoreHe = (PSICluster *) network->getCompound(typeName, compositionVec);
+	compositionVec = {numHe + 1, numV, 0};
+	auto heVClusterMoreHe = (PSICluster *) network->getCompound(typeName,
+			compositionVec);
 	// Here it is important that heVClusterMoreHe is the first cluster
 	// because it is the dissociating one.
 	dissociateCluster(heVClusterMoreHe, singleCluster);
@@ -395,17 +404,27 @@ void HeVCluster::createDissociationConnectivity() {
 	// (He_a)(V_b) --> He_(a)[V_(b-1)] + V
 	// Get the cluster with one less vacancy
 	compositionVec = {numHe, numV - 1, 0};
-	auto heVClusterLessV = (PSICluster *) network->getCompound(typeName, compositionVec);
+	auto heVClusterLessV = (PSICluster *) network->getCompound(typeName,
+			compositionVec);
+	// Special case for numV = 1
+	if (numV == 1) {
+		heVClusterLessV = (PSICluster *) network->get(heType, numHe);
+	}
+	// Skip He_1V_1 because it was counted in the He dissociation
+	if (numHe == 1 && numV == 1)
+		heVClusterLessV = nullptr;
+
 	// Get the single vacancy cluster
 	singleCluster = (PSICluster *) network->get(vType, 1);
 	emitClusters(singleCluster, heVClusterLessV);
 	// He_(a)[V_(b+1)] --> (He_a)(V_b) + V
 	// Get the cluster with one more vacancy
 	compositionVec = {numHe, numV + 1, 0};
-	auto heVClusterMoreV = (PSICluster *) network->getCompound(typeName, compositionVec);
+	auto heVClusterMoreV = (PSICluster *) network->getCompound(typeName,
+			compositionVec);
 	// Here it is important that heVClusterMoreV is the first cluster
 	// because it is the dissociating one.
 	dissociateCluster(heVClusterMoreV, singleCluster);
-	
+
 	return;
 }

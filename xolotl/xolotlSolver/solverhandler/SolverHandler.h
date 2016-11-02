@@ -58,6 +58,9 @@ protected:
 	//! If the user wants to move the surface.
 	bool movingSurface;
 
+	//! If the user wants to burst bubbles.
+	bool bubbleBursting;
+
 	//! Method generating the grid in the x direction
 	void generateGrid(int nx, double hx, int surfacePos) {
 		// Clear the grid
@@ -170,6 +173,8 @@ public:
 		// Should we be able to move the surface?
 		auto map = options.getProcesses();
 		movingSurface = map["movingSurface"];
+		// Should we be able to burst bubble?
+		bubbleBursting = map["bursting"];
 
 		return;
 	}
@@ -220,6 +225,14 @@ public:
 	 */
 	bool moveSurface() const {
 		return movingSurface;
+	}
+
+	/**
+	 * To know if the bubble bursting should be used.
+	 * \see ISolverHandler.h
+	 */
+	bool burstBubbles() const {
+		return bubbleBursting;
 	}
 
 	/**
