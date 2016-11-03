@@ -115,9 +115,8 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::load() {
 	}
 
 	// Set the reaction network for each reactant
-	for (auto reactantsIt = reactants.begin(); reactantsIt != reactants.end();
-			++reactantsIt) {
-		(*reactantsIt)->setReactionNetwork(network);
+	for (auto currCluster : reactants) {
+		currCluster->setReactionNetwork(network);
 	}
 
 	// Check if we want dummy reactions
@@ -187,7 +186,8 @@ void NEClusterNetworkLoader::applyGrouping(
 		// Keep the information of the group
 		superGroupMap[superCount] = superCluster.get();
 
-		std::cout << superCount << " " << count << " " << superCluster->getName() << std::endl;
+		std::cout << superCount << " " << count << " "
+				<< superCluster->getName() << std::endl;
 
 		// Reinitialize everything
 		size = 0.0, radius = 0.0, energy = 0.0;
@@ -324,25 +324,25 @@ void NEClusterNetworkLoader::applyGrouping(
 	// Get the super cluster map
 	auto superMap = network->getAll(NESuperType);
 	// Set the reaction network for each super reactant
-	for (auto reactantsIt = superMap.begin(); reactantsIt != superMap.end();
-			++reactantsIt) {
-		(*reactantsIt)->setReactionNetwork(network);
+	for (auto currCluster : superMap) {
+		currCluster->setReactionNetwork(network);
 	}
 
 	// Remove Xe clusters bigger than xeMin from the network
 	// Loop on the Xe clusters
-	for (int i = 0; i < xeMap.size(); i++) {
-		// Get the cluster and its size
-		cluster = (NECluster *) xeMap.at(i);
-		nXe = cluster->getSize();
+	std::vector<IReactant*> doomedReactants;
+	for (auto currCluster : xeMap) {
 
-		// Skip the clusters that are too small
-		if (nXe < xeMin)
-			continue;
+		// Get the cluster's size.
+		nXe = currCluster->getSize();
 
-		// Remove the reactant from the network
-		network->removeReactant(xeMap.at(i));
+		// Check if the cluster is too large.
+		if (nXe >= xeMin) {
+			// The cluster is too large.  Add it to the ones we will remove.
+			doomedReactants.push_back(currCluster);
+		}
 	}
+	network->removeReactants(doomedReactants);
 
 	// Recompute Ids and network size and redefine the connectivities
 	network->reinitializeNetwork();

@@ -143,9 +143,8 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::load() {
 		}
 
 		// Set the network for all of the reactants. This MUST be done manually.
-		for (auto reactantsIt = reactants.begin();
-				reactantsIt != reactants.end(); ++reactantsIt) {
-			(*reactantsIt)->setReactionNetwork(network);
+		for (auto currCluster : reactants) {
+			currCluster->setReactionNetwork(network);
 		}
 	}
 
@@ -514,25 +513,25 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 	// Get the super cluster map
 	auto superMap = network->getAll(PSISuperType);
 	// Set the reaction network for each super reactant
-	for (auto reactantsIt = superMap.begin(); reactantsIt != superMap.end();
-			++reactantsIt) {
-		(*reactantsIt)->setReactionNetwork(network);
+	for (auto currCluster : superMap) {
+		currCluster->setReactionNetwork(network);
 	}
 
 	// Remove HeV clusters bigger than vMin from the network
 	// Loop on the HeV clusters
-	for (int i = 0; i < heVMap.size(); i++) {
-		// Get the cluster and its composition
-		cluster = (PSICluster *) heVMap.at(i);
-		composition = cluster->getComposition();
+	std::vector<IReactant*> doomedReactants;
+	for (auto currCluster : heVMap) {
 
-		// Skip the clusters that are too small
-		if (composition[vType] < vMin)
-			continue;
+		// Get the composition
+		composition = currCluster->getComposition();
 
-		// Remove the reactant from the network
-		network->removeReactant(heVMap.at(i));
+		// Check if the cluster is too large.
+		if (composition[vType] >= vMin) {
+			// The cluster is too large.  Add it to the ones we will remove.
+			doomedReactants.push_back(currCluster);
+		}
 	}
+	network->removeReactants(doomedReactants);
 
 	// Recompute Ids and network size and redefine the connectivities
 	network->reinitializeNetwork();

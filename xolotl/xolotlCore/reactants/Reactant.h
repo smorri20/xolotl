@@ -26,7 +26,7 @@ namespace xolotlCore {
  * manipulating the concentration, etc. It should be subclassed to add
  * functionality for calculate fluxes and computing connectivity.
  */
-class Reactant : public IReactant {
+class Reactant: public IReactant {
 
 protected:
 
@@ -183,13 +183,14 @@ public:
 	/**
 	 * The destructor
 	 */
-	virtual ~Reactant() {}
+	virtual ~Reactant() {
+	}
 
 	/**
 	 * Returns a reactant created using the copy constructor
 	 */
 	virtual std::shared_ptr<IReactant> clone() {
-		return std::shared_ptr<IReactant> (new Reactant(*this));
+		return std::shared_ptr<IReactant>(new Reactant(*this));
 	}
 
 	/**
@@ -199,7 +200,8 @@ public:
 	 * @param distB The second distance for super clusters
 	 * @return The concentration of this reactant
 	 */
-	virtual double getConcentration(double distA = 0.0, double distB = 0.0) const;
+	virtual double getConcentration(double distA = 0.0,
+			double distB = 0.0) const;
 
 	/**
 	 * This operation sets the concentration of the reactant to the
@@ -258,7 +260,9 @@ public:
 	 * This operation reset the connectivity sets based on the information
 	 * in the effective production and dissociation vectors.
 	 */
-	virtual void resetConnectivities() {return;}
+	virtual void resetConnectivities() {
+		return;
+	}
 
 	/**
 	 * This operation returns a list that represents the connectivity
@@ -326,6 +330,18 @@ public:
 	 * elements and values indicating the amount of the element present.
 	 */
 	virtual const std::map<std::string, int> & getComposition() const;
+
+	/**
+	 * Get a string containing the canonical representation of the
+	 * composition of this reactant.  The string is not intended to
+	 * be human-readable, but rather is useful for keys in reactant maps
+	 * and for composition match tests (as opposed to comparisons of
+	 * the composition maps themselves).
+	 *
+	 * @return A string containing the canonical representation of our
+	 * composition.
+	 */
+	virtual std::string getCompositionString() const;
 
 	/**
 	 * This operation sets the id of the reactant, The id is zero by default
@@ -493,13 +509,17 @@ public:
 	 *
 	 * @return The rate
 	 */
-	virtual double getLeftSideRate() const {return 0.0;}
+	virtual double getLeftSideRate() const {
+		return 0.0;
+	}
 
 	/**
 	 * Calculate all the rate constants for the reactions and dissociations in which this
 	 * reactant is taking part.
 	 */
-	virtual void computeRateConstants() {return;}
+	virtual void computeRateConstants() {
+		return;
+	}
 
 	/**
 	 * Update all the rate constants for the reactions and dissociations in which this
@@ -511,7 +531,25 @@ public:
 	 * This operation returns true if the cluster is a mixed-species or compound
 	 * cluster and false if it is a single species cluster.
 	 */
-	virtual bool isMixed() const {return false;}
+	virtual bool isMixed() const {
+		return false;
+	}
+
+	/**
+	 * Get a string containing the canonical representation of the
+	 * given composition.  The string is not intended to
+	 * be human-readable, but rather is useful for keys in reactant maps
+	 * and for composition match tests (as opposed to comparisons of
+	 * the composition maps themselves).
+	 *
+	 * @param type The type that will be used with the given composition.
+	 * @param composition A map containing the names and amounts of each
+	 * part of the reactant.
+	 * @return A string containing the canonical representation of our
+	 * composition.
+	 */
+	static std::string toCanonicalString(std::string type,
+			const std::map<std::string, int>& composition);
 
 };
 

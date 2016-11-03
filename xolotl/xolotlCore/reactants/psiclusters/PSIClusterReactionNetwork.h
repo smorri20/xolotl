@@ -32,33 +32,30 @@ class PSIClusterReactionNetwork: public ReactionNetwork {
 private:
 
 	/**
-	 * The map of single-species clusters, indexed by a map that contains the
-	 * name of the reactant and its size.
+	 * The map of single-species clusters, indexed by a string representation
+	 * of a map that contains the name of the reactant and its size.
 	 */
-	std::unordered_map< std::map< std::string, int >,
-		std::shared_ptr<IReactant> > singleSpeciesMap;
+	std::unordered_map<std::string, std::shared_ptr<IReactant> > singleSpeciesMap;
 
 	/**
-	 * The map of mixed or compound species clusters, indexed by a map that
-	 * contains the name of the constituents of the compound reactant and their
-	 * sizes.
+	 * The map of mixed or compound species clusters, indexed by a string
+	 * representation of a map that contains the name of the constituents
+	 * of the compound reactant and their sizes.
 	 */
-	std::unordered_map< std::map< std::string, int >,
-		std::shared_ptr<IReactant> > mixedSpeciesMap;
+	std::unordered_map<std::string, std::shared_ptr<IReactant> > mixedSpeciesMap;
 
 	/**
 	 * The map of super species clusters, indexed by a map that
 	 * contains the name of the constituents of the compound reactant and their
 	 * sizes.
 	 */
-	std::unordered_map< std::map< std::string, int >,
-		std::shared_ptr<IReactant> > superSpeciesMap;
+	std::unordered_map<std::string, std::shared_ptr<IReactant> > superSpeciesMap;
 
 	/**
 	 * This map stores all of the clusters in the network by type.
 	 */
-	std::map<std::string, std::shared_ptr<
-		std::vector< std::shared_ptr<IReactant> > > > clusterTypeMap;
+	std::map<std::string,
+			std::shared_ptr<std::vector<std::shared_ptr<IReactant> > > > clusterTypeMap;
 
 	/**
 	 * This operation sets the default values of the properties table and names
@@ -78,7 +75,8 @@ public:
 	 *
 	 * @param registry The performance handler registry
 	 */
-	PSIClusterReactionNetwork(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+	PSIClusterReactionNetwork(
+			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
 	 * The copy constructor.
@@ -113,8 +111,7 @@ public:
 	 * @param size the size of the reactant
 	 * @return A pointer to the reactant
 	 */
-	IReactant * get(const std::string& type,
-			const int size) const;
+	IReactant * get(const std::string& type, const int size) const;
 
 	/**
 	 * This operation returns a compound reactant with the given type and size
@@ -207,11 +204,11 @@ public:
 	void addSuper(std::shared_ptr<IReactant> reactant);
 
 	/**
-	 * This operation removes the reactant from the network.
+	 * This operation removes a group of reactants from the network.
 	 *
-	 * @param reactant The reactant that should be removed.
+	 * @param reactants The reactants that should be removed.
 	 */
-	void removeReactant(IReactant * reactant);
+	void removeReactants(const std::vector<IReactant*>& reactants);
 
 	/**
 	 * This operation reinitializes the network.
@@ -253,7 +250,9 @@ public:
 	 *
 	 * @return The number of degrees of freedom
 	 */
-	virtual int getDOF() {return networkSize + 2 * getAll(xolotlCore::PSISuperType).size();}
+	virtual int getDOF() {
+		return networkSize + 2 * getAll(xolotlCore::PSISuperType).size();
+	}
 
 	/**
 	 * Get the diagonal fill for the Jacobian, corresponding to the reactions.

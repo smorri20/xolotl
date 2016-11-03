@@ -4,26 +4,12 @@
 // Includes
 #include "IReactionNetwork.h"
 #include <Constants.h>
+#include <set>
 #include <unordered_map>
 
 namespace xolotlPerf {
 class IHandlerRegistry;
 class IEventCounter;
-}
-
-// Override the hash operation for the composition maps used by the
-// PSIClusterReactionNetwork to store reactants.
-namespace std {
-template<>
-class hash<std::map<std::string, int>> {
-public:
-	long operator()(const std::map<std::string, int>& composition) const {
-		int bigNumber = 1e9;
-		return (composition.at(xolotlCore::heType) * 10
-				+ composition.at(xolotlCore::vType) * 200
-				+ composition.at(xolotlCore::iType) * 3000) * bigNumber;
-	}
-};
 }
 
 namespace xolotlCore {
@@ -33,9 +19,55 @@ namespace xolotlCore {
  *  (combinations of normal reactants). It also manages a set of properties
  *  that describe both.
  */
-class ReactionNetwork : public IReactionNetwork {
+class ReactionNetwork: public IReactionNetwork {
 
 protected:
+
+	/**
+	 * A functor useful for identifying a set of reactants by their
+	 * composition from a container, e.g., when removing a collection
+	 * of doomed reactants from a vector of reactants.
+	 */
+	class ReactantMatcher {
+	private:
+		/**
+		 * The canonical composition string representations of the reactants
+		 * we are to find.
+		 */
+		std::set<std::string> compStrings;
+
+	public:
+		/**
+		 * Build a ReactantMatcher.
+		 * @param reactants The collection of reactants we are to recognize.
+		 */
+		ReactantMatcher(const std::vector<IReactant*>& reactants) {
+			for (auto reactant : reactants) {
+				compStrings.insert(reactant->getCompositionString());
+			}
+		}
+
+		/**
+		 * Determine if the given reactant is in our set.
+		 * @param testReactant The reactant to check.
+		 * @return true iff the reactant's composition's canonical string
+		 * representation is in our set.
+		 */
+		bool operator()(const IReactant* testReactant) const {
+			auto iter = compStrings.find(testReactant->getCompositionString());
+			return (iter != compStrings.end());
+		}
+
+		/**
+		 * Determine if the given reactant is in our set.
+		 * @param testReactant The reactant to check.
+		 * @return true iff the reactant's composition's canonical string
+		 * representation is in our set.
+		 */
+		bool operator()(const std::shared_ptr<IReactant> testReactant) const {
+			return this->operator()(testReactant.get());
+		}
+	};
 
 	/**
 	 * The properties of this network. The exact configuration of the map is
@@ -58,7 +90,7 @@ protected:
 	 * The list of all of the reactants in the network. This list is filled and
 	 * maintained by the getAll() operation.
 	 */
-	std::shared_ptr< std::vector<IReactant *> > allReactants;
+	std::shared_ptr<std::vector<IReactant *> > allReactants;
 
 	/**
 	 * A map for storing the dfill configuration and accelerating the formation of
@@ -184,7 +216,9 @@ public:
 	 *
 	 * @param reactant The reactant that should be added to the network
 	 */
-	virtual void add(std::shared_ptr<IReactant> reactant) {return;}
+	virtual void add(std::shared_ptr<IReactant> reactant) {
+		return;
+	}
 
 	/**
 	 * This operation adds a super reactant to the network.
@@ -192,21 +226,27 @@ public:
 	 *
 	 * @param reactant The reactant that should be added to the network
 	 */
-	virtual void addSuper(std::shared_ptr<IReactant> reactant) {return;}
+	virtual void addSuper(std::shared_ptr<IReactant> reactant) {
+		return;
+	}
 
 	/**
-	 * This operation removes the reactant from the network.
+	 * This operation removes a group of reactants from the network.
 	 *
-	 * @param reactant The reactant that should be removed.
+	 * @param reactants The reactants that should be removed.
 	 */
-	virtual void removeReactant(IReactant * reactant) {return;}
+	virtual void removeReactants(const std::vector<IReactant*>& reactants) {
+		return;
+	}
 
 	/**
 	 * This operation reinitializes the network.
 	 *
 	 * It computes the cluster Ids and network size from the allReactants vector.
 	 */
-	virtual void reinitializeNetwork() {return;}
+	virtual void reinitializeNetwork() {
+		return;
+	}
 
 	/**
 	 * This operation returns the names of the reactants in the network.
@@ -242,22 +282,27 @@ public:
 	 * @param key The key for the property
 	 * @param value The value to which the key should be set
 	 */
-	virtual void setProperty(const std::string& key,
-			const std::string& value) {return;}
+	virtual void setProperty(const std::string& key, const std::string& value) {
+		return;
+	}
 
 	/**
 	 * This operation returns the size or number of reactants in the network.
 	 *
 	 * @return The number of reactants in the network
 	 */
-	int size() {return networkSize;}
+	int size() {
+		return networkSize;
+	}
 
 	/**
 	 * This operation returns the size or number of reactants and momentums in the network.
 	 *
 	 * @return The number of degrees of freedom
 	 */
-	virtual int getDOF() {return networkSize;}
+	virtual int getDOF() {
+		return networkSize;
+	}
 
 	/**
 	 * This operation fills an array of doubles with the concentrations of all
@@ -305,7 +350,9 @@ public:
 	 *
 	 * @param diagFill The pointer to the vector where the connectivity information is kept
 	 */
-	virtual void getDiagonalFill(int *diagFill) {return;}
+	virtual void getDiagonalFill(int *diagFill) {
+		return;
+	}
 
 	/**
 	 * Get the total concentration of atoms contained in bubbles in the network.
@@ -314,7 +361,9 @@ public:
 	 *
 	 * @return The total concentration
 	 */
-	virtual double getTotalAtomConcentration() {return 0.0;}
+	virtual double getTotalAtomConcentration() {
+		return 0.0;
+	}
 
 	/**
 	 * Compute the fluxes generated by all the reactions
@@ -326,7 +375,9 @@ public:
 	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
 	 * point where the fluxes are computed used to find the next solution
 	 */
-	virtual void computeAllFluxes(double *updatedConcOffset) {return;}
+	virtual void computeAllFluxes(double *updatedConcOffset) {
+		return;
+	}
 
 	/**
 	 * Compute the partial derivatives generated by all the reactions
@@ -342,7 +393,9 @@ public:
 	 * @param size The pointer to the array that will contain the number of reactions for
 	 * this cluster
 	 */
-	virtual void computeAllPartials(double *vals, int *indices, int *size) {return;}
+	virtual void computeAllPartials(double *vals, int *indices, int *size) {
+		return;
+	}
 
 };
 

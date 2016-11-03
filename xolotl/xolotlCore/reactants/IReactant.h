@@ -32,7 +32,8 @@ public:
 	/**
 	 * The destructor
 	 */
-	virtual ~IReactant() {}
+	virtual ~IReactant() {
+	}
 
 	/**
 	 * Returns a reactant created using the copy constructor
@@ -46,7 +47,8 @@ public:
 	 * @param distB The second distance for super clusters
 	 * @return The concentration of this reactant
 	 */
-	virtual double getConcentration(double distA = 0.0, double distB = 0.0) const = 0;
+	virtual double getConcentration(double distA = 0.0,
+			double distB = 0.0) const = 0;
 
 	/**
 	 * This operation sets the concentration of the reactant to the
@@ -148,7 +150,8 @@ public:
 	 * the list returned by the ReactionNetwork::getAll() operation. The size of
 	 * the vector should be equal to ReactionNetwork::size().
 	 */
-	virtual void getPartialDerivatives(std::vector<double> & partials) const = 0;
+	virtual void getPartialDerivatives(
+			std::vector<double> & partials) const = 0;
 
 	/**
 	 * This operation returns the name of the reactant.
@@ -173,6 +176,19 @@ public:
 	 * elements and values indicating the amount of the element present.
 	 */
 	virtual const std::map<std::string, int> & getComposition() const = 0;
+
+	/**
+	 * Get a string containing the canonical representation of the
+	 * composition of this reactant.  The string is not intended to
+	 * be human-readable, but rather is useful for keys in reactant maps
+	 * and for composition match tests (as opposed to comparisons of
+	 * the composition maps themselves).
+	 * TODO is this the same information as our name?
+	 *
+	 * @return A string containing the canonical representation of our
+	 * composition.
+	 */
+	virtual std::string getCompositionString() const = 0;
 
 	/**
 	 * This operation sets the id of the reactant, The id is zero by default
