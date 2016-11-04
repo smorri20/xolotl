@@ -36,18 +36,4 @@ public class Cluster {
 	// is 0.
 	public double D_0 = 0.0;
 
-	/**
-	 * This operation returns the cluster as a string of the form
-	 * 
-	 * nHe nV nI E_f E_migration D_0
-	 */
-	public String toString() {
-
-		// Convert infinite energies
-		String EfAsString = (!Double.isInfinite(E_f)) ? String.valueOf(E_f) : "Infinity";
-		String EMAsString = (!Double.isInfinite(E_m)) ? String.valueOf(E_m) : "Infinity";
-
-		return nHe + " " + nV + " " + nI + " " + EfAsString + " " + EMAsString + " " + D_0;
-	}
-
 }

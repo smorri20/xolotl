@@ -337,12 +337,9 @@ void NECluster::setReactionNetwork(
 	// Call the superclass's method to actually set the reference
 	Reactant::setReactionNetwork(reactionNetwork);
 
-	// Extract properties from the network
-	auto properties = network->getProperties();
-
 	// Get the enabled reaction type flags
-	bool reactionsEnabled = (properties["reactionsEnabled"] == "true");
-	bool dissociationsEnabled = (properties["dissociationsEnabled"] == "true");
+	bool reactionsEnabled = reactionNetwork->getReactionsEnabled();
+	bool dissociationsEnabled = reactionNetwork->getDissociationsEnabled();
 
 	// Clear the flux-related arrays
 	reactingPairs.clear();

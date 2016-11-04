@@ -27,7 +27,7 @@ using namespace xolotlPerf;
 
 SimplePSIReactionNetwork::SimplePSIReactionNetwork(const int maxClusterSize,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-	PSIClusterReactionNetwork(registry){
+		PSIClusterReactionNetwork(registry) {
 	// Add He clusters
 	for (int numHe = 1; numHe <= maxClusterSize; numHe++) {
 		// Create a He cluster with cluster size numHe
@@ -47,7 +47,8 @@ SimplePSIReactionNetwork::SimplePSIReactionNetwork(const int maxClusterSize,
 	// Add interstitial clusters
 	for (int numI = 1; numI <= maxClusterSize; numI++) {
 		// Create a He cluster with cluster size numI
-		shared_ptr<InterstitialCluster> cluster = make_shared<InterstitialCluster>(numI, registry);
+		shared_ptr<InterstitialCluster> cluster = make_shared<
+				InterstitialCluster>(numI, registry);
 		// Add it to the network
 		add(cluster);
 	}
@@ -57,7 +58,8 @@ SimplePSIReactionNetwork::SimplePSIReactionNetwork(const int maxClusterSize,
 	for (int numV = 1; numV <= maxClusterSize; numV++) {
 		for (int numHe = 1; numHe + numV <= maxClusterSize; numHe++) {
 			// Create a HeVCluster with the current amount of He and V
-			shared_ptr<HeVCluster> cluster = make_shared<HeVCluster>(numHe, numV, registry);
+			shared_ptr<HeVCluster> cluster = make_shared<HeVCluster>(numHe,
+					numV, registry);
 			add(cluster);
 		}
 	}
@@ -68,7 +70,8 @@ SimplePSIReactionNetwork::SimplePSIReactionNetwork(const int maxClusterSize,
 	for (int numI = 1; numI <= maxClusterSize; numI++) {
 		for (int numHe = 1; numHe + numI <= maxClusterSize; numHe++) {
 			// Create the HeI cluster
-			shared_ptr<HeInterstitialCluster> cluster = make_shared<HeInterstitialCluster>(numHe, numI, registry);
+			shared_ptr<HeInterstitialCluster> cluster = make_shared<
+					HeInterstitialCluster>(numHe, numI, registry);
 			// Add it to the reactants vector
 			add(cluster);
 		}
@@ -79,7 +82,7 @@ SimplePSIReactionNetwork::SimplePSIReactionNetwork(const int maxClusterSize,
 
 SimpleNEReactionNetwork::SimpleNEReactionNetwork(const int maxClusterSize,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-	NEClusterReactionNetwork(registry){
+		NEClusterReactionNetwork(registry) {
 	// Add Xe clusters
 	for (int numXe = 1; numXe <= maxClusterSize; numXe++) {
 		// Create a He cluster with cluster size numHe
@@ -91,13 +94,14 @@ SimpleNEReactionNetwork::SimpleNEReactionNetwork(const int maxClusterSize,
 	return;
 }
 
-shared_ptr<xolotlCore::PSIClusterReactionNetwork> testUtils::getSimplePSIReactionNetwork(const int maxClusterSize,
+shared_ptr<xolotlCore::PSIClusterReactionNetwork> testUtils::getSimplePSIReactionNetwork(
+		const int maxClusterSize,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
 	// Create the network
 	shared_ptr<xolotlCore::PSIClusterReactionNetwork> network(
 			new SimplePSIReactionNetwork(maxClusterSize, registry));
-	cout << "SimpleReactionNetwork Message: "
-			<< "Created network with size " << network->size() << endl;
+	cout << "SimpleReactionNetwork Message: " << "Created network with size "
+			<< network->size() << endl;
 	// Register the reaction network with its clusters
 	auto reactants = network->getAll();
 	for (unsigned int i = 0; i < reactants->size(); i++) {
@@ -106,8 +110,8 @@ shared_ptr<xolotlCore::PSIClusterReactionNetwork> testUtils::getSimplePSIReactio
 
 	// ----- TEMPORARY DEBUG OUTPUT!!!!! -----
 	// Print the reaction connectivity matrix
-	for (auto reactantIt = reactants->begin();
-			reactantIt != reactants->end(); reactantIt++) {
+	for (auto reactantIt = reactants->begin(); reactantIt != reactants->end();
+			reactantIt++) {
 		auto cluster = (PSICluster *) (*reactantIt);
 		vector<int> conn = cluster->getConnectivity();
 
@@ -120,13 +124,14 @@ shared_ptr<xolotlCore::PSIClusterReactionNetwork> testUtils::getSimplePSIReactio
 	return network;
 }
 
-shared_ptr<xolotlCore::NEClusterReactionNetwork> testUtils::getSimpleNEReactionNetwork(const int maxClusterSize,
+shared_ptr<xolotlCore::NEClusterReactionNetwork> testUtils::getSimpleNEReactionNetwork(
+		const int maxClusterSize,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
 	// Create the network
 	shared_ptr<xolotlCore::NEClusterReactionNetwork> network(
 			new SimpleNEReactionNetwork(maxClusterSize, registry));
-	cout << "SimpleReactionNetwork Message: "
-			<< "Created network with size " << network->size() << endl;
+	cout << "SimpleReactionNetwork Message: " << "Created network with size "
+			<< network->size() << endl;
 	// Register the reaction network with its clusters
 	auto reactants = network->getAll();
 	for (unsigned int i = 0; i < reactants->size(); i++) {
@@ -135,8 +140,8 @@ shared_ptr<xolotlCore::NEClusterReactionNetwork> testUtils::getSimpleNEReactionN
 
 	// ----- TEMPORARY DEBUG OUTPUT!!!!! -----
 	// Print the reaction connectivity matrix
-	for (auto reactantIt = reactants->begin();
-			reactantIt != reactants->end(); reactantIt++) {
+	for (auto reactantIt = reactants->begin(); reactantIt != reactants->end();
+			reactantIt++) {
 		auto cluster = (NECluster *) (*reactantIt);
 		vector<int> conn = cluster->getConnectivity();
 

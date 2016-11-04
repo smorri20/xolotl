@@ -26,8 +26,8 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	MPI_Init(&argc, &argv);
 
 	// Create the network loader
-	HDF5NetworkLoader loader =
-			HDF5NetworkLoader(make_shared<xolotlPerf::DummyHandlerRegistry>());
+	HDF5NetworkLoader loader = HDF5NetworkLoader(
+			make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Define the filename to load the network from
 	string sourceDir(XolotlSourceDirectory);
 	string pathToFile("/tests/testfiles/tungsten_diminutive.h5");
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	const int dof = network->getDOF();
 
 	// Create ofill
-	int mat[dof*dof];
+	int mat[dof * dof];
 	int *ofill = &mat[0];
 
 	// Create the advection handler and initialize it with a sink at
@@ -66,11 +66,11 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	double hz = 2.0;
 
 	// The arrays of concentration
-	double concentration[27*dof];
-	double newConcentration[27*dof];
+	double concentration[27 * dof];
+	double newConcentration[27 * dof];
 
 	// Initialize their values
-	for (int i = 0; i < 27*dof; i++) {
+	for (int i = 0; i < 27 * dof; i++) {
 		concentration[i] = (double) i * i;
 		newConcentration[i] = 0.0;
 	}
@@ -109,8 +109,8 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	std::vector<double> gridPosition = { hx, hy, hz };
 
 	// Compute the advection at this grid point
-	advectionHandler.computeAdvection(network, gridPosition,
-			concVector, updatedConcOffset, hx, hx, 1, hy, 1, hz, 1);
+	advectionHandler.computeAdvection(network, gridPosition, concVector,
+			updatedConcOffset, hx, hx, 1, hy, 1, hz, 1);
 
 	// Check the new values of updatedConcOffset
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 1.52642e+11, 0.01);
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	// Initialize the rows, columns, and values to set in the Jacobian
 	int nAdvec = advectionHandler.getNumberOfAdvecting();
 	int indices[nAdvec];
-	double val[7*nAdvec];
+	double val[7 * nAdvec];
 	// Get the pointer on them for the compute advection method
 	int *indicesPointer = &indices[0];
 	double *valPointer = &val[0];

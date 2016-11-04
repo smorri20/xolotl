@@ -27,8 +27,8 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	MPI_Init(&argc, &argv);
 
 	// Create the network loader
-	HDF5NetworkLoader loader =
-			HDF5NetworkLoader(make_shared<xolotlPerf::DummyHandlerRegistry>());
+	HDF5NetworkLoader loader = HDF5NetworkLoader(
+			make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Define the filename to load the network from
 	string sourceDir(XolotlSourceDirectory);
 	string pathToFile("/tests/testfiles/tungsten_diminutive.h5");
@@ -54,12 +54,13 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	std::vector<IAdvectionHandler *> advectionHandlers;
 
 	// Create ofill
-	int mat[dof*dof];
+	int mat[dof * dof];
 	int *ofill = &mat[0];
 
 	// Initialize it
 	diffusionHandler.initializeOFill(network, ofill);
-	diffusionHandler.initializeDiffusionGrid(advectionHandlers, grid, 3, 1.0, 3, 1.0);
+	diffusionHandler.initializeDiffusionGrid(advectionHandlers, grid, 3, 1.0, 3,
+			1.0);
 
 	// Check the total number of diffusing clusters
 	BOOST_REQUIRE_EQUAL(diffusionHandler.getNumberOfDiffusing(), 7);
@@ -72,11 +73,11 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	double sz = 1.0;
 
 	// The arrays of concentration
-	double concentration[27*dof];
-	double newConcentration[27*dof];
+	double concentration[27 * dof];
+	double newConcentration[27 * dof];
 
 	// Initialize their values
-	for (int i = 0; i < 27*dof; i++) {
+	for (int i = 0; i < 27 * dof; i++) {
 		concentration[i] = (double) i * i / 10.0;
 		newConcentration[i] = 0.0;
 	}
@@ -112,8 +113,8 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	concVector[6] = conc + 22 * dof; // back
 
 	// Compute the diffusion at this grid point
-	diffusionHandler.computeDiffusion(network, concVector,
-			updatedConcOffset, hx, hx, 1, sy, 1, sz, 1);
+	diffusionHandler.computeDiffusion(network, concVector, updatedConcOffset,
+			hx, hx, 1, sy, 1, sz, 1);
 
 	// Check the new values of updatedConcOffset
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 9.45765e+12, 0.01);
@@ -129,7 +130,7 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	// Initialize the indices and values to set in the Jacobian
 	int nDiff = diffusionHandler.getNumberOfDiffusing();
 	int indices[nDiff];
-	double val[7*nDiff];
+	double val[7 * nDiff];
 	// Get the pointer on them for the compute diffusion method
 	int *indicesPointer = &indices[0];
 	double *valPointer = &val[0];

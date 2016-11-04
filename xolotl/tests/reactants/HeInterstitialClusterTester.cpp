@@ -52,17 +52,15 @@ BOOST_AUTO_TEST_CASE(getSpeciesSize) {
  */
 BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork();
-	auto props = network->getProperties();
 
 	// Prevent dissociation from being added to the connectivity array
-	props["dissociationsEnabled"] = "false";
+	network->disableDissociations();
 
 	// Check the reaction connectivity of the HeI cluster
 	// with 5He and 3I
 	// Get the connectivity array from the reactant
 	vector<int> composition = { 5, 0, 3 };
-	auto reactant =
-			(PSICluster *) (network->getCompound("HeI", composition));
+	auto reactant = (PSICluster *) (network->getCompound("HeI", composition));
 	// Check the type name
 	BOOST_REQUIRE_EQUAL("HeI", reactant->getType());
 	auto reactionConnectivity = reactant->getConnectivity();
@@ -82,18 +80,15 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 			1, 0, 1, 0, 0, 0, 0, 0, 0, 0,
 
 			// HeV
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 			// HeI
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1,
-			1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0 };
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1,
+			0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 	for (unsigned int i = 0; i < reactionConnectivity.size(); i++) {
-		BOOST_REQUIRE_EQUAL(reactionConnectivity[i],
-				connectivityExpected[i]);
+		BOOST_REQUIRE_EQUAL(reactionConnectivity[i], connectivityExpected[i]);
 	}
 
 	return;
@@ -132,11 +127,8 @@ BOOST_AUTO_TEST_CASE(checkTotalFlux) {
 	cluster->computeRateConstants();
 	// The flux can pretty much be anything except "not a number" (nan).
 	double flux = cluster->getTotalFlux();
-	BOOST_TEST_MESSAGE("HeInterstitialClusterTester Message: \n" << "Total Flux is " << flux << "\n"
-			  << "   -Production Flux: " << cluster->getProductionFlux() << "\n"
-			  << "   -Combination Flux: " << cluster->getCombinationFlux() << "\n"
-			  << "   -Dissociation Flux: " << cluster->getDissociationFlux() << "\n"
-	  	  	  << "   -Emission Flux: " << cluster->getEmissionFlux() << "\n");
+	BOOST_TEST_MESSAGE(
+			"HeInterstitialClusterTester Message: \n" << "Total Flux is " << flux << "\n" << "   -Production Flux: " << cluster->getProductionFlux() << "\n" << "   -Combination Flux: " << cluster->getCombinationFlux() << "\n" << "   -Dissociation Flux: " << cluster->getDissociationFlux() << "\n" << "   -Emission Flux: " << cluster->getEmissionFlux() << "\n");
 
 	// Check the flux
 	BOOST_REQUIRE_CLOSE(-16982855380.0, flux, 0.1);
@@ -150,8 +142,8 @@ BOOST_AUTO_TEST_CASE(checkTotalFlux) {
 BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	// Local Declarations
 	// The vector of partial derivatives to compare with
-	double knownPartials[] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-			0.0, 0.0, 0.0, 0.0, 0.0};
+	double knownPartials[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+			0.0, 0.0, 0.0, 0.0, 0.0 };
 	// Get the simple reaction network
 	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork(3);
 
@@ -192,8 +184,8 @@ BOOST_AUTO_TEST_CASE(checkReactionRadius) {
 
 	// Check all the values
 	for (int i = 1; i <= 5; i++) {
-		cluster = shared_ptr < HeInterstitialCluster
-				> (new HeInterstitialCluster(1, i, registry));
+		cluster = shared_ptr<HeInterstitialCluster>(
+				new HeInterstitialCluster(1, i, registry));
 		BOOST_REQUIRE_CLOSE(expectedRadii[i - 1], cluster->getReactionRadius(),
 				0.000001);
 	}

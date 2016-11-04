@@ -18,6 +18,8 @@
 #include <HDF5Utils.h>
 #include <NESuperCluster.h>
 #include <PSISuperCluster.h>
+#include <NEClusterReactionNetwork.h>
+#include <PSIClusterReactionNetwork.h>
 
 namespace xolotlSolver {
 
@@ -1165,9 +1167,9 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 	auto grid = solverHandler->getXGrid();
 
 	// Get the maximum size of HeV clusters
-	std::map<std::string, std::string> props = network->getProperties();
-	int maxHeVClusterSize = std::stoi(props["maxHeVClusterSize"]);
-	int maxVClusterSize = std::stoi(props["maxVClusterSize"]);
+	auto psiNetwork = dynamic_cast<PSIClusterReactionNetwork*>(network);
+	int maxHeVClusterSize = psiNetwork->getMaxHeVClusterSize();
+	int maxVClusterSize = psiNetwork->getMaxVClusterSize();
 
 	// Loop on the grid points
 	for (xi = xs; xi < xs + xm; xi++) {
@@ -1447,10 +1449,10 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 	auto network = solverHandler->getNetwork();
 
 	// Get the maximum size of HeV clusters
-	std::map<std::string, std::string> props = network->getProperties();
-	int maxHeVClusterSize = std::stoi(props["maxHeVClusterSize"]);
+	auto psiNetwork = dynamic_cast<PSIClusterReactionNetwork*>(network);
+	int maxHeVClusterSize = psiNetwork->getMaxHeVClusterSize();
 	// Get the maximum size of V clusters
-	int maxVClusterSize = std::stoi(props["maxVClusterSize"]);
+	int maxVClusterSize = psiNetwork->getMaxVClusterSize();
 	// Get the number of He in the max HeV cluster
 	int maxHeSize = (maxHeVClusterSize - maxVClusterSize);
 	// Get the maximum stable HeV cluster
@@ -1459,7 +1461,8 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 			{ maxHeSize, maxVClusterSize, 0 });
 	if (!maxCluster) {
 		// Get the maximum size of Xe clusters
-		int maxXeClusterSize = std::stoi(props["maxXeClusterSize"]);
+		auto neNetwork = dynamic_cast<NEClusterReactionNetwork*>(network);
+		int maxXeClusterSize = neNetwork->getMaxXeClusterSize();
 		maxCluster = network->get(xeType, maxXeClusterSize);
 	}
 

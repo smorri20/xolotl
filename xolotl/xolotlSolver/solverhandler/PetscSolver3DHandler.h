@@ -48,13 +48,13 @@ public:
 	 * Compute the off-diagonal part of the Jacobian which is related to cluster's motion.
 	 * \see ISolverHandler.h
 	 */
-	void computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J);
+	void computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J, PetscReal ftime);
 
 	/**
 	 * Compute the diagonal part of the Jacobian which is related to cluster reactions.
 	 * \see ISolverHandler.h
 	 */
-	void computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J);
+	void computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J, PetscReal ftime);
 
 	/**
 	 * Get the position of the surface.

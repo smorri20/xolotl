@@ -70,12 +70,6 @@ protected:
 	};
 
 	/**
-	 * The properties of this network. The exact configuration of the map is
-	 * specified by the class that loaded the network.
-	 */
-	std::shared_ptr<std::map<std::string, std::string>> properties;
-
-	/**
 	 * The performance handler registry that will be used with
 	 * this class.
 	 */
@@ -122,7 +116,42 @@ protected:
 	std::vector<std::string> compoundNames;
 
 	/**
-	 * The default constructor. It initializes the properties map and reactants vector.
+	 * Are reactions enabled?
+	 */
+	bool reactionsEnabled;
+
+	/**
+	 * Are dissociations enabled?
+	 */
+	bool dissociationsEnabled;
+
+	/**
+	 * Number of vacancy clusters in our network.
+	 */
+	int numVClusters;
+
+	/**
+	 * Number of interstitial clusters in our network.
+	 */
+	int numIClusters;
+
+	/**
+	 * Number of super clusters in our network.
+	 */
+	int numSuperClusters;
+
+	/**
+	 * Maximum size of a vacancy cluster.
+	 */
+	int maxVClusterSize;
+
+	/**
+	 * Maximum size of an interstitial cluster.
+	 */
+	int maxIClusterSize;
+
+	/**
+	 * The default constructor. It initializes the properties and reactants vector.
 	 */
 	ReactionNetwork();
 
@@ -130,7 +159,7 @@ public:
 
 	/**
 	 * The constructor that takes the performance handler registry.
-	 * It initializes the properties map and reactants vector.
+	 * It initializes the properties and reactants vector.
 	 *
 	 * @param registry The performance handler registry
 	 */
@@ -266,27 +295,6 @@ public:
 	const std::vector<std::string> & getCompoundNames() const;
 
 	/**
-	 * This operation returns a map of the properties of this reaction network.
-	 *
-	 * @return The map of properties that has been configured for this
-	 * ReactionNetwork.
-	 */
-	const std::map<std::string, std::string> & getProperties();
-
-	/**
-	 * This operation sets a property with the given key to the specified value
-	 * for the network. ReactionNetworks may reserve the right to ignore this
-	 * operation for special key types, most especially those that they manage
-	 * on their own.
-	 *
-	 * @param key The key for the property
-	 * @param value The value to which the key should be set
-	 */
-	virtual void setProperty(const std::string& key, const std::string& value) {
-		return;
-	}
-
-	/**
 	 * This operation returns the size or number of reactants in the network.
 	 *
 	 * @return The number of reactants in the network
@@ -395,6 +403,85 @@ public:
 	 */
 	virtual void computeAllPartials(double *vals, int *indices, int *size) {
 		return;
+	}
+
+	/**
+	 * Are reactions enabled?
+	 * @returns true if reactions are enabled, false otherwise.
+	 */
+	bool getReactionsEnabled() const {
+		return reactionsEnabled;
+	}
+
+	/**
+	 * Enable reactions.
+	 */
+	void enableReactions() {
+		reactionsEnabled = true;
+	}
+
+	/**
+	 * Disable reactions.
+	 */
+	void disableReactions() {
+		reactionsEnabled = false;
+	}
+
+	/**
+	 * Are dissociations enabled?
+	 * @returns true if reactions are enabled, false otherwise.
+	 */
+	bool getDissociationsEnabled() const {
+		return dissociationsEnabled;
+	}
+
+	/**
+	 * Enable dissociations.
+	 */
+	void enableDissociations() {
+		dissociationsEnabled = true;
+	}
+
+	/**
+	 * Disable dissociations.
+	 */
+	void disableDissociations() {
+		dissociationsEnabled = false;
+	}
+
+	/**
+	 * Number of vacancy clusters in our network.
+	 */
+	int getNumVClusters() const {
+		return numVClusters;
+	}
+
+	/**
+	 * Number of interstitial clusters in our network.
+	 */
+	int getNumIClusters() const {
+		return numIClusters;
+	}
+
+	/**
+	 * Number of super clusters in our network.
+	 */
+	int getNumSuperClusters() const {
+		return numSuperClusters;
+	}
+
+	/**
+	 * Maximum vacancy cluster size in our network.
+	 */
+	int getMaxVClusterSize() const {
+		return maxVClusterSize;
+	}
+
+	/**
+	 * Maximum interstitial cluster size in our network.
+	 */
+	int getMaxIClusterSize() const {
+		return maxIClusterSize;
 	}
 
 };

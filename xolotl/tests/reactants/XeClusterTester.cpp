@@ -28,24 +28,22 @@ BOOST_AUTO_TEST_SUITE(XeCluster_testSuite)
  */
 BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	shared_ptr<ReactionNetwork> network = getSimpleNEReactionNetwork();
-	auto props = network->getProperties();
 
 	// Prevent dissociation from being added to the connectivity array
-	props["dissociationsEnabled"] = "false";
+	network->disableDissociations();
 
 	// Check the reaction connectivity of the 6th Xe reactant (numXe=6)
 	// Get the connectivity array from the reactant
 	auto reactant = (NECluster *) network->get("Xe", 6);
 
 	// Check the type name
-	BOOST_REQUIRE_EQUAL("Xe",reactant->getType());
+	BOOST_REQUIRE_EQUAL("Xe", reactant->getType());
 	auto reactionConnectivity = reactant->getConnectivity();
 
-	// Check the connectivity for Xe, V, and I
+	// Check the connectivity for Xe
 	int connectivityExpected[] = {
-		// Xe
-		0, 0, 0, 0, 0, 1, 1, 0, 0, 0
-	};
+	// Xe
+			0, 0, 0, 0, 0, 1, 1, 0, 0, 0 };
 
 	for (unsigned int i = 0; i < reactionConnectivity.size(); i++) {
 		BOOST_REQUIRE_EQUAL(reactionConnectivity[i], connectivityExpected[i]);
@@ -65,29 +63,24 @@ BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 	auto cluster = (NECluster *) network->get("Xe", 1);
 	// Get one that it combines with (Xe2)
 	auto secondCluster = (NECluster *) network->get("Xe", 2);
-	// Set the diffusion factor and migration energy based on the
-	// values from the tungsten benchmark for this problem.
+	// Set the diffusion factor and migration energy
 	cluster->setDiffusionFactor(2.950E+10);
 	cluster->setMigrationEnergy(0.13);
- 	cluster->setTemperature(1000.0);
+	cluster->setTemperature(1000.0);
 	cluster->setConcentration(0.5);
 
-	// Set the diffusion factor and migration energy based on the
-	// values from the tungsten benchmark for this problem for the second cluster
+	// Set the diffusion factor and migration energy
 	secondCluster->setDiffusionFactor(3.240E+010);
 	secondCluster->setMigrationEnergy(0.2);
 	secondCluster->setConcentration(0.5);
- 	secondCluster->setTemperature(1000.0);
+	secondCluster->setTemperature(1000.0);
 
- 	// Compute the rate constants that are needed for the flux
- 	cluster->computeRateConstants();
+	// Compute the rate constants that are needed for the flux
+	cluster->computeRateConstants();
 	// The flux can pretty much be anything except "not a number" (nan).
 	double flux = cluster->getTotalFlux();
-	BOOST_TEST_MESSAGE("XeClusterTester Message: \n" << "Total Flux is " << flux << "\n"
-			  << "   -Production Flux: " << cluster->getProductionFlux() << "\n"
-			  << "   -Combination Flux: " << cluster->getCombinationFlux() << "\n"
-			  << "   -Dissociation Flux: " << cluster->getDissociationFlux() << "\n"
-			  << "   -Emission Flux: " << cluster->getEmissionFlux() << "\n");
+	BOOST_TEST_MESSAGE(
+			"XeClusterTester Message: \n" << "Total Flux is " << flux << "\n" << "   -Production Flux: " << cluster->getProductionFlux() << "\n" << "   -Combination Flux: " << cluster->getCombinationFlux() << "\n" << "   -Dissociation Flux: " << cluster->getDissociationFlux() << "\n" << "   -Emission Flux: " << cluster->getEmissionFlux() << "\n");
 
 	BOOST_REQUIRE_CLOSE(1040725545627.6416, flux, 0.1);
 
@@ -100,22 +93,20 @@ BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	// Local Declarations
 	// The vector of partial derivatives to compare with
-	double knownPartials[] = {0.0, 2081451091255.283,
-			573123759757.52136};
+	double knownPartials[] = { 0.0, 2081451091255.283, 573123759757.52136 };
 	// Get the simple reaction network
 	shared_ptr<ReactionNetwork> network = getSimpleNEReactionNetwork(3);
 
 	// Get an Xe cluster with compostion 1,0,0.
 	auto cluster = (NECluster *) network->get("Xe", 1);
-	// Set the diffusion factor and migration energy based on the
-	// values from the tungsten benchmark for this problem.
+	// Set the diffusion factor and migration energy
 	cluster->setDiffusionFactor(2.950E+10);
 	cluster->setMigrationEnergy(0.13);
- 	cluster->setTemperature(1000.0);
+	cluster->setTemperature(1000.0);
 	cluster->setConcentration(0.5);
 
- 	// Compute the rate constants that are needed for the partial derivatives
- 	cluster->computeRateConstants();
+	// Compute the rate constants that are needed for the partial derivatives
+	cluster->computeRateConstants();
 	// Get the vector of partial derivatives
 	auto partials = cluster->getPartialDerivatives();
 
@@ -145,7 +136,8 @@ BOOST_AUTO_TEST_CASE(checkReactionRadius) {
 	// Check all the values
 	for (int i = 1; i <= 10; i++) {
 		cluster = shared_ptr<XeCluster>(new XeCluster(i, registry));
-		BOOST_REQUIRE_CLOSE(expectedRadii[i-1], cluster->getReactionRadius(), 0.000001);
+		BOOST_REQUIRE_CLOSE(expectedRadii[i - 1], cluster->getReactionRadius(),
+				0.000001);
 	}
 
 	return;

@@ -12,7 +12,7 @@ using namespace std;
 using namespace xolotlCore;
 
 /**
- * The test suite is responsible for testing the WFitFluxHandler.
+ * The test suite is responsible for testing the W110FitFluxHandler.
  */
 BOOST_AUTO_TEST_SUITE (W110FitFluxHandlerTester_testSuite)
 

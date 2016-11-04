@@ -37,11 +37,9 @@ public class FormationEnergyEngine {
 	 * E_(f,Xe_1) = xeFormationEnergies[1]. The value at index zero is just
 	 * padding to make the indexing easy.
 	 */
-	private static double[] xeFormationEnergies = { Double.POSITIVE_INFINITY,
-			7.0, 12.15, 17.15, 21.90, 26.50, 31.05, 35.30, 39.45, 43.00, 46.90,
-			50.65, 53.90, 56.90, 59.80, 62.55, 65.05, 67.45, 69.45, 71.20,
-			72.75, 74.15, 75.35, 76.40, 77.25, 77.95, 78.45, 78.80, 78.95,
-			79.0 };
+	private static double[] xeFormationEnergies = { Double.POSITIVE_INFINITY, 7.0, 12.15, 17.15, 21.90, 26.50, 31.05,
+			35.30, 39.45, 43.00, 46.90, 50.65, 53.90, 56.90, 59.80, 62.55, 65.05, 67.45, 69.45, 71.20, 72.75, 74.15,
+			75.35, 76.40, 77.25, 77.95, 78.45, 78.80, 78.95, 79.0 };
 
 	/**
 	 * The set of vacancy formation energies up to V_2 indexed by size. That is
@@ -228,7 +226,8 @@ public class FormationEnergyEngine {
 
 		if (size < 30 && size > 0)
 			energy = xeFormationEnergies[size];
-		else energy = 79.0;
+		else
+			energy = 79.0;
 
 		return energy;
 	}

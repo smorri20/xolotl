@@ -287,7 +287,7 @@ public class PreprocessorTest {
 
 				// Create a cluster
 				Cluster cluster = new Cluster();
-				cluster.nHe = 1;
+				cluster.nXe = 1;
 				cluster.nV = 23;
 				cluster.nI = 52;
 				cluster.E_f = 12.3;

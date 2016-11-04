@@ -27,8 +27,8 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	MPI_Init(&argc, &argv);
 
 	// Create the network loader
-	HDF5NetworkLoader loader =
-			HDF5NetworkLoader(make_shared<xolotlPerf::DummyHandlerRegistry>());
+	HDF5NetworkLoader loader = HDF5NetworkLoader(
+			make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Define the filename to load the network from
 	string sourceDir(XolotlSourceDirectory);
 	string pathToFile("/tests/testfiles/tungsten.h5");
@@ -75,14 +75,15 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 
 	// Initialize it
 	trapMutationHandler.initialize(network, grid);
-	trapMutationHandler.initializeIndex1D(surfacePos, network, advectionHandlers, grid);
+	trapMutationHandler.initializeIndex1D(surfacePos, network,
+			advectionHandlers, grid);
 
 	// The arrays of concentration
-	double concentration[13*dof];
-	double newConcentration[13*dof];
+	double concentration[13 * dof];
+	double newConcentration[13 * dof];
 
 	// Initialize their values
-	for (int i = 0; i < 13*dof; i++) {
+	for (int i = 0; i < 13 * dof; i++) {
 		concentration[i] = (double) i * i;
 		newConcentration[i] = 0.0;
 	}
@@ -96,8 +97,8 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	double *updatedConcOffset = updatedConc + dof;
 
 	// Compute the modified trap mutation at the second grid point
-	trapMutationHandler.computeTrapMutation(network,
-			concOffset, updatedConcOffset, 1);
+	trapMutationHandler.computeTrapMutation(network, concOffset,
+			updatedConcOffset, 1);
 
 	// Check the new values of updatedConcOffset
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 0.0, 0.01); // Create I
@@ -108,15 +109,15 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 
 	// Initialize the indices and values to set in the Jacobian
 	int nHelium = network->getAll(heType).size();
-	int indices[3*nHelium];
-	double val[3*nHelium];
+	int indices[3 * nHelium];
+	double val[3 * nHelium];
 	// Get the pointer on them for the compute modified trap-mutation method
 	int *indicesPointer = &indices[0];
 	double *valPointer = &val[0];
 
 	// Compute the partial derivatives for the modified trap-mutation at the grid point 1
-	int nMutating = trapMutationHandler.computePartialsForTrapMutation(network, valPointer,
-			indicesPointer, 1);
+	int nMutating = trapMutationHandler.computePartialsForTrapMutation(network,
+			valPointer, indicesPointer, 1);
 
 	// Verify that no cluster is undergoing modified trap-mutation
 	BOOST_REQUIRE_EQUAL(nMutating, 0);

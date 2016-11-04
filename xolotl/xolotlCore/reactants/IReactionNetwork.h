@@ -141,26 +141,6 @@ public:
 	virtual const std::vector<std::string> & getCompoundNames() const = 0;
 
 	/**
-	 * This operation returns a map of the properties of this reaction network.
-	 *
-	 * @return The map of properties that has been configured for this
-	 * ReactionNetwork.
-	 */
-	virtual const std::map<std::string, std::string> & getProperties() = 0;
-
-	/**
-	 * This operation sets a property with the given key to the specified value
-	 * for the network. ReactionNetworks may reserve the right to ignore this
-	 * operation for special key types, most especially those that they manage
-	 * on their own.
-	 *
-	 * @param key The key for the property
-	 * @param value The value to which the key should be set
-	 */
-	virtual void setProperty(const std::string& key,
-			const std::string& value) = 0;
-
-	/**
 	 * This operation returns the size or number of reactants in the network.
 	 *
 	 * @return The number of reactants in the network
@@ -247,6 +227,18 @@ public:
 	 * this cluster
 	 */
 	virtual void computeAllPartials(double *vals, int *indices, int *size) = 0;
+
+	/**
+	 * Are reactions enabled?
+	 * @returns true if reactions are enabled, false otherwise.
+	 */
+	virtual bool getReactionsEnabled() const = 0;
+
+	/**
+	 * Are dissociations enabled?
+	 * @returns true if reactions are enabled, false otherwise.
+	 */
+	virtual bool getDissociationsEnabled() const = 0;
 
 };
 

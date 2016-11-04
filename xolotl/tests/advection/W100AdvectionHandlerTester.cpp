@@ -26,8 +26,8 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	MPI_Init(&argc, &argv);
 
 	// Create the network loader
-	HDF5NetworkLoader loader =
-			HDF5NetworkLoader(make_shared<xolotlPerf::DummyHandlerRegistry>());
+	HDF5NetworkLoader loader = HDF5NetworkLoader(
+			make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Define the filename to load the network from
 	string sourceDir(XolotlSourceDirectory);
 	string pathToFile("/tests/testfiles/tungsten_diminutive.h5");
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	}
 
 	// Create ofill
-	int mat[dof*dof];
+	int mat[dof * dof];
 	int *ofill = &mat[0];
 
 	// Create a collection of advection handlers
@@ -73,11 +73,11 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	double hx = 1.0;
 
 	// Create the arrays of concentration
-	double concentration[3*dof];
-	double newConcentration[3*dof];
+	double concentration[3 * dof];
+	double newConcentration[3 * dof];
 
 	// Initialize their values
-	for (int i = 0; i < 3*dof; i++) {
+	for (int i = 0; i < 3 * dof; i++) {
 		concentration[i] = (double) i * i;
 		newConcentration[i] = 0.0;
 	}
@@ -107,8 +107,8 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	std::vector<double> gridPosition = { hx, 0.0, 0.0 };
 
 	// Compute the advection at this grid point
-	advectionHandler.computeAdvection(network, gridPosition,
-			concVector, updatedConcOffset, hx, hx, 1);
+	advectionHandler.computeAdvection(network, gridPosition, concVector,
+			updatedConcOffset, hx, hx, 1);
 
 	// Check the new values of updatedConcOffset
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], -3.09354e+10, 0.01);
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	// Initialize the rows, columns, and values to set in the Jacobian
 	int nAdvec = advectionHandler.getNumberOfAdvecting();
 	int indices[nAdvec];
-	double val[2*nAdvec];
+	double val[2 * nAdvec];
 	// Get the pointer on them for the compute advection method
 	int *indicesPointer = &indices[0];
 	double *valPointer = &val[0];
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(checkAdvection) {
 	BOOST_REQUIRE_EQUAL(indices[5], 5);
 
 	// Check values
-	BOOST_REQUIRE_CLOSE(val[0],-509225360.0, 0.01);
+	BOOST_REQUIRE_CLOSE(val[0], -509225360.0, 0.01);
 	BOOST_REQUIRE_CLOSE(val[1], 31826585.0, 0.01);
 	BOOST_REQUIRE_CLOSE(val[2], -553468828.0, 0.01);
 	BOOST_REQUIRE_CLOSE(val[3], 34591802.0, 0.01);

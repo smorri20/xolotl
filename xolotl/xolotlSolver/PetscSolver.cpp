@@ -102,7 +102,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal ftime, Vec C, Vec F, void *) {
 /*
  Compute the Jacobian entries based on IFunction() and insert them into the matrix
  */
-PetscErrorCode RHSJacobian(TS ts, PetscReal, Vec C, Mat A, Mat J,
+PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 		void *) {
 	// Start the RHSJacobian timer
 	RHSJacobianTimer->start();
@@ -125,13 +125,13 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal, Vec C, Mat A, Mat J,
 	auto solverHandler = PetscSolver::getSolverHandler();
 
 	/* ----- Compute the off-diagonal part of the Jacobian ----- */
-	solverHandler->computeOffDiagonalJacobian(ts, localC, J);
+	solverHandler->computeOffDiagonalJacobian(ts, localC, J, ftime);
 
 	ierr = MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
 	ierr = MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
 
 	/* ----- Compute the partial derivatives for the reaction term ----- */
-	solverHandler->computeDiagonalJacobian(ts, localC, J);
+	solverHandler->computeDiagonalJacobian(ts, localC, J, ftime);
 
 	ierr = MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
 	ierr = MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);

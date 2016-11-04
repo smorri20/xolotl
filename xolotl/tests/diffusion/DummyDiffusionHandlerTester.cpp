@@ -27,8 +27,8 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	MPI_Init(&argc, &argv);
 
 	// Create the network loader
-	HDF5NetworkLoader loader =
-			HDF5NetworkLoader(make_shared<xolotlPerf::DummyHandlerRegistry>());
+	HDF5NetworkLoader loader = HDF5NetworkLoader(
+			make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Define the filename to load the network from
 	string sourceDir(XolotlSourceDirectory);
 	string pathToFile("/tests/testfiles/tungsten_diminutive.h5");
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	DummyDiffusionHandler diffusionHandler;
 
 	// Create ofill
-	int mat[dof*dof];
+	int mat[dof * dof];
 	int *ofill = &mat[0];
 
 	// Initialize it
@@ -58,11 +58,11 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	double hx = 1.0;
 
 	// The arrays of concentration
-	double concentration[3*dof];
-	double newConcentration[3*dof];
+	double concentration[3 * dof];
+	double newConcentration[3 * dof];
 
 	// Initialize their values
-	for (int i = 0; i < 3*dof; i++) {
+	for (int i = 0; i < 3 * dof; i++) {
 		concentration[i] = (double) i * i;
 		newConcentration[i] = 0.0;
 	}
@@ -91,8 +91,8 @@ BOOST_AUTO_TEST_CASE(checkDiffusion) {
 	concVector[2] = conc + 2 * dof; // right
 
 	// Compute the diffusion at this grid point
-	diffusionHandler.computeDiffusion(network, concVector,
-			updatedConcOffset, hx, hx, 1);
+	diffusionHandler.computeDiffusion(network, concVector, updatedConcOffset,
+			hx, hx, 1);
 
 	// Check the new values of updatedConcOffset
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[0], 0.0, 0.01); // Does not diffuse

@@ -6,8 +6,8 @@
 using namespace xolotlCore;
 
 ReactionNetwork::ReactionNetwork() :
-		properties(new std::map<std::string, std::string>()),
-		temperature(0.0), networkSize(0) {
+		temperature(0.0), networkSize(0), reactionsEnabled(true), dissociationsEnabled(
+				true) {
 //    concUpdateCounter = xolotlPerf::getHandlerRegistry()->getEventCounter("net_conc_updates");
 	// Setup the vector to hold all of the reactants
 	allReactants = make_shared<std::vector<IReactant *>>();
@@ -16,9 +16,8 @@ ReactionNetwork::ReactionNetwork() :
 
 ReactionNetwork::ReactionNetwork(
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		properties(new std::map<std::string, std::string>()), handlerRegistry(
-				registry),
-				temperature(0.0), networkSize(0) {
+		handlerRegistry(registry), temperature(0.0), networkSize(0), reactionsEnabled(
+				true), dissociationsEnabled(true) {
 	// Counter for the number of times the network concentration is updated.
 	concUpdateCounter = handlerRegistry->getEventCounter("net_conc_updates");
 	// Setup the vector to hold all of the reactants
@@ -28,15 +27,14 @@ ReactionNetwork::ReactionNetwork(
 }
 
 ReactionNetwork::ReactionNetwork(const ReactionNetwork &other) {
-	// The copy constructor of std::map copies each of the keys and values.
-	properties.reset(new std::map<std::string, std::string>(*other.properties));
-
 	handlerRegistry = other.handlerRegistry;
 	allReactants = other.allReactants;
 	temperature = other.temperature;
 	networkSize = other.networkSize;
 	names = other.names;
 	compoundNames = other.compoundNames;
+	reactionsEnabled = other.reactionsEnabled;
+	dissociationsEnabled = other.dissociationsEnabled;
 
 	// TODO - do we copy the source ReactionNetwork's counter also?
 	// Or should we have our own counter?  How to distinguish them by name?
@@ -144,8 +142,4 @@ const std::vector<std::string> & ReactionNetwork::getNames() const {
 
 const std::vector<std::string> & ReactionNetwork::getCompoundNames() const {
 	return compoundNames;
-}
-
-const std::map<std::string, std::string> & ReactionNetwork::getProperties() {
-	return *properties;
 }

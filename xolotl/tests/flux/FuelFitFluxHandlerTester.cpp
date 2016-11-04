@@ -2,9 +2,9 @@
 #define BOOST_TEST_MODULE Regression
 
 #include <boost/test/included/unit_test.hpp>
-#include "W211FitFluxHandler.h"
+#include "FuelFitFluxHandler.h"
 #include <mpi.h>
-#include <HDF5NetworkLoader.h>
+#include <NEClusterNetworkLoader.h>
 #include <DummyHandlerRegistry.h>
 #include <XolotlConfig.h>
 
@@ -12,9 +12,9 @@ using namespace std;
 using namespace xolotlCore;
 
 /**
- * The test suite is responsible for testing the W211FitFluxHandler.
+ * The test suite is responsible for testing the WFitFluxHandler.
  */
-BOOST_AUTO_TEST_SUITE (W211FitFluxHandlerTester_testSuite)
+BOOST_AUTO_TEST_SUITE (FuelFitFluxHandlerTester_testSuite)
 
 BOOST_AUTO_TEST_CASE(checkgetIncidentFlux) {
 	// Initialize MPI for HDF5
@@ -23,11 +23,11 @@ BOOST_AUTO_TEST_CASE(checkgetIncidentFlux) {
 	MPI_Init(&argc, &argv);
 
 	// Create the network loader
-	HDF5NetworkLoader loader = HDF5NetworkLoader(
+	NEClusterNetworkLoader loader = NEClusterNetworkLoader(
 			make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Define the filename to load the network from
 	string sourceDir(XolotlSourceDirectory);
-	string pathToFile("/tests/testfiles/tungsten_diminutive.h5");
+	string pathToFile("/tests/testfiles/fuel_diminutive.h5");
 	string filename = sourceDir + pathToFile;
 	// Give the filename to the network loader
 	loader.setFilename(filename);
@@ -43,8 +43,8 @@ BOOST_AUTO_TEST_CASE(checkgetIncidentFlux) {
 	// Specify the surface position
 	int surfacePos = 0;
 
-	// Create the W211 flux handler
-	auto testFitFlux = make_shared<W211FitFluxHandler>();
+	// Create the fuel flux handler
+	auto testFitFlux = make_shared<FuelFitFluxHandler>();
 	// Set the flux amplitude
 	testFitFlux->setFluxAmplitude(1.0);
 	// Initialize the flux handler
@@ -57,9 +57,9 @@ BOOST_AUTO_TEST_CASE(checkgetIncidentFlux) {
 	auto testFluxVec = testFitFlux->getIncidentFluxVec(currTime, surfacePos);
 
 	// Check the value at some grid points
-	BOOST_REQUIRE_CLOSE(testFluxVec[1], 0.454047, 0.01);
-	BOOST_REQUIRE_CLOSE(testFluxVec[2], 0.249781, 0.01);
-	BOOST_REQUIRE_CLOSE(testFluxVec[3], 0.096172, 0.01);
+	BOOST_REQUIRE_CLOSE(testFluxVec[1], 0.26666, 0.01);
+	BOOST_REQUIRE_CLOSE(testFluxVec[2], 0.26666, 0.01);
+	BOOST_REQUIRE_CLOSE(testFluxVec[3], 0.26666, 0.01);
 
 	// Finalize MPI
 	MPI_Finalize();

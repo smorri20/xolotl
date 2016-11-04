@@ -145,6 +145,7 @@ public class Preprocessor {
 		petscOptions.put("-fieldsplit_0_pc_type", "sor");
 		petscOptions.put("-fieldsplit_1_pc_type", "redundant");
 		petscOptions.put("-ts_monitor", "");
+		petscOptions.put("-ts_exact_final_time", "stepover");
 
 		// Get the string of PETSc arguments from the command line
 		// and split the string around the blank spaces
@@ -161,6 +162,8 @@ public class Preprocessor {
 			petscList.add("gmres");
 			petscList.add("-ksp_type");
 			petscList.add("fgmres");
+			petscList.add("-fieldsplit_1_pc_gamg_sym_graph");
+			petscList.add("true");
 		}
 
 		// Create the dash character
@@ -318,7 +321,8 @@ public class Preprocessor {
 			clusterList.add(tmpCluster);
 		}
 
-		// Set Xe_1 diffusion parameters. Xe_1 is the first in the list, so it is
+		// Set Xe_1 diffusion parameters. Xe_1 is the first in the list, so it
+		// is
 		// straightforward to set it.
 		if (maxXe > 0) {
 			clusterList.get(0).D_0 = xeOneDiffusionFactor;
@@ -1134,7 +1138,7 @@ public class Preprocessor {
 
 			// Loop on the network array to fill the map
 			for (int i = 0; i < networkSize[0]; i++) {
-				map[i][0] = (int) networkArray[i][0]; // He
+				map[i][0] = (int) networkArray[i][0]; // He or Xe
 				map[i][1] = (int) networkArray[i][1]; // V
 				map[i][2] = (int) networkArray[i][2]; // I
 			}
@@ -1285,7 +1289,7 @@ public class Preprocessor {
 				// Loop on the new network
 				for (Cluster cluster : clusters) {
 					// Check the composition
-					if ((cluster.nHe == map[(int) concentration[l][0]][0])
+					if ((cluster.nHe == map[(int) concentration[l][0]][0] || cluster.nXe == map[(int) concentration[l][0]][0])
 							&& (cluster.nV == map[(int) concentration[l][0]][1])
 							&& (cluster.nI == map[(int) concentration[l][0]][2])) {
 						// Add the cluster to the new list, with the new index
@@ -1301,7 +1305,7 @@ public class Preprocessor {
 				// If the cluster was not found
 				if (!found) {
 					// Inform the user
-					System.out.println("Cluster with the following composition (He, V, I): "
+					System.out.println("Cluster with the following composition (He/Xe, V, I): "
 							+ map[(int) concentration[l][0]][0] + ", " + map[(int) concentration[l][0]][1] + ", "
 							+ map[(int) concentration[l][0]][2]
 							+ " is not present in the new network. Its concentration was " + concentration[l][1]
@@ -1452,7 +1456,8 @@ public class Preprocessor {
 			for (Cluster cluster : clusters) {
 				// Store the composition
 				networkArray[id][0] = cluster.nHe;
-				if (maxXe > 0) networkArray[id][0] = cluster.nXe;
+				if (maxXe > 0)
+					networkArray[id][0] = cluster.nXe;
 				networkArray[id][1] = cluster.nV;
 				networkArray[id][2] = cluster.nI;
 

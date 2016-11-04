@@ -29,10 +29,12 @@ public:
 	 * @param registry The dummy handler registry by default
 	 */
 	SimplePSIReactionNetwork(const int maxClusterSize = 10,
-			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry = std::make_shared<xolotlPerf::DummyHandlerRegistry>());
+			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry =
+					std::make_shared<xolotlPerf::DummyHandlerRegistry>());
 
 	//! Destructor
-	virtual ~SimplePSIReactionNetwork() {}
+	virtual ~SimplePSIReactionNetwork() {
+	}
 
 };
 
@@ -56,10 +58,12 @@ public:
 	 * @param registry The dummy handler registry by default
 	 */
 	SimpleNEReactionNetwork(const int maxClusterSize = 10,
-			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry = std::make_shared<xolotlPerf::DummyHandlerRegistry>());
+			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry =
+					std::make_shared<xolotlPerf::DummyHandlerRegistry>());
 
 	//! Destructor
-	virtual ~SimpleNEReactionNetwork() {}
+	virtual ~SimpleNEReactionNetwork() {
+	}
 
 };
 
@@ -73,8 +77,10 @@ public:
  * @param registry The dummy handler registry by default
  * @return The reaction network.
  */
-std::shared_ptr<xolotlCore::PSIClusterReactionNetwork> getSimplePSIReactionNetwork(const int maxClusterSize = 10,
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry = std::make_shared<xolotlPerf::DummyHandlerRegistry>());
+std::shared_ptr<xolotlCore::PSIClusterReactionNetwork> getSimplePSIReactionNetwork(
+		const int maxClusterSize = 10,
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry =
+				std::make_shared<xolotlPerf::DummyHandlerRegistry>());
 
 /**
  * This operation creates a SimpleNEReactionNetwork and makes sure that it is
@@ -86,8 +92,10 @@ std::shared_ptr<xolotlCore::PSIClusterReactionNetwork> getSimplePSIReactionNetwo
  * @param registry The dummy handler registry by default
  * @return The reaction network.
  */
-std::shared_ptr<xolotlCore::NEClusterReactionNetwork> getSimpleNEReactionNetwork(const int maxClusterSize = 10,
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry = std::make_shared<xolotlPerf::DummyHandlerRegistry>());
+std::shared_ptr<xolotlCore::NEClusterReactionNetwork> getSimpleNEReactionNetwork(
+		const int maxClusterSize = 10,
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry =
+				std::make_shared<xolotlPerf::DummyHandlerRegistry>());
 
 } /* end namespace testUtils */
 #endif

@@ -25,19 +25,19 @@ void PSIClusterReactionNetwork::setDefaultPropsAndNames() {
 	= std::make_shared<std::vector<std::shared_ptr<IReactant>>>();
 
 	// Initialize default properties
-	(*properties)["reactionsEnabled"] = "true";
-	(*properties)["dissociationsEnabled"] = "true";
-	(*properties)["numHeClusters"] = "0";
-	(*properties)["numVClusters"] = "0";
-	(*properties)["numIClusters"] = "0";
-	(*properties)["numHeVClusters"] = "0";
-	(*properties)["numHeIClusters"] = "0";
-	(*properties)["numSuperClusters"] = "0";
-	(*properties)["maxHeClusterSize"] = "0";
-	(*properties)["maxVClusterSize"] = "0";
-	(*properties)["maxIClusterSize"] = "0";
-	(*properties)["maxHeVClusterSize"] = "0";
-	(*properties)["maxHeIClusterSize"] = "0";
+	reactionsEnabled = true;
+	dissociationsEnabled = true;
+	numHeClusters = 0;
+	numVClusters = 0;
+	numIClusters = 0;
+	numHeVClusters = 0;
+	numHeIClusters = 0;
+	numSuperClusters = 0;
+	maxHeClusterSize = 0;
+	maxVClusterSize = 0;
+	maxIClusterSize = 0;
+	maxHeVClusterSize = 0;
+	maxHeIClusterSize = 0;
 
 	// Initialize the current and last size to 0
 	networkSize = 0;
@@ -240,7 +240,8 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 	// Local Declarations
 	int numHe = 0, numV = 0, numI = 0;
 	bool isMixed = false;
-	std::string numClusterKey, clusterSizeKey;
+	int* numClusters = nullptr;
+	int* maxClusterSize = nullptr;
 
 	// Only add a complete reactant
 	if (reactant != NULL) {
@@ -263,11 +264,11 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 			mixedSpeciesMap[compStr] = reactant;
 			// Figure out whether we have HeV or HeI and set the keys
 			if (numV > 0) {
-				numClusterKey = "numHeVClusters";
-				clusterSizeKey = "maxHeVClusterSize";
+				numClusters = &numHeVClusters;
+				maxClusterSize = &maxHeVClusterSize;
 			} else {
-				numClusterKey = "numHeIClusters";
-				clusterSizeKey = "maxHeIClusterSize";
+				numClusters = &numHeIClusters;
+				maxClusterSize = &maxHeIClusterSize;
 			}
 		} else if (!isMixed && singleSpeciesMap.count(compStr) == 0) {
 			/// Put the reactant in its map
@@ -275,14 +276,14 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 
 			// Figure out whether we have He, V or I and set the keys
 			if (numHe > 0) {
-				numClusterKey = "numHeClusters";
-				clusterSizeKey = "maxHeClusterSize";
+				numClusters = &numHeClusters;
+				maxClusterSize = &maxHeClusterSize;
 			} else if (numV > 0) {
-				numClusterKey = "numVClusters";
-				clusterSizeKey = "maxVClusterSize";
+				numClusters = &numVClusters;
+				maxClusterSize = &maxVClusterSize;
 			} else {
-				numClusterKey = "numIClusters";
-				clusterSizeKey = "maxIClusterSize";
+				numClusters = &numIClusters;
+				maxClusterSize = &maxIClusterSize;
 			}
 		} else {
 			std::stringstream errStream;
@@ -293,14 +294,10 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 		}
 
 		// Increment the number of total clusters of this type
-		int numClusters = std::stoi(properties->at(numClusterKey));
-		numClusters++;
-		(*properties)[numClusterKey] = std::to_string((long long) numClusters);
+		(*numClusters)++;
 		// Increment the max cluster size key
-		int maxSize = std::stoi(properties->at(clusterSizeKey));
 		int clusterSize = numHe + numV + numI;
-		maxSize = std::max(clusterSize, maxSize);
-		(*properties)[clusterSizeKey] = std::to_string((long long) maxSize);
+		(*maxClusterSize) = std::max(clusterSize, (*maxClusterSize));
 		// Update the size
 		++networkSize;
 		// Set the id for this cluster
@@ -320,7 +317,7 @@ void PSIClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 	// Local Declarations
 	int numHe = 0, numV = 0, numI = 0;
 	bool isMixed = false;
-	std::string numClusterKey;
+	int* numClusters = nullptr;
 
 	// Only add a complete reactant
 	if (reactant != NULL) {
@@ -341,7 +338,7 @@ void PSIClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 			// Put the compound in its map
 			superSpeciesMap[compStr] = reactant;
 			// Set the key
-			numClusterKey = "numSuperClusters";
+			numClusters = &numSuperClusters;
 		} else {
 			std::stringstream errStream;
 			errStream << "PSIClusterReactionNetwork Message: "
@@ -351,9 +348,7 @@ void PSIClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 		}
 
 		// Increment the number of total clusters of this type
-		int numClusters = std::stoi(properties->at(numClusterKey));
-		numClusters++;
-		(*properties)[numClusterKey] = std::to_string((long long) numClusters);
+		(*numClusters)++;
 		// Update the size
 		++networkSize;
 		// Set the id for this cluster
@@ -416,6 +411,8 @@ void PSIClusterReactionNetwork::removeReactants(
 }
 
 void PSIClusterReactionNetwork::reinitializeNetwork() {
+	// Recount HeV clusters
+	numHeVClusters = 0;
 	// Reset the Ids
 	int id = 0;
 	for (auto it = allReactants->begin(); it != allReactants->end(); ++it) {
@@ -423,14 +420,15 @@ void PSIClusterReactionNetwork::reinitializeNetwork() {
 		(*it)->setId(id);
 		(*it)->setHeMomentumId(id);
 		(*it)->setVMomentumId(id);
+
+		if ((*it)->getType() == heVType) numHeVClusters++;
 	}
 
 	// Reset the network size
 	networkSize = id;
 
 	// Get all the super clusters and loop on them
-	for (auto it = clusterTypeMap[PSISuperType]->begin();
-			it != clusterTypeMap[PSISuperType]->end(); ++it) {
+	for (auto it = clusterTypeMap[PSISuperType]->begin(); it != clusterTypeMap[PSISuperType]->end(); ++it) {
 		id++;
 		(*it)->setHeMomentumId(id);
 		id++;
@@ -444,23 +442,6 @@ void PSIClusterReactionNetwork::reinitializeConnectivities() {
 	// Loop on all the reactants to reset their connectivities
 	for (auto it = allReactants->begin(); it != allReactants->end(); ++it) {
 		(*it)->resetConnectivities();
-	}
-
-	return;
-}
-
-void PSIClusterReactionNetwork::setProperty(const std::string& key,
-		const std::string& value) {
-	// Check the keys and value before trying to set the property
-	if (!key.empty() && !value.empty() && key != "reactionsEnabled"
-			&& key != "dissociationsEnabled" && key != "numHeClusters"
-			&& key != "numVClusters" && key != "numIClusters"
-			&& key != "numHeVClusters" && key != "numHeIClusters"
-			&& key != "numSuperClusters" && key != "maxHeClusterSize"
-			&& key != "maxVClusterSize" && key != "maxIClusterSize"
-			&& key != "maxHeVClusterSize" && key != "maxHeIClusterSize") {
-		// Add the property if it made it through that!
-		(*properties)[key] = value;
 	}
 
 	return;
@@ -481,7 +462,6 @@ void PSIClusterReactionNetwork::updateConcentrationsFromArray(
 	}
 
 	// Set the moments
-	int numSuperClusters = stoi(properties->at("numSuperClusters"));
 	for (int i = size - numSuperClusters; i < size; i++) {
 		auto cluster = (PSISuperCluster *) reactants->at(i);
 		id = cluster->getId() - 1;

@@ -58,6 +58,36 @@ private:
 			std::shared_ptr<std::vector<std::shared_ptr<IReactant> > > > clusterTypeMap;
 
 	/**
+	 * Number of Xe clusters in our network.
+	 */
+	int numXeClusters;
+
+	/**
+	 * Number of XeV clusters in our network.
+	 */
+	int numXeVClusters;
+
+	/**
+	 * Number of XeI clusters in our network.
+	 */
+	int numXeIClusters;
+
+	/**
+	 * Maximum size of Xe clusters in our network.
+	 */
+	int maxXeClusterSize;
+
+	/**
+	 * Maximum size of XeV clusters in our network.
+	 */
+	int maxXeVClusterSize;
+
+	/**
+	 * Maximum size of XeI clusters in our network.
+	 */
+	int maxXeIClusterSize;
+
+	/**
 	 * This operation sets the default values of the properties table and names
 	 * for this network. It is used on construction and during a copy.
 	 */
@@ -220,17 +250,6 @@ public:
 	void reinitializeConnectivities();
 
 	/**
-	 * This operation sets a property with the given key to the specified value
-	 * for the network. ReactionNetworks may reserve the right to ignore this
-	 * operation for special key types, most especially those that they manage
-	 * on their own.
-	 *
-	 * @param key The key for the property
-	 * @param value The value to which the key should be set
-	 */
-	void setProperty(const std::string& key, const std::string& value);
-
-	/**
 	 * This operation updates the concentrations for all reactants in the
 	 * network from an array.
 	 *
@@ -247,7 +266,7 @@ public:
 	 * @return The number of degrees of freedom
 	 */
 	virtual int getDOF() {
-		return networkSize + getAll(xolotlCore::NESuperType).size();
+		return networkSize + numSuperClusters;
 	}
 
 	/**
@@ -278,6 +297,48 @@ public:
 	 * this cluster
 	 */
 	virtual void computeAllPartials(double *vals, int *indices, int *size);
+
+	/**
+	 * Number of Xe clusters in our network.
+	 */
+	int getNumXeClusters() const {
+		return numXeClusters;
+	}
+
+	/**
+	 * Number of XeV clusters in our network.
+	 */
+	int getNumXeVClusters() const {
+		return numXeVClusters;
+	}
+
+	/**
+	 * Number of XeI clusters in our network.
+	 */
+	int getNumXeIClusters() const {
+		return numXeIClusters;
+	}
+
+	/**
+	 * Maximum size of Xe clusters in our network.
+	 */
+	int getMaxXeClusterSize() const {
+		return maxXeClusterSize;
+	}
+
+	/**
+	 * Maximum size of XeV clusters in our network.
+	 */
+	int getMaxXeVClusterSize() const {
+		return maxXeVClusterSize;
+	}
+
+	/**
+	 * Maximum size of XeI clusters in our network.
+	 */
+	int getMaxXeIClusterSize() const {
+		return maxXeIClusterSize;
+	}
 
 };
 

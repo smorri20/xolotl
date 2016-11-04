@@ -33,8 +33,7 @@ void PetscSolver1DHandler::createSolverContext(DM &da) {
 			// Now that the diffusion coefficients of all the reactants
 			// are updated, the reaction and dissociation rates can be
 			// recomputed
-			auto cluster = (xolotlCore::PSICluster *) allReactants->at(i);
-			cluster->computeRateConstants();
+			allReactants->at(i)->computeRateConstants();
 		}
 		lastTemperature = temperature;
 	}
@@ -403,7 +402,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 }
 
 void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC,
-		Mat &J) {
+		Mat &J, PetscReal ftime) {
 	PetscErrorCode ierr;
 
 	// Get the distributed array
@@ -455,7 +454,7 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC,
 
 		// Get the temperature from the temperature handler
 		auto temperature = temperatureHandler->getTemperature(gridPosition,
-				0.0);
+				ftime);
 
 		// Update the network if the temperature changed
 		if (!xolotlCore::equal(temperature, lastTemperature)) {
@@ -542,7 +541,7 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC,
 }
 
 void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC,
-		Mat &J) {
+		Mat &J, PetscReal ftime) {
 	PetscErrorCode ierr;
 
 	// Get the distributed array
@@ -638,7 +637,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC,
 
 		// Get the temperature from the temperature handler
 		auto temperature = temperatureHandler->getTemperature(gridPosition,
-				0.0);
+				ftime);
 
 		// Update the network if the temperature changed
 		if (!xolotlCore::equal(temperature, lastTemperature)) {

@@ -29,8 +29,8 @@ BOOST_AUTO_TEST_CASE(checkLoad) {
 	MPI_Init(&argc, &argv);
 
 	// Create the network loader
-	NEClusterNetworkLoader loader =
-			NEClusterNetworkLoader(make_shared<xolotlPerf::DummyHandlerRegistry>());
+	NEClusterNetworkLoader loader = NEClusterNetworkLoader(
+			make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Define the filename to load the network from
 	string sourceDir(XolotlSourceDirectory);
 	string pathToFile("/tests/testfiles/fuel_diminutive.h5");
@@ -40,23 +40,23 @@ BOOST_AUTO_TEST_CASE(checkLoad) {
 
 	// Load the network
 	auto network = loader.load();
+	auto neNetwork = std::dynamic_pointer_cast<NEClusterReactionNetwork>(
+			network);
 
 	// Get the size of the network
 	int networkSize = network->size();
 	// Check the value
 	BOOST_REQUIRE_EQUAL(networkSize, 3);
 
-	// Get the properties
-	auto props = network->getProperties();
-
 	// Check the properties
-	BOOST_REQUIRE_EQUAL(strtol(props["maxXeClusterSize"].c_str(),NULL,10), 3);
-	BOOST_REQUIRE_EQUAL(strtol(props["maxVClusterSize"].c_str(),NULL,10), 0);
-	BOOST_REQUIRE_EQUAL(strtol(props["maxIClusterSize"].c_str(),NULL,10), 0);
-	BOOST_REQUIRE_EQUAL(strtol(props["maxXeVClusterSize"].c_str(),NULL,10), 0);
-	BOOST_REQUIRE_EQUAL(strtol(props["numXeClusters"].c_str(),NULL,10), 3);
-	BOOST_REQUIRE_EQUAL(strtol(props["numVClusters"].c_str(),NULL,10), 0);
-	BOOST_REQUIRE_EQUAL(strtol(props["numIClusters"].c_str(),NULL,10), 0);
+	BOOST_REQUIRE_EQUAL(neNetwork->getMaxXeClusterSize(), 3);
+	BOOST_REQUIRE_EQUAL(neNetwork->getMaxVClusterSize(), 0);
+	BOOST_REQUIRE_EQUAL(neNetwork->getMaxIClusterSize(), 0);
+	BOOST_REQUIRE_EQUAL(neNetwork->getMaxXeVClusterSize(), 0);
+	BOOST_REQUIRE_EQUAL(neNetwork->getNumXeClusters(), 3);
+	BOOST_REQUIRE_EQUAL(neNetwork->getNumVClusters(), 0);
+	BOOST_REQUIRE_EQUAL(neNetwork->getNumIClusters(), 0);
+	BOOST_REQUIRE_EQUAL(neNetwork->getNumSuperClusters(), 0);
 
 	// Get all the reactants
 	auto reactants = network->getAll();
@@ -91,6 +91,53 @@ BOOST_AUTO_TEST_CASE(checkLoad) {
 	// Check the diffusion factor
 	diffusionFactor = reactant->getDiffusionFactor();
 	BOOST_REQUIRE_CLOSE(diffusionFactor, 0.0, 1.0e-16);
+
+	return;
+}
+
+/**
+ * Method checking the loading of the network from the HDF5 file and
+ * the apply sectional method.
+ */
+BOOST_AUTO_TEST_CASE(checkApplySectional) {
+
+	// Create the network loader
+	NEClusterNetworkLoader loader = NEClusterNetworkLoader(
+			make_shared<xolotlPerf::DummyHandlerRegistry>());
+	// Define the filename to load the network from
+	string sourceDir(XolotlSourceDirectory);
+	string pathToFile("/tests/testfiles/fuel_diminutive.h5");
+	string filename = sourceDir + pathToFile;
+	// Give the filename to the network loader
+	loader.setFilename(filename);
+	// Set grouping parameters
+	loader.setXeMin(2);
+	loader.setWidth(2);
+
+	// Load the network
+	auto network = loader.load();
+
+	// Get the size of the network
+	int networkSize = network->size();
+	// Check the value
+	BOOST_REQUIRE_EQUAL(networkSize, 2);
+
+	// Get the dof of the network
+	int dof = network->getDOF();
+	// Check the value
+	BOOST_REQUIRE_EQUAL(dof, 3);
+
+	// Check the properties
+	auto neNetwork = std::dynamic_pointer_cast<NEClusterReactionNetwork>(
+			network);
+	BOOST_REQUIRE_EQUAL(neNetwork->getMaxXeClusterSize(), 3);
+	BOOST_REQUIRE_EQUAL(neNetwork->getMaxVClusterSize(), 0);
+	BOOST_REQUIRE_EQUAL(neNetwork->getMaxIClusterSize(), 0);
+	BOOST_REQUIRE_EQUAL(neNetwork->getMaxXeVClusterSize(), 0);
+	BOOST_REQUIRE_EQUAL(neNetwork->getNumXeClusters(), 1);
+	BOOST_REQUIRE_EQUAL(neNetwork->getNumVClusters(), 0);
+	BOOST_REQUIRE_EQUAL(neNetwork->getNumIClusters(), 0);
+	BOOST_REQUIRE_EQUAL(neNetwork->getNumSuperClusters(), 1);
 
 	// Finalize MPI
 	MPI_Finalize();

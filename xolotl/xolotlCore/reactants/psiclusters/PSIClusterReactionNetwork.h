@@ -56,6 +56,35 @@ private:
 	 */
 	std::map<std::string,
 			std::shared_ptr<std::vector<std::shared_ptr<IReactant> > > > clusterTypeMap;
+	/**
+	 * Number of He clusters in our network.
+	 */
+	int numHeClusters;
+
+	/**
+	 * Number of HeV clusters in our network.
+	 */
+	int numHeVClusters;
+
+	/**
+	 * Number of HeI clusters in our network.
+	 */
+	int numHeIClusters;
+
+	/**
+	 * Maximum size of He clusters in our network.
+	 */
+	int maxHeClusterSize;
+
+	/**
+	 * Maximum size of HeV clusters in our network.
+	 */
+	int maxHeVClusterSize;
+
+	/**
+	 * Maximum size of HeI clusters in our network.
+	 */
+	int maxHeIClusterSize;
 
 	/**
 	 * This operation sets the default values of the properties table and names
@@ -224,17 +253,6 @@ public:
 	void reinitializeConnectivities();
 
 	/**
-	 * This operation sets a property with the given key to the specified value
-	 * for the network. ReactionNetworks may reserve the right to ignore this
-	 * operation for special key types, most especially those that they manage
-	 * on their own.
-	 *
-	 * @param key The key for the property
-	 * @param value The value to which the key should be set
-	 */
-	void setProperty(const std::string& key, const std::string& value);
-
-	/**
 	 * This operation updates the concentrations for all reactants in the
 	 * network from an array.
 	 *
@@ -251,7 +269,7 @@ public:
 	 * @return The number of degrees of freedom
 	 */
 	virtual int getDOF() {
-		return networkSize + 2 * getAll(xolotlCore::PSISuperType).size();
+		return networkSize + 2 * numSuperClusters;
 	}
 
 	/**
@@ -291,6 +309,48 @@ public:
 	 * this cluster
 	 */
 	virtual void computeAllPartials(double *vals, int *indices, int *size);
+
+	/**
+	 * Number of He clusters in our network.
+	 */
+	int getNumHeClusters() const {
+		return numHeClusters;
+	}
+
+	/**
+	 * Number of HeV clusters in our network.
+	 */
+	int getNumHeVClusters() const {
+		return numHeVClusters;
+	}
+
+	/**
+	 * Number of HeI clusters in our network.
+	 */
+	int getNumHeIClusters() const {
+		return numHeIClusters;
+	}
+
+	/**
+	 * Maximum size of He clusters in our network.
+	 */
+	int getMaxHeClusterSize() const {
+		return maxHeClusterSize;
+	}
+
+	/**
+	 * Maximum size of HeV clusters in our network.
+	 */
+	int getMaxHeVClusterSize() const {
+		return maxHeVClusterSize;
+	}
+
+	/**
+	 * Maximum size of HeI clusters in our network.
+	 */
+	int getMaxHeIClusterSize() const {
+		return maxHeIClusterSize;
+	}
 
 };
 

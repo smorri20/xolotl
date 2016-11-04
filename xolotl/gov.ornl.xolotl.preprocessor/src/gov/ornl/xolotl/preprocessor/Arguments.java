@@ -52,8 +52,8 @@ public interface Arguments {
 	 * which takes a single integer value and is defined by the previous Option
 	 * annotation
 	 * 
-	 * @return The maximum size of a xenon cluster in the network satisfying
-	 *         the condition 0 <= maxXeSize
+	 * @return The maximum size of a xenon cluster in the network satisfying the
+	 *         condition 0 <= maxXeSize
 	 */
 	int getMaxXeSize();
 
@@ -111,7 +111,7 @@ public interface Arguments {
 	 * @param description
 	 *            Brief description of this option
 	 */
-	@Option(description = "Should the network be reduced with the phase-cut " + "method?")
+	@Option(description = "Should the network be reduced with the phase-cut method?")
 	/**
 	 * This operation produces the required command line option '--phaseCut'
 	 * which doesn't take a value and is defined by the previous Option
@@ -201,7 +201,7 @@ public interface Arguments {
 	@Option(defaultValue = "-ts_final_time 1.0 -ts_dt 1.0e-12 "
 			+ "-ts_max_steps 100 -ts_adapt_dt_max 1.0e-6 -ts_max_snes_failures 200 "
 			+ "-pc_type fieldsplit -pc_fieldsplit_detect_coupling -fieldsplit_0_pc_type sor "
-			+ "-fieldsplit_1_pc_type redundant -ts_monitor", description = "List of arguments to be passed to PETSc")
+			+ "-fieldsplit_1_pc_type redundant -ts_monitor -ts_exact_final_time stepover", description = "List of arguments to be passed to PETSc")
 	/**
 	 * This operation produces the required command line option '--petscArgs'
 	 * which takes a single string value and is defined by the previous Option

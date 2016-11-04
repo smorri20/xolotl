@@ -75,8 +75,9 @@ public:
 	 * @param ts The PETSc time stepper
 	 * @param localC The PETSc local solution vector
 	 * @param J The Jacobian
+	 * @param ftime The real time
 	 */
-	virtual void computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J) = 0;
+	virtual void computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J, PetscReal ftime) = 0;
 
 	/**
 	 * Compute the diagonal part of the Jacobian which is related to cluster reactions.
@@ -84,8 +85,9 @@ public:
 	 * @param ts The PETSc time stepper
 	 * @param localC The PETSc local solution vector
 	 * @param J The Jacobian
+	 * @param ftime The real time
 	 */
-	virtual void computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J) = 0;
+	virtual void computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J, PetscReal ftime) = 0;
 
 	/**
 	 * Get the grid in the x direction.

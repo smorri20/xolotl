@@ -25,19 +25,19 @@ void NEClusterReactionNetwork::setDefaultPropsAndNames() {
 	= std::make_shared<std::vector<std::shared_ptr<IReactant>>>();
 
 	// Initialize default properties
-	(*properties)["reactionsEnabled"] = "true";
-	(*properties)["dissociationsEnabled"] = "true";
-	(*properties)["numXeClusters"] = "0";
-	(*properties)["numVClusters"] = "0";
-	(*properties)["numIClusters"] = "0";
-	(*properties)["numXeVClusters"] = "0";
-	(*properties)["numXeIClusters"] = "0";
-	(*properties)["numSuperClusters"] = "0";
-	(*properties)["maxXeClusterSize"] = "0";
-	(*properties)["maxVClusterSize"] = "0";
-	(*properties)["maxIClusterSize"] = "0";
-	(*properties)["maxXeVClusterSize"] = "0";
-	(*properties)["maxXeIClusterSize"] = "0";
+	reactionsEnabled = true;
+	dissociationsEnabled = true;
+	numXeClusters = 0;
+	numVClusters = 0;
+	numIClusters = 0;
+	numXeVClusters = 0;
+	numXeIClusters = 0;
+	numSuperClusters = 0;
+	maxXeClusterSize = 0;
+	maxVClusterSize = 0;
+	maxIClusterSize = 0;
+	maxXeVClusterSize = 0;
+	maxXeIClusterSize = 0;
 
 	// Initialize the current and last size to 0
 	networkSize = 0;
@@ -236,7 +236,8 @@ void NEClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 	// Local Declarations
 	int numXe = 0, numV = 0, numI = 0;
 	bool isMixed = false;
-	std::string numClusterKey, clusterSizeKey;
+	int* numClusters = nullptr;
+	int* maxClusterSize = nullptr;
 
 	// Only add a complete reactant
 	if (reactant != NULL) {
@@ -258,28 +259,28 @@ void NEClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 		if (isMixed && mixedSpeciesMap.count(compStr) == 0) {
 			// Put the compound in its map
 			mixedSpeciesMap[compStr] = reactant;
-			// Figure out whether we have XeV or XeI and set the keys
+			// Figure out whether we have XeV or XeI
 			if (numV > 0) {
-				numClusterKey = "numXeVClusters";
-				clusterSizeKey = "maxXeVClusterSize";
+				numClusters = &numXeVClusters;
+				maxClusterSize = &maxXeVClusterSize;
 			} else {
-				numClusterKey = "numXeIClusters";
-				clusterSizeKey = "maxXeIClusterSize";
+				numClusters = &numXeIClusters;
+				maxClusterSize = &maxXeIClusterSize;
 			}
 		} else if (!isMixed && singleSpeciesMap.count(compStr) == 0) {
 			/// Put the reactant in its map
 			singleSpeciesMap[compStr] = reactant;
 
-			// Figure out whether we have Xe, V or I and set the keys
+			// Figure out whether we have Xe, V or I
 			if (numXe > 0) {
-				numClusterKey = "numXeClusters";
-				clusterSizeKey = "maxXeClusterSize";
+				numClusters = &numXeClusters;
+				maxClusterSize = &maxXeClusterSize;
 			} else if (numV > 0) {
-				numClusterKey = "numVClusters";
-				clusterSizeKey = "maxVClusterSize";
+				numClusters = &numVClusters;
+				maxClusterSize = &maxVClusterSize;
 			} else {
-				numClusterKey = "numIClusters";
-				clusterSizeKey = "maxIClusterSize";
+				numClusters = &numIClusters;
+				maxClusterSize = &maxIClusterSize;
 			}
 		} else {
 			std::stringstream errStream;
@@ -290,14 +291,10 @@ void NEClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 		}
 
 		// Increment the number of total clusters of this type
-		int numClusters = std::stoi(properties->at(numClusterKey));
-		numClusters++;
-		(*properties)[numClusterKey] = std::to_string((long long) numClusters);
+		(*numClusters)++;
 		// Increment the max cluster size key
-		int maxSize = std::stoi(properties->at(clusterSizeKey));
 		int clusterSize = numXe + numV + numI;
-		maxSize = std::max(clusterSize, maxSize);
-		(*properties)[clusterSizeKey] = std::to_string((long long) maxSize);
+		(*maxClusterSize) = std::max(clusterSize, *maxClusterSize);
 		// Update the size
 		++networkSize;
 		// Set the id for this cluster
@@ -317,7 +314,7 @@ void NEClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 	// Local Declarations
 	int numXe = 0, numV = 0, numI = 0;
 	bool isMixed = false;
-	std::string numClusterKey;
+	int* numClusters = nullptr;
 
 	// Only add a complete reactant
 	if (reactant != NULL) {
@@ -338,7 +335,7 @@ void NEClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 			// Put the compound in its map
 			superSpeciesMap[compStr] = reactant;
 			// Set the key
-			numClusterKey = "numSuperClusters";
+			numClusters = &numSuperClusters;
 		} else {
 			std::stringstream errStream;
 			errStream << "NEClusterReactionNetwork Message: "
@@ -348,9 +345,7 @@ void NEClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 		}
 
 		// Increment the number of total clusters of this type
-		int numClusters = std::stoi(properties->at(numClusterKey));
-		numClusters++;
-		(*properties)[numClusterKey] = std::to_string((long long) numClusters);
+		(*numClusters)++;
 		// Update the size
 		++networkSize;
 		// Set the id for this cluster
@@ -413,20 +408,23 @@ void NEClusterReactionNetwork::removeReactants(
 }
 
 void NEClusterReactionNetwork::reinitializeNetwork() {
+	// Recount the number of Xe clusters
+	numXeClusters = 0;
 	// Reset the Ids
 	int id = 0;
 	for (auto it = allReactants->begin(); it != allReactants->end(); ++it) {
 		id++;
 		(*it)->setId(id);
 		(*it)->setXeMomentumId(id);
+
+		if ((*it)->getType() == xeType) numXeClusters++;
 	}
 
 	// Reset the network size
 	networkSize = id;
 
 	// Get all the super clusters and loop on them
-	for (auto it = clusterTypeMap[NESuperType]->begin();
-			it != clusterTypeMap[NESuperType]->end(); ++it) {
+	for (auto it = clusterTypeMap[NESuperType]->begin(); it != clusterTypeMap[NESuperType]->end(); ++it) {
 		id++;
 		(*it)->setXeMomentumId(id);
 	}
@@ -438,21 +436,6 @@ void NEClusterReactionNetwork::reinitializeConnectivities() {
 	// Loop on all the reactants to reset their connectivities
 	for (auto it = allReactants->begin(); it != allReactants->end(); ++it) {
 		(*it)->resetConnectivities();
-	}
-
-	return;
-}
-
-void NEClusterReactionNetwork::setProperty(const std::string& key,
-		const std::string& value) {
-	// Check the keys and value before trying to set the property
-	if (!key.empty() && !value.empty() && key != "numXeClusters"
-			&& key != "numVClusters" && key != "numIClusters"
-			&& key != "numSuperClusters" && key != "maxXeClusterSize"
-			&& key != "maxVClusterSize" && key != "maxIClusterSize"
-			&& key != "maxXeVClusterSize" && key != "maxXeIClusterSize") {
-		// Add the property if it made it through that!
-		(*properties)[key] = value;
 	}
 
 	return;
@@ -473,7 +456,6 @@ void NEClusterReactionNetwork::updateConcentrationsFromArray(
 	}
 
 	// Set the moments
-	int numSuperClusters = stoi(properties->at("numSuperClusters"));
 	for (int i = size - numSuperClusters; i < size; i++) {
 		// Get the superCluster
 		auto cluster = (NESuperCluster *) reactants->at(i);
