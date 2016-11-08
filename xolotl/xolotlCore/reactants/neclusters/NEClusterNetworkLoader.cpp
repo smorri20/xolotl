@@ -186,8 +186,8 @@ void NEClusterNetworkLoader::applyGrouping(
 		// Keep the information of the group
 		superGroupMap[superCount] = superCluster.get();
 
-		std::cout << superCount << " " << count << " "
-				<< superCluster->getName() << std::endl;
+//		std::cout << superCount << " " << count << " "
+//				<< superCluster->getName() << std::endl;
 
 		// Reinitialize everything
 		size = 0.0, radius = 0.0, energy = 0.0;

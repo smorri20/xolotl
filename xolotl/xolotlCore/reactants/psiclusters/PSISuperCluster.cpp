@@ -17,8 +17,8 @@ std::vector<double> heMomentumPartials;
  */
 std::vector<double> vMomentumPartials;
 
-PSISuperCluster::PSISuperCluster(double numHe, double numV, int nTot, int heWidth,
-		int vWidth, double radius, double energy,
+PSISuperCluster::PSISuperCluster(double numHe, double numV, int nTot,
+		int heWidth, int vWidth, double radius, double energy,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		PSICluster(registry), numHe(numHe), numV(numV), nTot(nTot), l0(0.0), l1He(
 				0.0), l1V(0.0), dispersionHe(0.0), dispersionV(0.0) {
@@ -226,7 +226,7 @@ void PSISuperCluster::computeRateConstants() {
 	// Initialize the value for the biggest production rate
 	double biggestProductionRate = 0.0;
 	// Initialize the dispersion sum
-	int nHeSquare = 0, nVSquare = 0;
+	double nHeSquare = 0.0, nVSquare = 0.0;
 
 	// Loop on the vacancy width
 	for (int k = 0; k < sectionVWidth; k++) {
@@ -246,8 +246,8 @@ void PSISuperCluster::computeRateConstants() {
 				continue;
 
 			// Compute nSquare for the dispersion
-			nHeSquare += heIndex * heIndex;
-			nVSquare += vIndex * vIndex;
+			nHeSquare += (double) heIndex * heIndex;
+			nVSquare += (double) vIndex * vIndex;
 
 			// Get all the reaction vectors at this index
 			reactingPairs = reactingMap[key];
@@ -390,7 +390,7 @@ void PSISuperCluster::computeRateConstants() {
 		dispersionHe = 1.0;
 	else
 		dispersionHe = 2.0
-				* ((double) nHeSquare
+				* (nHeSquare
 						- ((double) compositionMap[heType]
 								* ((double) compositionMap[heType]
 										/ (double) nTot)))
@@ -400,7 +400,7 @@ void PSISuperCluster::computeRateConstants() {
 		dispersionV = 1.0;
 	else
 		dispersionV = 2.0
-				* ((double) nVSquare
+				* (nVSquare
 						- ((double) compositionMap[vType]
 								* ((double) compositionMap[vType]
 										/ (double) nTot)))
@@ -1056,7 +1056,8 @@ double PSISuperCluster::getCombinationFlux() {
 	return flux;
 }
 
-void PSISuperCluster::getPartialDerivatives(std::vector<double> & partials) const {
+void PSISuperCluster::getPartialDerivatives(
+		std::vector<double> & partials) const {
 	// Reinitialize the momentum partial derivatives vector
 	std::fill(heMomentumPartials.begin(), heMomentumPartials.end(), 0.0);
 	std::fill(vMomentumPartials.begin(), vMomentumPartials.end(), 0.0);

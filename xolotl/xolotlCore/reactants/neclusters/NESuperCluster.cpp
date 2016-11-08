@@ -175,7 +175,7 @@ void NESuperCluster::computeRateConstants() {
 	// Initialize the value for the biggest production rate
 	double biggestProductionRate = 0.0;
 	// Initialize the dispersion sum
-	int nXeSquare = 0;
+	double nXeSquare = 0.0;
 
 	// Loop on the xenon width
 	for (int k = 0; k < sectionWidth; k++) {
@@ -187,7 +187,7 @@ void NESuperCluster::computeRateConstants() {
 			continue;
 
 		// Compute nSquare for the dispersion
-		nXeSquare += index * index;
+		nXeSquare += (double) index * index;
 
 		// Get all the reaction vectors at this index
 		reactingPairs = reactingMap[index];
@@ -278,9 +278,11 @@ void NESuperCluster::computeRateConstants() {
 		dispersion = 1.0;
 	else {
 		dispersion = 2.0
-			* ((double) nXeSquare
-					- ((double) compositionMap[xeType] * ((double) compositionMap[xeType]
-							/ (double) sectionWidth))) / ((double) (sectionWidth * (sectionWidth - 1)));
+				* (nXeSquare
+						- ((double) compositionMap[xeType]
+								* ((double) compositionMap[xeType]
+										/ (double) sectionWidth)))
+				/ ((double) (sectionWidth * (sectionWidth - 1)));
 	}
 
 	// Method to optimize the reaction vectors
@@ -410,8 +412,7 @@ void NESuperCluster::optimizeReactions() {
 						superPair.a100 += distance;
 						superPair.a101 += distance * factor;
 						superPair.a110 += (*itBis).distance * distance;
-						superPair.a111 += (*itBis).distance * distance
-								* factor;
+						superPair.a111 += (*itBis).distance * distance * factor;
 
 						// Do not delete the element if it is the original one
 						if (itBis == it) {

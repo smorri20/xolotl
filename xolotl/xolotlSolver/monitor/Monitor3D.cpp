@@ -37,11 +37,6 @@ extern double previousTime;
 PetscInt hdf5Stride3D = 0;
 //! HDF5 output file name
 std::string hdf5OutputName3D = "xolotlStop.h5";
-// Declare the vector that will store the Id of the helium clusters
-std::vector<int> indices3D;
-// Declare the vector that will store the weight of the helium clusters
-// (their He composition)
-std::vector<int> weights3D;
 //! The pointer to the 2D plot used in MonitorSurfaceXY3D.
 std::shared_ptr<xolotlViz::IPlot> surfacePlotXY3D;
 //! The pointer to the 2D plot used in MonitorSurfaceXZ3D.
@@ -246,8 +241,6 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt, PetscReal time,
 
 	// Get the network
 	auto network = solverHandler->getNetwork();
-	// Get all the super clusters
-	auto superClusters = network->getAll(PSISuperType);
 
 	// Setup step size variables
 	double hy = solverHandler->getStepSizeY();
@@ -281,22 +274,8 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt, PetscReal time,
 				// Update the concentration in the network
 				network->updateConcentrationsFromArray(gridPointSolution);
 
-				// Loop on all the indices
-				for (unsigned int l = 0; l < indices3D.size(); l++) {
-					// Add the current concentration times the number of helium in the cluster
-					// (from the weight vector)
-					heConcentration += gridPointSolution[indices3D[l]]
-							* weights3D[l] * (grid[xi] - grid[xi - 1]) * hy
-							* hz;
-				}
-
-				// Loop on all the super clusters
-				for (int l = 0; l < superClusters.size(); l++) {
-					auto cluster =
-							(xolotlCore::PSISuperCluster *) superClusters[l];
-					heConcentration += cluster->getTotalHeliumConcentration()
-							* (grid[xi] - grid[xi - 1]) * hy * hz;
-				}
+				// Get the total helium concentration at this grid point
+				heConcentration += network->getTotalAtomConcentration() * (grid[xi] - grid[xi - 1]) * hy * hz;
 			}
 		}
 	}
@@ -966,17 +945,7 @@ PetscErrorCode monitorBursting3D(TS ts, PetscInt, PetscReal time,
 				double distance = grid[xi] - grid[surfacePos];
 
 				// Compute the helium density at this grid point
-				double heDensity = 0.0;
-				for (unsigned int i = 0; i < indices3D.size(); i++) {
-					// Add the current concentration times the number of helium in the cluster
-					// (from the weight vector)
-					heDensity += gridPointSolution[indices3D[i]] * weights3D[i];
-				}
-				// Loop on all the super clusters
-				for (int i = 0; i < superClusters.size(); i++) {
-					auto cluster = (xolotlCore::PSISuperCluster *) superClusters[i];
-					heDensity += cluster->getTotalHeliumConcentration();
-				}
+				double heDensity = network->getTotalAtomConcentration();
 
 				// Compute the radius of the bubble from the number of helium
 				double nV = heDensity * (grid[xi] - grid[xi-1]) / 4.0;
@@ -1121,6 +1090,46 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 	CHKERRQ(ierr);
 	checkPetscError(ierr, "setupPetsc3DMonitor: DMDAGetInfo failed.");
 
+	// Set the monitor to save the status of the simulation in hdf5 file
+	if (flagStatus) {
+		// Find the stride to know how often the HDF5 file has to be written
+		PetscBool flag;
+		ierr = PetscOptionsGetInt(NULL, NULL, "-start_stop", &hdf5Stride3D,
+				&flag);
+		checkPetscError(ierr,
+				"setupPetsc3DMonitor: PetscOptionsGetInt (-start_stop) failed.");
+		if (!flag)
+			hdf5Stride3D = 1;
+
+		// Initialize the HDF5 file for all the processes
+		xolotlCore::HDF5Utils::initializeFile(hdf5OutputName3D);
+
+		// Get the solver handler
+		auto solverHandler = PetscSolver::getSolverHandler();
+
+		// Get the physical grid in the x direction
+		auto grid = solverHandler->getXGrid();
+
+		// Setup step size variables
+		double hy = solverHandler->getStepSizeY();
+		double hz = solverHandler->getStepSizeZ();
+
+		// Save the header in the HDF5 file
+		xolotlCore::HDF5Utils::fillHeader(Mx, grid[1] - grid[0], My, hy, Mz,
+				hz);
+
+		// Save the network in the HDF5 file
+		xolotlCore::HDF5Utils::fillNetwork(solverHandler->getNetworkName());
+
+		// Finalize the HDF5 file
+		xolotlCore::HDF5Utils::finalizeFile();
+
+		// startStop3D will be called at each timestep
+		ierr = TSMonitorSet(ts, startStop3D, NULL, NULL);
+		checkPetscError(ierr,
+				"setupPetsc3DMonitor: TSMonitorSet (startStop3D) failed.");
+	}
+
 	// If the user wants the surface to be able to move
 	if (solverHandler->moveSurface()) {
 		// Initialize nInterstitial3D and previousIFlux3D before monitoring the
@@ -1205,32 +1214,6 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 
 	// Set the monitor to compute the helium fluence for the retention calculation
 	if (flagRetention) {
-		// Get all the helium clusters
-		auto heClusters = network->getAll(heType);
-
-		// Get all the helium-vacancy clusters
-		auto heVClusters = network->getAll(heVType);
-
-		// Loop on the helium clusters
-		for (unsigned int i = 0; i < heClusters.size(); i++) {
-			auto cluster = heClusters[i];
-			int id = cluster->getId() - 1;
-			// Add the Id to the vector
-			indices3D.push_back(id);
-			// Add the number of heliums of this cluster to the weight
-			weights3D.push_back(cluster->getSize());
-		}
-
-		// Loop on the helium-vacancy clusters
-		for (unsigned int i = 0; i < heVClusters.size(); i++) {
-			auto cluster = heVClusters[i];
-			int id = cluster->getId() - 1;
-			// Add the Id to the vector
-			indices3D.push_back(id);
-			// Add the number of heliums of this cluster to the weight
-			auto comp = cluster->getComposition();
-			weights3D.push_back(comp[heType]);
-		}
 
 		// Get the last time step written in the HDF5 file
 		int tempTimeStep = -2;
@@ -1249,6 +1232,9 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 			double dt = time;
 			// Increment the fluence with the value at this current timestep
 			fluxHandler->incrementFluence(dt);
+			// Get the previous time from the HDF5 file
+			previousTime = xolotlCore::HDF5Utils::readPreviousTime(networkName,
+					tempTimeStep);
 		}
 
 		// computeFluence will be called at each timestep
@@ -1265,46 +1251,6 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 		std::ofstream outputFile;
 		outputFile.open("retentionOut.txt");
 		outputFile.close();
-	}
-
-	// Set the monitor to save the status of the simulation in hdf5 file
-	if (flagStatus) {
-		// Find the stride to know how often the HDF5 file has to be written
-		PetscBool flag;
-		ierr = PetscOptionsGetInt(NULL, NULL, "-start_stop", &hdf5Stride3D,
-				&flag);
-		checkPetscError(ierr,
-				"setupPetsc3DMonitor: PetscOptionsGetInt (-start_stop) failed.");
-		if (!flag)
-			hdf5Stride3D = 1;
-
-		// Initialize the HDF5 file for all the processes
-		xolotlCore::HDF5Utils::initializeFile(hdf5OutputName3D);
-
-		// Get the solver handler
-		auto solverHandler = PetscSolver::getSolverHandler();
-
-		// Get the physical grid in the x direction
-		auto grid = solverHandler->getXGrid();
-
-		// Setup step size variables
-		double hy = solverHandler->getStepSizeY();
-		double hz = solverHandler->getStepSizeZ();
-
-		// Save the header in the HDF5 file
-		xolotlCore::HDF5Utils::fillHeader(Mx, grid[1] - grid[0], My, hy, Mz,
-				hz);
-
-		// Save the network in the HDF5 file
-		xolotlCore::HDF5Utils::fillNetwork(solverHandler->getNetworkName());
-
-		// Finalize the HDF5 file
-		xolotlCore::HDF5Utils::finalizeFile();
-
-		// startStop3D will be called at each timestep
-		ierr = TSMonitorSet(ts, startStop3D, NULL, NULL);
-		checkPetscError(ierr,
-				"setupPetsc3DMonitor: TSMonitorSet (startStop3D) failed.");
 	}
 
 	// Set the monitor to save surface plots of clusters concentration

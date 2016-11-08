@@ -225,8 +225,8 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 		// Keep the information of the group
 		superGroupMap[std::make_pair(-1, k)] = superCluster.get();
 
-		std::cout << "super: " << superCluster->getName() << " 4 1"
-				<< std::endl;
+//		std::cout << "super: " << superCluster->getName() << " 4 1"
+//				<< std::endl;
 
 		// Reinitialize everything
 		heSize = 0.0, vSize = 0.0, radius = 0.0, energy = 0.0;
@@ -308,17 +308,17 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 						count, heWidth, vWidth, radius, energy,
 						handlerRegistry);
 
-				std::cout << "normal: " << superCluster->getName() << " "
-						<< heWidth << " " << vWidth << std::endl;
+//				std::cout << "normal: " << superCluster->getName() << " "
+//						<< heWidth << " " << vWidth << std::endl;
 			} else {
 				// The cluster is smaller than we thought because we are at the edge
 				superCluster = std::make_shared<PSISuperCluster>(heSize, vSize,
 						count, heHigh - heLow + 1, vHigh - vLow + 1, radius,
 						energy, handlerRegistry);
 
-				std::cout << "irregular: " << superCluster->getName() << " "
-						<< heHigh - heLow + 1 << " " << vHigh - vLow + 1
-						<< std::endl;
+//				std::cout << "irregular: " << superCluster->getName() << " "
+//						<< heHigh - heLow + 1 << " " << vHigh - vLow + 1
+//						<< std::endl;
 			}
 			// Set the HeV vector
 			superCluster->setHeVVector(tempVector);
