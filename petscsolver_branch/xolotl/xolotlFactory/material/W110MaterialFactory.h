@@ -3,7 +3,7 @@
 
 #include <memory>
 #include <MaterialFactory.h>
-#include <W110FitFluxHandler.h>
+#include <FitFluxHandler.h>
 #include <W110AdvectionHandler.h>
 #include <W110TrapMutationHandler.h>
 #include <Diffusion1DHandler.h>
@@ -31,7 +31,7 @@ public:
 	 * @param dim The number of dimensions for the problem
 	 */
 	W110MaterialFactory(int dim) {
-		theFluxHandler = std::make_shared<xolotlCore::W110FitFluxHandler>();
+		theFluxHandler = std::make_shared<xolotlCore::FitFluxHandler>();
 		theAdvectionHandler.push_back(std::make_shared<xolotlCore::W110AdvectionHandler>());
 		theTrapMutationHandler = std::make_shared<xolotlCore::W110TrapMutationHandler>();
 
