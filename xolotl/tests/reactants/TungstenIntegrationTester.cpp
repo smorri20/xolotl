@@ -47,7 +47,6 @@ BOOST_AUTO_TEST_CASE(checkGetReactantFluxesAndParials) {
 	auto allReactants = network->getAll();
 	// Get the network size
 	const int size = network->size();
-	const int dof = network->getDOF();
 	// Set the temperature
 	double temperature = 1000.0;
 	// Initialize the rate constants
@@ -127,7 +126,6 @@ BOOST_AUTO_TEST_CASE(checkSingleReaction) {
 	auto allReactants = network->getAll();
 	// Get the network size
 	const int size = network->size();
-	const int dof = network->getDOF();
 	// Set the temperature
 	double temperature = 1000.0;
 	// Initialize the rate constants

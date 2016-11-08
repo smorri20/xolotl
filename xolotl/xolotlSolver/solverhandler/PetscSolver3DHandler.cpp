@@ -322,8 +322,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	double sz = 1.0 / (hZ * hZ);
 
 	// Declarations for variables used in the loop
-	double flux;
-	int fluxIndex = fluxHandler->getIncidentFluxClusterIndex(), reactantIndex;
+	int fluxIndex = fluxHandler->getIncidentFluxClusterIndex();
 	double **concVector = new double*[7];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 }, incidentFluxVector;
 	double atomConc = 0.0, totalAtomConc = 0.0;

@@ -7,7 +7,7 @@ using namespace xolotlCore;
 
 ReactionNetwork::ReactionNetwork() :
 		temperature(0.0), networkSize(0), reactionsEnabled(true), dissociationsEnabled(
-				true) {
+				true), numVClusters(0), numIClusters(0), numSuperClusters(0), maxVClusterSize(0), maxIClusterSize(0) {
 //    concUpdateCounter = xolotlPerf::getHandlerRegistry()->getEventCounter("net_conc_updates");
 	// Setup the vector to hold all of the reactants
 	allReactants = make_shared<std::vector<IReactant *>>();
@@ -17,7 +17,7 @@ ReactionNetwork::ReactionNetwork() :
 ReactionNetwork::ReactionNetwork(
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		handlerRegistry(registry), temperature(0.0), networkSize(0), reactionsEnabled(
-				true), dissociationsEnabled(true) {
+				true), dissociationsEnabled(true), numVClusters(0), numIClusters(0), numSuperClusters(0), maxVClusterSize(0), maxIClusterSize(0) {
 	// Counter for the number of times the network concentration is updated.
 	concUpdateCounter = handlerRegistry->getEventCounter("net_conc_updates");
 	// Setup the vector to hold all of the reactants
@@ -35,6 +35,11 @@ ReactionNetwork::ReactionNetwork(const ReactionNetwork &other) {
 	compoundNames = other.compoundNames;
 	reactionsEnabled = other.reactionsEnabled;
 	dissociationsEnabled = other.dissociationsEnabled;
+	numVClusters = other.numVClusters;
+	numIClusters = other.numIClusters;
+	numSuperClusters = other.numSuperClusters;
+	maxVClusterSize = other.maxVClusterSize;
+	maxIClusterSize = other.maxIClusterSize;
 
 	// TODO - do we copy the source ReactionNetwork's counter also?
 	// Or should we have our own counter?  How to distinguish them by name?
@@ -49,7 +54,7 @@ void ReactionNetwork::fillConcentrationsArray(double * concentrations) {
 	// Local Declarations
 	auto reactants = getAll();
 	int size = reactants->size();
-	int id = 1;
+	int id = -1;
 
 	// Fill the array
 	for (int i = 0; i < size; i++) {
@@ -64,7 +69,7 @@ void ReactionNetwork::updateConcentrationsFromArray(double * concentrations) {
 	// Local Declarations
 	auto reactants = getAll();
 	int size = reactants->size();
-	int id = 0;
+	int id = -1;
 
 	// Set the concentrations
 	concUpdateCounter->increment();	// increment the update concentration counter

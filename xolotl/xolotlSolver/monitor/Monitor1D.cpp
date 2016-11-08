@@ -737,7 +737,6 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 	PetscErrorCode ierr;
 	double **solutionArray, *gridPointSolution;
 	PetscInt xs, xm, xi, Mx;
-	double x = 0.0;
 
 	PetscFunctionBeginUser;
 
@@ -780,7 +779,6 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 	auto network = solverHandler->getNetwork();
 	int networkSize = network->size();
 	auto superClusters = network->getAll(NESuperType);
-	int dof = network->getDOF();
 
 	// Get the index of the middle of the grid
 	PetscInt ix = Mx / 2;
@@ -1337,7 +1335,7 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 		x = grid[xi];
 
 		// Initialize the values to write in the file
-		double heliumMean = 0.0, standardDev = 0.0;
+		double heliumMean = 0.0;
 
 		// If this is the locally owned part of the grid
 		if (xi >= xs && xi < xs + xm) {

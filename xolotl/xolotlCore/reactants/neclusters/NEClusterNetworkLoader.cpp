@@ -139,7 +139,7 @@ void NEClusterNetworkLoader::applyGrouping(
 	// Initialize variables for the loop
 	NECluster * cluster;
 	std::shared_ptr<NESuperCluster> superCluster;
-	int count = 0, superCount = 0, index = 0, width = sectionWidth;
+	int count = 0, superCount = 0, width = sectionWidth;
 	double size = 0.0, radius = 0.0, energy = 0.0;
 
 	// Map to know which cluster is in which group

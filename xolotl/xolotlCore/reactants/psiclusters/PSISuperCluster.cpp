@@ -1,7 +1,6 @@
 // Includes
 #include "PSISuperCluster.h"
 #include "PSIClusterReactionNetwork.h"
-#include <iostream>
 #include <Constants.h>
 #include <MathUtils.h>
 
@@ -21,7 +20,8 @@ PSISuperCluster::PSISuperCluster(double numHe, double numV, int nTot,
 		int heWidth, int vWidth, double radius, double energy,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		PSICluster(registry), numHe(numHe), numV(numV), nTot(nTot), l0(0.0), l1He(
-				0.0), l1V(0.0), dispersionHe(0.0), dispersionV(0.0) {
+				0.0), l1V(0.0), dispersionHe(0.0), dispersionV(0.0), heMomentumFlux(
+				0.0), vMomentumFlux(0.0) {
 	// Set the cluster size as the sum of
 	// the number of Helium and Vacancies
 	size = (int) (numHe + numV);
@@ -76,6 +76,8 @@ PSISuperCluster::PSISuperCluster(PSISuperCluster &other) :
 	effCombiningList = other.effCombiningList;
 	effDissociatingList = other.effDissociatingList;
 	effEmissionList = other.effEmissionList;
+	heMomentumFlux = other.heMomentumFlux;
+	vMomentumFlux = other.vMomentumFlux;
 
 	return;
 }
@@ -218,9 +220,10 @@ void PSISuperCluster::createDissociationConnectivity() {
 
 void PSISuperCluster::computeRateConstants() {
 	// Local declarations
-	PSICluster *firstReactant, *secondReactant, *combiningReactant,
-			*dissociatingCluster, *otherEmittedCluster, *firstCluster,
-			*secondCluster;
+	PSICluster *firstReactant = nullptr, *secondReactant = nullptr,
+			*combiningReactant = nullptr, *dissociatingCluster = nullptr,
+			*otherEmittedCluster = nullptr, *firstCluster = nullptr,
+			*secondCluster = nullptr;
 	double rate = 0.0;
 	int heIndex = 0, vIndex = 0;
 	// Initialize the value for the biggest production rate
@@ -415,10 +418,10 @@ void PSISuperCluster::computeRateConstants() {
 void PSISuperCluster::optimizeReactions() {
 	// Local declarations
 	double heFactor = 0.0, vFactor = 0.0, heDistance = 0.0, vDistance = 0.0;
-	int nPairs = 0;
-	PSICluster *firstReactant, *secondReactant, *combiningReactant,
-			*dissociatingCluster, *otherEmittedCluster, *firstCluster,
-			*secondCluster;
+	PSICluster *firstReactant = nullptr, *secondReactant = nullptr,
+			*combiningReactant = nullptr, *dissociatingCluster = nullptr,
+			*otherEmittedCluster = nullptr, *firstCluster = nullptr,
+			*secondCluster = nullptr;
 	int heIndex = 0, vIndex = 0;
 
 	// Loop on the effective reacting map
@@ -791,9 +794,10 @@ void PSISuperCluster::optimizeReactions() {
 
 void PSISuperCluster::updateRateConstants() {
 	// Local declarations
-	PSICluster *firstReactant, *secondReactant, *combiningReactant,
-			*dissociatingCluster, *otherEmittedCluster, *firstCluster,
-			*secondCluster;
+	PSICluster *firstReactant = nullptr, *secondReactant = nullptr,
+			*combiningReactant = nullptr, *dissociatingCluster = nullptr,
+			*otherEmittedCluster = nullptr, *firstCluster = nullptr,
+			*secondCluster = nullptr;
 	double rate = 0.0;
 	// Initialize the value for the biggest production rate
 	double biggestProductionRate = 0.0;
@@ -914,15 +918,14 @@ void PSISuperCluster::resetConnectivities() {
 
 double PSISuperCluster::getTotalFlux() {
 	// Initialize the fluxes
-	double prodFlux = 0.0, combFlux = 0.0, dissFlux = 0.0, emissFlux = 0.0;
 	heMomentumFlux = 0.0;
 	vMomentumFlux = 0.0;
 
 	// Get the fluxes
-	prodFlux = getProductionFlux();
-	dissFlux = getDissociationFlux();
-	combFlux = getCombinationFlux();
-	emissFlux = getEmissionFlux();
+	double prodFlux = getProductionFlux();
+	double dissFlux = getDissociationFlux();
+	double combFlux = getCombinationFlux();
+	double emissFlux = getEmissionFlux();
 
 	return prodFlux - combFlux + dissFlux - emissFlux;
 }
@@ -930,7 +933,7 @@ double PSISuperCluster::getTotalFlux() {
 double PSISuperCluster::getDissociationFlux() {
 	// Initial declarations
 	double flux = 0.0, value = 0.0;
-	PSICluster *dissociatingCluster;
+	PSICluster *dissociatingCluster = nullptr;
 
 	// Loop over all the dissociating pairs
 	for (auto it = effDissociatingList.begin(); it != effDissociatingList.end();
@@ -976,7 +979,7 @@ double PSISuperCluster::getEmissionFlux() {
 double PSISuperCluster::getProductionFlux() {
 	// Local declarations
 	double flux = 0.0, value = 0.0;
-	PSICluster *firstReactant, *secondReactant;
+	PSICluster *firstReactant = nullptr, *secondReactant = nullptr;
 
 	// Loop over all the reacting pairs
 	for (auto it = effReactingList.begin(); it != effReactingList.end(); ++it) {
@@ -1019,8 +1022,7 @@ double PSISuperCluster::getProductionFlux() {
 double PSISuperCluster::getCombinationFlux() {
 	// Local declarations
 	double flux = 0.0, value = 0.0;
-	int nReactants = 0;
-	PSICluster *combiningCluster;
+	PSICluster *combiningCluster = nullptr;
 
 	// Loop over all the combining clusters
 	for (auto it = effCombiningList.begin(); it != effCombiningList.end();
@@ -1076,7 +1078,7 @@ void PSISuperCluster::getProductionPartialDerivatives(
 	// Initial declarations
 	double value = 0.0;
 	int index = 0;
-	PSICluster *firstReactant, *secondReactant;
+	PSICluster *firstReactant = nullptr, *secondReactant = nullptr;
 
 	// Production
 	// A + B --> D, D being this cluster
@@ -1152,7 +1154,7 @@ void PSISuperCluster::getCombinationPartialDerivatives(
 		std::vector<double> & partials) const {
 	// Initial declarations
 	int index = 0;
-	PSICluster *cluster;
+	PSICluster *cluster = nullptr;
 	double value = 0.0;
 
 	// Combination
@@ -1226,7 +1228,7 @@ void PSISuperCluster::getDissociationPartialDerivatives(
 		std::vector<double> & partials) const {
 	// Initial declarations
 	int index = 0;
-	PSICluster *cluster;
+	PSICluster *cluster = nullptr;
 	double value = 0.0;
 
 	// Dissociation

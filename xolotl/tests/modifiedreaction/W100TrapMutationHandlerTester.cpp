@@ -141,6 +141,7 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 			valPointer, indicesPointer, 8);
 
 	// Check the values for the indices
+	BOOST_REQUIRE_EQUAL(nMutating, 3);
 	BOOST_REQUIRE_EQUAL(indices[0], 9); // He4
 	BOOST_REQUIRE_EQUAL(indices[1], 18); // He4V
 	BOOST_REQUIRE_EQUAL(indices[2], 0); // I
@@ -167,6 +168,7 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 			valPointer, indicesPointer, 8);
 
 	// Check values
+	BOOST_REQUIRE_EQUAL(nMutating, 3);
 	BOOST_REQUIRE_CLOSE(val[0], -2.14016e+13, 0.01);
 	BOOST_REQUIRE_CLOSE(val[1], 2.14016e+13, 0.01);
 	BOOST_REQUIRE_CLOSE(val[2], 2.14016e+13, 0.01);

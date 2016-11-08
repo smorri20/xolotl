@@ -429,8 +429,8 @@ void TrapMutationHandler::computeTrapMutation(IReactionNetwork *network,
 	// Get all the HeV bubbles
 	auto bubbles = network->getAll(heVType);
 	// Initialyze the pointers to interstitial and helium clusters and their ID
-	PSICluster * iCluster, * heCluster, * bubble;
-	int iIndex, heIndex, bubbleIndex;
+	PSICluster * iCluster = nullptr, * heCluster = nullptr, * bubble = nullptr;
+	int iIndex = -1, heIndex = -1, bubbleIndex = -1;
 
 	// Initialize the rate of the reaction
 	double rate = 0.0;
@@ -483,8 +483,8 @@ int TrapMutationHandler::computePartialsForTrapMutation(
 	// Get all the HeV bubbles
 	auto bubbles = network->getAll(heVType);
 	// Initialyze the pointers to interstitial and helium clusters and their ID
-	PSICluster * iCluster, * heCluster, * bubble;
-	int iIndex, heIndex, bubbleIndex;
+	PSICluster * iCluster = nullptr, * heCluster = nullptr, * bubble = nullptr;
+	int iIndex = -1, heIndex = -1, bubbleIndex = -1;
 
 	// Initialize the rate of the reaction
 	double rate = 0.0;

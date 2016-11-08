@@ -27,13 +27,6 @@ public:
 	~SurfaceAdvectionHandler() {}
 
 	/**
-	 * Set the position of the surface.
-	 *
-	 * \see IAdvectionHandler.h
-	 */
-	void setPosition(double pos);
-
-	/**
 	 * Initialize an array of the dimension of the physical domain times the number of advecting
 	 * clusters. For each location, True means the cluster is moving, False means it is not.
 	 *

@@ -3,8 +3,6 @@
 
 // Includes
 #include <Reactant.h>
-#include <math.h>
-#include <sstream>
 
 namespace xolotlPerf {
 	class ITimer;

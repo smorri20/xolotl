@@ -7,10 +7,6 @@
 
 #include "PSIClusterNetworkLoader.h"
 #include <TokenizedLineReader.h>
-#include <stdio.h>
-#include <limits>
-#include <algorithm>
-#include <vector>
 #include <HeCluster.h>
 #include <VCluster.h>
 #include <InterstitialCluster.h>
@@ -166,10 +162,10 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 	std::vector<PSICluster *> tempVector;
 
 	// Initialize variables for the loop
-	PSICluster * cluster;
+	PSICluster * cluster = nullptr;
 	std::shared_ptr<PSISuperCluster> superCluster;
 	static std::map<std::string, int> composition;
-	int count = 0, superCount = 0, heIndex = 1, vIndex = vMin, heWidth =
+	int count = 0, heIndex = 1, vIndex = vMin, heWidth =
 			heSectionWidth, vWidth = vSectionWidth;
 	double heSize = 0.0, vSize = 0.0, radius = 0.0, energy = 0.0;
 

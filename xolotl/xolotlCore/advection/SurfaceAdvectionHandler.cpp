@@ -3,12 +3,6 @@
 
 namespace xolotlCore {
 
-void SurfaceAdvectionHandler::setPosition(double pos) {
-	location = pos;
-
-	return;
-}
-
 void SurfaceAdvectionHandler::initializeAdvectionGrid(std::vector<IAdvectionHandler *> advectionHandlers,
 		std::vector<double> grid,
 		int ny, double hy, int nz, double hz) {

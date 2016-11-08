@@ -1,8 +1,6 @@
 #include "NECluster.h"
 #include <xolotlPerf.h>
 #include <Constants.h>
-#include <iostream>
-#include <limits>
 #include <MathUtils.h>
 
 using namespace xolotlCore;
@@ -210,9 +208,10 @@ void NECluster::combineClusters(std::vector<IReactant *> & reactants,
 	// Initial declarations
 	std::map<std::string, int> myComposition = getComposition(),
 			secondComposition;
-	int numXe, numV, numI, secondNumXe, secondNumV, secondNumI, productSize;
+	int numXe = 0, numV = 0, numI = 0, secondNumXe = 0, secondNumV = 0,
+			secondNumI = 0, productSize = 0;
 	std::vector<int> compositionSizes { 0, 0, 0 };
-	NECluster *productCluster, *secondCluster;
+	NECluster *productCluster = nullptr, *secondCluster = nullptr;
 	// Setup the composition variables for this cluster
 	numXe = myComposition[xeType];
 	numV = myComposition[vType];
@@ -347,9 +346,6 @@ void NECluster::setReactionNetwork(
 	dissociatingPairs.clear();
 	emissionPairs.clear();
 
-	// Get the index/id of this cluster in the reaction network.
-	thisNetworkIndex = id - 1;
-
 	// ----- Handle the connectivity for NEClusters -----
 
 	// Generate the reactant and dissociation connectivity arrays.
@@ -377,14 +373,11 @@ double NECluster::getMomentum() const {
 }
 
 double NECluster::getTotalFlux() {
-	// Initialize the fluxes
-	double prodFlux = 0.0, combFlux = 0.0, dissFlux = 0.0, emissFlux = 0.0;
-
 	// Get the fluxes
-	prodFlux = getProductionFlux();
-	dissFlux = getDissociationFlux();
-	combFlux = getCombinationFlux();
-	emissFlux = getEmissionFlux();
+	double prodFlux = getProductionFlux();
+	double dissFlux = getDissociationFlux();
+	double combFlux = getCombinationFlux();
+	double emissFlux = getEmissionFlux();
 
 	return prodFlux - combFlux + dissFlux - emissFlux;
 }
@@ -393,7 +386,7 @@ double NECluster::getDissociationFlux() const {
 	// Initial declarations
 	int nPairs = 0;
 	double flux = 0.0;
-	NECluster *dissociatingCluster;
+	NECluster *dissociatingCluster = nullptr;
 
 	// Set the total number of reactants that dissociate to form this one
 	nPairs = dissociatingPairs.size();
@@ -431,7 +424,7 @@ double NECluster::getProductionFlux() const {
 	// Local declarations
 	double flux = 0.0;
 	int nPairs = 0;
-	NECluster *firstReactant, *secondReactant;
+	NECluster *firstReactant = nullptr, *secondReactant = nullptr;
 
 	// Set the total number of reacting pairs
 	nPairs = reactingPairs.size();
@@ -456,7 +449,7 @@ double NECluster::getCombinationFlux() const {
 	// Local declarations
 	double flux = 0.0;
 	int nReactants = 0;
-	NECluster *combiningCluster;
+	NECluster *combiningCluster = nullptr;
 
 	// Set the total number of reactants that combine to form this one
 	nReactants = combiningReactants.size();
@@ -536,7 +529,7 @@ void NECluster::getCombinationPartialDerivatives(
 		std::vector<double> & partials) const {
 	// Initial declarations
 	int numReactants = 0, otherIndex = 0;
-	NECluster *cluster;
+	NECluster *cluster = nullptr;
 	double value = 0.0;
 
 	// Combination
@@ -569,7 +562,7 @@ void NECluster::getDissociationPartialDerivatives(
 		std::vector<double> & partials) const {
 	// Initial declarations
 	int numPairs = 0, index = 0;
-	NECluster *cluster;
+	NECluster *cluster = nullptr;
 
 	// Dissociation
 	// A --> B + D, B being this cluster
@@ -634,7 +627,7 @@ void NECluster::setMigrationEnergy(const double energy) {
 double NECluster::getLeftSideRate() const {
 	// Initialize the rate and the cluster pointer
 	double totalRate = 0.0;
-	NECluster *cluster;
+	NECluster *cluster = nullptr;
 
 	// Loop on the combining reactants
 	for (int i = 0; i < combiningReactants.size(); i++) {
@@ -680,9 +673,10 @@ std::vector<int> NECluster::getConnectivity() const {
 
 void NECluster::computeRateConstants() {
 	// Local declarations
-	NECluster *firstReactant, *secondReactant, *combiningReactant,
-			*dissociatingCluster, *otherEmittedCluster, *firstCluster,
-			*secondCluster;
+	NECluster *firstReactant = nullptr, *secondReactant = nullptr,
+			*combiningReactant = nullptr, *dissociatingCluster = nullptr,
+			*otherEmittedCluster = nullptr, *firstCluster = nullptr,
+			*secondCluster = nullptr;
 	double rate = 0.0;
 	// Initialize the value for the biggest production rate
 	double biggestProductionRate = 0.0;

@@ -2,9 +2,6 @@
 #include "PSICluster.h"
 #include "PSISuperCluster.h"
 #include <xolotlPerf.h>
-#include <iostream>
-#include <sstream>
-#include <algorithm>
 #include <Constants.h>
 
 using namespace xolotlCore;

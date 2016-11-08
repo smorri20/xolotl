@@ -15,7 +15,7 @@ Reactant::Reactant() :
 				0.0), typeName(""), network(nullptr), handlerRegistry(nullptr), size(
 				0), formationEnergy(0.0), diffusionFactor(0.0), diffusionCoefficient(
 				0.0), migrationEnergy(0.0), name("Reactant"), reactionRadius(
-				0.0), thisNetworkIndex(-1), biggestRate(0.0) {
+				0.0), biggestRate(0.0) {
 	// Setup the composition map.
 	compositionMap[xeType] = 0;
 	compositionMap[heType] = 0;
@@ -28,7 +28,7 @@ Reactant::Reactant(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 				0.0), typeName(""), network(nullptr), handlerRegistry(registry), size(
 				0), formationEnergy(0.0), diffusionFactor(0.0), diffusionCoefficient(
 				0.0), migrationEnergy(0.0), name("Reactant"), reactionRadius(
-				0.0), thisNetworkIndex(-1), biggestRate(0.0) {
+				0.0), biggestRate(0.0) {
 	// Setup the composition map.
 	compositionMap[xeType] = 0;
 	compositionMap[heType] = 0;
@@ -44,8 +44,8 @@ Reactant::Reactant(Reactant &other) :
 				other.handlerRegistry), size(other.size), formationEnergy(
 				other.formationEnergy), diffusionFactor(other.diffusionFactor), diffusionCoefficient(
 				other.diffusionCoefficient), migrationEnergy(
-				other.migrationEnergy), reactionRadius(other.reactionRadius), thisNetworkIndex(
-				other.thisNetworkIndex), biggestRate(other.biggestRate), reactionConnectivitySet(
+				other.migrationEnergy), reactionRadius(other.reactionRadius), biggestRate(
+				other.biggestRate), reactionConnectivitySet(
 				other.reactionConnectivitySet), dissociationConnectivitySet(
 				other.dissociationConnectivitySet) {
 	// Setup the composition map.

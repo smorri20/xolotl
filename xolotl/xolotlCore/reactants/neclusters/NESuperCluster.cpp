@@ -1,7 +1,6 @@
 // Includes
 #include "NESuperCluster.h"
 #include "NEClusterReactionNetwork.h"
-#include <iostream>
 #include <Constants.h>
 #include <MathUtils.h>
 
@@ -15,7 +14,7 @@ std::vector<double> momentumPartials;
 NESuperCluster::NESuperCluster(double num, int nTot, int width, double radius,
 		double energy, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		NECluster(registry), numXe(num), nTot(nTot), l0(0.0), l1(0.0), dispersion(
-				0.0) {
+				0.0), momentumFlux(0.0) {
 	// Set the cluster size
 	size = (int) numXe;
 
@@ -59,6 +58,7 @@ NESuperCluster::NESuperCluster(NESuperCluster &other) :
 	effCombiningList = other.effCombiningList;
 	effDissociatingList = other.effDissociatingList;
 	effEmissionList = other.effEmissionList;
+	momentumFlux = other.momentumFlux;
 
 	return;
 }
@@ -294,7 +294,6 @@ void NESuperCluster::computeRateConstants() {
 void NESuperCluster::optimizeReactions() {
 	// Local declarations
 	double factor = 0.0, distance = 0.0;
-	int nPairs = 0;
 	NECluster *firstReactant, *secondReactant, *combiningReactant,
 			*dissociatingCluster, *otherEmittedCluster, *firstCluster,
 			*secondCluster;
@@ -582,9 +581,10 @@ void NESuperCluster::optimizeReactions() {
 
 void NESuperCluster::updateRateConstants() {
 	// Local declarations
-	NECluster *firstReactant, *secondReactant, *combiningReactant,
-			*dissociatingCluster, *otherEmittedCluster, *firstCluster,
-			*secondCluster;
+	NECluster *firstReactant = nullptr, *secondReactant = nullptr,
+			*combiningReactant = nullptr, *dissociatingCluster = nullptr,
+			*otherEmittedCluster = nullptr, *firstCluster = nullptr,
+			*secondCluster = nullptr;
 	double rate = 0.0;
 	// Initialize the value for the biggest production rate
 	double biggestProductionRate = 0.0;
@@ -697,15 +697,14 @@ void NESuperCluster::resetConnectivities() {
 }
 
 double NESuperCluster::getTotalFlux() {
-	// Initialize the fluxes
-	double prodFlux = 0.0, combFlux = 0.0, dissFlux = 0.0, emissFlux = 0.0;
+	// Initialize the momentum flux
 	momentumFlux = 0.0;
 
 	// Get the fluxes
-	prodFlux = getProductionFlux();
-	dissFlux = getDissociationFlux();
-	combFlux = getCombinationFlux();
-	emissFlux = getEmissionFlux();
+	double prodFlux = getProductionFlux();
+	double dissFlux = getDissociationFlux();
+	double combFlux = getCombinationFlux();
+	double emissFlux = getEmissionFlux();
 
 	return prodFlux - combFlux + dissFlux - emissFlux;
 }
@@ -713,7 +712,7 @@ double NESuperCluster::getTotalFlux() {
 double NESuperCluster::getDissociationFlux() {
 	// Initial declarations
 	double flux = 0.0, value = 0.0;
-	NECluster *dissociatingCluster;
+	NECluster *dissociatingCluster = nullptr;
 
 	// Loop over all the dissociating pairs
 	for (auto it = effDissociatingList.begin(); it != effDissociatingList.end();
@@ -752,7 +751,7 @@ double NESuperCluster::getEmissionFlux() {
 double NESuperCluster::getProductionFlux() {
 	// Local declarations
 	double flux = 0.0, value = 0.0;
-	NECluster *firstReactant, *secondReactant;
+	NECluster *firstReactant = nullptr, *secondReactant = nullptr;
 
 	// Loop over all the reacting pairs
 	for (auto it = effReactingList.begin(); it != effReactingList.end(); ++it) {
@@ -781,7 +780,7 @@ double NESuperCluster::getProductionFlux() {
 double NESuperCluster::getCombinationFlux() {
 	// Local declarations
 	double flux = 0.0, value = 0.0;
-	NECluster *combiningCluster;
+	NECluster *combiningCluster = nullptr;
 
 	// Loop over all the combining clusters
 	for (auto it = effCombiningList.begin(); it != effCombiningList.end();
@@ -823,7 +822,7 @@ void NESuperCluster::getProductionPartialDerivatives(
 	// Initial declarations
 	double value = 0.0;
 	int index = 0;
-	NECluster *firstReactant, *secondReactant;
+	NECluster *firstReactant = nullptr, *secondReactant = nullptr;
 
 	// Production
 	// A + B --> D, D being this cluster
@@ -871,7 +870,7 @@ void NESuperCluster::getCombinationPartialDerivatives(
 		std::vector<double> & partials) const {
 	// Initial declarations
 	int index = 0;
-	NECluster *cluster;
+	NECluster *cluster = nullptr;
 	double value = 0.0;
 
 	// Combination
@@ -916,7 +915,7 @@ void NESuperCluster::getDissociationPartialDerivatives(
 		std::vector<double> & partials) const {
 	// Initial declarations
 	int index = 0;
-	NECluster *cluster;
+	NECluster *cluster = nullptr;
 	double value = 0.0;
 
 	// Dissociation

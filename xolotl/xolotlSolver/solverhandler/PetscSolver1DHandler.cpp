@@ -268,7 +268,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	// The following pointers are set to the first position in the conc or
 	// updatedConc arrays that correspond to the beginning of the data for the
 	// current grid point. They are accessed just like regular arrays.
-	PetscScalar *concOffset, *updatedConcOffset;
+	PetscScalar *concOffset = nullptr, *updatedConcOffset = nullptr;
 
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = network->getDOF();
@@ -308,9 +308,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			surfacePosition);
 
 	// Declarations for variables used in the loop
-	double flux;
-	int fluxIndex = fluxHandler->getIncidentFluxClusterIndex(), reactantIndex;
-	xolotlCore::IReactant *cluster = NULL;
+	int fluxIndex = fluxHandler->getIncidentFluxClusterIndex();
 	double **concVector = new double*[3];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
 
@@ -619,7 +617,6 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC,
 	int nHelium = heliums.size();
 
 	// Declarations for variables used in the loop
-	int reactantIndex;
 	std::vector<double> gridPosition;
 	gridPosition.push_back(0.0);
 	gridPosition.push_back(0.0);

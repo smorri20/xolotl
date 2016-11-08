@@ -303,9 +303,7 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	double sy = 1.0 / (hY * hY);
 
 	// Declarations for variables used in the loop
-	double flux;
-	int fluxIndex = fluxHandler->getIncidentFluxClusterIndex(), reactantIndex;
-	xolotlCore::IReactant *cluster = NULL;
+	int fluxIndex = fluxHandler->getIncidentFluxClusterIndex();
 	double **concVector = new double*[5];
 	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 }, incidentFluxVector;
 	double atomConc = 0.0, totalAtomConc = 0.0;

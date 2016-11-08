@@ -3,6 +3,8 @@
 
 // Includes
 #include "IReactant.h"
+#include <math.h>
+#include <sstream>
 #include <set>
 
 namespace xolotlPerf {
@@ -105,12 +107,6 @@ protected:
 	 * updated.
 	 */
 	double diffusionCoefficient;
-
-	/**
-	 * The index/id of this cluster in the reaction network - 1. It is used for
-	 * indexing arrays (thus the -1).
-	 */
-	int thisNetworkIndex;
 
 	/**
 	 * The formation energy of this cluster. It will be used to compute the

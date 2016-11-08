@@ -180,7 +180,6 @@ BOOST_AUTO_TEST_CASE(checkIO) {
  */
 BOOST_AUTO_TEST_CASE(checkSurface2D) {
 	// Initialize the HDF5 file
-	int networkSize = 10;
 	HDF5Utils::initializeFile("test.h5");
 
 	// Set the number of grid points and step size
@@ -244,7 +243,6 @@ BOOST_AUTO_TEST_CASE(checkSurface2D) {
  */
 BOOST_AUTO_TEST_CASE(checkSurface3D) {
 	// Initialize the HDF5 file
-	int networkSize = 10;
 	HDF5Utils::initializeFile("test.h5");
 
 	// Set the number of grid points and step size

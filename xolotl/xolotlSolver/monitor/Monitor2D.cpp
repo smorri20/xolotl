@@ -761,7 +761,7 @@ PetscErrorCode monitorBursting2D(TS ts, PetscInt, PetscReal time,
 			double heDensity = network->getTotalAtomConcentration();
 
 			// Compute the radius of the bubble from the number of helium
-			double nV = heDensity * (grid[xi] - grid[xi-1]) / 4.0;
+			double nV = heDensity * (grid[xi] - grid[xi-1]) * hy / 4.0;
 			double radius = (sqrt(3.0) / 4.0) * xolotlCore::tungstenLatticeConstant
 					+ pow(
 							(3.0 * pow(xolotlCore::tungstenLatticeConstant, 3.0) * nV)
@@ -880,7 +880,6 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 
 	// Get the network and its size
 	auto network = solverHandler->getNetwork();
-	const int networkSize = network->size();
 
 	// Get the da from ts
 	DM da;
