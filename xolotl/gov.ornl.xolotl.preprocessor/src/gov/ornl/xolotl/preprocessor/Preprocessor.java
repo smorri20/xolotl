@@ -166,6 +166,14 @@ public class Preprocessor {
 			petscList.add("true");
 		}
 
+		// Change the timesteps default for the NE problem
+		if (maxXe > 0) {
+			petscList.add("-ts_dt");
+			petscList.add("1.0e-1");
+			petscList.add("-ts_adapt_dt_max");
+			petscList.add("5.0e5");
+		}
+
 		// Create the dash character
 		String str = "-";
 		char dash = str.charAt(0);

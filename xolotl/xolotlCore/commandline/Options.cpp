@@ -1,4 +1,5 @@
 #include <cassert>
+#include <limits>
 #include <fstream>
 #include <TokenizedLineReader.h>
 #include <NetworkOptionHandler.h>
