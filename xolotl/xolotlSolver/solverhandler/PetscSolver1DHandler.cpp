@@ -144,7 +144,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) {
 	PetscErrorCode ierr;
 
 	// Pointer for the concentration vector
-	PetscScalar **concentrations;
+	PetscScalar **concentrations = nullptr;
 	ierr = DMDAVecGetArrayDOF(da, C, &concentrations);
 	checkPetscError(ierr, "PetscSolver1DHandler::initializeConcentration: "
 			"DMDAVecGetArrayDOF failed.");
@@ -178,7 +178,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) {
 	advectionHandlers[0]->initializeAdvectionGrid(advectionHandlers, grid);
 
 	// Pointer for the concentration vector at a specific grid point
-	PetscScalar *concOffset;
+	PetscScalar *concOffset = nullptr;
 
 	// Degrees of freedom is the total number of clusters in the network
 	// + the super clusters
@@ -250,7 +250,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 	// Pointers to the PETSc arrays that start at the beginning (xs) of the
 	// local array!
-	PetscScalar **concs, **updatedConcs;
+	PetscScalar **concs = nullptr, **updatedConcs = nullptr;
 	// Get pointers to vector data
 	ierr = DMDAVecGetArrayDOFRead(da, localC, &concs);
 	checkPetscError(ierr, "PetscSolver1DHandler::updateConcentration: "
@@ -552,7 +552,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC,
 	int xSize = grid.size();
 
 	// Get pointers to vector data
-	PetscScalar **concs;
+	PetscScalar **concs = nullptr;
 	ierr = DMDAVecGetArrayDOFRead(da, localC, &concs);
 	checkPetscError(ierr, "PetscSolver1DHandler::computeDiagonalJacobian: "
 			"DMDAVecGetArrayDOFRead failed.");
@@ -564,7 +564,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC,
 			"DMDAGetCorners failed.");
 
 	// Pointer to the concentrations at a given grid point
-	PetscScalar *concOffset;
+	PetscScalar *concOffset = nullptr;
 
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = network->getDOF();

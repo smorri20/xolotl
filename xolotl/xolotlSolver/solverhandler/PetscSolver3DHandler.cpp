@@ -156,7 +156,7 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) {
 	PetscErrorCode ierr;
 
 	// Pointer for the concentration vector
-	PetscScalar ****concentrations;
+	PetscScalar ****concentrations = nullptr;
 	ierr = DMDAVecGetArrayDOF(da, C, &concentrations);
 	checkPetscError(ierr, "PetscSolver3DHandler::initializeConcentration: "
 			"DMDAVecGetArrayDOF failed.");
@@ -206,7 +206,7 @@ void PetscSolver3DHandler::initializeConcentration(DM &da, Vec &C) {
 			hY, Mz, hZ);
 
 	// Pointer for the concentration vector at a specific grid point
-	PetscScalar *concOffset;
+	PetscScalar *concOffset = nullptr;
 
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = network->getDOF();
@@ -288,7 +288,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 	// Pointers to the PETSc arrays that start at the beginning (xs, ys, zs) of the
 	// local array!
-	PetscScalar ****concs, ****updatedConcs;
+	PetscScalar ****concs = nullptr, ****updatedConcs = nullptr;
 	// Get pointers to vector data
 	ierr = DMDAVecGetArrayDOFRead(da, localC, &concs);
 	checkPetscError(ierr, "PetscSolver3DHandler::updateConcentration: "
@@ -315,7 +315,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	// The following pointers are set to the first position in the conc or
 	// updatedConc arrays that correspond to the beginning of the data for the
 	// current grid point. They are accessed just like regular arrays.
-	PetscScalar *concOffset, *updatedConcOffset;
+	PetscScalar *concOffset = nullptr, *updatedConcOffset = nullptr;
 
 	// Set some step size variable
 	double sy = 1.0 / (hY * hY);
@@ -430,7 +430,7 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				// grid point) at the expense of being a little tricky to comprehend.
 				network->updateConcentrationsFromArray(concOffset);
 
-				// ----- Account for flux of incoming He of cluster size 1 -----
+				// ----- Account for flux -----
 				updatedConcOffset[fluxIndex] += incidentFluxVector[xi
 						- surfacePosition[yj][zk]];
 
@@ -683,7 +683,7 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC,
 	int xSize = grid.size();
 
 	// Get pointers to vector data
-	PetscScalar ****concs;
+	PetscScalar ****concs = nullptr;
 	ierr = DMDAVecGetArrayDOFRead(da, localC, &concs);
 	checkPetscError(ierr, "PetscSolver3DHandler::computeDiagonalJacobian: "
 			"DMDAVecGetArrayDOFRead failed.");
@@ -707,7 +707,7 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC,
 	const int dof = network->getDOF();
 
 	// Pointer to the concentrations at a given grid point
-	PetscScalar *concOffset;
+	PetscScalar *concOffset = nullptr;
 
 	// Arguments for MatSetValuesStencil called below
 	MatStencil rowId;

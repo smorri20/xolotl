@@ -556,6 +556,18 @@ double PSIClusterReactionNetwork::getTotalAtomConcentration() {
 	// Initial declarations
 	double heliumConc = 0.0;
 
+	// Get all the He clusters
+	auto heClusters = getAll(heType);
+	// Loop on them
+	for (int i = 0; i < heClusters.size(); i++) {
+		// Get the cluster and its composition
+		auto cluster = heClusters[i];
+		double size = cluster->getSize();
+
+		// Add the concentration times the He content to the total helium concentration
+		heliumConc += cluster->getConcentration() * size;
+	}
+
 	// Get all the HeV clusters
 	auto heVClusters = getAll(heVType);
 	// Loop on them
