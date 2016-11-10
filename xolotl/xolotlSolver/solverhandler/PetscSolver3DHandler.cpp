@@ -330,30 +330,31 @@ void PetscSolver3DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = network->getDOF();
 
-	// Loop over grid points computing ODE terms for each grid point
+	// Loop over grid points
 	for (PetscInt zk = 0; zk < Mz; zk++) {
 		for (PetscInt yj = 0; yj < My; yj++) {
 
 			// Compute the total concentration of atoms contained in bubbles
 			atomConc = 0.0;
 
-			// Loop over grid points to get the atom concentration
-			// near the surface
-			for (int xi = xs; xi < xs + xm; xi++) {
-				// Boundary conditions
-				if (xi <= surfacePosition[yj][zk] || xi == xSize - 1) continue;
-
+			// Loop over grid points
+			for (int xi = surfacePosition[yj][zk]; xi < Mx - 1; xi++) {
 				// We are only interested in the helium near the surface
-				if (grid[xi] - grid[surfacePosition[yj][zk]] > 2.0) continue;
+				if (grid[xi] - grid[surfacePosition[yj][zk]] > 2.0)
+					continue;
 
-				// Get the concentrations at this grid point
-				concOffset = concs[zk][yj][xi];
-				// Copy data into the PSIClusterReactionNetwork
-				network->updateConcentrationsFromArray(concOffset);
+				// Check if we are on the right processor
+				if (xi >= xs && xi < xs + xm && yj >= ys && yj < ys + ym
+						&& zk >= zs && zk < zs + zm) {
+					// Get the concentrations at this grid point
+					concOffset = concs[zk][yj][xi];
+					// Copy data into the PSIClusterReactionNetwork
+					network->updateConcentrationsFromArray(concOffset);
 
-				// Sum the total atom concentration
-				atomConc += network->getTotalAtomConcentration()
+					// Sum the total atom concentration
+					atomConc += network->getTotalAtomConcentration()
 							* (grid[xi] - grid[xi - 1]);
+				}
 			}
 
 			// Share the concentration with all the processes
@@ -669,8 +670,8 @@ void PetscSolver3DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC,
 	return;
 }
 
-void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC,
-		Mat &J, PetscReal ftime) {
+void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
+		PetscReal ftime) {
 	PetscErrorCode ierr;
 
 	// Get the distributed array
@@ -734,23 +735,24 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC,
 			// Compute the total concentration of atoms contained in bubbles
 			atomConc = 0.0;
 
-			// Loop over grid points to get the atom concentration
-			// near the surface
-			for (int xi = xs; xi < xs + xm; xi++) {
-				// Boundary conditions
-				if (xi <= surfacePosition[yj][zk] || xi == xSize - 1) continue;
-
+			// Loop over grid points
+			for (int xi = surfacePosition[yj][zk]; xi < Mx - 1; xi++) {
 				// We are only interested in the helium near the surface
-				if (grid[xi] - grid[surfacePosition[yj][zk]] > 2.0) continue;
+				if (grid[xi] - grid[surfacePosition[yj][zk]] > 2.0)
+					continue;
 
-				// Get the concentrations at this grid point
-				concOffset = concs[zk][yj][xi];
-				// Copy data into the PSIClusterReactionNetwork
-				network->updateConcentrationsFromArray(concOffset);
+				// Check if we are on the right processor
+				if (xi >= xs && xi < xs + xm && yj >= ys && yj < ys + ym
+						&& zk >= zs && zk < zs + zm) {
+					// Get the concentrations at this grid point
+					concOffset = concs[zk][yj][xi];
+					// Copy data into the PSIClusterReactionNetwork
+					network->updateConcentrationsFromArray(concOffset);
 
-				// Sum the total atom concentration
-				atomConc += network->getTotalAtomConcentration()
+					// Sum the total atom concentration
+					atomConc += network->getTotalAtomConcentration()
 							* (grid[xi] - grid[xi - 1]);
+				}
 			}
 
 			// Share the concentration with all the processes
@@ -820,7 +822,8 @@ void PetscSolver3DHandler::computeDiagonalJacobian(TS &ts, Vec &localC,
 						colIds[j].k = zk;
 						colIds[j].c = reactionIndices[i * dof + j];
 						// Get the partial derivative from the array of all of the partials
-						reactingPartialsForCluster[j] = reactionVals[i * dof + j];
+						reactingPartialsForCluster[j] =
+								reactionVals[i * dof + j];
 					}
 					// Update the matrix
 					ierr = MatSetValuesStencil(J, 1, &rowId, pdColIdsVectorSize,
