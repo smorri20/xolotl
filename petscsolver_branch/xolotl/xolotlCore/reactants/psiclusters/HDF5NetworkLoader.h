@@ -36,6 +36,7 @@ public:
 	 */
 	HDF5NetworkLoader(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
 		handlerRegistry = registry;
+		dummyReactions = false;
 	}
 
 	/**
