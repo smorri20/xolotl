@@ -31,7 +31,7 @@ private:
 
 //		// Uncomment to read the Weibull parameters from a file
 //		ifstream parameters;
-//		parameters.open("/home/ocekmer/Workspaces/UQTk_Xolotl/UQTk/Step2_SurrogateConstruction/FitParameters.dat");
+//		parameters.open("/home/ocekmer/Workspaces/UQTk_Xolotl/UQTk/Step2_SurrogateConstruction/FitParameters.dat");  // Location of the Weibull-parameter file.
 //		double p[2];
 //		for (int i=0;i<2;i++)
 //			parameters >> p[i];
@@ -40,8 +40,6 @@ private:
 		double value = p[0]/p[1] * pow(x/p[1],(p[0]-1.0)) * exp(-pow(x/p[1],p[0]));
 
 		return value;
-
-
 
 	}
 
