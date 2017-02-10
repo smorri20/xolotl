@@ -58,11 +58,11 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 			1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
 
 			// HeV
-			1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1,
+			0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 			// HeI
-			1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+			1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 	for (unsigned int i = 0; i < reactionConnectivity.size(); i++) {
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
  */
 BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 	// Local Declarations
-	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork();
+	auto network = getSimplePSIReactionNetwork();
 
 	// Get an He cluster with compostion 1,0,0.
 	auto cluster = (PSICluster *) network->get("He", 1);
@@ -87,7 +87,6 @@ BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 	// values from the tungsten benchmark for this problem.
 	cluster->setDiffusionFactor(2.950E+10);
 	cluster->setMigrationEnergy(0.13);
-	cluster->setTemperature(1000.0);
 	cluster->setConcentration(0.5);
 
 	// Set the diffusion factor and migration energy based on the
@@ -95,9 +94,10 @@ BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 	secondCluster->setDiffusionFactor(3.240E+010);
 	secondCluster->setMigrationEnergy(0.2);
 	secondCluster->setConcentration(0.5);
-	secondCluster->setTemperature(1000.0);
 
 	// Compute the rate constants that are needed for the flux
+	network->setTemperature(1000.0);
+	network->reinitializeNetwork();
 	network->computeRateConstants();
 	// The flux can pretty much be anything except "not a number" (nan).
 	double flux = cluster->getTotalFlux();
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 			2.23350e+12, 2.25143e+12, 2.46031e+12, -1.79298e+10, 2.25143e+12,
 			0.0 };
 	// Get the simple reaction network
-	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork(3);
+	auto network = getSimplePSIReactionNetwork(3);
 
 	// Get an He cluster with compostion 1,0,0.
 	auto cluster = (PSICluster *) network->get("He", 1);
@@ -128,10 +128,11 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	// values from the tungsten benchmark for this problem.
 	cluster->setDiffusionFactor(2.950E+10);
 	cluster->setMigrationEnergy(0.13);
-	cluster->setTemperature(1000.0);
 	cluster->setConcentration(0.5);
 
-	// Compute the rate constants that are needed for the partial derivatives
+	// Compute the rate constants that are needed for the flux
+	network->setTemperature(1000.0);
+	network->reinitializeNetwork();
 	network->computeRateConstants();
 	// Get the vector of partial derivatives
 	auto partials = cluster->getPartialDerivatives();

@@ -89,38 +89,34 @@ void PSISuperCluster::setReactionNetwork(
 	// Call the superclass's method to actually set the reference
 	Reactant::setReactionNetwork(reactionNetwork);
 
-	// Get the enabled reaction type flags
-	bool reactionsEnabled = reactionNetwork->getReactionsEnabled();
-	bool dissociationsEnabled = reactionNetwork->getDissociationsEnabled();
-
 	// Clear the flux-related arrays
 	reactingPairs.clear();
 	combiningReactants.clear();
 	dissociatingPairs.clear();
 	emissionPairs.clear();
 
-	// ----- Handle the connectivity for PSIClusters -----
+	// Aggregate the reacting pairs and combining reactants from the xeVector
+	// Loop on the xeVector
+	for (int i = 0; i < heVVector.size(); i++) {
+		// Get the cluster composition
+		auto comp = heVVector[i]->getComposition();
+		// Create the key to the map
+		auto key = std::make_pair(comp[heType], comp[vType]);
+		// Get all vectors
+		auto react = heVVector[i]->reactingPairs;
+		auto combi = heVVector[i]->combiningReactants;
+		auto disso = heVVector[i]->dissociatingPairs;
+		auto emi = heVVector[i]->emissionPairs;
 
-	// Generate the reactant and dissociation connectivity arrays.
-	// This only must be done once since the arrays are stored as
-	// member attributes. Only perform these tasks if the reaction
-	// types are enabled.
-	if (reactionsEnabled) {
-		createReactionConnectivity();
+		// Set them in the super cluster map
+		reactingMap[key] = react;
+		combiningMap[key] = combi;
+		dissociatingMap[key] = disso;
+		emissionMap[key] = emi;
 	}
-	if (dissociationsEnabled) {
-		createDissociationConnectivity();
-	}
 
-	// Shrink the arrays to save some space. (About 10% or so.)
-	reactingPairs.shrink_to_fit();
-	combiningReactants.shrink_to_fit();
-	dissociatingPairs.shrink_to_fit();
-	emissionPairs.shrink_to_fit();
-
-	// Compute the dispersion and optimize the reaction vectors
+	// Compute the dispersions
 	computeDispersion();
-	optimizeReactions();
 
 	return;
 }
@@ -243,48 +239,6 @@ double PSISuperCluster::getVDistance(int v) const {
 	if (sectionVWidth == 1)
 		return 0.0;
 	return 2.0 * (double) (v - numV) / ((double) sectionVWidth - 1.0);
-}
-
-void PSISuperCluster::createReactionConnectivity() {
-	// Aggregate the reacting pairs and combining reactants from the heVVector
-	// Loop on the heVVector
-	for (int i = 0; i < heVVector.size(); i++) {
-		// Get the cluster composition
-		auto comp = heVVector[i]->getComposition();
-		// Get both production vectors
-		auto react = heVVector[i]->reactingPairs;
-		auto combi = heVVector[i]->combiningReactants;
-
-		// Create the key to the map
-		auto key = std::make_pair(comp[heType], comp[vType]);
-
-		// Set them in the super cluster map
-		reactingMap[key] = react;
-		combiningMap[key] = combi;
-	}
-
-	return;
-}
-
-void PSISuperCluster::createDissociationConnectivity() {
-	// Aggregate the dissociating and emission pairs from the heVVector
-	// Loop on the heVVector
-	for (int i = 0; i < heVVector.size(); i++) {
-		// Get the cluster composition
-		auto comp = heVVector[i]->getComposition();
-		// Get both dissociation vectors
-		auto disso = heVVector[i]->dissociatingPairs;
-		auto emi = heVVector[i]->emissionPairs;
-
-		// Create the key to the map
-		auto key = std::make_pair(comp[heType], comp[vType]);
-
-		// Set them in the super cluster map
-		dissociatingMap[key] = disso;
-		emissionMap[key] = emi;
-	}
-
-	return;
 }
 
 void PSISuperCluster::computeDispersion() {

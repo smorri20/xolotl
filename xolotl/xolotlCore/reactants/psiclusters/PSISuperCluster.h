@@ -357,24 +357,6 @@ public:
 	double getVDistance(int v) const;
 
 	/**
-	 * Computes a row of the reaction connectivity matrix corresponding to
-	 * this reactant.
-	 *
-	 * If two reactants alone can form a reaction, the element at the position
-	 * of the second reactant is 1, otherwise 0.
-	 */
-	void createReactionConnectivity();
-
-	/**
-	 * Computes a row of the dissociation connectivity matrix corresponding to
-	 * this reactant.
-	 *
-	 * If two reactants together can be produced by a single reaction,
-	 * the element at the position of the second reactant is 1, otherwise 0.
-	 */
-	void createDissociationConnectivity();
-
-	/**
 	 * Calculate the dispersion of the group.
 	 */
 	void computeDispersion();

@@ -29,9 +29,6 @@ BOOST_AUTO_TEST_SUITE(XeCluster_testSuite)
 BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	shared_ptr<ReactionNetwork> network = getSimpleNEReactionNetwork();
 
-	// Prevent dissociation from being added to the connectivity array
-	network->disableDissociations();
-
 	// Check the reaction connectivity of the 6th Xe reactant (numXe=6)
 	// Get the connectivity array from the reactant
 	auto reactant = (NECluster *) network->get("Xe", 6);
@@ -57,7 +54,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
  */
 BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 	// Local Declarations
-	shared_ptr<ReactionNetwork> network = getSimpleNEReactionNetwork();
+	auto network = getSimpleNEReactionNetwork();
 
 	// Get an Xe cluster with compostion 1,0,0.
 	auto cluster = (NECluster *) network->get("Xe", 1);
@@ -75,13 +72,14 @@ BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 
 	// Compute the rate constants that are needed for the flux
 	network->setTemperature(1000.0);
+	network->reinitializeNetwork();
 	network->computeRateConstants();
 	// The flux can pretty much be anything except "not a number" (nan).
 	double flux = cluster->getTotalFlux();
 	BOOST_TEST_MESSAGE(
 			"XeClusterTester Message: \n" << "Total Flux is " << flux << "\n" << "   -Production Flux: " << cluster->getProductionFlux() << "\n" << "   -Combination Flux: " << cluster->getCombinationFlux() << "\n" << "   -Dissociation Flux: " << cluster->getDissociationFlux() << "\n" << "   -Emission Flux: " << cluster->getEmissionFlux() << "\n");
 
-	BOOST_REQUIRE_CLOSE(1040725545627.6416, flux, 0.1);
+	BOOST_REQUIRE_CLOSE(971367265495.44824, flux, 0.1);
 
 	return;
 }
@@ -92,9 +90,10 @@ BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	// Local Declarations
 	// The vector of partial derivatives to compare with
-	double knownPartials[] = { 0.0, 2081451091255.283, 573123759757.52136 };
+	double knownPartials[] = { -196821207586.07611, 2054353911079.95,
+			573123759757.52136 };
 	// Get the simple reaction network
-	shared_ptr<ReactionNetwork> network = getSimpleNEReactionNetwork(3);
+	auto network = getSimpleNEReactionNetwork(3);
 
 	// Get an Xe cluster with compostion 1,0,0.
 	auto cluster = (NECluster *) network->get("Xe", 1);
@@ -105,6 +104,7 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 
 	// Compute the rate constants that are needed for the partial derivatives
 	network->setTemperature(1000.0);
+	network->reinitializeNetwork();
 	network->computeRateConstants();
 	// Get the vector of partial derivatives
 	auto partials = cluster->getPartialDerivatives();

@@ -49,12 +49,7 @@ BOOST_AUTO_TEST_CASE(checkGetReactantFluxesAndParials) {
 	const int size = network->size();
 	// Set the temperature
 	double temperature = 1000.0;
-	// Initialize the rate constants
-	for (int i = 0; i < size; i++) {
-		// This part will set the temperature in each reactant
-		// and recompute the diffusion coefficient
-		allReactants->at(i)->setTemperature(temperature);
-	}
+	network->setTemperature(temperature);
 	network->computeRateConstants();
 
 	// Initialize all the concentrations to 0.001;
@@ -123,11 +118,7 @@ BOOST_AUTO_TEST_CASE(checkSingleReaction) {
 	// Set the temperature
 	double temperature = 1000.0;
 	// Initialize the rate constants
-	for (int i = 0; i < size; i++) {
-		// This part will set the temperature in each reactant
-		// and recompute the diffusion coefficient
-		allReactants->at(i)->setTemperature(temperature);
-	}
+	network->setTemperature(temperature);
 	network->computeRateConstants();
 
 	// Initialize all the concentrations to 0.001;

@@ -137,6 +137,10 @@ void PetscSolver1DHandler::createSolverContext(DM &da) {
 	checkPetscError(ierr, "PetscSolver1DHandler::createSolverContext: "
 			"PetscFree (dfill) failed.");
 
+	// Initialize the arrays for the reaction partial derivatives
+	reactionVals = new PetscScalar[dof * dof];
+	reactionIndices = new PetscInt[dof * dof];
+
 	return;
 }
 
@@ -595,10 +599,6 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC,
 	MatStencil rowId;
 	MatStencil colIds[dof];
 	int pdColIdsVectorSize = 0;
-	PetscScalar *reactionVals;
-	reactionVals = new PetscScalar[dof * dof];
-	PetscInt *reactionIndices;
-	reactionIndices = new PetscInt[dof * dof];
 	PetscInt reactionSize[dof];
 
 	// Store the total number of He clusters in the network for the
@@ -727,10 +727,6 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC,
 	ierr = DMRestoreLocalVector(da, &localC);
 	checkPetscError(ierr, "PetscSolver1DHandler::computeDiagonalJacobian: "
 			"DMRestoreLocalVector failed.");
-
-	// Delete arrays
-	delete[] reactionVals;
-	delete[] reactionIndices;
 
 	return;
 }

@@ -74,38 +74,32 @@ void NESuperCluster::setReactionNetwork(
 	// Call the superclass's method to actually set the reference
 	Reactant::setReactionNetwork(reactionNetwork);
 
-	// Get the enabled reaction type flags
-	bool reactionsEnabled = reactionNetwork->getReactionsEnabled();
-	bool dissociationsEnabled = reactionNetwork->getDissociationsEnabled();
-
 	// Clear the flux-related arrays
 	reactingPairs.clear();
 	combiningReactants.clear();
 	dissociatingPairs.clear();
 	emissionPairs.clear();
 
-	// ----- Handle the connectivity for NEClusters -----
+	// Aggregate the reacting pairs and combining reactants from the xeVector
+	// Loop on the xeVector
+	for (int i = 0; i < xeVector.size(); i++) {
+		// Get the cluster size
+		double size = xeVector[i]->getSize();
+		// Get all vectors
+		auto react = xeVector[i]->reactingPairs;
+		auto combi = xeVector[i]->combiningReactants;
+		auto disso = xeVector[i]->dissociatingPairs;
+		auto emi = xeVector[i]->emissionPairs;
 
-	// Generate the reactant and dissociation connectivity arrays.
-	// This only must be done once since the arrays are stored as
-	// member attributes. Only perform these tasks if the reaction
-	// types are enabled.
-	if (reactionsEnabled) {
-		createReactionConnectivity();
+		// Set them in the super cluster map
+		reactingMap[size] = react;
+		combiningMap[size] = combi;
+		dissociatingMap[size] = disso;
+		emissionMap[size] = emi;
 	}
-	if (dissociationsEnabled) {
-		createDissociationConnectivity();
-	}
 
-	// Shrink the arrays to save some space. (About 10% or so.)
-	reactingPairs.shrink_to_fit();
-	combiningReactants.shrink_to_fit();
-	dissociatingPairs.shrink_to_fit();
-	emissionPairs.shrink_to_fit();
-
-	// Compute the dispersion and optimize the reaction vectors
+	// Compute the dispersion
 	computeDispersion();
-	optimizeReactions();
 
 	return;
 }
@@ -167,43 +161,9 @@ double NESuperCluster::getTotalXenonConcentration() const {
 }
 
 double NESuperCluster::getDistance(int xe) const {
+	if (sectionWidth == 1)
+		return 0.0;
 	return 2.0 * (double) (xe - numXe) / ((double) sectionWidth - 1.0);
-}
-
-void NESuperCluster::createReactionConnectivity() {
-	// Aggregate the reacting pairs and combining reactants from the xeVector
-	// Loop on the xeVector
-	for (int i = 0; i < xeVector.size(); i++) {
-		// Get the cluster size
-		double size = xeVector[i]->getSize();
-		// Get both production vectors
-		auto react = xeVector[i]->reactingPairs;
-		auto combi = xeVector[i]->combiningReactants;
-
-		// Set them in the super cluster map
-		reactingMap[size] = react;
-		combiningMap[size] = combi;
-	}
-
-	return;
-}
-
-void NESuperCluster::createDissociationConnectivity() {
-	// Aggregate the dissociating and emission pairs from the xeVector
-	// Loop on the xeVector
-	for (int i = 0; i < xeVector.size(); i++) {
-		// Get the cluster size
-		double size = xeVector[i]->getSize();
-		// Get both dissociation vectors
-		auto disso = xeVector[i]->dissociatingPairs;
-		auto emi = xeVector[i]->emissionPairs;
-
-		// Set them in the super cluster map
-		dissociatingMap[size] = disso;
-		emissionMap[size] = emi;
-	}
-
-	return;
 }
 
 void NESuperCluster::computeDispersion() {
@@ -487,8 +447,8 @@ void NESuperCluster::optimizeReactions() {
 			secondCluster = (*it).second;
 
 			// Create a dissociation reaction
-			auto reaction = std::make_shared<DissociationReaction>(
-					this, firstCluster, secondCluster);
+			auto reaction = std::make_shared<DissociationReaction>(this,
+					firstCluster, secondCluster);
 			// Add it to the network
 			reaction = network->addDissociationReaction(reaction);
 
@@ -750,6 +710,9 @@ void NESuperCluster::getProductionPartialDerivatives(
 
 		// Compute the contribution from the first part of the reacting pair
 		value = *((*it).kConstant) / (double) nTot;
+
+//		std::cout << name << " : " << firstReactant->getName() << " + " << secondReactant->getName() << " " << l0A << " " << l0B << std::endl;
+
 		index = firstReactant->getId() - 1;
 		partials[index] += value * ((*it).a000 * l0B + (*it).a010 * l1B);
 		momentumPartials[index] += value

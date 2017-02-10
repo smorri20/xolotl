@@ -3,6 +3,7 @@
 
 // Includes
 #include "IReactionNetwork.h"
+#include "ReactantUtils.h"
 #include <memory>
 #include <vector>
 #include <map>
@@ -39,6 +40,43 @@ public:
 	 * Returns a reactant created using the copy constructor
 	 */
 	virtual std::shared_ptr<IReactant> clone() = 0;
+
+	/**
+	 * Create a production pair associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 */
+	virtual void createProduction(std::shared_ptr<ProductionReaction> reaction) = 0;
+
+	/**
+	 * Create a combination associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction where this cluster takes part.
+	 */
+	virtual void createCombination(std::shared_ptr<ProductionReaction> reaction) = 0;
+
+	/**
+	 * Create a dissociation pair associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 */
+	virtual void createDissociation(std::shared_ptr<DissociationReaction> reaction) = 0;
+
+	/**
+	 * Create an emission pair associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction where this cluster emits.
+	 */
+	virtual void createEmission(std::shared_ptr<DissociationReaction> reaction) = 0;
+
+	/**
+	 * Add the reactions to the network lists.
+	 */
+	virtual void optimizeReactions() = 0;
 
 	/**
 	 * This operation returns the current concentration.

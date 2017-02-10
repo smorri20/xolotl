@@ -131,6 +131,67 @@ double NEClusterReactionNetwork::calculateDissociationConstant(
 	return k_minus;
 }
 
+void NEClusterReactionNetwork::createReactionConnectivity() {
+	// Initial declarations
+	int firstSize = 0, secondSize = 0, productSize = 0;
+
+	// Single species clustering (Xe)
+	// We know here that only Xe_1 can cluster so we simplify the search
+	// Xe_(a-i) + Xe_i --> Xe_a
+	firstSize = 1;
+	auto singleXeCluster = get(xeType, firstSize);
+	// Get all the Xe clusters
+	auto xeClusters = getAll(xeType);
+	// Loop on them
+	for (auto it = xeClusters.begin(); it != xeClusters.end(); it++) {
+		// Get the size of the second reactant and product
+		secondSize = (*it)->getSize();
+		productSize = firstSize + secondSize;
+		// Get the product cluster for the reaction
+		auto product = get(xeType, productSize);
+		// Check that the reaction can occur
+		if (product
+				&& (singleXeCluster->getDiffusionFactor() > 0.0
+						|| (*it)->getDiffusionFactor() > 0.0)) {
+			// Create a production reaction
+			auto reaction = std::make_shared<ProductionReaction>(
+					singleXeCluster, (*it));
+			// Tell the reactants that they are in this reaction
+			singleXeCluster->createCombination(reaction);
+			(*it)->createCombination(reaction);
+			product->createProduction(reaction);
+
+			// Check if the reverse reaction is allowed
+			checkDissociationConnectivity(product, reaction);
+		}
+	}
+
+	return;
+}
+
+void NEClusterReactionNetwork::checkDissociationConnectivity(
+		IReactant * emittingReactant,
+		std::shared_ptr<ProductionReaction> reaction) {
+	// Check if at least one of the potentially emitted cluster is size one
+	if (reaction->first->getSize() != 1 && reaction->second->getSize() != 1) {
+		// Don't add the reverse reaction
+		return;
+	}
+
+	// The reaction can occur, create the dissociation
+	// Create a dissociation reaction
+	auto dissociationReaction = std::make_shared<DissociationReaction>(
+			emittingReactant, reaction->first, reaction->second);
+	// Set the reverse reaction
+	dissociationReaction->reverseReaction = reaction.get();
+	// Tell the reactants that their are in this reaction
+	reaction->first->createDissociation(dissociationReaction);
+	reaction->second->createDissociation(dissociationReaction);
+	emittingReactant->createEmission(dissociationReaction);
+
+	return;
+}
+
 void NEClusterReactionNetwork::setTemperature(double temp) {
 	ReactionNetwork::setTemperature(temp);
 
@@ -430,14 +491,18 @@ void NEClusterReactionNetwork::reinitializeNetwork() {
 		(*it)->setId(id);
 		(*it)->setXeMomentumId(id);
 
-		if ((*it)->getType() == xeType) numXeClusters++;
+		(*it)->optimizeReactions();
+
+		if ((*it)->getType() == xeType)
+			numXeClusters++;
 	}
 
 	// Reset the network size
 	networkSize = id;
 
 	// Get all the super clusters and loop on them
-	for (auto it = clusterTypeMap[NESuperType]->begin(); it != clusterTypeMap[NESuperType]->end(); ++it) {
+	for (auto it = clusterTypeMap[NESuperType]->begin();
+			it != clusterTypeMap[NESuperType]->end(); ++it) {
 		id++;
 		(*it)->setXeMomentumId(id);
 	}
@@ -554,11 +619,14 @@ void NEClusterReactionNetwork::computeRateConstants() {
 	double biggestProductionRate = 0.0;
 
 	// Loop on all the production reactions
-	for (auto iter = allProductionReactions.begin(); iter != allProductionReactions.end(); iter++) {
+	for (auto iter = allProductionReactions.begin();
+			iter != allProductionReactions.end(); iter++) {
 		// Compute the rate
 		rate = calculateReactionRateConstant((*iter).get());
 		// Set it in the reaction
 		(*iter)->kConstant = rate;
+
+//		std::cout << (*iter)->first->getName() << " + " << (*iter)->second->getName() << std::endl;
 
 		// Check if the rate is the biggest one up to now
 		if (rate > biggestProductionRate)
@@ -566,7 +634,8 @@ void NEClusterReactionNetwork::computeRateConstants() {
 	}
 
 	// Loop on all the dissociation reactions
-	for (auto iter = allDissociationReactions.begin(); iter != allDissociationReactions.end(); iter++) {
+	for (auto iter = allDissociationReactions.begin();
+			iter != allDissociationReactions.end(); iter++) {
 		// Compute the rate
 		rate = calculateDissociationConstant((*iter).get());
 		// Set it in the reaction

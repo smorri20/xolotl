@@ -144,6 +144,9 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::load() {
 		}
 	}
 
+	// Create the reactions
+	network->createReactionConnectivity();
+
 	// Check if we want dummy reactions
 	if (!dummyReactions) {
 		// Apply sectional grouping
@@ -232,7 +235,7 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 
 	// Get the number of groups in the helium and vacancy directions
 	int nVGroup = (network->getAll(vType).size() - vMin) / vSectionWidth + 1;
-	int nHeGroup = (network->getAll(vType).size() * 4) / heSectionWidth + 10;
+	int nHeGroup = (network->getAll(vType).size() * 4) / heSectionWidth + 20;
 
 	// Loop on the vacancy groups
 	for (int k = 0; k < nVGroup; k++) {

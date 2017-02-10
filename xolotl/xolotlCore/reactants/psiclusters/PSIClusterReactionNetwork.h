@@ -125,6 +125,21 @@ public:
 	PSIClusterReactionNetwork(const PSIClusterReactionNetwork &other);
 
 	/**
+	 * Computes the full reaction connectivity matrix for this network.
+	 */
+	void createReactionConnectivity();
+
+	/**
+	 * Add the dissociation connectivity for the reverse reaction if it is allowed.
+	 *
+	 * @param emittingReactant The reactant that would emit the pair
+	 * @param reaction The reaction we want to reverse
+	 *
+	 */
+	void checkDissociationConnectivity(IReactant * emittingReactant,
+			std::shared_ptr<ProductionReaction> reaction);
+
+	/**
 	 * This operation sets the temperature at which the reactants currently
 	 * exists. It calls setTemperature() on each reactant.
 	 *

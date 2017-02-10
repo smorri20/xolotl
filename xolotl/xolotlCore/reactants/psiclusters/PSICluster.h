@@ -74,16 +74,14 @@ protected:
 		double secondVDistance;
 
 		/**
-		 * The reaction/dissociation constant associated to this
-		 * reaction or dissociation
+		 * The reaction/dissociation pointer to the list
 		 */
-		const double * kConstant;
+		std::shared_ptr<Reaction> reaction;
 
 		//! The constructor
-		ClusterPair(PSICluster * firstPtr, PSICluster * secondPtr,
-				Reaction * reaction) :
-				first(firstPtr), second(secondPtr), kConstant(
-						&(reaction->kConstant)), firstHeDistance(0.0), firstVDistance(
+		ClusterPair(PSICluster * firstPtr, PSICluster * secondPtr) :
+				first(firstPtr), second(secondPtr), reaction(
+						nullptr), firstHeDistance(0.0), firstVDistance(
 						0.0), secondHeDistance(0.0), secondVDistance(0.0) {
 		}
 	};
@@ -115,149 +113,16 @@ protected:
 		double vDistance;
 
 		/**
-		 * The reaction constant associated to this reaction
+		 * The reaction pointer to the list
 		 */
-		const double * kConstant;
+		std::shared_ptr<Reaction> reaction;
 
 		//! The constructor
-		CombiningCluster(PSICluster * Ptr, Reaction * reaction) :
-				combining(Ptr), kConstant(&(reaction->kConstant)), heDistance(
+		CombiningCluster(PSICluster * ptr) :
+				combining(ptr), reaction(nullptr), heDistance(
 						0.0), vDistance(0.0) {
 		}
 	};
-
-	/**
-	 * Computes a row (or column) of the reaction connectivity matrix
-	 * corresponding to this cluster.
-	 *
-	 * Connections are made between this cluster and any clusters it
-	 * affects in combination and production reactions.
-	 *
-	 * The base-class implementation handles the common part of single species clusters.
-	 *
-	 * A_(x-i) + A_i --> A_x
-	 *
-	 * Must be overridden by subclasses.
-	 */
-	virtual void createReactionConnectivity();
-
-	/**
-	 * Computes a row (or column) of the dissociation connectivity matrix
-	 * corresponding to this cluster.
-	 *
-	 * Connections are made between this cluster and any clusters it affects
-	 * in a dissociation reaction.
-	 *
-	 * The base-class implementation handles dissociation for regular clusters
-	 * by processing the reaction
-	 *
-	 * A_x --> A_(x-1) + A
-	 *
-	 * Must be overridden by subclasses.
-	 *
-	 */
-	virtual void createDissociationConnectivity();
-
-	/**
-	 * This operation adds the dissociating cluster to the list of dissociatingPairs.
-	 * It is called by createDissociationConnectivity to process the reaction.
-	 *
-	 * @param dissociatingCluster The cluster that creates this cluster
-	 * by dissociation
-	 * @param emittedCluster The cluster that is also emitted during the
-	 * dissociation
-	 */
-	void dissociateCluster(PSICluster * dissociatingCluster,
-			PSICluster * emittedCluster);
-
-	/**
-	 * This operation creates the two emitted clusters from the dissociation of
-	 * this cluster. It is called by createDissociationConnectivity to process the
-	 * reaction and handle the connectivity.
-	 *
-	 * @param firstEmittedCluster The first cluster emitted by the
-	 * dissociation. Should be the single size one to have correct
-	 * computation of the dissociation constant
-	 * @param secondEmittedCluster The second cluster emitted by the
-	 * dissociation
-	 */
-	void emitClusters(PSICluster * firstEmittedCluster,
-			PSICluster * secondEmittedCluster);
-
-	/**
-	 * This operation "combines" clusters in the sense that it handles all of
-	 * the logic and caching required to correctly process the reaction
-	 *
-	 * A_x + A_y --> A_(x+y)
-	 *
-	 * or
-	 *
-	 * A_x + B_y --> (A_x)(B_y)
-	 *
-	 * or
-	 *
-	 * (A_x)(B_y) + B_z --> (A_x)[B_(z+y)]
-	 *
-	 * for each cluster in the set that interacts with this cluster.
-	 *
-	 * This operation fills the reaction connectivity array as well as the
-	 * array of combining clusters.
-	 *
-	 * @param clusters The clusters that can combine with this cluster
-	 * @param productName The name of the product produced in the reaction
-	 */
-	virtual void combineClusters(std::vector<IReactant *> & clusters,
-			const std::string& productName);
-
-	/**
-	 * This operation handles partial replacement reactions of the form
-	 *
-	 * (A_x)(B_y) + C_z --> (A_x)[B_(y-z)]
-	 *
-	 * for each compound cluster in the set.
-	 *
-	 * This operation fills the reaction connectivity array as well as the
-	 * array of combining clusters.
-	 *
-	 * Works only if "this" is not a mixed species. Needs to be overridden
-	 * for the other ones.
-	 *
-	 * @param clusters The clusters that have part of their B components
-	 * replaced. It is assumed that each element of this set represents a
-	 * cluster of the form (A_x)(B_y).
-	 * @param oldComponentName The name of the component that will be partially
-	 * replaced
-	 */
-	virtual void replaceInCompound(std::vector<IReactant *> & clusters,
-			const std::string& oldComponentName);
-
-	/** This operation handles reactions where interstitials fill vacancies,
-	 * sometimes referred to vacancy-interstitial annihilation. The reaction
-	 * is of the form
-	 *
-	 * I_a + V_b
-	 * --> I_(a-b), if a > b
-	 * --> V_(b-a), if a < b
-	 * --> 0, if a = b
-	 *
-	 * It is important to note that I_a + V_b = V_b + I_a.
-	 *
-	 * The operation assumes "this" is the first cluster in the reaction and
-	 * relies on the caller to specify the second cluster name/type.
-	 *
-	 * This operation fills the reaction connectivity array as well as the
-	 * array of combining clusters.
-	 *
-	 * This operation also I_a and V_b as a reacting pair of the product. It
-	 * is simpler and cheaper (O(C)) to do this operation here and quite
-	 * computationally difficult by comparison (O(numI*numV)) to do this
-	 * operation on the child since it has to search all of the possible
-	 * parents.
-	 *
-	 * @param clusters The set of clusters of the second type that interact
-	 * with this cluster
-	 **/
-	void fillVWithI(std::vector<IReactant *> & clusters);
 
 	/**
 
@@ -355,6 +220,43 @@ public:
 	 */
 	virtual void setReactionNetwork(
 			const std::shared_ptr<IReactionNetwork> reactionNetwork);
+
+	/**
+	 * Create a production pair associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 */
+	void createProduction(std::shared_ptr<ProductionReaction> reaction);
+
+	/**
+	 * Create a combination associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction where this cluster takes part.
+	 */
+	void createCombination(std::shared_ptr<ProductionReaction> reaction);
+
+	/**
+	 * Create a dissociation pair associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 */
+	void createDissociation(std::shared_ptr<DissociationReaction> reaction);
+
+	/**
+	 * Create an emission pair associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction where this cluster emits.
+	 */
+	void createEmission(std::shared_ptr<DissociationReaction> reaction);
+
+	/**
+	 * Add the reactions to the network lists.
+	 */
+	virtual void optimizeReactions();
 
 	/**
 	 * This operation returns the connectivity array for this cluster for

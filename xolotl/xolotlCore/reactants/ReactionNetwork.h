@@ -186,7 +186,8 @@ protected:
 	 * @param reaction The reaction
 	 * @return The dissociation constant
 	 */
-	virtual double calculateDissociationConstant(DissociationReaction * reaction) const {
+	virtual double calculateDissociationConstant(
+			DissociationReaction * reaction) const {
 		return 0.0;
 	}
 

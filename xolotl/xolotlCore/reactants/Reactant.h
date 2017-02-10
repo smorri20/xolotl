@@ -3,7 +3,6 @@
 
 // Includes
 #include "IReactant.h"
-#include "ReactantUtils.h"
 #include <math.h>
 #include <sstream>
 #include <set>
@@ -183,6 +182,57 @@ public:
 	 */
 	virtual std::shared_ptr<IReactant> clone() {
 		return std::shared_ptr<IReactant>(new Reactant(*this));
+	}
+
+	/**
+	 * Create a production pair associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 */
+	virtual void createProduction(
+			std::shared_ptr<ProductionReaction> reaction) {
+		return;
+	}
+
+	/**
+	 * Create a combination associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction where this cluster takes part.
+	 */
+	virtual void createCombination(
+			std::shared_ptr<ProductionReaction> reaction) {
+		return;
+	}
+
+	/**
+	 * Create a dissociation pair associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 */
+	virtual void createDissociation(
+			std::shared_ptr<DissociationReaction> reaction) {
+		return;
+	}
+
+	/**
+	 * Create an emission pair associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction where this cluster emits.
+	 */
+	virtual void createEmission(
+			std::shared_ptr<DissociationReaction> reaction) {
+		return;
+	}
+
+	/**
+	 * Add the reactions to the network lists.
+	 */
+	virtual void optimizeReactions() {
+		return;
 	}
 
 	/**

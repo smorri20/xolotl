@@ -115,6 +115,8 @@ shared_ptr<xolotlCore::PSIClusterReactionNetwork> testUtils::getSimplePSIReactio
 	for (unsigned int i = 0; i < reactants->size(); i++) {
 		reactants->at(i)->setReactionNetwork(network);
 	}
+	// Create the reactions
+	network->createReactionConnectivity();
 
 	// ----- TEMPORARY DEBUG OUTPUT!!!!! -----
 	// Print the reaction connectivity matrix
@@ -145,6 +147,8 @@ shared_ptr<xolotlCore::NEClusterReactionNetwork> testUtils::getSimpleNEReactionN
 	for (unsigned int i = 0; i < reactants->size(); i++) {
 		reactants->at(i)->setReactionNetwork(network);
 	}
+	// Create the reactions
+	network->createReactionConnectivity();
 
 	// ----- TEMPORARY DEBUG OUTPUT!!!!! -----
 	// Print the reaction connectivity matrix
