@@ -381,6 +381,22 @@ public:
 			std::shared_ptr<DissociationReaction> reaction);
 
 	/**
+	 * This operation adds a production reaction to the network.
+	 *
+	 * @param reaction The reaction that should be added to the network
+	 */
+	virtual void pushProductionReaction(
+			std::shared_ptr<ProductionReaction> reaction);
+
+	/**
+	 * This operation adds a dissociation reaction to the network.
+	 *
+	 * @param reaction The reaction that should be added to the network
+	 */
+	virtual void pushDissociationReaction(
+			std::shared_ptr<DissociationReaction> reaction);
+
+	/**
 	 * This operation fills an array of doubles with the concentrations of all
 	 * of the reactants in the network.
 	 *

@@ -109,7 +109,7 @@ void PSICluster::optimizeReactions() {
 		auto newReaction = std::make_shared<ProductionReaction>((*it).first,
 				(*it).second);
 		// Add it to the network
-		newReaction = network->addProductionReaction(newReaction);
+		network->pushProductionReaction(newReaction);
 		// Link it to the pair
 		(*it).reaction = newReaction;
 	}
@@ -118,7 +118,7 @@ void PSICluster::optimizeReactions() {
 		auto newReaction = std::make_shared<ProductionReaction>((*it).combining,
 				this);
 		// Add it to the network
-		newReaction = network->addProductionReaction(newReaction);
+		network->pushProductionReaction(newReaction);
 		// Link it to the pair
 		(*it).reaction = newReaction;
 	}
@@ -127,7 +127,7 @@ void PSICluster::optimizeReactions() {
 		auto newReaction = std::make_shared<DissociationReaction>((*it).first,
 				(*it).second, this);
 		// Add it to the network
-		newReaction = network->addDissociationReaction(newReaction);
+		network->pushDissociationReaction(newReaction);
 		// Link it to the pair
 		(*it).reaction = newReaction;
 	}
@@ -136,7 +136,7 @@ void PSICluster::optimizeReactions() {
 		auto newReaction = std::make_shared<DissociationReaction>(this, (*it).first,
 				(*it).second);
 		// Add it to the network
-		newReaction = network->addDissociationReaction(newReaction);
+		network->pushDissociationReaction(newReaction);
 		// Link it to the pair
 		(*it).reaction = newReaction;
 	}

@@ -227,3 +227,27 @@ std::shared_ptr<DissociationReaction> ReactionNetwork::addDissociationReaction(
 
 	return reaction;
 }
+
+void ReactionNetwork::pushProductionReaction(
+		std::shared_ptr<ProductionReaction> reaction) {
+	// Add the reaction
+	allProductionReactions.push_back(reaction);
+
+	return;
+}
+
+void ReactionNetwork::pushDissociationReaction(
+		std::shared_ptr<DissociationReaction> reaction) {
+	// First you have to link it to the reverse reaction
+	// Create the reverse reaction to get a pointer to it
+	auto reverseReaction = std::make_shared<ProductionReaction>(reaction->first,
+			reaction->second);
+	// Get the pointer to the reaction in the production vector
+	reverseReaction = addProductionReaction(reverseReaction);
+	// Update this pointer in this reaction
+	reaction->reverseReaction = reverseReaction.get();
+	// Add it to the vector
+	allDissociationReactions.push_back(reaction);
+
+	return;
+}
