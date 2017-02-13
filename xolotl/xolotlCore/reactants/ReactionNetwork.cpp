@@ -180,8 +180,8 @@ const std::vector<std::string> & ReactionNetwork::getCompoundNames() const {
 std::shared_ptr<ProductionReaction> ReactionNetwork::addProductionReaction(
 		std::shared_ptr<ProductionReaction> reaction) {
 	// Loop on all the production reactions
-	for (auto iter = allProductionReactions.begin();
-			iter != allProductionReactions.end(); iter++) {
+	for (auto iter = allProductionReactions.rbegin();
+			iter != allProductionReactions.rend(); iter++) {
 		if (((*iter)->first == reaction->first
 				&& (*iter)->second == reaction->second)
 				|| ((*iter)->first == reaction->second
@@ -200,8 +200,8 @@ std::shared_ptr<ProductionReaction> ReactionNetwork::addProductionReaction(
 std::shared_ptr<DissociationReaction> ReactionNetwork::addDissociationReaction(
 		std::shared_ptr<DissociationReaction> reaction) {
 	// Loop on all the dissociation reactions
-	for (auto iter = allDissociationReactions.begin();
-			iter != allDissociationReactions.end(); iter++) {
+	for (auto iter = allDissociationReactions.rbegin();
+			iter != allDissociationReactions.rend(); iter++) {
 		if ((*iter)->dissociating == reaction->dissociating) {
 			if (((*iter)->first == reaction->first
 					&& (*iter)->second == reaction->second)
