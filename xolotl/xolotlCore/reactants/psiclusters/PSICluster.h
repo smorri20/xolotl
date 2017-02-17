@@ -78,11 +78,16 @@ protected:
 		 */
 		std::shared_ptr<Reaction> reaction;
 
+		/**
+		 * The number of times this reaction should be counted
+		 */
+		int multiplicity;
+
 		//! The constructor
 		ClusterPair(PSICluster * firstPtr, PSICluster * secondPtr) :
 				first(firstPtr), second(secondPtr), reaction(
 						nullptr), firstHeDistance(0.0), firstVDistance(
-						0.0), secondHeDistance(0.0), secondVDistance(0.0) {
+						0.0), secondHeDistance(0.0), secondVDistance(0.0), multiplicity(1) {
 		}
 	};
 
@@ -117,10 +122,15 @@ protected:
 		 */
 		std::shared_ptr<Reaction> reaction;
 
+		/**
+		 * The number of times this reaction should be counted
+		 */
+		int multiplicity;
+
 		//! The constructor
 		CombiningCluster(PSICluster * ptr) :
 				combining(ptr), reaction(nullptr), heDistance(
-						0.0), vDistance(0.0) {
+						0.0), vDistance(0.0), multiplicity(1) {
 		}
 	};
 

@@ -109,7 +109,7 @@ void NECluster::optimizeReactions() {
 		auto newReaction = std::make_shared<ProductionReaction>((*it).first,
 				(*it).second);
 		// Add it to the network
-		network->pushProductionReaction(newReaction);
+		newReaction = network->addProductionReaction(newReaction);
 		// Link it to the pair
 		(*it).reaction = newReaction;
 	}
@@ -118,7 +118,7 @@ void NECluster::optimizeReactions() {
 		auto newReaction = std::make_shared<ProductionReaction>((*it).combining,
 				this);
 		// Add it to the network
-		network->pushProductionReaction(newReaction);
+		newReaction = network->addProductionReaction(newReaction);
 		// Link it to the pair
 		(*it).reaction = newReaction;
 	}
@@ -127,7 +127,7 @@ void NECluster::optimizeReactions() {
 		auto newReaction = std::make_shared<DissociationReaction>((*it).first,
 				(*it).second, this);
 		// Add it to the network
-		network->pushDissociationReaction(newReaction);
+		newReaction = network->addDissociationReaction(newReaction);
 		// Link it to the pair
 		(*it).reaction = newReaction;
 	}
@@ -136,7 +136,7 @@ void NECluster::optimizeReactions() {
 		auto newReaction = std::make_shared<DissociationReaction>(this, (*it).first,
 				(*it).second);
 		// Add it to the network
-		network->pushDissociationReaction(newReaction);
+		newReaction = network->addDissociationReaction(newReaction);
 		// Link it to the pair
 		(*it).reaction = newReaction;
 	}

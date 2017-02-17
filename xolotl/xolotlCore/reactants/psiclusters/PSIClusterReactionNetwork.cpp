@@ -971,6 +971,8 @@ void PSIClusterReactionNetwork::reinitializeNetwork() {
 		(*it)->setHeMomentumId(id);
 		(*it)->setVMomentumId(id);
 
+		(*it)->optimizeReactions();
+
 		if ((*it)->getType() == heVType)
 			numHeVClusters++;
 	}
@@ -985,11 +987,6 @@ void PSIClusterReactionNetwork::reinitializeNetwork() {
 		(*it)->setHeMomentumId(id);
 		id++;
 		(*it)->setVMomentumId(id);
-	}
-
-	// Add the reactions to the network starting with the super clusters
-	for (auto it = allReactants->rbegin(); it != allReactants->rend(); ++it) {
-		(*it)->optimizeReactions();
 	}
 
 	return;
