@@ -36,11 +36,26 @@ public:
 	virtual std::vector<double> getInitialDisplacementVec() = 0;
 
 	/**
+	 * This operation returns the initial interstitial vector.
+	 *
+	 * @param currentTime The time
+	 * @return The incident flux vector
+	 */
+	virtual std::vector<double> getInitialInterstitialVec() = 0;
+
+	/**
 	 * This operation returns the index of the vacancy cluster.
 	 *
 	 * @return The index of the incident flux cluster
 	 */
 	virtual int getInitialDisplacementClusterIndex() = 0;
+
+	/**
+	 * This operation returns the index of the interstitial cluster.
+	 *
+	 * @return The index of the incident flux cluster
+	 */
+	virtual int getInitialInterstitialClusterIndex() = 0;
 
 	/**
 	 * This operation sets the factor to change the intensity of the krypton fluence.

@@ -23,7 +23,7 @@ private:
 	 */
 	double FitFunction(double x) {
 
-		double p0, p1, z;
+		double p0, p1;
 		double value;
 
 //		// Uncomment to read the parameters from a file
@@ -36,11 +36,10 @@ private:
 //		value = 1/p[1] * exp(-(z+exp(-z)));
 //		parameters.close();
 
-		p0 = 1.083180509068046;
-		p1 = 0.9468532619150253;
+		p0 = 1.904709327255052;
+		p1 = 3.311156742832611;
 
-		z = (x-p0)/p1;
-		value = 1/p1 * exp(-(z+exp(-z)));
+		value=p0/p1 * pow(x/p1,(p0-1.0)) * exp(-pow(x/p1,p0));
 
 		return value;
 	}

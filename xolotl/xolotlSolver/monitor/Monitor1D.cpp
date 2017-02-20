@@ -40,7 +40,7 @@ double previousIFlux1D = 0.0;
 //! How often HDF5 file is written
 PetscInt hdf5Stride1D = 0;
 //! HDF5 output file name
-std::string hdf5OutputName1D = "xolotlStop.h5";
+std::string hdf5OutputName1D = "xolotlStop3.h5";
 // Declare the vector that will store the Id of the helium clusters
 std::vector<int> heIndices1D;
 // Declare the vector that will store the weight of the helium clusters
@@ -311,6 +311,7 @@ PetscErrorCode computeBoundaryFlux1D(TS ts, PetscInt, PetscReal time,
 	double he2vConcentration = 0;
 	double he3vConcentration = 0;
 	double he4vConcentration = 0;
+	double iConcentration = 0;
 
 	// Declare the necessary coefficients for He flux calculation at the boundary
 	double fluxBoundary = 0.0;
@@ -330,6 +331,7 @@ PetscErrorCode computeBoundaryFlux1D(TS ts, PetscInt, PetscReal time,
 		he2vConcentration += gridPointSolution[16] * hx;
 		he3vConcentration += gridPointSolution[17] * hx;
 		he4vConcentration += gridPointSolution[18] * hx;
+		iConcentration += gridPointSolution[0] * hx;
 
 		if (xi == 0)
 			concentration_0 = gridPointSolution[6] * hx;
@@ -348,6 +350,7 @@ PetscErrorCode computeBoundaryFlux1D(TS ts, PetscInt, PetscReal time,
 	double totalHe2vConcentration = 0.0;
 	double totalHe3vConcentration = 0.0;
 	double totalHe4vConcentration = 0.0;
+	double totalIConcentration = 0.0;
 
 	MPI_Reduce(&heConcentration, &totalHeConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 	MPI_Reduce(&vConcentration, &totalVConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
@@ -355,6 +358,7 @@ PetscErrorCode computeBoundaryFlux1D(TS ts, PetscInt, PetscReal time,
 	MPI_Reduce(&he2vConcentration, &totalHe2vConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 	MPI_Reduce(&he3vConcentration, &totalHe3vConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 	MPI_Reduce(&he4vConcentration, &totalHe4vConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&iConcentration, &totalIConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
 	// Master process
 	if (procId == 0) {
@@ -370,6 +374,7 @@ PetscErrorCode computeBoundaryFlux1D(TS ts, PetscInt, PetscReal time,
 		std::cout << "He2Vconcentration = " << totalHe2vConcentration << std::endl;
 		std::cout << "He3Vconcentration = " << totalHe3vConcentration << std::endl;
 		std::cout << "He4Vconcentration = " << totalHe4vConcentration << std::endl;
+		std::cout << "Iconcentration = " << totalIConcentration << std::endl;
 
 		// Uncomment to write the flux at the boundary and temperature in a file
 		std::ofstream outputFile;

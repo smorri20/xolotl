@@ -128,11 +128,20 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 	// Get the initial displacement vector
 	auto initialDisplacementVector = displacementHandler->getInitialDisplacementVec();
 
+	// Get the initial interstitial vector
+	auto initialInterstitialVector = displacementHandler->getInitialInterstitialVec();
+
 	// Get the single vacancy ID
 	auto singleVacancyCluster = network->get(xolotlCore::vType, 1);
 	int vacancyIndex = -1;
 	if (singleVacancyCluster)
 		vacancyIndex = singleVacancyCluster->getId() - 1;
+
+	// Get the single interstitial ID
+	auto singleInterstitialCluster = network->get(xolotlCore::iType, 1);
+	int interstitialIndex = -1;
+	if (singleInterstitialCluster)
+		interstitialIndex = singleInterstitialCluster->getId() - 1;
 
 	// Loop on all the grid points
 	for (int i = xs; i < xs + xm; i++) {
@@ -147,6 +156,11 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) const {
 		if (i > 0 && i < Mx - 1 && vacancyIndex > 0) {
 			concOffset[vacancyIndex] = initialDisplacementVector[i];
 		}
+		// Initialize the interstitial concentration
+		if (i > 0 && i < Mx - 1 && interstitialIndex == 0) {
+			concOffset[interstitialIndex] = initialInterstitialVector[i];
+		}
+
 	}
 
 	// If the concentration must be set from the HDF5 file

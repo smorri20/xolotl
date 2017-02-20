@@ -22,6 +22,12 @@ protected:
 	std::vector<double> initialDisplacementVec;
 
 	/**
+	 * Vector to hold the initial interstitial values at each grid
+	 * point (x position).
+	 */
+	std::vector<double> initialInterstitialVec;
+
+	/**
 	 * Step size between each grid point in the x direction.
 	 */
 	double stepSize;
@@ -37,9 +43,14 @@ protected:
 	int thresholdDisplacementEnergy;
 
 	/**
-	 * The index of the cluster.
+	 * The index of V_1.
 	 */
 	int displacementIndex;
+
+	/**
+	 * The index of the I_1.
+	 */
+	int interstitialIndex;
 
 	/**
 	 * Value of the fit function integrated on the grid.
@@ -54,6 +65,8 @@ protected:
 	 * @return The evaluated value
 	 */
 	virtual double VacancyFitFunction(double x) {return 0.0;}
+
+	virtual double InterstitialFitFunction(double x) {return 0.0;}
 
 public:
 
@@ -76,11 +89,22 @@ public:
 	virtual std::vector<double> getInitialDisplacementVec();
 
 	/**
+	 * This operation returns the initial interstitial vector.
+     * \see IDisplacementHandler.h
+	 */
+	virtual std::vector<double> getInitialInterstitialVec();
+
+	/**
 	 * This operation returns the index of the vacancy cluster.
      * \see IDisplacementHandler.h
 	 */
 	virtual int getInitialDisplacementClusterIndex();
 
+	/**
+	 * This operation returns the index of the interstitial cluster.
+     * \see IDisplacementHandler.h
+	 */
+	virtual int getInitialInterstitialClusterIndex();
 
 	/**
 	 * This operation sets the factor to change the intensity of the krypton fluence.
