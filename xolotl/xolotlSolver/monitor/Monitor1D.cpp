@@ -40,7 +40,7 @@ double previousIFlux1D = 0.0;
 //! How often HDF5 file is written
 PetscInt hdf5Stride1D = 0;
 //! HDF5 output file name
-std::string hdf5OutputName1D = "xolotlStop3.h5";
+std::string hdf5OutputName1D = "xolotlStop.h5";
 // Declare the vector that will store the Id of the helium clusters
 std::vector<int> heIndices1D;
 // Declare the vector that will store the weight of the helium clusters
