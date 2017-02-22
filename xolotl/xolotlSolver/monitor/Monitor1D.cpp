@@ -280,15 +280,15 @@ PetscErrorCode computeBoundaryFlux1D(TS ts, PetscInt, PetscReal time,
 
 	// Get the solver handler
 	auto solverHandler = PetscSolver::getSolverHandler();
-
 	// Get the flux handler that will be used to compute fluxes.
 	auto fluxHandler = solverHandler->getFluxHandler();
+
 	auto network = solverHandler->getNetwork();
 	auto heliums = network->getAll("He");
 	auto cluster = (PSICluster *)heliums.at(0);
-	auto temp = network->getTemperature();
-	int id = cluster->getId()-1;
 	double difCoef=cluster->getDiffusionCoefficient();
+	auto temp = network->getTemperature();
+	auto allHeVReactants = network->getAll(heVType);
 
 	// Get the da from ts
 	DM da;
@@ -304,14 +304,41 @@ PetscErrorCode computeBoundaryFlux1D(TS ts, PetscInt, PetscReal time,
 	PetscReal **solutionArray;
 	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
 
-	// Store the concentrations over the grid
-	double heConcentration = 0;
-	double vConcentration = 0;
-	double hevConcentration = 0;
-	double he2vConcentration = 0;
-	double he3vConcentration = 0;
-	double he4vConcentration = 0;
-	double iConcentration = 0;
+	// Store the concentration over the grid
+	double he1Concentration = 0;
+	double v1Concentration = 0;
+	double he1V1Concentration = 0;
+	double he2V1Concentration = 0;
+	double he3V1Concentration = 0;
+	double he4V1Concentration = 0;
+	double i1Concentration = 0;
+
+	auto he1V1Cluster = (PSICluster *) allHeVReactants[0];
+	auto he2V1Cluster = (PSICluster *) allHeVReactants[1];
+	auto he3V1Cluster = (PSICluster *) allHeVReactants[2];
+	auto he4V1Cluster = (PSICluster *) allHeVReactants[3];
+
+	auto he1Cluster = (PSICluster *) network->get(heType, 1);
+	auto v1Cluster = (PSICluster *) network->get(vType, 1);
+	auto i1Cluster = (PSICluster *) network->get(iType, 1);
+
+	auto he1Index = he1Cluster->getId() - 1;
+	auto he1Name = he1Cluster->getName();
+
+	auto v1Index = v1Cluster->getId() - 1;
+	auto v1Name = v1Cluster->getName();
+	auto i1Index = i1Cluster->getId() - 1;
+	auto i1Name = i1Cluster->getName();
+
+	auto he1V1Index = he1V1Cluster->getId() - 1;
+	auto he2V1Index = he2V1Cluster->getId() - 1;
+	auto he3V1Index = he3V1Cluster->getId() - 1;
+	auto he4V1Index = he4V1Cluster->getId() - 1;
+
+	auto he1V1Name = he1V1Cluster->getName();
+	auto he2V1Name = he2V1Cluster->getName();
+	auto he3V1Name = he3V1Cluster->getName();
+	auto he4V1Name = he4V1Cluster->getName();
 
 	// Declare the necessary coefficients for He flux calculation at the boundary
 	double fluxBoundary = 0.0;
@@ -325,18 +352,18 @@ PetscErrorCode computeBoundaryFlux1D(TS ts, PetscInt, PetscReal time,
 		// Get the pointer to the beginning of the solution data for this grid point
 		gridPointSolution = solutionArray[xi];
 
-		heConcentration += gridPointSolution[6] * hx;
-		vConcentration += gridPointSolution[14] * hx;
-		hevConcentration += gridPointSolution[15] * hx;
-		he2vConcentration += gridPointSolution[16] * hx;
-		he3vConcentration += gridPointSolution[17] * hx;
-		he4vConcentration += gridPointSolution[18] * hx;
-		iConcentration += gridPointSolution[0] * hx;
+		he1Concentration += gridPointSolution[he1Index] * hx;
+		v1Concentration += gridPointSolution[v1Index] * hx;
+		i1Concentration += gridPointSolution[i1Index] * hx;
+		he1V1Concentration += gridPointSolution[he1V1Index] * hx;
+		he2V1Concentration += gridPointSolution[he2V1Index] * hx;
+		he3V1Concentration += gridPointSolution[he3V1Index] * hx;
+		he4V1Concentration += gridPointSolution[he4V1Index] * hx;
 
 		if (xi == 0)
-			concentration_0 = gridPointSolution[6] * hx;
+			concentration_0 = gridPointSolution[he1Index] * hx;
 		else if (xi == 1)
-			concentration_1 = gridPointSolution[6] * hx;
+			concentration_1 = gridPointSolution[he1Index] * hx;
 	}
 
 	// Get the current process ID
@@ -344,43 +371,47 @@ PetscErrorCode computeBoundaryFlux1D(TS ts, PetscInt, PetscReal time,
 	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
 
 	// Sum all the concentrations through MPI reduce
-	double totalHeConcentration = 0.0;
-	double totalVConcentration = 0.0;
-	double totalHevConcentration = 0.0;
-	double totalHe2vConcentration = 0.0;
-	double totalHe3vConcentration = 0.0;
-	double totalHe4vConcentration = 0.0;
-	double totalIConcentration = 0.0;
+	double totalHe1Concentration = 0.0;
+	double totalV1Concentration = 0.0;
+	double totalI1Concentration = 0.0;
+	double totalHe1V1Concentration = 0.0;
+	double totalHe2V1Concentration = 0.0;
+	double totalHe3V1Concentration = 0.0;
+	double totalHe4V1Concentration = 0.0;
 
-	MPI_Reduce(&heConcentration, &totalHeConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-	MPI_Reduce(&vConcentration, &totalVConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-	MPI_Reduce(&hevConcentration, &totalHevConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-	MPI_Reduce(&he2vConcentration, &totalHe2vConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-	MPI_Reduce(&he3vConcentration, &totalHe3vConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-	MPI_Reduce(&he4vConcentration, &totalHe4vConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-	MPI_Reduce(&iConcentration, &totalIConcentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&he1Concentration, &totalHe1Concentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&v1Concentration, &totalV1Concentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&i1Concentration, &totalI1Concentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&he1V1Concentration, &totalHe1V1Concentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&he2V1Concentration, &totalHe2V1Concentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&he3V1Concentration, &totalHe3V1Concentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&he4V1Concentration, &totalHe4V1Concentration, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
 	// Master process
 	if (procId == 0) {
+		// Get the fluence
+		double heliumFluence = fluxHandler->getFluence();
 
 		// Helium flux calculation at the boundary
 		fluxBoundary = difCoef * (concentration_1 - concentration_0) / hx;
 
-		// Print the results for He, V, HeV, He2V, He3V, and He4V
+		// Print the result
+		std::cout << "\nTemperature: " << temp << std::endl;
 		std::cout << "\nTime: " << time << std::endl;
-		std::cout << "Helium concentration = " << totalHeConcentration << std::endl;
-		std::cout << "Vconcentration = " << totalVConcentration << std::endl;
-		std::cout << "HeVconcentration = " << totalHevConcentration << std::endl;
-		std::cout << "He2Vconcentration = " << totalHe2vConcentration << std::endl;
-		std::cout << "He3Vconcentration = " << totalHe3vConcentration << std::endl;
-		std::cout << "He4Vconcentration = " << totalHe4vConcentration << std::endl;
-		std::cout << "Iconcentration = " << totalIConcentration << std::endl;
+		std::cout << "Helium fluence = " << heliumFluence << "\n" << std::endl;
+		std::cout << "Cluster concentrations: " << std::endl;
+		std::cout << he1Name << "=" << totalHe1Concentration << std::endl;
+		std::cout << v1Name << "=" << totalV1Concentration << std::endl;
+		std::cout << he1V1Name << "=" << totalHe1V1Concentration << std::endl;
+		std::cout << he2V1Name << "=" << totalHe2V1Concentration << std::endl;
+		std::cout << he3V1Name << "=" << totalHe3V1Concentration << std::endl;
+		std::cout << he4V1Name << "=" << totalHe4V1Concentration << std::endl;
+		std::cout << i1Name << "=" << totalI1Concentration << std::endl;
 
 		// Uncomment to write the flux at the boundary and temperature in a file
 		std::ofstream outputFile;
 		outputFile.open("thds.txt", ios::app);
-		outputFile << temp << " "
-				<< fluxBoundary << std::endl;
+		outputFile << temp << " " << fluxBoundary << std::endl;
 		outputFile.close();
 	}
 
@@ -388,6 +419,9 @@ PetscErrorCode computeBoundaryFlux1D(TS ts, PetscInt, PetscReal time,
 	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);CHKERRQ(ierr);
 
 	PetscFunctionReturn(0);
+
+
+
 }
 
 #undef __FUNCT__
