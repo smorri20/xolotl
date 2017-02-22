@@ -210,30 +210,28 @@ double PSICluster::computeBindingEnergy(const PSICluster & dissociatingCluster,
 
 	if (dissociatingCluster.name == "He_2V_1")
 	{
-		bindingEnergy = 3.11;
-		std::cout << dissociatingCluster.name << " -> " << secondCluster.name << " + " << singleCluster.name << " : " << bindingEnergy << std::endl;
+		bindingEnergy = 3.00;
 	}
 	else if (dissociatingCluster.name == "He_3V_1")
 	{
-		bindingEnergy = 2.88;
-		std::cout << dissociatingCluster.name << " -> " << secondCluster.name << " + " << singleCluster.name << " : " << bindingEnergy << std::endl;
+		bindingEnergy = 2.75;
 	}
 	else if (dissociatingCluster.name == "He_2V_2" && secondCluster.name == "He_1V_2")
 	{
 		bindingEnergy = 4.42;
-		std::cout << dissociatingCluster.name << " -> " << secondCluster.name << " + " << singleCluster.name << " : " << bindingEnergy << std::endl;
 	}
 	else if (dissociatingCluster.name == "He_4V_1")
 	{
-		bindingEnergy = 2.41;
-		std::cout << dissociatingCluster.name << " -> " << secondCluster.name << " + " << singleCluster.name << " : " << bindingEnergy << std::endl;
+		bindingEnergy = 2.45;
 	}
 	else if (dissociatingCluster.name == "He_1V_1")
 	{
-		bindingEnergy = 4.05;
-		std::cout << dissociatingCluster.name << " -> " << secondCluster.name << " + " << singleCluster.name << " : " << bindingEnergy << std::endl;
+		bindingEnergy = 4.00;
 	}
-
+	else if (dissociatingCluster.name == "He_1V_2" && secondCluster.name == "He_1V_1")
+	{
+		bindingEnergy = 1.67;
+	}
 
 	return bindingEnergy;
 }
