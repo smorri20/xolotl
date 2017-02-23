@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <string>
-#include <PSIClusterReactionNetwork.h>
+#include <IReactionNetwork.h>
 
 namespace xolotlCore {
 
@@ -21,11 +21,11 @@ public:
 	 * Compute and store the initial vacancy values at each grid point.
 	 *
 	 * @param network The reaction network
-	 * @param nx The total number of grid points that will be used on the x axis
-	 * @param hx The step size between grid points on the x axis
+	 * @param surfacePos The surface position
+	 * @param grid The grid on the x axis
 	 */
-	virtual void initializeDisplacementHandler(PSIClusterReactionNetwork *network,
-			int nx, double hx) = 0;
+	virtual void initializeDisplacementHandler(IReactionNetwork *network,
+			int surfacePos, std::vector<double> grid) = 0;
 
 	/**
 	 * This operation returns the initial displacement vector.

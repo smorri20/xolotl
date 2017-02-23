@@ -28,9 +28,10 @@ protected:
 	std::vector<double> initialInterstitialVec;
 
 	/**
-	 * Step size between each grid point in the x direction.
+	 * Vector to hold the position at each grid
+	 * point (x position).
 	 */
-	double stepSize;
+	std::vector<double> xGrid;
 
 	/**
 	 * The amplitude of the krypton fluence.
@@ -64,9 +65,13 @@ protected:
 	 * @param x The position where to evaluate the fit
 	 * @return The evaluated value
 	 */
-	virtual double VacancyFitFunction(double x) {return 0.0;}
+	virtual double VacancyFitFunction(double x) {
+		return 0.0;
+	}
 
-	virtual double InterstitialFitFunction(double x) {return 0.0;}
+	virtual double InterstitialFitFunction(double x) {
+		return 0.0;
+	}
 
 public:
 
@@ -77,56 +82,56 @@ public:
 
 	/**
 	 * Compute and store the initial displacement values at each grid point.
-     * \see IDisplacementHandler.h
+	 * \see IDisplacementHandler.h
 	 */
-	virtual void initializeDisplacementHandler(PSIClusterReactionNetwork *network,
-			int nx, double hx);
+	virtual void initializeDisplacementHandler(IReactionNetwork *network,
+			int surfacePos, std::vector<double> grid);
 
 	/**
 	 * This operation returns the initial displacement vector.
-     * \see IDisplacementHandler.h
+	 * \see IDisplacementHandler.h
 	 */
 	virtual std::vector<double> getInitialDisplacementVec();
 
 	/**
 	 * This operation returns the initial interstitial vector.
-     * \see IDisplacementHandler.h
+	 * \see IDisplacementHandler.h
 	 */
 	virtual std::vector<double> getInitialInterstitialVec();
 
 	/**
 	 * This operation returns the index of the vacancy cluster.
-     * \see IDisplacementHandler.h
+	 * \see IDisplacementHandler.h
 	 */
 	virtual int getInitialDisplacementClusterIndex();
 
 	/**
 	 * This operation returns the index of the interstitial cluster.
-     * \see IDisplacementHandler.h
+	 * \see IDisplacementHandler.h
 	 */
 	virtual int getInitialInterstitialClusterIndex();
 
 	/**
 	 * This operation sets the factor to change the intensity of the krypton fluence.
-     * \see IDisplacementHandler.h
+	 * \see IDisplacementHandler.h
 	 */
 	virtual void setKrFluenceAmplitude(double krFluence);
 
 	/**
 	 * This operation gets the factor that changes the krypton fluence intensity/amplitude.
-     * \see IDisplacementHandler.h
+	 * \see IDisplacementHandler.h
 	 */
 	virtual double getKrFluenceAmplitude() const;
 
 	/**
 	 * This operation sets the factor to change the threshold energy.
-     * \see IDisplacementHandler.h
+	 * \see IDisplacementHandler.h
 	 */
 	virtual void setDispEnergy(int thresholdEnergy);
 
 	/**
 	 * This operation gets the factor that changes the threshold energy.
-     * \see IDisplacementHandler.h
+	 * \see IDisplacementHandler.h
 	 */
 	virtual int getDispEnergy() const;
 

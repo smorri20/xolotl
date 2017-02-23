@@ -6,6 +6,7 @@
 #include <IFluxHandler.h>
 #include <IAdvectionHandler.h>
 #include <IDiffusionHandler.h>
+#include <ITrapMutationHandler.h>
 #include <IDisplacementHandler.h>
 
 namespace xolotlFactory {
@@ -20,7 +21,8 @@ public:
 	/**
 	 * The destructor
 	 */
-	~IMaterialFactory() {}
+	~IMaterialFactory() {
+	}
 
 	/**
 	 * Initialize the material conditions with the different given options.
@@ -37,11 +39,11 @@ public:
 	virtual std::shared_ptr<xolotlCore::IFluxHandler> getFluxHandler() const = 0;
 
 	/**
-	 * Return the advection handler.
+	 * Return the advection handlers.
 	 *
-	 * @return The advection handler.
+	 * @return The advection handlers.
 	 */
-	virtual std::shared_ptr<xolotlCore::IAdvectionHandler> getAdvectionHandler() const = 0;
+	virtual std::vector<std::shared_ptr<xolotlCore::IAdvectionHandler> > getAdvectionHandler() const = 0;
 
 	/**
 	 * Return the diffusion handler.
@@ -49,6 +51,13 @@ public:
 	 * @return The diffusion handler.
 	 */
 	virtual std::shared_ptr<xolotlCore::IDiffusionHandler> getDiffusionHandler() const = 0;
+
+	/**
+	 * Return the modified trap-mutation handler.
+	 *
+	 * @return The trap mutation handler.
+	 */
+	virtual std::shared_ptr<xolotlCore::ITrapMutationHandler> getTrapMutationHandler() const = 0;
 
 	/**
 	 * Return the displacement handler.
@@ -64,8 +73,8 @@ public:
 	 * @param dimension The number of dimensions of the problem.
 	 * @return The material factory.
 	 */
-	static std::shared_ptr<IMaterialFactory> createMaterialFactory(const std::string& materialType,
-			int dimension);
+	static std::shared_ptr<IMaterialFactory> createMaterialFactory(
+			const std::string& materialType, int dimension);
 
 };
 

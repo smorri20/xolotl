@@ -4,7 +4,8 @@
 #include <memory>
 #include <MaterialFactory.h>
 #include <WSRIMFitFluxHandler.h>
-#include <WSRIMAdvectionHandler.h>
+#include <DummyAdvectionHandler.h>
+#include <DummyTrapMutationHandler.h>
 #include <Diffusion1DHandler.h>
 #include <Diffusion2DHandler.h>
 #include <Diffusion3DHandler.h>
@@ -12,7 +13,8 @@
 namespace xolotlFactory {
 
 /**
- * Subclass of MaterialFactory for a (SRIM) tungsten material.
+ * Subclass of MaterialFactory for an amorphous tungsten material with
+ * a WSRIM input file.
  */
 class WSRIMMaterialFactory : public MaterialFactory {
 private:
@@ -31,7 +33,8 @@ public:
 	 */
 	WSRIMMaterialFactory(int dim) {
 		theFluxHandler = std::make_shared<xolotlCore::WSRIMFitFluxHandler>();
-		theAdvectionHandler = std::make_shared<xolotlCore::WSRIMAdvectionHandler>();
+		theAdvectionHandler.push_back(std::make_shared<xolotlCore::DummyAdvectionHandler>());
+		theTrapMutationHandler = std::make_shared<xolotlCore::DummyTrapMutationHandler>();
 
 		// Switch on the dimension for the diffusion handler
 		switch (dim) {

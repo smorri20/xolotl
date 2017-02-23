@@ -1,4 +1,5 @@
 #include <cassert>
+#include <limits>
 #include <fstream>
 #include <TokenizedLineReader.h>
 #include <NetworkOptionHandler.h>
@@ -6,14 +7,20 @@
 #include <ConstTempOptionHandler.h>
 #include <TempProfileOptionHandler.h>
 #include <FluxOptionHandler.h>
-#include <DisplacementOptionHandler.h>
-#include <KrFluenceOptionHandler.h>
 #include <FluxProfileOptionHandler.h>
 #include <PerfOptionHandler.h>
 #include <VizOptionHandler.h>
 #include <MaterialOptionHandler.h>
 #include <VConcentrationOptionHandler.h>
+#include <VoidPortionOptionHandler.h>
 #include <DimensionsOptionHandler.h>
+#include <RegularGridOptionHandler.h>
+#include <ProcessOptionHandler.h>
+#include <GrainBoundariesOptionHandler.h>
+#include <GroupingOptionHandler.h>
+#include <SputteringOptionHandler.h>
+#include <DisplacementOptionHandler.h>
+#include <KrFluenceOptionHandler.h>
 #include "Options.h"
 
 namespace xolotlCore {
@@ -25,17 +32,25 @@ Options::Options() :
 		petscArgv(NULL),
 		constTempFlag(false),
 		constTemperature(1000.0),
+		temperatureGradient(0.0),
 		tempProfileFlag(false),
 		fluxFlag(false),
 		fluxAmplitude(0.0),
-		krFluenceAmplitude(0.0),
-		thresholdDisplacementEnergy(0),
 		fluxProfileFlag(false),
 		perfRegistryType(xolotlPerf::IHandlerRegistry::std),
 		vizStandardHandlersFlag(false),
 		materialName(""),
 		initialVConcentration(0.0),
-		dimensionNumber(1) {
+		voidPortion(50.0),
+		dimensionNumber(1),
+		useRegularGridFlag(true), 
+		gbList(""),
+		groupingMin(std::numeric_limits<int>::max()),
+		groupingWidthA(1),
+		groupingWidthB(1),
+		sputteringYield(0.0),
+		krFluenceAmplitude(0.0),
+		thresholdDisplacementEnergy(0) {
 
 	// Create the network option handler
 	auto networkHandler = new NetworkOptionHandler();
@@ -57,12 +72,24 @@ Options::Options() :
 	auto materialHandler = new MaterialOptionHandler();
 	// Create the initial vacancy concentration option handler
 	auto vConcHandler = new VConcentrationOptionHandler();
+	// Create the void portion option handler
+	auto voidHandler = new VoidPortionOptionHandler();
 	// Create the dimensions option handler
 	auto dimHandler = new DimensionsOptionHandler();
+	// Create the regular grid option handler
+	auto gridHandler = new RegularGridOptionHandler();
+	// Create the physical processes option handler
+	auto procHandler = new ProcessOptionHandler();
+	// Create the GB option handler
+	auto gbHandler = new GrainBoundariesOptionHandler();
+	// Create the grouping option handler
+	auto groupingHandler = new GroupingOptionHandler();
+	// Create the grouping option handler
+	auto sputteringHandler = new SputteringOptionHandler();
 	// Create the displacement option handler
-	auto displacementHandler = new DisplacementOptionHandler();
-	// Create the krypton fluence option handler
-	auto krFluenceHandler = new KrFluenceOptionHandler();
+	auto disHandler = new DisplacementOptionHandler();
+	// Create the Kr option handler
+	auto krHandler = new KrFluenceOptionHandler();
 
 	// Add our notion of which options we support.
 	optionsMap[networkHandler->key] = networkHandler;
@@ -75,9 +102,15 @@ Options::Options() :
 	optionsMap[vizHandler->key] = vizHandler;
 	optionsMap[materialHandler->key] = materialHandler;
 	optionsMap[vConcHandler->key] = vConcHandler;
+	optionsMap[voidHandler->key] = voidHandler;
 	optionsMap[dimHandler->key] = dimHandler;
-	optionsMap[displacementHandler->key] = displacementHandler;
-	optionsMap[krFluenceHandler->key] = krFluenceHandler;
+	optionsMap[gridHandler->key] = gridHandler;
+	optionsMap[procHandler->key] = procHandler;
+	optionsMap[gbHandler->key] = gbHandler;
+	optionsMap[groupingHandler->key] = groupingHandler;
+	optionsMap[sputteringHandler->key] = sputteringHandler;
+	optionsMap[disHandler->key] = disHandler;
+	optionsMap[krHandler->key] = krHandler;
 }
 
 Options::~Options(void) {
@@ -132,7 +165,16 @@ void Options::readParams(char* argv[]) {
 		if (iter != optionsMap.end()) {
 			// Call the option's handler
 			auto currOpt = iter->second;
-			assert(currOpt != NULL);
+			if (currOpt == nullptr) {
+				// Something went wrong.
+				std::cerr
+						<< "\nOption: No handler associated to the option: "
+						<< line[0] << " !"
+						<< std::endl;
+				shouldRunFlag = false;
+				exitCode = EXIT_FAILURE;
+				break;
+			}
 			// Continue to read if everything went well with the current option
 			bool continueReading = currOpt->handler(this, line[1]);
 

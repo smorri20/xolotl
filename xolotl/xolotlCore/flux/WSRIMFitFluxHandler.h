@@ -3,7 +3,6 @@
 
 #include "FluxHandler.h"
 #include <cmath>
-#include <fstream>
 
 namespace xolotlCore {
 
@@ -18,11 +17,11 @@ private:
 	 * Function that calculate the flux at a given position x (in nm).
 	 * This function is not normalized. The surface is supposed to be amorphous.
 	 *
-	 * @param x The position where to evaluate the fit
+	 * @param x The position where to evaluate he fit
 	 * @return The evaluated value
 	 */
 	double FitFunction(double x) {
-
+		// Initial declarations
 		double p0, p1;
 		double value;
 
@@ -55,6 +54,28 @@ public:
 	 * The Destructor
 	 */
 	~WSRIMFitFluxHandler() {}
+
+	/**
+	 * Compute and store the incident flux values at each grid point.
+	 * \see IFluxHandler.h
+	 */
+	void initializeFluxHandler(IReactionNetwork *network,
+			int surfacePos, std::vector<double> grid) {
+		// Call the general method
+		FluxHandler::initializeFluxHandler(network, surfacePos, grid);
+
+		// Set the flux index corresponding the the single helium cluster here
+		auto fluxCluster = network->get(heType, 1);
+		// Check that the helium cluster is present in the network
+		if (!fluxCluster) {
+			throw std::string(
+					"\nThe single helium cluster is not present in the network, "
+					"cannot use the flux option!");
+		}
+		fluxIndex = fluxCluster->getId() - 1;
+
+		return;
+	}
 
 };
 //end class WSRIMFitFluxHandler
