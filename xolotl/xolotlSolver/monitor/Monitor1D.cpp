@@ -189,19 +189,19 @@ PetscErrorCode computeBoundaryFlux1D(TS ts, PetscInt, PetscReal time,
 	double totalHe4V1Concentration = 0.0;
 
 	MPI_Reduce(&he1Concentration, &totalHe1Concentration, 1, MPI_DOUBLE,
-			MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_SUM, 0, MPI_COMM_WORLD);
 	MPI_Reduce(&v1Concentration, &totalV1Concentration, 1, MPI_DOUBLE, MPI_SUM,
 			0, MPI_COMM_WORLD);
 	MPI_Reduce(&i1Concentration, &totalI1Concentration, 1, MPI_DOUBLE, MPI_SUM,
 			0, MPI_COMM_WORLD);
 	MPI_Reduce(&he1V1Concentration, &totalHe1V1Concentration, 1, MPI_DOUBLE,
-			MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_SUM, 0, MPI_COMM_WORLD);
 	MPI_Reduce(&he2V1Concentration, &totalHe2V1Concentration, 1, MPI_DOUBLE,
-			MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_SUM, 0, MPI_COMM_WORLD);
 	MPI_Reduce(&he3V1Concentration, &totalHe3V1Concentration, 1, MPI_DOUBLE,
-			MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_SUM, 0, MPI_COMM_WORLD);
 	MPI_Reduce(&he4V1Concentration, &totalHe4V1Concentration, 1, MPI_DOUBLE,
-			MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_SUM, 0, MPI_COMM_WORLD);
 
 	// Master process
 	if (procId == 0) {
@@ -2278,6 +2278,14 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 	auto network = solverHandler->getNetwork();
 	const int networkSize = network->size();
 
+	// Compute the fluence for He
+	if (flagHeRetention || flagBoundaryFlux) {
+		// computeFluence will be called at each timestep
+		ierr = TSMonitorSet(ts, computeFluence, NULL, NULL);
+		checkPetscError(ierr,
+				"setupPetsc1DMonitor: TSMonitorSet (computeFluence) failed.");
+	}
+
 	// Set the monitor to compute the helium flux at the boundary
 	if (flagBoundaryFlux) {
 		// computeBoundaryFlux1D will be called at each timestep
@@ -2583,11 +2591,6 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 			previousTime = xolotlCore::HDF5Utils::readPreviousTime(networkName,
 					tempTimeStep);
 		}
-
-		// computeFluence will be called at each timestep
-		ierr = TSMonitorSet(ts, computeFluence, NULL, NULL);
-		checkPetscError(ierr,
-				"setupPetsc1DMonitor: TSMonitorSet (computeFluence) failed.");
 
 		// computeHeliumRetention1D will be called at each timestep
 		ierr = TSMonitorSet(ts, computeHeliumRetention1D, NULL, NULL);
