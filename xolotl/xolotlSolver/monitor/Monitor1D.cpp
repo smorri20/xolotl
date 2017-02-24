@@ -163,6 +163,7 @@ PetscErrorCode computeBoundaryFlux1D(TS ts, PetscInt, PetscReal time,
 		gridPointSolution = solutionArray[xi];
 		double hx = grid[xi] - grid[xi - 1];
 
+
 		he1Concentration += gridPointSolution[he1Index] * hx;
 		v1Concentration += gridPointSolution[v1Index] * hx;
 		i1Concentration += gridPointSolution[i1Index] * hx;
@@ -172,7 +173,7 @@ PetscErrorCode computeBoundaryFlux1D(TS ts, PetscInt, PetscReal time,
 		he4V1Concentration += gridPointSolution[he4V1Index] * hx;
 
 		if (xi == surfacePos + 1)
-			concentration_1 = gridPointSolution[he1Index] * hx;
+			concentration_1 = gridPointSolution[he1Index];
 	}
 
 	// Get the current process ID
@@ -1194,7 +1195,7 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 
 		// Render and save in file
 		std::stringstream fileName;
-		fileName << "Scatter_TS" << timestep << ".png";
+		fileName << "Scatter_TS" << timestep << ".pnm";
 		scatterPlot1D->write(fileName.str());
 	}
 
@@ -1373,7 +1374,8 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 
 		// Render and save in file
 		std::stringstream fileName;
-		fileName << "log_series_TS" << timestep << ".png";
+//		fileName << "log_series_TS" << timestep << ".pnm";
+		fileName << "series_TS" << timestep << ".pnm";
 		seriesPlot1D->write(fileName.str());
 	}
 
@@ -1560,7 +1562,7 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 
 		// Render and save in file
 		std::stringstream fileName;
-		fileName << "Brian_TS" << timestep << "_D" << xi << ".png";
+		fileName << "Brian_TS" << timestep << "_D" << xi << ".pnm";
 		surfacePlot1D->write(fileName.str());
 	}
 
