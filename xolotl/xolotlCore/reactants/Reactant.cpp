@@ -15,7 +15,7 @@ Reactant::Reactant() :
 				0.0), typeName(""), network(nullptr), handlerRegistry(nullptr), size(
 				0), formationEnergy(0.0), diffusionFactor(0.0), diffusionCoefficient(
 				0.0), migrationEnergy(0.0), name("Reactant"), reactionRadius(
-				0.0), biggestRate(0.0) {
+				0.0) {
 	// Setup the composition map.
 	compositionMap[xeType] = 0;
 	compositionMap[heType] = 0;
@@ -28,7 +28,7 @@ Reactant::Reactant(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 				0.0), typeName(""), network(nullptr), handlerRegistry(registry), size(
 				0), formationEnergy(0.0), diffusionFactor(0.0), diffusionCoefficient(
 				0.0), migrationEnergy(0.0), name("Reactant"), reactionRadius(
-				0.0), biggestRate(0.0) {
+				0.0) {
 	// Setup the composition map.
 	compositionMap[xeType] = 0;
 	compositionMap[heType] = 0;
@@ -44,8 +44,7 @@ Reactant::Reactant(Reactant &other) :
 				other.handlerRegistry), size(other.size), formationEnergy(
 				other.formationEnergy), diffusionFactor(other.diffusionFactor), diffusionCoefficient(
 				other.diffusionCoefficient), migrationEnergy(
-				other.migrationEnergy), reactionRadius(other.reactionRadius), biggestRate(
-				other.biggestRate), reactionConnectivitySet(
+				other.migrationEnergy), reactionRadius(other.reactionRadius), reactionConnectivitySet(
 				other.reactionConnectivitySet), dissociationConnectivitySet(
 				other.dissociationConnectivitySet) {
 	// Setup the composition map.
@@ -114,7 +113,7 @@ void Reactant::setDissociationConnectivity(int id) {
 std::vector<int> Reactant::getConnectivity() const {
 	// The connectivity array by default is filled with
 	// zeros.
-	int connectivityLength = 0;
+	int connectivityLength = network->getDOF();
 	std::vector<int> connectivity = std::vector<int>(connectivityLength, 0);
 
 	// This reactant should be connected to itself
@@ -126,7 +125,7 @@ std::vector<int> Reactant::getConnectivity() const {
 std::vector<double> Reactant::getPartialDerivatives() const {
 	// The partial derivatives array by default is filled with
 	// zeros.
-	int length = network->size();
+	int length = network->getDOF();
 	std::vector<double> partial_derivatives = std::vector<double>(length, 0.0);
 
 	return partial_derivatives;
@@ -283,15 +282,4 @@ void Reactant::setMigrationEnergy(const double energy) {
 
 double Reactant::getReactionRadius() const {
 	return reactionRadius; // Computed by subclasses in constructors.
-}
-
-double Reactant::getBiggestRate() const {
-	return biggestRate; // Computed by computeRateConstants
-}
-
-void Reactant::updateRateConstants() {
-	// Call compute rate constants by default
-	computeRateConstants();
-
-	return;
 }

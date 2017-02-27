@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	// Check the connectivity for He, V, and I
 	int connectivityExpected[] = {
 			// He
-			1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+			1, 1, 1, 1, 1, 1, 1, 0, 0, 0,
 
 			// V
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -59,8 +59,8 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 			// HeI
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
-			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 	for (unsigned int i = 0; i < reactionConnectivity.size(); i++) {
 		BOOST_REQUIRE_EQUAL(reactionConnectivity[i], connectivityExpected[i]);
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
  */
 BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 	// Local Declarations
-	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork();
+	auto network = getSimplePSIReactionNetwork();
 
 	// Get an V cluster with compostion 0,1,0.
 	auto cluster = (PSICluster *) network->get("V", 1);
@@ -84,7 +84,6 @@ BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 	// values from the tungsten benchmark for this problem.
 	cluster->setDiffusionFactor(2.41E+11);
 	cluster->setMigrationEnergy(1.66);
-	cluster->setTemperature(1000.0);
 	cluster->setConcentration(0.5);
 
 	// Set the diffusion factor and migration energy based on the
@@ -92,10 +91,11 @@ BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 	secondCluster->setDiffusionFactor(0.0);
 	secondCluster->setMigrationEnergy(numeric_limits<double>::infinity());
 	secondCluster->setConcentration(0.5);
-	secondCluster->setTemperature(1000.0);
 
 	// Compute the rate constants that are needed for the flux
-	cluster->computeRateConstants();
+	network->setTemperature(1000.0);
+	network->reinitializeNetwork();
+	network->computeRateConstants();
 	// The flux can pretty much be anything except "not a number" (nan).
 	double flux = cluster->getTotalFlux();
 	BOOST_TEST_MESSAGE(
@@ -112,11 +112,11 @@ BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	// Local Declarations
 	// The vector of partial derivatives to compare with
-	double knownPartials[] = { -2850.42, -3005.08, 0.0, -14316.7, 896815.0,
-			257925.0, 0.0, -2188.27, -2373.78, 356134.7, 377344.4, 224717.0,
-			0.0, 0.0, -2054.05 };
+	double knownPartials[] = { 221864.07, 221709.26, 0.0, -14316.7, 896815.0,
+			257925.0, -1925.666, -2188.27, -2373.78, 356134.7, 377344.4,
+			224717.0, 256135.51, -1789.5926, -2054.05 };
 	// Get the simple reaction network
-	shared_ptr<ReactionNetwork> network = getSimplePSIReactionNetwork(3);
+	auto network = getSimplePSIReactionNetwork(3);
 
 	// Get an V cluster with compostion 0,1,0.
 	auto cluster = (PSICluster *) network->get("V", 1);
@@ -124,11 +124,12 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	// values from the tungsten benchmark for this problem.
 	cluster->setDiffusionFactor(2.41E+11);
 	cluster->setMigrationEnergy(1.66);
-	cluster->setTemperature(1000.0);
 	cluster->setConcentration(0.5);
 
-	// Compute the rate constants that are needed for the partial derivatives
-	cluster->computeRateConstants();
+	// Compute the rate constants that are needed for the partials
+	network->setTemperature(1000.0);
+	network->reinitializeNetwork();
+	network->computeRateConstants();
 	// Get the vector of partial derivatives
 	auto partials = cluster->getPartialDerivatives();
 

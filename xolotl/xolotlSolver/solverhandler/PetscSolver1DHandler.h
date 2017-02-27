@@ -15,12 +15,6 @@ private:
 	//! The position of the surface
 	int surfacePosition;
 
-	//! Reaction values for the RHS jacobian
-	PetscScalar *reactionVals;
-
-	//! Reaction indices for the RHS jacobian
-	PetscInt *reactionIndices;
-
 public:
 
 	//! The Constructor
@@ -29,9 +23,6 @@ public:
 
 	//! The Destructor
 	~PetscSolver1DHandler() {
-		// Delete arrays
-		delete[] reactionVals;
-		delete[] reactionIndices;
 	}
 
 	/**

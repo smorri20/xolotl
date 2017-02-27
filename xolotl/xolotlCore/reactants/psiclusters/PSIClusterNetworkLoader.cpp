@@ -144,6 +144,9 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::load() {
 		}
 	}
 
+	// Create the reactions
+	network->createReactionConnectivity();
+
 	// Check if we want dummy reactions
 	if (!dummyReactions) {
 		// Apply sectional grouping
@@ -156,7 +159,7 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::load() {
 void PSIClusterNetworkLoader::applySectionalGrouping(
 		std::shared_ptr<IReactionNetwork> network) {
 	// Get the HeV cluster map
-	auto vMap = network->getAll(vType);
+	auto heVMap = network->getAll(heVType);
 
 	// Create a temporary vector for the loop
 	std::vector<PSICluster *> tempVector;
@@ -174,317 +177,288 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 	// Map to know which super cluster gathers which group
 	std::map<std::pair<int, int>, PSISuperCluster *> superGroupMap;
 
-//	// Take care of the clusters near He / V = 4
-//	// Loop on the vacancy groups
-//	for (int k = vMin; k <= network->getAll(vType).size(); k++) {
-//		// Loop within the group
-//		for (int m = k * 4 - 3; m < (k + 1) * 4; m++) {
-//			// Get the corresponding cluster
-//			std::vector<int> compositionVector = { m, k, 0 };
-//			// Get the product of the same type as the second reactant
-//			cluster = (PSICluster *) network->getCompound(heVType,
-//					compositionVector);
-//
-//			// Verify if the cluster exists
-//			if (!cluster)
-//				continue;
-//
-//			// Increment the counter
-//			count++;
-//
-//			// Add this cluster to the temporary vector
-//			tempVector.push_back(cluster);
-//			heSize += (double) m;
-//			vSize += (double) k;
-//			radius += cluster->getReactionRadius();
-//			energy += cluster->getFormationEnergy();
-//			// Keep the information of the group
-//			clusterGroupMap[compositionVector] = std::make_pair(-1, k);
-//		}
-//
-//		// Check if there were clusters in this group
-//		if (count == 0)
-//			continue;
-//
-//		// Average all values
-//		heSize = heSize / (double) count;
-//		vSize = vSize / (double) count;
-//		radius = radius / (double) count;
-//		energy = energy / (double) count;
-//		// Create the cluster
-//		superCluster = std::make_shared<PSISuperCluster>(heSize, vSize, count,
-//				4, 1, radius, energy, handlerRegistry);
-//		// Set the HeV vector
-//		superCluster->setHeVVector(tempVector);
-//		// Add this cluster to the network and clusters
-//		network->addSuper(superCluster);
-//		// Keep the information of the group
-//		superGroupMap[std::make_pair(-1, k)] = superCluster.get();
-//
-////		std::cout << "super: " << superCluster->getName() << " 4 1"
-////				<< std::endl;
-//
-//		// Reinitialize everything
-//		heSize = 0.0, vSize = 0.0, radius = 0.0, energy = 0.0;
-//		count = 0;
-//		tempVector.clear();
-//	}
-
 	// Get the number of groups in the helium and vacancy directions
 	int nVGroup = (network->getAll(vType).size() - vMin) / vSectionWidth + 1;
-//	int nHeGroup = (network->getAll(vType).size() * 4) / heSectionWidth + 10;
+	int nHeGroup = (network->getAll(vType).size() * 4) / heSectionWidth + 20;
 
 	// Loop on the vacancy groups
 	for (int k = 0; k < nVGroup; k++) {
-		// To check if the group is full
-		int vLow = network->getAll(vType).size() + 1, vHigh = -1;
+		// Loop on the helium groups
+		for (int j = 0; j < nHeGroup; j++) {
+			// To check if the group is full
+			int heLow = network->getAll(vType).size() * 4, heHigh = -1, vLow =
+					network->getAll(vType).size(), vHigh = -1;
 
-		// Loop within the group
-		for (int n = vIndex; n < vIndex + vWidth; n++) {
-//				for (int m = heIndex; m < heIndex + heWidth; m++) {
-			// Get the corresponding cluster
-			std::vector<int> compositionVector = { 0, n, 0 };
-			// Get the product of the same type as the second reactant
-			cluster = (PSICluster *) network->get(vType, n);
+			// Loop within the group
+			for (int n = vIndex; n < vIndex + vWidth; n++) {
+				for (int m = heIndex; m < heIndex + heWidth; m++) {
+					// Get the corresponding cluster
+					std::vector<int> compositionVector = { m, n, 0 };
+					// Get the product of the same type as the second reactant
+					cluster = (PSICluster *) network->getCompound(heVType,
+							compositionVector);
 
-			// Verify if the cluster exists
-			if (!cluster)
+					// Verify if the cluster exists
+					if (!cluster)
+						continue;
+
+					// Verify it was not already used
+					if (clusterGroupMap.find(compositionVector)
+							!= clusterGroupMap.end())
+						continue;
+
+					// Will be used to know if the group was full
+					if (m < heLow)
+						heLow = m;
+					if (m > heHigh)
+						heHigh = m;
+					if (n < vLow)
+						vLow = n;
+					if (n > vHigh)
+						vHigh = n;
+
+					// Increment the counter
+					count++;
+
+					// Add this cluster to the temporary vector
+					tempVector.push_back(cluster);
+					heSize += (double) m;
+					vSize += (double) n;
+					radius += cluster->getReactionRadius();
+					energy += cluster->getFormationEnergy();
+					// Keep the information of the group
+					clusterGroupMap[compositionVector] = std::make_pair(j, k);
+				}
+			}
+
+			// Check if there were clusters in this group
+			if (count == 0) {
+				// Reinitialize the group indices for the helium direction
+				heIndex += heWidth;
+//				heWidth = std::max((int) std::pow((double) (j * heSectionWidth), 3.0) / 400000, heSectionWidth);
+//				heWidth -= heWidth % heSectionWidth;
 				continue;
+			}
 
-			// Verify it was not already used
-			if (clusterGroupMap.find(compositionVector)
-					!= clusterGroupMap.end())
-				continue;
+			// Average all values
+			heSize = heSize / (double) count;
+			vSize = vSize / (double) count;
+			radius = radius / (double) count;
+			energy = energy / (double) count;
+			// Create the super cluster
+			if (heHigh - heLow + 1 == heWidth && vHigh - vLow + 1 == vWidth) {
+				// Everything is fine, the cluster is full
+				superCluster = std::make_shared<PSISuperCluster>(heSize, vSize,
+						count, heWidth, vWidth, radius, energy,
+						handlerRegistry);
 
-			// Will be used to know if the group was full
-			if (n < vLow)
-				vLow = n;
-			if (n > vHigh)
-				vHigh = n;
+//				std::cout << "normal: " << superCluster->getName() << " "
+//						<< heWidth << " " << vWidth << std::endl;
+			} else {
+				// The cluster is smaller than we thought because we are at the edge
+				superCluster = std::make_shared<PSISuperCluster>(heSize, vSize,
+						count, heHigh - heLow + 1, vHigh - vLow + 1, radius,
+						energy, handlerRegistry);
 
-			// Increment the counter
-			count++;
-
-			// Add this cluster to the temporary vector
-			tempVector.push_back(cluster);
-			vSize += (double) n;
-			radius += cluster->getReactionRadius();
-			energy += cluster->getFormationEnergy();
+//				std::cout << "irregular: " << superCluster->getName() << " "
+//						<< heHigh - heLow + 1 << " " << vHigh - vLow + 1
+//						<< std::endl;
+			}
+			// Set the HeV vector
+			superCluster->setHeVVector(tempVector);
+			// Add this cluster to the network and clusters
+			network->addSuper(superCluster);
 			// Keep the information of the group
-			clusterGroupMap[compositionVector] = std::make_pair(0, k);
+			superGroupMap[std::make_pair(j, k)] = superCluster.get();
+
+			// Reinitialize everything
+			heSize = 0.0, vSize = 0.0, radius = 0.0, energy = 0.0;
+			count = 0;
+			tempVector.clear();
+			// Reinitialize the group indices for the helium direction
+			heIndex += heWidth;
+//			heWidth = std::max((int) std::pow((double) (j * heSectionWidth), 3.0) / 400000, heSectionWidth);
+//			heWidth -= heWidth % heSectionWidth;
 		}
-
-		if (count == 0) {
-			break;
-		}
-
-		// Average all values
-		heSize = heSize / (double) count;
-		vSize = vSize / (double) count;
-		radius = radius / (double) count;
-		energy = energy / (double) count;
-		// Create the super cluster
-		if (vHigh - vLow + 1 == vWidth) {
-			// Everything is fine, the cluster is full
-			superCluster = std::make_shared<PSISuperCluster>(heSize, vSize,
-					count, 1, vWidth, radius, energy, handlerRegistry);
-
-			std::cout << "normal: " << superCluster->getName() << " " << 0
-					<< " " << vWidth << std::endl;
-		} else {
-			// The cluster is smaller than we thought because we are at the edge
-			superCluster = std::make_shared<PSISuperCluster>(heSize, vSize,
-					count, 1, vHigh - vLow + 1, radius, energy,
-					handlerRegistry);
-
-			std::cout << "irregular: " << superCluster->getName() << " " << count
-					<< " " << vHigh - vLow + 1 << std::endl;
-		}
-		// Set the HeV vector
-		superCluster->setHeVVector(tempVector);
-		// Add this cluster to the network and clusters
-		network->addSuper(superCluster);
-		// Keep the information of the group
-		superGroupMap[std::make_pair(0, k)] = superCluster.get();
-
-		// Reinitialize everything
-		heSize = 0.0, vSize = 0.0, radius = 0.0, energy = 0.0;
-		count = 0;
-		tempVector.clear();
 
 		// Reinitialize the group indices for the vacancy direction
 		vIndex += vWidth;
-		vWidth = std::max((int) (std::pow((double) (k * vSectionWidth), 3.0)), vSectionWidth);
-		vWidth -= vWidth % vSectionWidth;
-	}
-
-	// Initialize variables for the loop
-	PSISuperCluster * newCluster;
-	// Loop on all the reactants to update the pairs vector with super clusters
-	auto reactants = network->getAll();
-	for (int i = 0; i < reactants->size(); i++) {
-		// Get the cluster
-		cluster = (PSICluster *) reactants->at(i);
-		// Get their production and dissociation vectors
-		auto react = cluster->reactingPairs;
-		auto combi = cluster->combiningReactants;
-		auto disso = cluster->dissociatingPairs;
-		auto emi = cluster->emissionPairs;
-
-		// Loop on its reacting pairs
-		for (int l = 0; l < react.size(); l++) {
-			// Test the first reactant
-			if (react[l].first->getType() == vType) {
-				// Get its composition
-				composition = react[l].first->getComposition();
-				// Test its size
-				if (composition[vType] >= vMin) {
-					// It has to be replaced by a super cluster
-					std::vector<int> compositionVector = { composition[heType],
-							composition[vType], 0 };
-					newCluster =
-							superGroupMap[clusterGroupMap[compositionVector]];
-					react[l].first = newCluster;
-					react[l].firstHeDistance = newCluster->getHeDistance(
-							composition[heType]);
-					react[l].firstVDistance = newCluster->getVDistance(
-							composition[vType]);
-				}
-			}
-
-			// Test the second reactant
-			if (react[l].second->getType() == vType) {
-				// Get its composition
-				composition = react[l].second->getComposition();
-				// Test its size
-				if (composition[vType] >= vMin) {
-					// It has to be replaced by a super cluster
-					std::vector<int> compositionVector = { composition[heType],
-							composition[vType], 0 };
-					newCluster =
-							superGroupMap[clusterGroupMap[compositionVector]];
-					react[l].second = newCluster;
-					react[l].secondHeDistance = newCluster->getHeDistance(
-							composition[heType]);
-					react[l].secondVDistance = newCluster->getVDistance(
-							composition[vType]);
-				}
-			}
-		}
-
-		// Loop on its combining reactants
-		for (int l = 0; l < combi.size(); l++) {
-			// Test the combining reactant
-			if (combi[l].combining->getType() == vType) {
-				// Get its composition
-				composition = combi[l].combining->getComposition();
-				// Test its size
-				if (composition[vType] >= vMin) {
-					// It has to be replaced by a super cluster
-					std::vector<int> compositionVector = { composition[heType],
-							composition[vType], 0 };
-					newCluster =
-							superGroupMap[clusterGroupMap[compositionVector]];
-					combi[l].combining = newCluster;
-					combi[l].heDistance = newCluster->getHeDistance(
-							composition[heType]);
-					combi[l].vDistance = newCluster->getVDistance(
-							composition[vType]);
-				}
-			}
-		}
-
-		// Loop on its dissociating pairs
-		for (int l = 0; l < disso.size(); l++) {
-			// Test the first reactant
-			if (disso[l].first->getType() == vType) {
-				// Get its composition
-				composition = disso[l].first->getComposition();
-				// Test its size
-				if (composition[vType] >= vMin) {
-					// It has to be replaced by a super cluster
-					std::vector<int> compositionVector = { composition[heType],
-							composition[vType], 0 };
-					newCluster =
-							superGroupMap[clusterGroupMap[compositionVector]];
-					disso[l].first = newCluster;
-					disso[l].firstHeDistance = newCluster->getHeDistance(
-							composition[heType]);
-					disso[l].firstVDistance = newCluster->getVDistance(
-							composition[vType]);
-				}
-			}
-
-			// Test the second reactant
-			if (disso[l].second->getType() == vType) {
-				// Get its composition
-				composition = disso[l].second->getComposition();
-				// Test its size
-				if (composition[vType] >= vMin) {
-					// It has to be replaced by a super cluster
-					std::vector<int> compositionVector = { composition[heType],
-							composition[vType], 0 };
-					newCluster =
-							superGroupMap[clusterGroupMap[compositionVector]];
-					disso[l].second = newCluster;
-					disso[l].secondHeDistance = newCluster->getHeDistance(
-							composition[heType]);
-					disso[l].secondVDistance = newCluster->getVDistance(
-							composition[vType]);
-				}
-			}
-		}
-
-		// Loop on its emission pairs
-		for (int l = 0; l < emi.size(); l++) {
-			// Test the first reactant
-			if (emi[l].first->getType() == vType) {
-				// Get its composition
-				composition = emi[l].first->getComposition();
-				// Test its size
-				if (composition[vType] >= vMin) {
-					// It has to be replaced by a super cluster
-					std::vector<int> compositionVector = { composition[heType],
-							composition[vType], 0 };
-					newCluster =
-							superGroupMap[clusterGroupMap[compositionVector]];
-					emi[l].first = newCluster;
-					emi[l].firstHeDistance = newCluster->getHeDistance(
-							composition[heType]);
-					emi[l].firstVDistance = newCluster->getVDistance(
-							composition[vType]);
-				}
-			}
-
-			// Test the second reactant
-			if (emi[l].second->getType() == vType) {
-				// Get its composition
-				composition = emi[l].second->getComposition();
-				// Test its size
-				if (composition[vType] >= vMin) {
-					// It has to be replaced by a super cluster
-					std::vector<int> compositionVector = { composition[heType],
-							composition[vType], 0 };
-					newCluster =
-							superGroupMap[clusterGroupMap[compositionVector]];
-					emi[l].second = newCluster;
-					emi[l].secondHeDistance = newCluster->getHeDistance(
-							composition[heType]);
-					emi[l].secondVDistance = newCluster->getVDistance(
-							composition[vType]);
-				}
-			}
-		}
-
-		// Set their production and dissociation vectors
-		cluster->reactingPairs = react;
-		cluster->combiningReactants = combi;
-		cluster->dissociatingPairs = disso;
-		cluster->emissionPairs = emi;
+//		vWidth = std::max((int) std::pow((double) (k * vSectionWidth), 3.0) / 100000, vSectionWidth);
+//		vWidth -= vWidth % vSectionWidth;
+//		heWidth = heSectionWidth;
+		heIndex = 1;
 	}
 
 	// Get the super cluster map
 	auto superMap = network->getAll(PSISuperType);
+
+	if (superMap.size() > 0) {
+		// Initialize variables for the loop
+		PSISuperCluster * newCluster;
+		// Loop on all the reactants to update the pairs vector with super clusters
+		auto reactants = network->getAll();
+		for (int i = 0; i < reactants->size(); i++) {
+			// Get the cluster
+			cluster = (PSICluster *) reactants->at(i);
+			// Get their production and dissociation vectors
+			auto react = cluster->reactingPairs;
+			auto combi = cluster->combiningReactants;
+			auto disso = cluster->dissociatingPairs;
+			auto emi = cluster->emissionPairs;
+
+			// Loop on its reacting pairs
+			for (int l = 0; l < react.size(); l++) {
+				// Test the first reactant
+				if (react[l].first->getType() == heVType) {
+					// Get its composition
+					composition = react[l].first->getComposition();
+					// Test its size
+					if (composition[vType] >= vMin) {
+						// It has to be replaced by a super cluster
+						std::vector<int> compositionVector = {
+								composition[heType], composition[vType], 0 };
+						newCluster =
+								superGroupMap[clusterGroupMap[compositionVector]];
+						react[l].first = newCluster;
+						react[l].firstHeDistance = newCluster->getHeDistance(
+								composition[heType]);
+						react[l].firstVDistance = newCluster->getVDistance(
+								composition[vType]);
+					}
+				}
+
+				// Test the second reactant
+				if (react[l].second->getType() == heVType) {
+					// Get its composition
+					composition = react[l].second->getComposition();
+					// Test its size
+					if (composition[vType] >= vMin) {
+						// It has to be replaced by a super cluster
+						std::vector<int> compositionVector = {
+								composition[heType], composition[vType], 0 };
+						newCluster =
+								superGroupMap[clusterGroupMap[compositionVector]];
+						react[l].second = newCluster;
+						react[l].secondHeDistance = newCluster->getHeDistance(
+								composition[heType]);
+						react[l].secondVDistance = newCluster->getVDistance(
+								composition[vType]);
+					}
+				}
+			}
+
+			// Loop on its combining reactants
+			for (int l = 0; l < combi.size(); l++) {
+				// Test the combining reactant
+				if (combi[l].combining->getType() == heVType) {
+					// Get its composition
+					composition = combi[l].combining->getComposition();
+					// Test its size
+					if (composition[vType] >= vMin) {
+						// It has to be replaced by a super cluster
+						std::vector<int> compositionVector = {
+								composition[heType], composition[vType], 0 };
+						newCluster =
+								superGroupMap[clusterGroupMap[compositionVector]];
+						combi[l].combining = newCluster;
+						combi[l].heDistance = newCluster->getHeDistance(
+								composition[heType]);
+						combi[l].vDistance = newCluster->getVDistance(
+								composition[vType]);
+					}
+				}
+			}
+
+			// Loop on its dissociating pairs
+			for (int l = 0; l < disso.size(); l++) {
+				// Test the first reactant
+				if (disso[l].first->getType() == heVType) {
+					// Get its composition
+					composition = disso[l].first->getComposition();
+					// Test its size
+					if (composition[vType] >= vMin) {
+						// It has to be replaced by a super cluster
+						std::vector<int> compositionVector = {
+								composition[heType], composition[vType], 0 };
+						newCluster =
+								superGroupMap[clusterGroupMap[compositionVector]];
+						disso[l].first = newCluster;
+						disso[l].firstHeDistance = newCluster->getHeDistance(
+								composition[heType]);
+						disso[l].firstVDistance = newCluster->getVDistance(
+								composition[vType]);
+					}
+				}
+
+				// Test the second reactant
+				if (disso[l].second->getType() == heVType) {
+					// Get its composition
+					composition = disso[l].second->getComposition();
+					// Test its size
+					if (composition[vType] >= vMin) {
+						// It has to be replaced by a super cluster
+						std::vector<int> compositionVector = {
+								composition[heType], composition[vType], 0 };
+						newCluster =
+								superGroupMap[clusterGroupMap[compositionVector]];
+						disso[l].second = newCluster;
+						disso[l].secondHeDistance = newCluster->getHeDistance(
+								composition[heType]);
+						disso[l].secondVDistance = newCluster->getVDistance(
+								composition[vType]);
+					}
+				}
+			}
+
+			// Loop on its emission pairs
+			for (int l = 0; l < emi.size(); l++) {
+				// Test the first reactant
+				if (emi[l].first->getType() == heVType) {
+					// Get its composition
+					composition = emi[l].first->getComposition();
+					// Test its size
+					if (composition[vType] >= vMin) {
+						// It has to be replaced by a super cluster
+						std::vector<int> compositionVector = {
+								composition[heType], composition[vType], 0 };
+						newCluster =
+								superGroupMap[clusterGroupMap[compositionVector]];
+						emi[l].first = newCluster;
+						emi[l].firstHeDistance = newCluster->getHeDistance(
+								composition[heType]);
+						emi[l].firstVDistance = newCluster->getVDistance(
+								composition[vType]);
+					}
+				}
+
+				// Test the second reactant
+				if (emi[l].second->getType() == heVType) {
+					// Get its composition
+					composition = emi[l].second->getComposition();
+					// Test its size
+					if (composition[vType] >= vMin) {
+						// It has to be replaced by a super cluster
+						std::vector<int> compositionVector = {
+								composition[heType], composition[vType], 0 };
+						newCluster =
+								superGroupMap[clusterGroupMap[compositionVector]];
+						emi[l].second = newCluster;
+						emi[l].secondHeDistance = newCluster->getHeDistance(
+								composition[heType]);
+						emi[l].secondVDistance = newCluster->getVDistance(
+								composition[vType]);
+					}
+				}
+			}
+
+			// Set their production and dissociation vectors
+			cluster->reactingPairs = react;
+			cluster->combiningReactants = combi;
+			cluster->dissociatingPairs = disso;
+			cluster->emissionPairs = emi;
+		}
+	}
+
 	// Set the reaction network for each super reactant
 	for (auto currCluster : superMap) {
 		currCluster->setReactionNetwork(network);
@@ -493,7 +467,7 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 	// Remove HeV clusters bigger than vMin from the network
 	// Loop on the HeV clusters
 	std::vector<IReactant*> doomedReactants;
-	for (auto currCluster : vMap) {
+	for (auto currCluster : heVMap) {
 
 		// Get the composition
 		composition = currCluster->getComposition();

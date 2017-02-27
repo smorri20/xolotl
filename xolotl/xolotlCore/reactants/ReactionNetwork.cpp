@@ -7,7 +7,8 @@ using namespace xolotlCore;
 
 ReactionNetwork::ReactionNetwork() :
 		temperature(0.0), networkSize(0), reactionsEnabled(true), dissociationsEnabled(
-				true), numVClusters(0), numIClusters(0), numSuperClusters(0), maxVClusterSize(0), maxIClusterSize(0) {
+				true), numVClusters(0), numIClusters(0), numSuperClusters(0), maxVClusterSize(
+				0), maxIClusterSize(0) {
 //    concUpdateCounter = xolotlPerf::getHandlerRegistry()->getEventCounter("net_conc_updates");
 	// Setup the vector to hold all of the reactants
 	allReactants = make_shared<std::vector<IReactant *>>();
@@ -17,7 +18,8 @@ ReactionNetwork::ReactionNetwork() :
 ReactionNetwork::ReactionNetwork(
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		handlerRegistry(registry), temperature(0.0), networkSize(0), reactionsEnabled(
-				true), dissociationsEnabled(true), numVClusters(0), numIClusters(0), numSuperClusters(0), maxVClusterSize(0), maxIClusterSize(0) {
+				true), dissociationsEnabled(true), numVClusters(0), numIClusters(
+				0), numSuperClusters(0), maxVClusterSize(0), maxIClusterSize(0) {
 	// Counter for the number of times the network concentration is updated.
 	concUpdateCounter = handlerRegistry->getEventCounter("net_conc_updates");
 	// Setup the vector to hold all of the reactants
@@ -50,6 +52,33 @@ ReactionNetwork::ReactionNetwork(const ReactionNetwork &other) {
 	return;
 }
 
+double ReactionNetwork::calculateReactionRateConstant(
+		ProductionReaction * reaction) const {
+	// Get the reaction radii
+	double r_first = reaction->first->getReactionRadius();
+	double r_second = reaction->second->getReactionRadius();
+
+	// Get the diffusion coefficients
+	double firstDiffusion = reaction->first->getDiffusionCoefficient();
+	double secondDiffusion = reaction->second->getDiffusionCoefficient();
+	double r0 = xolotlCore::tungstenLatticeConstant * 0.75 * std::sqrt(3.0);
+
+	// Calculate and return
+	double k_plus = 4.0 * xolotlCore::pi * (r_first + r_second + r0)
+			* (firstDiffusion + secondDiffusion);
+	return k_plus;
+}
+
+double ReactionNetwork::computeBindingEnergy(
+		DissociationReaction * reaction) const {
+	// for the dissociation A --> B + C we need A binding energy
+	// E_b(A) = E_f(B) + E_f(C) - E_f(A) where E_f is the formation energy
+	double bindingEnergy = reaction->first->getFormationEnergy()
+			+ reaction->second->getFormationEnergy()
+			- reaction->dissociating->getFormationEnergy();
+	return bindingEnergy;
+}
+
 void ReactionNetwork::fillConcentrationsArray(double * concentrations) {
 	// Local Declarations
 	auto reactants = getAll();
@@ -67,15 +96,15 @@ void ReactionNetwork::fillConcentrationsArray(double * concentrations) {
 
 void ReactionNetwork::updateConcentrationsFromArray(double * concentrations) {
 	// Local Declarations
-	auto reactants = getAll();
-	int size = reactants->size();
+	auto allReactants = this->getAll();
 	int id = -1;
 
 	// Set the concentrations
 	concUpdateCounter->increment();	// increment the update concentration counter
-	for (int i = 0; i < size; i++) {
-		id = reactants->at(i)->getId() - 1;
-		reactants->at(i)->setConcentration(concentrations[id]);
+	for (auto iter = allReactants->begin(); iter != allReactants->end();
+			++iter) {
+		id = (*iter)->getId() - 1;
+		(*iter)->setConcentration(concentrations[id]);
 	}
 
 	return;
@@ -147,4 +176,79 @@ const std::vector<std::string> & ReactionNetwork::getNames() const {
 
 const std::vector<std::string> & ReactionNetwork::getCompoundNames() const {
 	return compoundNames;
+}
+
+std::shared_ptr<ProductionReaction> ReactionNetwork::addProductionReaction(
+		std::shared_ptr<ProductionReaction> reaction) {
+	// Loop on all the production reactions
+	for (auto iter = allProductionReactions.rbegin();
+			iter != allProductionReactions.rend(); iter++) {
+		if (((*iter)->first == reaction->first
+				&& (*iter)->second == reaction->second)
+				|| ((*iter)->first == reaction->second
+						&& (*iter)->second == reaction->first)) {
+			// Return the already existing one
+			return (*iter);
+		}
+	}
+
+	// The reaction is not present in the vector yet so add it
+	allProductionReactions.push_back(reaction);
+
+	return reaction;
+}
+
+std::shared_ptr<DissociationReaction> ReactionNetwork::addDissociationReaction(
+		std::shared_ptr<DissociationReaction> reaction) {
+	// Loop on all the dissociation reactions
+	for (auto iter = allDissociationReactions.rbegin();
+			iter != allDissociationReactions.rend(); iter++) {
+		if ((*iter)->dissociating == reaction->dissociating) {
+			if (((*iter)->first == reaction->first
+					&& (*iter)->second == reaction->second)
+					|| ((*iter)->first == reaction->second
+							&& (*iter)->second == reaction->first)) {
+				// Return the already existing one
+				return (*iter);
+			}
+		}
+	}
+
+	// The reaction is not present in the vector yet so add it
+	// But first you have to link it to the reverse reaction
+	// Create the reverse reaction to get a pointer to it
+	auto reverseReaction = std::make_shared<ProductionReaction>(reaction->first,
+			reaction->second);
+	// Get the pointer to the reaction in the production vector
+	reverseReaction = addProductionReaction(reverseReaction);
+	// Update this pointer in this reaction
+	reaction->reverseReaction = reverseReaction.get();
+	// Add it to the vector
+	allDissociationReactions.push_back(reaction);
+
+	return reaction;
+}
+
+void ReactionNetwork::pushProductionReaction(
+		std::shared_ptr<ProductionReaction> reaction) {
+	// Add the reaction
+	allProductionReactions.push_back(reaction);
+
+	return;
+}
+
+void ReactionNetwork::pushDissociationReaction(
+		std::shared_ptr<DissociationReaction> reaction) {
+	// First you have to link it to the reverse reaction
+	// Create the reverse reaction to get a pointer to it
+	auto reverseReaction = std::make_shared<ProductionReaction>(reaction->first,
+			reaction->second);
+	// Get the pointer to the reaction in the production vector
+	reverseReaction = addProductionReaction(reverseReaction);
+	// Update this pointer in this reaction
+	reaction->reverseReaction = reverseReaction.get();
+	// Add it to the vector
+	allDissociationReactions.push_back(reaction);
+
+	return;
 }

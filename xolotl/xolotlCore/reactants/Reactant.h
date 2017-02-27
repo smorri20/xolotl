@@ -125,24 +125,19 @@ protected:
 	double reactionRadius;
 
 	/**
-	 * The biggest rate for this cluster
-	 */
-	double biggestRate;
-
-	/**
 	 * The row of the reaction connectivity matrix corresponding to
-	 * this PSICluster stored as a set.
+	 * this Reactant stored as a set.
 	 *
-	 * If a cluster is involved in a reaction with this PSICluster,
+	 * If a cluster is involved in a reaction with this Reactant,
 	 * the cluster id is an element of this set.
 	 */
 	std::set<int> reactionConnectivitySet;
 
 	/**
 	 * The row of the dissociation connectivity matrix corresponding to
-	 * this PSICluster stored as a set.
+	 * this Reactant stored as a set.
 	 *
-	 * If this PSICluster can dissociate into a particular cluster,
+	 * If this Reactant can dissociate into a particular cluster,
 	 * the cluster id is an element of this set.
 	 */
 	std::set<int> dissociationConnectivitySet;
@@ -187,6 +182,57 @@ public:
 	 */
 	virtual std::shared_ptr<IReactant> clone() {
 		return std::shared_ptr<IReactant>(new Reactant(*this));
+	}
+
+	/**
+	 * Create a production pair associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 */
+	virtual void createProduction(
+			std::shared_ptr<ProductionReaction> reaction) {
+		return;
+	}
+
+	/**
+	 * Create a combination associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction where this cluster takes part.
+	 */
+	virtual void createCombination(
+			std::shared_ptr<ProductionReaction> reaction) {
+		return;
+	}
+
+	/**
+	 * Create a dissociation pair associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 */
+	virtual void createDissociation(
+			std::shared_ptr<DissociationReaction> reaction) {
+		return;
+	}
+
+	/**
+	 * Create an emission pair associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction where this cluster emits.
+	 */
+	virtual void createEmission(
+			std::shared_ptr<DissociationReaction> reaction) {
+		return;
+	}
+
+	/**
+	 * Add the reactions to the network lists.
+	 */
+	virtual void optimizeReactions() {
+		return;
 	}
 
 	/**
@@ -489,14 +535,6 @@ public:
 	double getReactionRadius() const;
 
 	/**
-	 * This operation returns the biggest rate for this
-	 * particular reactant.
-	 *
-	 * @return The biggest rate
-	 */
-	double getBiggestRate() const;
-
-	/**
 	 * This operation returns the sum of combination rate and emission rate
 	 * (where this reactant is on the left side of the reaction) for this
 	 * particular reactant.
@@ -508,20 +546,6 @@ public:
 	virtual double getLeftSideRate() const {
 		return 0.0;
 	}
-
-	/**
-	 * Calculate all the rate constants for the reactions and dissociations in which this
-	 * reactant is taking part.
-	 */
-	virtual void computeRateConstants() {
-		return;
-	}
-
-	/**
-	 * Update all the rate constants for the reactions and dissociations in which this
-	 * reactant is taking part when the temperature changes.
-	 */
-	virtual void updateRateConstants();
 
 	/**
 	 * This operation returns true if the cluster is a mixed-species or compound

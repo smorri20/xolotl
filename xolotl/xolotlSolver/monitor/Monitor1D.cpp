@@ -48,7 +48,9 @@ double nInterstitial1D = 0.0;
 //! The variable to store the sputtering yield at the surface.
 double sputteringYield1D = 0.0;
 //! How often HDF5 file is written
-PetscInt hdf5Stride1D = 0;
+PetscReal hdf5Stride1D = 0.0;
+//! Previous time for HDF5
+PetscInt hdf5Previous1D = 0;
 //! HDF5 output file name
 std::string hdf5OutputName1D = "xolotlStop.h5";
 // Declare the vector that will store the Id of the helium clusters
@@ -78,8 +80,11 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time,
 	PetscFunctionBeginUser;
 
 	// Don't do anything if it is not on the stride
-	if (timestep % hdf5Stride1D != 0)
+	if ((int) (time / hdf5Stride1D) == hdf5Previous1D)
 		PetscFunctionReturn(0);
+
+	// Update the previous time
+	hdf5Previous1D++;
 
 	// Get the number of processes
 	int worldSize;
@@ -694,8 +699,7 @@ PetscErrorCode computeCumulativeHelium1D(TS ts, PetscInt timestep,
 			network->updateConcentrationsFromArray(gridPointSolution);
 
 			// Get the total helium concentration at this grid point
-			heLocalConc += network->getTotalAtomConcentration()
-					* (grid[xi] - grid[xi - 1]);
+			heLocalConc += network->getTotalAtomConcentration() * (grid[xi] - grid[xi - 1]);
 
 			// If this is not the master process, send the value
 			if (procId != 0) {
@@ -733,8 +737,8 @@ PetscErrorCode computeCumulativeHelium1D(TS ts, PetscInt timestep,
 /**
  * This is a monitoring method that will compute the data to send to TRIDYN
  */
-PetscErrorCode computeTRIDYN1D(TS ts, PetscInt timestep, PetscReal time,
-		Vec solution, void *ictx) {
+PetscErrorCode computeTRIDYN1D(TS ts, PetscInt timestep,
+		PetscReal time, Vec solution, void *ictx) {
 	// Initial declarations
 	PetscErrorCode ierr;
 	PetscInt xs, xm;
@@ -830,8 +834,8 @@ PetscErrorCode computeTRIDYN1D(TS ts, PetscInt timestep, PetscReal time,
 
 		// The master process writes computes the cumulative value and writes in the file
 		if (procId == 0) {
-			outputFile << x - grid[surfacePos] << " " << heLocalConc << " "
-					<< vLocalConc << " " << iLocalConc << std::endl;
+			outputFile << x - grid[surfacePos] << " " << heLocalConc << " " << vLocalConc << " " << iLocalConc
+					<< std::endl;
 		}
 	}
 
@@ -1437,6 +1441,7 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the network
 	auto network = solverHandler->getNetwork();
+	int dof = network->getDOF();
 
 	// Get all the super clusters
 	auto superClusters = network->getAll(PSISuperType);
@@ -1473,6 +1478,10 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[xi];
 
+//			for (int i = 0; i < dof; i++) {
+//				std::cout << i << " " << gridPointSolution[i] << std::endl;
+//			}
+
 			// Update the concentration in the network
 			network->updateConcentrationsFromArray(gridPointSolution);
 
@@ -1486,17 +1495,17 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 								* radii1D[i] * radii1D[i] << std::endl;
 			}
 
-			// Loop on the super clusters
-			for (int l = 0; l < superClusters.size(); l++) {
-				// Get the super cluster
-				auto superCluster = (PSISuperCluster *) superClusters[l];
-				// Get its diameter
-				double diam = 2.0 * superCluster->getReactionRadius();
-				// Get its concentration
-				double conc = superCluster->getTotalConcentration() / (double) superCluster->getNTot();
-				outputFile << diam << " "
-						<< conc * constantMulti * diam * diam << std::endl;
-			}
+//			// Loop on the super clusters
+//			for (int l = 0; l < superClusters.size(); l++) {
+//				// Get the super cluster
+//				auto superCluster = (PSISuperCluster *) superClusters[l];
+//				// Get its diameter
+//				double diam = 2.0 * superCluster->getReactionRadius();
+//				// Get its concentration
+//				double conc = superCluster->getTotalConcentration() / (double) superCluster->getNTot();
+//				outputFile << diam << " "
+//						<< conc * constantMulti * diam * diam << std::endl;
+//			}
 		}
 	}
 
@@ -1817,8 +1826,8 @@ PetscErrorCode monitorMovingSurface1D(TS ts, PetscInt, PetscReal time,
 
 		// Printing information about the extension of the material
 		if (procId == 0) {
-			std::cout << "Removing grid points to the grid at time: " << time
-					<< " s." << std::endl;
+			std::cout << "Removing grid points to the grid at time: "
+					<< time << " s." << std::endl;
 		}
 
 		// Set it in the solver
@@ -2095,12 +2104,12 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 	if (flagStatus) {
 		// Find the stride to know how often the HDF5 file has to be written
 		PetscBool flag;
-		ierr = PetscOptionsGetInt(NULL, NULL, "-start_stop", &hdf5Stride1D,
+		ierr = PetscOptionsGetReal(NULL, NULL, "-start_stop", &hdf5Stride1D,
 				&flag);
 		checkPetscError(ierr,
 				"setupPetsc1DMonitor: PetscOptionsGetInt (-start_stop) failed.");
 		if (!flag)
-			hdf5Stride1D = 1;
+			hdf5Stride1D = 1.0;
 
 		PetscInt Mx;
 		PetscErrorCode ierr;
@@ -2332,6 +2341,9 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		// Get all the helium clusters
 		auto heClusters = network->getAll(vType);
 
+		// Get all the helium-vacancy clusters
+		auto heVClusters = network->getAll(heVType);
+
 		// Loop on the helium clusters
 		for (unsigned int i = 0; i < heClusters.size(); i++) {
 			auto cluster = heClusters[i];
@@ -2340,6 +2352,18 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 			indices1D.push_back(id);
 			// Add the number of heliums of this cluster to the weight
 			weights1D.push_back(cluster->getSize());
+			radii1D.push_back(cluster->getReactionRadius());
+		}
+
+		// Loop on the helium-vacancy clusters
+		for (unsigned int i = 0; i < heVClusters.size(); i++) {
+			auto cluster = heVClusters[i];
+			int id = cluster->getId() - 1;
+			// Add the Id to the vector
+			indices1D.push_back(id);
+			// Add the number of heliums of this cluster to the weight
+			auto comp = cluster->getComposition();
+			weights1D.push_back(comp[heType]);
 			radii1D.push_back(cluster->getReactionRadius());
 		}
 	}
