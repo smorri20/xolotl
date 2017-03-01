@@ -298,12 +298,6 @@ public:
 	virtual double getBiggestRate() const = 0;
 
 	/**
-	 * Are reactions enabled?
-	 * @returns true if reactions are enabled, false otherwise.
-	 */
-	virtual bool getReactionsEnabled() const = 0;
-
-	/**
 	 * Are dissociations enabled?
 	 * @returns true if reactions are enabled, false otherwise.
 	 */

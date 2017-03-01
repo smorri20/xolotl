@@ -131,11 +131,6 @@ protected:
 	double biggestRate;
 
 	/**
-	 * Are reactions enabled?
-	 */
-	bool reactionsEnabled;
-
-	/**
 	 * Are dissociations enabled?
 	 */
 	bool dissociationsEnabled;
@@ -539,28 +534,6 @@ public:
 	 */
 	double getBiggestRate() const {
 		return biggestRate;
-	}
-
-	/**
-	 * Are reactions enabled?
-	 * @returns true if reactions are enabled, false otherwise.
-	 */
-	bool getReactionsEnabled() const {
-		return reactionsEnabled;
-	}
-
-	/**
-	 * Enable reactions.
-	 */
-	void enableReactions() {
-		reactionsEnabled = true;
-	}
-
-	/**
-	 * Disable reactions.
-	 */
-	void disableReactions() {
-		reactionsEnabled = false;
 	}
 
 	/**

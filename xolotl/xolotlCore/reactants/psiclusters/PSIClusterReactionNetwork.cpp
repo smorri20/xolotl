@@ -22,7 +22,6 @@ void PSIClusterReactionNetwork::setDefaultPropsAndNames() {
 	= std::make_shared<std::vector<std::shared_ptr<IReactant>>>();
 
 	// Initialize default properties
-	reactionsEnabled = true;
 	dissociationsEnabled = true;
 	numHeClusters = 0;
 	numVClusters = 0;
@@ -111,6 +110,9 @@ PSIClusterReactionNetwork::PSIClusterReactionNetwork(
 
 double PSIClusterReactionNetwork::calculateDissociationConstant(
 		DissociationReaction * reaction) const {
+	// If the dissociations are not allowed
+	if (!dissociationsEnabled) return 0.0;
+
 	// The atomic volume is computed by considering the BCC structure of the
 	// tungsten. In a given lattice cell in tungsten there are tungsten atoms
 	// at each corner and a tungsten atom in the center. The tungsten atoms at

@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	auto reactionConnectivity = reactant->getConnectivity();
 
 	// Check the connectivity for He, V, and I
-	int connectivityExpected[] = { 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1,
+	int connectivityExpected[] = { 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1,
 			1, 1, 0, 1, 1, 1, 1, 0, 0 };
 
 	for (unsigned int i = 0; i < reactionConnectivity.size(); i++) {
