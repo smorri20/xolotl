@@ -1254,9 +1254,9 @@ void PSIClusterReactionNetwork::computeRateConstants() {
 	for (auto iter = allProductionReactions.begin();
 			iter != allProductionReactions.end(); iter++) {
 		// Compute the rate
-		rate = calculateReactionRateConstant((*iter).get());
+		rate = calculateReactionRateConstant(iter->get());
 		// Set it in the reaction
-		(*iter)->kConstant = rate;
+        (*iter)->kConstant = rate;
 
 		// Check if the rate is the biggest one up to now
 		if (rate > biggestProductionRate)
@@ -1267,7 +1267,7 @@ void PSIClusterReactionNetwork::computeRateConstants() {
 	for (auto iter = allDissociationReactions.begin();
 			iter != allDissociationReactions.end(); iter++) {
 		// Compute the rate
-		rate = calculateDissociationConstant((*iter).get());
+		rate = calculateDissociationConstant(iter->get());
 		// Set it in the reaction
 		(*iter)->kConstant = rate;
 	}

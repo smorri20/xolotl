@@ -624,7 +624,7 @@ void NEClusterReactionNetwork::computeRateConstants() {
 	for (auto iter = allProductionReactions.begin();
 			iter != allProductionReactions.end(); iter++) {
 		// Compute the rate
-		rate = calculateReactionRateConstant((*iter).get());
+		rate = calculateReactionRateConstant(iter->get());
 		// Set it in the reaction
 		(*iter)->kConstant = rate;
 
@@ -639,7 +639,7 @@ void NEClusterReactionNetwork::computeRateConstants() {
 	for (auto iter = allDissociationReactions.begin();
 			iter != allDissociationReactions.end(); iter++) {
 		// Compute the rate
-		rate = calculateDissociationConstant((*iter).get());
+		rate = calculateDissociationConstant(iter->get());
 		// Set it in the reaction
 		(*iter)->kConstant = rate;
 	}

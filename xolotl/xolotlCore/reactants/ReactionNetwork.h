@@ -5,6 +5,7 @@
 #include "IReactionNetwork.h"
 #include <Constants.h>
 #include <set>
+#include <map>
 #include <unordered_map>
 
 namespace xolotlPerf {
@@ -87,14 +88,26 @@ protected:
 	std::shared_ptr<std::vector<IReactant *> > allReactants;
 
 	/**
-	 * The list of all of the production reactions in the network.
+	 * All known production reactions in the network.
 	 */
-	std::vector<std::shared_ptr<ProductionReaction> > allProductionReactions;
+    std::vector<std::shared_ptr<ProductionReaction> > allProductionReactions;
+
+    /**
+     * Map of known ProductionReactions for quickly
+     * identifying known reactions.
+     */
+    std::map<ProductionReaction::KeyType, std::shared_ptr<ProductionReaction> > productionReactionMap;
 
 	/**
-	 * The list of all of the dissociation reactions in the network.
+	 * All known dissociation reactions in the network.
 	 */
-	std::vector<std::shared_ptr<DissociationReaction> > allDissociationReactions;
+    std::vector<std::shared_ptr<DissociationReaction> > allDissociationReactions;
+
+    /**
+     * Map of known DissociationReactions for quickly 
+     * identifying known reactions.
+     */
+    std::map<DissociationReaction::KeyType, std::shared_ptr<DissociationReaction> > dissociationReactionMap;
 
 	/**
 	 * A map for storing the dfill configuration and accelerating the formation of
@@ -373,22 +386,6 @@ public:
 	 * @return The pointer to the reaction that is now in the network
 	 */
 	virtual std::shared_ptr<DissociationReaction> addDissociationReaction(
-			std::shared_ptr<DissociationReaction> reaction);
-
-	/**
-	 * This operation adds a production reaction to the network.
-	 *
-	 * @param reaction The reaction that should be added to the network
-	 */
-	virtual void pushProductionReaction(
-			std::shared_ptr<ProductionReaction> reaction);
-
-	/**
-	 * This operation adds a dissociation reaction to the network.
-	 *
-	 * @param reaction The reaction that should be added to the network
-	 */
-	virtual void pushDissociationReaction(
 			std::shared_ptr<DissociationReaction> reaction);
 
 	/**

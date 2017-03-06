@@ -178,75 +178,54 @@ const std::vector<std::string> & ReactionNetwork::getCompoundNames() const {
 
 std::shared_ptr<ProductionReaction> ReactionNetwork::addProductionReaction(
 		std::shared_ptr<ProductionReaction> reaction) {
-	// Loop on all the production reactions
-	for (auto iter = allProductionReactions.rbegin();
-			iter != allProductionReactions.rend(); iter++) {
-		if (((*iter)->first == reaction->first
-				&& (*iter)->second == reaction->second)
-				|| ((*iter)->first == reaction->second
-						&& (*iter)->second == reaction->first)) {
-			// Return the already existing one
-			return (*iter);
-		}
-	}
 
-	// The reaction is not present in the vector yet so add it
-	allProductionReactions.push_back(reaction);
+    // Check if the given ProductionReaction already exists.
+    auto key = reaction->descriptiveKey();
+    auto iter = productionReactionMap.find(key);
+    if(iter != productionReactionMap.end()) {
+        // We already knew about the reaction, so return the one we
+        // already had defined.
+        return iter->second;
+    }
 
-	return reaction;
+    // We did not yet know about the given reaction.
+    // Save it.
+    productionReactionMap.emplace(key, reaction);
+    allProductionReactions.emplace_back(reaction);
+
+    return reaction;
 }
 
 std::shared_ptr<DissociationReaction> ReactionNetwork::addDissociationReaction(
 		std::shared_ptr<DissociationReaction> reaction) {
-	// Loop on all the dissociation reactions
-	for (auto iter = allDissociationReactions.rbegin();
-			iter != allDissociationReactions.rend(); iter++) {
-		if ((*iter)->dissociating == reaction->dissociating) {
-			if (((*iter)->first == reaction->first
-					&& (*iter)->second == reaction->second)
-					|| ((*iter)->first == reaction->second
-							&& (*iter)->second == reaction->first)) {
-				// Return the already existing one
-				return (*iter);
-			}
-		}
-	}
 
-	// The reaction is not present in the vector yet so add it
-	// But first you have to link it to the reverse reaction
-	// Create the reverse reaction to get a pointer to it
-	auto reverseReaction = std::make_shared<ProductionReaction>(reaction->first,
-			reaction->second);
-	// Get the pointer to the reaction in the production vector
-	reverseReaction = addProductionReaction(reverseReaction);
-	// Update this pointer in this reaction
-	reaction->reverseReaction = reverseReaction.get();
-	// Add it to the vector
-	allDissociationReactions.push_back(reaction);
+    // Check if we already know about this reaction.
+    auto key = reaction->descriptiveKey();
+    auto iter = dissociationReactionMap.find(key);
+    if(iter != dissociationReactionMap.end()) {
+        // We already knew about the reaction.
+        // Return the existing one.
+        return iter->second;
+    }
 
-	return reaction;
+    // We did not yet know about the given reaction.
+    // Add it, but also link it to its reverse reaction.
+    // First, create the reverse reaction to get a pointer to it.
+    auto reverseReaction = std::make_shared<ProductionReaction>(reaction->first,
+            reaction->second);
+    // Add this reverse reaction to our set of known reactions.
+    reverseReaction = addProductionReaction(reverseReaction);
+
+    // Indicate that the reverse reaction is the reverse reaction
+    // to the newly-added dissociation reaction.
+    reaction->reverseReaction = reverseReaction.get();
+
+    // Add the dissociation reaction to our set of known reactions.
+    dissociationReactionMap.emplace(key, reaction);
+    allDissociationReactions.emplace_back(reaction);
+
+    // Return the newly-added dissociation reaction.
+    return reaction;
 }
 
-void ReactionNetwork::pushProductionReaction(
-		std::shared_ptr<ProductionReaction> reaction) {
-	// Add the reaction
-	allProductionReactions.push_back(reaction);
 
-	return;
-}
-
-void ReactionNetwork::pushDissociationReaction(
-		std::shared_ptr<DissociationReaction> reaction) {
-	// First you have to link it to the reverse reaction
-	// Create the reverse reaction to get a pointer to it
-	auto reverseReaction = std::make_shared<ProductionReaction>(reaction->first,
-			reaction->second);
-	// Get the pointer to the reaction in the production vector
-	reverseReaction = addProductionReaction(reverseReaction);
-	// Update this pointer in this reaction
-	reaction->reverseReaction = reverseReaction.get();
-	// Add it to the vector
-	allDissociationReactions.push_back(reaction);
-
-	return;
-}
