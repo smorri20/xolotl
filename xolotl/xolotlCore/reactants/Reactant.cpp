@@ -170,16 +170,17 @@ std::string Reactant::toCanonicalString(std::string type,
 	return ostr.str();
 }
 
+
 std::string Reactant::getCompositionString() const {
 
 	// Return the canonical string representation of our composition.
-	//
-	// TODO Would it be better to cache the composition string as a member
-	// variable?  It would require us to have control over the composition map,
-	// so that no changes to it could be made without us knowing about it.
-	// (I.e., need a protected function for derived classes to make changes,
-	// and the map itself becomes private to us.)
-	return toCanonicalString(getType(), compositionMap);
+    if(compString.empty()) {
+
+        // We have not found our descriptive string yet.
+        // So determine it and cache it.
+        compString = toCanonicalString(getType(), compositionMap);
+    }
+    return compString;
 }
 
 void Reactant::setId(int nId) {
