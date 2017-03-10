@@ -30,6 +30,15 @@ namespace xolotlCore {
  */
 class Reactant: public IReactant {
 
+private:
+    /**
+     * A string description of our type/composition map that can
+     * be used for quick comparisons.
+     * Computed on demand by getCompositionString() and cached.
+     * Note: must be kept consistent with contents of compositionMap.
+     */
+    mutable std::string compString;
+
 protected:
 
 	/**
@@ -150,6 +159,7 @@ protected:
 	 */
 	void recomputeDiffusionCoefficient(double temp);
 
+    
 	/**
 	 * The constructor.
 	 */

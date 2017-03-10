@@ -33,11 +33,11 @@ double VCluster::getEmissionFlux() const {
 	// Initial declarations
 	double flux = PSICluster::getEmissionFlux();
 
-	// Compute the loss to dislocation sinks
-	if (size < 2) {
-		// k^2 * D * C
-		flux += xolotlCore::sinkStrength * diffusionCoefficient * concentration;
-	}
+//	// Compute the loss to dislocation sinks
+//	if (size < 2) {
+//		// k^2 * D * C
+//		flux += xolotlCore::sinkStrength * diffusionCoefficient * concentration;
+//	}
 
 	return flux;
 }
@@ -47,11 +47,11 @@ void VCluster::getEmissionPartialDerivatives(
 	// Initial declarations
 	PSICluster::getEmissionPartialDerivatives(partials);
 
-	// Compute the loss to dislocation sinks
-	if (size < 2) {
-		// k^2 * D * C
-		partials[id - 1] -= xolotlCore::sinkStrength * diffusionCoefficient;
-	}
+//	// Compute the loss to dislocation sinks
+//	if (size < 2) {
+//		// k^2 * D * C
+//		partials[id - 1] -= xolotlCore::sinkStrength * diffusionCoefficient;
+//	}
 
 	return;
 }

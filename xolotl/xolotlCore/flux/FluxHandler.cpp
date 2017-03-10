@@ -139,7 +139,7 @@ void FluxHandler::computeIncidentFlux(double currentTime, double *updatedConcOff
 
 	// Update the concentration array
 	updatedConcOffset[fluxIndex] += fluxAmplitude;
-	updatedConcOffset[fluxBisIndex] += fluxAmplitude;
+//	updatedConcOffset[fluxBisIndex] += fluxAmplitude;
 
 	return;
 }

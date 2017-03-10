@@ -539,6 +539,15 @@ public:
 	}
 
 	/**
+	 * Returns nTot.
+	 *
+	 * @return nTot
+	 */
+	double getNTot() {
+		return nTot;
+	}
+
+	/**
 	 * Returns a vector containing the information about the group's bounderies
 	 * in the helium and vacancy directions.
 	 *

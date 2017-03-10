@@ -1453,7 +1453,7 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 	std::ofstream outputFile;
 	if (procId == 0) {
 		std::stringstream name;
-		name << "voidDiam_" << timestep << ".dat";
+		name << "voidDiamGroup_" << timestep << ".dat";
 		outputFile.open(name.str());
 	}
 
@@ -1495,17 +1495,17 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 								* radii1D[i] * radii1D[i] << std::endl;
 			}
 
-//			// Loop on the super clusters
-//			for (int l = 0; l < superClusters.size(); l++) {
-//				// Get the super cluster
-//				auto superCluster = (PSISuperCluster *) superClusters[l];
-//				// Get its diameter
-//				double diam = 2.0 * superCluster->getReactionRadius();
-//				// Get its concentration
-//				double conc = superCluster->getTotalConcentration() / (double) superCluster->getNTot();
-//				outputFile << diam << " "
-//						<< conc * constantMulti * diam * diam << std::endl;
-//			}
+			// Loop on the super clusters
+			for (int l = 0; l < superClusters.size(); l++) {
+				// Get the super cluster
+				auto superCluster = (PSISuperCluster *) superClusters[l];
+				// Get its diameter
+				double diam = 2.0 * superCluster->getReactionRadius();
+				// Get its concentration
+				double conc = superCluster->getTotalConcentration() / (double) superCluster->getNTot();
+				outputFile << diam << " "
+						<< conc * constantMulti * diam * diam << std::endl;
+			}
 		}
 	}
 

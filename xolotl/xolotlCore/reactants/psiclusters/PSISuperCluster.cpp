@@ -27,8 +27,8 @@ PSISuperCluster::PSISuperCluster(double numHe, double numV, int nTot,
 	size = (int) (numHe + numV);
 
 	// Update the composition map
-	compositionMap[heType] = (int) (numHe * (double) nTot);
-	compositionMap[vType] = (int) (numV * (double) nTot);
+	compositionMap[heType] = (int) numHe;
+	compositionMap[vType] = (int) numV;
 
 	// Set the width
 	sectionHeWidth = heWidth;
@@ -143,23 +143,23 @@ double PSISuperCluster::getTotalConcentration() const {
 		// Compute the vacancy index
 		vIndex = (int) (numV - (double) sectionVWidth / 2.0) + k + 1;
 
-		// Loop on the helium width
-		for (int j = 0; j < sectionHeWidth; j++) {
-			// Compute the helium index
-			heIndex = (int) (numHe - (double) sectionHeWidth / 2.0) + j + 1;
+//		// Loop on the helium width
+//		for (int j = 0; j < sectionHeWidth; j++) {
+//			// Compute the helium index
+//			heIndex = (int) (numHe - (double) sectionHeWidth / 2.0) + j + 1;
 
 			// Check if this cluster exists
-			if (reactingMap.find(std::make_pair(heIndex, vIndex))
+			if (reactingMap.find(std::make_pair(0, vIndex))
 					== reactingMap.end())
 				continue;
 
 			// Compute the distances
-			heDistance = getHeDistance(heIndex);
+//			heDistance = getHeDistance(heIndex);
 			vDistance = getVDistance(vIndex);
 
 			// Add the concentration of each cluster in the group times its number of helium
-			conc += getConcentration(heDistance, vDistance);
-		}
+			conc += getConcentration(0.0, vDistance);
+//		}
 	}
 
 	return conc;
@@ -274,21 +274,13 @@ void PSISuperCluster::computeDispersion() {
 	if (sectionHeWidth == 1)
 		dispersionHe = 1.0;
 	else
-		dispersionHe = 2.0
-				* (nHeSquare
-						- ((double) compositionMap[heType]
-								* ((double) compositionMap[heType]
-										/ (double) nTot)))
+		dispersionHe = 2.0 * (nHeSquare - (numHe * (double) nTot * numHe))
 				/ ((double) (nTot * (sectionHeWidth - 1)));
 
 	if (sectionVWidth == 1)
 		dispersionV = 1.0;
 	else
-		dispersionV = 2.0
-				* (nVSquare
-						- ((double) compositionMap[vType]
-								* ((double) compositionMap[vType]
-										/ (double) nTot)))
+		dispersionV = 2.0 * (nVSquare - (numV * (double) nTot * numV))
 				/ ((double) (nTot * (sectionVWidth - 1)));
 
 	return;
@@ -521,8 +513,8 @@ void PSISuperCluster::optimizeReactions() {
 	}
 
 	// Loop on the effective dissociating map
-	for (auto mapIt = dissociatingMap.begin();
-			mapIt != dissociatingMap.end(); ++mapIt) {
+	for (auto mapIt = dissociatingMap.begin(); mapIt != dissociatingMap.end();
+			++mapIt) {
 		// Get the pairs
 		auto pairs = mapIt->second;
 		// Loop over all the reacting pairs
@@ -612,8 +604,8 @@ void PSISuperCluster::optimizeReactions() {
 			secondCluster = (*it).second;
 
 			// Create a dissociation reaction
-			auto reaction = std::make_shared<DissociationReaction>(
-					this, firstCluster, secondCluster);
+			auto reaction = std::make_shared<DissociationReaction>(this,
+					firstCluster, secondCluster);
 			// Add it to the network
 			reaction = network->addDissociationReaction(reaction);
 

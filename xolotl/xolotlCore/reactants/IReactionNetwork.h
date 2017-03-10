@@ -174,22 +174,6 @@ public:
 			std::shared_ptr<DissociationReaction> reaction) = 0;
 
 	/**
-	 * This operation adds a production reaction to the network.
-	 *
-	 * @param reaction The reaction that should be added to the network
-	 */
-	virtual void pushProductionReaction(
-			std::shared_ptr<ProductionReaction> reaction) = 0;
-
-	/**
-	 * This operation adds a dissociation reaction to the network.
-	 *
-	 * @param reaction The reaction that should be added to the network
-	 */
-	virtual void pushDissociationReaction(
-			std::shared_ptr<DissociationReaction> reaction) = 0;
-
-	/**
 	 * This operation fills an array of doubles with the concentrations of all
 	 * of the reactants in the network.
 	 *
@@ -296,12 +280,6 @@ public:
 	 * @return The biggest rate
 	 */
 	virtual double getBiggestRate() const = 0;
-
-	/**
-	 * Are reactions enabled?
-	 * @returns true if reactions are enabled, false otherwise.
-	 */
-	virtual bool getReactionsEnabled() const = 0;
 
 	/**
 	 * Are dissociations enabled?

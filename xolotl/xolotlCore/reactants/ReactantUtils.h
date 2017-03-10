@@ -1,6 +1,7 @@
 #ifndef REACTANTUTILS_H
 #define REACTANTUTILS_H
 
+#include <string>
 #include "IReactant.h"
 
 namespace xolotlCore {
@@ -15,6 +16,20 @@ class IReactant;
  */
 class Reaction {
 public:
+    /**
+     * Type of a canonical key describing this ProductionReaction that 
+     * can be used to compare it to other ProductionReactions.
+     */
+    typedef std::string KeyType;
+
+protected:
+    /**
+     * A descriptive key in canonical form that can be used for
+     * fast compares against that of other ProductionReactions.
+     */
+    KeyType descKey;
+
+public:
 
 	/**
 	 * The rate constant
@@ -25,6 +40,12 @@ public:
 	Reaction() :
 			kConstant(0.0) {
 	}
+
+
+    /**
+     * Find the canonical key describing this ProductionReaction.
+     */
+    KeyType descriptiveKey() const  { return descKey; }
 };
 
 /**
@@ -39,21 +60,20 @@ public:
  */
 class ProductionReaction: public Reaction {
 public:
-
 	/**
-	 * The first cluster in the pair
+	 * The first cluster in the pair.
+     * Its composition string is "<=" that of the second cluster.
 	 */
 	IReactant * first;
 
 	/**
 	 * The second cluster in the pair
+     * Its composition string is ">=" that of the second cluster.
 	 */
 	IReactant * second;
 
 	//! The constructor
-	ProductionReaction(IReactant * firstPtr, IReactant * secondPtr) :
-			first(firstPtr), second(secondPtr) {
-	}
+	ProductionReaction(IReactant * _reactant1, IReactant * _reactant2);
 };
 
 /**
@@ -88,10 +108,7 @@ public:
 
 	//! The constructor
 	DissociationReaction(IReactant * dissociatingPtr, IReactant * firstPtr,
-			IReactant * secondPtr) :
-			dissociating(dissociatingPtr), first(firstPtr), second(secondPtr), reverseReaction(
-					nullptr) {
-	}
+			IReactant * secondPtr);
 };
 
 }

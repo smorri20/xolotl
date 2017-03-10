@@ -25,7 +25,6 @@ void NEClusterReactionNetwork::setDefaultPropsAndNames() {
 	= std::make_shared<std::vector<std::shared_ptr<IReactant>>>();
 
 	// Initialize default properties
-	reactionsEnabled = true;
 	dissociationsEnabled = true;
 	numXeClusters = 0;
 	numVClusters = 0;
@@ -114,6 +113,9 @@ NEClusterReactionNetwork::NEClusterReactionNetwork(
 
 double NEClusterReactionNetwork::calculateDissociationConstant(
 		DissociationReaction * reaction) const {
+	// If the dissociations are not allowed
+	if (!dissociationsEnabled) return 0.0;
+
 	// Compute the atomic volume
 	double atomicVolume = 0.5 * xolotlCore::uraniumDioxydeLatticeConstant
 			* xolotlCore::uraniumDioxydeLatticeConstant
@@ -622,7 +624,7 @@ void NEClusterReactionNetwork::computeRateConstants() {
 	for (auto iter = allProductionReactions.begin();
 			iter != allProductionReactions.end(); iter++) {
 		// Compute the rate
-		rate = calculateReactionRateConstant((*iter).get());
+		rate = calculateReactionRateConstant(iter->get());
 		// Set it in the reaction
 		(*iter)->kConstant = rate;
 
@@ -637,7 +639,7 @@ void NEClusterReactionNetwork::computeRateConstants() {
 	for (auto iter = allDissociationReactions.begin();
 			iter != allDissociationReactions.end(); iter++) {
 		// Compute the rate
-		rate = calculateDissociationConstant((*iter).get());
+		rate = calculateDissociationConstant(iter->get());
 		// Set it in the reaction
 		(*iter)->kConstant = rate;
 	}

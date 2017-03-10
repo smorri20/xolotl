@@ -22,7 +22,6 @@ void PSIClusterReactionNetwork::setDefaultPropsAndNames() {
 	= std::make_shared<std::vector<std::shared_ptr<IReactant>>>();
 
 	// Initialize default properties
-	reactionsEnabled = true;
 	dissociationsEnabled = true;
 	numHeClusters = 0;
 	numVClusters = 0;
@@ -111,6 +110,9 @@ PSIClusterReactionNetwork::PSIClusterReactionNetwork(
 
 double PSIClusterReactionNetwork::calculateDissociationConstant(
 		DissociationReaction * reaction) const {
+	// If the dissociations are not allowed
+	if (!dissociationsEnabled) return 0.0;
+
 	// The atomic volume is computed by considering the BCC structure of the
 	// tungsten. In a given lattice cell in tungsten there are tungsten atoms
 	// at each corner and a tungsten atom in the center. The tungsten atoms at
@@ -152,6 +154,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 				firstIt != allTypeReactants.end(); firstIt++) {
 			// Get its size
 			firstSize = (*firstIt)->getSize();
+			if (firstSize > 1) break;
 			// Loop on the second cluster starting at the same pointer to avoid double counting
 			for (auto secondIt = firstIt; secondIt != allTypeReactants.end();
 					secondIt++) {
@@ -884,7 +887,7 @@ void PSIClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 		isMixed = ((numHe > 0) + (numV > 0) + (numI > 0)) > 1;
 		// Only add the element if we don't already have it
 		// Add the compound or regular reactant.
-		if (isMixed && superSpeciesMap.count(compStr) == 0) {
+		if (!isMixed && superSpeciesMap.count(compStr) == 0) {
 			// Put the compound in its map
 			superSpeciesMap[compStr] = reactant;
 			// Set the key
@@ -1252,9 +1255,9 @@ void PSIClusterReactionNetwork::computeRateConstants() {
 	for (auto iter = allProductionReactions.begin();
 			iter != allProductionReactions.end(); iter++) {
 		// Compute the rate
-		rate = calculateReactionRateConstant((*iter).get());
+		rate = calculateReactionRateConstant(iter->get());
 		// Set it in the reaction
-		(*iter)->kConstant = rate;
+        (*iter)->kConstant = rate;
 
 		// Check if the rate is the biggest one up to now
 		if (rate > biggestProductionRate)
@@ -1265,7 +1268,7 @@ void PSIClusterReactionNetwork::computeRateConstants() {
 	for (auto iter = allDissociationReactions.begin();
 			iter != allDissociationReactions.end(); iter++) {
 		// Compute the rate
-		rate = calculateDissociationConstant((*iter).get());
+		rate = calculateDissociationConstant(iter->get());
 		// Set it in the reaction
 		(*iter)->kConstant = rate;
 	}
