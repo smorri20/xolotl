@@ -176,6 +176,8 @@ int main(int argc, char **argv) {
 		auto handlerRegistry = xolotlPerf::getHandlerRegistry();
 		auto totalTimer = handlerRegistry->getTimer("total");
 		totalTimer->start();
+        auto totalMemRegion = handlerRegistry->getMemSamplingRegion("total");
+        totalMemRegion->start();
 
 		// Initialize and get the solver handler
 		bool dimOK = xolotlFactory::initializeDimension(opts);
@@ -202,6 +204,8 @@ int main(int argc, char **argv) {
 				solvHandler, opts);
 
 		// Launch the PetscSolver
+        auto solverMemRegion = handlerRegistry->getMemSamplingRegion("solver");
+        solverMemRegion->start();
 		launchPetscSolver(solver, handlerRegistry);
 
 		// Finalize our use of the solver.
@@ -209,20 +213,17 @@ int main(int argc, char **argv) {
 		solverFinalizeTimer->start();
 		solver->finalize();
 		solverFinalizeTimer->stop();
+        solverMemRegion->stop();
 
+        totalMemRegion->stop();
 		totalTimer->stop();
 
 		// Report statistics about the performance data collected during
 		// the run we just completed.
-		xperf::PerfObjStatsMap<xperf::ITimer::ValType> timerStats;
-		xperf::PerfObjStatsMap<xperf::IEventCounter::ValType> counterStats;
-		xperf::PerfObjStatsMap<xperf::IHardwareCounter::CounterType> hwCtrStats;
-		handlerRegistry->collectStatistics(timerStats, counterStats,
-				hwCtrStats);
-		if (rank == 0) {
-			handlerRegistry->reportStatistics(std::cout, timerStats,
-					counterStats, hwCtrStats);
-		}
+        auto perfStats = handlerRegistry->collectStatistics();
+        if (rank == 0) {
+            handlerRegistry->reportStatistics(std::cout, perfStats);
+        }
 	} catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;
 		std::cerr << "Aborting." << std::endl;

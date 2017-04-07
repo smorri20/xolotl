@@ -3,8 +3,9 @@
 
 #include "mpi.h"
 #include <vector>
-#include <limits.h>
-#include "../xolotlCore/IIdentifiable.h"
+#include <limits>
+#include "xolotlCore/IIdentifiable.h"
+#include "xolotlPerf/PerfObjStatistics.h"
 
 using namespace std;
 
@@ -32,6 +33,9 @@ public:
 	/// Type of an individual IHardwareCounter value.
 	typedef long long CounterType;
 
+    /// Type of globally aggregated value statistics.
+    typedef PerfObjStatistics<CounterType> GlobalStatsType;
+
 	/// Type of the IHardwareCounter's collection of values.
 	typedef std::vector<CounterType> ValType;
 
@@ -52,7 +56,7 @@ public:
 	/**
 	 * The maximum value possible for an individual counter.
 	 */
-	static constexpr CounterType MaxValue = LLONG_MAX;
+	static constexpr CounterType MaxValue = std::numeric_limits<CounterType>::max();
 
 	/**
 	 * Destroy th ecounter set.

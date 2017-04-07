@@ -30,20 +30,13 @@ std::shared_ptr<IHardwareCounter> DummyHandlerRegistry::getHardwareCounter(
 	return std::make_shared < DummyHardwareCounter > (name, ctrSpec);
 }
 
-void DummyHandlerRegistry::collectStatistics(
-		PerfObjStatsMap<ITimer::ValType>&,
-		PerfObjStatsMap<IEventCounter::ValType>&,
-		PerfObjStatsMap<IHardwareCounter::CounterType>&) {
-	// do nothing
-	return;
-}
+/**
+ * Obtain a memory sampling region.
+ */
+std::shared_ptr<IMemSamplingRegion> DummyHandlerRegistry::getMemSamplingRegion(
+        const std::string& name) {
 
-void DummyHandlerRegistry::reportStatistics(std::ostream&,
-		const PerfObjStatsMap<ITimer::ValType>&,
-		const PerfObjStatsMap<IEventCounter::ValType>&,
-		const PerfObjStatsMap<IHardwareCounter::CounterType>&) const {
-	// do nothing
-	return;
+    return std::make_shared<DummyMemSamplingRegion>(name);
 }
 
 } // namespace xolotlPerf

@@ -13,6 +13,7 @@ file(GLOB HEADERS trapmutation/*.h)
 file(GLOB SRC trapmutation/*.cpp)
 
 #Include directories
+include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/modifiedreaction/trapmutation)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants)

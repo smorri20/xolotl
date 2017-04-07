@@ -8,7 +8,9 @@
 #include "ITimer.h"
 #include "IEventCounter.h"
 #include "IHardwareCounter.h"
+#include "IMemSamplingRegion.h"
 #include "PerfObjStatistics.h"
+
 
 namespace xolotlPerf {
 
@@ -19,6 +21,18 @@ namespace xolotlPerf {
 class IHandlerRegistry {
 
 public:
+
+    /**
+     * Globally aggregated performance statistics for all
+     * performance data types we know how to collect.
+     */
+    struct GlobalPerfStats {
+        PerfObjStatsMap<ITimer::GlobalStatsType> timerStats;
+        PerfObjStatsMap<IEventCounter::GlobalStatsType> counterStats;
+        PerfObjStatsMap<IHardwareCounter::GlobalStatsType> hwCounterStats;
+        PerfObjStatsMap<IMemSamplingRegion::GlobalStatsType> memStats;
+    };
+
 
 	/// Possible types of performance handler registries.
 	enum RegistryType {
@@ -52,33 +66,28 @@ public:
 			const std::string& name,
 			const IHardwareCounter::SpecType& ctrSpec) = 0;
 
+    /**
+     * Obtain a memory sampling region.
+     */
+    virtual std::shared_ptr<IMemSamplingRegion> getMemSamplingRegion(
+            const std::string& name) = 0;
+
+
 	/**
 	 * Collect statistics about any performance data collected by
 	 * processes of the program.
-	 *
-	 * @param timerStats Map of timer statistics, keyed by timer name.
-	 * @param counterStats Map of counter statistics, keyed by counter name.
-	 * @param hwCounterStats Map of hardware counter statistics, keyed by IHardwareCounter name + ':' + hardware counter name.
-	 *
 	 */
-	virtual void collectStatistics(PerfObjStatsMap<ITimer::ValType>& timerStats,
-			PerfObjStatsMap<IEventCounter::ValType>& counterStats,
-			PerfObjStatsMap<IHardwareCounter::CounterType>& hwCounterStats) = 0;
+    virtual GlobalPerfStats collectStatistics(void) const = 0;
 
 	/**
 	 * Report performance data statistics to the given stream.
 	 *
 	 * @param os Stream on which to output statistics.
-	 * @param timerStats Map of timer statistics, keyed by timer name.
-	 * @param counterStats Map of counter statistics, keyed by counter name.
-	 * @param hwCounterStats Map of hardware counter statistics, keyed by IHardwareCounter name + ':' + hardware counter name.
+     * @param stats The performance statistics to display.
 	 *
 	 */
-	virtual void reportStatistics(std::ostream& os,
-			const PerfObjStatsMap<ITimer::ValType>& timerStats,
-			const PerfObjStatsMap<IEventCounter::ValType>& counterStats,
-			const PerfObjStatsMap<IHardwareCounter::CounterType>& hwCounterStats) const = 0;
-
+	virtual void reportStatistics(std::ostream& os, 
+                                const GlobalPerfStats& stats) const = 0;
 };
 
 } //end namespace xolotlPerf

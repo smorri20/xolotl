@@ -19,8 +19,8 @@ file(GLOB DUMMYSRC *.cpp dummy/*.cpp)
 
 # Always include the Standard classes, since we will always be 
 # building the support for OS-provided timers at a minimum.
-set(STD_HEADERS standard/StdHandlerRegistry.h standard/EventCounter.h)
-set(STD_SRC standard/StdHandlerRegistry.cpp)
+set(STD_HEADERS standard/StdHandlerRegistry.h standard/EventCounter.h standard/MemSamplingRegion.h)
+set(STD_SRC standard/StdHandlerRegistry.cpp standard/StatmSamplingRegion.cpp)
 
 # Check for OS timer support...
 include(CheckIncludeFiles)

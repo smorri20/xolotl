@@ -2,8 +2,9 @@
 #define IEVENTCOUNTER_H
 
 #include "mpi.h"
-#include <limits.h>
-#include "../xolotlCore/IIdentifiable.h"
+#include <limits>
+#include "xolotlCore/IIdentifiable.h"
+#include "xolotlPerf/PerfObjStatistics.h"
 
 namespace xolotlPerf {
 
@@ -14,10 +15,12 @@ namespace xolotlPerf {
 class IEventCounter: public virtual xolotlCore::IIdentifiable {
 
 public:
-	/**
-	 * Type of the counter.
-	 */
+	/// Type of the counter.
 	typedef unsigned long ValType;
+
+    
+    /// Type of globally aggregated value statistics.
+    typedef PerfObjStatistics<ValType> GlobalStatsType;
 
 	/**
 	 * MPI type used when transmitting a ValType.
@@ -32,7 +35,7 @@ public:
 	/**
 	 * The maximum value possible.
 	 */
-	static const ValType MaxValue = ULONG_MAX;
+	static const ValType MaxValue = std::numeric_limits<ValType>::max();
 
 	/**
 	 * The destructor

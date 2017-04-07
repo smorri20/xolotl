@@ -8,6 +8,7 @@ SET(PACKAGE_DESCRIPTION "Xolotl Temperature")
 file(GLOB HEADERS *.h)
 
 #Include directories
+include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/commandline)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants)

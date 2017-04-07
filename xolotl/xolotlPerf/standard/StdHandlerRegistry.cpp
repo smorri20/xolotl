@@ -9,6 +9,7 @@
 #include <string.h>
 #include "xolotlPerf/standard/StdHandlerRegistry.h"
 #include "xolotlPerf/standard/EventCounter.h"
+#include "xolotlPerf/standard/MemSamplingRegion.h"
 
 namespace xolotlPerf {
 
@@ -23,6 +24,7 @@ StdHandlerRegistry::~StdHandlerRegistry(void) {
 	allTimers.clear();
 	allEventCounters.clear();
 	allHWCounterSets.clear();
+    allMemSamplingRegions.clear();
 }
 
 // We can create the EventCounters, since they don't depend on
@@ -46,6 +48,33 @@ std::shared_ptr<IEventCounter> StdHandlerRegistry::getEventCounter(
 	}
 	return ret;
 }
+
+// We can create the MemSamplingRegions, since they don't depend on
+// more specialized functionality from any of our subclasses.
+std::shared_ptr<IMemSamplingRegion> StdHandlerRegistry::getMemSamplingRegion(
+		const std::string& name) {
+
+    std::shared_ptr<IMemSamplingRegion> ret;
+
+    // Have we already created a region with this name?
+    auto iter = allMemSamplingRegions.find(name);
+    if(iter != allMemSamplingRegions.end()) {
+
+        // We have already created a memory sampling region with this name,
+        // so return that one.
+        ret = iter->second;
+    }
+    else {
+        // We have not already created a memory sampling region wtih this name.
+        // Create one, keep track of it, and return it.
+        ret = std::make_shared<MemSamplingRegion>(name);
+        allMemSamplingRegions.emplace(name, ret);
+    }
+
+    return ret;
+}
+
+
 
 template<typename T, typename V>
 void StdHandlerRegistry::CollectAllObjectNames(int myRank,
@@ -112,7 +141,7 @@ void StdHandlerRegistry::CollectAllObjectNames(int myRank,
 				// Add it to the statistics map.
 				stats.insert(
 						std::pair<std::string, PerfObjStatistics<V> >(pName,
-								PerfObjStatistics<V>(pName)));
+								PerfObjStatistics<V>()));
 			}
 
 			// Advance to next object name
@@ -233,14 +262,14 @@ void StdHandlerRegistry::AggregateStatistics(int myRank,
 	auto tsiter = stats.begin();
 	for (int idx = 0; idx < nObjs; ++idx) {
 		// broadcast the current object's name
-		int nameLen = (myRank == 0) ? tsiter->second.name.length() : -1;
+		int nameLen = (myRank == 0) ? tsiter->first.length() : -1;
 		MPI_Bcast(&nameLen, 1, MPI_INT, 0, MPI_COMM_WORLD);
 		// we can safely cast away const on the tsiter data string because
 		// the only process that accesses that string is rank 0,
 		// and it only reads the data.
 		char* objName =
 				(myRank == 0) ?
-						const_cast<char*>(tsiter->second.name.c_str()) :
+						const_cast<char*>(tsiter->first.c_str()) :
 						new char[nameLen + 1];
 		MPI_Bcast(objName, nameLen + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
 
@@ -303,45 +332,133 @@ void StdHandlerRegistry::AggregateStatistics(int myRank,
 	}
 }
 
-void StdHandlerRegistry::collectStatistics(
-		PerfObjStatsMap<ITimer::ValType>& timerStats,
-		PerfObjStatsMap<IEventCounter::ValType>& counterStats,
-		PerfObjStatsMap<IHardwareCounter::CounterType>& hwCounterStats) {
+
+template<>
+void StdHandlerRegistry::AggregateStatistics<IMemSamplingRegion, MemStats>(int myRank,
+		const std::map<std::string, std::shared_ptr<IMemSamplingRegion> >& myObjs,
+		std::map<std::string, PerfObjStatistics<MemStats> >& globalStats) const {
+
+	// Determine the set of object names known across all processes.
+	// Since some processes may define an object that others don't, we
+	// have to form the union across all processes.
+	// Unfortunately, because the strings are of different lengths,
+	// we have a more difficult marshal/unmarshal problem than we'd like.
+	CollectAllObjectNames<IMemSamplingRegion, MemStats>(myRank, myObjs, globalStats);
+
+	// Let all processes know how many statistics we will be collecting.
+	int nObjs;
+	if (myRank == 0) {
+		nObjs = globalStats.size();
+	}
+	MPI_Bcast(&nObjs, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	assert(nObjs >= 0);
+
+	// Collect and compute statistics for each object.
+	auto tsiter = globalStats.begin();
+	for (int idx = 0; idx < nObjs; ++idx) {
+
+		// broadcast the current object's name
+		int nameLen = (myRank == 0) ? tsiter->first.length() : -1;
+		MPI_Bcast(&nameLen, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		// we can safely cast away const on the tsiter data string because
+		// the only process that accesses that string is rank 0,
+		// and it only reads the data.
+		char* objName =
+				(myRank == 0) ?
+						const_cast<char*>(tsiter->first.c_str()) :
+						new char[nameLen + 1];
+		MPI_Bcast(objName, nameLen + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+		// do we know about the current object?
+		bool localIsValid = false;
+		IMemSamplingRegion::ValType localValue;
+		std::tie(localIsValid, localValue) = 
+            GetObjValue<IMemSamplingRegion, IMemSamplingRegion::ValType>(myObjs, objName);
+
+		// collect count of processes knowing about the current object
+        uint32_t currProcessCount = 0;
+		int knowObjVal = localIsValid ? 1 : 0;
+		MPI_Reduce(&knowObjVal, &currProcessCount, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+        if(myRank == 0) {
+            tsiter->second.processCount = currProcessCount;
+        }
+
+        // Aggregate values across all ranks.
+        tsiter->second.stats.Aggregate(localValue,
+                                        myRank,
+                                        localIsValid,
+                                        currProcessCount);
+
+		// clean up
+		if (myRank != 0) {
+			delete[] objName;
+		}
+
+		// advance to next object
+		if (myRank == 0) {
+			++tsiter;
+		}
+	}
+}
+
+IHandlerRegistry::GlobalPerfStats
+StdHandlerRegistry::collectStatistics(void) const {
+
+    IHandlerRegistry::GlobalPerfStats stats;
+
 	int myRank;
 	MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
 
-	// Aggregate statistics about counters in all processes.
-	// First, timers...
-	AggregateStatistics<ITimer, ITimer::ValType>(myRank, allTimers, timerStats);
+	// Aggregate performance data from all processes.
+	// Timers...
+	AggregateStatistics<ITimer, ITimer::ValType>(myRank,
+            allTimers, stats.timerStats);
 
-	// ...next event counters...
+	// ...event counters...
 	AggregateStatistics<IEventCounter, IEventCounter::ValType>(myRank,
-			allEventCounters, counterStats);
+			allEventCounters, stats.counterStats);
 
-	// ...finally hardware counters.
+	// ...hardware counters...
 	AggregateStatistics<IHardwareCounter, IHardwareCounter::CounterType>(myRank,
-			allHWCounterSets, hwCounterStats);
+			allHWCounterSets, stats.hwCounterStats);
+
+    // ...memory usage.
+    AggregateStatistics<IMemSamplingRegion, IMemSamplingRegion::ValType>(myRank,
+        allMemSamplingRegions, stats.memStats);
+
+    return stats;
 }
 
 void StdHandlerRegistry::reportStatistics(std::ostream& os,
-		const PerfObjStatsMap<ITimer::ValType>& timerStats,
-		const PerfObjStatsMap<IEventCounter::ValType>& counterStats,
-		const PerfObjStatsMap<IHardwareCounter::CounterType>& hwCounterStats) const {
+                        const IHandlerRegistry::GlobalPerfStats& stats) const {
+
 	os << "\nTimers:\n";
-	for (auto iter = timerStats.begin(); iter != timerStats.end(); ++iter) {
-		iter->second.outputTo(os);
-	}
+    for (auto currTimerStats : stats.timerStats) {
+        os << "name: " << currTimerStats.first << '\n';
+        currTimerStats.second.outputTo(os);
+        os << '\n';
+    }
 
 	os << "\nCounters:\n";
-	for (auto iter = counterStats.begin(); iter != counterStats.end(); ++iter) {
-		iter->second.outputTo(os);
-	}
+    for (auto currCounterStats : stats.counterStats) {
+        os << "name: " << currCounterStats.first << '\n';
+        currCounterStats.second.outputTo(os);
+        os << '\n';
+    }
 
 	os << "\nHardwareCounters:\n";
-	for (auto iter = hwCounterStats.begin(); iter != hwCounterStats.end();
-			++iter) {
-		iter->second.outputTo(os);
-	}
+    for (auto currHwCounterStats : stats.hwCounterStats) {
+        os << "name: " << currHwCounterStats.first << '\n';
+        currHwCounterStats.second.outputTo(os);
+        os << '\n';
+    }
+
+    os << "\nMemoryUsage:\n";
+    for (auto currMemStats : stats.memStats) {
+        os << "name: " << currMemStats.first << '\n';
+        currMemStats.second.outputTo(os);
+        os << '\n';
+    }
 }
 
 } // namespace xolotlPerf

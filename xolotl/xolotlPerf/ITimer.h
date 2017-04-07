@@ -3,8 +3,9 @@
 
 #include "mpi.h"
 #include <string>
-#include <float.h>
-#include "../xolotlCore/IIdentifiable.h"
+#include <limits>
+#include "xolotlCore/IIdentifiable.h"
+#include "xolotlPerf/PerfObjStatistics.h"
 
 using namespace std;
 
@@ -18,10 +19,11 @@ class ITimer: public virtual xolotlCore::IIdentifiable {
 
 public:
 
-	/**
-	 * The type of a timer value.
-	 */
+	/// The type of a timer value.
 	typedef double ValType;
+
+    /// Type of globally aggregated value statistics.
+    typedef PerfObjStatistics<ValType> GlobalStatsType;
 
 	/**
 	 * The MPI type to use when transferring a ValType.
@@ -36,7 +38,7 @@ public:
 	/**
 	 * The maximum value possible.
 	 */
-	static constexpr ValType MaxValue = DBL_MAX;
+	static constexpr ValType MaxValue = std::numeric_limits<ValType>::max();
 
 	/**
 	 * Destroy the timer.

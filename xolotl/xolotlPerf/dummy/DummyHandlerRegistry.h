@@ -5,6 +5,8 @@
 #include "xolotlPerf/dummy/DummyTimer.h" //Dependency Generated Source:DummyHandlerRegistry Target:DummyTimer
 #include "xolotlPerf/dummy/DummyEventCounter.h" //Dependency Generated Source:DummyHandlerRegistry Target:DummyEventCounter
 #include "xolotlPerf/dummy/DummyHardwareCounter.h" //Dependency Generated Source:DummyHandlerRegistry Target:DummyHardwareCounter
+#include "xolotlPerf/dummy/DummyMemSamplingRegion.h"
+
 
 namespace xolotlPerf {
 
@@ -34,34 +36,33 @@ public:
 	virtual std::shared_ptr<IHardwareCounter> getHardwareCounter(
 			const std::string& name, const IHardwareCounter::SpecType& ctrSpec);
 
+    /**
+     * Obtain a memory sampling region.
+     */
+    virtual std::shared_ptr<IMemSamplingRegion> getMemSamplingRegion(
+            const std::string& name);
+
 	/**
 	 * Collect statistics about any performance data collected by
 	 * processes of the program.
 	 * This method is a stub.
-	 *
-	 * @param timerStats Map of timer statistics, keyed by timer name.
-	 * @param counterStats Map of counter statistics, keyed by counter name.
-	 * @param hwCounterStats Map of hardware counter statistics, keyed by IHardwareCounter name + ':' + hardware counter name.
-	 *
 	 */
-	virtual void collectStatistics(PerfObjStatsMap<ITimer::ValType>& timerStats,
-			PerfObjStatsMap<IEventCounter::ValType>& counterStats,
-			PerfObjStatsMap<IHardwareCounter::CounterType>& hwCounterStats);
+	virtual GlobalPerfStats collectStatistics(void) const {
+        // Nothing to do.
+    }
 
 	/**
 	 * Report performance data statistics to the given stream.
 	 * This method is a stub in this class.
 	 *
 	 * @param os Stream on which to output statistics.
-	 * @param timerStats Map of timer statistics, keyed by timer name.
-	 * @param counterStats Map of counter statistics, keyed by counter name.
-	 * @param hwCounterStats Map of hardware counter statistics, keyed by IHardwareCounter name + ':' + hardware counter name.
-	 *
+     * @param stats Collected statistics.
 	 */
 	virtual void reportStatistics(std::ostream& os,
-			const PerfObjStatsMap<ITimer::ValType>& timerStats,
-			const PerfObjStatsMap<IEventCounter::ValType>& counterStats,
-			const PerfObjStatsMap<IHardwareCounter::CounterType>& hwCounterStats) const;
+                                    const GlobalPerfStats& stats) const {
+
+        // Nothing to do.
+    }
 };
 
 } //end namespace xolotlPerf

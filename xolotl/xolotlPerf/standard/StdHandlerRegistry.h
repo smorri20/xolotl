@@ -97,6 +97,11 @@ protected:
 	 */
 	std::map<std::string, std::shared_ptr<IHardwareCounter> > allHWCounterSets;
 
+    /**
+     * Known MemSamplingRegions, keyed by name.
+     */
+    std::map<std::string, std::shared_ptr<IMemSamplingRegion> > allMemSamplingRegions;
+
 public:
 
 	/**
@@ -119,32 +124,28 @@ public:
 	virtual std::shared_ptr<IEventCounter> getEventCounter(
 			const std::string& name);
 
+
+    /**
+     * Obtain a memory sampling region.
+     */
+    virtual std::shared_ptr<IMemSamplingRegion> getMemSamplingRegion(
+            const std::string& name);
+
+
 	/**
 	 * Collect statistics about any performance data collected by
 	 * processes of the program.
-	 *
-	 * @param timerStats Map of timer statistics, keyed by timer name.
-	 * @param counterStats Map of counter statistics, keyed by counter name.
-	 * @param hwCounterStats Map of hardware counter statistics, keyed by IHardwareCounter name + ':' + hardware counter name.
-	 *
 	 */
-	virtual void collectStatistics(PerfObjStatsMap<ITimer::ValType>& timerStats,
-			PerfObjStatsMap<IEventCounter::ValType>& counterStats,
-			PerfObjStatsMap<IHardwareCounter::CounterType>& hwCounterStats);
+	virtual IHandlerRegistry::GlobalPerfStats collectStatistics(void) const;
 
 	/**
 	 * Report performance data statistics to the given stream.
 	 *
 	 * @param os Stream on which to output statistics.
-	 * @param timerStats Map of timer statistics, keyed by timer name.
-	 * @param counterStats Map of counter statistics, keyed by counter name.
-	 * @param hwCounterStats Map of hardware counter statistics, keyed by IHardwareCounter name + ':' + hardware counter name.
+     * @param stats Statistics to be reported.
 	 */
 	virtual void reportStatistics(std::ostream& os,
-			const PerfObjStatsMap<ITimer::ValType>& timerStats,
-			const PerfObjStatsMap<IEventCounter::ValType>& counterStats,
-			const PerfObjStatsMap<IHardwareCounter::CounterType>& hwCounterStats) const;
-
+                        const IHandlerRegistry::GlobalPerfStats& stats) const;
 };
 
 } // namespace xolotlPerf
