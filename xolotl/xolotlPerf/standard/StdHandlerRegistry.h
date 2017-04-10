@@ -97,11 +97,6 @@ protected:
 	 */
 	std::map<std::string, std::shared_ptr<IHardwareCounter> > allHWCounterSets;
 
-    /**
-     * Known MemSamplingRegions, keyed by name.
-     */
-    std::map<std::string, std::shared_ptr<IMemSamplingRegion> > allMemSamplingRegions;
-
 public:
 
 	/**
@@ -123,13 +118,6 @@ public:
 	 */
 	virtual std::shared_ptr<IEventCounter> getEventCounter(
 			const std::string& name);
-
-
-    /**
-     * Obtain a memory sampling region.
-     */
-    virtual std::shared_ptr<IMemSamplingRegion> getMemSamplingRegion(
-            const std::string& name);
 
 
 	/**

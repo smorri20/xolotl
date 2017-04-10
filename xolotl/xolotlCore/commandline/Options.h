@@ -154,6 +154,16 @@ protected:
 	 */
 	double sputteringYield;
 
+	/**
+	 * Which type of memory usage infrastructure should we use?
+	 */
+	xolotlMemUsage::IHandlerRegistry::RegistryType memUsageRegistryType;
+
+    /**
+     * What sampling interval should the memory usage infrastructure use?
+     */
+    xolotlMemUsage::IHandlerRegistry::SamplingInterval memUsageSamplingInterval;
+
 public:
 
 	/**
@@ -616,6 +626,35 @@ public:
 		sputteringYield = yield;
 	}
 
+    
+	/**
+	 * Which type of memory usage handlers should we use?
+	 *
+	 * @return The type of memory usage handler registry to use
+	 */
+	virtual xolotlMemUsage::IHandlerRegistry::RegistryType getMemUsageHandlerType(void) const {
+        return memUsageRegistryType;
+    }
+
+	/**
+	 * Set the type of memory usage handlers to use.
+	 *
+	 * @param rtype The type of memory usage handler registry to use
+	 */
+	virtual void setMemUsageHandlerType(
+			xolotlMemUsage::IHandlerRegistry::RegistryType rtype) {
+
+        memUsageRegistryType = rtype;
+    }
+
+    /**
+     * Retrieve the interval used for sampling memory usage.
+     *
+     * @return Interval to use for sampling memory usage.
+     */
+    virtual xolotlMemUsage::IHandlerRegistry::SamplingInterval getMemUsageSamplingInterval(void) const {
+        return memUsageSamplingInterval;
+    }
 };
 //end class Options
 

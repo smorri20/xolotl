@@ -7,6 +7,7 @@
 namespace xolotlPerf {
 
 PAPIHandlerRegistry::PAPIHandlerRegistry(void) {
+
 	int ret;
 	ret = PAPI_library_init(PAPI_VER_CURRENT);
 	if (ret != PAPI_VER_CURRENT) {

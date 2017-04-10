@@ -19,6 +19,7 @@
 #include <GrainBoundariesOptionHandler.h>
 #include <GroupingOptionHandler.h>
 #include <SputteringOptionHandler.h>
+#include <MemUsageOptionHandler.h>
 #include "Options.h"
 
 namespace xolotlCore {
@@ -46,7 +47,9 @@ Options::Options() :
 		groupingMin(std::numeric_limits<int>::max()),
 		groupingWidthA(1),
 		groupingWidthB(1),
-		sputteringYield(0.0) {
+		sputteringYield(0.0),
+		memUsageRegistryType(xolotlMemUsage::IHandlerRegistry::std),
+        memUsageSamplingInterval(1) {
 
 	// Create the network option handler
 	auto networkHandler = new NetworkOptionHandler();
@@ -83,6 +86,8 @@ Options::Options() :
 	// Create the grouping option handler
 	auto sputteringHandler = new SputteringOptionHandler();
 
+    auto memUsageHandler = new MemUsageOptionHandler();
+
 	// Add our notion of which options we support.
 	optionsMap[networkHandler->key] = networkHandler;
 	optionsMap[petscHandler->key] = petscHandler;
@@ -101,6 +106,7 @@ Options::Options() :
 	optionsMap[gbHandler->key] = gbHandler;
 	optionsMap[groupingHandler->key] = groupingHandler;
 	optionsMap[sputteringHandler->key] = sputteringHandler;
+    optionsMap[memUsageHandler->key] = memUsageHandler;
 }
 
 Options::~Options(void) {

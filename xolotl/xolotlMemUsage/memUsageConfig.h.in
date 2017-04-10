@@ -1,0 +1,5 @@
+#ifndef XMEMUSAGE_MEMUSAGECONFIG_H
+#define XMEMUSAGE_MEMUSAGECONFIG_H
+// Configuration header for the xolotlMemUsage library.
+
+#endif // XMEMUSAGE_MEMUSAGECONFIG_H

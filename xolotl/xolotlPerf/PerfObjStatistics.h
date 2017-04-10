@@ -4,7 +4,6 @@
 #include <string>
 #include <map>
 #include <iostream>
-#include "MemStats.h"
 
 namespace xolotlPerf {
 
@@ -102,55 +101,6 @@ struct PerfObjStatistics : public PerfObjStatisticsBase {
             << "    " << "max: " << max << '\n' 
             << "    " << "average: " << average << '\n' 
             << "    " << "stdev: " << stdev << '\n';
-	}
-};
-
-
-// Specialization for memory statistics.
-// The default definition is suitable for scalars, but not for 
-// structures/classes.
-template<>
-struct PerfObjStatistics<MemStats> : public PerfObjStatisticsBase {
-    MemStats stats; //< statistics across all processes
-
-
-	/**
-	 * Construct a PerfObjStatistics struct with default values.
-	 * @param _name The metric name.
-	 */
-	PerfObjStatistics(void) {
-        // Nothing else to do.
-	}
-
-	/**
-	 * Construct a PerfObjStatistics struct as a copy of another.
-	 * @param obj The object to be copied.
-	 */
-	PerfObjStatistics(const PerfObjStatistics& other) :
-        PerfObjStatisticsBase(other),
-        stats(other.stats) {
-        // Nothing else to do.
-	}
-
-	/**
-	 * Replace my own values to be a copy of another PerfObjStatistics.
-	 * @param obj The object to be copied.
-	 */
-	PerfObjStatistics& operator=(const PerfObjStatistics& other) {
-		if (&other != this) {
-            PerfObjStatisticsBase::operator=(other);
-            stats = other.stats;
-		}
-		return *this;
-	}
-
-	/**
-	 * Output our name and statistics to the given output stream.
-	 * @param os The output stream on which we will write our statistics.
-	 */
-	void outputTo(std::ostream& os) const {
-        PerfObjStatisticsBase::outputTo(os);
-        stats.OutputTo(os, "    ");
 	}
 };
 

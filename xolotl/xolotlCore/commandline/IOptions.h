@@ -6,6 +6,7 @@
 #include <string>
 #include <map>
 #include <xolotlPerf.h>
+#include <xolotlMemUsage/xolotlMemUsage.h>
 
 namespace xolotlCore {
 
@@ -420,6 +421,28 @@ public:
 	 */
 	virtual void setSputteringYield(double yield) = 0;
 
+	/**
+	 * Which type of memory usage handlers should we use?
+	 *
+	 * @return The type of memory usage handler registry to use
+	 */
+	virtual xolotlMemUsage::IHandlerRegistry::RegistryType getMemUsageHandlerType(void) const = 0;
+
+	/**
+	 * Set the type of memory usage handlers to use.
+	 *
+	 * @param rtype The type of memory usage handler registry to use
+	 */
+	virtual void setMemUsageHandlerType(
+			xolotlMemUsage::IHandlerRegistry::RegistryType rtype) = 0;
+
+
+    /**
+     * Retrieve the interval used for sampling memory usage.
+     *
+     * @return Interval to use for sampling memory usage.
+     */
+    virtual xolotlMemUsage::IHandlerRegistry::SamplingInterval getMemUsageSamplingInterval(void) const = 0;
 };
 //end class IOptions
 

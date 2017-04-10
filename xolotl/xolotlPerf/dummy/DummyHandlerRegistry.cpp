@@ -30,14 +30,5 @@ std::shared_ptr<IHardwareCounter> DummyHandlerRegistry::getHardwareCounter(
 	return std::make_shared < DummyHardwareCounter > (name, ctrSpec);
 }
 
-/**
- * Obtain a memory sampling region.
- */
-std::shared_ptr<IMemSamplingRegion> DummyHandlerRegistry::getMemSamplingRegion(
-        const std::string& name) {
-
-    return std::make_shared<DummyMemSamplingRegion>(name);
-}
-
 } // namespace xolotlPerf
 

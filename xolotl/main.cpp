@@ -19,11 +19,14 @@
 #include <SolverHandlerFactory.h>
 #include <ISolverHandler.h>
 #include <IReactionHandlerFactory.h>
+#include <xolotlMemUsage.h>
 #include <ctime>
 
 using namespace std;
 using std::shared_ptr;
+
 namespace xperf = xolotlPerf;
+namespace xmem = xolotlMemUsage;
 
 //! This operation prints the start message
 void printStartMessage() {
@@ -139,8 +142,10 @@ int main(int argc, char **argv) {
 	assert(!networkFilename.empty());
 
 	try {
-		// Set up our performance data infrastructure.
+		// Set up our performance data and memory usage tracking infrastructure.
 		xperf::initialize(opts.getPerfHandlerType());
+        xmem::initialize(opts.getMemUsageHandlerType(),
+                            opts.getMemUsageSamplingInterval());
 
 		// Initialize MPI. We do this instead of leaving it to some
 		// other package (e.g., PETSc), because we want to avoid problems
@@ -176,8 +181,10 @@ int main(int argc, char **argv) {
 		auto handlerRegistry = xolotlPerf::getHandlerRegistry();
 		auto totalTimer = handlerRegistry->getTimer("total");
 		totalTimer->start();
-        auto totalMemRegion = handlerRegistry->getMemSamplingRegion("total");
-        totalMemRegion->start();
+
+        auto memUsageHandlerRegistry = xmem::getHandlerRegistry();
+        auto totalMemUsageSampler = memUsageHandlerRegistry->getMemUsageSampler("total");
+        totalMemUsageSampler->start();
 
 		// Initialize and get the solver handler
 		bool dimOK = xolotlFactory::initializeDimension(opts);
@@ -204,8 +211,8 @@ int main(int argc, char **argv) {
 				solvHandler, opts);
 
 		// Launch the PetscSolver
-        auto solverMemRegion = handlerRegistry->getMemSamplingRegion("solver");
-        solverMemRegion->start();
+        auto solverMemUsageSampler = memUsageHandlerRegistry->getMemUsageSampler("solver");
+        solverMemUsageSampler->start();
 		launchPetscSolver(solver, handlerRegistry);
 
 		// Finalize our use of the solver.
@@ -213,9 +220,9 @@ int main(int argc, char **argv) {
 		solverFinalizeTimer->start();
 		solver->finalize();
 		solverFinalizeTimer->stop();
-        solverMemRegion->stop();
+        solverMemUsageSampler->stop();
 
-        totalMemRegion->stop();
+        totalMemUsageSampler->stop();
 		totalTimer->stop();
 
 		// Report statistics about the performance data collected during
@@ -224,6 +231,14 @@ int main(int argc, char **argv) {
         if (rank == 0) {
             handlerRegistry->reportStatistics(std::cout, perfStats);
         }
+
+        // Report on memory usage data collected during the run we
+        // just completed.
+        auto memStats = memUsageHandlerRegistry->collectStatistics();
+        if (rank == 0) {
+            memUsageHandlerRegistry->reportStatistics(std::cout, memStats);
+        }
+
 	} catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;
 		std::cerr << "Aborting." << std::endl;

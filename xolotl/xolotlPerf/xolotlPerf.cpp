@@ -15,6 +15,7 @@ static std::shared_ptr<IHandlerRegistry> theHandlerRegistry;
 
 // Create the desired type of handler registry.
 void initialize(IHandlerRegistry::RegistryType rtype) {
+
 	switch (rtype) {
 	case IHandlerRegistry::dummy:
 		theHandlerRegistry = std::make_shared<DummyHandlerRegistry>();

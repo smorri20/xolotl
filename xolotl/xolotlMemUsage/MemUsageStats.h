@@ -1,5 +1,5 @@
-#ifndef XOLOTLPERF_MEM_STATS_H
-#define XOLOTLPERF_MEM_STATS_H
+#ifndef XMEMUSAGE_MEM_STATS_H
+#define XMEMUSAGE_MEM_STATS_H
 
 #include "mpi.h"
 #include <iostream>
@@ -8,18 +8,18 @@
 #include <cmath>
 #include <limits>
 
-namespace xolotlPerf {
+namespace xolotlMemUsage {
 
-struct MemPageStats {
+struct MemUsagePageStats {
     uint64_t min;
     uint64_t max;
     double avg;
     double stdev;
 
     /**
-     * Construct a MemPageStats with useful initial values.
+     * Construct a MemUsagePageStats with useful initial values.
      */
-    MemPageStats(void)
+    MemUsagePageStats(void)
       : min(std::numeric_limits<uint64_t>::max()),
         max(std::numeric_limits<uint64_t>::min()),
         avg(std::numeric_limits<double>::quiet_NaN()),
@@ -30,9 +30,9 @@ struct MemPageStats {
 
 
     /**
-     * Construct a MemPageStats from existing valid data.
+     * Construct a MemUsagePageStats from existing valid data.
      */
-    MemPageStats(uint64_t _min,
+    MemUsagePageStats(uint64_t _min,
                     uint64_t _max,
                     double _avg,
                     double _stdev = std::numeric_limits<double>::quiet_NaN())
@@ -55,28 +55,28 @@ struct MemPageStats {
 
 };
 
-struct MemStats {
-    MemPageStats vmSize;
-    MemPageStats vmRSS;
-    MemPageStats rss;
-    MemPageStats text;
-    MemPageStats dataAndStack;
+struct MemUsageStats {
+    MemUsagePageStats vmSize;
+    MemUsagePageStats vmRSS;
+    MemUsagePageStats rss;
+    MemUsagePageStats text;
+    MemUsagePageStats dataAndStack;
 
 
     /**
-     * Construct a MemStats with useful initial values.
+     * Construct a MemUsageStats with useful initial values.
      */
-    MemStats(void) = default;
+    MemUsageStats(void) = default;
 
 
     /**
-     * Construct a MemStats from existing data.
+     * Construct a MemUsageStats from existing data.
      */
-    MemStats(const MemPageStats& _vmSize,
-                const MemPageStats& _vmRSS,
-                const MemPageStats& _rss,
-                const MemPageStats& _text,
-                const MemPageStats& _dataAndStack)
+    MemUsageStats(const MemUsagePageStats& _vmSize,
+                const MemUsagePageStats& _vmRSS,
+                const MemUsagePageStats& _rss,
+                const MemUsagePageStats& _text,
+                const MemUsagePageStats& _dataAndStack)
       : vmSize(_vmSize),
         vmRSS(_vmRSS),
         rss(_rss),
@@ -89,7 +89,7 @@ struct MemStats {
 
 
     void OutputTo(std::ostream& os, std::string prefix = "") const {
-        // TODO should we just define an ostream inserter for the MemPageStats?
+        // TODO should we just define an ostream inserter for the MemUsagePageStats?
 
         os << std::fixed << std::setprecision(2);
         vmSize.OutputTo(os, prefix + "vmSize: ");
@@ -106,8 +106,8 @@ struct MemStats {
     }
 
     template<typename T>
-    void MinReduceKnown(MemPageStats MemStats::*pMember,
-                    const MemStats& myValue,
+    void MinReduceKnown(MemUsagePageStats MemUsageStats::*pMember,
+                    const MemUsageStats& myValue,
                     int myRank,
                     int mpiDatatype,
                     bool knowObject) {
@@ -119,8 +119,8 @@ struct MemStats {
     }
 
     template<typename T>
-    void MaxReduceKnown(MemPageStats MemStats::*pMember,
-                    const MemStats& myValue,
+    void MaxReduceKnown(MemUsagePageStats MemUsageStats::*pMember,
+                    const MemUsageStats& myValue,
                     int myRank,
                     int mpiDatatype,
                     bool knowObject) {
@@ -131,8 +131,8 @@ struct MemStats {
     }
 
     template<typename T>
-    void AvgReduceKnown(MemPageStats MemStats::*pMember,
-                    const MemStats& myValue,
+    void AvgReduceKnown(MemUsagePageStats MemUsageStats::*pMember,
+                    const MemUsageStats& myValue,
                     int myRank,
                     int mpiDatatype,
                     bool knowObject,
@@ -148,8 +148,8 @@ struct MemStats {
     }
 
     template<typename T>
-    void StdevReduceKnown(MemPageStats MemStats::*pMember,
-                            const MemStats& myValue,
+    void StdevReduceKnown(MemUsagePageStats MemUsageStats::*pMember,
+                            const MemUsageStats& myValue,
                             int myRank,
                             int mpiDatatype,
                             bool knowObject,
@@ -166,13 +166,13 @@ struct MemStats {
         }
     }
 
-    void Aggregate(const MemStats& localValue,
+    void Aggregate(const MemUsageStats& localValue,
                     int myRank,
                     bool localIsValid,
                     uint32_t processCount);
 };
 
 
-} // end namespace xolotlPerf
+} // end namespace xolotlMemUsage
 
-#endif // XOLOTLPERF_MEM_STATS_H
+#endif // XMEMUSAGE_MEM_STATS_H

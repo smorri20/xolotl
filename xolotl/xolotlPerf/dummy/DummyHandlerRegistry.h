@@ -5,7 +5,6 @@
 #include "xolotlPerf/dummy/DummyTimer.h" //Dependency Generated Source:DummyHandlerRegistry Target:DummyTimer
 #include "xolotlPerf/dummy/DummyEventCounter.h" //Dependency Generated Source:DummyHandlerRegistry Target:DummyEventCounter
 #include "xolotlPerf/dummy/DummyHardwareCounter.h" //Dependency Generated Source:DummyHandlerRegistry Target:DummyHardwareCounter
-#include "xolotlPerf/dummy/DummyMemSamplingRegion.h"
 
 
 namespace xolotlPerf {
@@ -36,19 +35,13 @@ public:
 	virtual std::shared_ptr<IHardwareCounter> getHardwareCounter(
 			const std::string& name, const IHardwareCounter::SpecType& ctrSpec);
 
-    /**
-     * Obtain a memory sampling region.
-     */
-    virtual std::shared_ptr<IMemSamplingRegion> getMemSamplingRegion(
-            const std::string& name);
-
 	/**
 	 * Collect statistics about any performance data collected by
 	 * processes of the program.
 	 * This method is a stub.
 	 */
 	virtual GlobalPerfStats collectStatistics(void) const {
-        // Nothing to do.
+        return GlobalPerfStats();
     }
 
 	/**

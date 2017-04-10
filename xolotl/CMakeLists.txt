@@ -43,6 +43,8 @@ add_subdirectory(gov.ornl.xolotl.preprocessor)
 
 # Build the performance library first, so it can be used by other libraries.
 add_subdirectory(xolotlPerf)
+# A memory usage sampler.
+add_subdirectory(xolotlMemUsage)
 # Add the visualization directory
 add_subdirectory(xolotlViz)
 # Add the I/O, data structures and reactor directories
@@ -96,14 +98,23 @@ include_directories(${CMAKE_SOURCE_DIR}/xolotlFactory/solverHandler)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlFactory/reactionHandler)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlSolver)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlMemUsage)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlViz)
 include_directories(${PETSC_INCLUDES})
 
 configure_file ("${CMAKE_SOURCE_DIR}/XolotlConfig.h.in" "${CMAKE_SOURCE_DIR}/XolotlConfig.h")
 
 # Setup the library list
-set(XOLOTL_LIBS xolotlReactants xolotlSolver xolotlIO xolotlPerf xolotlViz 
-xolotlFactory xolotlCL ${PETSC_LIBRARIES} ${HDF5_LIBRARIES})
+set(XOLOTL_LIBS xolotlReactants 
+                xolotlSolver 
+                xolotlIO 
+                xolotlPerf 
+                xolotlMemUsage 
+                xolotlViz 
+                xolotlFactory 
+                xolotlCL
+                ${PETSC_LIBRARIES}
+                ${HDF5_LIBRARIES})
 
 # Add an executable for the main program
 ADD_EXECUTABLE (xolotl main.cpp)

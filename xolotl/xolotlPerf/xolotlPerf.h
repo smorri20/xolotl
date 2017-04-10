@@ -50,6 +50,7 @@ inline IHandlerRegistry::RegistryType toPerfRegistryType(
  */
 void initialize(IHandlerRegistry::RegistryType rtype);
 
+
 /**
  * Access the handler registry.
  * Throws a std::runtime_error if called before the xolotlPerf classes

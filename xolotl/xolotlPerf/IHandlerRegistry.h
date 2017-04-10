@@ -5,10 +5,10 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <chrono>
 #include "ITimer.h"
 #include "IEventCounter.h"
 #include "IHardwareCounter.h"
-#include "IMemSamplingRegion.h"
 #include "PerfObjStatistics.h"
 
 
@@ -30,7 +30,6 @@ public:
         PerfObjStatsMap<ITimer::GlobalStatsType> timerStats;
         PerfObjStatsMap<IEventCounter::GlobalStatsType> counterStats;
         PerfObjStatsMap<IHardwareCounter::GlobalStatsType> hwCounterStats;
-        PerfObjStatsMap<IMemSamplingRegion::GlobalStatsType> memStats;
     };
 
 
@@ -41,6 +40,7 @@ public:
 		os,         //< Use operating system/runtime API.
 		papi,       //< Use PAPI to collect performance data.
 	};
+
 
 	/**
 	 * The destructor
@@ -65,13 +65,6 @@ public:
 	virtual std::shared_ptr<IHardwareCounter> getHardwareCounter(
 			const std::string& name,
 			const IHardwareCounter::SpecType& ctrSpec) = 0;
-
-    /**
-     * Obtain a memory sampling region.
-     */
-    virtual std::shared_ptr<IMemSamplingRegion> getMemSamplingRegion(
-            const std::string& name) = 0;
-
 
 	/**
 	 * Collect statistics about any performance data collected by
