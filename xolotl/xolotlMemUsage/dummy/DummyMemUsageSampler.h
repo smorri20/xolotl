@@ -12,7 +12,8 @@ namespace xolotlMemUsage {
  * Implements the interface, so that the caller's code doesn't
  * have to change, but does nothing.
  */
-class DummyMemUsageSampler : public IMemUsageSampler, xolotlCore::Identifiable {
+class DummyMemUsageSampler : public IMemUsageSampler, 
+                                public xolotlCore::Identifiable {
 
 private:
     /**

@@ -141,21 +141,18 @@ BOOST_AUTO_TEST_CASE(aggregateStats) {
 		BOOST_TEST_MESSAGE("done.");
 
 		// compute statistics about the program's event counts
-		xperf::PerfObjStatsMap<xperf::ITimer::ValType> timerStats;
-		xperf::PerfObjStatsMap<xperf::IEventCounter::ValType> ctrStats;
-		xperf::PerfObjStatsMap<xperf::IHardwareCounter::CounterType> hwCtrStats;
-		reg->collectStatistics(timerStats, ctrStats, hwCtrStats);
+		auto perfStats = reg->collectStatistics();
 
 		// Verify the statistics collected.
 		// Only rank 0 does the verification.
 		if (cwRank == 0) {
 			// First check times.  Should be very close to the nTimedSeconds
 			// with little spread.
-			BOOST_REQUIRE_EQUAL(timerStats.size(), 1U);
+			BOOST_REQUIRE_EQUAL(perfStats.timerStats.size(), 1U);
 			xperf::PerfObjStatistics<xperf::ITimer::ValType>& timerStatsObj =
-					timerStats.begin()->second;
+					perfStats.timerStats.begin()->second;
 
-			BOOST_TEST_MESSAGE("timer name: " << timerStatsObj.name);
+			BOOST_TEST_MESSAGE("timer name: " << perfStats.timerStats.begin()->first);
 			BOOST_TEST_MESSAGE(
 					"timer process count: " << timerStatsObj.processCount);
 			BOOST_TEST_MESSAGE("timer average: " << timerStatsObj.average);
@@ -163,7 +160,7 @@ BOOST_AUTO_TEST_CASE(aggregateStats) {
 			BOOST_TEST_MESSAGE("timer max: " << timerStatsObj.max);
 			BOOST_TEST_MESSAGE("timer stdev: " << timerStatsObj.stdev);
 
-			BOOST_REQUIRE_EQUAL(timerStatsObj.name, "testTimer");
+			BOOST_REQUIRE_EQUAL(perfStats.timerStats.begin()->first, "testTimer");
 			BOOST_REQUIRE_EQUAL(timerStatsObj.processCount,
 					(unsigned int )cwSize);
 			BOOST_REQUIRE_CLOSE(timerStatsObj.average, nTimedSeconds, 0.03);
@@ -185,11 +182,11 @@ BOOST_AUTO_TEST_CASE(aggregateStats) {
 			double expStdev = sqrt(
 					(squaredCountSum / cwSize) - expAverage * expAverage);
 
-			BOOST_REQUIRE_EQUAL(ctrStats.size(), 1U);
+			BOOST_REQUIRE_EQUAL(perfStats.counterStats.size(), 1U);
 			xperf::PerfObjStatistics<xperf::IEventCounter::ValType>& ctrStatsObj =
-					ctrStats.begin()->second;
+					perfStats.counterStats.begin()->second;
 
-			BOOST_TEST_MESSAGE("ctr name: " << ctrStatsObj.name);
+			BOOST_TEST_MESSAGE("ctr name: " << perfStats.counterStats.begin()->first);
 			BOOST_TEST_MESSAGE(
 					"ctr process count: " << ctrStatsObj.processCount);
 			BOOST_TEST_MESSAGE("ctr average: " << ctrStatsObj.average);
@@ -197,7 +194,7 @@ BOOST_AUTO_TEST_CASE(aggregateStats) {
 			BOOST_TEST_MESSAGE("ctr max: " << ctrStatsObj.max);
 			BOOST_TEST_MESSAGE("ctr stdev: " << ctrStatsObj.stdev);
 
-			BOOST_REQUIRE_EQUAL(ctrStatsObj.name, "testCounter");
+			BOOST_REQUIRE_EQUAL(perfStats.counterStats.begin()->first, "testCounter");
 			BOOST_REQUIRE_EQUAL(ctrStatsObj.processCount,
 					(unsigned int )cwSize);
 			BOOST_REQUIRE_EQUAL(ctrStatsObj.min, expMin);
