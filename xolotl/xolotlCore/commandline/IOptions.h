@@ -443,6 +443,15 @@ public:
      * @return Interval to use for sampling memory usage.
      */
     virtual xolotlMemUsage::IHandlerRegistry::SamplingInterval getMemUsageSamplingInterval(void) const = 0;
+
+    
+    /**
+     * Set the sampling interval to use for memory usage tracking.
+     *
+     * @param interval The memory usage tracking sampling interval to use.
+     */
+    virtual void setMemUsageSamplingInterval(xolotlMemUsage::IHandlerRegistry::SamplingInterval interval) = 0;
+
 };
 //end class IOptions
 

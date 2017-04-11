@@ -655,6 +655,16 @@ public:
     virtual xolotlMemUsage::IHandlerRegistry::SamplingInterval getMemUsageSamplingInterval(void) const {
         return memUsageSamplingInterval;
     }
+
+    /**
+     * Set the sampling interval to use for memory usage tracking.
+     *
+     * @param interval The memory usage tracking sampling interval to use.
+     */
+    virtual void setMemUsageSamplingInterval(xolotlMemUsage::IHandlerRegistry::SamplingInterval interval) {
+
+        memUsageSamplingInterval = interval;
+    }
 };
 //end class Options
 
