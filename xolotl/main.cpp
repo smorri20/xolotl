@@ -234,9 +234,9 @@ int main(int argc, char **argv) {
 
         // Report on memory usage data collected during the run we
         // just completed.
-        auto memStats = memUsageHandlerRegistry->collectStatistics();
+        auto memUsageData = memUsageHandlerRegistry->collectData();
         if (rank == 0) {
-            memUsageHandlerRegistry->reportStatistics(std::cout, memStats);
+            memUsageHandlerRegistry->reportData(std::cout, memUsageData);
         }
 
 	} catch (const std::exception& e) {

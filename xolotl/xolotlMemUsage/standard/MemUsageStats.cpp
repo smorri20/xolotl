@@ -1,11 +1,11 @@
 #include "mpi.h"
-#include "MemUsageStats.h"
+#include "xolotlMemUsage/standard/MemUsageStats.h"
 
 namespace xolotlMemUsage {
 
 // TODO This is very ugly.  Surely there's a better way.
 void
-MemUsageStats::Aggregate(const MemUsageStats& localValue,
+MemUsageStats::Aggregate(std::shared_ptr<MemUsageStats> localValue,
                     int myRank,
                     bool localIsValid,
                     uint32_t processCount) {

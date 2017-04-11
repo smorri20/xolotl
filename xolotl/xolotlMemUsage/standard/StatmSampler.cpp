@@ -44,14 +44,14 @@ StatmSampler::SamplingThreadType::Sample(void)
 }
 
 
-MemUsageStats
+std::shared_ptr<MemUsageStats>
 StatmData::GetCurrentStats(void) const
 {
-    return MemUsageStats(vmSize.GetPageStats(nSamples),
-                vmRSS.GetPageStats(nSamples),
-                rss.GetPageStats(nSamples),
-                text.GetPageStats(nSamples),
-                dataAndStack.GetPageStats(nSamples));
+    return std::make_shared<MemUsageStats>(vmSize.GetPageStats(nSamples),
+                                vmRSS.GetPageStats(nSamples),
+                                rss.GetPageStats(nSamples),
+                                text.GetPageStats(nSamples),
+                                dataAndStack.GetPageStats(nSamples));
 }
 
 

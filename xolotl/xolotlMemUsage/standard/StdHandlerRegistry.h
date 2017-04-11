@@ -4,7 +4,7 @@
 #include <map>
 #include <memory>
 #include "xolotlMemUsage/IHandlerRegistry.h"
-#include "xolotlMemUsage/MemUsageObjStatistics.h"
+#include "xolotlMemUsage/standard/MemUsageObjStatistics.h"
 
 namespace xolotlMemUsage {
 
@@ -13,6 +13,15 @@ namespace xolotlMemUsage {
  * collect data (as opposed to low-overhead stubs).
  */
 class StdHandlerRegistry: public IHandlerRegistry {
+public:
+    /**
+     * Globally aggregated memory usage statistics for all
+     * data types we know how to collect.
+     */
+    struct GlobalMemUsageStats : public IHandlerRegistry::GlobalData {
+        MemUsageObjStatsMap<MemUsageObjStatistics<MemUsageStats> > memStats;
+    };
+
 private:
 	/**
 	 * Collect memory usage data from all program processes.
@@ -40,7 +49,7 @@ private:
 	 * @return The value of the named object.
 	 */
 	template<typename T, typename V>
-	std::pair<bool, V> GetObjValue(
+    std::shared_ptr<V> GetObjValue(
 			const std::map<std::string, std::shared_ptr<T> >& myObjs,
 			const std::string& objName) const;
 
@@ -100,19 +109,19 @@ public:
 
 
 	/**
-	 * Collect statistics about any memory usage data collected by
+	 * Collect data about any memory usage data collected by
 	 * processes of the program.
 	 */
-	virtual IHandlerRegistry::GlobalMemUsageStats collectStatistics(void) const;
+    virtual std::shared_ptr<IHandlerRegistry::GlobalData> collectData(void) const;
 
 	/**
-	 * Report memory usage data statistics to the given stream.
+	 * Report memory usage data to the given stream.
 	 *
-	 * @param os Stream on which to output statistics.
-     * @param stats Statistics to be reported.
+	 * @param os Stream on which to output data.
+     * @param stats The data to be reported.
 	 */
-	virtual void reportStatistics(std::ostream& os,
-                        const IHandlerRegistry::GlobalMemUsageStats& stats) const;
+	virtual void reportData(std::ostream& os,
+                        std::shared_ptr<IHandlerRegistry::GlobalData> data) const;
 };
 
 } // namespace xolotlMemUsage

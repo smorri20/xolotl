@@ -25,26 +25,31 @@ public:
      * Obtain a memory usage sampler.
      */
     virtual std::shared_ptr<IMemUsageSampler> getMemUsageSampler(
-            const std::string& name);
+            const std::string& name) {
+
+        return std::make_shared<DummyMemUsageSampler>(name);
+    }
+
 
 	/**
-	 * Collect statistics about any memory usage data collected by
-	 * processes of the program.
+	 * Collect data about any memory usage collected by
+	 * any processes of the program.
 	 * This method is a stub.
 	 */
-	virtual GlobalMemUsageStats collectStatistics(void) const {
-        return GlobalMemUsageStats();
+	virtual std::shared_ptr<GlobalData> collectData(void) const {
+
+        return std::make_shared<GlobalData>();
     }
 
 	/**
-	 * Report memory usage data statistics to the given stream.
+	 * Report memory usage data to the given stream.
 	 * This method is a stub in this class.
 	 *
-	 * @param os Stream on which to output statistics.
-     * @param stats Collected statistics.
+	 * @param os Stream on which to output data.
+     * @param stats Collected data.
 	 */
-	virtual void reportStatistics(std::ostream& os,
-                                    const GlobalMemUsageStats& stats) const {
+	virtual void reportData(std::ostream& os,
+                                    std::shared_ptr<GlobalData> data) const {
 
         // Nothing to do.
     }

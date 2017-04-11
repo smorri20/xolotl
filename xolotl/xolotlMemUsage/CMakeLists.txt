@@ -18,14 +18,15 @@ file(GLOB DUMMYHEADERS *.h dummy/*.h)
 file(GLOB DUMMYSRC *.cpp dummy/*.cpp)
 
 # Always include the Standard classes, since we will always build them.
-set(STD_HEADERS standard/StdHandlerRegistry.h standard/MemUsageSampler.h)
-set(STD_SRC standard/StdHandlerRegistry.cpp standard/StatmSampler.cpp)
+set(STD_HEADERS standard/StdHandlerRegistry.h standard/MemUsageSampler.h standard/MemUsageStats.h)
+set(STD_SRC standard/StdHandlerRegistry.cpp standard/StatmSampler.cpp standard/MemUsageStats.cpp)
 
-set(HEADERS ${COMMONHEADERS} ${DUMMYHEADERS} ${STD_HEADERS})
-set(SRC ${COMMONSRC} ${DUMMYSRC} ${STD_SRC})
+# Always include the profile classes.
+#set(PROF_HEADERS profile/ProfileHandlerRegistry.h)
+#set(PROF_SRC profile/ProfileHandlerRegistry.cpp)
 
-message(STATUS "xolotlMemUsage: are we even getting here?")
-
+set(HEADERS ${COMMONHEADERS} ${DUMMYHEADERS} ${STD_HEADERS} ${PROF_HEADERS})
+set(SRC ${COMMONSRC} ${DUMMYSRC} ${STD_SRC} ${PROF_SRC})
 
 # Specify the library to build
 add_library(${LIBRARY_NAME} STATIC ${SRC})
@@ -33,7 +34,6 @@ add_library(${LIBRARY_NAME} STATIC ${SRC})
 #Install the xolotl header files
 install(FILES ${HEADERS} DESTINATION include)
 install(TARGETS ${LIBRARY_NAME} DESTINATION lib)
-
 
 # Configure file for the memory usage library.
 # Note: must do this after all the other checks, or else the 

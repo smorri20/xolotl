@@ -54,6 +54,7 @@ public:
             // Determine type of handler to use.
             xolotlMemUsage::IHandlerRegistry::RegistryType rtype = 
                 xolotlMemUsage::toRegistryType(tokens[0]);
+            opt->setMemUsageHandlerType(rtype);
 
             // Check if we need to set the sampling interval.
             if((rtype != xolotlMemUsage::IHandlerRegistry::dummy) and

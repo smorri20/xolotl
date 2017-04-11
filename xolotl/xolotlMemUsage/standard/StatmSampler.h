@@ -5,7 +5,7 @@
 #include <limits>
 #include <unistd.h>
 #include "xolotlMemUsage/standard/AsyncSampler.h"
-#include "xolotlMemUsage/MemUsageStats.h"
+#include "xolotlMemUsage/standard/MemUsageStats.h"
 
 namespace xolotlMemUsage {
 
@@ -72,7 +72,7 @@ struct StatmData
         nSamples++;
     }
 
-    MemUsageStats GetCurrentStats(void) const;
+    std::shared_ptr<MemUsageStats> GetCurrentStats(void) const;
 };
 
 struct StatmSupportData

@@ -4,7 +4,7 @@
 #include <string>
 #include <map>
 #include <iostream>
-#include "MemUsageStats.h"
+#include "xolotlMemUsage/standard/MemUsageStats.h"
 
 namespace xolotlMemUsage {
 

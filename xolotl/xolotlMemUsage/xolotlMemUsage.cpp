@@ -5,6 +5,10 @@
 #include "xolotlMemUsage/dummy/DummyHandlerRegistry.h"
 #include "xolotlMemUsage/standard/StdHandlerRegistry.h"
 
+#if READY
+#include "xolotlMemUsage/profile/ProfileHandlerRegistry.h"
+#endif // READY
+
 
 namespace xolotlMemUsage {
 
@@ -22,6 +26,12 @@ void initialize(IHandlerRegistry::RegistryType rtype,
 	case IHandlerRegistry::std:
         theHandlerRegistry = std::make_shared<StdHandlerRegistry>(samplingInterval);
 		break;
+
+#if READY
+    case IHandlerRegistry::profile:
+        theHandlerRegistry = std::make_shared<ProfileHandlerRegistry>(samplingInterval);
+        break;
+#endif // READY
 
 	default:
 		throw std::invalid_argument(

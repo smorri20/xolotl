@@ -1,23 +1,21 @@
 #ifndef XMEMUSAGE_IMEMUSAGE_SAMPLER_H
 #define XMEMUSAGE_IMEMUSAGE_SAMPLER_H
 
+#include <memory>
 #include "xolotlCore/IIdentifiable.h"
-#include "xolotlMemUsage/MemUsageStats.h"
-#include "xolotlMemUsage/MemUsageObjStatistics.h"
 
 namespace xolotlMemUsage {
 
 class IMemUsageSampler : public virtual xolotlCore::IIdentifiable {
 
 public:
-    /// Type of the aggregate data we collect
-    typedef MemUsageStats ValType;
-
     /**
-     * Type of globally aggregated value statistics.
-     * TODO - do we need MemUsageObjStatistics, or is MemUsageStats sufficient?
+     * Memory usage data that we can collect.
+     * This is a base class for derived classes to extend.
      */
-    typedef MemUsageObjStatistics<MemUsageStats> GlobalStatsType;
+    struct MemUsageData {
+        virtual ~MemUsageData(void) { } // required to make class polymorphic
+    };
 
     /// Destroy the memory usage sampler.
     virtual ~IMemUsageSampler(void) { }
@@ -29,7 +27,7 @@ public:
     virtual void stop(void) = 0;
 
     /// Obtain the sampler's current values.
-    virtual ValType getValue(void) const = 0;
+    virtual std::shared_ptr<MemUsageData> getValue(void) const = 0;
 };
 
 }//end namespace xolotlMemUsage

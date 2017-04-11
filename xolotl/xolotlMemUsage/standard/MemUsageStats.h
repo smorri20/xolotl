@@ -7,6 +7,8 @@
 #include <sstream>
 #include <cmath>
 #include <limits>
+#include "xolotlMemUsage/IMemUsageSampler.h"
+
 
 namespace xolotlMemUsage {
 
@@ -55,7 +57,7 @@ struct MemUsagePageStats {
 
 };
 
-struct MemUsageStats {
+struct MemUsageStats : public IMemUsageSampler::MemUsageData {
     MemUsagePageStats vmSize;
     MemUsagePageStats vmRSS;
     MemUsagePageStats rss;
@@ -107,39 +109,39 @@ struct MemUsageStats {
 
     template<typename T>
     void MinReduceKnown(MemUsagePageStats MemUsageStats::*pMember,
-                    const MemUsageStats& myValue,
+                    std::shared_ptr<MemUsageStats> myValue,
                     int myRank,
                     int mpiDatatype,
                     bool knowObject) {
 
         T* target = (myRank == 0) ? &((this->*pMember).min) : nullptr;
-        T myCandidate = knowObject ? (myValue.*pMember).min : std::numeric_limits<T>::max();
+        T myCandidate = knowObject ? (myValue.get()->*pMember).min : std::numeric_limits<T>::max();
         
         MPI_Reduce(&myCandidate, target, 1, mpiDatatype, MPI_MIN, 0, MPI_COMM_WORLD);
     }
 
     template<typename T>
     void MaxReduceKnown(MemUsagePageStats MemUsageStats::*pMember,
-                    const MemUsageStats& myValue,
+                    std::shared_ptr<MemUsageStats> myValue,
                     int myRank,
                     int mpiDatatype,
                     bool knowObject) {
         
         T* target = (myRank == 0) ? &((this->*pMember).max) : nullptr;
-        T myCandidate = knowObject ? (myValue.*pMember).max : std::numeric_limits<T>::min();
+        T myCandidate = knowObject ? (myValue.get()->*pMember).max : std::numeric_limits<T>::min();
         MPI_Reduce(&myCandidate, target, 1, mpiDatatype, MPI_MAX, 0, MPI_COMM_WORLD);
     }
 
     template<typename T>
     void AvgReduceKnown(MemUsagePageStats MemUsageStats::*pMember,
-                    const MemUsageStats& myValue,
+                    std::shared_ptr<MemUsageStats> myValue,
                     int myRank,
                     int mpiDatatype,
                     bool knowObject,
                     uint32_t processCount) {
 
         T sum;
-        T myContribution = knowObject ? (myValue.*pMember).avg : 0;
+        T myContribution = knowObject ? (myValue.get()->*pMember).avg : 0;
         MPI_Reduce(&myContribution, &sum, 1, mpiDatatype, MPI_SUM, 0, MPI_COMM_WORLD);
 
         if(myRank == 0) {
@@ -149,14 +151,14 @@ struct MemUsageStats {
 
     template<typename T>
     void StdevReduceKnown(MemUsagePageStats MemUsageStats::*pMember,
-                            const MemUsageStats& myValue,
+                            std::shared_ptr<MemUsageStats> myValue,
                             int myRank,
                             int mpiDatatype,
                             bool knowObject,
                             uint32_t processCount) {
 
         T valSquaredSum;
-        T myContribution = knowObject ? ((myValue.*pMember).avg * (myValue.*pMember).avg) : 0;
+        T myContribution = knowObject ? ((myValue.get()->*pMember).avg * (myValue.get()->*pMember).avg) : 0;
         MPI_Reduce(&myContribution, &valSquaredSum, 1, mpiDatatype, MPI_SUM, 0, MPI_COMM_WORLD);
 
         if(myRank == 0) {
@@ -166,7 +168,7 @@ struct MemUsageStats {
         }
     }
 
-    void Aggregate(const MemUsageStats& localValue,
+    void Aggregate(std::shared_ptr<MemUsageStats> localValue,
                     int myRank,
                     bool localIsValid,
                     uint32_t processCount);

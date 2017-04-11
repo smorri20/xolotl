@@ -30,6 +30,10 @@ inline IHandlerRegistry::RegistryType toRegistryType(
 		ret = IHandlerRegistry::dummy;
 	} else if (arg == "std") {
 		ret = IHandlerRegistry::std;
+#if READY
+    } else if (arg == "profile") {
+        ret = IHandlerRegistry::profile; 
+#endif // READY
 	} else {
 		std::ostringstream estr;
 		estr << "Invalid memory usage handler argument \"" << arg << "\" seen.";

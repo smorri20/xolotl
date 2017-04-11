@@ -7,7 +7,6 @@
 #include <memory>
 #include <chrono>
 #include "IMemUsageSampler.h"
-#include "MemUsageObjStatistics.h"
 
 
 namespace xolotlMemUsage {
@@ -20,18 +19,21 @@ class IHandlerRegistry {
 public:
 
     /**
-     * Globally aggregated memory usage statistics for all
+     * Globally aggregated memory usage data for all
      * data types we know how to collect.
+     * This is a base class for derived classes to extend.
      */
-    struct GlobalMemUsageStats {
-        MemUsageObjStatsMap<IMemUsageSampler::GlobalStatsType> memStats;
+    struct GlobalData {
+        
+        virtual ~GlobalData(void) { }   // required to make GlobalData polymorphic
     };
 
 
 	/// Possible types of memory usage handler registries.
 	enum RegistryType {
-		dummy,     //< Use stub classes that do not collect any data
-		std        //< Use the default API.
+		dummy,      //< Use stub classes that do not collect any data.
+		std,        //< Collect memory usage statistics.
+        profile     //< Collect memory usage profiles.
 	};
 
 
@@ -59,7 +61,7 @@ public:
 	 * Collect statistics about any memory usage data collected by
 	 * processes of the program.
 	 */
-    virtual GlobalMemUsageStats collectStatistics(void) const = 0;
+    virtual std::shared_ptr<GlobalData> collectData(void) const = 0;
 
 	/**
 	 * Report memory usage data statistics to the given stream.
@@ -68,8 +70,8 @@ public:
      * @param stats The memory usage statistics to display.
 	 *
 	 */
-	virtual void reportStatistics(std::ostream& os, 
-                                const GlobalMemUsageStats& stats) const = 0;
+	virtual void reportData(std::ostream& os,
+                                std::shared_ptr<GlobalData> data) const = 0;
 };
 
 } //end namespace xolotlMemUsage

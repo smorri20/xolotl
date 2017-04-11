@@ -152,20 +152,15 @@ void StdHandlerRegistry::CollectMyObjectNames(
 
 
 template<typename T, typename V>
-std::pair<bool, V> StdHandlerRegistry::GetObjValue(
+std::shared_ptr<V> StdHandlerRegistry::GetObjValue(
 		const std::map<std::string, std::shared_ptr<T> >& myObjs,
 		const std::string& objName) const {
+
 	auto currObjIter = myObjs.find(objName);
 	bool found = currObjIter != myObjs.end();
-	V val = V();
-	if (found) {
-		val = currObjIter->second->getValue();
-	} else {
-		// val's value is undefined.
-		// Callers must test the found part of the return pair to
-		// know whether the value part is valid.
-	}
-	return std::make_pair(found, val);
+
+    return found ? std::dynamic_pointer_cast<V>(currObjIter->second->getValue())
+                : std::make_shared<V>();
 }
 
 template<typename T, typename V>
@@ -300,10 +295,8 @@ void StdHandlerRegistry::AggregateStatistics<IMemUsageSampler, MemUsageStats>(in
 		MPI_Bcast(objName, nameLen + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
 
 		// do we know about the current object?
-		bool localIsValid = false;
-		IMemUsageSampler::ValType localValue;
-		std::tie(localIsValid, localValue) = 
-            GetObjValue<IMemUsageSampler, IMemUsageSampler::ValType>(myObjs, objName);
+        std::shared_ptr<MemUsageStats> localValue = GetObjValue<IMemUsageSampler, MemUsageStats>(myObjs, objName);
+		bool localIsValid = (bool)localValue;
 
 		// collect count of processes knowing about the current object
         uint32_t currProcessCount = 0;
@@ -331,27 +324,29 @@ void StdHandlerRegistry::AggregateStatistics<IMemUsageSampler, MemUsageStats>(in
 	}
 }
 
-IHandlerRegistry::GlobalMemUsageStats
-StdHandlerRegistry::collectStatistics(void) const {
+std::shared_ptr<IHandlerRegistry::GlobalData>
+StdHandlerRegistry::collectData(void) const {
 
-    IHandlerRegistry::GlobalMemUsageStats stats;
+    auto ret = std::make_shared<GlobalMemUsageStats>();
 
 	int myRank;
 	MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
 
 	// Aggregate data from all processes.
     // Memory usage.
-    AggregateStatistics<IMemUsageSampler, IMemUsageSampler::ValType>(myRank,
-        allMemUsageSamplers, stats.memStats);
+    AggregateStatistics<IMemUsageSampler, MemUsageStats>(myRank,
+        allMemUsageSamplers, ret->memStats);
 
-    return stats;
+    return ret;
 }
 
-void StdHandlerRegistry::reportStatistics(std::ostream& os,
-                        const IHandlerRegistry::GlobalMemUsageStats& stats) const {
+void StdHandlerRegistry::reportData(std::ostream& os,
+                        std::shared_ptr<IHandlerRegistry::GlobalData> data) const {
+
+    auto myData = std::dynamic_pointer_cast<GlobalMemUsageStats>(data);
 
     os << "\nMemoryUsage:\n";
-    for (auto currMemUsageStats : stats.memStats) {
+    for (auto currMemUsageStats : myData->memStats) {
         os << "name: " << currMemUsageStats.first << '\n';
         currMemUsageStats.second.outputTo(os);
         os << '\n';

@@ -66,7 +66,7 @@ public:
 	/**
 	 * Obtain the sampler's metric values.
 	 */
-	virtual IMemUsageSampler::ValType getValue(void) const {
+    virtual std::shared_ptr<IMemUsageSampler::MemUsageData> getValue(void) const {
 
         return GetRunningSampleData().GetCurrentStats();
     }
