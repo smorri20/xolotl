@@ -1,7 +1,7 @@
 #ifndef XMEMUSAGE_MEM_USAGE_PROFILE_H
 #define XMEMUSAGE_MEM_USAGE_PROFILE_H
 
-#include "xolotlMemUsage/profile/StatmProfiler.h"
+#include "xolotlMemUsage/profileproc/StatmProfiler.h"
 
 namespace xolotlMemUsage {
 

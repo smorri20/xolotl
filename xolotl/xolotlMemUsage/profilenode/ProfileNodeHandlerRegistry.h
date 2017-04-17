@@ -1,11 +1,11 @@
-#ifndef XMEMUSAGE_PROFILE_HANDLER_REGISTRY_H
-#define XMEMUSAGE_PROFILE_HANDLER_REGISTRY_H
+#ifndef XMEMUSAGE_PROFILE_NODE_HANDLER_REGISTRY_H
+#define XMEMUSAGE_PROFILE_NODE_HANDLER_REGISTRY_H
 
 #include <map>
 #include <memory>
 #include "xolotlMemUsage/common/CommonHandlerRegistry.h"
-#include "xolotlMemUsage/profile/MemUsageProfile.h"
-#include "xolotlMemUsage/profile/MemUsageProfiler.h"
+#include "xolotlMemUsage/profilenode/NodeMemUsageProfile.h"
+#include "xolotlMemUsage/profilenode/NodeMemUsageProfiler.h"
 
 
 namespace xolotlMemUsage {
@@ -13,14 +13,14 @@ namespace xolotlMemUsage {
 /**
  * Registry for building memory usage profilers.
  */
-class ProfileHandlerRegistry : public CommonHandlerRegistry {
+class ProfileNodeHandlerRegistry : public CommonHandlerRegistry {
 public:
 
     /**
      * Global mem usage profile data for all known profilers.
      */
     struct GlobalMemUsageData : public IHandlerRegistry::GlobalData {
-        std::map<std::string, std::tuple<uint32_t, MemUsageProfile> > profiles;
+        std::map<std::string, std::tuple<uint32_t, NodeMemUsageProfile> > profiles;
     };
 
 
@@ -37,14 +37,14 @@ private:
      * @param name Name to associate with the sampler.
      */
     virtual std::shared_ptr<IMemUsageSampler> MakeMemUsageSampler(std::string name) {
-        return std::make_shared<MemUsageProfiler>(name);
+        return std::make_shared<NodeMemUsageProfiler>(name);
     }
 
 public:
 	/**
 	 * Construct a Registry for collecting memory usage profiles.
 	 */
-    ProfileHandlerRegistry(std::string outputFilename)
+    ProfileNodeHandlerRegistry(std::string outputFilename)
       : oFilename(outputFilename) {
         // Nothing else to do.
     }
@@ -53,7 +53,7 @@ public:
 	/**
 	 * Destroy our Registry.
 	 */
-	virtual ~ProfileHandlerRegistry(void) {
+	virtual ~ProfileNodeHandlerRegistry(void) {
         // Nothing else to do.
     }
 
@@ -88,4 +88,4 @@ public:
 
 } // namespace xolotlMemUsage
 
-#endif // XMEMUSAGE_PROFILE_HANDLER_REGISTRY_H
+#endif // XMEMUSAGE_PROFILE_NODE_HANDLER_REGISTRY_H

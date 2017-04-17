@@ -3,7 +3,7 @@
 
 #include "xolotlMemUsage/IMemUsageSampler.h"
 #include "xolotlMemUsage/common/StatmSamplerBase.h"
-#include "xolotlMemUsage/profile/TimeHistogram.h"
+#include "xolotlMemUsage/common/TimeHistogram.h"
 
 namespace xolotlMemUsage {
 

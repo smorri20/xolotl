@@ -19,7 +19,7 @@ public:
 	 */
 	MemUsageOptionHandler() :
 		OptionHandler("memUsageHandler",
-				"memUsageHandler dummy | std [sampling_interval_ms] | profile output_filename [sampling_interval_ms]\n"
+				"memUsageHandler dummy | std [sampling_interval_ms] | (profileproc|profilenode) output_filename [sampling_interval_ms]\n"
 				"Which memory usage handlers to use (default = std) and sampling interval in ms (default=1000, ignored with dummy handler)\n") {}
 
 	/**
@@ -61,7 +61,8 @@ public:
                 
                 auto currIdx = 1;
 
-                if(rtype == xolotlMemUsage::IHandlerRegistry::profile) {
+                if((rtype == xolotlMemUsage::IHandlerRegistry::profileproc) or
+                    (rtype == xolotlMemUsage::IHandlerRegistry::profilenode)) {
 
                     if(tokens.size() < 2) {
                         // We were not given a filename to use.

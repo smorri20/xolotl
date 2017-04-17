@@ -122,6 +122,11 @@ int main(int argc, char **argv) {
 	int rank;
     int ret = EXIT_SUCCESS;
 
+    // Initialize MPI. We do this instead of leaving it to some
+    // other package (e.g., PETSc), because we want to avoid problems
+    // with overlapping Timer scopes.
+    MPI_Init(&argc, &argv);
+
 	// Check the command line arguments.
 	// Skip the executable name before parsing
 	argc -= 1; // one for the executable name
@@ -142,16 +147,12 @@ int main(int argc, char **argv) {
 	assert(!networkFilename.empty());
 
 	try {
-		// Set up our performance data and memory usage tracking infrastructure.
+		// Set up our performance data infrastructure and memory
+        // usage monitoring infrastructure.
 		xperf::initialize(opts.getPerfHandlerType());
         xmem::initialize(opts.getMemUsageHandlerType(),
                             opts.getMemUsageSamplingInterval(),
                             opts.getMemUsageProfileFilename());
-
-		// Initialize MPI. We do this instead of leaving it to some
-		// other package (e.g., PETSc), because we want to avoid problems
-		// with overlapping Timer scopes.
-		MPI_Init(&argc, &argv);
 
 		// Get the MPI rank
 		MPI_Comm_rank(MPI_COMM_WORLD, &rank);

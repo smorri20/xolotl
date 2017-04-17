@@ -7,14 +7,14 @@
 #include <tuple>
 #include <cmath>
 #include <cstring>
-#include "xolotlMemUsage/profile/ProfileHandlerRegistry.h"
-#include "xolotlMemUsage/profile/MemUsageProfiler.h"
+#include "xolotlMemUsage/profileproc/ProfileProcHandlerRegistry.h"
+#include "xolotlMemUsage/profileproc/MemUsageProfiler.h"
 
 
 namespace xolotlMemUsage {
 
 std::shared_ptr<IHandlerRegistry::GlobalData>
-ProfileHandlerRegistry::collectData(void) const {
+ProfileProcHandlerRegistry::collectData(void) const {
 
     auto ret = std::make_shared<GlobalMemUsageData>();
 

@@ -1,9 +1,9 @@
-#include "xolotlMemUsage/profile/StatmProfiler.h"
-#include "xolotlMemUsage/profile/MemUsageProfile.h"
+#include "xolotlMemUsage/profilenode/SysInfoProfiler.h"
+#include "xolotlMemUsage/profilenode/NodeMemUsageProfile.h"
 
 namespace xolotlMemUsage {
 
-namespace Statm {
+namespace SysInfo {
 
 const unsigned int Profiler::nTimeHistogramBins = 40;
 
@@ -12,10 +12,10 @@ const AsyncSamplingThreadBase::ClockType::duration Profiler::initialBinWidth = s
 std::shared_ptr<IMemUsageSampler::MemUsageData>
 Profiler::GetCurrentProfile(void) const
 {
-    return std::make_shared<MemUsageProfile>(GetRunningSampleData().hist);
+    return std::make_shared<NodeMemUsageProfile>(GetRunningSampleData().hist);
 }
 
-} // end namespace Statm
+} // end namespace SysInfo
 
 } // namespace xolotlMemUsage
 

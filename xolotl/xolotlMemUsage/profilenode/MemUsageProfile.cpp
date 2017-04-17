@@ -1,10 +1,10 @@
 #include <iomanip>
-#include "xolotlMemUsage/profile/MemUsageProfile.h"
+#include "xolotlMemUsage/profilenode/NodeMemUsageProfile.h"
 
 namespace xolotlMemUsage {
 
 void
-MemUsageProfile::outputTo(std::ostream& os) const
+NodeMemUsageProfile::outputTo(std::ostream& os) const
 {
     using Seconds = std::chrono::duration<double>;
 
@@ -15,7 +15,7 @@ MemUsageProfile::outputTo(std::ostream& os) const
     os << "\tnBins: " << bins.size()
         << "\tstartTimestamp: " << std::put_time(std::localtime(&startTimeT), "%F %T")
         << "\tbinWidth_sec: " << Seconds(profile.GetBinWidth()).count() << '\n'
-        << "# bin\tnSamples\tvmSize\tvmRSS\trss\ttext\tdataAndStack\n";
+        << "# bin\tnSamples\ttotalram\tfreeram\tsharedram\tbufferram\ttotalswap\tfreeswap\ttotahigh\tfreehigh\n";
 
     auto binIdx = 0;
     for(auto currBin : bins)

@@ -4,7 +4,8 @@
 #include "xolotlMemUsage/xolotlMemUsage.h"
 #include "xolotlMemUsage/dummy/DummyHandlerRegistry.h"
 #include "xolotlMemUsage/standard/StdHandlerRegistry.h"
-#include "xolotlMemUsage/profile/ProfileHandlerRegistry.h"
+#include "xolotlMemUsage/profileproc/ProfileProcHandlerRegistry.h"
+#include "xolotlMemUsage/profilenode/ProfileNodeHandlerRegistry.h"
 
 
 namespace xolotlMemUsage {
@@ -28,8 +29,41 @@ void initialize(IHandlerRegistry::RegistryType rtype,
         theHandlerRegistry = std::make_shared<StdHandlerRegistry>();
 		break;
 
-    case IHandlerRegistry::profile:
-        theHandlerRegistry = std::make_shared<ProfileHandlerRegistry>(profileFilename);
+    case IHandlerRegistry::profileproc:
+        theHandlerRegistry = std::make_shared<ProfileProcHandlerRegistry>(profileFilename);
+        break;
+
+    case IHandlerRegistry::profilenode:
+        // The user wants per-node profiling.  We only need one process
+        // on the node to collect the profile data.
+        // We select the one process that will collect profile data
+        // by creating a node-local communicator, and "bless" whatever
+        // process is rank 0 in that communicator.
+        // Everyone else will build a dummy registry.
+        // TODO this requires MPI-3 functionality - what to do if it
+        // isn't available?
+        // TODO how to handle situations where the "blessed" process 
+        // doesn't define some memory profiling regions that others do?
+        {
+            MPI_Comm nodeLocalComm;
+            MPI_Comm_split_type(MPI_COMM_WORLD,
+                                MPI_COMM_TYPE_SHARED,
+                                0,  // key
+                                MPI_INFO_NULL,
+                                &nodeLocalComm);
+
+            int myNodeLocalRank;
+            MPI_Comm_rank(nodeLocalComm, &myNodeLocalRank);
+
+            if(myNodeLocalRank == 0)
+            {
+                theHandlerRegistry = std::make_shared<ProfileNodeHandlerRegistry>(profileFilename);
+            }
+            else
+            {
+                theHandlerRegistry = std::make_shared<DummyHandlerRegistry>();
+            }
+        }
         break;
 
 	default:

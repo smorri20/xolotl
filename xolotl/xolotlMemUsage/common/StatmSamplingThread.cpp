@@ -3,10 +3,6 @@
 
 namespace xolotlMemUsage {
 
-// Default to sampling every second.
-AsyncSamplingThreadBase::ClockType::duration AsyncSamplingThreadBase::samplingInterval = std::chrono::duration<uint64_t, std::milli>(1000);
-
-
 template<>
 std::tuple<AsyncSamplingThreadBase::ClockType::time_point, Statm::Sample>
 StatmSamplingThread::CollectSample(const Statm::SupportData& supportData) const

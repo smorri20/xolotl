@@ -10,8 +10,8 @@ include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_BINARY_DIR})
 
 # Always include the Dummy (stub), standard, and common classes.
-file(GLOB HEADERS *.h common/*.h dummy/*.h standard/*.h profile/*.h)
-file(GLOB SRC *.cpp common/*.cpp dummy/*.cpp standard/*.cpp profile/*.cpp)
+file(GLOB HEADERS *.h common/*.h dummy/*.h standard/*.h profileproc/*.h profilenode/*.h)
+file(GLOB SRC *.cpp common/*.cpp dummy/*.cpp standard/*.cpp profileproc/*.cpp profilenode/*.cpp)
 
 # Specify the library to build
 add_library(${LIBRARY_NAME} STATIC ${SRC})

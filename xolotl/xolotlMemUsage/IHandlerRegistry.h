@@ -33,8 +33,9 @@ public:
 	/// Possible types of memory usage handler registries.
 	enum RegistryType {
 		dummy,      //< Use stub classes that do not collect any data.
-		std,        //< Collect memory usage statistics.
-        profile     //< Collect memory usage profiles.
+		std,        //< Collect per-process memory usage statistics.
+        profileproc,//< Collect per-process memory usage profiles.
+        profilenode //< Collect per-node memory usage profiles.
 	};
 
 
