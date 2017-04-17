@@ -15,18 +15,10 @@ namespace xolotlMemUsage {
 class DummyMemUsageSampler : public IMemUsageSampler, 
                                 public xolotlCore::Identifiable {
 
-private:
-    /**
-     * Construct a DummyMemUsageSampler.
-     * Declared private to enforce that MemUsageSamplers must
-     * be constructed with a name.
-     */
-    DummyMemUsageSampler(void)
-      : xolotlCore::Identifiable("unused") {
-        // Nothing else to do.
-    }
-    
 public:
+
+    /// Disallow construction of a DummyMemUsageSampler without a name.
+    DummyMemUsageSampler(void) = delete;
 
 	/**
      * Construct a DummyMemUsageSampler with the given name.

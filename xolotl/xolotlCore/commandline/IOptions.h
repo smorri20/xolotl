@@ -452,6 +452,23 @@ public:
      */
     virtual void setMemUsageSamplingInterval(xolotlMemUsage::IHandlerRegistry::SamplingInterval interval) = 0;
 
+
+    /**
+     * Set the filename for storing memory usage profiles.
+     *
+     * @param fname The file name to use for storing memory usage profiles.
+     *              A '%r' in the filename will be replaced with the collecting
+     *              process' MPI rank number.
+     */
+    virtual void setMemUsageProfileFilename(std::string fname) = 0;
+
+
+    /**
+     * Get the filename for storing memory usage profiles.
+     *
+     * @return The file name to use for storing memory usage profiles.
+     */
+    virtual std::string getMemUsageProfileFilename(void) const = 0;
 };
 //end class IOptions
 

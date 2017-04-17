@@ -1,59 +1,25 @@
 #include <fstream>
 #include "xolotlMemUsage/standard/StatmSampler.h"
+#include "xolotlMemUsage/standard/MemUsageStats.h"
 
 namespace xolotlMemUsage {
 
-template<>
-StatmSampler::SamplingThreadType::SamplingIntervalType StatmSampler::samplingInterval = std::chrono::duration<double>(1);
+namespace Statm {
 
-
-template<>
-void
-StatmSampler::SamplingThreadType::Sample(void)
+std::shared_ptr<IMemUsageSampler::MemUsageData>
+Sampler::GetCurrentStats(void) const
 {
-    // Collect the sample.
-    std::ifstream ifs(supportData.statmFilePath);
-    uint64_t vmSize;
-    uint64_t vmRSS;
-    uint64_t rss;
-    uint64_t text;
-    uint64_t libUnused;
-    uint64_t dataAndStack;
-    uint64_t dirtyUnused;
-
-    ifs >> vmSize
-        >> vmRSS
-        >> rss
-        >> text
-        >> libUnused
-        >> dataAndStack
-        >> dirtyUnused;
-
-    // Ensure we are the only ones updating our data structures.
-    std::lock_guard<std::mutex> ourLock(mtx);
-
-    // Add the sample to the data for all active samplers.
-    for(auto currSampler : activeSamplers)
-    {
-        currSampler->GetRunningSampleData().HandleNewSample(vmSize,
-                                                            vmRSS,
-                                                            rss,
-                                                            text,
-                                                            dataAndStack);
-    }
+    auto const& runningData = GetRunningSampleData();
+    auto nSamples = runningData.nSamples;
+    return std::make_shared<MemUsageStats>(MemUsagePageStats(runningData.vmSize, nSamples),
+                                MemUsagePageStats(runningData.vmRSS, nSamples),
+                                MemUsagePageStats(runningData.rss, nSamples),
+                                MemUsagePageStats(runningData.text, nSamples),
+                                MemUsagePageStats(runningData.dataAndStack, nSamples));
 }
 
 
-std::shared_ptr<MemUsageStats>
-StatmData::GetCurrentStats(void) const
-{
-    return std::make_shared<MemUsageStats>(vmSize.GetPageStats(nSamples),
-                                vmRSS.GetPageStats(nSamples),
-                                rss.GetPageStats(nSamples),
-                                text.GetPageStats(nSamples),
-                                dataAndStack.GetPageStats(nSamples));
-}
-
+} // end namespace Statm
 
 } // end namespace xolotlMemUsage
 

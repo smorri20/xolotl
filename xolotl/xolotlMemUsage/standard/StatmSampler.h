@@ -1,13 +1,12 @@
 #ifndef XMEMUSAGE_MEM_SAMPLER_H
 #define XMEMUSAGE_MEM_SAMPLER_H
 
-#include <sstream>
-#include <limits>
-#include <unistd.h>
-#include "xolotlMemUsage/standard/AsyncSampler.h"
-#include "xolotlMemUsage/standard/MemUsageStats.h"
+#include "xolotlMemUsage/IMemUsageSampler.h"
+#include "xolotlMemUsage/common/StatmSamplerBase.h"
 
 namespace xolotlMemUsage {
+
+namespace Statm {
 
 struct RunningPageStats
 {
@@ -35,14 +34,37 @@ struct RunningPageStats
             max = val;
         }
     }
-
-    MemUsagePageStats GetPageStats(uint64_t nSamples) const
-    {
-        return MemUsagePageStats(min, max, ((double)total) / nSamples);
-    }
 };
 
-struct StatmData
+
+struct PageStats
+{
+    uint64_t min;
+    uint64_t max;
+    double average;
+
+    PageStats(uint64_t _min = std::numeric_limits<uint64_t>::max(),
+                uint64_t _max = std::numeric_limits<uint64_t>::min(),
+                double _average = std::numeric_limits<double>::quiet_NaN())
+      : min(_min),
+        max(_max),
+        average(_average)
+    {
+        // Nothing else to do.
+    }
+
+    PageStats(const RunningPageStats& rps, uint64_t nSamples)
+      : min(rps.min),
+        max(rps.max),
+        average(((double)rps.total) / nSamples)
+    {
+        // Nothing else to do.
+    }
+
+};
+
+
+struct RunningData
 {
     uint64_t nSamples;
 
@@ -52,41 +74,42 @@ struct StatmData
     RunningPageStats text;
     RunningPageStats dataAndStack;
 
-    StatmData(void)
+    RunningData(void)
       : nSamples(0)
     {
         // Nothing else to do.
     }
 
-    void HandleNewSample(uint64_t _vmSize,
-                        uint64_t _vmRSS,
-                        uint64_t _rss,
-                        uint64_t _text,
-                        uint64_t _dataAndStack)
+    void HandleNewSample(const Sample& sample)
     {
-        vmSize.HandleNewSample(_vmSize);
-        vmRSS.HandleNewSample(_vmRSS);
-        rss.HandleNewSample(_rss);
-        text.HandleNewSample(_text);
-        dataAndStack.HandleNewSample(_dataAndStack);
+        vmSize.HandleNewSample(sample.vmSize);
+        vmRSS.HandleNewSample(sample.vmRSS);
+        rss.HandleNewSample(sample.rss);
+        text.HandleNewSample(sample.text);
+        dataAndStack.HandleNewSample(sample.dataAndStack);
         nSamples++;
     }
-
-    std::shared_ptr<MemUsageStats> GetCurrentStats(void) const;
 };
 
-struct StatmSupportData
-{
-    std::string statmFilePath;
 
-    StatmSupportData(void)
-      : statmFilePath([]{std::ostringstream s; s << "/proc/" << getpid() << "/statm"; return s.str();}())
+class Sampler : public Statm::SamplerBase<RunningData>
+{
+public:
+    Sampler(std::string _name)
+      : Statm::SamplerBase<RunningData>(_name)
     {
         // Nothing else to do.
     }
+
+    virtual void HandleNewSample(AsyncSamplingThreadBase::ClockType::time_point /* timestamp */, const Sample& sample)
+    {
+        runningData.HandleNewSample(sample);
+    }
+
+    std::shared_ptr<IMemUsageSampler::MemUsageData> GetCurrentStats(void) const;
 };
 
-typedef AsyncSampler<StatmData, StatmSupportData> StatmSampler;
+} // end namespace Statm
 
 } // end namespace xolotlMemUsage
 

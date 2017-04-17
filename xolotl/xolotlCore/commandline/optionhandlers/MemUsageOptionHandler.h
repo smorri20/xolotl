@@ -19,7 +19,7 @@ public:
 	 */
 	MemUsageOptionHandler() :
 		OptionHandler("memUsageHandler",
-				"memUsageHandler {std,dummy} [samplingInterval_in_ms] "
+				"memUsageHandler dummy | std [sampling_interval_ms] | profile output_filename [sampling_interval_ms]\n"
 				"Which memory usage handlers to use (default = std) and sampling interval in ms (default=1000, ignored with dummy handler)\n") {}
 
 	/**
@@ -56,22 +56,37 @@ public:
                 xolotlMemUsage::toRegistryType(tokens[0]);
             opt->setMemUsageHandlerType(rtype);
 
-            // Check if we need to set the sampling interval.
-            if((rtype != xolotlMemUsage::IHandlerRegistry::dummy) and
-                (tokens.size() > 1)) 
-            {
-                std::istringstream sistr(tokens[1]);
-                uint64_t samplingIntervalMillis = 0;
-                sistr >> samplingIntervalMillis;
-                if(not sistr.eof())
-                {
-                    throw std::invalid_argument("unable to convert mem usage sampling interval argument to ms");
+            // Handle additional arguments if necessary.
+            if(rtype != xolotlMemUsage::IHandlerRegistry::dummy) {
+                
+                auto currIdx = 1;
+
+                if(rtype == xolotlMemUsage::IHandlerRegistry::profile) {
+
+                    if(tokens.size() < 2) {
+                        // We were not given a filename to use.
+                        throw std::invalid_argument("Memory usage profiling requested, but no output filename given for memory usage profiles");
+                    }
+
+                    opt->setMemUsageProfileFilename(tokens[currIdx]);
+                    ++currIdx;
                 }
-                if(samplingIntervalMillis == 0)
-                {
-                    throw std::invalid_argument("sampling interval must be > 0 ms");
+                
+                // See if we were given a sampling interval.
+                if(currIdx < tokens.size()) {
+                    std::istringstream sistr(tokens[currIdx]);
+                    uint64_t samplingIntervalMillis = 0;
+                    sistr >> samplingIntervalMillis;
+                    if(not sistr.eof())
+                    {
+                        throw std::invalid_argument("unable to convert mem usage sampling interval argument to ms");
+                    }
+                    if(samplingIntervalMillis == 0)
+                    {
+                        throw std::invalid_argument("sampling interval must be > 0 ms");
+                    }
+                    opt->setMemUsageSamplingInterval(std::chrono::duration<uint64_t, std::milli>(samplingIntervalMillis));
                 }
-                opt->setMemUsageSamplingInterval(std::chrono::duration<double, std::milli>(samplingIntervalMillis));
             }
         }
         catch (const std::invalid_argument& e)

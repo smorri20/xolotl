@@ -1,30 +1,20 @@
 #ifndef XMEMUSAGE_MEM_USAGE_SAMPLER_H
 #define XMEMUSAGE_MEM_USAGE_SAMPLER_H
 
-#include "xolotlCore/Identifiable.h"
-#include "xolotlMemUsage/IMemUsageSampler.h"
+#include "xolotlMemUsage/common/MemUsageSamplerBase.h"
 #include "xolotlMemUsage/standard/StatmSampler.h"
 
 
 namespace xolotlMemUsage {
 
-class MemUsageSampler : public IMemUsageSampler,
-                            public StatmSampler,
-                            public xolotlCore::Identifiable {
+class MemUsageSampler : public MemUsageSamplerBase<Statm::Sampler> {
 
-private:
-    /**
-     * Construct a MemUsageSampler.
-     * Declared private to enforce that MemUsageSamplers must
-     * be constructed with a name.
-     */
-    MemUsageSampler(void)
-      : xolotlCore::Identifiable("unused"),
-        StatmSampler("unused") {
-        // Nothing else to do.
-    }
-    
 public:
+    /**
+     * Disallow building an object without a name.
+     */
+    MemUsageSampler(void) = delete;
+
 
 	/**
      * Construct a MemUsageSampler with the given name.
@@ -32,35 +22,9 @@ public:
 	 * @param name The object's name.
 	 */
 	MemUsageSampler(const std::string& name)
-      : xolotlCore::Identifiable(name),
-        StatmSampler(name) {
+      : MemUsageSamplerBase<Statm::Sampler>(name) {
 
         // Nothing else to do.
-    }
-
-	/**
-	 * Destroy the MemUsageSampler.
-	 */
-	virtual ~MemUsageSampler(void) {
-
-        // Ensure we've stopped sampling.
-        stop();
-    }
-
-	/**
-	 * Start sampling.
-	 */
-	virtual void start(void) {
-
-        StartSampling();
-    }
-
-	/**
-	 * Stop sampling.
-	 */
-	virtual void stop(void) {
-
-        StopSampling();
     }
 
 	/**
@@ -68,7 +32,7 @@ public:
 	 */
     virtual std::shared_ptr<IMemUsageSampler::MemUsageData> getValue(void) const {
 
-        return GetRunningSampleData().GetCurrentStats();
+        return GetCurrentStats();
     }
 };
 

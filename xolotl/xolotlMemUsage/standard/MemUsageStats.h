@@ -8,24 +8,20 @@
 #include <cmath>
 #include <limits>
 #include "xolotlMemUsage/IMemUsageSampler.h"
+#include "xolotlMemUsage/standard/StatmSampler.h"
 
 
 namespace xolotlMemUsage {
 
-struct MemUsagePageStats {
-    uint64_t min;
-    uint64_t max;
-    double avg;
+struct MemUsagePageStats : public Statm::PageStats {
+
     double stdev;
 
     /**
      * Construct a MemUsagePageStats with useful initial values.
      */
     MemUsagePageStats(void)
-      : min(std::numeric_limits<uint64_t>::max()),
-        max(std::numeric_limits<uint64_t>::min()),
-        avg(std::numeric_limits<double>::quiet_NaN()),
-        stdev(std::numeric_limits<double>::quiet_NaN())
+      : stdev(std::numeric_limits<double>::quiet_NaN())
     {
         // Nothing else to do.
     }
@@ -38,20 +34,29 @@ struct MemUsagePageStats {
                     uint64_t _max,
                     double _avg,
                     double _stdev = std::numeric_limits<double>::quiet_NaN())
-      : min(_min),
-        max(_max),
-        avg(_avg),
+      : Statm::PageStats(_min, _max, _avg),
         stdev(_stdev)
     {
         // Nothing else to do.
     }
+
+
+    /**
+     * Construct a MemUsagePageStats from existing valid data.
+     */
+    MemUsagePageStats(const Statm::RunningPageStats& _rps, uint64_t _nSamples)
+      : Statm::PageStats(_rps, _nSamples)
+    {
+        // Nothing else to do.
+    }
+
 
     void OutputTo(std::ostream& os, std::string prefix = "") const {
 
         os << prefix 
             << "min: " << min 
             << " max: " << max 
-            << " avg: " << avg
+            << " avg: " << average
             << " stdev: " << stdev;
     }
 
@@ -141,11 +146,11 @@ struct MemUsageStats : public IMemUsageSampler::MemUsageData {
                     uint32_t processCount) {
 
         T sum;
-        T myContribution = knowObject ? (myValue.get()->*pMember).avg : 0;
+        T myContribution = knowObject ? (myValue.get()->*pMember).average : 0;
         MPI_Reduce(&myContribution, &sum, 1, mpiDatatype, MPI_SUM, 0, MPI_COMM_WORLD);
 
         if(myRank == 0) {
-            (this->*pMember).avg = sum / processCount;
+            (this->*pMember).average = sum / processCount;
         }
     }
 
@@ -158,13 +163,13 @@ struct MemUsageStats : public IMemUsageSampler::MemUsageData {
                             uint32_t processCount) {
 
         T valSquaredSum;
-        T myContribution = knowObject ? ((myValue.get()->*pMember).avg * (myValue.get()->*pMember).avg) : 0;
+        T myContribution = knowObject ? ((myValue.get()->*pMember).average * (myValue.get()->*pMember).average) : 0;
         MPI_Reduce(&myContribution, &valSquaredSum, 1, mpiDatatype, MPI_SUM, 0, MPI_COMM_WORLD);
 
         if(myRank == 0) {
             (this->*pMember).stdev = 
                     std::sqrt((valSquaredSum / processCount)
-                        - ((this->*pMember).avg * (this->*pMember).avg));
+                        - ((this->*pMember).average * (this->*pMember).average));
         }
     }
 

@@ -4,10 +4,7 @@
 #include "xolotlMemUsage/xolotlMemUsage.h"
 #include "xolotlMemUsage/dummy/DummyHandlerRegistry.h"
 #include "xolotlMemUsage/standard/StdHandlerRegistry.h"
-
-#if READY
 #include "xolotlMemUsage/profile/ProfileHandlerRegistry.h"
-#endif // READY
 
 
 namespace xolotlMemUsage {
@@ -16,22 +13,24 @@ static std::shared_ptr<IHandlerRegistry> theHandlerRegistry;
 
 // Create the desired type of handler registry.
 void initialize(IHandlerRegistry::RegistryType rtype,
-                IHandlerRegistry::SamplingInterval samplingInterval) {
+                IHandlerRegistry::SamplingInterval samplingInterval,
+                std::string profileFilename) {
+
+    // Set our sampling interval to the one given.
+    AsyncSamplingThreadBase::SetSamplingInterval(samplingInterval);
 
 	switch (rtype) {
 	case IHandlerRegistry::dummy:
-		theHandlerRegistry = std::make_shared<DummyHandlerRegistry>(samplingInterval);
+		theHandlerRegistry = std::make_shared<DummyHandlerRegistry>();
 		break;
 
 	case IHandlerRegistry::std:
-        theHandlerRegistry = std::make_shared<StdHandlerRegistry>(samplingInterval);
+        theHandlerRegistry = std::make_shared<StdHandlerRegistry>();
 		break;
 
-#if READY
     case IHandlerRegistry::profile:
-        theHandlerRegistry = std::make_shared<ProfileHandlerRegistry>(samplingInterval);
+        theHandlerRegistry = std::make_shared<ProfileHandlerRegistry>(profileFilename);
         break;
-#endif // READY
 
 	default:
 		throw std::invalid_argument(

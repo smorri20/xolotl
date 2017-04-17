@@ -164,6 +164,13 @@ protected:
      */
     xolotlMemUsage::IHandlerRegistry::SamplingInterval memUsageSamplingInterval;
 
+
+    /**
+     * Where should we store memory usage profiles (if collected)?
+     */
+    std::string memUsageProfileFilename;
+
+
 public:
 
 	/**
@@ -664,6 +671,28 @@ public:
     virtual void setMemUsageSamplingInterval(xolotlMemUsage::IHandlerRegistry::SamplingInterval interval) {
 
         memUsageSamplingInterval = interval;
+    }
+
+
+    /**
+     * Set the filename for storing memory usage profiles.
+     *
+     * @param fname The file name to use for storing memory usage profiles.
+     *              A '%r' in the filename will be replaced with the collecting
+     *              process' MPI rank number.
+     */
+    virtual void setMemUsageProfileFilename(std::string fname) {
+        memUsageProfileFilename = fname;
+    }
+
+
+    /**
+     * Get the filename for storing memory usage profiles.
+     *
+     * @return The file name to use for storing memory usage profiles.
+     */
+    virtual std::string getMemUsageProfileFilename(void) const {
+        return memUsageProfileFilename;
     }
 };
 //end class Options

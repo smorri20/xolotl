@@ -3,8 +3,9 @@
 
 #include <map>
 #include <memory>
-#include "xolotlMemUsage/IHandlerRegistry.h"
+#include "xolotlMemUsage/common/CommonHandlerRegistry.h"
 #include "xolotlMemUsage/standard/MemUsageObjStatistics.h"
+#include "xolotlMemUsage/standard/MemUsageSampler.h"
 
 namespace xolotlMemUsage {
 
@@ -12,7 +13,7 @@ namespace xolotlMemUsage {
  * Base class for for building memory usage data collection objects that
  * collect data (as opposed to low-overhead stubs).
  */
-class StdHandlerRegistry: public IHandlerRegistry {
+class StdHandlerRegistry : public CommonHandlerRegistry {
 public:
     /**
      * Globally aggregated memory usage statistics for all
@@ -83,29 +84,31 @@ private:
 			const std::map<std::string, std::shared_ptr<T> >& myObjs,
 			std::map<std::string, MemUsageObjStatistics<V> >& stats) const;
 
-protected:
+
     /**
-     * Known samplers, keyed by name.
+     * Construct a MemUsageSampler (of the appropriate derived type)
+     * with the given name.
+     *
+     * @param name Name to associate with the sampler.
      */
-    std::map<std::string, std::shared_ptr<IMemUsageSampler> > allMemUsageSamplers;
+    virtual std::shared_ptr<IMemUsageSampler> MakeMemUsageSampler(std::string name) {
+        return std::make_shared<MemUsageSampler>(name);
+    }
+
 
 public:
 
 	/**
 	 * Construct a StdHandlerRegistry.
 	 */
-	StdHandlerRegistry(IHandlerRegistry::SamplingInterval si);
+    StdHandlerRegistry(void) = default;
 
 	/**
 	 * Destroy a StdHandlerRegistry.
 	 */
-	virtual ~StdHandlerRegistry(void);
-
-    /**
-     * Obtain a memory usage sampler.
-     */
-    virtual std::shared_ptr<IMemUsageSampler> getMemUsageSampler(
-            const std::string& name);
+	virtual ~StdHandlerRegistry(void) {
+        // Nothing else to do.
+    }
 
 
 	/**

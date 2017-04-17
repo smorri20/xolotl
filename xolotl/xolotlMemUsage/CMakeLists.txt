@@ -9,24 +9,9 @@ SET(LIBRARY_NAME "xolotlMemUsage")
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_BINARY_DIR})
 
-# Always use the sources and headers common to all registry types.
-file(GLOB COMMONHEADERS *.h)
-file(GLOB COMMONSRC *.cpp)
-
-# Always include the Dummy (stub) classes.
-file(GLOB DUMMYHEADERS *.h dummy/*.h)
-file(GLOB DUMMYSRC *.cpp dummy/*.cpp)
-
-# Always include the Standard classes, since we will always build them.
-set(STD_HEADERS standard/StdHandlerRegistry.h standard/MemUsageSampler.h standard/MemUsageStats.h)
-set(STD_SRC standard/StdHandlerRegistry.cpp standard/StatmSampler.cpp standard/MemUsageStats.cpp)
-
-# Always include the profile classes.
-#set(PROF_HEADERS profile/ProfileHandlerRegistry.h)
-#set(PROF_SRC profile/ProfileHandlerRegistry.cpp)
-
-set(HEADERS ${COMMONHEADERS} ${DUMMYHEADERS} ${STD_HEADERS} ${PROF_HEADERS})
-set(SRC ${COMMONSRC} ${DUMMYSRC} ${STD_SRC} ${PROF_SRC})
+# Always include the Dummy (stub), standard, and common classes.
+file(GLOB HEADERS *.h common/*.h dummy/*.h standard/*.h profile/*.h)
+file(GLOB SRC *.cpp common/*.cpp dummy/*.cpp standard/*.cpp profile/*.cpp)
 
 # Specify the library to build
 add_library(${LIBRARY_NAME} STATIC ${SRC})

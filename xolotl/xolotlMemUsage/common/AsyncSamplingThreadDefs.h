@@ -8,9 +8,9 @@
 
 namespace xolotlMemUsage {
 
-template<typename RPD, typename PSD>
+template<typename SampleType, typename SamplingSupportType>
 void
-AsyncSamplingThread<RPD, PSD>::StartSamplingFor(AsyncSampler<RPD, PSD>* sampler)
+AsyncSamplingThread<SampleType, SamplingSupportType>::StartSamplingFor(AsyncSampler<SampleType, SamplingSupportType>* sampler)
 {
     // Ensure we are the only ones updating our data structures.
     std::lock_guard<std::mutex> ourLock(mtx);
@@ -21,7 +21,7 @@ AsyncSamplingThread<RPD, PSD>::StartSamplingFor(AsyncSampler<RPD, PSD>* sampler)
         // We do not have a sampling thread.  Create one.
         haveSamplingThread = true;
         samplingThreadDone = false;
-        samplingThreadResult = std::async(&AsyncSamplingThread::CollectSamples, this);
+        samplingThreadResult = std::async(&AsyncSamplingThread::BeSamplingThread, this);
     }
 
     // Ensure we know about the sampler
@@ -57,9 +57,9 @@ AsyncSamplingThread<RPD, PSD>::StartSamplingFor(AsyncSampler<RPD, PSD>* sampler)
 }
 
 
-template<typename RPD, typename PSD>
+template<typename SampleType, typename SamplingSupportType>
 void
-AsyncSamplingThread<RPD, PSD>::StopSamplingFor(AsyncSampler<RPD, PSD>* sampler)
+AsyncSamplingThread<SampleType, SamplingSupportType>::StopSamplingFor(AsyncSampler<SampleType, SamplingSupportType>* sampler)
 {
     // Ensure we are the only ones updating our data structures.
     std::lock_guard<std::mutex> ourLock(mtx);
@@ -82,13 +82,32 @@ AsyncSamplingThread<RPD, PSD>::StopSamplingFor(AsyncSampler<RPD, PSD>* sampler)
     }
 }
 
-template<typename RPD, typename PSD>
+
+template<typename SampleType, typename SamplingSupportType>
 void
-AsyncSamplingThread<RPD, PSD>::CollectSamples(void)
+AsyncSamplingThread<SampleType, SamplingSupportType>::BeSamplingThread(void)
 {
     while(not samplingThreadDone)
     {
-        Sample();
+        // Collect the sample.
+        SampleType currSample;
+        AsyncSamplingThreadBase::ClockType::time_point timestamp;
+        std::tie(timestamp, currSample) = CollectSample(supportData);
+
+        // Ensure we are the only ones updating our data structures.
+        // We have to start a new scope here so that we release
+        // the lock when we go out of scope.
+        {
+            std::lock_guard<std::mutex> ourLock(mtx);
+
+            // Add the sample to the data for all active samplers.
+            for(auto currSampler : activeSamplers)
+            {
+                currSampler->HandleNewSample(timestamp, currSample);
+            }
+        }
+
+        // Get out of the way till time to take the next sample.
         std::this_thread::sleep_for(samplingInterval);
     }
 }

@@ -7,6 +7,7 @@
 #include <memory>
 #include <chrono>
 #include "IMemUsageSampler.h"
+#include "xolotlMemUsage/common/AsyncSamplingThread.h"
 
 
 namespace xolotlMemUsage {
@@ -40,7 +41,7 @@ public:
     /**
      * Type of values used to specify asynchronous sampling interval.
      */
-    typedef std::chrono::duration<double> SamplingInterval;
+    using SamplingInterval = AsyncSamplingThreadBase::ClockType::duration;
 
 
 	/**

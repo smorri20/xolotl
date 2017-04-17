@@ -145,7 +145,8 @@ int main(int argc, char **argv) {
 		// Set up our performance data and memory usage tracking infrastructure.
 		xperf::initialize(opts.getPerfHandlerType());
         xmem::initialize(opts.getMemUsageHandlerType(),
-                            opts.getMemUsageSamplingInterval());
+                            opts.getMemUsageSamplingInterval(),
+                            opts.getMemUsageProfileFilename());
 
 		// Initialize MPI. We do this instead of leaving it to some
 		// other package (e.g., PETSc), because we want to avoid problems

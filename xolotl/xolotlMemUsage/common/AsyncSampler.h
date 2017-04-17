@@ -6,26 +6,22 @@
 namespace xolotlMemUsage {
 
 
-template<typename RPD, typename PSD>
+template<typename SampleType, typename SamplingSupportType>
 class AsyncSampler
 {
 public:
-    typedef AsyncSamplingThread<RPD, PSD> SamplingThreadType;
+    using SamplingThreadType = AsyncSamplingThread<SampleType, SamplingSupportType>;
 
 private:
-    static typename SamplingThreadType::SamplingIntervalType samplingInterval;
-
     static std::shared_ptr<SamplingThreadType> GetSamplingThread(void)
     {
         // This is thread-safe in C++11, but *NOT* under earlier C++ standards.
         static std::shared_ptr<SamplingThreadType> theSamplingThread = 
-            std::make_shared<SamplingThreadType>(samplingInterval);
+            std::make_shared<SamplingThreadType>();
         return theSamplingThread;
     }
 
-
     std::string name;
-    RPD runningSampleData;
 
 public:
     AsyncSampler(std::string _name)
@@ -34,7 +30,7 @@ public:
         // Nothing else to do.
     }
 
-    ~AsyncSampler(void)
+    virtual ~AsyncSampler(void)
     {
         StopSampling();
     }
@@ -51,15 +47,9 @@ public:
         GetSamplingThread()->StopSamplingFor(this);
     }
 
-    static void SetSamplingInterval(const typename SamplingThreadType::SamplingIntervalType& interval)
-    {
-        samplingInterval = interval;
-    }
-
     std::string GetName(void) const { return name; }
 
-    const RPD& GetRunningSampleData(void) const { return runningSampleData; }
-    RPD& GetRunningSampleData(void) { return runningSampleData; }
+    virtual void HandleNewSample(AsyncSamplingThreadBase::ClockType::time_point timestamp, const SampleType& sample) = 0;
 };
 
 } // namespace xolotlMemUsage

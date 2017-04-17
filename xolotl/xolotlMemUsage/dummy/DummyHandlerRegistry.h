@@ -15,9 +15,11 @@ namespace xolotlMemUsage {
 //
 class DummyHandlerRegistry: public IHandlerRegistry {
 public:
-	DummyHandlerRegistry(IHandlerRegistry::SamplingInterval /* samplingInterval */) {
-	}
+    /// Construct a stub HandlerRegistry.
+    DummyHandlerRegistry(void) = default;
 
+
+    /// Destroy our HandlerRegistry.
 	virtual ~DummyHandlerRegistry(void) {
 	}
 

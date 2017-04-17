@@ -10,46 +10,6 @@
 
 namespace xolotlMemUsage {
 
-StdHandlerRegistry::StdHandlerRegistry(IHandlerRegistry::SamplingInterval si) {
-
-    MemUsageSampler::SetSamplingInterval(si);
-}
-
-StdHandlerRegistry::~StdHandlerRegistry(void) {
-	// Release the objects we have been tracking.
-	// Because we use shared_ptrs for these objects,
-	// we do not need to explicitly delete the objects themselves.
-    allMemUsageSamplers.clear();
-}
-
-
-// We can create the MemUsageSamplers, since they don't depend on
-// more specialized functionality from any of our subclasses.
-std::shared_ptr<IMemUsageSampler> StdHandlerRegistry::getMemUsageSampler(
-		const std::string& name) {
-
-    std::shared_ptr<IMemUsageSampler> ret;
-
-    // Have we already created a sampler with this name?
-    auto iter = allMemUsageSamplers.find(name);
-    if(iter != allMemUsageSamplers.end()) {
-
-        // We have already created a memory usage sampler with this name,
-        // so return that one.
-        ret = iter->second;
-    }
-    else {
-        // We have not already created a memory usage sampler with this name.
-        // Create one, keep track of it, and return it.
-        ret = std::make_shared<MemUsageSampler>(name);
-        allMemUsageSamplers.emplace(name, ret);
-    }
-
-    return ret;
-}
-
-
-
 template<typename T, typename V>
 void StdHandlerRegistry::CollectAllObjectNames(int myRank,
 		const std::map<std::string, std::shared_ptr<T> >& myObjs,
@@ -335,7 +295,7 @@ StdHandlerRegistry::collectData(void) const {
 	// Aggregate data from all processes.
     // Memory usage.
     AggregateStatistics<IMemUsageSampler, MemUsageStats>(myRank,
-        allMemUsageSamplers, ret->memStats);
+        allSamplers, ret->memStats);
 
     return ret;
 }
