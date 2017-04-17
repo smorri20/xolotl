@@ -15,7 +15,7 @@ MemUsageProfile::outputTo(std::ostream& os) const
     os << "\tnBins: " << bins.size()
         << "\tstartTimestamp: " << std::put_time(std::localtime(&startTimeT), "%F %T")
         << "\tbinWidth_sec: " << Seconds(profile.GetBinWidth()).count() << '\n'
-        << "# bin\tnSamples\tvmSize_pages\tvmRSS_pages\trss_pages\ttext_pages\tdataAndStack_pages\n";
+        << "# bin\tnSamples\tvmSize\tvmRSS\trss\ttext\tdataAndStack\n";
 
     auto binIdx = 0;
     for(auto currBin : bins)
