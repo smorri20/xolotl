@@ -1,6 +1,6 @@
 #include <fstream>
-#include "xolotlMemUsage/standard/StatmSampler.h"
-#include "xolotlMemUsage/standard/MemUsageStats.h"
+#include "xolotlMemUsage/summaryproc/StatmSampler.h"
+#include "xolotlMemUsage/summaryproc/MemUsageStats.h"
 
 namespace xolotlMemUsage {
 

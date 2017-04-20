@@ -3,7 +3,8 @@
 #include "xolotlMemUsage/memUsageConfig.h"
 #include "xolotlMemUsage/xolotlMemUsage.h"
 #include "xolotlMemUsage/dummy/DummyHandlerRegistry.h"
-#include "xolotlMemUsage/standard/StdHandlerRegistry.h"
+#include "xolotlMemUsage/summaryproc/SummaryProcHandlerRegistry.h"
+#include "xolotlMemUsage/summarynode/SummaryNodeHandlerRegistry.h"
 #include "xolotlMemUsage/profileproc/ProfileProcHandlerRegistry.h"
 #include "xolotlMemUsage/profilenode/ProfileNodeHandlerRegistry.h"
 
@@ -20,49 +21,96 @@ void initialize(IHandlerRegistry::RegistryType rtype,
     // Set our sampling interval to the one given.
     AsyncSamplingThreadBase::SetSamplingInterval(samplingInterval);
 
+    // If user wants node-level information, figure out if we are 
+    // going to be participating in the memory usage data collection.
+    // TODO this requires MPI-3 functionality.  What to do if that
+    // isn't available?
+    // TODO how to handle situations where the "blessed" process
+    // doesn't define some memory regions that others do?
+    bool participating = true;
+    MPI_Comm aggComm;
+    int aggCommRank = -1;
+    if((rtype == IHandlerRegistry::summaryNode) or
+            (rtype == IHandlerRegistry::profileNode)) {
+
+        MPI_Comm nodeLocalComm;
+        MPI_Comm_split_type(MPI_COMM_WORLD,
+                            MPI_COMM_TYPE_SHARED,
+                            0,  // key
+                            MPI_INFO_NULL,
+                            &nodeLocalComm);
+
+        int myNodeLocalRank;
+        MPI_Comm_rank(nodeLocalComm, &myNodeLocalRank);
+        participating = (myNodeLocalRank == 0);
+
+        // We need a communicator that only the 'blessed' processes
+        // belong to, since only those will have data to be aggregated.
+        // We pass in a color and a key when creating the new communicator.
+        // All communicators with same color are in the same communicator.
+        // Any that pass in MPI_UNDEFINED for the color get put into 
+        // a communicator of one.
+        // The key determines the ordering of the ranks within the
+        // new communciator.  We use our rank within MPI_COMM_WORLD,
+        // so that (hopefully) rank 0 in MPI_COMM_WORLD will always 
+        // be rank 0 in the new communicator.
+        int myCWRank = -1;
+        MPI_Comm_rank(MPI_COMM_WORLD, &myCWRank);
+        MPI_Comm_split(MPI_COMM_WORLD,
+                        participating ? 0 : MPI_UNDEFINED,  // color - procs with same color are in same output communicator
+                        myCWRank,               // key for ordering ranks in new communicator - should be in same
+                        &aggComm);
+        if(participating) {
+            // Figure out our rank within the aggregating communicator.
+            MPI_Comm_rank(aggComm, &aggCommRank);
+        }
+        else {
+            // We won't be providing data, so we can release the
+            // communicator we were given.
+            // Should be a purely local operation since we 
+            // used a color of MPI_UNDEFINED.
+            if(aggComm != MPI_COMM_NULL) {
+                MPI_Comm_free(&aggComm);
+            }
+        }
+    }
+        
+    // Build a registry that will produce the desired type of memory
+    // usage samplers.
 	switch (rtype) {
 	case IHandlerRegistry::dummy:
 		theHandlerRegistry = std::make_shared<DummyHandlerRegistry>();
 		break;
 
-	case IHandlerRegistry::std:
-        theHandlerRegistry = std::make_shared<StdHandlerRegistry>();
+    case IHandlerRegistry::summaryProc:
+        theHandlerRegistry = std::make_shared<SummaryProcHandlerRegistry>();
 		break;
 
-    case IHandlerRegistry::profileproc:
-        theHandlerRegistry = std::make_shared<ProfileProcHandlerRegistry>(profileFilename);
+    case IHandlerRegistry::summaryNode:
+        if(participating) {
+            // Build the registry to use the aggregating communicator.
+            assert(aggCommRank != -1);
+            theHandlerRegistry = std::make_shared<SummaryNodeHandlerRegistry>(aggComm, aggCommRank);
+        }
+        else {
+            // We won't be providing any data.
+            theHandlerRegistry = std::make_shared<DummyHandlerRegistry>();
+        }
         break;
 
-    case IHandlerRegistry::profilenode:
-        // The user wants per-node profiling.  We only need one process
-        // on the node to collect the profile data.
-        // We select the one process that will collect profile data
-        // by creating a node-local communicator, and "bless" whatever
-        // process is rank 0 in that communicator.
-        // Everyone else will build a dummy registry.
-        // TODO this requires MPI-3 functionality - what to do if it
-        // isn't available?
-        // TODO how to handle situations where the "blessed" process 
-        // doesn't define some memory profiling regions that others do?
-        {
-            MPI_Comm nodeLocalComm;
-            MPI_Comm_split_type(MPI_COMM_WORLD,
-                                MPI_COMM_TYPE_SHARED,
-                                0,  // key
-                                MPI_INFO_NULL,
-                                &nodeLocalComm);
+    case IHandlerRegistry::profileProc:
+        theHandlerRegistry = std::make_shared<ProfileProcHandlerRegistry>(profileFilename);
+		break;
 
-            int myNodeLocalRank;
-            MPI_Comm_rank(nodeLocalComm, &myNodeLocalRank);
-
-            if(myNodeLocalRank == 0)
-            {
-                theHandlerRegistry = std::make_shared<ProfileNodeHandlerRegistry>(profileFilename);
-            }
-            else
-            {
-                theHandlerRegistry = std::make_shared<DummyHandlerRegistry>();
-            }
+    case IHandlerRegistry::profileNode:
+        if(participating) {
+            // Build the registry to use the aggregating communicator.
+            assert(aggCommRank != -1);
+            theHandlerRegistry = std::make_shared<ProfileNodeHandlerRegistry>(profileFilename, aggComm, aggCommRank);
+        }
+        else {
+            // We won't be providing any data.
+            theHandlerRegistry = std::make_shared<DummyHandlerRegistry>();
         }
         break;
 

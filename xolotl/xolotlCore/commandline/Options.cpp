@@ -48,7 +48,7 @@ Options::Options() :
 		groupingWidthA(1),
 		groupingWidthB(1),
 		sputteringYield(0.0),
-		memUsageRegistryType(xolotlMemUsage::IHandlerRegistry::std),
+		memUsageRegistryType(xolotlMemUsage::IHandlerRegistry::summaryProc),
         memUsageSamplingInterval(1) {
 
 	// Create the network option handler

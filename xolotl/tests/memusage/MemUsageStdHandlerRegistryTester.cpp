@@ -7,7 +7,8 @@
 #include <unistd.h>
 #include <boost/test/included/unit_test.hpp>
 #include "xolotlMemUsage/xolotlMemUsage.h"
-#include "xolotlMemUsage/MemUsageObjStatistics.h"
+#include "xolotlMemUsage/summaryproc/MemUsageObjStatistics.h"
+#include "xolotlMemUsage/summaryproc/SummaryProcHandlerRegistry.h"
 
 namespace xmem = xolotlMemUsage;
 
@@ -18,7 +19,7 @@ int cwSize = -1;
 /**
  * Test suite for HandlerRegistry classes (mainly StdHandlerRegistry).
  */
-BOOST_AUTO_TEST_SUITE (StdHandlerRegistry_testSuite)
+BOOST_AUTO_TEST_SUITE (MemUsageHandlerRegistry_testSuite)
 
 struct MPIFixture {
 	MPIFixture(void) {
@@ -65,32 +66,36 @@ BOOST_AUTO_TEST_CASE(createDummyHandlerReg) {
 	BOOST_REQUIRE_EQUAL(nGoodInits, 2U);
 }
 
-BOOST_AUTO_TEST_CASE(createStdHandlerReg) {
+BOOST_AUTO_TEST_CASE(createSummaryProcHandlerReg) {
 	unsigned int nGoodInits = 0;
 
 	try {
-		xmem::initialize(xmem::IHandlerRegistry::std);
+		xmem::initialize(xmem::IHandlerRegistry::summaryProc);
 		nGoodInits++;
 
-		std::shared_ptr<xmem::IHandlerRegistry> reg =
-				xmem::getHandlerRegistry();
+		std::shared_ptr<xmem::IHandlerRegistry> reg = xmem::getHandlerRegistry();
 		if (reg) {
 			nGoodInits++;
 		}
 
-		BOOST_TEST_MESSAGE("Standard handler registry created successfully.");
+        auto spreg = std::dynamic_pointer_cast<xmem::SummaryProcHandlerRegistry>(reg);
+        if(spreg) {
+            nGoodInits++;
+        }
+
+		BOOST_TEST_MESSAGE("Summary per-process handler registry created successfully.");
 	} catch (const std::exception& e) {
-		BOOST_TEST_MESSAGE("StdHandlerRegistry creation failed: " << e.what());
+		BOOST_TEST_MESSAGE("Summary per-process HandlerRegistry creation failed: " << e.what());
 	}
 
-	BOOST_REQUIRE_EQUAL(nGoodInits, 2U);
+	BOOST_REQUIRE_EQUAL(nGoodInits, 3U);
 }
 
 BOOST_AUTO_TEST_CASE(aggregateStats) {
 	try {
-		xmem::initialize(xmem::IHandlerRegistry::std);
-		std::shared_ptr<xmem::IHandlerRegistry> reg =
-				xmem::getHandlerRegistry();
+		xmem::initialize(xmem::IHandlerRegistry::summaryProc);
+        auto reg = std::dynamic_pointer_cast<xmem::SummaryProcHandlerRegistry>(xmem::getHandlerRegistry());
+        BOOST_REQUIRE(reg);
 
         const std::string samplerName = "testSampler";
 
@@ -111,7 +116,8 @@ BOOST_AUTO_TEST_CASE(aggregateStats) {
 		BOOST_TEST_MESSAGE("done.");
 
 		// compute statistics about the program's memory usage.
-		auto memStats = reg->collectStatistics();
+        auto stats = std::dynamic_pointer_cast<xmem::SummaryProcHandlerRegistry::GlobalMemUsageStats>(reg->collectData());
+        BOOST_REQUIRE(stats);   // Should be valid in all processes.
 
 		// Verify the statistics collected.
 		// Only rank 0 does the verification.
@@ -119,32 +125,35 @@ BOOST_AUTO_TEST_CASE(aggregateStats) {
 
 			// First check times.  Should be very close to the nTimedSeconds
 			// with little spread.
-			BOOST_REQUIRE_EQUAL(memStats.memStats.size(), 1U);
-			xmem::MemUsageObjStatistics<xmem::IMemUsageSampler::ValType>& memStatsObj =
-					memStats.memStats.begin()->second;
+			BOOST_REQUIRE_EQUAL(stats->memStats.size(), 1U);
 
-			BOOST_TEST_MESSAGE("mem usage sampler name: " << memStats.memStats.begin()->first);
-			BOOST_REQUIRE_EQUAL(memStats.memStats.begin()->first, samplerName);
+            xmem::MemUsageStats const& mapMemStats = stats->memStats[samplerName].stats;
+            auto samplerMemStats = std::dynamic_pointer_cast<xmem::MemUsageStats>(sampler->getValue());
+            BOOST_REQUIRE(samplerMemStats);
 
-            BOOST_REQUIRE_CLOSE((double)(memStats.memStats[samplerName].stats.vmSize.min), (double)(sampler->getValue().vmSize.min), 3.0);
-            BOOST_REQUIRE_CLOSE((double)(memStats.memStats[samplerName].stats.vmSize.max), (double)(sampler->getValue().vmSize.max), 3.0);
-            BOOST_REQUIRE_CLOSE(memStats.memStats[samplerName].stats.vmSize.avg, sampler->getValue().vmSize.avg, 3.0);
 
-            BOOST_REQUIRE_CLOSE((double)(memStats.memStats[samplerName].stats.vmRSS.min), (double)(sampler->getValue().vmRSS.min), 3.0);
-            BOOST_REQUIRE_CLOSE((double)(memStats.memStats[samplerName].stats.vmRSS.max), (double)(sampler->getValue().vmRSS.max), 3.0);
-            BOOST_REQUIRE_CLOSE(memStats.memStats[samplerName].stats.vmRSS.avg, sampler->getValue().vmRSS.avg, 3.0);
+			BOOST_TEST_MESSAGE("mem usage sampler name: " << stats->memStats.begin()->first);
+			BOOST_REQUIRE_EQUAL(stats->memStats.begin()->first, samplerName);
 
-            BOOST_REQUIRE_CLOSE((double)(memStats.memStats[samplerName].stats.rss.min), (double)(sampler->getValue().rss.min), 3.0);
-            BOOST_REQUIRE_CLOSE((double)(memStats.memStats[samplerName].stats.rss.max), (double)(sampler->getValue().rss.max), 3.0);
-            BOOST_REQUIRE_CLOSE(memStats.memStats[samplerName].stats.rss.avg, sampler->getValue().rss.avg, 3.0);
+            BOOST_REQUIRE_CLOSE((double)(mapMemStats.vmSize.min), (double)(samplerMemStats->vmSize.min), 3.0);
+            BOOST_REQUIRE_CLOSE((double)(mapMemStats.vmSize.max), (double)(samplerMemStats->vmSize.max), 3.0);
+            BOOST_REQUIRE_CLOSE(mapMemStats.vmSize.average, samplerMemStats->vmSize.average, 3.0);
 
-            BOOST_REQUIRE_CLOSE((double)(memStats.memStats[samplerName].stats.text.min), (double)(sampler->getValue().text.min), 3.0);
-            BOOST_REQUIRE_CLOSE((double)(memStats.memStats[samplerName].stats.text.max), (double)(sampler->getValue().text.max), 3.0);
-            BOOST_REQUIRE_CLOSE(memStats.memStats[samplerName].stats.text.avg, sampler->getValue().text.avg, 3.0);
+            BOOST_REQUIRE_CLOSE((double)(mapMemStats.vmRSS.min), (double)(samplerMemStats->vmRSS.min), 3.0);
+            BOOST_REQUIRE_CLOSE((double)(mapMemStats.vmRSS.max), (double)(samplerMemStats->vmRSS.max), 3.0);
+            BOOST_REQUIRE_CLOSE(mapMemStats.vmRSS.average, samplerMemStats->vmRSS.average, 3.0);
 
-            BOOST_REQUIRE_CLOSE((double)(memStats.memStats[samplerName].stats.dataAndStack.min), (double)(sampler->getValue().dataAndStack.min), 3.0);
-            BOOST_REQUIRE_CLOSE((double)(memStats.memStats[samplerName].stats.dataAndStack.max), (double)(sampler->getValue().dataAndStack.max), 3.0);
-            BOOST_REQUIRE_CLOSE(memStats.memStats[samplerName].stats.dataAndStack.avg, sampler->getValue().dataAndStack.avg, 3.0);
+            BOOST_REQUIRE_CLOSE((double)(mapMemStats.rss.min), (double)(samplerMemStats->rss.min), 3.0);
+            BOOST_REQUIRE_CLOSE((double)(mapMemStats.rss.max), (double)(samplerMemStats->rss.max), 3.0);
+            BOOST_REQUIRE_CLOSE(mapMemStats.rss.average, samplerMemStats->rss.average, 3.0);
+
+            BOOST_REQUIRE_CLOSE((double)(mapMemStats.text.min), (double)(samplerMemStats->text.min), 3.0);
+            BOOST_REQUIRE_CLOSE((double)(mapMemStats.text.max), (double)(samplerMemStats->text.max), 3.0);
+            BOOST_REQUIRE_CLOSE(mapMemStats.text.average, samplerMemStats->text.average, 3.0);
+
+            BOOST_REQUIRE_CLOSE((double)(mapMemStats.dataAndStack.min), (double)(samplerMemStats->dataAndStack.min), 3.0);
+            BOOST_REQUIRE_CLOSE((double)(mapMemStats.dataAndStack.max), (double)(samplerMemStats->dataAndStack.max), 3.0);
+            BOOST_REQUIRE_CLOSE(mapMemStats.dataAndStack.average, samplerMemStats->dataAndStack.average, 3.0);
 		}
 	} catch (const std::exception& e) {
 		BOOST_TEST_MESSAGE(

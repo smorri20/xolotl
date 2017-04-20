@@ -25,9 +25,14 @@ public:
 
 
 private:
-
     /// Name of file to which memory usage profile data should be saved.
     std::string oFilename;  
+
+    /// Communicator to use for aggregating results.
+    MPI_Comm aggComm;
+
+    /// Rank within aggregating communicator.
+    int aggCommRank;
     
 
     /**
@@ -44,8 +49,12 @@ public:
 	/**
 	 * Construct a Registry for collecting memory usage profiles.
 	 */
-    ProfileNodeHandlerRegistry(std::string outputFilename)
-      : oFilename(outputFilename) {
+    ProfileNodeHandlerRegistry(std::string outputFilename, 
+                                MPI_Comm _aggComm,
+                                int _aggCommRank)
+      : oFilename(outputFilename),
+        aggComm(_aggComm),
+        aggCommRank(_aggCommRank) {
         // Nothing else to do.
     }
 

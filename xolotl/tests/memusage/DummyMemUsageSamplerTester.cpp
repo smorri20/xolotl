@@ -22,28 +22,6 @@ BOOST_AUTO_TEST_CASE(checkName) {
 }
 
 
-void
-CheckMemUsagePageStatsInitialValue(std::string memberName, 
-                                    const MemUsagePageStats& stats)
-{
-    BOOST_REQUIRE_EQUAL(std::numeric_limits<uint64_t>::max(), stats.min);
-    BOOST_REQUIRE_EQUAL(std::numeric_limits<uint64_t>::min(), stats.max);
-    BOOST_REQUIRE(std::isnan(stats.avg));
-    BOOST_REQUIRE(std::isnan(stats.stdev));
-}
-
-
-BOOST_AUTO_TEST_CASE(checkInitialValue) {
-
-	DummyMemUsageSampler sampler("test");
-
-    CheckMemUsagePageStatsInitialValue("vmSize", sampler.getValue().vmSize);
-    CheckMemUsagePageStatsInitialValue("vmRSS", sampler.getValue().vmRSS);
-    CheckMemUsagePageStatsInitialValue("rss", sampler.getValue().rss);
-    CheckMemUsagePageStatsInitialValue("text", sampler.getValue().text);
-    CheckMemUsagePageStatsInitialValue("dataAndStack", sampler.getValue().dataAndStack);
-}
-
 BOOST_AUTO_TEST_CASE(checkSampling) {
 
 	DummyMemUsageSampler sampler("test");
@@ -52,13 +30,9 @@ BOOST_AUTO_TEST_CASE(checkSampling) {
 	sleep(3);
 	sampler.stop();
 
-    // These are dummies, so their values after being started and stopped
-    // should be the same as their initial values.
-    CheckMemUsagePageStatsInitialValue("vmSize", sampler.getValue().vmSize);
-    CheckMemUsagePageStatsInitialValue("vmRSS", sampler.getValue().vmRSS);
-    CheckMemUsagePageStatsInitialValue("rss", sampler.getValue().rss);
-    CheckMemUsagePageStatsInitialValue("text", sampler.getValue().text);
-    CheckMemUsagePageStatsInitialValue("dataAndStack", sampler.getValue().dataAndStack);
+    // These are dummies, so the value can be empty.
+    auto val = sampler.getValue();
+    BOOST_REQUIRE_EQUAL(sampler.getValue(), std::make_shared<IMemUsageSampler::MemUsageData>());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

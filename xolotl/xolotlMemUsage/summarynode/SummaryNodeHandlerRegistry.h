@@ -1,11 +1,12 @@
-#ifndef XMEMUSAGE_STD_HANDLER_REGISTRY_H
-#define XMEMUSAGE_STD_HANDLER_REGISTRY_H
+#ifndef XMEMUSAGE_SUMMARY_NODE_HANDLER_REGISTRY_H
+#define XMEMUSAGE_SUMMARY_NODE_HANDLER_REGISTRY_H
 
 #include <map>
 #include <memory>
 #include "xolotlMemUsage/common/CommonHandlerRegistry.h"
-#include "xolotlMemUsage/standard/MemUsageObjStatistics.h"
-#include "xolotlMemUsage/standard/MemUsageSampler.h"
+#include "xolotlMemUsage/summarynode/NodeMemUsageObjStatistics.h"
+#include "xolotlMemUsage/summarynode/NodeMemUsageSampler.h"
+
 
 namespace xolotlMemUsage {
 
@@ -13,14 +14,14 @@ namespace xolotlMemUsage {
  * Base class for for building memory usage data collection objects that
  * collect data (as opposed to low-overhead stubs).
  */
-class StdHandlerRegistry : public CommonHandlerRegistry {
+class SummaryNodeHandlerRegistry : public CommonHandlerRegistry {
 public:
     /**
      * Globally aggregated memory usage statistics for all
      * data types we know how to collect.
      */
     struct GlobalMemUsageStats : public IHandlerRegistry::GlobalData {
-        MemUsageObjStatsMap<MemUsageObjStatistics<MemUsageStats> > memStats;
+        NodeMemUsageObjStatsMap<NodeMemUsageObjStatistics<NodeMemUsageStats> > memStats;
     };
 
 private:
@@ -39,7 +40,7 @@ private:
 	template<typename T, typename V>
 	void AggregateStatistics(int myRank,
 			const std::map<std::string, std::shared_ptr<T> >& myObjs,
-			std::map<std::string, MemUsageObjStatistics<V> >& stats) const;
+			std::map<std::string, NodeMemUsageObjStatistics<V> >& stats) const;
 
 	/**
 	 * Retrieve the value of the named object from the given collection of
@@ -82,7 +83,7 @@ private:
 	template<typename T, typename V>
 	void CollectAllObjectNames(int myRank,
 			const std::map<std::string, std::shared_ptr<T> >& myObjs,
-			std::map<std::string, MemUsageObjStatistics<V> >& stats) const;
+			std::map<std::string, NodeMemUsageObjStatistics<V> >& stats) const;
 
 
     /**
@@ -92,21 +93,33 @@ private:
      * @param name Name to associate with the sampler.
      */
     virtual std::shared_ptr<IMemUsageSampler> MakeMemUsageSampler(std::string name) {
-        return std::make_shared<MemUsageSampler>(name);
+        return std::make_shared<NodeMemUsageSampler>(name);
     }
+
+
+    /// Communicator to use for aggregating collected data.
+    MPI_Comm aggComm;
+
+
+    /// Our rank within the aggregator communicator.
+    int aggCommRank;
 
 
 public:
 
 	/**
-	 * Construct a StdHandlerRegistry.
+	 * Construct a SummaryNodeHandlerRegistry.
 	 */
-    StdHandlerRegistry(void) = default;
+    SummaryNodeHandlerRegistry(MPI_Comm _aggComm, int _aggCommRank)
+      : aggComm(_aggComm),
+        aggCommRank(_aggCommRank) {
+        // Nothing else to do.
+    }
 
 	/**
-	 * Destroy a StdHandlerRegistry.
+	 * Destroy a SummaryNodeHandlerRegistry.
 	 */
-	virtual ~StdHandlerRegistry(void) {
+	virtual ~SummaryNodeHandlerRegistry(void) {
         // Nothing else to do.
     }
 
@@ -129,4 +142,4 @@ public:
 
 } // namespace xolotlMemUsage
 
-#endif // XMEMUSAGE_STD_HANDLER_REGISTRY_H
+#endif // XMEMUSAGE_SUMMARY_NODE_HANDLER_REGISTRY_H

@@ -5,7 +5,8 @@
 #include <limits>
 #include <string>
 #include <cstdlib>
-#include "xolotlMemUsage/standard/MemUsageSampler.h"
+#include "xolotlMemUsage/summaryproc/MemUsageSampler.h"
+#include "xolotlMemUsage/summaryproc/MemUsageStats.h"
 
 using namespace std;
 using namespace xolotlMemUsage;
@@ -35,7 +36,7 @@ CheckMemUsagePageStatsInitialValue(std::string memberName,
 {
     BOOST_REQUIRE_EQUAL(std::numeric_limits<uint64_t>::max(), stats.min);
     BOOST_REQUIRE_EQUAL(std::numeric_limits<uint64_t>::min(), stats.max);
-    BOOST_REQUIRE(std::isnan(stats.avg));
+    BOOST_REQUIRE(std::isnan(stats.average));
     BOOST_REQUIRE(std::isnan(stats.stdev));
 }
 
@@ -48,11 +49,13 @@ BOOST_AUTO_TEST_CASE(checkInitialValue) {
     BOOST_TEST_MESSAGE("\nChecking MemUsageSampler initial values.\n");
 
 	// Check initial values.
-    CheckMemUsagePageStatsInitialValue("vmSize", sampler.getValue().vmSize);
-    CheckMemUsagePageStatsInitialValue("vmRSS", sampler.getValue().vmRSS);
-    CheckMemUsagePageStatsInitialValue("rss", sampler.getValue().rss);
-    CheckMemUsagePageStatsInitialValue("text", sampler.getValue().text);
-    CheckMemUsagePageStatsInitialValue("dataAndStack", sampler.getValue().dataAndStack);
+    auto testVal = std::dynamic_pointer_cast<MemUsageStats>(sampler.getValue());
+    BOOST_REQUIRE(testVal);
+    CheckMemUsagePageStatsInitialValue("vmSize", testVal->vmSize);
+    CheckMemUsagePageStatsInitialValue("vmRSS", testVal->vmRSS);
+    CheckMemUsagePageStatsInitialValue("rss", testVal->rss);
+    CheckMemUsagePageStatsInitialValue("text", testVal->text);
+    CheckMemUsagePageStatsInitialValue("dataAndStack", testVal->dataAndStack);
 }
 
 inline
@@ -61,8 +64,8 @@ CheckMinMaxAvg(std::string metric, const MemUsagePageStats& stats)
 {
     BOOST_TEST_MESSAGE("\nChecking page metric statistic relationships for " << metric << "\n");
     BOOST_REQUIRE(stats.min <= stats.max);
-    BOOST_REQUIRE(stats.min <= stats.avg);
-    BOOST_REQUIRE(stats.avg <= stats.max);
+    BOOST_REQUIRE(stats.min <= stats.average);
+    BOOST_REQUIRE(stats.average <= stats.max);
 }
 
 
@@ -85,14 +88,16 @@ BOOST_AUTO_TEST_CASE(checkSampling) {
     auto& runningSampleData = sampler.GetRunningSampleData();
     BOOST_REQUIRE_CLOSE(5.0, (double)(runningSampleData.nSamples), 20.0);
 
-    auto const& currStats = runningSampleData.GetCurrentStats();
-    CheckMinMaxAvg("vmSize", currStats.vmSize);
-    CheckMinMaxAvg("vmRSS", currStats.vmRSS);
-    CheckMinMaxAvg("rss", currStats.rss);
-    CheckMinMaxAvg("text", currStats.text);
-    CheckMinMaxAvg("dataAndStack", currStats.dataAndStack);
+    auto testVal = std::dynamic_pointer_cast<MemUsageStats>(sampler.getValue());
+    BOOST_REQUIRE(testVal);
 
-    BOOST_REQUIRE(currStats.vmSize.avg > (currStats.text.avg + currStats.dataAndStack.avg));
+    CheckMinMaxAvg("vmSize", testVal->vmSize);
+    CheckMinMaxAvg("vmRSS", testVal->vmRSS);
+    CheckMinMaxAvg("rss", testVal->rss);
+    CheckMinMaxAvg("text", testVal->text);
+    CheckMinMaxAvg("dataAndStack", testVal->dataAndStack);
+
+    BOOST_REQUIRE(testVal->vmSize.average > (testVal->text.average + testVal->dataAndStack.average));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

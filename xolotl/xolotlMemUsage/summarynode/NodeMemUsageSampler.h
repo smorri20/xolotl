@@ -1,19 +1,19 @@
-#ifndef XMEMUSAGE_MEM_USAGE_SAMPLER_H
-#define XMEMUSAGE_MEM_USAGE_SAMPLER_H
+#ifndef XMEMUSAGE_NODE_MEM_USAGE_SAMPLER_H
+#define XMEMUSAGE_NODE_MEM_USAGE_SAMPLER_H
 
 #include "xolotlMemUsage/common/MemUsageSamplerBase.h"
-#include "xolotlMemUsage/standard/StatmSampler.h"
+#include "xolotlMemUsage/summarynode/SysInfoSampler.h"
 
 
 namespace xolotlMemUsage {
 
-class MemUsageSampler : public MemUsageSamplerBase<Statm::Sampler> {
+class NodeMemUsageSampler : public MemUsageSamplerBase<SysInfo::Sampler> {
 
 public:
     /**
      * Disallow building an object without a name.
      */
-    MemUsageSampler(void) = delete;
+    NodeMemUsageSampler(void) = delete;
 
 
 	/**
@@ -21,8 +21,8 @@ public:
 	 *
 	 * @param name The object's name.
 	 */
-	MemUsageSampler(const std::string& name)
-      : MemUsageSamplerBase<Statm::Sampler>(name) {
+	NodeMemUsageSampler(const std::string& name)
+      : MemUsageSamplerBase<SysInfo::Sampler>(name) {
 
         // Nothing else to do.
     }
@@ -38,4 +38,4 @@ public:
 
 } // end namespace xolotlMemUsage
 
-#endif // XMEMUSAGE_MEM_USAGE_SAMPLER_H
+#endif // XMEMUSAGE_NODE_MEM_USAGE_SAMPLER_H

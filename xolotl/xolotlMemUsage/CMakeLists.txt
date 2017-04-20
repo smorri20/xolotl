@@ -9,9 +9,21 @@ SET(LIBRARY_NAME "xolotlMemUsage")
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_BINARY_DIR})
 
-# Always include the Dummy (stub), standard, and common classes.
-file(GLOB HEADERS *.h common/*.h dummy/*.h standard/*.h profileproc/*.h profilenode/*.h)
-file(GLOB SRC *.cpp common/*.cpp dummy/*.cpp standard/*.cpp profileproc/*.cpp profilenode/*.cpp)
+# Specify headers and source files to build/depend on.
+file(GLOB HEADERS *.h 
+                    common/*.h 
+                    dummy/*.h 
+                    summaryproc/*.h 
+                    summarynode/*.h
+                    profileproc/*.h 
+                    profilenode/*.h)
+file(GLOB SRC *.cpp 
+                    common/*.cpp 
+                    dummy/*.cpp 
+                    summaryproc/*.cpp 
+                    summarynode/*.cpp
+                    profileproc/*.cpp 
+                    profilenode/*.cpp)
 
 # Specify the library to build
 add_library(${LIBRARY_NAME} STATIC ${SRC})

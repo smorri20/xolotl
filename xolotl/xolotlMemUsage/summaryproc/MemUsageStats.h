@@ -8,7 +8,7 @@
 #include <cmath>
 #include <limits>
 #include "xolotlMemUsage/IMemUsageSampler.h"
-#include "xolotlMemUsage/standard/StatmSampler.h"
+#include "xolotlMemUsage/summaryproc/StatmSampler.h"
 
 
 namespace xolotlMemUsage {

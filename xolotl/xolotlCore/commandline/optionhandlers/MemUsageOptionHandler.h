@@ -2,6 +2,8 @@
 #define MEMUSAGEOPTIONHANDLER_H
 
 // Includes
+#include <iostream>
+#include <iterator>
 #include "OptionHandler.h"
 #include "xolotlMemUsage/IHandlerRegistry.h"
 
@@ -19,8 +21,10 @@ public:
 	 */
 	MemUsageOptionHandler() :
 		OptionHandler("memUsageHandler",
-				"memUsageHandler dummy | std [sampling_interval_ms] | (profileproc|profilenode) output_filename [sampling_interval_ms]\n"
+                "memUsageHandler dummy | (summary|profile) (proc|node) [sampling_interval_ms]\n"
 				"Which memory usage handlers to use (default = std) and sampling interval in ms (default=1000, ignored with dummy handler)\n") {}
+
+
 
 	/**
 	 * Destroy the MemUsageOptionHandler.
@@ -53,18 +57,18 @@ public:
 
             // Determine type of handler to use.
             xolotlMemUsage::IHandlerRegistry::RegistryType rtype = 
-                xolotlMemUsage::toRegistryType(tokens[0]);
+                xolotlMemUsage::toRegistryType(tokens);
             opt->setMemUsageHandlerType(rtype);
 
             // Handle additional arguments if necessary.
             if(rtype != xolotlMemUsage::IHandlerRegistry::dummy) {
                 
-                auto currIdx = 1;
+                auto currIdx = 2;   // skips '(summary|profile) (proc|node)'
 
-                if((rtype == xolotlMemUsage::IHandlerRegistry::profileproc) or
-                    (rtype == xolotlMemUsage::IHandlerRegistry::profilenode)) {
+                if((rtype == xolotlMemUsage::IHandlerRegistry::profileProc) or
+                    (rtype == xolotlMemUsage::IHandlerRegistry::profileNode)) {
 
-                    if(tokens.size() < 2) {
+                    if(tokens.size() < 3) {
                         // We were not given a filename to use.
                         throw std::invalid_argument("Memory usage profiling requested, but no output filename given for memory usage profiles");
                     }

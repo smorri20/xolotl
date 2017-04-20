@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <sstream>
+#include <iterator>
 #include "xolotlMemUsage/IHandlerRegistry.h"
 #include "xolotlMemUsage/RuntimeError.h"
 
@@ -21,24 +22,41 @@ namespace xolotlMemUsage {
  * @param arg Type of handler registry to create.
  * @return Newly-created handler registry.
  */
-inline IHandlerRegistry::RegistryType toRegistryType(
-		const std::string& arg) {
+inline IHandlerRegistry::RegistryType toRegistryType(const std::vector<std::string>& tokens) {
 
 	IHandlerRegistry::RegistryType ret;
 
-	if (arg == "dummy") {
-		ret = IHandlerRegistry::dummy;
-	} else if (arg == "std") {
-		ret = IHandlerRegistry::std;
-    } else if (arg == "profileproc") {
-        ret = IHandlerRegistry::profileproc; 
-    } else if (arg == "profilenode") {
-        ret = IHandlerRegistry::profilenode; 
-	} else {
-		std::ostringstream estr;
-		estr << "Invalid memory usage handler argument \"" << arg << "\" seen.";
+    try {
+        if(tokens[0] == "dummy") {
+            ret = IHandlerRegistry::dummy;
+        } else if(tokens[0] == "summary") {
+            if(tokens[1] == "proc") {
+                ret = IHandlerRegistry::summaryProc;
+            } else if(tokens[1] == "node") {
+                ret = IHandlerRegistry::summaryNode;
+            } else {
+                throw std::invalid_argument("unrecognized registry variant");
+            }
+        } else if(tokens[0] == "profile") {
+            if(tokens[1] == "proc") {
+                ret = IHandlerRegistry::profileProc;
+            } else if(tokens[1] == "node") {
+                ret = IHandlerRegistry::profileNode;
+            } else {
+                throw std::invalid_argument("unrecognized registry variant");
+            }
+        } else  {
+            throw std::invalid_argument("unrecognized primary registry type");
+        }
+    }
+    catch(std::exception& e) {
+        std::ostringstream estr;
+        estr << "Invalid memory usage handler arguments: ";
+        std::copy(tokens.begin(), tokens.end(),
+                std::ostream_iterator<std::string>(estr, " "));
+        estr << '\n' << e.what() << '\n';
 		throw std::invalid_argument(estr.str());
-	}
+    }
 	return ret;
 }
 
