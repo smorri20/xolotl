@@ -1411,9 +1411,9 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 
 	PetscFunctionBeginUser;
 
-	// Don't do anything if it is not on the stride
-	if (timestep % 10 != 0)
-		PetscFunctionReturn(0);
+//	// Don't do anything if it is not on the stride
+//	if (timestep % 10 != 0)
+//		PetscFunctionReturn(0);
 
 	// Get the number of processes
 	int worldSize;
@@ -1457,7 +1457,7 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 		outputFile.open(name.str());
 	}
 
-	double constantMulti = xolotlCore::pi
+	double constantMulti = xolotlCore::pi * 8.0
 			/ std::pow(xolotlCore::tungstenLatticeConstant, 3.0);
 
 	// Loop on the full grid
@@ -1490,9 +1490,8 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 
 			// Loop on all the indices to compute the mean
 			for (int i = 0; i < indices1D.size(); i++) {
-				outputFile << 2.0 * radii1D[i] << " "
-						<< gridPointSolution[indices1D[i]] * constantMulti * 4.0
-								* radii1D[i] * radii1D[i] << std::endl;
+				outputFile << radii1D[i] << " "
+						<< gridPointSolution[indices1D[i]] * constantMulti * radii1D[i] * radii1D[i] << std::endl;
 			}
 
 			// Loop on the super clusters
@@ -1500,7 +1499,7 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 				// Get the super cluster
 				auto superCluster = (PSISuperCluster *) superClusters[l];
 				// Get its diameter
-				double diam = 2.0 * superCluster->getReactionRadius();
+				double diam = superCluster->getReactionRadius();
 				// Get its concentration
 				double conc = superCluster->getTotalConcentration() / (double) superCluster->getNTot();
 				outputFile << diam << " "

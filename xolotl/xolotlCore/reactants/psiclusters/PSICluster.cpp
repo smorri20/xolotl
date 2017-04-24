@@ -129,10 +129,10 @@ void PSICluster::optimizeReactions() {
 
 				// Remove the reaction from the vector
 				itBis = reactingPairs.erase(itBis);
-			}
-			else {
+			} else {
 				// Check the distance
-				if (std::distance(it, itBis) > 2) break;
+				if (std::distance(it, itBis) > 2)
+					break;
 				itBis++;
 			}
 		}
@@ -161,10 +161,10 @@ void PSICluster::optimizeReactions() {
 
 				// Remove the reaction from the vector
 				itBis = combiningReactants.erase(itBis);
-			}
-			else {
+			} else {
 				// Check the distance
-				if (std::distance(it, itBis) > 2) break;
+				if (std::distance(it, itBis) > 2)
+					break;
 				itBis++;
 			}
 		}
@@ -194,10 +194,10 @@ void PSICluster::optimizeReactions() {
 
 				// Remove the reaction from the vector
 				itBis = dissociatingPairs.erase(itBis);
-			}
-			else {
+			} else {
 				// Check the distance
-				if (std::distance(it, itBis) > 2) break;
+				if (std::distance(it, itBis) > 2)
+					break;
 				itBis++;
 			}
 		}
@@ -226,10 +226,10 @@ void PSICluster::optimizeReactions() {
 
 				// Remove the reaction from the vector
 				itBis = emissionPairs.erase(itBis);
-			}
-			else {
+			} else {
 				// Check the distance
-				if (std::distance(it, itBis) > 2) break;
+				if (std::distance(it, itBis) > 2)
+					break;
 				itBis++;
 			}
 		}

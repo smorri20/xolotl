@@ -314,7 +314,7 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 
 		// Reinitialize the group indices for the vacancy direction
 		vIndex += vWidth;
-		vWidth = std::max((int) (std::pow((double) (k * vSectionWidth), 3.0) / 1000.0), vSectionWidth);
+		vWidth = std::max((int) (std::pow((double) (k * vSectionWidth), 3.0) / 10000.0), vSectionWidth);
 		vWidth -= vWidth % vSectionWidth;
 	}
 

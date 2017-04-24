@@ -31,11 +31,11 @@ double InterstitialCluster::getEmissionFlux() const {
 	// Initial declarations
 	double flux = PSICluster::getEmissionFlux();
 
-//	// Compute the loss to dislocation sinks
-//	if (size < 2) {
-//		// bias * k^2 * D * C
-//		flux += sinkBias * sinkStrength * diffusionCoefficient * concentration;
-//	}
+	// Compute the loss to dislocation sinks
+	if (size < 2) {
+		// bias * k^2 * D * C
+		flux += sinkBias * sinkStrength * diffusionCoefficient * concentration;
+	}
 
 	return flux;
 }
@@ -45,11 +45,11 @@ void InterstitialCluster::getEmissionPartialDerivatives(
 	// Initial declarations
 	PSICluster::getEmissionPartialDerivatives(partials);
 
-//	// Compute the loss to dislocation sinks
-//	if (size < 2) {
-//		// bias * k^2 * D * C
-//		partials[id - 1] -= sinkBias * sinkStrength * diffusionCoefficient;
-//	}
+	// Compute the loss to dislocation sinks
+	if (size < 2) {
+		// bias * k^2 * D * C
+		partials[id - 1] -= sinkBias * sinkStrength * diffusionCoefficient;
+	}
 
 	return;
 }

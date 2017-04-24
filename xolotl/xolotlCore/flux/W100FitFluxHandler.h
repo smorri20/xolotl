@@ -58,8 +58,8 @@ public:
 		// Set the flux index corresponding the the single helium cluster here
 		auto fluxCluster = network->get(vType, 1);
 		fluxIndex = fluxCluster->getId() - 1;
-//		fluxCluster = network->get(iType, 1);
-//		fluxBisIndex = fluxCluster->getId() - 1;
+		fluxCluster = network->get(iType, 1);
+		fluxBisIndex = fluxCluster->getId() - 1;
 
 		return;
 	}

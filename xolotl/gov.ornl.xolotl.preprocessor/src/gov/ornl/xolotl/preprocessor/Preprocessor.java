@@ -73,7 +73,7 @@ public class Preprocessor {
 	private int maxV;
 
 	// The diffusion factor for a single vacancy.
-	private double vOneDiffusionFactor = 2.0e+11;
+	private double vOneDiffusionFactor = 1.0296125e+11;
 
 	// The migration energy for a single vacancy.
 	private double vOneMigrationEnergy = 0.67;
@@ -85,7 +85,7 @@ public class Preprocessor {
 	private int maxIDiffusionSize = 5;
 
 	// The diffusion coefficients for single species interstitial clusters.
-	private double[] iDiffusionFactors = { 0.0, 2.0e+11, 8.0e+10, 3.9e+10, 2.0e+10, 1.0e+10 };
+	private double[] iDiffusionFactors = { 0.0, 1.0296125e+11, 8.0e+10, 3.9e+10, 2.0e+10, 1.0e+10 };
 
 	// The migration energies for single species interstitial clusters.
 	private double[] iMigrationEnergies = { Double.POSITIVE_INFINITY, 0.34, 0.02, 0.03, 0.04, 0.05 };
