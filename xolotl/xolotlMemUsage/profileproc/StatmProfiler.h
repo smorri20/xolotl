@@ -64,10 +64,10 @@ inline
 std::ostream&
 operator<<(std::ostream& os, const SampleAverages& sa)
 {
-    os << sa.vmSize << '\t'
-        << sa.vmRSS << '\t'
-        << sa.rss << '\t'
-        << sa.text << '\t'
+    os << sa.vmSize << ','
+        << sa.vmRSS << ','
+        << sa.rss << ','
+        << sa.text << ','
         << sa.dataAndStack;
     return os;
 }

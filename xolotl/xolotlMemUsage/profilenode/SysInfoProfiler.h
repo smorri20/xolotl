@@ -93,13 +93,13 @@ inline
 std::ostream&
 operator<<(std::ostream& os, const SampleAverages& sa)
 {
-    os << sa.totalram << '\t'
-        << sa.freeram << '\t'
-        << sa.sharedram << '\t'
-        << sa.bufferram << '\t'
-        << sa.totalswap << '\t'
-        << sa.freeswap << '\t'
-        << sa.totalhigh << '\t'
+    os << sa.totalram << ','
+        << sa.freeram << ','
+        << sa.sharedram << ','
+        << sa.bufferram << ','
+        << sa.totalswap << ','
+        << sa.freeswap << ','
+        << sa.totalhigh << ','
         << sa.freehigh;
     return os;
 }
