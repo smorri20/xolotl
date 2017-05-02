@@ -150,9 +150,18 @@ int main(int argc, char **argv) {
 		// Set up our performance data infrastructure and memory
         // usage monitoring infrastructure.
 		xperf::initialize(opts.getPerfHandlerType());
+		auto handlerRegistry = xolotlPerf::getHandlerRegistry();
         xmem::initialize(opts.getMemUsageHandlerType(),
                             opts.getMemUsageSamplingInterval(),
                             opts.getMemUsageProfileFilename());
+        auto memUsageHandlerRegistry = xmem::getHandlerRegistry();
+
+        // Start of "real" work.
+        // We start a new scope so that any memory allocated
+        // on the stack during the "real" work can be recovered
+        // before aggregating and outputting performance data 
+        // and memory usage data.
+        {
 
 		// Get the MPI rank
 		MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -180,11 +189,9 @@ int main(int argc, char **argv) {
 
 		// Access our performance handler registry to obtain a Timer
 		// measuring the runtime of the entire program.
-		auto handlerRegistry = xolotlPerf::getHandlerRegistry();
 		auto totalTimer = handlerRegistry->getTimer("total");
 		totalTimer->start();
 
-        auto memUsageHandlerRegistry = xmem::getHandlerRegistry();
         auto totalMemUsageSampler = memUsageHandlerRegistry->getMemUsageSampler("total");
         totalMemUsageSampler->start();
 
@@ -226,6 +233,8 @@ int main(int argc, char **argv) {
 
         totalMemUsageSampler->stop();
 		totalTimer->stop();
+
+        } // end of "real" work.
 
 		// Report statistics about the performance data collected during
 		// the run we just completed.
