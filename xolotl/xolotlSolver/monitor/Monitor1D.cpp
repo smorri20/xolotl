@@ -1411,9 +1411,9 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 
 	PetscFunctionBeginUser;
 
-//	// Don't do anything if it is not on the stride
-//	if (timestep % 10 != 0)
-//		PetscFunctionReturn(0);
+	// Don't do anything if it is not on the stride
+	if (time < 1.0e9)
+		PetscFunctionReturn(0);
 
 	// Get the number of processes
 	int worldSize;
