@@ -2,6 +2,7 @@
 #include <TemperatureHandler.h>
 #include <TemperatureProfileHandler.h>
 #include <TemperatureGradientHandler.h>
+#include <HeatEquationHandler.h>
 #include <MathUtils.h>
 #include <fstream>
 #include <iostream>
@@ -33,18 +34,22 @@ bool initializeTempHandler(xolotlCore::Options &options) {
 		double gradient = options.getTemperatureGradient();
 		if (xolotlCore::equal(gradient, 0.0)) {
 			// we are to use a constant temperature handler
-			theTemperatureHandler = std::make_shared<xolotlCore::TemperatureHandler>(temp);
-		}
-		else {
+			theTemperatureHandler = std::make_shared<
+					xolotlCore::TemperatureHandler>(temp);
+		} else {
 			// Use a temperature gradient
-			theTemperatureHandler = std::make_shared<xolotlCore::TemperatureGradientHandler>(temp, gradient);
+			theTemperatureHandler = std::make_shared<
+					xolotlCore::TemperatureGradientHandler>(temp, gradient);
 		}
 	} else if (options.useTemperatureProfileHandlers()) {
 		auto tempFileName = options.getTempProfileFilename();
-//		std::cout << "\nHandler Temperature file = " << tempFileName << std::endl;
-		theTemperatureHandler = std::make_shared<xolotlCore::TemperatureProfileHandler>(
-				tempFileName);
-		theTemperatureHandler->initializeTemperature();
+		theTemperatureHandler = std::make_shared<
+				xolotlCore::TemperatureProfileHandler>(tempFileName);
+	} else if (options.useHeatEquationHandlers()) {
+		theTemperatureHandler =
+				std::make_shared<xolotlCore::HeatEquationHandler>(
+						options.getConstTemperature(),
+						options.getBulkTemperature());
 	} else {
 		// Only print the error message once when running in parallel
 		if (procId == 0) {
@@ -54,7 +59,8 @@ bool initializeTempHandler(xolotlCore::Options &options) {
 		}
 		auto temp = options.getConstTemperature();
 		// we are to use a constant temperature handler
-		theTemperatureHandler = std::make_shared<xolotlCore::TemperatureHandler>(temp);
+		theTemperatureHandler =
+				std::make_shared<xolotlCore::TemperatureHandler>(temp);
 	}
 
 	return ret;
