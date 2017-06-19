@@ -84,15 +84,22 @@ void initialize(IHandlerRegistry::RegistryType rtype,
         
     // Build a registry that will produce the desired type of memory
     // usage samplers.
-	switch (rtype) {
-	case IHandlerRegistry::dummy:
-		theHandlerRegistry = std::make_shared<DummyHandlerRegistry>();
-		break;
+    switch (rtype) {
+    case IHandlerRegistry::dummy:
+        theHandlerRegistry = std::make_shared<DummyHandlerRegistry>();
+        break;
 
+#if defined(HAVE_PER_PROC_DATA_SOURCE)
     case IHandlerRegistry::summaryProc:
         theHandlerRegistry = std::make_shared<SummaryProcHandlerRegistry>();
-		break;
+        break;
 
+    case IHandlerRegistry::profileProc:
+        theHandlerRegistry = std::make_shared<ProfileProcHandlerRegistry>(profileFilename);
+        break;
+#endif // defined(HAVE_PER_PROC_DATA_SOURCE)
+
+#if defined(HAVE_PER_NODE_DATA_SOURCE)
     case IHandlerRegistry::summaryNode:
         if(participating) {
             // Build the registry to use the aggregating communicator.
@@ -105,10 +112,6 @@ void initialize(IHandlerRegistry::RegistryType rtype,
         }
         break;
 
-    case IHandlerRegistry::profileProc:
-        theHandlerRegistry = std::make_shared<ProfileProcHandlerRegistry>(profileFilename);
-		break;
-
     case IHandlerRegistry::profileNode:
         if(participating) {
             // Build the registry to use the aggregating communicator.
@@ -120,21 +123,22 @@ void initialize(IHandlerRegistry::RegistryType rtype,
             theHandlerRegistry = std::make_shared<DummyHandlerRegistry>();
         }
         break;
+#endif // defined(HAVE_PER_NODE_DATA_SOURCE)
 
-	default:
-		throw std::invalid_argument(
-				"unrecognized memory usage handler registry type requested");
-		break;
-	}
+    default:
+        throw std::invalid_argument(
+                "unrecognized memory usage handler registry type requested");
+        break;
+    }
 }
 
 // Provide access to our handler registry.
 std::shared_ptr<IHandlerRegistry> getHandlerRegistry(void) {
-	if (!theHandlerRegistry) {
-		throw std::runtime_error(
-				"Request for xolotlMemUsage handler registry before xolotlMemUsage library has been initialized");
-	}
-	return theHandlerRegistry;
+    if (!theHandlerRegistry) {
+        throw std::runtime_error(
+                "Request for xolotlMemUsage handler registry before xolotlMemUsage library has been initialized");
+    }
+    return theHandlerRegistry;
 }
 
 } // end namespace xolotlMemUsage
