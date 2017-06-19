@@ -1,5 +1,5 @@
 #include <fstream>
-#include "xolotlMemUsage/common/StatmSamplingThread.h"
+#include "xolotlMemUsage/common/Statm/StatmSamplingThread.h"
 
 namespace xolotlMemUsage {
 

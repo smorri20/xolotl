@@ -2,7 +2,7 @@
 #define XMEMUSAGE_STATM_MEM_PROFILER_H
 
 #include "xolotlMemUsage/IMemUsageSampler.h"
-#include "xolotlMemUsage/common/StatmSamplerBase.h"
+#include "xolotlMemUsage/common/Statm/StatmSamplerBase.h"
 #include "xolotlMemUsage/common/TimeHistogram.h"
 
 namespace xolotlMemUsage {

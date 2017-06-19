@@ -2,7 +2,7 @@
 #define XMEMUSAGE_SYSINFO_SAMPLING_THREAD_H
 
 #include "xolotlMemUsage/common/AsyncSamplingThread.h"
-#include "xolotlMemUsage/common/SysInfoSamplerBase.h"
+#include "xolotlMemUsage/common/SysInfo/SysInfoSamplerBase.h"
 
 namespace xolotlMemUsage {
 

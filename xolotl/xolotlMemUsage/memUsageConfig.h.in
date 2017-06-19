@@ -2,4 +2,8 @@
 #define XMEMUSAGE_MEMUSAGECONFIG_H
 // Configuration header for the xolotlMemUsage library.
 
+#cmakedefine HAVE_PER_NODE_DATA_SOURCE
+
+#cmakedefine HAVE_PER_PROC_DATA_SOURCE
+
 #endif // XMEMUSAGE_MEMUSAGECONFIG_H

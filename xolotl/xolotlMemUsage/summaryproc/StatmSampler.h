@@ -2,7 +2,7 @@
 #define XMEMUSAGE_MEM_SAMPLER_H
 
 #include "xolotlMemUsage/IMemUsageSampler.h"
-#include "xolotlMemUsage/common/StatmSamplerBase.h"
+#include "xolotlMemUsage/common/Statm/StatmSamplerBase.h"
 
 namespace xolotlMemUsage {
 

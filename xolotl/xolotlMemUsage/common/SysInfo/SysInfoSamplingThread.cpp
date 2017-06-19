@@ -1,5 +1,5 @@
 #include <sys/sysinfo.h>
-#include "xolotlMemUsage/common/SysInfoSamplingThread.h"
+#include "xolotlMemUsage/common/SysInfo/SysInfoSamplingThread.h"
 
 namespace xolotlMemUsage {
 

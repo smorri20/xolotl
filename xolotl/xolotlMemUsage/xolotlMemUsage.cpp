@@ -1,12 +1,19 @@
+#include "mpi.h"
 #include <iostream>
 #include <sstream>
 #include "xolotlMemUsage/memUsageConfig.h"
 #include "xolotlMemUsage/xolotlMemUsage.h"
 #include "xolotlMemUsage/dummy/DummyHandlerRegistry.h"
-#include "xolotlMemUsage/summaryproc/SummaryProcHandlerRegistry.h"
+
+#if defined(HAVE_PER_NODE_DATA_SOURCE)
 #include "xolotlMemUsage/summarynode/SummaryNodeHandlerRegistry.h"
-#include "xolotlMemUsage/profileproc/ProfileProcHandlerRegistry.h"
 #include "xolotlMemUsage/profilenode/ProfileNodeHandlerRegistry.h"
+#endif // defined(HAVE_PER_NODE_DATA_SOURCE)
+
+#if defined(HAVE_PER_PROC_DATA_SOURCE)
+#include "xolotlMemUsage/summaryproc/SummaryProcHandlerRegistry.h"
+#include "xolotlMemUsage/profileproc/ProfileProcHandlerRegistry.h"
+#endif // defined(HAVE_PER_PROC_DATA_SOURCE)
 
 
 namespace xolotlMemUsage {

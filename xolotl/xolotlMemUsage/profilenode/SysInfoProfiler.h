@@ -2,7 +2,7 @@
 #define XMEMUSAGE_SYSINFO_MEM_PROFILER_H
 
 #include "xolotlMemUsage/IMemUsageSampler.h"
-#include "xolotlMemUsage/common/SysInfoSamplerBase.h"
+#include "xolotlMemUsage/common/SysInfo/SysInfoSamplerBase.h"
 #include "xolotlMemUsage/common/TimeHistogram.h"
 
 namespace xolotlMemUsage {

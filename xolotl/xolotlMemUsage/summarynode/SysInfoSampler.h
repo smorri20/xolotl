@@ -2,7 +2,7 @@
 #define XMEMUSAGE_SYSINFO_MEM_SAMPLER_H
 
 #include "xolotlMemUsage/IMemUsageSampler.h"
-#include "xolotlMemUsage/common/SysInfoSamplerBase.h"
+#include "xolotlMemUsage/common/SysInfo/SysInfoSamplerBase.h"
 
 namespace xolotlMemUsage {
 
