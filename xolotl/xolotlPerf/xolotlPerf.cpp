@@ -13,6 +13,10 @@ namespace xolotlPerf {
 
 static std::shared_ptr<IHandlerRegistry> theHandlerRegistry;
 
+const MPI_Datatype ITimer::MPIValType = MPI_DOUBLE;
+const MPI_Datatype IEventCounter::MPIValType = MPI_UNSIGNED_LONG;
+const MPI_Datatype IHardwareCounter::MPIValType = MPI_LONG_LONG_INT;
+
 // Create the desired type of handler registry.
 void initialize(IHandlerRegistry::RegistryType rtype) {
 
