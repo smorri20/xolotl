@@ -1,6 +1,7 @@
 #ifndef XMEMUSAGE_PROFILE_NODE_HANDLER_REGISTRY_H
 #define XMEMUSAGE_PROFILE_NODE_HANDLER_REGISTRY_H
 
+#include "mpi.h"
 #include <map>
 #include <memory>
 #include "xolotlMemUsage/common/CommonHandlerRegistry.h"
