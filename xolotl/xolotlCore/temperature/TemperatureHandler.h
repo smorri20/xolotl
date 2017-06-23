@@ -86,6 +86,15 @@ public:
 	}
 
 	/**
+	 * This operation sets the heat coefficient to use in the equation.
+	 *
+	 * \see ITemperatureHandler.h
+	 */
+	virtual void setHeatCoefficient(double coef) {
+		return;
+	}
+
+	/**
 	 * This operation sets the surface position.
 	 * Don't do anything.
 	 *

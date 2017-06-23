@@ -50,6 +50,19 @@ bool initializeTempHandler(xolotlCore::Options &options) {
 				std::make_shared<xolotlCore::HeatEquationHandler>(
 						options.getConstTemperature(),
 						options.getBulkTemperature());
+
+		// Set the heat coefficient which depends on the material
+		auto problemType = options.getMaterial();
+		// PSI case
+		if (problemType == "W100" || problemType == "W110"
+				|| problemType == "W111" || problemType == "W211"
+				|| problemType == "TRIDYN")
+			theTemperatureHandler->setHeatCoefficient(
+					xolotlCore::tungstenHeatCoefficient);
+		// NE case
+		else if (problemType == "Fuel")
+			theTemperatureHandler->setHeatCoefficient(
+					xolotlCore::uo2HeatCoefficient);
 	} else {
 		// Only print the error message once when running in parallel
 		if (procId == 0) {

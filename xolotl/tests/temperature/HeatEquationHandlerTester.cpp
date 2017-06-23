@@ -49,6 +49,7 @@ BOOST_AUTO_TEST_CASE(checkHeat) {
 
 	// Create the heat handler
 	HeatEquationHandler heatHandler = HeatEquationHandler(1200.0, 1000.0);
+	heatHandler.setHeatCoefficient(xolotlCore::tungstenHeatCoefficient);
 
 	// Check the initial temperatures
 	BOOST_REQUIRE_CLOSE(heatHandler.getTemperature({ 0.0, 0.0, 0.0 }, 0.0), 1200.0, 0.01);

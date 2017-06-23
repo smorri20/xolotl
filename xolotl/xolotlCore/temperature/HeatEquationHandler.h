@@ -41,12 +41,17 @@ private:
 	double surfacePosition;
 
 	/**
+	 * The heat coefficient
+	 */
+	double heatCoef;
+
+	/**
 	 * The default constructor is private because the TemperatureHandler
 	 * must be initialized with a temperature
 	 */
 	HeatEquationHandler() :
 			surfaceTemperature(0.0), bulkTemperature(0.0), localTemperature(
-					0.0), dof(0), surfacePosition(0.0) {
+					0.0), dof(0), surfacePosition(0.0), heatCoef(0.0) {
 	}
 
 public:
@@ -59,7 +64,7 @@ public:
 	 */
 	HeatEquationHandler(double surfTemp, double bulkTemp) :
 			surfaceTemperature(surfTemp), bulkTemperature(bulkTemp), localTemperature(
-					0.0), dof(0), surfacePosition(0.0) {
+					0.0), dof(0), surfacePosition(0.0), heatCoef(0.0) {
 	}
 
 	/**
@@ -113,6 +118,15 @@ public:
 	}
 
 	/**
+	 * This operation sets the heat coefficient to use in the equation.
+	 *
+	 * \see ITemperatureHandler.h
+	 */
+	virtual void setHeatCoefficient(double coef) {
+		heatCoef = coef;
+	}
+
+	/**
 	 * This operation sets the surface position.
 	 *
 	 * \see ITemperatureHandler.h
@@ -138,7 +152,7 @@ public:
 		double oldRightConc = concVector[2][index];
 
 		// Use a simple midpoint stencil to compute the concentration
-		double conc = xolotlCore::tungstenHeatCoefficient * 2.0
+		double conc = heatCoef * 2.0
 				* (oldLeftConc + (hxLeft / hxRight) * oldRightConc
 						- (1.0 + (hxLeft / hxRight)) * oldConc)
 				/ (hxLeft * (hxLeft + hxRight));
@@ -166,12 +180,9 @@ public:
 
 		// Compute the partial derivatives for diffusion of this cluster
 		// for the middle, left, and right grid point
-		val[0] = -2.0 * xolotlCore::tungstenHeatCoefficient
-				/ (hxLeft * hxRight); // middle
-		val[1] = xolotlCore::tungstenHeatCoefficient * 2.0
-				/ (hxLeft * (hxLeft + hxRight)); // left
-		val[2] = xolotlCore::tungstenHeatCoefficient * 2.0
-				/ (hxRight * (hxLeft + hxRight)); // right
+		val[0] = -2.0 * heatCoef / (hxLeft * hxRight); // middle
+		val[1] = heatCoef * 2.0 / (hxLeft * (hxLeft + hxRight)); // left
+		val[2] = heatCoef * 2.0 / (hxRight * (hxLeft + hxRight)); // right
 
 		return;
 	}

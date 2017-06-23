@@ -52,6 +52,13 @@ public:
 	virtual void setTemperature(double * solution) = 0;
 
 	/**
+	 * This operation sets the heat coefficient to use in the equation.
+	 *
+	 * @param coef The heat coefficient
+	 */
+	virtual void setHeatCoefficient(double coef) = 0;
+
+	/**
 	 * This operation sets the surface position.
 	 *
 	 * @param surfacePos The surface location
