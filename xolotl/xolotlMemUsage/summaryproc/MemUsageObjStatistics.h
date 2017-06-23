@@ -4,7 +4,15 @@
 #include <string>
 #include <map>
 #include <iostream>
-#include "xolotlMemUsage/summaryproc/MemUsageStats.h"
+
+#include "xolotlMemUsage/memUsageConfig.h"
+
+
+#if defined(HAVE_STATM)
+    #include "xolotlMemUsage/summaryproc/Statm/MemUsageStats.h"
+#else
+    #error "Configuration error: thought we had a per-proc data source, but no actual data source available."
+#endif // defined(HAVE_STATM)
 
 namespace xolotlMemUsage {
 

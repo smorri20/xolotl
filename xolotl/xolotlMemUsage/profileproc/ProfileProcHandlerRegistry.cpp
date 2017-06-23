@@ -10,6 +10,9 @@
 #include "xolotlMemUsage/profileproc/ProfileProcHandlerRegistry.h"
 #include "xolotlMemUsage/profileproc/MemUsageProfiler.h"
 
+// Pull in definitions of TimeHistogram template methods so we can
+// instantiate the methods we need.
+#include "xolotlMemUsage/common/TimeHistogram.cpp"
 
 namespace xolotlMemUsage {
 
@@ -18,11 +21,9 @@ ProfileProcHandlerRegistry::collectData(void) const {
 
     auto ret = std::make_shared<GlobalMemUsageData>();
 
-    // Determine my MPI rank.
-	int myRank;
+    // Determine size of our aggregating communicator.
     int cwSize;
-	MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
-    MPI_Comm_size(MPI_COMM_WORLD, &cwSize);
+    MPI_Comm_size(aggComm, &cwSize);
 
 #if READY
     // TODO implement aggregation of memory usage profiles.
@@ -42,7 +43,7 @@ ProfileProcHandlerRegistry::collectData(void) const {
 
         // Build our output file name.
         std::ostringstream rstr;
-        rstr << std::setw(maxWidth) << std::setfill('0') << myRank;
+        rstr << std::setw(maxWidth) << std::setfill('0') << aggCommRank;
         actualFilename.replace(pos, 2, rstr.str());
     }
 

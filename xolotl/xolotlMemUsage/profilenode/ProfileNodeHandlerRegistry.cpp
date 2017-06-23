@@ -10,6 +10,9 @@
 #include "xolotlMemUsage/profilenode/ProfileNodeHandlerRegistry.h"
 #include "xolotlMemUsage/profilenode/NodeMemUsageProfiler.h"
 
+// Pull in definitions of TimeHistogram template methods so we can
+// instantiate the methods we need.
+#include "xolotlMemUsage/common/TimeHistogram.cpp"
 
 namespace xolotlMemUsage {
 

@@ -9,7 +9,6 @@ namespace xolotlMemUsage {
 
 namespace SysInfo {
 
-
 struct RunningSampleTotals
 {
     double totalram;
@@ -89,6 +88,14 @@ struct SampleAverages
 };
 
 
+
+inline
+std::string
+GetCSVHeaderString(void)
+{
+    return "totalram_bytes,freeram_bytes,sharedram_bytes,bufferram_bytes,totalswap_bytes,freeswap_bytes,totalhigh_bytes,freehigh_bytes";
+}
+
 inline
 std::ostream&
 operator<<(std::ostream& os, const SampleAverages& sa)
@@ -107,79 +114,34 @@ operator<<(std::ostream& os, const SampleAverages& sa)
 
 using ProfilerTimeHistogram = TimeHistogram<Sample, RunningSampleTotals, SampleAverages, AsyncSamplingThreadBase::ClockType>;
 
-
-//
-// For reasons I don't understand, at least some compilers (e.g., Intel 17)
-// require these template specializations for structures to be done
-// outside of the SysInfo namespace.
-// We close off the namespace, define the specializations, then
-// restart the namespace for the Profiler class.
-//
-
 } // namespace SysInfo
 
-template<>
-void
-SysInfo::ProfilerTimeHistogram::BinData::HandleSample(const SysInfo::Sample& sample)
-{
-    nSamples++;
 
-    if(runningValue.mem_unit == 0)
-    {
-        runningValue.mem_unit = sample.mem_unit;
-    }
-    else
-    {
-        assert(sample.mem_unit == runningValue.mem_unit);
-    }
-
-    runningValue.totalram += sample.totalram;
-    runningValue.freeram += sample.freeram;
-    runningValue.sharedram += sample.sharedram;
-    runningValue.bufferram += sample.bufferram;
-    runningValue.totalswap += sample.totalswap;
-    runningValue.freeswap += sample.freeswap;
-    runningValue.totalhigh += sample.totalhigh;
-    runningValue.freehigh += sample.freehigh;
-}
+//
+// We need to forward-declare the specializations of these TimeHistogram
+// methods here, or else they will be instantiated with their default
+// implementations.
+//
+// In C++11, these explicit specializations have to occur in the
+// namespace that *encloses* the specialized template.  (Earlier
+// standards required them to be in the namespace "of which the template
+// is a member.")  So, we close off the namespace to declare the
+// specializations and later re-open it for the code that will
+// cause the class to be implicitly instantiated except for these
+// explicit specializations.
+//
 
 template<>
 void
-SysInfo::ProfilerTimeHistogram::BinData::Reset(void)
-{
-    nSamples = 0;
+SysInfo::ProfilerTimeHistogram::BinData::HandleSample(const SysInfo::Sample& sample);
 
-    runningValue.mem_unit = 0;
-
-    runningValue.totalram = 0;
-    runningValue.freeram = 0;
-    runningValue.sharedram = 0;
-    runningValue.bufferram = 0;
-    runningValue.totalswap = 0;
-    runningValue.freeswap = 0;
-    runningValue.totalhigh = 0;
-    runningValue.freehigh = 0;
-}
+template<>
+void
+SysInfo::ProfilerTimeHistogram::BinData::Reset(void);
 
 template<>
 SysInfo::SampleAverages
-SysInfo::ProfilerTimeHistogram::BinData::GetMetricValue(void) const
-{
-    SysInfo::SampleAverages ret;
-
-    if(nSamples > 0)
-    {
-        ret.totalram = runningValue.totalram / nSamples;
-        ret.freeram = runningValue.freeram / nSamples;
-        ret.sharedram = runningValue.sharedram / nSamples;
-        ret.bufferram = runningValue.bufferram / nSamples;
-        ret.totalswap = runningValue.totalswap / nSamples;
-        ret.freeswap = runningValue.freeswap / nSamples;
-        ret.totalhigh = runningValue.totalhigh / nSamples;
-        ret.freehigh = runningValue.freehigh / nSamples;
-    }
-    return ret;
-}
+SysInfo::ProfilerTimeHistogram::BinData::GetMetricValue(void) const;
 
 
 // Restarting SysInfo namespace - see comment above.

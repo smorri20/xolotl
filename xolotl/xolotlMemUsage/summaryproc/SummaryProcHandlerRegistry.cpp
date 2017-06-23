@@ -49,18 +49,18 @@ void SummaryProcHandlerRegistry::CollectAllObjectNames(int myRank,
 	// Let root know how much space it needs to collect all object names
 	unsigned int totalNumBytes = 0;
 	MPI_Reduce(&nBytes, &totalNumBytes, 1, MPI_UNSIGNED, MPI_SUM, 0,
-			MPI_COMM_WORLD);
+			aggComm);
 
 	// Provide all names to root.
 	// First, provide the amount of data from each process.
 	int cwSize;
-	MPI_Comm_size(MPI_COMM_WORLD, &cwSize);
+	MPI_Comm_size(aggComm, &cwSize);
 	char* allNames = (myRank == 0) ? new char[totalNumBytes] : NULL;
 	int* allNameCounts = (myRank == 0) ? new int[cwSize] : NULL;
 	int* allNameDispls = (myRank == 0) ? new int[cwSize] : NULL;
 
 	MPI_Gather(&nBytes, 1, MPI_INT, allNameCounts, 1, MPI_INT, 0,
-			MPI_COMM_WORLD);
+			aggComm);
 
 	// Next, root computes the displacements for data from each process.
 	if (myRank == 0) {
@@ -72,7 +72,7 @@ void SummaryProcHandlerRegistry::CollectAllObjectNames(int myRank,
 
 	// Finally, gather all names to the root process.
 	MPI_Gatherv(myNamesBuf, nBytes, MPI_CHAR, allNames, allNameCounts,
-			allNameDispls, MPI_CHAR, 0, MPI_COMM_WORLD);
+			allNameDispls, MPI_CHAR, 0, aggComm);
 
 	if (myRank == 0) {
 		// Process the gathered names to determine the
@@ -140,7 +140,7 @@ void SummaryProcHandlerRegistry::AggregateStatistics(int myRank,
 	if (myRank == 0) {
 		nObjs = stats.size();
 	}
-	MPI_Bcast(&nObjs, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&nObjs, 1, MPI_INT, 0, aggComm);
 	assert(nObjs >= 0);
 
 	// Collect and compute statistics for each object.
@@ -148,7 +148,7 @@ void SummaryProcHandlerRegistry::AggregateStatistics(int myRank,
 	for (int idx = 0; idx < nObjs; ++idx) {
 		// broadcast the current object's name
 		int nameLen = (myRank == 0) ? tsiter->first.length() : -1;
-		MPI_Bcast(&nameLen, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&nameLen, 1, MPI_INT, 0, aggComm);
 		// we can safely cast away const on the tsiter data string because
 		// the only process that accesses that string is rank 0,
 		// and it only reads the data.
@@ -156,7 +156,7 @@ void SummaryProcHandlerRegistry::AggregateStatistics(int myRank,
 				(myRank == 0) ?
 						const_cast<char*>(tsiter->first.c_str()) :
 						new char[nameLen + 1];
-		MPI_Bcast(objName, nameLen + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
+		MPI_Bcast(objName, nameLen + 1, MPI_CHAR, 0, aggComm);
 
 		// do we know about the current object?
 		bool knowObject;
@@ -168,26 +168,26 @@ void SummaryProcHandlerRegistry::AggregateStatistics(int myRank,
 		unsigned int* pcount =
 				(myRank == 0) ? &(tsiter->second.processCount) : NULL;
 		int knowObjVal = knowObject ? 1 : 0;
-		MPI_Reduce(&knowObjVal, pcount, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+		MPI_Reduce(&knowObjVal, pcount, 1, MPI_INT, MPI_SUM, 0, aggComm);
 
 		// collect min value of current object
 		V* pMinVal = (myRank == 0) ? &(tsiter->second.min) : NULL;
 		V reduceVal = knowObject ? myVal : T::MaxValue;
 		MPI_Reduce(&reduceVal, pMinVal, 1, T::MPIValType, MPI_MIN, 0,
-				MPI_COMM_WORLD);
+				aggComm);
 
 		// collect max value of current object
 		V* pMaxVal = (myRank == 0) ? &(tsiter->second.max) : NULL;
 		reduceVal = knowObject ? myVal : T::MinValue;
 		MPI_Reduce(&reduceVal, pMaxVal, 1, T::MPIValType, MPI_MAX, 0,
-				MPI_COMM_WORLD);
+				aggComm);
 
 		// collect sum of current object's values (for computing avg and stdev)
 		double valSum;
 		// use the same myVal as for max: actual value if known, 0 otherwise
 		double myValAsDouble = (double) reduceVal;
 		MPI_Reduce(&myValAsDouble, &valSum, 1, MPI_DOUBLE, MPI_SUM, 0,
-				MPI_COMM_WORLD);
+				aggComm);
 		if (myRank == 0) {
 			tsiter->second.average = valSum / tsiter->second.processCount;
 		}
@@ -196,7 +196,7 @@ void SummaryProcHandlerRegistry::AggregateStatistics(int myRank,
 		double valSquaredSum;
 		double myValSquared = myValAsDouble * myValAsDouble;
 		MPI_Reduce(&myValSquared, &valSquaredSum, 1, MPI_DOUBLE, MPI_SUM, 0,
-				MPI_COMM_WORLD);
+				aggComm);
 		if (myRank == 0) {
 			tsiter->second.stdev =
 					sqrt(
@@ -235,7 +235,7 @@ void SummaryProcHandlerRegistry::AggregateStatistics<IMemUsageSampler, MemUsageS
 	if (myRank == 0) {
 		nObjs = globalStats.size();
 	}
-	MPI_Bcast(&nObjs, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&nObjs, 1, MPI_INT, 0, aggComm);
 	assert(nObjs >= 0);
 
 	// Collect and compute statistics for each object.
@@ -244,7 +244,7 @@ void SummaryProcHandlerRegistry::AggregateStatistics<IMemUsageSampler, MemUsageS
 
 		// broadcast the current object's name
 		int nameLen = (myRank == 0) ? tsiter->first.length() : -1;
-		MPI_Bcast(&nameLen, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&nameLen, 1, MPI_INT, 0, aggComm);
 		// we can safely cast away const on the tsiter data string because
 		// the only process that accesses that string is rank 0,
 		// and it only reads the data.
@@ -252,7 +252,7 @@ void SummaryProcHandlerRegistry::AggregateStatistics<IMemUsageSampler, MemUsageS
 				(myRank == 0) ?
 						const_cast<char*>(tsiter->first.c_str()) :
 						new char[nameLen + 1];
-		MPI_Bcast(objName, nameLen + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
+		MPI_Bcast(objName, nameLen + 1, MPI_CHAR, 0, aggComm);
 
 		// do we know about the current object?
         std::shared_ptr<MemUsageStats> localValue = GetObjValue<IMemUsageSampler, MemUsageStats>(myObjs, objName);
@@ -261,13 +261,14 @@ void SummaryProcHandlerRegistry::AggregateStatistics<IMemUsageSampler, MemUsageS
 		// collect count of processes knowing about the current object
         uint32_t currProcessCount = 0;
 		int knowObjVal = localIsValid ? 1 : 0;
-		MPI_Reduce(&knowObjVal, &currProcessCount, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+		MPI_Reduce(&knowObjVal, &currProcessCount, 1, MPI_INT, MPI_SUM, 0, aggComm);
         if(myRank == 0) {
             tsiter->second.processCount = currProcessCount;
         }
 
         // Aggregate values across all ranks.
         tsiter->second.stats.Aggregate(localValue,
+                                        aggComm,
                                         myRank,
                                         localIsValid,
                                         currProcessCount);
@@ -289,12 +290,9 @@ SummaryProcHandlerRegistry::collectData(void) const {
 
     auto ret = std::make_shared<GlobalMemUsageStats>();
 
-	int myRank;
-	MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
-
 	// Aggregate data from all processes.
     // Memory usage.
-    AggregateStatistics<IMemUsageSampler, MemUsageStats>(myRank,
+    AggregateStatistics<IMemUsageSampler, MemUsageStats>(aggCommRank,
         allSamplers, ret->memStats);
 
     return ret;

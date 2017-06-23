@@ -1,13 +1,24 @@
 #ifndef XMEMUSAGE_NODE_MEM_USAGE_NODE_PROFILER_H
 #define XMEMUSAGE_NODE_MEM_USAGE_NODE_PROFILER_H
 
+#include "xolotlMemUsage/memUsageConfig.h"
 #include "xolotlMemUsage/common/MemUsageSamplerBase.h"
-#include "xolotlMemUsage/profilenode/SysInfoProfiler.h"
+
+#if defined(HAVE_SYSINFO)
+    #include "xolotlMemUsage/profilenode/SysInfo/SysInfoProfiler.h"
+    namespace PerNodeDataSource = xolotlMemUsage::SysInfo;
+#elif defined(HAVE_MACH_HOST_STATISTICS)
+    #include "xolotlMemUsage/profilenode/OSX/OSXProfiler.h"
+    namespace PerNodeDataSource = xolotlMemUsage::OSX;
+#else
+    #error "Configuration error: thought we had a per-node data source, but no actual data source available."
+#endif // defined(HAVE_SYSINFO)
+
 
 
 namespace xolotlMemUsage {
 
-class NodeMemUsageProfiler : public MemUsageSamplerBase<SysInfo::Profiler> {
+class NodeMemUsageProfiler : public MemUsageSamplerBase<PerNodeDataSource::Profiler> {
 
 public:
 
@@ -21,7 +32,7 @@ public:
      * @param name The object's name.
      */
     NodeMemUsageProfiler(const std::string& name)
-      : MemUsageSamplerBase<SysInfo::Profiler>(name) {
+      : MemUsageSamplerBase<PerNodeDataSource::Profiler>(name) {
 
         // Nothing else to do.
     }

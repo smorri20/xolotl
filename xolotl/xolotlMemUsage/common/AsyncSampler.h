@@ -22,10 +22,12 @@ private:
     }
 
     std::string name;
+    bool isSampling;
 
 public:
     AsyncSampler(std::string _name)
-      : name(_name)
+      : name(_name),
+        isSampling(false)
     {
         // Nothing else to do.
     }
@@ -39,12 +41,17 @@ public:
     StartSampling(void)
     {
         GetSamplingThread()->StartSamplingFor(this);
+        isSampling = true;
     }
 
     void
     StopSampling(void)
     {
-        GetSamplingThread()->StopSamplingFor(this);
+        if(isSampling)
+        {
+            isSampling = false;
+            GetSamplingThread()->StopSamplingFor(this);
+        }
     }
 
     std::string GetName(void) const { return name; }

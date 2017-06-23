@@ -97,14 +97,27 @@ private:
     }
 
 
+    /// Communicator to use for aggregating collected data.
+    MPI_Comm aggComm;
+
+
+    /// Our rank within the aggregator communicator.
+    int aggCommRank;
+
+
 public:
 
 	/**
 	 * Construct a SummaryProcHandlerRegistry.
 	 */
-    SummaryProcHandlerRegistry(void) = default;
+    SummaryProcHandlerRegistry(MPI_Comm _aggComm, int _aggCommRank)
+      : aggComm(_aggComm),
+        aggCommRank(_aggCommRank) {
+        // Nothing else to do.
+    }
 
-	/**
+
+	/*
 	 * Destroy a SummaryProcHandlerRegistry.
 	 */
 	virtual ~SummaryProcHandlerRegistry(void) {

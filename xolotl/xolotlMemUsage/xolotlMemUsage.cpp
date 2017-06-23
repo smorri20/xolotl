@@ -81,6 +81,14 @@ void initialize(IHandlerRegistry::RegistryType rtype,
             }
         }
     }
+    else {
+
+        // It is not a per-node registry.
+        // By definition, all processes are participating (or it is
+        // a dummy registry, in which case the following is harmless).
+        aggComm = MPI_COMM_WORLD;
+        MPI_Comm_rank(aggComm, &aggCommRank);
+    }
         
     // Build a registry that will produce the desired type of memory
     // usage samplers.
@@ -91,11 +99,12 @@ void initialize(IHandlerRegistry::RegistryType rtype,
 
 #if defined(HAVE_PER_PROC_DATA_SOURCE)
     case IHandlerRegistry::summaryProc:
-        theHandlerRegistry = std::make_shared<SummaryProcHandlerRegistry>();
+        // By definition, all processes are participating.
+        theHandlerRegistry = std::make_shared<SummaryProcHandlerRegistry>(aggComm, aggCommRank);
         break;
 
     case IHandlerRegistry::profileProc:
-        theHandlerRegistry = std::make_shared<ProfileProcHandlerRegistry>(profileFilename);
+        theHandlerRegistry = std::make_shared<ProfileProcHandlerRegistry>(profileFilename, aggComm, aggCommRank);
         break;
 #endif // defined(HAVE_PER_PROC_DATA_SOURCE)
 

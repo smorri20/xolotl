@@ -20,7 +20,9 @@ NodeMemUsageProfile::outputTo(std::ostream& os) const
 
 
     // Output the CSV header line.
-    os << "binNumber,nSamples,totalram_bytes,freeram_bytes,sharedram_bytes,bufferram_bytes,totalswap_bytes,freeswap_bytes,totalhigh_bytes,freehigh_bytes\n";
+    os << "binNumber,nSamples,"
+        << PerNodeDataSource::GetCSVHeaderString()
+        << '\n';
 
     auto binIdx = 0;
     for(auto currBin : bins)

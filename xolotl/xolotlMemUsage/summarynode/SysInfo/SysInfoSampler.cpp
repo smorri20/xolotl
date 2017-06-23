@@ -1,5 +1,5 @@
-#include "xolotlMemUsage/summarynode/SysInfoSampler.h"
-#include "xolotlMemUsage/summarynode/NodeMemUsageStats.h"
+#include "xolotlMemUsage/summarynode/SysInfo/SysInfoSampler.h"
+#include "xolotlMemUsage/summarynode/SysInfo/NodeMemUsageStats.h"
 
 namespace xolotlMemUsage {
 

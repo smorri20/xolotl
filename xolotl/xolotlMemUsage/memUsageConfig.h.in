@@ -4,6 +4,12 @@
 
 #cmakedefine HAVE_PER_NODE_DATA_SOURCE
 
+#cmakedefine HAVE_SYSINFO
+
+#cmakedefine HAVE_MACH_HOST_STATISTICS
+
 #cmakedefine HAVE_PER_PROC_DATA_SOURCE
+
+#cmakedefine HAVE_STATM
 
 #endif // XMEMUSAGE_MEMUSAGECONFIG_H

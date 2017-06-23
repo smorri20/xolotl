@@ -1,13 +1,21 @@
 #ifndef XMEMUSAGE_MEM_USAGE_PROFILER_H
 #define XMEMUSAGE_MEM_USAGE_PROFILER_H
 
+#include "xolotlMemUsage/memUsageConfig.h"
 #include "xolotlMemUsage/common/MemUsageSamplerBase.h"
-#include "xolotlMemUsage/profileproc/StatmProfiler.h"
+
+#if defined(HAVE_STATM)
+    #include "xolotlMemUsage/profileproc/Statm/StatmProfiler.h"
+    namespace PerProcDataSource = xolotlMemUsage::Statm;
+#else
+    #error "Configuration error: thought we had a per-proc data source, but no actual data source available."
+#endif // defined(HAVE_STATM)
+
 
 
 namespace xolotlMemUsage {
 
-class MemUsageProfiler : public MemUsageSamplerBase<Statm::Profiler> {
+class MemUsageProfiler : public MemUsageSamplerBase<PerProcDataSource::Profiler> {
 
 public:
 
@@ -21,7 +29,7 @@ public:
      * @param name The object's name.
      */
     MemUsageProfiler(const std::string& name)
-      : MemUsageSamplerBase<Statm::Profiler>(name) {
+      : MemUsageSamplerBase<PerProcDataSource::Profiler>(name) {
 
         // Nothing else to do.
     }
