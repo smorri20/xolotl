@@ -3,6 +3,7 @@
 
 #include <string>
 #include <limits>
+#include <typeinfo>
 #include <boost/test/included/unit_test.hpp>
 #include "xolotlMemUsage/dummy/DummyMemUsageSampler.h"
 
@@ -31,8 +32,7 @@ BOOST_AUTO_TEST_CASE(checkSampling) {
 	sampler.stop();
 
     // These are dummies, so the value can be empty.
-    auto val = sampler.getValue();
-    BOOST_REQUIRE_EQUAL(sampler.getValue(), std::make_shared<IMemUsageSampler::MemUsageData>());
+    BOOST_REQUIRE_EQUAL(typeid(*(sampler.getValue().get())).name(), typeid(IMemUsageSampler::MemUsageData).name());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

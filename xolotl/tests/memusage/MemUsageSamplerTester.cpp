@@ -5,14 +5,15 @@
 #include <limits>
 #include <string>
 #include <cstdlib>
+
+
 #include "xolotlMemUsage/summaryproc/MemUsageSampler.h"
-#include "xolotlMemUsage/summaryproc/MemUsageStats.h"
 
 using namespace std;
 using namespace xolotlMemUsage;
 
 /**
- * This suite is responsible for testing the StatmMemSampler.
+ * This suite is responsible for testing the [PerProc]MemUsageSampler.
  */
 BOOST_AUTO_TEST_SUITE (MemUsageSampler_testSuite)
 
