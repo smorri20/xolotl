@@ -10,7 +10,7 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include "xolotlMemUsage/xolotlMemUsage.h"
-#include "xolotlMemUsage/profilenode/ProfileNodeHandlerRegistry.h"
+#include "xolotlMemUsage/profileproc/ProfileProcHandlerRegistry.h"
 
 #include "tests/memusage/memUsageTestConfig.h"
 
@@ -28,7 +28,7 @@ int cwRank = -1;
 int cwSize = -1;
 
 /**
- * Test suite for ProfileNodeHandlerRegistry.
+ * Test suite for ProfileProcHandlerRegistry.
  */
 BOOST_AUTO_TEST_SUITE (MemUsageHandlerRegistry_testSuite)
 
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(createHandlerReg) {
 	unsigned int nGoodInits = 0;
 
 	try {
-		xmem::initialize(xmem::IHandlerRegistry::profileNode);
+		xmem::initialize(xmem::IHandlerRegistry::profileProc);
 		nGoodInits++;
 
 		std::shared_ptr<xmem::IHandlerRegistry> reg = xmem::getHandlerRegistry();
@@ -68,36 +68,22 @@ BOOST_AUTO_TEST_CASE(createHandlerReg) {
 			nGoodInits++;
 		}
 
-        auto snreg = std::dynamic_pointer_cast<xmem::ProfileNodeHandlerRegistry>(reg);
+        auto snreg = std::dynamic_pointer_cast<xmem::ProfileProcHandlerRegistry>(reg);
         if(snreg) {
             nGoodInits++;
         }
 
-		BOOST_TEST_MESSAGE("Profile per-node handler registry created successfully.");
+		BOOST_TEST_MESSAGE("Profile per-proc handler registry created successfully.");
 	} catch (const std::exception& e) {
-		BOOST_TEST_MESSAGE("Profile per-node HandlerRegistry creation failed: " << e.what());
+		BOOST_TEST_MESSAGE("Profile per-proc HandlerRegistry creation failed: " << e.what());
 	}
 
-    // One rank on each node should get the actual registry.
-    // We know rank 0 will be one, but can't say anything about
-    // which others will without knowing how many processes were
-    // created on each node.
-    // TODO this only works if running the test on a single node.
-    // How can we tell who are supposed to have a "real" handler,
-    // without duplicating the entire logic that it uses?
-    if(cwRank == 0) {
-	    BOOST_REQUIRE_EQUAL(nGoodInits, 3U);
-    }
-#if READY    
-    else {
-	    BOOST_REQUIRE_EQUAL(nGoodInits, 2U);
-    }
-#endif // READY
+    BOOST_REQUIRE_EQUAL(nGoodInits, 3U);
 }
 
 BOOST_AUTO_TEST_CASE(accessStats) {
 	try {
-		xmem::initialize(xmem::IHandlerRegistry::profileNode);
+		xmem::initialize(xmem::IHandlerRegistry::profileProc);
         auto reg = xmem::getHandlerRegistry();
         BOOST_REQUIRE(reg);
 
@@ -111,9 +97,7 @@ BOOST_AUTO_TEST_CASE(accessStats) {
 
         // Ensure that we get the right type for statistics.
         auto gd = reg->collectData();
-        if(cwRank == 0) {
-            BOOST_REQUIRE_EQUAL(typeid(*(gd.get())).name(), typeid(xmem::ProfileNodeHandlerRegistry::GlobalMemUsageData).name());
-        }
+        BOOST_REQUIRE_EQUAL(typeid(*(gd.get())).name(), typeid(xmem::ProfileProcHandlerRegistry::GlobalMemUsageData).name());
         
 	} catch (const std::exception& e) {
 		BOOST_TEST_MESSAGE(
@@ -125,7 +109,7 @@ BOOST_AUTO_TEST_CASE(accessStats) {
 BOOST_AUTO_TEST_CASE(genProfiles) {
 
 	try {
-		xmem::initialize(xmem::IHandlerRegistry::profileNode, 
+		xmem::initialize(xmem::IHandlerRegistry::profileProc, 
                             std::chrono::duration<uint64_t, std::milli>(100),
                             "bogus.%r");
         auto reg = xmem::getHandlerRegistry();
@@ -153,17 +137,10 @@ BOOST_AUTO_TEST_CASE(genProfiles) {
         fs::path profileFilename(profilePathStr.str());
         fs::path profilePath = fs::current_path() / profileFilename;
 
-        // Verify that we generated a profile for rank 0.
-        // Note other ranks may also have generated a profile file,
-        // but it isn't easy to tell which ones did since it is
-        // based on the number of processes created and number 
-        // of processes created per node.
-        if(cwRank == 0) {
-
-            BOOST_CHECK(fs::exists(profilePath));
-            BOOST_CHECK(fs::is_regular_file(profilePath));
-            BOOST_CHECK(not fs::is_empty(profilePath));
-		}
+        // Verify that we generated a profile.
+        BOOST_CHECK(fs::exists(profilePath));
+        BOOST_CHECK(fs::is_regular_file(profilePath));
+        BOOST_CHECK(not fs::is_empty(profilePath));
 
         // Everyone tries to remove their own file.
         if(fs::exists(profilePath)) {

@@ -22,11 +22,8 @@ if(Boost_FOUND)
     include(CheckMemUsageDataSources)    
     check_memusage_per_proc_data_source(HAVE_PER_PROC_DATA_SOURCE HAVE_STATM)
     if(HAVE_PER_PROC_DATA_SOURCE)
-#        list(APPEND tests MemUsageSamplerTester.cpp
-#                            SummaryProcHandlerRegistryTester.cpp
-#                            MemUsageProfilerTester.cpp
-#                            ProfileProcHandlerRegistryTester.cpp
-#                            )
+        list(APPEND tests SummaryProcHandlerRegistryTester.cpp
+                            ProfileProcHandlerRegistryTester.cpp)
     endif()
 
     # Check if we have a usable per-node data source.
