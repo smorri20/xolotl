@@ -150,20 +150,20 @@ BOOST_AUTO_TEST_CASE(aggregateStats) {
 			BOOST_REQUIRE_EQUAL(stats->memStats.begin()->first, samplerName);
 
 #if defined(HAVE_SYSINFO)
-            BOOST_REQUIRE_CLOSE((double)(mapMemStats.totalram.min), (double)(samplerMemStats->totalram.min), 3.0);
+            BOOST_REQUIRE_CLOSE((double)(mapMemStats.totalram.min), (double)(samplerMemStats->totalram.min), 10.0);
             BOOST_REQUIRE_CLOSE((double)(mapMemStats.totalram.max), (double)(samplerMemStats->totalram.max), 3.0);
             BOOST_REQUIRE_CLOSE(mapMemStats.totalram.average, samplerMemStats->totalram.average, 3.0);
 
-            BOOST_REQUIRE_CLOSE((double)(mapMemStats.freeram.min), (double)(samplerMemStats->freeram.min), 3.0);
+            BOOST_REQUIRE_CLOSE((double)(mapMemStats.freeram.min), (double)(samplerMemStats->freeram.min), 10.0);
             BOOST_REQUIRE_CLOSE((double)(mapMemStats.freeram.max), (double)(samplerMemStats->freeram.max), 3.0);
             BOOST_REQUIRE_CLOSE(mapMemStats.freeram.average, samplerMemStats->freeram.average, 3.0);
 
 #elif defined(HAVE_MACH_HOST_STATISTICS)
-            BOOST_REQUIRE_CLOSE((double)(mapMemStats.free_count.min), (double)(samplerMemStats->free_count.min), 3.0);
+            BOOST_REQUIRE_CLOSE((double)(mapMemStats.free_count.min), (double)(samplerMemStats->free_count.min), 10.0);
             BOOST_REQUIRE_CLOSE((double)(mapMemStats.free_count.max), (double)(samplerMemStats->free_count.max), 3.0);
             BOOST_REQUIRE_CLOSE(mapMemStats.free_count.average, samplerMemStats->free_count.average, 3.0);
 
-            BOOST_REQUIRE_CLOSE((double)(mapMemStats.active_count.min), (double)(samplerMemStats->active_count.min), 3.0);
+            BOOST_REQUIRE_CLOSE((double)(mapMemStats.active_count.min), (double)(samplerMemStats->active_count.min), 10.0);
             BOOST_REQUIRE_CLOSE((double)(mapMemStats.active_count.max), (double)(samplerMemStats->active_count.max), 3.0);
             BOOST_REQUIRE_CLOSE(mapMemStats.active_count.average, samplerMemStats->active_count.average, 3.0);
 

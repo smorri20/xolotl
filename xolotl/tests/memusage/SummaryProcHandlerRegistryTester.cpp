@@ -135,11 +135,11 @@ BOOST_AUTO_TEST_CASE(aggregateStats) {
             BOOST_REQUIRE_EQUAL(stats->memStats.begin()->first, samplerName);
 
 #if defined(HAVE_STATM)
-            BOOST_REQUIRE_CLOSE((double)(mapMemStats.vmSize.min), (double)(samplerMemStats->vmSize.min), 3.0);
+            BOOST_REQUIRE_CLOSE((double)(mapMemStats.vmSize.min), (double)(samplerMemStats->vmSize.min), 10.0);
             BOOST_REQUIRE_CLOSE((double)(mapMemStats.vmSize.max), (double)(samplerMemStats->vmSize.max), 3.0);
             BOOST_REQUIRE_CLOSE(mapMemStats.vmSize.average, samplerMemStats->vmSize.average, 3.0);
 
-            BOOST_REQUIRE_CLOSE((double)(mapMemStats.vmRSS.min), (double)(samplerMemStats->vmRSS.min), 3.0);
+            BOOST_REQUIRE_CLOSE((double)(mapMemStats.vmRSS.min), (double)(samplerMemStats->vmRSS.min), 10.0);
             BOOST_REQUIRE_CLOSE((double)(mapMemStats.vmRSS.max), (double)(samplerMemStats->vmRSS.max), 3.0);
             BOOST_REQUIRE_CLOSE(mapMemStats.vmRSS.average, samplerMemStats->vmRSS.average, 3.0);
 
