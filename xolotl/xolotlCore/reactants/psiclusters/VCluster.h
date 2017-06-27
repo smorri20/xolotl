@@ -19,8 +19,8 @@ private:
 	 * initialized with a size.
 	 */
 	VCluster() :
-		PSICluster()
-	{ }
+			PSICluster() {
+	}
 
 public:
 
@@ -33,13 +33,14 @@ public:
 	VCluster(int nV, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	//! Destructor
-	~VCluster() {}
+	~VCluster() {
+	}
 
 	/**
 	 * Returns a reactant created using the copy constructor
 	 */
 	virtual std::shared_ptr<IReactant> clone() {
-		return std::shared_ptr<IReactant> (new VCluster(*this));
+		return std::shared_ptr<IReactant>(new VCluster(*this));
 	}
 
 	/**

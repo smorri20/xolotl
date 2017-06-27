@@ -60,22 +60,12 @@ double ReactionNetwork::calculateReactionRateConstant(
 	// Get the diffusion coefficients
 	double firstDiffusion = reaction->first->getDiffusionCoefficient();
 	double secondDiffusion = reaction->second->getDiffusionCoefficient();
-	double r0 = xolotlCore::tungstenLatticeConstant * 0.75 * std::sqrt(3.0);
 
 	// Calculate and return
-	double k_plus = 4.0 * xolotlCore::pi * (r_first + r_second + r0)
+	double k_plus = 4.0 * xolotlCore::pi
+			* (r_first + r_second + xolotlCore::reactionRadius)
 			* (firstDiffusion + secondDiffusion);
 	return k_plus;
-}
-
-double ReactionNetwork::computeBindingEnergy(
-		DissociationReaction * reaction) const {
-	// for the dissociation A --> B + C we need A binding energy
-	// E_b(A) = E_f(B) + E_f(C) - E_f(A) where E_f is the formation energy
-	double bindingEnergy = reaction->first->getFormationEnergy()
-			+ reaction->second->getFormationEnergy()
-			- reaction->dissociating->getFormationEnergy();
-	return bindingEnergy;
 }
 
 void ReactionNetwork::fillConcentrationsArray(double * concentrations) {
@@ -180,53 +170,52 @@ const std::vector<std::string> & ReactionNetwork::getCompoundNames() const {
 std::shared_ptr<ProductionReaction> ReactionNetwork::addProductionReaction(
 		std::shared_ptr<ProductionReaction> reaction) {
 
-    // Check if the given ProductionReaction already exists.
-    auto key = reaction->descriptiveKey();
-    auto iter = productionReactionMap.find(key);
-    if(iter != productionReactionMap.end()) {
-        // We already knew about the reaction, so return the one we
-        // already had defined.
-        return iter->second;
-    }
+	// Check if the given ProductionReaction already exists.
+	auto key = reaction->descriptiveKey();
+	auto iter = productionReactionMap.find(key);
+	if (iter != productionReactionMap.end()) {
+		// We already knew about the reaction, so return the one we
+		// already had defined.
+		return iter->second;
+	}
 
-    // We did not yet know about the given reaction.
-    // Save it.
-    productionReactionMap.emplace(key, reaction);
-    allProductionReactions.emplace_back(reaction);
+	// We did not yet know about the given reaction.
+	// Save it.
+	productionReactionMap.emplace(key, reaction);
+	allProductionReactions.emplace_back(reaction);
 
-    return reaction;
+	return reaction;
 }
 
 std::shared_ptr<DissociationReaction> ReactionNetwork::addDissociationReaction(
 		std::shared_ptr<DissociationReaction> reaction) {
 
-    // Check if we already know about this reaction.
-    auto key = reaction->descriptiveKey();
-    auto iter = dissociationReactionMap.find(key);
-    if(iter != dissociationReactionMap.end()) {
-        // We already knew about the reaction.
-        // Return the existing one.
-        return iter->second;
-    }
+	// Check if we already know about this reaction.
+	auto key = reaction->descriptiveKey();
+	auto iter = dissociationReactionMap.find(key);
+	if (iter != dissociationReactionMap.end()) {
+		// We already knew about the reaction.
+		// Return the existing one.
+		return iter->second;
+	}
 
-    // We did not yet know about the given reaction.
-    // Add it, but also link it to its reverse reaction.
-    // First, create the reverse reaction to get a pointer to it.
-    auto reverseReaction = std::make_shared<ProductionReaction>(reaction->first,
-            reaction->second);
-    // Add this reverse reaction to our set of known reactions.
-    reverseReaction = addProductionReaction(reverseReaction);
+	// We did not yet know about the given reaction.
+	// Add it, but also link it to its reverse reaction.
+	// First, create the reverse reaction to get a pointer to it.
+	auto reverseReaction = std::make_shared<ProductionReaction>(reaction->first,
+			reaction->second);
+	// Add this reverse reaction to our set of known reactions.
+	reverseReaction = addProductionReaction(reverseReaction);
 
-    // Indicate that the reverse reaction is the reverse reaction
-    // to the newly-added dissociation reaction.
-    reaction->reverseReaction = reverseReaction.get();
+	// Indicate that the reverse reaction is the reverse reaction
+	// to the newly-added dissociation reaction.
+	reaction->reverseReaction = reverseReaction.get();
 
-    // Add the dissociation reaction to our set of known reactions.
-    dissociationReactionMap.emplace(key, reaction);
-    allDissociationReactions.emplace_back(reaction);
+	// Add the dissociation reaction to our set of known reactions.
+	dissociationReactionMap.emplace(key, reaction);
+	allDissociationReactions.emplace_back(reaction);
 
-    // Return the newly-added dissociation reaction.
-    return reaction;
+	// Return the newly-added dissociation reaction.
+	return reaction;
 }
-
 

@@ -12,7 +12,6 @@ namespace xolotlCore {
 FluxHandler::FluxHandler() :
 		fluence(0.0),
 		fluxAmplitude(0.0),
-		fluxIndex(-1),
 		useTimeProfile(false),
 		normFactor(0.0){
 	return;
@@ -22,6 +21,8 @@ void FluxHandler::initializeFluxHandler(IReactionNetwork *network,
 		int surfacePos, std::vector<double> grid) {
 	// Set the grid
 	xGrid = grid;
+
+	if (xGrid.size() == 0) return;
 
 	// Compute the norm factor because the fit function has an
 	// arbitrary amplitude
@@ -38,7 +39,8 @@ void FluxHandler::initializeFluxHandler(IReactionNetwork *network,
 
 	// Factor the incident flux will be multiplied by to get
 	// the wanted intensity
-	double fluxNormalized = fluxAmplitude / normFactor;
+	double fluxNormalized = 0.0;
+	if (normFactor > 0.0) fluxNormalized = fluxAmplitude / normFactor;
 
 	// Clear the flux vector
 	incidentFluxVec.clear();
@@ -64,7 +66,8 @@ void FluxHandler::initializeFluxHandler(IReactionNetwork *network,
 
 void FluxHandler::recomputeFluxHandler(int surfacePos) {
 	// Factor the incident flux will be multiplied by
-	double fluxNormalized = fluxAmplitude / normFactor;
+	double fluxNormalized = 0.0;
+	if (normFactor > 0.0) fluxNormalized = fluxAmplitude / normFactor;
 
 	// Starts a i = surfacePos + 1 because the first values were already put in the vector
 	for (int i = surfacePos + 1; i < xGrid.size() - 1; i++) {
@@ -137,9 +140,20 @@ void FluxHandler::computeIncidentFlux(double currentTime, double *updatedConcOff
 		recomputeFluxHandler(surfacePos);
 	}
 
+	if (incidentFluxVec.size() == 0) {
+		updatedConcOffset[fluxIndices[0]] += 2.11e-11; // He1
+		updatedConcOffset[fluxIndices[1]] += 1.49e-05; // I1
+		updatedConcOffset[fluxIndices[2]] += 9.91e-06; // V1
+		updatedConcOffset[fluxIndices[3]] += 1.51e-06; // V2
+		updatedConcOffset[fluxIndices[4]] += 2.60e-07; // V3
+		updatedConcOffset[fluxIndices[5]] += 1.58e-07; // V4
+		updatedConcOffset[fluxIndices[6]] += 6.29e-08; // V5
+		updatedConcOffset[fluxIndices[7]] += 3.16e-08; // V6
+		return;
+	}
+
 	// Update the concentration array
-	updatedConcOffset[fluxIndex] += fluxAmplitude * 0.4;
-	updatedConcOffset[fluxBisIndex] += fluxAmplitude * 0.4;
+	updatedConcOffset[fluxIndices[0]] += incidentFluxVec[xi - surfacePos];
 
 	return;
 }

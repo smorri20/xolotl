@@ -56,10 +56,28 @@ public:
 		FluxHandler::initializeFluxHandler(network, surfacePos, grid);
 
 		// Set the flux index corresponding the the single helium cluster here
-		auto fluxCluster = network->get(vType, 1);
-		fluxIndex = fluxCluster->getId() - 1;
+		auto fluxCluster = network->get(heType, 1);
+		// Check that the helium cluster is present in the network
+		if (!fluxCluster) {
+			throw std::string(
+					"\nThe single helium cluster is not present in the network, "
+					"cannot use the flux option!");
+		}
+		fluxIndices.push_back(fluxCluster->getId() - 1);
 		fluxCluster = network->get(iType, 1);
-		fluxBisIndex = fluxCluster->getId() - 1;
+		fluxIndices.push_back(fluxCluster->getId() - 1);
+		fluxCluster = network->get(vType, 1);
+		fluxIndices.push_back(fluxCluster->getId() - 1);
+		fluxCluster = network->get(vType, 2);
+		fluxIndices.push_back(fluxCluster->getId() - 1);
+		fluxCluster = network->get(vType, 3);
+		fluxIndices.push_back(fluxCluster->getId() - 1);
+		fluxCluster = network->get(vType, 4);
+		fluxIndices.push_back(fluxCluster->getId() - 1);
+		fluxCluster = network->get(vType, 5);
+		fluxIndices.push_back(fluxCluster->getId() - 1);
+		fluxCluster = network->get(vType, 9);
+		fluxIndices.push_back(fluxCluster->getId() - 1);
 
 		return;
 	}

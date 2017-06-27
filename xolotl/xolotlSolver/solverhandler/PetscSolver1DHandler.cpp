@@ -1,6 +1,5 @@
 // Includes
 #include <PetscSolver1DHandler.h>
-#include <HDF5Utils.h>
 #include <MathUtils.h>
 #include <Constants.h>
 
@@ -38,12 +37,7 @@ void PetscSolver1DHandler::createSolverContext(DM &da) {
 	 Create distributed array (DMDA) to manage parallel grid and vectors
 	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-	// Get starting conditions from HDF5 file
-	int nx = 0, ny = 0, nz = 0;
-	double hx = 0.0, hy = 0.0, hz = 0.0;
-	xolotlCore::HDF5Utils::readHeader(networkName, nx, hx, ny, hy, nz, hz);
-
-	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_NONE, 1, dof, 0,
+	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, nX, dof, 1,
 	NULL, &da);
 	checkPetscError(ierr, "PetscSolver1DHandler::createSolverContext: "
 			"DMDACreate1d failed.");
@@ -57,15 +51,17 @@ void PetscSolver1DHandler::createSolverContext(DM &da) {
 	// Set the position of the surface
 	surfacePosition = 0;
 	if (movingSurface)
-		surfacePosition = (int) (nx * portion / 100.0);
+		surfacePosition = (int) (nX * portion / 100.0);
 
 	// Generate the grid in the x direction
-	generateGrid(nx, hx, surfacePosition);
+	generateGrid(nX, hX, surfacePosition);
 
 	// Now that the grid was generated, we can update the surface position
 	// if we are using a restart file
 	int tempTimeStep = -2;
-	bool hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
+	bool hasConcentrations = false;
+	if (!networkName.empty())
+		hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
 			networkName, tempTimeStep);
 	if (hasConcentrations) {
 		surfacePosition = xolotlCore::HDF5Utils::readSurface1D(networkName,
@@ -161,7 +157,9 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) {
 
 	// Get the last time step written in the HDF5 file
 	int tempTimeStep = -2;
-	bool hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
+	bool hasConcentrations = false;
+	if (!networkName.empty())
+		hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
 			networkName, tempTimeStep);
 
 	// Get the total size of the grid for the boundary conditions
@@ -312,15 +310,15 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		concOffset = concs[xi];
 		updatedConcOffset = updatedConcs[xi];
 
-//		// Boundary conditions
-//		// Everything to the left of the surface is empty
-//		if (xi <= surfacePosition || xi == xSize - 1) {
-//			for (int i = 0; i < dof; i++) {
-//				updatedConcOffset[i] = 1.0 * concOffset[i];
-//			}
-//
-//			continue;
-//		}
+		// Boundary conditions
+		// Everything to the left of the surface is empty
+		if (xi <= surfacePosition || xi == xSize - 1) {
+			for (int i = 0; i < dof; i++) {
+				updatedConcOffset[i] = 1.0 * concOffset[i];
+			}
+
+			continue;
+		}
 
 		// Set the grid position
 		gridPosition[0] = grid[xi];
@@ -435,10 +433,10 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC,
 	 at each grid point
 	 */
 	for (PetscInt xi = xs; xi < xs + xm; xi++) {
-//		// Boundary conditions
-//		// Everything to the left of the surface is empty
-//		if (xi <= surfacePosition || xi == xSize - 1)
-//			continue;
+		// Boundary conditions
+		// Everything to the left of the surface is empty
+		if (xi <= surfacePosition || xi == xSize - 1)
+			continue;
 
 		// Set the grid position
 		gridPosition[0] = grid[xi];
@@ -613,10 +611,10 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC,
 
 	// Loop over the grid points
 	for (PetscInt xi = xs; xi < xs + xm; xi++) {
-//		// Boundary conditions
-//		// Everything to the left of the surface is empty
-//		if (xi <= surfacePosition || xi == xSize - 1)
-//			continue;
+		// Boundary conditions
+		// Everything to the left of the surface is empty
+		if (xi <= surfacePosition || xi == xSize - 1)
+			continue;
 
 		// Set the grid position
 		gridPosition[0] = grid[xi];

@@ -34,7 +34,7 @@ double VCluster::getEmissionFlux() const {
 	double flux = PSICluster::getEmissionFlux();
 
 	// Compute the loss to dislocation sinks
-	if (size < 2) {
+	if (size < 5) {
 		// k^2 * D * C
 		flux += xolotlCore::sinkStrength * diffusionCoefficient * concentration;
 	}
@@ -48,7 +48,7 @@ void VCluster::getEmissionPartialDerivatives(
 	PSICluster::getEmissionPartialDerivatives(partials);
 
 	// Compute the loss to dislocation sinks
-	if (size < 2) {
+	if (size < 5) {
 		// k^2 * D * C
 		partials[id - 1] -= xolotlCore::sinkStrength * diffusionCoefficient;
 	}

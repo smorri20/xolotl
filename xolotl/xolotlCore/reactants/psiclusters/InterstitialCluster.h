@@ -18,7 +18,8 @@ private:
 	 * initialized with a size.
 	 */
 	InterstitialCluster() :
-		PSICluster() {}
+			PSICluster() {
+	}
 
 public:
 
@@ -29,18 +30,20 @@ public:
 	 * @param nI The number of interstitial defect in this cluster
 	 * @param registry The performance handler registry
 	 */
-	InterstitialCluster(int nI, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+	InterstitialCluster(int nI,
+			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
 	 * The Destructor
 	 */
-	~InterstitialCluster() {}
+	~InterstitialCluster() {
+	}
 
 	/**
 	 * Returns a reactant created using the copy constructor
 	 */
 	virtual std::shared_ptr<IReactant> clone() {
-		return std::shared_ptr<IReactant> (new InterstitialCluster(*this));
+		return std::shared_ptr<IReactant>(new InterstitialCluster(*this));
 	}
 
 	/**

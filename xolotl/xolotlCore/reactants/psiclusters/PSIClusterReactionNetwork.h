@@ -103,6 +103,15 @@ private:
 	double calculateDissociationConstant(DissociationReaction * reaction) const;
 
 	/**
+	 * Calculate the binding energy for the dissociation cluster to emit the single
+	 * and second cluster.
+	 *
+	 * @param reaction The reaction
+	 * @return The binding energy corresponding to this dissociation
+	 */
+	virtual double computeBindingEnergy(DissociationReaction * reaction) const;
+
+	/**
 	 * The Constructor
 	 */
 	PSIClusterReactionNetwork();
