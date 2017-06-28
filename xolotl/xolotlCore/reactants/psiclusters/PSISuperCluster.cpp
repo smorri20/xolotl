@@ -83,12 +83,6 @@ void PSISuperCluster::setReactionNetwork(
 	// Call the superclass's method to actually set the reference
 	Reactant::setReactionNetwork(reactionNetwork);
 
-	// Clear the flux-related arrays
-	reactingPairs.clear();
-	combiningReactants.clear();
-	dissociatingPairs.clear();
-	emissionPairs.clear();
-
 	// Aggregate the reacting pairs and combining reactants from the xeVector
 	// Loop on the xeVector
 	for (int i = 0; i < heVVector.size(); i++) {
@@ -97,10 +91,10 @@ void PSISuperCluster::setReactionNetwork(
 		// Create the key to the map
 		auto key = std::make_pair(comp[heType], comp[vType]);
 		// Get all vectors
-		auto react = heVVector[i]->reactingPairs;
-		auto combi = heVVector[i]->combiningReactants;
-		auto disso = heVVector[i]->dissociatingPairs;
-		auto emi = heVVector[i]->emissionPairs;
+		auto react = *(heVVector[i]->reactingPairs);
+		auto combi = *(heVVector[i]->combiningReactants);
+		auto disso = *(heVVector[i]->dissociatingPairs);
+		auto emi = *(heVVector[i]->emissionPairs);
 
 		// Set them in the super cluster map
 		reactingMap[key] = react;
@@ -651,12 +645,6 @@ void PSISuperCluster::optimizeReactions() {
 			it = pairs.erase(it);
 		}
 	}
-
-	// Clear the maps because they won't be used anymore
-	reactingPairs.clear();
-	combiningReactants.clear();
-	dissociatingPairs.clear();
-	emissionPairs.clear();
 
 	return;
 }

@@ -560,11 +560,11 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 		auto emi = cluster->emissionPairs;
 
 		// Loop on its reacting pairs
-		for (int l = 0; l < react.size(); l++) {
+		for (int l = 0; l < react->size(); l++) {
 			// Test the first reactant
-			if (react[l].first->getType() == heVType) {
+			if (react->at(l).first->getType() == heVType) {
 				// Get its composition
-				composition = react[l].first->getComposition();
+				composition = react->at(l).first->getComposition();
 				// Test its size
 				if (composition[vType] >= vMin || composition[heType] >= vMin) {
 					// It has to be replaced by a super cluster
@@ -572,18 +572,18 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 							composition[vType], 0 };
 					newCluster =
 							superGroupMap[clusterGroupMap[compositionVector]];
-					react[l].first = newCluster;
-					react[l].firstHeDistance = newCluster->getHeDistance(
+					react->at(l).first = newCluster;
+					react->at(l).firstHeDistance = newCluster->getHeDistance(
 							composition[heType]);
-					react[l].firstVDistance = newCluster->getVDistance(
+					react->at(l).firstVDistance = newCluster->getVDistance(
 							composition[vType]);
 				}
 			}
 
 			// Test the second reactant
-			if (react[l].second->getType() == heVType) {
+			if (react->at(l).second->getType() == heVType) {
 				// Get its composition
-				composition = react[l].second->getComposition();
+				composition = react->at(l).second->getComposition();
 				// Test its size
 				if (composition[vType] >= vMin || composition[heType] >= vMin) {
 					// It has to be replaced by a super cluster
@@ -591,21 +591,21 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 							composition[vType], 0 };
 					newCluster =
 							superGroupMap[clusterGroupMap[compositionVector]];
-					react[l].second = newCluster;
-					react[l].secondHeDistance = newCluster->getHeDistance(
+					react->at(l).second = newCluster;
+					react->at(l).secondHeDistance = newCluster->getHeDistance(
 							composition[heType]);
-					react[l].secondVDistance = newCluster->getVDistance(
+					react->at(l).secondVDistance = newCluster->getVDistance(
 							composition[vType]);
 				}
 			}
 		}
 
 		// Loop on its combining reactants
-		for (int l = 0; l < combi.size(); l++) {
+		for (int l = 0; l < combi->size(); l++) {
 			// Test the combining reactant
-			if (combi[l].combining->getType() == heVType) {
+			if (combi->at(l).combining->getType() == heVType) {
 				// Get its composition
-				composition = combi[l].combining->getComposition();
+				composition = combi->at(l).combining->getComposition();
 				// Test its size
 				if (composition[vType] >= vMin || composition[heType] >= vMin) {
 					// It has to be replaced by a super cluster
@@ -613,21 +613,21 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 							composition[vType], 0 };
 					newCluster =
 							superGroupMap[clusterGroupMap[compositionVector]];
-					combi[l].combining = newCluster;
-					combi[l].heDistance = newCluster->getHeDistance(
+					combi->at(l).combining = newCluster;
+					combi->at(l).heDistance = newCluster->getHeDistance(
 							composition[heType]);
-					combi[l].vDistance = newCluster->getVDistance(
+					combi->at(l).vDistance = newCluster->getVDistance(
 							composition[vType]);
 				}
 			}
 		}
 
 		// Loop on its dissociating pairs
-		for (int l = 0; l < disso.size(); l++) {
+		for (int l = 0; l < disso->size(); l++) {
 			// Test the first reactant
-			if (disso[l].first->getType() == heVType) {
+			if (disso->at(l).first->getType() == heVType) {
 				// Get its composition
-				composition = disso[l].first->getComposition();
+				composition = disso->at(l).first->getComposition();
 				// Test its size
 				if (composition[vType] >= vMin || composition[heType] >= vMin) {
 					// It has to be replaced by a super cluster
@@ -635,18 +635,18 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 							composition[vType], 0 };
 					newCluster =
 							superGroupMap[clusterGroupMap[compositionVector]];
-					disso[l].first = newCluster;
-					disso[l].firstHeDistance = newCluster->getHeDistance(
+					disso->at(l).first = newCluster;
+					disso->at(l).firstHeDistance = newCluster->getHeDistance(
 							composition[heType]);
-					disso[l].firstVDistance = newCluster->getVDistance(
+					disso->at(l).firstVDistance = newCluster->getVDistance(
 							composition[vType]);
 				}
 			}
 
 			// Test the second reactant
-			if (disso[l].second->getType() == heVType) {
+			if (disso->at(l).second->getType() == heVType) {
 				// Get its composition
-				composition = disso[l].second->getComposition();
+				composition = disso->at(l).second->getComposition();
 				// Test its size
 				if (composition[vType] >= vMin || composition[heType] >= vMin) {
 					// It has to be replaced by a super cluster
@@ -654,21 +654,21 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 							composition[vType], 0 };
 					newCluster =
 							superGroupMap[clusterGroupMap[compositionVector]];
-					disso[l].second = newCluster;
-					disso[l].secondHeDistance = newCluster->getHeDistance(
+					disso->at(l).second = newCluster;
+					disso->at(l).secondHeDistance = newCluster->getHeDistance(
 							composition[heType]);
-					disso[l].secondVDistance = newCluster->getVDistance(
+					disso->at(l).secondVDistance = newCluster->getVDistance(
 							composition[vType]);
 				}
 			}
 		}
 
 		// Loop on its emission pairs
-		for (int l = 0; l < emi.size(); l++) {
+		for (int l = 0; l < emi->size(); l++) {
 			// Test the first reactant
-			if (emi[l].first->getType() == heVType) {
+			if (emi->at(l).first->getType() == heVType) {
 				// Get its composition
-				composition = emi[l].first->getComposition();
+				composition = emi->at(l).first->getComposition();
 				// Test its size
 				if (composition[vType] >= vMin || composition[heType] >= vMin) {
 					// It has to be replaced by a super cluster
@@ -676,18 +676,18 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 							composition[vType], 0 };
 					newCluster =
 							superGroupMap[clusterGroupMap[compositionVector]];
-					emi[l].first = newCluster;
-					emi[l].firstHeDistance = newCluster->getHeDistance(
+					emi->at(l).first = newCluster;
+					emi->at(l).firstHeDistance = newCluster->getHeDistance(
 							composition[heType]);
-					emi[l].firstVDistance = newCluster->getVDistance(
+					emi->at(l).firstVDistance = newCluster->getVDistance(
 							composition[vType]);
 				}
 			}
 
 			// Test the second reactant
-			if (emi[l].second->getType() == heVType) {
+			if (emi->at(l).second->getType() == heVType) {
 				// Get its composition
-				composition = emi[l].second->getComposition();
+				composition = emi->at(l).second->getComposition();
 				// Test its size
 				if (composition[vType] >= vMin || composition[heType] >= vMin) {
 					// It has to be replaced by a super cluster
@@ -695,10 +695,10 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 							composition[vType], 0 };
 					newCluster =
 							superGroupMap[clusterGroupMap[compositionVector]];
-					emi[l].second = newCluster;
-					emi[l].secondHeDistance = newCluster->getHeDistance(
+					emi->at(l).second = newCluster;
+					emi->at(l).secondHeDistance = newCluster->getHeDistance(
 							composition[heType]);
-					emi[l].secondVDistance = newCluster->getVDistance(
+					emi->at(l).secondVDistance = newCluster->getVDistance(
 							composition[vType]);
 				}
 			}
