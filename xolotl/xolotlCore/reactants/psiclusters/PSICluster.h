@@ -166,7 +166,7 @@ public:
 	 * cluster's lifecycle by subclasses. In the standard Xolotl clusters,
 	 * this vector is filled in createReactionConnectivity.
 	 */
-	std::vector<ClusterPair> *reactingPairs;
+	std::vector<ClusterPair> reactingPairs;
 
 	/**
 	 * A vector of clusters that combine with this cluster to produce other
@@ -174,7 +174,7 @@ public:
 	 * lifecycle by subclasses. In the standard Xolotl clusters, this vector is
 	 * filled in createReactionConnectivity.
 	 */
-	std::vector<CombiningCluster> *combiningReactants;
+	std::vector<CombiningCluster> combiningReactants;
 
 	/**
 	 * A vector of pairs of clusters: the first one is the one dissociation into
@@ -184,7 +184,7 @@ public:
 	 * vector is filled in dissociateCluster that is called by
 	 * createDissociationConnectivity.
 	 */
-	std::vector<ClusterPair> *dissociatingPairs;
+	std::vector<ClusterPair> dissociatingPairs;
 
 	/**
 	 * A vector of ClusterPairs that represent pairs of clusters that are emitted
@@ -193,7 +193,7 @@ public:
 	 * this vector is filled in emitClusters that is called by
 	 * createDissociationConnectivity.
 	 */
-	std::vector<ClusterPair> *emissionPairs;
+	std::vector<ClusterPair> emissionPairs;
 
 	/**
 	 * The default constructor
@@ -212,12 +212,7 @@ public:
 	/**
 	 * The destructor
 	 */
-	~PSICluster() {
-		// Delete vectors
-		delete reactingPairs;
-		delete combiningReactants;
-		delete dissociatingPairs;
-		delete emissionPairs;
+	virtual ~PSICluster() {
 	}
 
 	/**

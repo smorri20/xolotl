@@ -312,9 +312,9 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 	IReactant * cluster;
 
 	// Loop on Y = V number
-	for (int i = 0; i <= maxVClusterSize; i++) {
+	for (int i = 0; i <= maxHeVClusterSize / 2; i++) {
 		// Loop on X = He number
-		for (int j = 0; j <= maxHeVClusterSize - maxVClusterSize; j++) {
+		for (int j = 0; j <= maxHeVClusterSize / 2; j++) {
 			double conc = 0.0;
 			// V clusters
 			if (j == 0) {
@@ -422,9 +422,9 @@ PetscErrorCode monitorMeanSize0D(TS ts, PetscInt timestep, PetscReal time,
 
 	PetscFunctionBeginUser;
 
-	// Don't do anything if it is not on the stride
-	if (timestep % 10 != 0)
-		PetscFunctionReturn(0);
+//	// Don't do anything if it is not on the stride
+//	if (timestep % 10 != 0)
+//		PetscFunctionReturn(0);
 
 	// Get the da from ts
 	DM da;
@@ -469,9 +469,8 @@ PetscErrorCode monitorMeanSize0D(TS ts, PetscInt timestep, PetscReal time,
 
 //	// Loop on all the indices to compute the mean
 //	for (int i = 0; i < indices0D.size(); i++) {
-//		outputFile << 2.0 * radii0D[i] << " "
-//				<< gridPointSolution[indices0D[i]] * constantMulti * 4.0
-//						* radii0D[i] * radii0D[i] << std::endl;
+//		outputFile << i << " "
+//				<< gridPointSolution[indices0D[i]] << std::endl;
 //	}
 
 	// Loop on the super clusters
