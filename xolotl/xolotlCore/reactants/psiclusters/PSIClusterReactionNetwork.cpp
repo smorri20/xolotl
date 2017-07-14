@@ -189,6 +189,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 	// Get all the He and HeV clusters
 	auto allHeReactants = getAll(heType);
 	auto allHeVReactants = getAll(heVType);
+	auto allSuperReactants = getAll(PSISuperType);
 	// Loop on the He clusters
 	for (auto firstIt = allHeReactants.begin(); firstIt != allHeReactants.end();
 			firstIt++) {
@@ -207,6 +208,22 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 					comp[vType], 0 };
 			// Get the product
 			auto product = getCompound(heVType, compositionVec);
+
+			// Check if the product can be a super cluster
+			if (!product) {
+				// Loop on the super clusters
+				for (auto thirdIt = allSuperReactants.begin();
+						thirdIt != allSuperReactants.end(); thirdIt++) {
+					// Check if the cluster contains the product
+					auto superCluster = (PSISuperCluster *) *thirdIt;
+					if (superCluster->isIn(compositionVec[0],
+							compositionVec[1])) {
+						product = *thirdIt;
+						break;
+					}
+				}
+			}
+
 			// Check that the reaction can occur
 			if (product
 					&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -217,10 +234,56 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 				// Tell the reactants that they are in this reaction
 				(*firstIt)->createCombination(reaction);
 				(*secondIt)->createCombination(reaction);
-				product->createProduction(reaction);
+				product->createProduction(reaction, compositionVec[0],
+						compositionVec[1]);
 
 				// Check if the reverse reaction is allowed
-				checkDissociationConnectivity(product, reaction);
+				checkDissociationConnectivity(product, reaction,
+						compositionVec[0], compositionVec[1]);
+			}
+		}
+
+		// Loop on the super clusters
+		for (auto secondIt = allSuperReactants.begin();
+				secondIt != allSuperReactants.end(); secondIt++) {
+			auto superCluster = (PSISuperCluster *) *secondIt;
+			IReactant * product = nullptr;
+			// Get its boundaries
+			auto boundaries = superCluster->getBoundaries();
+			// Loop on them
+			for (int i = boundaries[0]; i <= boundaries[1]; i++) {
+				for (int j = boundaries[2]; j <= boundaries[3]; j++) {
+					// Assume the product can only be a super cluster here
+					product = nullptr;
+					// Loop on the super clusters
+					for (auto thirdIt = allSuperReactants.begin();
+							thirdIt != allSuperReactants.end(); thirdIt++) {
+						// Check if the cluster contains the product
+						auto tempCluster = (PSISuperCluster *) *thirdIt;
+						if (tempCluster->isIn(i + firstSize, j)) {
+							product = *thirdIt;
+							break;
+						}
+					}
+
+					// Check that the reaction can occur
+					if (product
+							&& ((*firstIt)->getDiffusionFactor() > 0.0
+									|| (*secondIt)->getDiffusionFactor() > 0.0)) {
+						// Create a production reaction
+						auto reaction = std::make_shared<ProductionReaction>(
+								(*firstIt), (*secondIt));
+						// Tell the reactants that they are in this reaction
+						(*firstIt)->createCombination(reaction, i, j);
+						(*secondIt)->createCombination(reaction, i, j);
+						product->createProduction(reaction, i + firstSize, j, i,
+								j);
+
+						// Check if the reverse reaction is allowed
+						checkDissociationConnectivity(product, reaction,
+								i + firstSize, j, i, j);
+					}
+				}
 			}
 		}
 	}
@@ -248,6 +311,22 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 					+ firstSize, 0 };
 			// Get the product
 			auto product = getCompound(heVType, compositionVec);
+
+			// Check if the product can be a super cluster
+			if (!product) {
+				// Loop on the super clusters
+				for (auto thirdIt = allSuperReactants.begin();
+						thirdIt != allSuperReactants.end(); thirdIt++) {
+					// Check if the cluster contains the product
+					auto superCluster = (PSISuperCluster *) *thirdIt;
+					if (superCluster->isIn(compositionVec[0],
+							compositionVec[1])) {
+						product = *thirdIt;
+						break;
+					}
+				}
+			}
+
 			// Check that the reaction can occur
 			if (product
 					&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -258,10 +337,56 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 				// Tell the reactants that they are in this reaction
 				(*firstIt)->createCombination(reaction);
 				(*secondIt)->createCombination(reaction);
-				product->createProduction(reaction);
+				product->createProduction(reaction, compositionVec[0],
+						compositionVec[1]);
 
 				// Check if the reverse reaction is allowed
-				checkDissociationConnectivity(product, reaction);
+				checkDissociationConnectivity(product, reaction,
+						compositionVec[0], compositionVec[1]);
+			}
+		}
+
+		// Loop on the super clusters
+		for (auto secondIt = allSuperReactants.begin();
+				secondIt != allSuperReactants.end(); secondIt++) {
+			auto superCluster = (PSISuperCluster *) *secondIt;
+			IReactant * product = nullptr;
+			// Get its boundaries
+			auto boundaries = superCluster->getBoundaries();
+			// Loop on them
+			for (int i = boundaries[0]; i <= boundaries[1]; i++) {
+				for (int j = boundaries[2]; j <= boundaries[3]; j++) {
+					// Assume the product can only be a super cluster here
+					product = nullptr;
+					// Loop on the super clusters
+					for (auto thirdIt = allSuperReactants.begin();
+							thirdIt != allSuperReactants.end(); thirdIt++) {
+						// Check if the cluster contains the product
+						auto tempCluster = (PSISuperCluster *) *thirdIt;
+						if (tempCluster->isIn(i, j + firstSize)) {
+							product = *thirdIt;
+							break;
+						}
+					}
+
+					// Check that the reaction can occur
+					if (product
+							&& ((*firstIt)->getDiffusionFactor() > 0.0
+									|| (*secondIt)->getDiffusionFactor() > 0.0)) {
+						// Create a production reaction
+						auto reaction = std::make_shared<ProductionReaction>(
+								(*firstIt), (*secondIt));
+						// Tell the reactants that they are in this reaction
+						(*firstIt)->createCombination(reaction, i, j);
+						(*secondIt)->createCombination(reaction, i, j);
+						product->createProduction(reaction, i, j + firstSize, i,
+								j);
+
+						// Check if the reverse reaction is allowed
+						checkDissociationConnectivity(product, reaction, i,
+								j + firstSize, i, j);
+					}
+				}
 			}
 		}
 	}
@@ -282,6 +407,22 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			std::vector<int> compositionVec = { firstSize, secondSize, 0 };
 			// Get the product
 			auto product = getCompound(heVType, compositionVec);
+
+			// Check if the product can be a super cluster
+			if (!product) {
+				// Loop on the super clusters
+				for (auto thirdIt = allSuperReactants.begin();
+						thirdIt != allSuperReactants.end(); thirdIt++) {
+					// Check if the cluster contains the product
+					auto superCluster = (PSISuperCluster *) *thirdIt;
+					if (superCluster->isIn(compositionVec[0],
+							compositionVec[1])) {
+						product = *thirdIt;
+						break;
+					}
+				}
+			}
+
 			// Check that the reaction can occur
 			if (product
 					&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -292,10 +433,12 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 				// Tell the reactants that they are in this reaction
 				(*firstIt)->createCombination(reaction);
 				(*secondIt)->createCombination(reaction);
-				product->createProduction(reaction);
+				product->createProduction(reaction, compositionVec[0],
+						compositionVec[1]);
 
 				// Check if the reverse reaction is allowed
-				checkDissociationConnectivity(product, reaction);
+				checkDissociationConnectivity(product, reaction,
+						compositionVec[0], compositionVec[1]);
 			}
 		}
 	}
@@ -341,6 +484,57 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
 				// Check if the reverse reaction is allowed
 				checkDissociationConnectivity(product, reaction);
+			}
+		}
+
+		// Loop on the super clusters
+		for (auto secondIt = allSuperReactants.begin();
+				secondIt != allSuperReactants.end(); secondIt++) {
+			auto superCluster = (PSISuperCluster *) *secondIt;
+			IReactant * product = nullptr;
+			// Get its boundaries
+			auto boundaries = superCluster->getBoundaries();
+			// Loop on them
+			for (int i = boundaries[0]; i <= boundaries[1]; i++) {
+				for (int j = boundaries[2]; j <= boundaries[3]; j++) {
+					// The product might be HeV
+					// Create the composition of the potential product
+					std::vector<int> compositionVec = { i, j - firstSize, 0 };
+					// Get the product
+					product = getCompound(heVType, compositionVec);
+
+					// If the product doesn't exist check for super clusters
+					if (!product) {
+						// Loop on the super clusters
+						for (auto thirdIt = allSuperReactants.begin();
+								thirdIt != allSuperReactants.end(); thirdIt++) {
+							// Check if the cluster contains the product
+							auto tempCluster = (PSISuperCluster *) *thirdIt;
+							if (tempCluster->isIn(i, j - firstSize)) {
+								product = *thirdIt;
+								break;
+							}
+						}
+					}
+
+					// Check that the reaction can occur
+					if (product
+							&& ((*firstIt)->getDiffusionFactor() > 0.0
+									|| (*secondIt)->getDiffusionFactor() > 0.0)) {
+						// Create a production reaction
+						auto reaction = std::make_shared<ProductionReaction>(
+								(*firstIt), (*secondIt));
+						// Tell the reactants that they are in this reaction
+						(*firstIt)->createCombination(reaction, i, j);
+						(*secondIt)->createCombination(reaction, i, j);
+						product->createProduction(reaction, i, j - firstSize, i,
+								j);
+
+						// Check if the reverse reaction is allowed
+						checkDissociationConnectivity(product, reaction, i,
+								j - firstSize, i, j);
+					}
+				}
 			}
 		}
 	}
@@ -657,7 +851,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
 void PSIClusterReactionNetwork::checkDissociationConnectivity(
 		IReactant * emittingReactant,
-		std::shared_ptr<ProductionReaction> reaction) {
+		std::shared_ptr<ProductionReaction> reaction, int a, int b, int c,
+		int d) {
 	// Check if at least one of the potentially emitted cluster is size one
 	if (reaction->first->getSize() != 1 && reaction->second->getSize() != 1) {
 		// Don't add the reverse reaction
@@ -685,9 +880,9 @@ void PSIClusterReactionNetwork::checkDissociationConnectivity(
 	// Set the reverse reaction
 	dissociationReaction->reverseReaction = reaction.get();
 	// Tell the reactants that their are in this reaction
-	reaction->first->createDissociation(dissociationReaction);
-	reaction->second->createDissociation(dissociationReaction);
-	emittingReactant->createEmission(dissociationReaction);
+	reaction->first->createDissociation(dissociationReaction, a, b, c, d);
+	reaction->second->createDissociation(dissociationReaction, a, b, c, d);
+	emittingReactant->createEmission(dissociationReaction, a, b, c, d);
 
 	return;
 }
@@ -1280,9 +1475,6 @@ void PSIClusterReactionNetwork::computeRateConstants() {
 		// Set it in the reaction
 		(*iter)->kConstant = rate;
 
-//		std::cout << "production: " << (*iter)->first->getName() << " + "
-//				<< (*iter)->second->getName() << " : " << rate << std::endl;
-
 		// Check if the rate is the biggest one up to now
 		if (rate > biggestProductionRate)
 			biggestProductionRate = rate;
@@ -1295,9 +1487,6 @@ void PSIClusterReactionNetwork::computeRateConstants() {
 		rate = calculateDissociationConstant(iter->get());
 		// Set it in the reaction
 		(*iter)->kConstant = rate;
-
-//		std::cout << "dissociation: " << (*iter)->first->getName() << " + "
-//				<< (*iter)->second->getName() << " : " << rate << std::endl;
 	}
 
 	// Set the biggest rate

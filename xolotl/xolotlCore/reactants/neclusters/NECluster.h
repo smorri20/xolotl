@@ -211,32 +211,44 @@ public:
 	 * Create the connectivity.
 	 *
 	 * @param reaction The reaction creating this cluster.
+	 * @param a Number that can be used by daughter classes.
+	 * @param b Number that can be used by daughter classes.
 	 */
-	void createProduction(std::shared_ptr<ProductionReaction> reaction);
+	void createProduction(std::shared_ptr<ProductionReaction> reaction, int a =
+			0, int b = 0);
 
 	/**
 	 * Create a combination associated with the given reaction.
 	 * Create the connectivity.
 	 *
 	 * @param reaction The reaction where this cluster takes part.
+	 * @param a Number that can be used by daughter classes.
+	 * @param b Number that can be used by daughter classes.
 	 */
-	void createCombination(std::shared_ptr<ProductionReaction> reaction);
+	void createCombination(std::shared_ptr<ProductionReaction> reaction, int a =
+			0, int b = 0);
 
 	/**
 	 * Create a dissociation pair associated with the given reaction.
 	 * Create the connectivity.
 	 *
 	 * @param reaction The reaction creating this cluster.
+	 * @param a Number that can be used by daughter classes.
+	 * @param b Number that can be used by daughter classes.
 	 */
-	void createDissociation(std::shared_ptr<DissociationReaction> reaction);
+	void createDissociation(std::shared_ptr<DissociationReaction> reaction,
+			int a = 0, int b = 0);
 
 	/**
 	 * Create an emission pair associated with the given reaction.
 	 * Create the connectivity.
 	 *
 	 * @param reaction The reaction where this cluster emits.
+	 * @param a Number that can be used by daughter classes.
+	 * @param b Number that can be used by daughter classes.
 	 */
-	void createEmission(std::shared_ptr<DissociationReaction> reaction);
+	void createEmission(std::shared_ptr<DissociationReaction> reaction, int a =
+			0, int b = 0);
 
 	/**
 	 * Add the reactions to the network lists.

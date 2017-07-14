@@ -145,14 +145,17 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::load() {
 		}
 	}
 
-	// Create the reactions
-	network->createReactionConnectivity();
-
 	// Check if we want dummy reactions
 	if (!dummyReactions) {
 		// Apply sectional grouping
 		applySectionalGrouping(network);
 	}
+
+	// Create the reactions
+	network->createReactionConnectivity();
+
+	// Recompute Ids and network size and redefine the connectivities
+	network->reinitializeNetwork();
 
 	return network;
 }
@@ -304,14 +307,17 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 		currCluster->setReactionNetwork(network);
 	}
 
-	// Create the reactions
-	network->createReactionConnectivity();
-
 	// Check if we want dummy reactions
 	if (!dummyReactions) {
 		// Apply sectional grouping
 		applySectionalGrouping(network);
 	}
+
+	// Create the reactions
+	network->createReactionConnectivity();
+
+	// Recompute Ids and network size and redefine the connectivities
+	network->reinitializeNetwork();
 
 	return network;
 }
@@ -561,171 +567,6 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 		heIndex = 1;
 	}
 
-	// Initialize variables for the loop
-	PSISuperCluster * newCluster;
-	// Loop on all the reactants to update the pairs vector with super clusters
-	auto reactants = network->getAll();
-	for (int i = 0; i < reactants->size(); i++) {
-		// Get the cluster
-		cluster = (PSICluster *) reactants->at(i);
-		// Get their production and dissociation vectors
-		auto react = cluster->reactingPairs;
-		auto combi = cluster->combiningReactants;
-		auto disso = cluster->dissociatingPairs;
-		auto emi = cluster->emissionPairs;
-
-		// Loop on its reacting pairs
-		for (int l = 0; l < react.size(); l++) {
-			// Test the first reactant
-			if (react[l].first->getType() == heVType) {
-				// Get its composition
-				composition = react[l].first->getComposition();
-				// Test its size
-				if (composition[vType] >= vMin || composition[heType] >= vMin) {
-					// It has to be replaced by a super cluster
-					std::vector<int> compositionVector = { composition[heType],
-							composition[vType], 0 };
-					newCluster =
-							superGroupMap[clusterGroupMap[compositionVector]];
-					react[l].first = newCluster;
-					react[l].firstHeDistance = newCluster->getHeDistance(
-							composition[heType]);
-					react[l].firstVDistance = newCluster->getVDistance(
-							composition[vType]);
-				}
-			}
-
-			// Test the second reactant
-			if (react[l].second->getType() == heVType) {
-				// Get its composition
-				composition = react[l].second->getComposition();
-				// Test its size
-				if (composition[vType] >= vMin || composition[heType] >= vMin) {
-					// It has to be replaced by a super cluster
-					std::vector<int> compositionVector = { composition[heType],
-							composition[vType], 0 };
-					newCluster =
-							superGroupMap[clusterGroupMap[compositionVector]];
-					react[l].second = newCluster;
-					react[l].secondHeDistance = newCluster->getHeDistance(
-							composition[heType]);
-					react[l].secondVDistance = newCluster->getVDistance(
-							composition[vType]);
-				}
-			}
-		}
-
-		// Loop on its combining reactants
-		for (int l = 0; l < combi.size(); l++) {
-			// Test the combining reactant
-			if (combi[l].combining->getType() == heVType) {
-				// Get its composition
-				composition = combi[l].combining->getComposition();
-				// Test its size
-				if (composition[vType] >= vMin || composition[heType] >= vMin) {
-					// It has to be replaced by a super cluster
-					std::vector<int> compositionVector = { composition[heType],
-							composition[vType], 0 };
-					newCluster =
-							superGroupMap[clusterGroupMap[compositionVector]];
-					combi[l].combining = newCluster;
-					combi[l].heDistance = newCluster->getHeDistance(
-							composition[heType]);
-					combi[l].vDistance = newCluster->getVDistance(
-							composition[vType]);
-				}
-			}
-		}
-
-		// Loop on its dissociating pairs
-		for (int l = 0; l < disso.size(); l++) {
-			// Test the first reactant
-			if (disso[l].first->getType() == heVType) {
-				// Get its composition
-				composition = disso[l].first->getComposition();
-				// Test its size
-				if (composition[vType] >= vMin || composition[heType] >= vMin) {
-					// It has to be replaced by a super cluster
-					std::vector<int> compositionVector = { composition[heType],
-							composition[vType], 0 };
-					newCluster =
-							superGroupMap[clusterGroupMap[compositionVector]];
-					disso[l].first = newCluster;
-					disso[l].firstHeDistance = newCluster->getHeDistance(
-							composition[heType]);
-					disso[l].firstVDistance = newCluster->getVDistance(
-							composition[vType]);
-				}
-			}
-
-			// Test the second reactant
-			if (disso[l].second->getType() == heVType) {
-				// Get its composition
-				composition = disso[l].second->getComposition();
-				// Test its size
-				if (composition[vType] >= vMin || composition[heType] >= vMin) {
-					// It has to be replaced by a super cluster
-					std::vector<int> compositionVector = { composition[heType],
-							composition[vType], 0 };
-					newCluster =
-							superGroupMap[clusterGroupMap[compositionVector]];
-					disso[l].second = newCluster;
-					disso[l].secondHeDistance = newCluster->getHeDistance(
-							composition[heType]);
-					disso[l].secondVDistance = newCluster->getVDistance(
-							composition[vType]);
-				}
-			}
-		}
-
-		// Loop on its emission pairs
-		for (int l = 0; l < emi.size(); l++) {
-			// Test the first reactant
-			if (emi[l].first->getType() == heVType) {
-				// Get its composition
-				composition = emi[l].first->getComposition();
-				// Test its size
-				if (composition[vType] >= vMin || composition[heType] >= vMin) {
-					// It has to be replaced by a super cluster
-					std::vector<int> compositionVector = { composition[heType],
-							composition[vType], 0 };
-					newCluster =
-							superGroupMap[clusterGroupMap[compositionVector]];
-					emi[l].first = newCluster;
-					emi[l].firstHeDistance = newCluster->getHeDistance(
-							composition[heType]);
-					emi[l].firstVDistance = newCluster->getVDistance(
-							composition[vType]);
-				}
-			}
-
-			// Test the second reactant
-			if (emi[l].second->getType() == heVType) {
-				// Get its composition
-				composition = emi[l].second->getComposition();
-				// Test its size
-				if (composition[vType] >= vMin || composition[heType] >= vMin) {
-					// It has to be replaced by a super cluster
-					std::vector<int> compositionVector = { composition[heType],
-							composition[vType], 0 };
-					newCluster =
-							superGroupMap[clusterGroupMap[compositionVector]];
-					emi[l].second = newCluster;
-					emi[l].secondHeDistance = newCluster->getHeDistance(
-							composition[heType]);
-					emi[l].secondVDistance = newCluster->getVDistance(
-							composition[vType]);
-				}
-			}
-		}
-
-		// Set their production and dissociation vectors
-		cluster->reactingPairs = react;
-		cluster->combiningReactants = combi;
-		cluster->dissociatingPairs = disso;
-		cluster->emissionPairs = emi;
-	}
-
 	// Get the super cluster map
 	auto superMap = network->getAll(PSISuperType);
 	// Set the reaction network for each super reactant
@@ -748,9 +589,6 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 		}
 	}
 	network->removeReactants(doomedReactants);
-
-	// Recompute Ids and network size and redefine the connectivities
-	network->reinitializeNetwork();
 
 	return;
 }

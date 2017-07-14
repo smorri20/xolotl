@@ -78,16 +78,11 @@ protected:
 		 */
 		std::shared_ptr<Reaction> reaction;
 
-		/**
-		 * The number of times this reaction should be counted
-		 */
-		int multiplicity;
-
 		//! The constructor
 		ClusterPair(PSICluster * firstPtr, PSICluster * secondPtr) :
 				first(firstPtr), second(secondPtr), reaction(nullptr), firstHeDistance(
 						0.0), firstVDistance(0.0), secondHeDistance(0.0), secondVDistance(
-						0.0), multiplicity(1) {
+						0.0) {
 		}
 	};
 
@@ -122,15 +117,10 @@ protected:
 		 */
 		std::shared_ptr<Reaction> reaction;
 
-		/**
-		 * The number of times this reaction should be counted
-		 */
-		int multiplicity;
-
 		//! The constructor
 		CombiningCluster(PSICluster * ptr) :
 				combining(ptr), reaction(nullptr), heDistance(0.0), vDistance(
-						0.0), multiplicity(1) {
+						0.0) {
 		}
 	};
 
@@ -236,32 +226,51 @@ public:
 	 * Create the connectivity.
 	 *
 	 * @param reaction The reaction creating this cluster.
+	 * @param a Helium number.
+	 * @param b Vacancy number.
+	 * @param c Helium number.
+	 * @param d Vacancy number.
 	 */
-	void createProduction(std::shared_ptr<ProductionReaction> reaction);
+	virtual void createProduction(std::shared_ptr<ProductionReaction> reaction,
+			int a = 0, int b = 0, int c = 0, int d = 0);
 
 	/**
 	 * Create a combination associated with the given reaction.
 	 * Create the connectivity.
 	 *
 	 * @param reaction The reaction where this cluster takes part.
+	 * @param a Helium number.
+	 * @param b Vacancy number.
 	 */
-	void createCombination(std::shared_ptr<ProductionReaction> reaction);
+	virtual void createCombination(std::shared_ptr<ProductionReaction> reaction,
+			int a = 0, int b = 0);
 
 	/**
 	 * Create a dissociation pair associated with the given reaction.
 	 * Create the connectivity.
 	 *
 	 * @param reaction The reaction creating this cluster.
+	 * @param a Helium number.
+	 * @param b Vacancy number.
+	 * @param c Helium number.
+	 * @param d Vacancy number.
 	 */
-	void createDissociation(std::shared_ptr<DissociationReaction> reaction);
+	virtual void createDissociation(
+			std::shared_ptr<DissociationReaction> reaction, int a = 0,
+			int b = 0, int c = 0, int d = 0);
 
 	/**
 	 * Create an emission pair associated with the given reaction.
 	 * Create the connectivity.
 	 *
 	 * @param reaction The reaction where this cluster emits.
+	 * @param a Helium number.
+	 * @param b Vacancy number.
+	 * @param c Helium number.
+	 * @param d Vacancy number.
 	 */
-	void createEmission(std::shared_ptr<DissociationReaction> reaction);
+	virtual void createEmission(std::shared_ptr<DissociationReaction> reaction,
+			int a = 0, int b = 0, int c = 0, int d = 0);
 
 	/**
 	 * Add the reactions to the network lists.
@@ -303,6 +312,25 @@ public:
 	 * @return The momentum
 	 */
 	virtual double getVMomentum() const {
+		return 0.0;
+	}
+	/**
+	 * This operation returns the distance to the mean.
+	 *
+	 * @param he The number of helium
+	 * @return The distance to the mean number of helium in the group
+	 */
+	virtual double getHeDistance(int he) const {
+		return 0.0;
+	}
+
+	/**
+	 * This operation returns the distance to the mean.
+	 *
+	 * @param he The number of vacancy
+	 * @return The distance to the mean number of vacancy in the group
+	 */
+	virtual double getVDistance(int v) const {
 		return 0.0;
 	}
 

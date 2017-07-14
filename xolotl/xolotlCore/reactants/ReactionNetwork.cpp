@@ -169,7 +169,6 @@ const std::vector<std::string> & ReactionNetwork::getCompoundNames() const {
 
 std::shared_ptr<ProductionReaction> ReactionNetwork::addProductionReaction(
 		std::shared_ptr<ProductionReaction> reaction) {
-
 	// Check if the given ProductionReaction already exists.
 	auto key = reaction->descriptiveKey();
 	auto iter = productionReactionMap.find(key);

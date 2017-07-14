@@ -32,13 +32,24 @@ PSICluster::PSICluster(PSICluster &other) :
 	return;
 }
 
-void PSICluster::createProduction(
-		std::shared_ptr<ProductionReaction> reaction) {
+void PSICluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
+		int a, int b, int c, int d) {
 	// Create a cluster pair from the given reaction
 	ClusterPair pair((PSICluster *) reaction->first,
 			(PSICluster *) reaction->second);
+	if (reaction->first->getType() == PSISuperType) {
+		auto super = (PSICluster *) reaction->first;
+		pair.firstHeDistance = super->getHeDistance(c);
+		pair.firstVDistance = super->getVDistance(d);
+	}
+	if (reaction->second->getType() == PSISuperType) {
+		auto super = (PSICluster *) reaction->second;
+		pair.secondHeDistance = super->getHeDistance(c);
+		pair.secondVDistance = super->getVDistance(d);
+	}
 	// Add the pair to the list
 	reactingPairs.push_back(pair);
+
 	// Setup the connectivity array
 	setReactionConnectivity(reaction->first->getId());
 	setReactionConnectivity(reaction->second->getId());
@@ -46,8 +57,8 @@ void PSICluster::createProduction(
 	return;
 }
 
-void PSICluster::createCombination(
-		std::shared_ptr<ProductionReaction> reaction) {
+void PSICluster::createCombination(std::shared_ptr<ProductionReaction> reaction,
+		int a, int b) {
 	setReactionConnectivity(id);
 	// Look for the other cluster
 	IReactant * secondCluster;
@@ -58,6 +69,11 @@ void PSICluster::createCombination(
 
 	// Creates the combining cluster
 	CombiningCluster combCluster((PSICluster *) secondCluster);
+	if (secondCluster->getType() == PSISuperType) {
+		auto super = (PSICluster *) secondCluster;
+		combCluster.heDistance = super->getHeDistance(a);
+		combCluster.vDistance = super->getVDistance(b);
+	}
 	// Push the product into the list of clusters that combine with this one
 	combiningReactants.push_back(combCluster);
 
@@ -69,7 +85,8 @@ void PSICluster::createCombination(
 }
 
 void PSICluster::createDissociation(
-		std::shared_ptr<DissociationReaction> reaction) {
+		std::shared_ptr<DissociationReaction> reaction, int a, int b, int c,
+		int d) {
 	// Look for the other cluster
 	IReactant * emittedCluster;
 	if (reaction->first->getId() == id)
@@ -81,6 +98,16 @@ void PSICluster::createDissociation(
 	// dissociating cluster is the first one
 	ClusterPair pair((PSICluster *) reaction->dissociating,
 			(PSICluster *) emittedCluster);
+	if (reaction->dissociating->getType() == PSISuperType) {
+		auto super = (PSICluster *) reaction->dissociating;
+		pair.firstHeDistance = super->getHeDistance(a);
+		pair.firstVDistance = super->getVDistance(b);
+	}
+	if (emittedCluster->getType() == PSISuperType) {
+		auto super = (PSICluster *) emittedCluster;
+		pair.secondHeDistance = super->getHeDistance(c);
+		pair.secondVDistance = super->getVDistance(d);
+	}
 	// Add the pair to the dissociating pair vector
 	dissociatingPairs.push_back(pair);
 
@@ -90,11 +117,21 @@ void PSICluster::createDissociation(
 	return;
 }
 
-void PSICluster::createEmission(
-		std::shared_ptr<DissociationReaction> reaction) {
+void PSICluster::createEmission(std::shared_ptr<DissociationReaction> reaction,
+		int a, int b, int c, int d) {
 	// Create the pair of emitted clusters
 	ClusterPair pair((PSICluster *) reaction->first,
 			(PSICluster *) reaction->second);
+	if (reaction->first->getType() == PSISuperType) {
+		auto super = (PSICluster *) reaction->first;
+		pair.firstHeDistance = super->getHeDistance(c);
+		pair.firstVDistance = super->getVDistance(d);
+	}
+	if (reaction->second->getType() == PSISuperType) {
+		auto super = (PSICluster *) reaction->second;
+		pair.secondHeDistance = super->getHeDistance(c);
+		pair.secondVDistance = super->getVDistance(d);
+	}
 	// Add the pair to the emission pair vector
 	emissionPairs.push_back(pair);
 
@@ -245,7 +282,6 @@ void PSICluster::setReactionNetwork(
 	return;
 }
 
-
 double PSICluster::getDissociationFlux() const {
 	// Initial declarations
 	int nPairs = 0;
@@ -260,7 +296,6 @@ double PSICluster::getDissociationFlux() const {
 		dissociatingCluster = dissociatingPairs[j].first;
 		// Calculate the Dissociation flux
 		flux += dissociatingPairs[j].reaction->kConstant
-				* (double) dissociatingPairs[j].multiplicity
 				* dissociatingCluster->getConcentration(
 						dissociatingPairs[j].firstHeDistance,
 						dissociatingPairs[j].firstVDistance);
@@ -280,8 +315,7 @@ double PSICluster::getEmissionFlux() const {
 	// Loop over all the pairs
 	for (int i = 0; i < nPairs; i++) {
 		// Update the flux
-		flux += emissionPairs[i].reaction->kConstant
-				* (double) emissionPairs[i].multiplicity;
+		flux += emissionPairs[i].reaction->kConstant;
 	}
 
 	return flux * concentration;
@@ -302,7 +336,6 @@ double PSICluster::getProductionFlux() const {
 		secondReactant = reactingPairs[i].second;
 		// Update the flux
 		flux += reactingPairs[i].reaction->kConstant
-				* (double) reactingPairs[i].multiplicity
 				* firstReactant->getConcentration(
 						reactingPairs[i].firstHeDistance,
 						reactingPairs[i].firstVDistance)
@@ -329,7 +362,6 @@ double PSICluster::getCombinationFlux() const {
 		combiningCluster = combiningReactants[j].combining;
 		// Calculate the combination flux
 		flux += combiningReactants[j].reaction->kConstant
-				* (double) combiningReactants[j].multiplicity
 				* combiningCluster->getConcentration(
 						combiningReactants[j].heDistance,
 						combiningReactants[j].vDistance);
@@ -378,7 +410,6 @@ void PSICluster::getProductionPartialDerivatives(
 	for (int i = 0; i < numReactants; i++) {
 		// Compute the contribution from the first part of the reacting pair
 		value = reactingPairs[i].reaction->kConstant
-				* (double) reactingPairs[i].multiplicity
 				* reactingPairs[i].second->getConcentration(
 						reactingPairs[i].secondHeDistance,
 						reactingPairs[i].secondVDistance);
@@ -390,7 +421,6 @@ void PSICluster::getProductionPartialDerivatives(
 		partials[index] += value * reactingPairs[i].firstVDistance;
 		// Compute the contribution from the second part of the reacting pair
 		value = reactingPairs[i].reaction->kConstant
-				* (double) reactingPairs[i].multiplicity
 				* reactingPairs[i].first->getConcentration(
 						reactingPairs[i].firstHeDistance,
 						reactingPairs[i].firstVDistance);
@@ -425,12 +455,10 @@ void PSICluster::getCombinationPartialDerivatives(
 		// Remember that the flux due to combinations is OUTGOING (-=)!
 		// Compute the contribution from this cluster
 		partials[id - 1] -= combiningReactants[i].reaction->kConstant
-				* (double) combiningReactants[i].multiplicity
 				* cluster->getConcentration(combiningReactants[i].heDistance,
 						combiningReactants[i].vDistance);
 		// Compute the contribution from the combining cluster
-		value = combiningReactants[i].reaction->kConstant
-				* (double) combiningReactants[i].multiplicity * concentration;
+		value = combiningReactants[i].reaction->kConstant * concentration;
 		otherIndex = cluster->id - 1;
 		partials[otherIndex] -= value;
 		otherIndex = cluster->heMomId - 1;
@@ -459,8 +487,7 @@ void PSICluster::getDissociationPartialDerivatives(
 	for (int i = 0; i < numPairs; i++) {
 		// Get the dissociating cluster
 		cluster = dissociatingPairs[i].first;
-		value = dissociatingPairs[i].reaction->kConstant
-				* (double) dissociatingPairs[i].multiplicity;
+		value = dissociatingPairs[i].reaction->kConstant;
 		index = cluster->id - 1;
 		partials[index] += value;
 		index = cluster->heMomId - 1;
@@ -488,8 +515,7 @@ void PSICluster::getEmissionPartialDerivatives(
 		// Modify the partial derivative. Remember that the flux
 		// due to emission is OUTGOING (-=)!
 		index = id - 1;
-		partials[index] -= emissionPairs[i].reaction->kConstant
-				* (double) emissionPairs[i].multiplicity;
+		partials[index] -= emissionPairs[i].reaction->kConstant;
 	}
 
 	return;
@@ -523,15 +549,13 @@ double PSICluster::getLeftSideRate() const {
 		cluster = (PSICluster *) combiningReactants[i].combining;
 		// Add the rate to the total rate
 		totalRate += combiningReactants[i].reaction->kConstant
-				* (double) combiningReactants[i].multiplicity
 				* cluster->concentration;
 	}
 
 	// Loop on the emission pairs
 	for (int i = 0; i < emissionPairs.size(); i++) {
 		// Add the rate to the total rate
-		totalRate += emissionPairs[i].reaction->kConstant
-				* (double) emissionPairs[i].multiplicity;
+		totalRate += emissionPairs[i].reaction->kConstant;
 	}
 
 	return totalRate;

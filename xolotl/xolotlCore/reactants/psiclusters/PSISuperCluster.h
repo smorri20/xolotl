@@ -282,6 +282,56 @@ public:
 			const std::shared_ptr<IReactionNetwork> reactionNetwork);
 
 	/**
+	 * Create a production pair associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 * @param a Helium number.
+	 * @param b Vacancy number.
+	 * @param c Helium number.
+	 * @param d Vacancy number.
+	 */
+	void createProduction(std::shared_ptr<ProductionReaction> reaction, int a =
+			0, int b = 0, int c = 0, int d = 0);
+
+	/**
+	 * Create a combination associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction where this cluster takes part.
+	 * @param a Helium number.
+	 * @param b Vacancy number.
+	 */
+	void createCombination(std::shared_ptr<ProductionReaction> reaction, int a =
+			0, int b = 0);
+
+	/**
+	 * Create a dissociation pair associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 * @param a Helium number.
+	 * @param b Vacancy number.
+	 * @param c Helium number.
+	 * @param d Vacancy number.
+	 */
+	void createDissociation(std::shared_ptr<DissociationReaction> reaction,
+			int a = 0, int b = 0, int c = 0, int d = 0);
+
+	/**
+	 * Create an emission pair associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction where this cluster emits.
+	 * @param a Helium number.
+	 * @param b Vacancy number.
+	 * @param c Helium number.
+	 * @param d Vacancy number.
+	 */
+	void createEmission(std::shared_ptr<DissociationReaction> reaction, int a =
+			0, int b = 0, int c = 0, int d = 0);
+
+	/**
 	 * This operation returns true to signify that this cluster is a mixture of
 	 * He and V.
 	 *
@@ -585,6 +635,26 @@ public:
 		boundaries.push_back(
 				(int) (numV - (double) sectionVWidth / 2.0) + sectionVWidth);
 		return boundaries;
+	}
+
+	/**
+	 * This operation returns true if the given numbers are contained in the group
+	 *
+	 * @return True if contained
+	 */
+	bool isIn(int a, int b) const {
+
+		// Try with key and map later
+
+		if (a < (int) (numHe - (double) sectionHeWidth / 2.0) + 1)
+			return false;
+		if (a > (int) (numHe - (double) sectionHeWidth / 2.0) + sectionHeWidth)
+			return false;
+		if (b < (int) (numV - (double) sectionVWidth / 2.0) + 1)
+			return false;
+		if (b > (int) (numV - (double) sectionVWidth / 2.0) + sectionVWidth)
+			return false;
+		return true;
 	}
 
 };

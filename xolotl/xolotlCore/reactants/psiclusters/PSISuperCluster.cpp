@@ -78,6 +78,153 @@ PSISuperCluster::PSISuperCluster(PSISuperCluster &other) :
 	return;
 }
 
+void PSISuperCluster::createProduction(
+		std::shared_ptr<ProductionReaction> reaction, int a, int b, int c, int d) {
+	// Create a cluster pair from the given reaction
+	ClusterPair pair((PSICluster *) reaction->first,
+			(PSICluster *) reaction->second);
+	if (reaction->first->getType() == PSISuperType) {
+		auto super = (PSISuperCluster *) reaction->first;
+		pair.firstHeDistance = super->getHeDistance(c);
+		pair.firstVDistance = super->getVDistance(d);
+	}
+	if (reaction->second->getType() == PSISuperType) {
+		auto super = (PSISuperCluster *) reaction->second;
+		pair.secondHeDistance = super->getHeDistance(c);
+		pair.secondVDistance = super->getVDistance(d);
+	}
+
+	// Create the key to see if we already have a vector at this entry
+	auto key = std::make_pair(a, b);
+	// Look for it in the map
+	auto it = reactingMap.find(key);
+	if (it != reactingMap.end()) {
+		// The key was found, add the element to it
+		it->second.push_back(pair);
+	} else {
+		// The key was not found, we have to create the element
+		std::vector<ClusterPair> tempVector;
+		tempVector.push_back(pair);
+		reactingMap[key] = tempVector;
+	}
+
+	// Setup the connectivity array
+	setReactionConnectivity(reaction->first->getId());
+	setReactionConnectivity(reaction->second->getId());
+
+	return;
+}
+
+void PSISuperCluster::createCombination(
+		std::shared_ptr<ProductionReaction> reaction, int a, int b) {
+	setReactionConnectivity(id);
+	// Look for the other cluster
+	IReactant * secondCluster;
+	if (reaction->first->getId() == id)
+		secondCluster = reaction->second;
+	else
+		secondCluster = reaction->first;
+
+	// Creates the combining cluster
+	CombiningCluster combCluster((PSICluster *) secondCluster);
+
+	// Create the key to see if we already have a vector at this entry
+	auto key = std::make_pair(a, b);
+	// Look for it in the map
+	auto it = combiningMap.find(key);
+	if (it != combiningMap.end()) {
+		// The key was found, add the element to it
+		it->second.push_back(combCluster);
+	} else {
+		// The key was not found, we have to create the element
+		std::vector<CombiningCluster> tempVector;
+		tempVector.push_back(combCluster);
+		combiningMap[key] = tempVector;
+	}
+
+	// Setup the connectivity array
+	setReactionConnectivity(id);
+	setReactionConnectivity(secondCluster->getId());
+
+	return;
+}
+
+void PSISuperCluster::createDissociation(
+		std::shared_ptr<DissociationReaction> reaction, int a, int b, int c,
+		int d) {
+	// Look for the other cluster
+	IReactant * emittedCluster;
+	if (reaction->first->getId() == id)
+		emittedCluster = reaction->second;
+	else
+		emittedCluster = reaction->first;
+
+	// Create the pair of them where it is important that the
+	// dissociating cluster is the first one
+	ClusterPair pair((PSICluster *) reaction->dissociating,
+			(PSICluster *) emittedCluster);
+	if (reaction->dissociating->getType() == PSISuperType) {
+		auto super = (PSISuperCluster *) reaction->dissociating;
+		pair.firstHeDistance = super->getHeDistance(a);
+		pair.firstVDistance = super->getVDistance(b);
+	}
+
+	// Create the key to see if we already have a vector at this entry
+	auto key = std::make_pair(c, d);
+	// Look for it in the map
+	auto it = dissociatingMap.find(key);
+	if (it != dissociatingMap.end()) {
+		// The key was found, add the element to it
+		it->second.push_back(pair);
+	} else {
+		// The key was not found, we have to create the element
+		std::vector<ClusterPair> tempVector;
+		tempVector.push_back(pair);
+		dissociatingMap[key] = tempVector;
+	}
+
+	// Setup the connectivity array
+	setDissociationConnectivity(reaction->dissociating->getId());
+
+	return;
+}
+
+void PSISuperCluster::createEmission(
+		std::shared_ptr<DissociationReaction> reaction, int a, int b, int c, int d) {
+	// Create the pair of emitted clusters
+	ClusterPair pair((PSICluster *) reaction->first,
+			(PSICluster *) reaction->second);
+	if (reaction->first->getType() == PSISuperType) {
+		auto super = (PSISuperCluster *) reaction->first;
+		pair.firstHeDistance = super->getHeDistance(c);
+		pair.firstVDistance = super->getVDistance(d);
+	}
+	if (reaction->second->getType() == PSISuperType) {
+		auto super = (PSISuperCluster *) reaction->second;
+		pair.secondHeDistance = super->getHeDistance(c);
+		pair.secondVDistance = super->getVDistance(d);
+	}
+
+	// Create the key to see if we already have a vector at this entry
+	auto key = std::make_pair(a, b);
+	// Look for it in the map
+	auto it = emissionMap.find(key);
+	if (it != emissionMap.end()) {
+		// The key was found, add the element to it
+		it->second.push_back(pair);
+	} else {
+		// The key was not found, we have to create the element
+		std::vector<ClusterPair> tempVector;
+		tempVector.push_back(pair);
+		emissionMap[key] = tempVector;
+	}
+
+	// Setup the connectivity array to itself
+	setReactionConnectivity(id);
+
+	return;
+}
+
 void PSISuperCluster::setReactionNetwork(
 		const std::shared_ptr<IReactionNetwork> reactionNetwork) {
 	// Call the superclass's method to actually set the reference
@@ -89,28 +236,25 @@ void PSISuperCluster::setReactionNetwork(
 	dissociatingPairs.clear();
 	emissionPairs.clear();
 
-	// Aggregate the reacting pairs and combining reactants from the xeVector
-	// Loop on the xeVector
-	for (int i = 0; i < heVVector.size(); i++) {
-		// Get the cluster composition
-		auto comp = heVVector[i]->getComposition();
-		// Create the key to the map
-		auto key = std::make_pair(comp[heType], comp[vType]);
-		// Get all vectors
-		auto react = heVVector[i]->reactingPairs;
-		auto combi = heVVector[i]->combiningReactants;
-		auto disso = heVVector[i]->dissociatingPairs;
-		auto emi = heVVector[i]->emissionPairs;
-
-		// Set them in the super cluster map
-		reactingMap[key] = react;
-		combiningMap[key] = combi;
-		dissociatingMap[key] = disso;
-		emissionMap[key] = emi;
-	}
-
-	// Compute the dispersions
-	computeDispersion();
+//	// Aggregate the reacting pairs and combining reactants from the xeVector
+//	// Loop on the xeVector
+//	for (int i = 0; i < heVVector.size(); i++) {
+//		// Get the cluster composition
+//		auto comp = heVVector[i]->getComposition();
+//		// Create the key to the map
+//		auto key = std::make_pair(comp[heType], comp[vType]);
+//		// Get all vectors
+//		auto react = heVVector[i]->reactingPairs;
+//		auto combi = heVVector[i]->combiningReactants;
+//		auto disso = heVVector[i]->dissociatingPairs;
+//		auto emi = heVVector[i]->emissionPairs;
+//
+//		// Set them in the super cluster map
+//		reactingMap[key] = react;
+//		combiningMap[key] = combi;
+//		dissociatingMap[key] = disso;
+//		emissionMap[key] = emi;
+//	}
 
 	return;
 }
@@ -272,6 +416,9 @@ void PSISuperCluster::optimizeReactions() {
 			*otherEmittedCluster = nullptr, *firstCluster = nullptr,
 			*secondCluster = nullptr;
 	int heIndex = 0, vIndex = 0;
+
+	// Compute the dispersions
+	computeDispersion();
 
 	// Loop on the effective reacting map
 	for (auto mapIt = reactingMap.begin(); mapIt != reactingMap.end();
@@ -491,8 +638,8 @@ void PSISuperCluster::optimizeReactions() {
 	}
 
 	// Loop on the effective dissociating map
-	for (auto mapIt = dissociatingMap.begin();
-			mapIt != dissociatingMap.end(); ++mapIt) {
+	for (auto mapIt = dissociatingMap.begin(); mapIt != dissociatingMap.end();
+			++mapIt) {
 		// Get the pairs
 		auto pairs = mapIt->second;
 		// Loop over all the reacting pairs
@@ -582,8 +729,8 @@ void PSISuperCluster::optimizeReactions() {
 			secondCluster = (*it).second;
 
 			// Create a dissociation reaction
-			auto reaction = std::make_shared<DissociationReaction>(
-					this, firstCluster, secondCluster);
+			auto reaction = std::make_shared<DissociationReaction>(this,
+					firstCluster, secondCluster);
 			// Add it to the network
 			reaction = network->addDissociationReaction(reaction);
 

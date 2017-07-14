@@ -157,6 +157,8 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal ftime, Vec C, Mat A, Mat J,
 		CHKERRQ(ierr);
 	}
 
+//	ierr = MatView(J, PETSC_VIEWER_STDOUT_WORLD);
+
 	// Stop the RHSJacobian timer
 	RHSJacobianTimer->stop();
 
