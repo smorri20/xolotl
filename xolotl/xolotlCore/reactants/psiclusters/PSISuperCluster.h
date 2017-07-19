@@ -168,6 +168,18 @@ private:
 	//! The width in the vacancy direction.
 	int sectionVWidth;
 
+	//! The lower bound in the helium direction.
+	int lowerHe;
+
+	//! The lower bound in the vacancy direction.
+	int lowerV;
+
+	//! The upper bound in the helium direction.
+	int upperHe;
+
+	//! The upper bound in the vacancy direction.
+	int upperV;
+
 	//! The 0th order momentum (mean).
 	double l0;
 
@@ -337,6 +349,11 @@ public:
 		}
 
 		computeDispersion();
+		lowerHe = (int) (numHe - (double) sectionHeWidth / 2.0) + 1;
+		upperHe = (int) (numHe - (double) sectionHeWidth / 2.0)
+				+ sectionHeWidth;
+		lowerV = (int) (numV - (double) sectionVWidth / 2.0) + 1;
+		upperV = (int) (numV - (double) sectionVWidth / 2.0) + sectionVWidth;
 	}
 
 	/**
@@ -619,12 +636,10 @@ public:
 	 */
 	std::vector<int> getBoundaries() const {
 		std::vector<int> boundaries;
-		boundaries.push_back((int) (numHe - (double) sectionHeWidth / 2.0) + 1);
-		boundaries.push_back(
-				(int) (numHe - (double) sectionHeWidth / 2.0) + sectionHeWidth);
-		boundaries.push_back((int) (numV - (double) sectionVWidth / 2.0) + 1);
-		boundaries.push_back(
-				(int) (numV - (double) sectionVWidth / 2.0) + sectionVWidth);
+		boundaries.push_back(lowerHe);
+		boundaries.push_back(upperHe);
+		boundaries.push_back(lowerV);
+		boundaries.push_back(upperV);
 		return boundaries;
 	}
 
@@ -637,13 +652,13 @@ public:
 
 		// Try with key and map later
 
-		if (a < (int) (numHe - (double) sectionHeWidth / 2.0) + 1)
+		if (a < lowerHe)
 			return false;
-		if (a > (int) (numHe - (double) sectionHeWidth / 2.0) + sectionHeWidth)
+		if (a > upperHe)
 			return false;
-		if (b < (int) (numV - (double) sectionVWidth / 2.0) + 1)
+		if (b < lowerV)
 			return false;
-		if (b > (int) (numV - (double) sectionVWidth / 2.0) + sectionVWidth)
+		if (b > upperV)
 			return false;
 		return true;
 	}

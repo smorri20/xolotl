@@ -34,30 +34,17 @@ PSICluster::PSICluster(PSICluster &other) :
 
 void PSICluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
 		int a, int b, int c, int d) {
-	// Check if the reaction was already added
-	std::vector<ClusterPair>::iterator it;
-	for (it = reactingPairs.begin(); it != reactingPairs.end(); it++) {
-		if (reaction->first == (*it).first
-				&& reaction->second == (*it).second) {
-			break;
-		}
-	}
-	if (it == reactingPairs.end()) {
-		// It was not already in so add it
-		// Create a cluster pair from the given reaction
-		ClusterPair pair((PSICluster *) reaction->first,
-				(PSICluster *) reaction->second);
-		// Add it
-		reactingPairs.push_back(pair);
-		it = reactingPairs.end() - 1;
+	// Create a cluster pair from the given reaction
+	ClusterPair pair((PSICluster *) reaction->first,
+			(PSICluster *) reaction->second);
+	// Add it
+	reactingPairs.push_back(pair);
+	auto it = reactingPairs.end() - 1;
 
-		// Add the reaction to the network
-		reaction = network->addProductionReaction(reaction);
-		// Link it to the pair
-		(*it).reaction = reaction;
-	} else {
-		std::cout << name << " double reactions !" << std::endl;
-	}
+	// Add the reaction to the network
+	reaction = network->addProductionReaction(reaction);
+	// Link it to the pair
+	(*it).reaction = reaction;
 
 	// Update the coefficients
 	double firstHeDistance = 0.0, firstVDistance = 0.0, secondHeDistance = 0.0,
@@ -95,20 +82,20 @@ void PSICluster::createCombination(std::shared_ptr<ProductionReaction> reaction,
 		secondCluster = reaction->first;
 
 	// Check if the reaction was already added
-	std::vector<CombiningCluster>::iterator it;
-	for (it = combiningReactants.begin(); it != combiningReactants.end();
+	std::vector<CombiningCluster>::reverse_iterator it;
+	for (it = combiningReactants.rbegin(); it != combiningReactants.rend();
 			it++) {
 		if (secondCluster == (*it).combining) {
 			break;
 		}
 	}
-	if (it == combiningReactants.end()) {
+	if (it == combiningReactants.rend()) {
 		// It was not already in so add it
 		// Creates the combining cluster
 		CombiningCluster combCluster((PSICluster *) secondCluster);
 		// Add it
 		combiningReactants.push_back(combCluster);
-		it = combiningReactants.end() - 1;
+		it = combiningReactants.rbegin();
 
 		// Create the corresponding production reaction
 		auto newReaction = std::make_shared<ProductionReaction>((*it).combining,
@@ -144,14 +131,15 @@ void PSICluster::createDissociation(
 		emittedCluster = reaction->first;
 
 	// Check if the reaction was already added
-	std::vector<ClusterPair>::iterator it;
-	for (it = dissociatingPairs.begin(); it != dissociatingPairs.end(); it++) {
+	std::vector<ClusterPair>::reverse_iterator it;
+	for (it = dissociatingPairs.rbegin(); it != dissociatingPairs.rend();
+			it++) {
 		if (reaction->dissociating == (*it).first
 				&& emittedCluster == (*it).second) {
 			break;
 		}
 	}
-	if (it == dissociatingPairs.end()) {
+	if (it == dissociatingPairs.rend()) {
 		// It was not already in so add it
 		// Create the pair of them where it is important that the
 		// dissociating cluster is the first one
@@ -159,7 +147,7 @@ void PSICluster::createDissociation(
 				(PSICluster *) emittedCluster);
 		// Add it
 		dissociatingPairs.push_back(pair);
-		it = dissociatingPairs.end() - 1;
+		it = dissociatingPairs.rbegin();
 
 		// Create the corresponding dissociation reaction
 		auto newReaction = std::make_shared<DissociationReaction>((*it).first,
