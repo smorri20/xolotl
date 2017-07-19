@@ -6,7 +6,6 @@
 #include <PetscOptionHandler.h>
 #include <ConstTempOptionHandler.h>
 #include <TempProfileOptionHandler.h>
-#include <HeatOptionHandler.h>
 #include <FluxOptionHandler.h>
 #include <FluxProfileOptionHandler.h>
 #include <PerfOptionHandler.h>
@@ -36,9 +35,6 @@ Options::Options() :
 		constTemperature(1000.0),
 		temperatureGradient(0.0),
 		tempProfileFlag(false),
-		tempProfileFilename(""),
-		heatFlag(false),
-		bulkTemperature(0.0),
 		fluxFlag(false),
 		fluxAmplitude(0.0),
 		fluxProfileFlag(false),
@@ -68,8 +64,6 @@ Options::Options() :
 	auto constTempHandler = new ConstTempOptionHandler();
 	// Create the temperature profile option handler
 	auto tempProfileHandler = new TempProfileOptionHandler();
-	// Create the heat equation option handler
-	auto heatHandler = new HeatOptionHandler();
 	// Create the flux option handler
 	auto fluxHandler = new FluxOptionHandler();
 	// Create the flux time profile option handler
@@ -106,7 +100,6 @@ Options::Options() :
 	optionsMap[petscHandler->key] = petscHandler;
 	optionsMap[constTempHandler->key] = constTempHandler;
 	optionsMap[tempProfileHandler->key] = tempProfileHandler;
-	optionsMap[heatHandler->key] = heatHandler;
 	optionsMap[fluxHandler->key] = fluxHandler;
 	optionsMap[fluxProfileHandler->key] = fluxProfileHandler;
 	optionsMap[perfHandler->key] = perfHandler;

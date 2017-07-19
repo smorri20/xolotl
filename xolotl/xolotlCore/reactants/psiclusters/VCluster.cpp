@@ -23,11 +23,35 @@ VCluster::VCluster(int nV,
 
 	// Compute the reaction radius
 	// It is the same formula for HeV clusters
-	reactionRadius = (sqrt(3.0) / 4.0) * xolotlCore::tungstenLatticeConstant
-			+ pow(
-					(3.0 * pow(xolotlCore::tungstenLatticeConstant, 3.0) * size)
-							/ (8.0 * xolotlCore::pi), (1.0 / 3.0))
-			- pow(
-					(3.0 * pow(xolotlCore::tungstenLatticeConstant, 3.0))
-							/ (8.0 * xolotlCore::pi), (1.0 / 3.0));
+	reactionRadius = xolotlCore::tungstenLatticeConstant
+			* pow((3.0 * size) / xolotlCore::pi, (1.0 / 3.0)) * 0.5;
+
+	return;
+}
+
+double VCluster::getEmissionFlux() const {
+	// Initial declarations
+	double flux = PSICluster::getEmissionFlux();
+
+	// Compute the loss to dislocation sinks
+	if (size < 5) {
+		// k^2 * D * C
+		flux += xolotlCore::sinkStrength * diffusionCoefficient * concentration;
+	}
+
+	return flux;
+}
+
+void VCluster::getEmissionPartialDerivatives(
+		std::vector<double> & partials) const {
+	// Initial declarations
+	PSICluster::getEmissionPartialDerivatives(partials);
+
+	// Compute the loss to dislocation sinks
+	if (size < 5) {
+		// k^2 * D * C
+		partials[id - 1] -= xolotlCore::sinkStrength * diffusionCoefficient;
+	}
+
+	return;
 }

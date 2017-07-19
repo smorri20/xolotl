@@ -53,7 +53,7 @@ public:
 					"\nThe single xenon cluster is not present in the network, "
 					"cannot use the flux option!");
 		}
-		fluxIndex = fluxCluster->getId() - 1;
+		fluxIndices.push_back(fluxCluster->getId() - 1);
 
 		return;
 	}

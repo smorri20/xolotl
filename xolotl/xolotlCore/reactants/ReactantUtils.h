@@ -16,18 +16,18 @@ class IReactant;
  */
 class Reaction {
 public:
-    /**
-     * Type of a canonical key describing this ProductionReaction that 
-     * can be used to compare it to other ProductionReactions.
-     */
-    typedef std::string KeyType;
+	/**
+	 * Type of a canonical key describing this ProductionReaction that
+	 * can be used to compare it to other ProductionReactions.
+	 */
+	typedef std::string KeyType;
 
 protected:
-    /**
-     * A descriptive key in canonical form that can be used for
-     * fast compares against that of other ProductionReactions.
-     */
-    KeyType descKey;
+	/**
+	 * A descriptive key in canonical form that can be used for
+	 * fast compares against that of other ProductionReactions.
+	 */
+	KeyType descKey;
 
 public:
 
@@ -41,11 +41,12 @@ public:
 			kConstant(0.0) {
 	}
 
-
-    /**
-     * Find the canonical key describing this ProductionReaction.
-     */
-    KeyType descriptiveKey() const  { return descKey; }
+	/**
+	 * Find the canonical key describing this ProductionReaction.
+	 */
+	KeyType descriptiveKey() const {
+		return descKey;
+	}
 };
 
 /**
@@ -62,13 +63,13 @@ class ProductionReaction: public Reaction {
 public:
 	/**
 	 * The first cluster in the pair.
-     * Its composition string is "<=" that of the second cluster.
+	 * Its composition string is "<=" that of the second cluster.
 	 */
 	IReactant * first;
 
 	/**
 	 * The second cluster in the pair
-     * Its composition string is ">=" that of the second cluster.
+	 * Its composition string is ">=" that of the second cluster.
 	 */
 	IReactant * second;
 

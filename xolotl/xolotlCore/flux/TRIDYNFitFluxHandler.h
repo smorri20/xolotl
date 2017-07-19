@@ -128,7 +128,7 @@ public:
 					"\nThe single helium cluster is not present in the network, "
 							"cannot use the flux option!");
 		}
-		fluxIndex = fluxCluster->getId() - 1;
+		fluxIndices.push_back(fluxCluster->getId() - 1);
 
 //		// Set the V index corresponding the the single vacancy cluster here
 //		auto vCluster = network->get(vType, 1);
@@ -165,7 +165,7 @@ public:
 		}
 
 		// Update the concentration array
-		updatedConcOffset[fluxIndex] += incidentFluxVec[xi - surfacePos];
+		updatedConcOffset[fluxIndices[0]] += incidentFluxVec[xi - surfacePos];
 //		updatedConcOffset[vDefectIndex] += incidentFluxVec[xi - surfacePos] * 4.25e-7;
 //		updatedConcOffset[iDefectIndex] += incidentFluxVec[xi - surfacePos] * 4.25e-7;
 

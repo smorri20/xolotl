@@ -12,7 +12,6 @@ namespace xolotlCore {
 FluxHandler::FluxHandler() :
 		fluence(0.0),
 		fluxAmplitude(0.0),
-		fluxIndex(-1),
 		useTimeProfile(false),
 		normFactor(0.0){
 	return;
@@ -142,12 +141,19 @@ void FluxHandler::computeIncidentFlux(double currentTime, double *updatedConcOff
 	}
 
 	if (incidentFluxVec.size() == 0) {
-		updatedConcOffset[fluxIndex] += fluxAmplitude;
+		updatedConcOffset[fluxIndices[0]] += 2.11e-11; // He1
+		updatedConcOffset[fluxIndices[1]] += 1.49e-05; // I1
+		updatedConcOffset[fluxIndices[2]] += 9.91e-06; // V1
+		updatedConcOffset[fluxIndices[3]] += 1.51e-06; // V2
+		updatedConcOffset[fluxIndices[4]] += 2.60e-07; // V3
+		updatedConcOffset[fluxIndices[5]] += 1.58e-07; // V4
+		updatedConcOffset[fluxIndices[6]] += 6.29e-08; // V5
+		updatedConcOffset[fluxIndices[7]] += 3.16e-08; // V6
 		return;
 	}
 
 	// Update the concentration array
-	updatedConcOffset[fluxIndex] += incidentFluxVec[xi - surfacePos];
+	updatedConcOffset[fluxIndices[0]] += incidentFluxVec[xi - surfacePos];
 
 	return;
 }

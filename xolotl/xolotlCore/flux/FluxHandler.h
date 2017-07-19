@@ -41,7 +41,7 @@ protected:
 	/**
 	 * The index of the cluster.
 	 */
-	int fluxIndex;
+	std::vector<int> fluxIndices;
 
 	/**
 	 * Are we using a time profile for the amplitude of the helium incoming flux?

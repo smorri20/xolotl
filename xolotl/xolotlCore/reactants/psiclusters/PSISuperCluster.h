@@ -5,6 +5,7 @@
 #include "PSICluster.h"
 #include <string>
 #include <forward_list>
+#include <Constants.h>
 
 namespace xolotlCore {
 /**
@@ -182,17 +183,8 @@ private:
 	//! The dispersion in the group in the vacancy direction.
 	double dispersionV;
 
-	//! The map containing all the reacting pairs separated by original composition.
-	std::map<std::pair<int, int>, std::vector<ClusterPair> > reactingMap;
-
-	//! The map containing all the combining clusters separated by original composition.
-	std::map<std::pair<int, int>, std::vector<CombiningCluster> > combiningMap;
-
-	//! The map containing all the dissociating pairs separated by original composition.
-	std::map<std::pair<int, int>, std::vector<ClusterPair> > dissociatingMap;
-
-	//! The map containing all the emission pairs separated by original composition.
-	std::map<std::pair<int, int>, std::vector<ClusterPair> > emissionMap;
+	//! The vector containing the indices of clusters gathered in this cluster
+	std::vector<std::pair<int, int> > indexVector;
 
 	//! The list of optimized effective reacting pairs.
 	std::forward_list<SuperClusterProductionPair> effReactingList;
@@ -221,18 +213,12 @@ private:
 	 * initialized with a size.
 	 */
 	PSISuperCluster() :
-			PSICluster() {
+			PSICluster(), numHe(0.0), numV(0.0), nTot(0), sectionHeWidth(0), sectionVWidth(
+					0), l0(0.0), l1He(0.0), l1V(0.0), dispersionHe(0.0), dispersionV(
+					0.0), heMomentumFlux(0.0), vMomentumFlux(0.0) {
 	}
 
-	/**
-	 * Group the same reactions together.
-	 */
-	void optimizeReactions();
-
 public:
-
-	//! The vector of HeV clusters it will replace
-	std::vector<PSICluster *> heVVector;
 
 	/**
 	 * The constructor. All SuperClusters must be initialized with its
@@ -269,9 +255,8 @@ public:
 	 * @return A copy of this reactant
 	 */
 	virtual std::shared_ptr<IReactant> clone() {
-        return std::make_shared<PSISuperCluster>(*this);
-    }
-
+		return std::make_shared<PSISuperCluster>(*this);
+	}
 
 	/**
 	 * Sets the collection of other clusters that make up
@@ -281,6 +266,56 @@ public:
 	 */
 	void setReactionNetwork(
 			const std::shared_ptr<IReactionNetwork> reactionNetwork);
+
+	/**
+	 * Create a production pair associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 * @param a Helium number.
+	 * @param b Vacancy number.
+	 * @param c Helium number.
+	 * @param d Vacancy number.
+	 */
+	void createProduction(std::shared_ptr<ProductionReaction> reaction, int a =
+			0, int b = 0, int c = 0, int d = 0);
+
+	/**
+	 * Create a combination associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction where this cluster takes part.
+	 * @param a Helium number.
+	 * @param b Vacancy number.
+	 */
+	void createCombination(std::shared_ptr<ProductionReaction> reaction, int a =
+			0, int b = 0);
+
+	/**
+	 * Create a dissociation pair associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 * @param a Helium number.
+	 * @param b Vacancy number.
+	 * @param c Helium number.
+	 * @param d Vacancy number.
+	 */
+	void createDissociation(std::shared_ptr<DissociationReaction> reaction,
+			int a = 0, int b = 0, int c = 0, int d = 0);
+
+	/**
+	 * Create an emission pair associated with the given reaction.
+	 * Create the connectivity.
+	 *
+	 * @param reaction The reaction where this cluster emits.
+	 * @param a Helium number.
+	 * @param b Vacancy number.
+	 * @param c Helium number.
+	 * @param d Vacancy number.
+	 */
+	void createEmission(std::shared_ptr<DissociationReaction> reaction, int a =
+			0, int b = 0, int c = 0, int d = 0);
 
 	/**
 	 * This operation returns true to signify that this cluster is a mixture of
@@ -296,7 +331,12 @@ public:
 	 * Set the HeV vector
 	 */
 	void setHeVVector(std::vector<PSICluster *> vec) {
-		heVVector = vec;
+		for (auto it = vec.begin(); it != vec.end(); it++) {
+			auto comp = (*it)->getComposition();
+			indexVector.push_back(std::make_pair(comp[heType], comp[vType]));
+		}
+
+		computeDispersion();
 	}
 
 	/**
@@ -307,9 +347,8 @@ public:
 	 * @return The concentration of this reactant
 	 */
 	double getConcentration(double distHe, double distV) const {
-        return l0 + (distHe * l1He) + (distV * l1V);
-    }
-
+		return l0 + (distHe * l1He) + (distV * l1V);
+	}
 
 	/**
 	 * This operation returns the first helium momentum.
@@ -317,8 +356,8 @@ public:
 	 * @return The momentum
 	 */
 	double getHeMomentum() const {
-        return l1He;
-    }
+		return l1He;
+	}
 
 	/**
 	 * This operation returns the first vacancy momentum.
@@ -326,9 +365,8 @@ public:
 	 * @return The momentum
 	 */
 	double getVMomentum() const {
-        return l1V;
-    }
-
+		return l1V;
+	}
 
 	/**
 	 * This operation returns the current total concentration of clusters in the group.
@@ -358,9 +396,9 @@ public:
 	 * @return The distance to the mean number of helium in the group
 	 */
 	double getHeDistance(int he) const {
-        return (sectionHeWidth == 1) ? 0.0
-            : 2.0 * (he - numHe) / (sectionHeWidth - 1.0);
-    }
+		return (sectionHeWidth == 1) ?
+				0.0 : 2.0 * (he - numHe) / (sectionHeWidth - 1.0);
+	}
 
 	/**
 	 * This operation returns the distance to the mean.
@@ -369,11 +407,9 @@ public:
 	 * @return The distance to the mean number of vacancy in the group
 	 */
 	double getVDistance(int v) const {
-        return (sectionVWidth == 1) ? 0.0
-            : 2.0 * (v - numV) / (sectionVWidth - 1.0);
-    }
-
-
+		return (sectionVWidth == 1) ?
+				0.0 : 2.0 * (v - numV) / (sectionVWidth - 1.0);
+	}
 
 	/**
 	 * Calculate the dispersion of the group.
@@ -422,16 +458,14 @@ public:
 	 */
 	double getTotalFlux() {
 
-        // Initialize the fluxes
-        heMomentumFlux = 0.0;
-        vMomentumFlux = 0.0;
+		// Initialize the fluxes
+		heMomentumFlux = 0.0;
+		vMomentumFlux = 0.0;
 
-        // Compute the fluxes.
-        return getProductionFlux() 
-                - getCombinationFlux() 
-                + getDissociationFlux() 
-                - getEmissionFlux();
-    }
+		// Compute the fluxes.
+		return getProductionFlux() - getCombinationFlux()
+				+ getDissociationFlux() - getEmissionFlux();
+	}
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -569,6 +603,15 @@ public:
 	}
 
 	/**
+	 * Returns the number of clusters contained.
+	 *
+	 * @return The number of clusters
+	 */
+	double getNTot() {
+		return nTot;
+	}
+
+	/**
 	 * Returns a vector containing the information about the group's bounderies
 	 * in the helium and vacancy directions.
 	 *
@@ -583,6 +626,26 @@ public:
 		boundaries.push_back(
 				(int) (numV - (double) sectionVWidth / 2.0) + sectionVWidth);
 		return boundaries;
+	}
+
+	/**
+	 * This operation returns true if the given numbers are contained in the group
+	 *
+	 * @return True if contained
+	 */
+	bool isIn(int a, int b) const {
+
+		// Try with key and map later
+
+		if (a < (int) (numHe - (double) sectionHeWidth / 2.0) + 1)
+			return false;
+		if (a > (int) (numHe - (double) sectionHeWidth / 2.0) + sectionHeWidth)
+			return false;
+		if (b < (int) (numV - (double) sectionVWidth / 2.0) + 1)
+			return false;
+		if (b > (int) (numV - (double) sectionVWidth / 2.0) + sectionVWidth)
+			return false;
+		return true;
 	}
 
 };

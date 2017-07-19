@@ -74,10 +74,8 @@ protected:
 	 * to He2, etc.; the second vector gives the size of the vacancies into which He
 	 * trap-mutates. Information about desorption is also initialized here.
 	 * It needs to be implemented by the daughter classes.
-	 *
-	 * @param temp The temperature of the system
 	 */
-	virtual void initializeDepthSize(double temp) {return;}
+	virtual void initializeDepthSize() {return;}
 
 public:
 

@@ -283,7 +283,6 @@ public:
 
 	/**
 	 * Are dissociations enabled?
-	 *
 	 * @returns true if reactions are enabled, false otherwise.
 	 */
 	virtual bool getDissociationsEnabled() const = 0;

@@ -32,7 +32,8 @@ NECluster::NECluster(NECluster &other) :
 	return;
 }
 
-void NECluster::createProduction(std::shared_ptr<ProductionReaction> reaction) {
+void NECluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
+		int a, int b) {
 	// Create a cluster pair from the given reaction
 	ClusterPair pair((NECluster *) reaction->first,
 			(NECluster *) reaction->second);
@@ -45,8 +46,8 @@ void NECluster::createProduction(std::shared_ptr<ProductionReaction> reaction) {
 	return;
 }
 
-void NECluster::createCombination(
-		std::shared_ptr<ProductionReaction> reaction) {
+void NECluster::createCombination(std::shared_ptr<ProductionReaction> reaction,
+		int a, int b) {
 	setReactionConnectivity(id);
 	// Look for the other cluster
 	IReactant * secondCluster;
@@ -68,7 +69,7 @@ void NECluster::createCombination(
 }
 
 void NECluster::createDissociation(
-		std::shared_ptr<DissociationReaction> reaction) {
+		std::shared_ptr<DissociationReaction> reaction, int a, int b) {
 	// Look for the other cluster
 	IReactant * emittedCluster;
 	if (reaction->first->getId() == id)
@@ -89,7 +90,8 @@ void NECluster::createDissociation(
 	return;
 }
 
-void NECluster::createEmission(std::shared_ptr<DissociationReaction> reaction) {
+void NECluster::createEmission(std::shared_ptr<DissociationReaction> reaction,
+		int a, int b) {
 	// Create the pair of emitted clusters
 	ClusterPair pair((NECluster *) reaction->first,
 			(NECluster *) reaction->second);
@@ -113,7 +115,8 @@ void NECluster::optimizeReactions() {
 		// Link it to the pair
 		(*it).reaction = newReaction;
 	}
-	for (auto it = combiningReactants.begin(); it != combiningReactants.end(); it++) {
+	for (auto it = combiningReactants.begin(); it != combiningReactants.end();
+			it++) {
 		// Create the corresponding production reaction
 		auto newReaction = std::make_shared<ProductionReaction>((*it).combining,
 				this);
@@ -122,7 +125,8 @@ void NECluster::optimizeReactions() {
 		// Link it to the pair
 		(*it).reaction = newReaction;
 	}
-	for (auto it = dissociatingPairs.begin(); it != dissociatingPairs.end(); it++) {
+	for (auto it = dissociatingPairs.begin(); it != dissociatingPairs.end();
+			it++) {
 		// Create the corresponding dissociation reaction
 		auto newReaction = std::make_shared<DissociationReaction>((*it).first,
 				(*it).second, this);
@@ -133,8 +137,8 @@ void NECluster::optimizeReactions() {
 	}
 	for (auto it = emissionPairs.begin(); it != emissionPairs.end(); it++) {
 		// Create the corresponding dissociation reaction
-		auto newReaction = std::make_shared<DissociationReaction>(this, (*it).first,
-				(*it).second);
+		auto newReaction = std::make_shared<DissociationReaction>(this,
+				(*it).first, (*it).second);
 		// Add it to the network
 		newReaction = network->addDissociationReaction(newReaction);
 		// Link it to the pair

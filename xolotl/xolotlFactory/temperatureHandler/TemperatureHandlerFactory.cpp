@@ -2,7 +2,6 @@
 #include <TemperatureHandler.h>
 #include <TemperatureProfileHandler.h>
 #include <TemperatureGradientHandler.h>
-#include <HeatEquationHandler.h>
 #include <MathUtils.h>
 #include <fstream>
 #include <iostream>
@@ -34,35 +33,18 @@ bool initializeTempHandler(xolotlCore::Options &options) {
 		double gradient = options.getTemperatureGradient();
 		if (xolotlCore::equal(gradient, 0.0)) {
 			// we are to use a constant temperature handler
-			theTemperatureHandler = std::make_shared<
-					xolotlCore::TemperatureHandler>(temp);
-		} else {
+			theTemperatureHandler = std::make_shared<xolotlCore::TemperatureHandler>(temp);
+		}
+		else {
 			// Use a temperature gradient
-			theTemperatureHandler = std::make_shared<
-					xolotlCore::TemperatureGradientHandler>(temp, gradient);
+			theTemperatureHandler = std::make_shared<xolotlCore::TemperatureGradientHandler>(temp, gradient);
 		}
 	} else if (options.useTemperatureProfileHandlers()) {
 		auto tempFileName = options.getTempProfileFilename();
-		theTemperatureHandler = std::make_shared<
-				xolotlCore::TemperatureProfileHandler>(tempFileName);
-	} else if (options.useHeatEquationHandlers()) {
-		theTemperatureHandler =
-				std::make_shared<xolotlCore::HeatEquationHandler>(
-						options.getConstTemperature(),
-						options.getBulkTemperature());
-
-		// Set the heat coefficient which depends on the material
-		auto problemType = options.getMaterial();
-		// PSI case
-		if (problemType == "W100" || problemType == "W110"
-				|| problemType == "W111" || problemType == "W211"
-				|| problemType == "TRIDYN")
-			theTemperatureHandler->setHeatCoefficient(
-					xolotlCore::tungstenHeatCoefficient);
-		// NE case
-		else if (problemType == "Fuel")
-			theTemperatureHandler->setHeatCoefficient(
-					xolotlCore::uo2HeatCoefficient);
+//		std::cout << "\nHandler Temperature file = " << tempFileName << std::endl;
+		theTemperatureHandler = std::make_shared<xolotlCore::TemperatureProfileHandler>(
+				tempFileName);
+		theTemperatureHandler->initializeTemperature();
 	} else {
 		// Only print the error message once when running in parallel
 		if (procId == 0) {
@@ -72,8 +54,7 @@ bool initializeTempHandler(xolotlCore::Options &options) {
 		}
 		auto temp = options.getConstTemperature();
 		// we are to use a constant temperature handler
-		theTemperatureHandler =
-				std::make_shared<xolotlCore::TemperatureHandler>(temp);
+		theTemperatureHandler = std::make_shared<xolotlCore::TemperatureHandler>(temp);
 	}
 
 	return ret;

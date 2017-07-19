@@ -194,6 +194,11 @@ int main(int argc, char **argv) {
 		networkFactory->initializeReactionNetwork(opts, handlerRegistry);
 		networkLoadTimer->stop();
 
+		if (rank == 0) {
+			std::time_t currentTime = std::time(NULL);
+			std::cout << std::asctime(std::localtime(&currentTime));
+		}
+
 		// Get the network handler
 		auto networkHandler = networkFactory->getNetworkHandler();
 

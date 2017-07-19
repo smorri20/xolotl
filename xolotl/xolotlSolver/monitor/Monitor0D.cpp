@@ -37,6 +37,8 @@ extern double previousTime;
 
 //! The pointer to the plot used in monitorScatter0D.
 std::shared_ptr<xolotlViz::IPlot> scatterPlot0D;
+//! The pointer to the 2D plot used in MonitorSurface0D.
+std::shared_ptr<xolotlViz::IPlot> surfacePlot0D;
 //! How often HDF5 file is written
 PetscReal hdf5Stride0D = 0.0;
 //! Previous time for HDF5
@@ -253,6 +255,160 @@ PetscErrorCode monitorScatter0D(TS ts, PetscInt timestep, PetscReal time,
 }
 
 #undef __FUNCT__
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "monitorSurface0D")
+/**
+ * This is a monitoring method that will save 2D plots for each depths of
+ * the concentration as a function of the cluster composition.
+ */
+PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
+		Vec solution, void *) {
+	// Initial declarations
+	PetscErrorCode ierr;
+	double **solutionArray, *gridPointSolution;
+	PetscInt xs, xm, xi;
+
+	PetscFunctionBeginUser;
+
+	// Don't do anything if it is not on the stride
+	if (timestep % 10 != 0)
+		PetscFunctionReturn(0);
+
+	// Get the da from ts
+	DM da;
+	ierr = TSGetDM(ts, &da);
+	CHKERRQ(ierr);
+
+	// Get the solutionArray
+	ierr = DMDAVecGetArrayDOF(da, solution, &solutionArray);
+	CHKERRQ(ierr);
+
+	// Get the solver handler
+	auto solverHandler = PetscSolver::getSolverHandler();
+
+	// Get the network
+	auto network = solverHandler->getNetwork();
+	// Get all the super clusters
+	auto superClusters = network->getAll(PSISuperType);
+
+	// Get the physical grid
+	auto grid = solverHandler->getXGrid();
+
+	// Get the maximum size of HeV clusters
+	auto psiNetwork = dynamic_cast<PSIClusterReactionNetwork*>(network);
+	int maxHeVClusterSize = psiNetwork->getMaxHeVClusterSize();
+	int maxVClusterSize = psiNetwork->getMaxVClusterSize();
+
+	// Create a Point vector to store the data to give to the data provider
+	// for the visualization
+	auto myPoints = std::make_shared<std::vector<xolotlViz::Point> >();
+
+	// Get the pointer to the beginning of the solution data for this grid point
+	gridPointSolution = solutionArray[0];
+
+	// Update the concentration in the network
+	network->updateConcentrationsFromArray(gridPointSolution);
+
+	// A pointer for the clusters used below
+	IReactant * cluster;
+
+	// Loop on Y = V number
+	for (int i = 0; i <= maxHeVClusterSize / 2; i++) {
+		// Loop on X = He number
+		for (int j = 0; j <= maxHeVClusterSize / 2; j++) {
+			double conc = 0.0;
+			// V clusters
+			if (j == 0) {
+				cluster = network->get("V", i);
+				if (cluster) {
+					// Get the ID of the cluster
+					int id = cluster->getId() - 1;
+//					conc = gridPointSolution[id];
+				}
+			}
+			// He clusters
+			else if (i == 0) {
+				cluster = network->get("He", j);
+				if (cluster) {
+					// Get the ID of the cluster
+					int id = cluster->getId() - 1;
+//					conc = gridPointSolution[id];
+				}
+			}
+			// HeV clusters
+			else {
+				cluster = network->getCompound("HeV", { j, i, 0 });
+				if (cluster) {
+					// Get the ID of the cluster
+					int id = cluster->getId() - 1;
+					conc = gridPointSolution[id];
+				}
+
+				else {
+					// Look for superClusters !
+					PSISuperCluster * superCluster = nullptr;
+					// Loop on the super clusters
+					for (int l = 0; l < superClusters.size(); l++) {
+						// Get the super cluster
+						superCluster = (PSISuperCluster *) superClusters[l];
+						// Get its boundaries
+						auto boundaries = superCluster->getBoundaries();
+						// Is it the right one?
+						if (j >= boundaries[0] && j <= boundaries[1]
+								&& i >= boundaries[2] && i <= boundaries[3]) {
+							conc = superCluster->getConcentration(
+									superCluster->getHeDistance(j),
+									superCluster->getVDistance(i));
+							break;
+						}
+					}
+				}
+			}
+
+			// Create a Point with the concentration as the value
+			// and add it to myPoints
+			xolotlViz::Point aPoint;
+			aPoint.value = conc;
+			aPoint.t = time;
+			aPoint.x = (double) j;
+			aPoint.y = (double) i;
+			myPoints->push_back(aPoint);
+		}
+	}
+
+	// Get the data provider and give it the points
+	surfacePlot0D->getDataProvider()->setPoints(myPoints);
+	surfacePlot0D->getDataProvider()->setDataName("brian");
+
+	// Change the title of the plot
+	std::stringstream title;
+	title << "Concentration";
+	surfacePlot0D->plotLabelProvider->titleLabel = title.str();
+	// Give the time to the label provider
+	std::stringstream timeLabel;
+	timeLabel << "time: " << std::setprecision(4) << time << "s";
+	surfacePlot0D->plotLabelProvider->timeLabel = timeLabel.str();
+	// Get the current time step
+	PetscReal currentTimeStep;
+	ierr = TSGetTimeStep(ts, &currentTimeStep);
+	CHKERRQ(ierr);
+	// Give the timestep to the label provider
+	std::stringstream timeStepLabel;
+	timeStepLabel << "dt: " << std::setprecision(4) << currentTimeStep << "s";
+	surfacePlot0D->plotLabelProvider->timeStepLabel = timeStepLabel.str();
+
+	// Render and save in file
+	std::stringstream fileName;
+	fileName << "Brian_TS" << timestep << ".png";
+	surfacePlot0D->write(fileName.str());
+
+	// Restore the solutionArray
+	ierr = DMDAVecRestoreArrayDOF(da, solution, &solutionArray);
+	CHKERRQ(ierr);
+
+	PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ Actual__FUNCT__("xolotlSolver", "monitorMeanSize0D")
 /**
  * This is a monitoring method that will create files with the mean
@@ -266,9 +422,9 @@ PetscErrorCode monitorMeanSize0D(TS ts, PetscInt timestep, PetscReal time,
 
 	PetscFunctionBeginUser;
 
-	// Don't do anything if it is not on the stride
-	if (timestep % 10 != 0)
-		PetscFunctionReturn(0);
+//	// Don't do anything if it is not on the stride
+//	if (timestep % 10 != 0)
+//		PetscFunctionReturn(0);
 
 	// Get the da from ts
 	DM da;
@@ -292,7 +448,7 @@ PetscErrorCode monitorMeanSize0D(TS ts, PetscInt timestep, PetscReal time,
 	// Create the output file
 	std::ofstream outputFile;
 	std::stringstream name;
-	name << "voidDiam_" << timestep << ".dat";
+	name << "bubble_" << timestep << ".dat";
 	outputFile.open(name.str());
 
 	double constantMulti = xolotlCore::pi
@@ -311,25 +467,26 @@ PetscErrorCode monitorMeanSize0D(TS ts, PetscInt timestep, PetscReal time,
 	// Initialize the total helium and concentration before looping
 	double concTot = 0.0, heliumTot = 0.0;
 
-	// Loop on all the indices to compute the mean
-	for (int i = 0; i < indices0D.size(); i++) {
-		outputFile << 2.0 * radii0D[i] << " "
-				<< gridPointSolution[indices0D[i]] * constantMulti * 4.0
-						* radii0D[i] * radii0D[i] << std::endl;
-	}
-
-//	// Loop on the super clusters
-//	for (int l = 0; l < superClusters.size(); l++) {
-//		// Get the super cluster
-//		auto superCluster = (PSISuperCluster *) superClusters[l];
-//		// Get its diameter
-//		double diam = 2.0 * superCluster->getReactionRadius();
-//		// Get its concentration
-//		double conc = superCluster->getTotalConcentration()
-//				/ (double) superCluster->getNTot();
-//		outputFile << diam << " " << conc * constantMulti * diam * diam
-//				<< std::endl;
+//	// Loop on all the indices to compute the mean
+//	for (int i = 0; i < indices0D.size(); i++) {
+//		outputFile << i << " "
+//				<< gridPointSolution[indices0D[i]] << std::endl;
 //	}
+
+	// Loop on the super clusters
+	for (int l = 0; l < superClusters.size(); l++) {
+		// Get the super cluster
+		auto superCluster = (PSISuperCluster *) superClusters[l];
+		// Get its boundaries
+		auto boundaries = superCluster->getBoundaries();
+		// Get its diameter
+		double diam = 2.0 * superCluster->getReactionRadius();
+		// Get its concentration
+		double conc = superCluster->getConcentration(0.0, 0.0);
+		outputFile << boundaries[0] << " " << boundaries[1] << " "
+				<< boundaries[2] << " " << boundaries[3] << " " << conc
+				<< std::endl;
+	}
 
 	// Close the file
 	outputFile.close();
@@ -354,7 +511,7 @@ PetscErrorCode setupPetsc0DMonitor(TS ts) {
 	auto vizHandlerRegistry = xolotlFactory::getVizHandlerRegistry();
 
 	// Flags to launch the monitors or not
-	PetscBool flag1DPlot, flagMeanSize, flagPerf, flagStatus;
+	PetscBool flag1DPlot, flag2DPlot, flagMeanSize, flagPerf, flagStatus;
 
 	// Check the option -plot_perf
 	ierr = PetscOptionsHasName(NULL, NULL, "-plot_perf", &flagPerf);
@@ -365,6 +522,11 @@ PetscErrorCode setupPetsc0DMonitor(TS ts) {
 	ierr = PetscOptionsHasName(NULL, NULL, "-plot_1d", &flag1DPlot);
 	checkPetscError(ierr,
 			"setupPetsc0DMonitor: PetscOptionsHasName (-plot_1d) failed.");
+
+	// Check the option -plot_2d
+	ierr = PetscOptionsHasName(NULL, NULL, "-plot_2d", &flag2DPlot);
+	checkPetscError(ierr,
+			"setupPetsc0DMonitor: PetscOptionsHasName (-plot_2d) failed.");
 
 	// Check the option -start_stop
 	ierr = PetscOptionsHasName(NULL, NULL, "-start_stop", &flagStatus);
@@ -459,6 +621,36 @@ PetscErrorCode setupPetsc0DMonitor(TS ts) {
 		ierr = TSMonitorSet(ts, monitorScatter0D, NULL, NULL);
 		checkPetscError(ierr,
 				"setupPetsc0DMonitor: TSMonitorSet (monitorScatter0D) failed.");
+	}
+
+	// Set the monitor to save surface plots of clusters concentration
+	// for each depth
+	if (flag2DPlot) {
+		// Create a SurfacePlot
+		surfacePlot0D = vizHandlerRegistry->getPlot("surfacePlot0D",
+				xolotlViz::PlotType::SURFACE);
+
+		// Create and set the label provider
+		auto labelProvider = std::make_shared<xolotlViz::LabelProvider>(
+				"labelProvider");
+		labelProvider->axis1Label = "He number";
+		labelProvider->axis2Label = "V number";
+		labelProvider->axis3Label = "Concentration";
+
+		// Give it to the plot
+		surfacePlot0D->setLabelProvider(labelProvider);
+
+		// Create the data provider
+		auto dataProvider = std::make_shared<xolotlViz::CvsXYDataProvider>(
+				"dataProvider");
+
+		// Give it to the plot
+		surfacePlot0D->setDataProvider(dataProvider);
+
+		// monitorSurface0D will be called at each timestep
+		ierr = TSMonitorSet(ts, monitorSurface0D, NULL, NULL);
+		checkPetscError(ierr,
+				"setupPetsc0DMonitor: TSMonitorSet (monitorSurface0D) failed.");
 	}
 
 	// Set the monitor to save performance plots (has to be in parallel)

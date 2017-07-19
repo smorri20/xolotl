@@ -46,32 +46,51 @@ public:
 	 * Create the connectivity.
 	 *
 	 * @param reaction The reaction creating this cluster.
+	 * @param a Number that can be used by daughter classes.
+	 * @param b Number that can be used by daughter classes.
+	 * @param c Number that can be used by daughter classes.
+	 * @param d Number that can be used by daughter classes.
 	 */
-	virtual void createProduction(std::shared_ptr<ProductionReaction> reaction) = 0;
+	virtual void createProduction(std::shared_ptr<ProductionReaction> reaction,
+			int a = 0, int b = 0, int c = 0, int d = 0) = 0;
 
 	/**
 	 * Create a combination associated with the given reaction.
 	 * Create the connectivity.
 	 *
 	 * @param reaction The reaction where this cluster takes part.
+	 * @param a Number that can be used by daughter classes.
+	 * @param b Number that can be used by daughter classes.
 	 */
-	virtual void createCombination(std::shared_ptr<ProductionReaction> reaction) = 0;
+	virtual void createCombination(std::shared_ptr<ProductionReaction> reaction,
+			int a = 0, int b = 0) = 0;
 
 	/**
 	 * Create a dissociation pair associated with the given reaction.
 	 * Create the connectivity.
 	 *
 	 * @param reaction The reaction creating this cluster.
+	 * @param a Number that can be used by daughter classes.
+	 * @param b Number that can be used by daughter classes.
+	 * @param c Number that can be used by daughter classes.
+	 * @param d Number that can be used by daughter classes.
 	 */
-	virtual void createDissociation(std::shared_ptr<DissociationReaction> reaction) = 0;
+	virtual void createDissociation(
+			std::shared_ptr<DissociationReaction> reaction, int a = 0,
+			int b = 0, int c = 0, int d = 0) = 0;
 
 	/**
 	 * Create an emission pair associated with the given reaction.
 	 * Create the connectivity.
 	 *
 	 * @param reaction The reaction where this cluster emits.
+	 * @param a Number that can be used by daughter classes.
+	 * @param b Number that can be used by daughter classes.
+	 * @param c Number that can be used by daughter classes.
+	 * @param d Number that can be used by daughter classes.
 	 */
-	virtual void createEmission(std::shared_ptr<DissociationReaction> reaction) = 0;
+	virtual void createEmission(std::shared_ptr<DissociationReaction> reaction,
+			int a = 0, int b = 0, int c = 0, int d = 0) = 0;
 
 	/**
 	 * Add the reactions to the network lists.

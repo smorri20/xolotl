@@ -63,7 +63,21 @@ public:
 					"\nThe single helium cluster is not present in the network, "
 					"cannot use the flux option!");
 		}
-		fluxIndex = fluxCluster->getId() - 1;
+		fluxIndices.push_back(fluxCluster->getId() - 1);
+		fluxCluster = network->get(iType, 1);
+		fluxIndices.push_back(fluxCluster->getId() - 1);
+		fluxCluster = network->get(vType, 1);
+		fluxIndices.push_back(fluxCluster->getId() - 1);
+		fluxCluster = network->get(vType, 2);
+		fluxIndices.push_back(fluxCluster->getId() - 1);
+		fluxCluster = network->get(vType, 3);
+		fluxIndices.push_back(fluxCluster->getId() - 1);
+		fluxCluster = network->get(vType, 4);
+		fluxIndices.push_back(fluxCluster->getId() - 1);
+		fluxCluster = network->get(vType, 5);
+		fluxIndices.push_back(fluxCluster->getId() - 1);
+		fluxCluster = network->get(vType, 9);
+		fluxIndices.push_back(fluxCluster->getId() - 1);
 
 		return;
 	}

@@ -62,19 +62,10 @@ double ReactionNetwork::calculateReactionRateConstant(
 	double secondDiffusion = reaction->second->getDiffusionCoefficient();
 
 	// Calculate and return
-	double k_plus = 4.0 * xolotlCore::pi * (r_first + r_second)
+	double k_plus = 4.0 * xolotlCore::pi
+			* (r_first + r_second + xolotlCore::reactionRadius)
 			* (firstDiffusion + secondDiffusion);
 	return k_plus;
-}
-
-double ReactionNetwork::computeBindingEnergy(
-		DissociationReaction * reaction) const {
-	// for the dissociation A --> B + C we need A binding energy
-	// E_b(A) = E_f(B) + E_f(C) - E_f(A) where E_f is the formation energy
-	double bindingEnergy = reaction->first->getFormationEnergy()
-			+ reaction->second->getFormationEnergy()
-			- reaction->dissociating->getFormationEnergy();
-	return bindingEnergy;
 }
 
 void ReactionNetwork::fillConcentrationsArray(double * concentrations) {
@@ -178,7 +169,6 @@ const std::vector<std::string> & ReactionNetwork::getCompoundNames() const {
 
 std::shared_ptr<ProductionReaction> ReactionNetwork::addProductionReaction(
 		std::shared_ptr<ProductionReaction> reaction) {
-
 	// Check if the given ProductionReaction already exists.
 	auto key = reaction->descriptiveKey();
 	auto iter = productionReactionMap.find(key);

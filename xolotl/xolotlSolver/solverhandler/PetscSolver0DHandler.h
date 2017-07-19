@@ -11,6 +11,9 @@ namespace xolotlSolver {
  * to solve the ADR equations in 0D using PETSc from Argonne National Laboratory.
  */
 class PetscSolver0DHandler: public PetscSolverHandler {
+private:
+	//! The position of the surface
+	int surfacePosition;
 
 public:
 
@@ -58,7 +61,7 @@ public:
 	 * \see ISolverHandler.h
 	 */
 	int getSurfacePosition(int j = -1, int k = -1) const {
-		return 0;
+		return surfacePosition;
 	}
 
 	/**
@@ -66,7 +69,7 @@ public:
 	 * \see ISolverHandler.h
 	 */
 	void setSurfacePosition(int pos, int j = -1, int k = -1) {
-		return;
+		surfacePosition = pos;
 	}
 
 };
