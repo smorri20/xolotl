@@ -211,17 +211,9 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
 			// Check if the product can be a super cluster
 			if (!product) {
-				// Loop on the super clusters
-				for (auto thirdIt = allSuperReactants.begin();
-						thirdIt != allSuperReactants.end(); thirdIt++) {
-					// Check if the cluster contains the product
-					auto superCluster = (PSISuperCluster *) *thirdIt;
-					if (superCluster->isIn(compositionVec[0],
-							compositionVec[1])) {
-						product = *thirdIt;
-						break;
-					}
-				}
+				// Check if it is a super cluster from the map
+				product = groupMap[std::make_pair(compositionVec[0],
+						compositionVec[1])];
 			}
 
 			// Check that the reaction can occur
@@ -254,17 +246,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			for (int i = boundaries[0]; i <= boundaries[1]; i++) {
 				for (int j = boundaries[2]; j <= boundaries[3]; j++) {
 					// Assume the product can only be a super cluster here
-					product = nullptr;
-					// Loop on the super clusters
-					for (auto thirdIt = allSuperReactants.begin();
-							thirdIt != allSuperReactants.end(); thirdIt++) {
-						// Check if the cluster contains the product
-						auto tempCluster = (PSISuperCluster *) *thirdIt;
-						if (tempCluster->isIn(i + firstSize, j)) {
-							product = *thirdIt;
-							break;
-						}
-					}
+					product = groupMap[std::make_pair(i + firstSize, j)];
 
 					// Check that the reaction can occur
 					if (product
@@ -314,17 +296,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
 			// Check if the product can be a super cluster
 			if (!product) {
-				// Loop on the super clusters
-				for (auto thirdIt = allSuperReactants.begin();
-						thirdIt != allSuperReactants.end(); thirdIt++) {
-					// Check if the cluster contains the product
-					auto superCluster = (PSISuperCluster *) *thirdIt;
-					if (superCluster->isIn(compositionVec[0],
-							compositionVec[1])) {
-						product = *thirdIt;
-						break;
-					}
-				}
+				product = groupMap[std::make_pair(compositionVec[0],
+						compositionVec[1])];
 			}
 
 			// Check that the reaction can occur
@@ -357,17 +330,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			for (int i = boundaries[0]; i <= boundaries[1]; i++) {
 				for (int j = boundaries[2]; j <= boundaries[3]; j++) {
 					// Assume the product can only be a super cluster here
-					product = nullptr;
-					// Loop on the super clusters
-					for (auto thirdIt = allSuperReactants.begin();
-							thirdIt != allSuperReactants.end(); thirdIt++) {
-						// Check if the cluster contains the product
-						auto tempCluster = (PSISuperCluster *) *thirdIt;
-						if (tempCluster->isIn(i, j + firstSize)) {
-							product = *thirdIt;
-							break;
-						}
-					}
+					product = groupMap[std::make_pair(i, j + firstSize)];
 
 					// Check that the reaction can occur
 					if (product
@@ -410,17 +373,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
 			// Check if the product can be a super cluster
 			if (!product) {
-				// Loop on the super clusters
-				for (auto thirdIt = allSuperReactants.begin();
-						thirdIt != allSuperReactants.end(); thirdIt++) {
-					// Check if the cluster contains the product
-					auto superCluster = (PSISuperCluster *) *thirdIt;
-					if (superCluster->isIn(compositionVec[0],
-							compositionVec[1])) {
-						product = *thirdIt;
-						break;
-					}
-				}
+				product = groupMap[std::make_pair(compositionVec[0],
+						compositionVec[1])];
 			}
 
 			// Check that the reaction can occur
@@ -505,16 +459,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
 					// If the product doesn't exist check for super clusters
 					if (!product) {
-						// Loop on the super clusters
-						for (auto thirdIt = allSuperReactants.begin();
-								thirdIt != allSuperReactants.end(); thirdIt++) {
-							// Check if the cluster contains the product
-							auto tempCluster = (PSISuperCluster *) *thirdIt;
-							if (tempCluster->isIn(i, j - firstSize)) {
-								product = *thirdIt;
-								break;
-							}
-						}
+						product = groupMap[std::make_pair(i, j - firstSize)];
 					}
 
 					// Check that the reaction can occur
@@ -1204,6 +1149,12 @@ void PSIClusterReactionNetwork::reinitializeNetwork() {
 		(*it)->setHeMomentumId(id);
 		id++;
 		(*it)->setVMomentumId(id);
+
+		// Update the HeV size
+		auto cluster = (PSISuperCluster *) (*it).get();
+		auto bounds = cluster->getBoundaries();
+		int clusterSize = bounds[1] + bounds[3];
+		maxHeVClusterSize = max(maxHeVClusterSize, clusterSize);
 	}
 
 	return;

@@ -22,6 +22,11 @@ class IReactionNetwork {
 public:
 
 	/**
+	 * This map contains the information of which cluster is in which super cluster.
+	 */
+	std::map<std::pair<int, int>, IReactant* > groupMap;
+
+	/**
 	 * The destructor.
 	 */
 	virtual ~IReactionNetwork() {

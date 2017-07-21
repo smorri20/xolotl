@@ -27,7 +27,7 @@ HeVCluster::HeVCluster(int numHe, int numV,
 	// Compute the reaction radius
 	// It is the same formula for HeV clusters
 	reactionRadius = xolotlCore::tungstenLatticeConstant
-			* pow((3.0 * size) / xolotlCore::pi, (1.0 / 3.0)) * 0.5;
+			* pow((3.0 * numV) / xolotlCore::pi, (1.0 / 3.0)) * 0.5;
 
 	return;
 }

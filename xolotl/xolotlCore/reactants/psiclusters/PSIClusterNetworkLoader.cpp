@@ -284,18 +284,23 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 		// Loop on the helium number
 		for (int j = 1; j <= maxHe; j++) {
 			numHe = j;
-			// Create the cluster
-			nextCluster = createPSICluster(numHe, numV, numI);
-			// Set its attributes
-			nextCluster->setFormationEnergy(0.0);
-			nextCluster->setDiffusionFactor(0.0);
-			nextCluster->setMigrationEnergy(
-					std::numeric_limits<double>::infinity());
+			// Create the cluster only if it is not going to be grouped
+			if (numHe < vMin && numV < vMin) {
+				nextCluster = createPSICluster(numHe, numV, numI);
+				// Set its attributes
+				nextCluster->setFormationEnergy(0.0);
+				nextCluster->setDiffusionFactor(0.0);
+				nextCluster->setMigrationEnergy(
+						std::numeric_limits<double>::infinity());
 
-			// Add the cluster to the network
-			network->add(nextCluster);
-			// Add it to the list so that we can set the network later
-			reactants.push_back(nextCluster);
+				// Add the cluster to the network
+				network->add(nextCluster);
+				// Add it to the list so that we can set the network later
+				reactants.push_back(nextCluster);
+			} else {
+				// Add the composition to the list of HeV clusters
+				heVList.push_back(std::make_pair(numHe, numV));
+			}
 		}
 
 		// Reset the helium composition
@@ -420,31 +425,20 @@ double PSIClusterNetworkLoader::getHeVFormationEnergy(int numHe, int numV) {
 
 void PSIClusterNetworkLoader::applySectionalGrouping(
 		std::shared_ptr<IReactionNetwork> network) {
-	// Get the HeV cluster map
-	auto heVMap = network->getAll(heVType);
-
 	// Create a temporary vector for the loop
-	std::vector<PSICluster *> tempVector;
+	std::vector<std::pair<int, int> > tempVector;
 
 	// Initialize variables for the loop
-	PSICluster * cluster = nullptr;
 	std::shared_ptr<PSISuperCluster> superCluster;
-	static std::map<std::string, int> composition;
 	int count = 0, heIndex = 1, vIndex = 1, heWidth = heSectionWidth, vWidth =
 			vSectionWidth;
-	double heSize = 0.0, vSize = 0.0, radius = 0.0, energy = 0.0;
-
-	// Map to know which cluster is in which group
-	std::map<std::vector<int>, std::pair<int, int> > clusterGroupMap;
-	// Map to know which super cluster gathers which group
-	std::map<std::pair<int, int>, PSISuperCluster *> superGroupMap;
+	double heSize = 0.0, vSize = 0.0;
 
 	// Get the number of groups in the helium and vacancy directions
 	// Get the biggest cluster composition
-	auto biggestComp = network->getAll(heVType).at(
-			network->getAll(heVType).size() - 1)->getComposition();
-	int maxV = biggestComp[vType];
-	int maxHe = biggestComp[heType];
+	auto biggestComp = heVList[heVList.size() - 1];
+	int maxV = biggestComp.second;
+	int maxHe = biggestComp.first;
 	int nVGroup = maxV / vSectionWidth + 1;
 	int nHeGroup = maxHe / heSectionWidth + 1;
 
@@ -457,27 +451,20 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 
 			// Loop within the group
 			for (int n = vIndex; n < vIndex + vWidth; n++) {
-				if (vIndex > maxV)
+				if (n > maxV)
 					continue;
 				for (int m = heIndex; m < heIndex + heWidth; m++) {
-					if (heIndex > maxHe)
+					if (m > maxHe)
 						continue;
 					if (m < vMin && n < vMin)
 						continue;
 					// Get the corresponding cluster
-					std::vector<int> compositionVector = { m, n, 0 };
-					// Get the product of the same type as the second reactant
-					cluster = (PSICluster *) network->getCompound(heVType,
-							compositionVector);
+					auto pair = std::make_pair(m, n);
 
-					// Verify if the cluster exists
-					if (!cluster)
-						continue;
-
-					// Verify it was not already used
-					if (clusterGroupMap.find(compositionVector)
-							!= clusterGroupMap.end())
-						continue;
+//					// Verify if the cluster is supposed to exist
+//					auto it = find(heVList.begin(), heVList.end(), pair);
+//					if (it == heVList.end())
+//						continue;
 
 					// Will be used to know if the group was full
 					if (m < heLow)
@@ -493,13 +480,9 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 					count++;
 
 					// Add this cluster to the temporary vector
-					tempVector.push_back(cluster);
+					tempVector.push_back(pair);
 					heSize += (double) m;
 					vSize += (double) n;
-					radius += cluster->getReactionRadius();
-					energy += cluster->getFormationEnergy();
-					// Keep the information of the group
-					clusterGroupMap[compositionVector] = std::make_pair(j, k);
 				}
 			}
 
@@ -517,36 +500,32 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 			// Average all values
 			heSize = heSize / (double) count;
 			vSize = vSize / (double) count;
-			radius = radius / (double) count;
-			energy = energy / (double) count;
 			// Create the super cluster
 			if (count == heWidth * vWidth) {
 				// Everything is fine, the cluster is full
 				superCluster = std::make_shared<PSISuperCluster>(heSize, vSize,
-						count, heWidth, vWidth, radius, energy,
-						handlerRegistry);
+						count, heWidth, vWidth, handlerRegistry);
 
 				std::cout << "normal: " << superCluster->getName() << " "
 						<< heWidth << " " << vWidth << std::endl;
 			} else {
 				// The cluster is smaller than we thought because we are at the edge
 				superCluster = std::make_shared<PSISuperCluster>(heSize, vSize,
-						count, heHigh - heLow + 1, vHigh - vLow + 1, radius,
-						energy, handlerRegistry);
+						count, heHigh - heLow + 1, vHigh - vLow + 1,
+						handlerRegistry);
 
 				std::cout << "irregular: " << superCluster->getName() << " "
 						<< heHigh - heLow + 1 << " " << vHigh - vLow + 1
 						<< std::endl;
 			}
-			// Set the HeV vector
-			superCluster->setHeVVector(tempVector);
 			// Add this cluster to the network and clusters
 			network->addSuper(superCluster);
-			// Keep the information of the group
-			superGroupMap[std::make_pair(j, k)] = superCluster.get();
+			superCluster->setReactionNetwork(network);
+			// Set the HeV vector
+			superCluster->setHeVVector(tempVector);
 
 			// Reinitialize everything
-			heSize = 0.0, vSize = 0.0, radius = 0.0, energy = 0.0;
+			heSize = 0.0, vSize = 0.0;
 			count = 0;
 			tempVector.clear();
 			// Reinitialize the group indices for the helium direction
@@ -555,6 +534,8 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 					(int) std::pow((double) (j * heSectionWidth), 3.0) / 4000,
 					heSectionWidth);
 			heWidth -= heWidth % heSectionWidth;
+
+			if (heIndex > maxHe) break;
 		}
 
 		// Reinitialize the group indices for the vacancy direction
@@ -565,30 +546,9 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 		vWidth -= vWidth % vSectionWidth;
 		heWidth = heSectionWidth;
 		heIndex = 1;
+
+		if (vIndex > maxV) break;
 	}
-
-	// Get the super cluster map
-	auto superMap = network->getAll(PSISuperType);
-	// Set the reaction network for each super reactant
-	for (auto currCluster : superMap) {
-		currCluster->setReactionNetwork(network);
-	}
-
-	// Remove HeV clusters bigger than vMin from the network
-	// Loop on the HeV clusters
-	std::vector<IReactant*> doomedReactants;
-	for (auto currCluster : heVMap) {
-
-		// Get the composition
-		composition = currCluster->getComposition();
-
-		// Check if the cluster is too large.
-		if (composition[vType] >= vMin || composition[heType] >= vMin) {
-			// The cluster is too large.  Add it to the ones we will remove.
-			doomedReactants.push_back(currCluster);
-		}
-	}
-	network->removeReactants(doomedReactants);
 
 	return;
 }

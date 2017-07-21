@@ -16,11 +16,11 @@ std::vector<double> heMomentumPartials;
 std::vector<double> vMomentumPartials;
 
 PSISuperCluster::PSISuperCluster(double numHe, double numV, int nTot,
-		int heWidth, int vWidth, double radius, double energy,
+		int heWidth, int vWidth,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(registry), numHe(numHe), numV(numV), nTot(nTot), l0(0.0), l1He(
-				0.0), l1V(0.0), dispersionHe(0.0), dispersionV(0.0), heMomentumFlux(
-				0.0), vMomentumFlux(0.0) {
+		PSICluster(registry), numHe(numHe), numV(numV), nTot(nTot), lowerHe(0), upperHe(
+				0), lowerV(0), upperV(0), l0(0.0), l1He(0.0), l1V(0.0), dispersionHe(
+				0.0), dispersionV(0.0), heMomentumFlux(0.0), vMomentumFlux(0.0) {
 	// Set the cluster size as the sum of
 	// the number of Helium and Vacancies
 	size = (int) (numHe + numV);
@@ -33,8 +33,7 @@ PSISuperCluster::PSISuperCluster(double numHe, double numV, int nTot,
 	sectionHeWidth = heWidth;
 	sectionVWidth = vWidth;
 
-	// Set the reaction radius and formation energy
-	reactionRadius = radius;
+	// Set the formation energy
 	formationEnergy = 0.0; // It is set to 0.0 because we do not want the super clusters to undergo dissociation
 
 	// Set the diffusion factor and the migration energy

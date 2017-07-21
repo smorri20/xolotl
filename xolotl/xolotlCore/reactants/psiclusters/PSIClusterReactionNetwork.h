@@ -56,6 +56,7 @@ private:
 	 */
 	std::map<std::string,
 			std::shared_ptr<std::vector<std::shared_ptr<IReactant> > > > clusterTypeMap;
+
 	/**
 	 * Number of He clusters in our network.
 	 */

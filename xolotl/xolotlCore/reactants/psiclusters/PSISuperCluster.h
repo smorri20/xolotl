@@ -226,8 +226,9 @@ private:
 	 */
 	PSISuperCluster() :
 			PSICluster(), numHe(0.0), numV(0.0), nTot(0), sectionHeWidth(0), sectionVWidth(
-					0), l0(0.0), l1He(0.0), l1V(0.0), dispersionHe(0.0), dispersionV(
-					0.0), heMomentumFlux(0.0), vMomentumFlux(0.0) {
+					0), lowerHe(0), upperHe(0), lowerV(0), upperV(0), l0(0.0), l1He(
+					0.0), l1V(0.0), dispersionHe(0.0), dispersionV(0.0), heMomentumFlux(
+					0.0), vMomentumFlux(0.0) {
 	}
 
 public:
@@ -246,8 +247,7 @@ public:
 	 * @param registry The performance handler registry
 	 */
 	PSISuperCluster(double numHe, double numV, int nTot, int heWidth,
-			int vWidth, double radius, double energy,
-			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+			int vWidth, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
 	 * Copy constructor.
@@ -342,13 +342,22 @@ public:
 	/**
 	 * Set the HeV vector
 	 */
-	void setHeVVector(std::vector<PSICluster *> vec) {
+	void setHeVVector(std::vector<std::pair<int, int> > vec) {
+		// Fill the vector, update the network map, compute the radius
 		for (auto it = vec.begin(); it != vec.end(); it++) {
-			auto comp = (*it)->getComposition();
-			indexVector.push_back(std::make_pair(comp[heType], comp[vType]));
+			indexVector.push_back((*it));
+			network->groupMap[(*it)] = this;
+			reactionRadius += xolotlCore::tungstenLatticeConstant
+					* pow(
+							(3.0 * (double) ((*it).second))
+									/ xolotlCore::pi, (1.0 / 3.0)) * 0.5
+					/ (double) nTot;
 		}
 
+		// Compute the dispersions
 		computeDispersion();
+
+		// Set the boundaries
 		lowerHe = (int) (numHe - (double) sectionHeWidth / 2.0) + 1;
 		upperHe = (int) (numHe - (double) sectionHeWidth / 2.0)
 				+ sectionHeWidth;

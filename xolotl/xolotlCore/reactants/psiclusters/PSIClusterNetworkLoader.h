@@ -55,7 +55,7 @@ namespace xolotlCore {
  * > numMixedClusters - The number of mixed-species clusters of all sizes in the
  * network.
  */
-class PSIClusterNetworkLoader : public NetworkLoader {
+class PSIClusterNetworkLoader: public NetworkLoader {
 
 protected:
 
@@ -75,9 +75,16 @@ protected:
 	int vSectionWidth;
 
 	/**
+	 * The list of clusters that will be grouped.
+	 */
+	std::vector<std::pair<int, int> > heVList;
+
+	/**
 	 * Private nullary constructor.
 	 */
-	PSIClusterNetworkLoader() {}
+	PSIClusterNetworkLoader() :
+			NetworkLoader(), vMin(1000000), heSectionWidth(1), vSectionWidth(1) {
+	}
 
 	/**
 	 * This operation creates a singles-species cluster of helium, vacancies or
@@ -109,7 +116,8 @@ public:
 	 *
 	 * @param registry The performance handler registry
 	 */
-	PSIClusterNetworkLoader(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+	PSIClusterNetworkLoader(
+			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
 	 * An alternative constructor provided for convenience.
@@ -124,7 +132,8 @@ public:
 	/**
 	 * Destructor
 	 */
-	virtual ~PSIClusterNetworkLoader() {}
+	virtual ~PSIClusterNetworkLoader() {
+	}
 
 	/**
 	 * This operation will load the reaction network from the inputstream in
@@ -156,21 +165,27 @@ public:
 	 *
 	 * @param min The value for the size
 	 */
-	void setVMin (int min) {vMin = min;}
+	void setVMin(int min) {
+		vMin = min;
+	}
 
 	/**
 	 * This operation will set the helium width for the grouping scheme.
 	 *
 	 * @param w The value of the width
 	 */
-	void setHeWidth (int w) {heSectionWidth = w;}
+	void setHeWidth(int w) {
+		heSectionWidth = w;
+	}
 
 	/**
 	 * This operation will set the vacancy width for the grouping scheme.
 	 *
 	 * @param w The value of the width
 	 */
-	void setVWidth (int w) {vSectionWidth = w;}
+	void setVWidth(int w) {
+		vSectionWidth = w;
+	}
 };
 
 } /* namespace xolotlCore */
