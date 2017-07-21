@@ -26,8 +26,8 @@ PSISuperCluster::PSISuperCluster(double numHe, double numV, int nTot,
 	size = (int) (numHe + numV);
 
 	// Update the composition map
-	compositionMap[heType] = (int) (numHe * (double) nTot);
-	compositionMap[vType] = (int) (numV * (double) nTot);
+	compositionMap[heType] = (int) numHe;
+	compositionMap[vType] = (int) numV;
 
 	// Set the width
 	sectionHeWidth = heWidth;
@@ -441,21 +441,13 @@ void PSISuperCluster::computeDispersion() {
 	if (sectionHeWidth == 1)
 		dispersionHe = 1.0;
 	else
-		dispersionHe = 2.0
-				* (nHeSquare
-						- ((double) compositionMap[heType]
-								* ((double) compositionMap[heType]
-										/ (double) nTot)))
+		dispersionHe = 2.0 * (nHeSquare - (numHe * (double) nTot * numHe))
 				/ ((double) (nTot * (sectionHeWidth - 1)));
 
 	if (sectionVWidth == 1)
 		dispersionV = 1.0;
 	else
-		dispersionV = 2.0
-				* (nVSquare
-						- ((double) compositionMap[vType]
-								* ((double) compositionMap[vType]
-										/ (double) nTot)))
+		dispersionV = 2.0 * (nVSquare - (numV * (double) nTot * numV))
 				/ ((double) (nTot * (sectionVWidth - 1)));
 
 	return;

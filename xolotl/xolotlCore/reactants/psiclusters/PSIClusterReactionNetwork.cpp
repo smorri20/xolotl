@@ -1635,9 +1635,8 @@ double PSIClusterReactionNetwork::computeBindingEnergy(
 					|| reaction->second->getType() == vType)) {
 		auto superCluster = (PSISuperCluster *) reaction->dissociating;
 		auto comp = reaction->dissociating->getComposition();
-		int nTot = superCluster->getNTot();
-		double numV = (double) comp[vType] / (double) nTot;
-		double numHe = (double) comp[heType] / (double) nTot;
+		double numV = (double) comp[vType];
+		double numHe = (double) comp[heType];
 		bindingEnergy = 1.73
 				- 2.59 * (pow(numV, 2.0 / 3.0) - pow(numV - 1.0, 2.0 / 3.0))
 				+ 2.5 * log(1.0 + (numHe / numV));
@@ -1660,9 +1659,8 @@ double PSIClusterReactionNetwork::computeBindingEnergy(
 		} else if (reaction->dissociating->getType() == PSISuperType) {
 			auto superCluster = (PSISuperCluster *) reaction->dissociating;
 			auto comp = reaction->dissociating->getComposition();
-			int nTot = superCluster->getNTot();
-			double numV = (double) comp[vType] / (double) nTot;
-			double numHe = (double) comp[heType] / (double) nTot;
+			double numV = (double) comp[vType];
+			double numHe = (double) comp[heType];
 			bindingEnergy = 4.88
 					+ 2.59 * (pow(numV, 2.0 / 3.0) - pow(numV - 1.0, 2.0 / 3.0))
 					- 2.5 * log(1.0 + (numHe / numV));
