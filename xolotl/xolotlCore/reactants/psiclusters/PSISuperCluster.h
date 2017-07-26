@@ -340,30 +340,9 @@ public:
 	}
 
 	/**
-	 * Set the HeV vector
+	 * Set the HeV vector and compute different parameters
 	 */
-	void setHeVVector(std::vector<std::pair<int, int> > vec) {
-		// Fill the vector, update the network map, compute the radius
-		for (auto it = vec.begin(); it != vec.end(); it++) {
-			indexVector.push_back((*it));
-			network->groupMap[(*it)] = this;
-			reactionRadius += xolotlCore::tungstenLatticeConstant
-					* pow(
-							(3.0 * (double) ((*it).second))
-									/ xolotlCore::pi, (1.0 / 3.0)) * 0.5
-					/ (double) nTot;
-		}
-
-		// Compute the dispersions
-		computeDispersion();
-
-		// Set the boundaries
-		lowerHe = (int) (numHe - (double) sectionHeWidth / 2.0) + 1;
-		upperHe = (int) (numHe - (double) sectionHeWidth / 2.0)
-				+ sectionHeWidth;
-		lowerV = (int) (numV - (double) sectionVWidth / 2.0) + 1;
-		upperV = (int) (numV - (double) sectionVWidth / 2.0) + sectionVWidth;
-	}
+	void setHeVVector(std::vector<std::pair<int, int> > vec);
 
 	/**
 	 * This operation returns the current concentration.
@@ -436,11 +415,6 @@ public:
 		return (sectionVWidth == 1) ?
 				0.0 : 2.0 * (v - numV) / (sectionVWidth - 1.0);
 	}
-
-	/**
-	 * Calculate the dispersion of the group.
-	 */
-	void computeDispersion();
 
 	/**
 	 * This operation sets the zeroth order momentum.

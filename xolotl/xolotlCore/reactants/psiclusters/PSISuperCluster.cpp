@@ -60,6 +60,10 @@ PSISuperCluster::PSISuperCluster(PSISuperCluster &other) :
 	l0 = other.l0;
 	l1He = other.l1He;
 	l1V = other.l1V;
+	lowerHe = other.lowerHe;
+	upperHe = other.upperHe;
+	lowerV = other.lowerV;
+	upperV = other.upperV;
 	dispersionHe = other.dispersionHe;
 	dispersionV = other.dispersionV;
 	effReactingList = other.effReactingList;
@@ -308,133 +312,21 @@ void PSISuperCluster::setReactionNetwork(
 	return;
 }
 
-double PSISuperCluster::getTotalConcentration() const {
-	// Initial declarations
-	int heIndex = 0, vIndex = 0;
-	double heDistance = 0.0, vDistance = 0.0, conc = 0.0;
-
-	// Loop on the vacancy width
-	for (int k = 0; k < sectionVWidth; k++) {
-		// Compute the vacancy index
-		vIndex = (int) (numV - (double) sectionVWidth / 2.0) + k + 1;
-
-		// Loop on the helium width
-		for (int j = 0; j < sectionHeWidth; j++) {
-			// Compute the helium index
-			heIndex = (int) (numHe - (double) sectionHeWidth / 2.0) + j + 1;
-
-			// Check if this cluster exists
-			auto it = find(indexVector.begin(), indexVector.end(),
-					std::make_pair(heIndex, vIndex));
-			if (it == indexVector.end())
-				continue;
-
-			// Compute the distances
-			heDistance = getHeDistance(heIndex);
-			vDistance = getVDistance(vIndex);
-
-			// Add the concentration of each cluster in the group times its number of helium
-			conc += getConcentration(heDistance, vDistance);
-		}
-	}
-
-	return conc;
-}
-
-double PSISuperCluster::getTotalHeliumConcentration() const {
-	// Initial declarations
-	int heIndex = 0, vIndex = 0;
-	double heDistance = 0.0, vDistance = 0.0, conc = 0.0;
-
-	// Loop on the vacancy width
-	for (int k = 0; k < sectionVWidth; k++) {
-		// Compute the vacancy index
-		vIndex = (int) (numV - (double) sectionVWidth / 2.0) + k + 1;
-
-		// Loop on the helium width
-		for (int j = 0; j < sectionHeWidth; j++) {
-			// Compute the helium index
-			heIndex = (int) (numHe - (double) sectionHeWidth / 2.0) + j + 1;
-
-			// Check if this cluster exists
-			auto it = find(indexVector.begin(), indexVector.end(),
-					std::make_pair(heIndex, vIndex));
-			if (it == indexVector.end())
-				continue;
-
-			// Compute the distances
-			heDistance = getHeDistance(heIndex);
-			vDistance = getVDistance(vIndex);
-
-			// Add the concentration of each cluster in the group times its number of helium
-			conc += getConcentration(heDistance, vDistance) * (double) heIndex;
-		}
-	}
-
-	return conc;
-}
-
-double PSISuperCluster::getTotalVacancyConcentration() const {
-	// Initial declarations
-	int heIndex = 0, vIndex = 0;
-	double heDistance = 0.0, vDistance = 0.0, conc = 0.0;
-
-	// Loop on the vacancy width
-	for (int k = 0; k < sectionVWidth; k++) {
-		// Compute the vacancy index
-		vIndex = (int) (numV - (double) sectionVWidth / 2.0) + k + 1;
-
-		// Loop on the helium width
-		for (int j = 0; j < sectionHeWidth; j++) {
-			// Compute the helium index
-			heIndex = (int) (numHe - (double) sectionHeWidth / 2.0) + j + 1;
-
-			// Check if this cluster exists
-			auto it = find(indexVector.begin(), indexVector.end(),
-					std::make_pair(heIndex, vIndex));
-			if (it == indexVector.end())
-				continue;
-
-			// Compute the distances
-			heDistance = getHeDistance(heIndex);
-			vDistance = getVDistance(vIndex);
-
-			// Add the concentration of each cluster in the group times its number of helium
-			conc += getConcentration(heDistance, vDistance) * (double) vIndex;
-		}
-	}
-
-	return conc;
-}
-
-void PSISuperCluster::computeDispersion() {
-	// Local declarations
-	int heIndex = 0, vIndex = 0;
+void PSISuperCluster::setHeVVector(std::vector<std::pair<int, int> > vec) {
 	// Initialize the dispersion sum
 	double nHeSquare = 0.0, nVSquare = 0.0;
+	// Set the vector
+	indexVector = vec;
+	// Update the network map, compute the radius and dispersions
+	for (auto it = vec.begin(); it != vec.end(); it++) {
+		network->groupMap[(*it)] = this;
+		reactionRadius += xolotlCore::tungstenLatticeConstant
+				* pow((3.0 * (double) ((*it).second)) / xolotlCore::pi,
+						(1.0 / 3.0)) * 0.5 / (double) nTot;
 
-	// Loop on the vacancy width
-	for (int k = 0; k < sectionVWidth; k++) {
-		// Compute the vacancy index
-		vIndex = (int) (numV - (double) sectionVWidth / 2.0) + k + 1;
-
-		// Loop on the helium width
-		for (int j = 0; j < sectionHeWidth; j++) {
-			// Compute the helium index
-			heIndex = (int) (numHe - (double) sectionHeWidth / 2.0) + j + 1;
-
-			// Create the key for the maps
-			auto key = std::make_pair(heIndex, vIndex);
-
-			// Check if this cluster exists
-			auto it = find(indexVector.begin(), indexVector.end(), key);
-			if (it == indexVector.end())
-				continue;
-
-			// Compute nSquare for the dispersion
-			nHeSquare += (double) heIndex * heIndex;
-			nVSquare += (double) vIndex * vIndex;
-		}
+		// Compute nSquare for the dispersion
+		nHeSquare += (double) (*it).first * (*it).first;
+		nVSquare += (double) (*it).second * (*it).second;
 	}
 
 	// Compute the dispersions
@@ -450,7 +342,64 @@ void PSISuperCluster::computeDispersion() {
 		dispersionV = 2.0 * (nVSquare - (numV * (double) nTot * numV))
 				/ ((double) (nTot * (sectionVWidth - 1)));
 
+	// Set the boundaries
+	lowerHe = (int) (numHe - (double) sectionHeWidth / 2.0) + 1;
+	upperHe = (int) (numHe - (double) sectionHeWidth / 2.0) + sectionHeWidth;
+	lowerV = (int) (numV - (double) sectionVWidth / 2.0) + 1;
+	upperV = (int) (numV - (double) sectionVWidth / 2.0) + sectionVWidth;
+
 	return;
+}
+
+double PSISuperCluster::getTotalConcentration() const {
+	// Initial declarations
+	double heDistance = 0.0, vDistance = 0.0, conc = 0.0;
+
+	// Loop on the indexVector
+	for (auto it = indexVector.begin(); it != indexVector.end(); it++) {
+		// Compute the distances
+		heDistance = getHeDistance((*it).first);
+		vDistance = getVDistance((*it).second);
+
+		// Add the concentration of each cluster in the group times its number of helium
+		conc += getConcentration(heDistance, vDistance);
+	}
+
+	return conc;
+}
+
+double PSISuperCluster::getTotalHeliumConcentration() const {
+	// Initial declarations
+	double heDistance = 0.0, vDistance = 0.0, conc = 0.0;
+
+	// Loop on the indexVector
+	for (auto it = indexVector.begin(); it != indexVector.end(); it++) {
+		// Compute the distances
+		heDistance = getHeDistance((*it).first);
+		vDistance = getVDistance((*it).second);
+
+		// Add the concentration of each cluster in the group times its number of helium
+		conc += getConcentration(heDistance, vDistance) * (double) (*it).first;
+	}
+
+	return conc;
+}
+
+double PSISuperCluster::getTotalVacancyConcentration() const {
+	// Initial declarations
+	double heDistance = 0.0, vDistance = 0.0, conc = 0.0;
+
+	// Loop on the indexVector
+	for (auto it = indexVector.begin(); it != indexVector.end(); it++) {
+		// Compute the distances
+		heDistance = getHeDistance((*it).first);
+		vDistance = getVDistance((*it).second);
+
+		// Add the concentration of each cluster in the group times its number of helium
+		conc += getConcentration(heDistance, vDistance) * (double) (*it).second;
+	}
+
+	return conc;
 }
 
 void PSISuperCluster::resetConnectivities() {
