@@ -113,6 +113,16 @@ private:
 	virtual double computeBindingEnergy(DissociationReaction * reaction) const;
 
 	/**
+	 * This operation returns the super cluster that contains the original cluster
+	 * with nHe helium atoms and nV vacancies.
+	 *
+	 * @param nHe the type of the compound reactant
+	 * @param nV an array containing the sizes of each piece of the reactant.
+	 * @return A pointer to the super cluster
+	 */
+	IReactant * getSuperFromComp(int nHe, int nV) const;
+
+	/**
 	 * The Constructor
 	 */
 	PSIClusterReactionNetwork();

@@ -195,9 +195,6 @@ private:
 	//! The dispersion in the group in the vacancy direction.
 	double dispersionV;
 
-	//! The vector containing the indices of clusters gathered in this cluster
-	std::vector<std::pair<int, int> > indexVector;
-
 	//! The list of optimized effective reacting pairs.
 	std::forward_list<SuperClusterProductionPair> effReactingList;
 

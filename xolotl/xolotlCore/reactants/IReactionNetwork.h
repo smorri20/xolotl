@@ -22,9 +22,9 @@ class IReactionNetwork {
 public:
 
 	/**
-	 * This map contains the information of which cluster is in which super cluster.
+	 * This vector contains the information on the group bounds in both directions.
 	 */
-	std::map<std::pair<int, int>, IReactant* > groupMap;
+	std::vector<int> boundVector;
 
 	/**
 	 * The destructor.

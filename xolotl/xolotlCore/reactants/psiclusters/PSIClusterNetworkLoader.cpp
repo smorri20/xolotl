@@ -163,7 +163,7 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::load() {
 std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 		IOptions &options) {
 	// Initial declarations
-	int maxI = options.getMaxI(), maxHe = options.getMaxImpurity(), maxV =
+	maxI = options.getMaxI(), maxHe = options.getMaxImpurity(), maxV =
 			options.getMaxV();
 	bool usePhaseCut = options.usePhaseCut();
 	int numHe = 0, numV = 0, numI = 0;
@@ -297,9 +297,6 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 				network->add(nextCluster);
 				// Add it to the list so that we can set the network later
 				reactants.push_back(nextCluster);
-			} else {
-				// Add the composition to the list of HeV clusters
-				heVList.push_back(std::make_pair(numHe, numV));
 			}
 		}
 
@@ -435,15 +432,13 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 	double heSize = 0.0, vSize = 0.0;
 
 	// Get the number of groups in the helium and vacancy directions
-	// Get the biggest cluster composition
-	auto biggestComp = heVList[heVList.size() - 1];
-	int maxV = biggestComp.second;
-	int maxHe = biggestComp.first;
 	int nVGroup = maxV / vSectionWidth + 1;
 	int nHeGroup = maxHe / heSectionWidth + 1;
 
 	// Loop on the vacancy groups
 	for (int k = 0; k < nVGroup; k++) {
+		// Add the bound the the network vector
+		network->boundVector.push_back(vIndex);
 		// Loop on the helium groups
 		for (int j = 0; j < nHeGroup; j++) {
 			// To check if the group is full
@@ -460,11 +455,6 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 						continue;
 					// Get the corresponding cluster
 					auto pair = std::make_pair(m, n);
-
-//					// Verify if the cluster is supposed to exist
-//					auto it = find(heVList.begin(), heVList.end(), pair);
-//					if (it == heVList.end())
-//						continue;
 
 					// Will be used to know if the group was full
 					if (m < heLow)
@@ -549,6 +539,9 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 
 		if (vIndex > maxV) break;
 	}
+
+	// Add the bound the the network vector
+	network->boundVector.push_back(maxV+1);
 
 	return;
 }

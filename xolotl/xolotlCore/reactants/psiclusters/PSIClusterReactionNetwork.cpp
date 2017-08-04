@@ -212,8 +212,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			// Check if the product can be a super cluster
 			if (!product) {
 				// Check if it is a super cluster from the map
-				product = groupMap[std::make_pair(compositionVec[0],
-						compositionVec[1])];
+				product = getSuperFromComp(compositionVec[0], compositionVec[1]);
 			}
 
 			// Check that the reaction can occur
@@ -246,7 +245,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			for (int i = boundaries[0]; i <= boundaries[1]; i++) {
 				for (int j = boundaries[2]; j <= boundaries[3]; j++) {
 					// Assume the product can only be a super cluster here
-					product = groupMap[std::make_pair(i + firstSize, j)];
+					product = getSuperFromComp(i + firstSize, j);
 
 					// Check that the reaction can occur
 					if (product
@@ -296,8 +295,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
 			// Check if the product can be a super cluster
 			if (!product) {
-				product = groupMap[std::make_pair(compositionVec[0],
-						compositionVec[1])];
+				product = getSuperFromComp(compositionVec[0], compositionVec[1]);
 			}
 
 			// Check that the reaction can occur
@@ -330,7 +328,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			for (int i = boundaries[0]; i <= boundaries[1]; i++) {
 				for (int j = boundaries[2]; j <= boundaries[3]; j++) {
 					// Assume the product can only be a super cluster here
-					product = groupMap[std::make_pair(i, j + firstSize)];
+					product = getSuperFromComp(i, j + firstSize);
 
 					// Check that the reaction can occur
 					if (product
@@ -373,8 +371,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
 			// Check if the product can be a super cluster
 			if (!product) {
-				product = groupMap[std::make_pair(compositionVec[0],
-						compositionVec[1])];
+				product = getSuperFromComp(compositionVec[0], compositionVec[1]);
 			}
 
 			// Check that the reaction can occur
@@ -451,15 +448,21 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			// Loop on them
 			for (int i = boundaries[0]; i <= boundaries[1]; i++) {
 				for (int j = boundaries[2]; j <= boundaries[3]; j++) {
-					// The product might be HeV
-					// Create the composition of the potential product
-					std::vector<int> compositionVec = { i, j - firstSize, 0 };
+					// The product might be HeV or He
 					// Get the product
-					product = getCompound(heVType, compositionVec);
+					if (j == firstSize) {
+						// The product is He
+						product = get(heType, i);
+					}
+					else {
+						// Create the composition of the potential product
+						std::vector<int> compositionVec = { i, j - firstSize, 0 };
+						product = getCompound(heVType, compositionVec);
 
-					// If the product doesn't exist check for super clusters
-					if (!product) {
-						product = groupMap[std::make_pair(i, j - firstSize)];
+						// If the product doesn't exist check for super clusters
+						if (!product) {
+							product = getSuperFromComp(i, j - firstSize);
+						}
 					}
 
 					// Check that the reaction can occur
@@ -1705,4 +1708,25 @@ double PSIClusterReactionNetwork::computeBindingEnergy(
 //			<< std::endl;
 
 	return max(bindingEnergy, -5.0);
+}
+
+
+IReactant * PSIClusterReactionNetwork::getSuperFromComp(int nHe, int nV) const {
+	// Initial declarations
+	IReactant * toReturn = nullptr;
+	static std::vector<IReactant *> superClusters;
+	if (superClusters.size() == 0) superClusters = getAll(PSISuperType);
+	// Find the right indices for He and V
+	int i = -1, j = -1;
+	for (auto it = boundVector.begin(); it != boundVector.end(); it++) {
+		if (nHe >= *it) i++;
+		if (nV >= *it) j++;
+	}
+
+	// Compute the super index
+	int index = i + (j * (boundVector.size() - 1)) - std::min(j+1, 3) * 3;
+	// Get the super cluster
+	toReturn = superClusters[index];
+
+	return toReturn;
 }

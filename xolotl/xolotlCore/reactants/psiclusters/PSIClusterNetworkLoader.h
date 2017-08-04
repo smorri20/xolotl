@@ -65,6 +65,21 @@ protected:
 	int vMin;
 
 	/**
+	 * The maximum size for helium clusters
+	 */
+	int maxHe;
+
+	/**
+	 * The maximum size for interstitial clusters
+	 */
+	int maxI;
+
+	/**
+	 * The maximum size for vacancy clusters
+	 */
+	int maxV;
+
+	/**
 	 * The width of the group in the helium direction.
 	 */
 	int heSectionWidth;
@@ -83,7 +98,8 @@ protected:
 	 * Private nullary constructor.
 	 */
 	PSIClusterNetworkLoader() :
-			NetworkLoader(), vMin(1000000), heSectionWidth(1), vSectionWidth(1) {
+			NetworkLoader(), vMin(1000000), maxHe(0), maxI(0), maxV(0), heSectionWidth(
+					1), vSectionWidth(1) {
 	}
 
 	/**
