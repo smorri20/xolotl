@@ -1715,7 +1715,8 @@ IReactant * PSIClusterReactionNetwork::getSuperFromComp(int nHe, int nV) const {
 	// Initial declarations
 	IReactant * toReturn = nullptr;
 	static std::vector<IReactant *> superClusters;
-	if (superClusters.size() == 0) superClusters = getAll(PSISuperType);
+	int superSize = superClusters.size();
+	if (superSize == 0) superClusters = getAll(PSISuperType);
 	// Find the right indices for He and V
 	int i = -1, j = -1;
 	for (auto it = boundVector.begin(); it != boundVector.end(); it++) {
@@ -1726,7 +1727,8 @@ IReactant * PSIClusterReactionNetwork::getSuperFromComp(int nHe, int nV) const {
 	// Compute the super index
 	int index = i + (j * (boundVector.size() - 1)) - std::min(j+1, 3) * 3;
 	// Get the super cluster
-	toReturn = superClusters[index];
+	if (index < superSize)
+		toReturn = superClusters[index];
 
 	return toReturn;
 }
