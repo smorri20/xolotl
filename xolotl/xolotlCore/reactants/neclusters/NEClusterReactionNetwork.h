@@ -51,11 +51,6 @@ private:
 	 */
 	std::unordered_map<std::string, std::shared_ptr<IReactant> > superSpeciesMap;
 
-	/**
-	 * This map stores all of the clusters in the network by type.
-	 */
-	std::map<std::string,
-			std::shared_ptr<std::vector<std::shared_ptr<IReactant> > > > clusterTypeMap;
 
 	/**
 	 * Number of Xe clusters in our network.
@@ -192,16 +187,6 @@ public:
 	 */
 	IReactant * getSuper(const std::string& type, const int size) const;
 
-	/**
-	 * This operation returns all reactants in the network with the given name.
-	 * The list may or may not be ordered and the decision is left to
-	 * implementers.
-	 *
-	 * @param name The reactant or compound reactant name
-	 * @return The list of all of the reactants in the network or null if the
-	 * name is invalid.
-	 */
-	std::vector<IReactant *> getAll(const std::string& name) const;
 
 	/**
 	 * This operation adds a reactant or a compound reactant to the network.

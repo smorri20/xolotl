@@ -138,10 +138,19 @@ IReactant * ReactionNetwork::getCompound(const std::string& type,
 	return (IReactant *) retReactant.get();
 }
 
-std::vector<IReactant *> ReactionNetwork::getAll(
-		const std::string& name) const {
+std::vector<IReactant *> ReactionNetwork::getAll(const std::string& name) const {
 	// Local Declarations
 	std::vector<IReactant *> reactants;
+
+	// Only pull the reactants if the name is valid
+    // TODO fix clients of getAll so they can use directly without 
+    // shared pointers.
+    // TODO fix so can validate type string.
+    reactants.reserve(clusterTypeMap.at(name).size());
+    for (auto& currReactant : clusterTypeMap.at(name)) {
+
+        reactants.push_back(currReactant.get());
+    }
 
 	return reactants;
 }

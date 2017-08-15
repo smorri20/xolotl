@@ -22,6 +22,12 @@ namespace xolotlCore {
  */
 class ReactionNetwork: public IReactionNetwork {
 
+public:
+    /**
+     * Nice name for vector of reactants that are not owned by the container.
+     */
+    using ReactantVector = std::vector<std::shared_ptr<IReactant> >;
+
 protected:
 
 	/**
@@ -179,6 +185,11 @@ protected:
 	 */
     std::vector<IReactant*> allReactants;
 
+
+	/**
+	 * This map stores all of the clusters in the network by type.
+	 */
+	std::map<std::string, ReactantVector> clusterTypeMap;
 
 
 	/**

@@ -10,19 +10,6 @@
 using namespace xolotlCore;
 
 void NEClusterReactionNetwork::setDefaultPropsAndNames() {
-	// Shared pointers for the cluster type map
-	std::shared_ptr<std::vector<std::shared_ptr<IReactant>>>xeVector =
-	std::make_shared<std::vector<std::shared_ptr<IReactant>>>();
-	std::shared_ptr < std::vector<std::shared_ptr<IReactant>>> vVector
-	= std::make_shared<std::vector<std::shared_ptr<IReactant>>>();
-	std::shared_ptr < std::vector<std::shared_ptr<IReactant>>> iVector
-	= std::make_shared<std::vector<std::shared_ptr<IReactant>>>();
-	std::shared_ptr < std::vector<std::shared_ptr<IReactant>>> xeVVector
-	= std::make_shared<std::vector<std::shared_ptr<IReactant>>>();
-	std::shared_ptr < std::vector<std::shared_ptr<IReactant>>> xeIVector
-	= std::make_shared<std::vector<std::shared_ptr<IReactant>>>();
-	std::shared_ptr < std::vector<std::shared_ptr<IReactant>>> superVector
-	= std::make_shared<std::vector<std::shared_ptr<IReactant>>>();
 
 	// Initialize default properties
 	dissociationsEnabled = true;
@@ -50,12 +37,12 @@ void NEClusterReactionNetwork::setDefaultPropsAndNames() {
 	compoundNames.push_back(xeIType);
 
 	// Setup the cluster type map
-	clusterTypeMap[xeType] = xeVector;
-	clusterTypeMap[vType] = vVector;
-	clusterTypeMap[iType] = iVector;
-	clusterTypeMap[xeVType] = xeVVector;
-	clusterTypeMap[xeIType] = xeIVector;
-	clusterTypeMap[NESuperType] = superVector;
+    for (auto& currName : names) {
+        clusterTypeMap.insert( { currName, ReactionNetwork::ReactantVector() } );
+    }
+    for (auto& currName : compoundNames) {
+        clusterTypeMap.insert( { currName, ReactionNetwork::ReactantVector() } );
+    }
 
 	return;
 }
@@ -287,25 +274,6 @@ IReactant * NEClusterReactionNetwork::getSuper(const std::string& type,
 }
 
 
-std::vector<IReactant *> NEClusterReactionNetwork::getAll(
-		const std::string& name) const {
-	// Local Declarations
-	std::vector<IReactant *> reactants;
-
-	// Only pull the reactants if the name is valid
-	if (name == xeType || name == vType || name == iType || name == xeVType
-			|| name == xeIType || name == NESuperType) {
-		std::shared_ptr<std::vector<std::shared_ptr<IReactant>> > storedReactants =
-				clusterTypeMap.at(name);
-		int vecSize = storedReactants->size();
-		for (int i = 0; i < vecSize; i++) {
-			reactants.push_back(storedReactants->at(i).get());
-		}
-	}
-
-	return reactants;
-}
-
 void NEClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 	// Local Declarations
 	int numXe = 0, numV = 0, numI = 0;
@@ -373,10 +341,9 @@ void NEClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 		++networkSize;
 		// Set the id for this cluster
 		reactant->setId(networkSize);
-		// Get the vector for this reactant from the type map
-		auto clusters = clusterTypeMap[reactant->getType()];
+		// Add to our per-type map.
+        clusterTypeMap.at(reactant->getType()).push_back(reactant);
 
-		clusters->push_back(reactant);
 		// Add the pointer to the list of all clusters
 		allReactants.push_back(reactant.get());
 	}
@@ -424,9 +391,9 @@ void NEClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 		++networkSize;
 		// Set the id for this cluster
 		reactant->setId(networkSize);
-		// Get the vector for this reactant from the type map
-		auto clusters = clusterTypeMap[reactant->getType()];
-		clusters->push_back(reactant);
+		// Add to our per-type map.
+        clusterTypeMap.at(reactant->getType()).push_back(reactant);
+
 		// Add the pointer to the list of all clusters
 		allReactants.push_back(reactant.get());
 	}
@@ -460,10 +427,10 @@ void NEClusterReactionNetwork::removeReactants(
 	// ...Next, examine each type's collection of clusters and remove the
 	// doomed reactants.
 	for (auto currType : typesUsed) {
-		auto clusters = clusterTypeMap[currType];
-		auto citer = std::remove_if(clusters->begin(), clusters->end(),
+		auto& clusters = clusterTypeMap[currType];
+		auto citer = std::remove_if(clusters.begin(), clusters.end(),
 				doomedReactantMatcher);
-		clusters->erase(citer, clusters->end());
+		clusters.erase(citer, clusters.end());
 	}
 
 	// Remove the doomed reactants from the SpeciesMap.
@@ -501,10 +468,9 @@ void NEClusterReactionNetwork::reinitializeNetwork() {
 	networkSize = id;
 
 	// Get all the super clusters and loop on them
-	for (auto it = clusterTypeMap[NESuperType]->begin();
-			it != clusterTypeMap[NESuperType]->end(); ++it) {
+    for (auto& currCluster : clusterTypeMap.at(NESuperType)) {
 		id++;
-		(*it)->setXeMomentumId(id);
+		currCluster->setXeMomentumId(id);
 	}
 
 	return;

@@ -8,19 +8,6 @@
 using namespace xolotlCore;
 
 void PSIClusterReactionNetwork::setDefaultPropsAndNames() {
-	// Shared pointers for the cluster type map
-	std::shared_ptr<std::vector<std::shared_ptr<IReactant>>>heVector =
-	std::make_shared<std::vector<std::shared_ptr<IReactant>>>();
-	std::shared_ptr < std::vector<std::shared_ptr<IReactant>>> vVector
-	= std::make_shared<std::vector<std::shared_ptr<IReactant>>>();
-	std::shared_ptr < std::vector<std::shared_ptr<IReactant>>> iVector
-	= std::make_shared<std::vector<std::shared_ptr<IReactant>>>();
-	std::shared_ptr < std::vector<std::shared_ptr<IReactant>>> heVVector
-	= std::make_shared<std::vector<std::shared_ptr<IReactant>>>();
-	std::shared_ptr < std::vector<std::shared_ptr<IReactant>>> heIVector
-	= std::make_shared<std::vector<std::shared_ptr<IReactant>>>();
-	std::shared_ptr < std::vector<std::shared_ptr<IReactant>>> superVector
-	= std::make_shared<std::vector<std::shared_ptr<IReactant>>>();
 
 	// Initialize default properties
 	dissociationsEnabled = true;
@@ -47,13 +34,13 @@ void PSIClusterReactionNetwork::setDefaultPropsAndNames() {
 	compoundNames.push_back(heIType);
 	compoundNames.push_back(PSISuperType);
 
-	// Setup the cluster type map
-	clusterTypeMap[heType] = heVector;
-	clusterTypeMap[vType] = vVector;
-	clusterTypeMap[iType] = iVector;
-	clusterTypeMap[heVType] = heVVector;
-	clusterTypeMap[heIType] = heIVector;
-	clusterTypeMap[PSISuperType] = superVector;
+	// Specify cluster types we know about.
+    for (auto& currName : names) {
+        clusterTypeMap.insert( { currName, ReactionNetwork::ReactantVector() } );
+    }
+    for (auto& currName : compoundNames) {
+        clusterTypeMap.insert( { currName, ReactionNetwork::ReactantVector() } );
+    }
 
 	return;
 }
@@ -931,25 +918,6 @@ IReactant * PSIClusterReactionNetwork::getSuper(const std::string& type,
 }
 
 
-std::vector<IReactant *> PSIClusterReactionNetwork::getAll(
-		const std::string& name) const {
-	// Local Declarations
-	std::vector<IReactant *> reactants;
-
-	// Only pull the reactants if the name is valid
-	if (name == heType || name == vType || name == iType || name == heVType
-			|| name == heIType || name == PSISuperType) {
-		std::shared_ptr<std::vector<std::shared_ptr<IReactant>> > storedReactants =
-				clusterTypeMap.at(name);
-		int vecSize = storedReactants->size();
-		for (int i = 0; i < vecSize; i++) {
-			reactants.push_back(storedReactants->at(i).get());
-		}
-	}
-
-	return reactants;
-}
-
 void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 	// Local Declarations
 	int numHe = 0, numV = 0, numI = 0;
@@ -1016,10 +984,10 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 		++networkSize;
 		// Set the id for this cluster
 		reactant->setId(networkSize);
-		// Get the vector for this reactant from the type map
-		auto clusters = clusterTypeMap[reactant->getType()];
 
-		clusters->push_back(reactant);
+        // Add reactant to our per-type map.
+        clusterTypeMap.at(reactant->getType()).push_back(reactant);
+
 		// Add the pointer to the list of all clusters
         allReactants.push_back(reactant.get());
 	}
@@ -1067,9 +1035,9 @@ void PSIClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 		++networkSize;
 		// Set the id for this cluster
 		reactant->setId(networkSize);
-		// Get the vector for this reactant from the type map
-		auto clusters = clusterTypeMap[reactant->getType()];
-		clusters->push_back(reactant);
+		// Add cluster to our per-type map.
+        clusterTypeMap.at(reactant->getType()).push_back(reactant);
+
 		// Add the pointer to the list of all clusters
 		allReactants.push_back(reactant.get());
 	}
@@ -1103,10 +1071,10 @@ void PSIClusterReactionNetwork::removeReactants(
 	// ...Next, examine each type's collection of clusters and remove the
 	// doomed reactants.
 	for (auto currType : typesUsed) {
-		auto clusters = clusterTypeMap[currType];
-		auto citer = std::remove_if(clusters->begin(), clusters->end(),
+		auto& clusters = clusterTypeMap[currType];
+		auto citer = std::remove_if(clusters.begin(), clusters.end(),
 				doomedReactantMatcher);
-		clusters->erase(citer, clusters->end());
+		clusters.erase(citer, clusters.end());
 	}
 
 	// Remove the doomed reactants from the SpeciesMap.
@@ -1143,15 +1111,15 @@ void PSIClusterReactionNetwork::reinitializeNetwork() {
 	networkSize = id;
 
 	// Get all the super clusters and loop on them
-	for (auto it = clusterTypeMap[PSISuperType]->begin();
-			it != clusterTypeMap[PSISuperType]->end(); ++it) {
+    for (auto& currCluster : clusterTypeMap[PSISuperType]) {
+
 		id++;
-		(*it)->setHeMomentumId(id);
+		currCluster->setHeMomentumId(id);
 		id++;
-		(*it)->setVMomentumId(id);
+		currCluster->setVMomentumId(id);
 
 		// Update the HeV size
-		auto cluster = (PSISuperCluster *) (*it).get();
+		auto cluster = (PSISuperCluster *) currCluster.get();
 		auto bounds = cluster->getBoundaries();
 		int clusterSize = bounds[1] + bounds[3];
 		maxHeVClusterSize = max(maxHeVClusterSize, clusterSize);
