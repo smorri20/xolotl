@@ -10,8 +10,7 @@ ReactionNetwork::ReactionNetwork() :
 				0), numIClusters(0), numSuperClusters(0), maxVClusterSize(0), maxIClusterSize(
 				0) {
 //    concUpdateCounter = xolotlPerf::getHandlerRegistry()->getEventCounter("net_conc_updates");
-	// Setup the vector to hold all of the reactants
-	allReactants = make_shared<std::vector<IReactant *>>();
+
 	return;
 }
 
@@ -23,7 +22,6 @@ ReactionNetwork::ReactionNetwork(
 	// Counter for the number of times the network concentration is updated.
 	concUpdateCounter = handlerRegistry->getEventCounter("net_conc_updates");
 	// Setup the vector to hold all of the reactants
-	allReactants = make_shared<std::vector<IReactant *>>();
 
 	return;
 }
@@ -69,15 +67,11 @@ double ReactionNetwork::calculateReactionRateConstant(
 }
 
 void ReactionNetwork::fillConcentrationsArray(double * concentrations) {
-	// Local Declarations
-	auto reactants = getAll();
-	int size = reactants->size();
-	int id = -1;
 
 	// Fill the array
-	for (int i = 0; i < size; i++) {
-		id = reactants->at(i)->getId() - 1;
-		concentrations[id] = reactants->at(i)->getConcentration();
+    for(auto& currReactant : getAll()) {
+		auto id = currReactant->getId() - 1;
+		concentrations[id] = currReactant->getConcentration();
 	}
 
 	return;
@@ -85,12 +79,11 @@ void ReactionNetwork::fillConcentrationsArray(double * concentrations) {
 
 void ReactionNetwork::updateConcentrationsFromArray(double * concentrations) {
 	// Local Declarations
-	auto allReactants = this->getAll();
 	int id = -1;
 
 	// Set the concentrations
 	concUpdateCounter->increment();	// increment the update concentration counter
-	for (auto iter = allReactants->begin(); iter != allReactants->end();
+	for (auto iter = allReactants.begin(); iter != allReactants.end();
 			++iter) {
 		id = (*iter)->getId() - 1;
 		(*iter)->setConcentration(concentrations[id]);
@@ -100,11 +93,9 @@ void ReactionNetwork::updateConcentrationsFromArray(double * concentrations) {
 }
 
 void ReactionNetwork::askReactantsToReleaseNetwork(void) {
-	// Get all the reactants
-	auto allReactants = this->getAll();
 
 	// Loop on each reactant to release the network
-	for (auto iter = allReactants->begin(); iter != allReactants->end();
+	for (auto iter = allReactants.begin(); iter != allReactants.end();
 			++iter) {
 		IReactant* currReactant = *iter;
 		assert(currReactant != NULL);
@@ -121,7 +112,7 @@ void ReactionNetwork::setTemperature(double temp) {
 	for (int i = 0; i < networkSize; i++) {
 		// This part will set the temperature in each reactant
 		// and recompute the diffusion coefficient
-		allReactants->at(i)->setTemperature(temp);
+		allReactants.at(i)->setTemperature(temp);
 	}
 
 	return;
@@ -145,10 +136,6 @@ IReactant * ReactionNetwork::getCompound(const std::string& type,
 	std::shared_ptr<IReactant> retReactant;
 
 	return (IReactant *) retReactant.get();
-}
-
-const std::shared_ptr<std::vector<IReactant *>> & ReactionNetwork::getAll() const {
-	return allReactants;
 }
 
 std::vector<IReactant *> ReactionNetwork::getAll(

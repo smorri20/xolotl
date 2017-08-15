@@ -81,14 +81,14 @@ void SurfaceAdvectionHandler::computeAdvection(
 		double hxLeft, double hxRight, int ix,
 		double hy, int iy, double hz, int iz) {
 	// Get all the reactant
-	auto reactants = network->getAll();
+	auto& reactants = network->getAll();
 	// Get the number of advecting cluster
 	int nAdvec = indexVector.size();
 
 	// Loop on the advecting clusters
 	for (int i = 0; i < nAdvec; i++) {
 		// Get a specific one and its index
-		auto cluster = (PSICluster *) reactants->at(indexVector[i]);
+		auto cluster = (PSICluster *) reactants.at(indexVector[i]);
 		int index = cluster->getId() - 1;
 
 		// Get the initial concentrations
@@ -115,14 +115,14 @@ void SurfaceAdvectionHandler::computePartialsForAdvection(
 		double hxLeft, double hxRight, int ix,
 		double hy, int iy, double hz, int iz) {
 	// Get all the reactant
-	auto reactants = network->getAll();
+	auto& reactants = network->getAll();
 	// Get the number of advecting cluster
 	int nAdvec = indexVector.size();
 
 	// Loop on the advecting clusters
 	for (int i = 0; i < nAdvec; i++) {
 		// Get a specific one and its index
-		auto cluster = (PSICluster *) reactants->at(indexVector[i]);
+		auto cluster = (PSICluster *) reactants.at(indexVector[i]);
 		int index = cluster->getId() - 1;
 		// Get the diffusion coefficient of the cluster
 		double diffCoeff = cluster->getDiffusionCoefficient();

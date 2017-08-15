@@ -6,8 +6,8 @@ namespace xolotlCore {
 void ZGBAdvectionHandler::initialize(IReactionNetwork *network,
 		int *ofill) {
 	// Get all the reactants and their number
-	auto reactants = network->getAll();
-	int networkSize = reactants->size();
+	auto& reactants = network->getAll();
+	int networkSize = reactants.size();
 	int dof = network->getDOF();
 
 	// Clear the index and sink strength vectors
@@ -17,7 +17,7 @@ void ZGBAdvectionHandler::initialize(IReactionNetwork *network,
 	// Loop on all the reactants
 	for (int i = 0; i < networkSize; i++) {
 		// Get the i-th cluster
-		auto cluster = (PSICluster *) reactants->at(i);
+		auto cluster = (PSICluster *) reactants.at(i);
 		// Get its diffusion coefficient
 		double diffFactor = cluster->getDiffusionFactor();
 
@@ -83,14 +83,14 @@ void ZGBAdvectionHandler::computeAdvection(IReactionNetwork *network,
 		double *updatedConcOffset, double hxLeft, double hxRight, int ix,
 		double hy, int iy, double hz, int iz) {
 	// Get all the reactant
-	auto reactants = network->getAll();
+	auto& reactants = network->getAll();
 	// Get the number of advecting cluster
 	int nAdvec = indexVector.size();
 
 	// Loop on the advecting clusters
 	for (int i = 0; i < nAdvec; i++) {
 		// Get a specific one and its index
-		auto cluster = (PSICluster *) reactants->at(indexVector[i]);
+		auto cluster = (PSICluster *) reactants.at(indexVector[i]);
 		int index = cluster->getId() - 1;
 
 		// If we are on the sink, the behavior is not the same
@@ -137,14 +137,14 @@ void ZGBAdvectionHandler::computePartialsForAdvection(
 		std::vector<double> &pos, double hxLeft, double hxRight, int ix,
 		double hy, int iy, double hz, int iz) {
 	// Get all the reactant
-	auto reactants = network->getAll();
+	auto& reactants = network->getAll();
 	// Get the number of advecting cluster
 	int nAdvec = indexVector.size();
 
 	// Loop on the advecting clusters
 	for (int i = 0; i < nAdvec; i++) {
 		// Get a specific one and its index
-		auto cluster = (PSICluster *) reactants->at(indexVector[i]);
+		auto cluster = (PSICluster *) reactants.at(indexVector[i]);
 		int index = cluster->getId() - 1;
 		// Get the diffusion coefficient of the cluster
 		double diffCoeff = cluster->getDiffusionCoefficient();

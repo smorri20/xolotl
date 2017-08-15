@@ -82,12 +82,6 @@ protected:
 	std::shared_ptr<xolotlPerf::IEventCounter> concUpdateCounter;
 
 	/**
-	 * The list of all of the reactants in the network. This list is filled and
-	 * maintained by the getAll() operation.
-	 */
-	std::shared_ptr<std::vector<IReactant *> > allReactants;
-
-	/**
 	 * All known production reactions in the network.
 	 */
 	std::vector<std::shared_ptr<ProductionReaction> > allProductionReactions;
@@ -175,6 +169,19 @@ protected:
 	int maxIClusterSize;
 
 	/**
+	 * This vector contains the information on the group bounds in both directions.
+	 */
+	std::vector<int> boundVector;
+
+
+	/**
+     * All reactants known to the network.
+	 */
+    std::vector<IReactant*> allReactants;
+
+
+
+	/**
 	 * Calculate the reaction constant dependent on the
 	 * reaction radii and the diffusion coefficients for the
 	 * ith and jth clusters, which itself depends on the current
@@ -210,6 +217,7 @@ protected:
 	virtual double computeBindingEnergy(DissociationReaction * reaction) const {
 		return 0.0;
 	}
+
 
 	/**
 	 * The default constructor. It initializes the properties and reactants vector.
@@ -284,7 +292,10 @@ public:
 	 *
 	 * @return The list of all of the reactants in the network
 	 */
-	virtual const std::shared_ptr<std::vector<IReactant *>> & getAll() const;
+    virtual const std::vector<IReactant*> & getAll() const {
+
+        return allReactants;
+    }
 
 	/**
 	 * This operation returns all reactants in the network with the given type.

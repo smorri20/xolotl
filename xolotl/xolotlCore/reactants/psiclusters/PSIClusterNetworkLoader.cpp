@@ -421,7 +421,8 @@ double PSIClusterNetworkLoader::getHeVFormationEnergy(int numHe, int numV) {
 }
 
 void PSIClusterNetworkLoader::applySectionalGrouping(
-		std::shared_ptr<IReactionNetwork> network) {
+		std::shared_ptr<PSIClusterReactionNetwork> network) {
+
 	// Create a temporary vector for the loop
 	std::vector<std::pair<int, int> > tempVector;
 
@@ -438,7 +439,9 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 	// Loop on the vacancy groups
 	for (int k = 0; k < nVGroup; k++) {
 		// Add the bound the the network vector
-		network->boundVector.push_back(vIndex);
+        network->addBound(vIndex);
+
+
 		// Loop on the helium groups
 		for (int j = 0; j < nHeGroup; j++) {
 			// To check if the group is full
@@ -541,7 +544,7 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 	}
 
 	// Add the bound the the network vector
-	network->boundVector.push_back(maxV+1);
+    network->addBound(maxV+1);
 
 	return;
 }

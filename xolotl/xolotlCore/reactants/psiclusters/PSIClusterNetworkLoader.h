@@ -11,6 +11,7 @@
 //Includes
 #include <PSICluster.h>
 #include <NetworkLoader.h>
+#include "PSIClusterReactionNetwork.h"
 
 namespace xolotlCore {
 
@@ -174,7 +175,7 @@ public:
 	 *
 	 * @param The network to be modified.
 	 */
-	void applySectionalGrouping(std::shared_ptr<IReactionNetwork> network);
+    void applySectionalGrouping(std::shared_ptr<PSIClusterReactionNetwork> network);
 
 	/**
 	 * This operation will set the helium size at which the grouping scheme starts.

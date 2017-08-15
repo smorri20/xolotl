@@ -22,11 +22,6 @@ class IReactionNetwork {
 public:
 
 	/**
-	 * This vector contains the information on the group bounds in both directions.
-	 */
-	std::vector<int> boundVector;
-
-	/**
 	 * The destructor.
 	 */
 	virtual ~IReactionNetwork() {
@@ -77,7 +72,7 @@ public:
 	 *
 	 * @return The list of all of the reactants in the network
 	 */
-	virtual const std::shared_ptr<std::vector<IReactant *>> & getAll() const = 0;
+    virtual const std::vector<IReactant*> & getAll() const = 0;
 
 	/**
 	 * This operation returns all reactants in the network with the given type.

@@ -221,15 +221,6 @@ public:
 			const std::vector<int>& sizes) const;
 
 	/**
-	 * This operation returns all reactants in the network without regard for
-	 * their composition or whether they are compound reactants. The list may
-	 * or may not be ordered and the decision is left to implementers.
-	 *
-	 * @return The list of all of the reactants in the network
-	 */
-	const std::shared_ptr<std::vector<IReactant *>> & getAll() const;
-
-	/**
 	 * This operation returns all reactants in the network with the given name.
 	 * The list may or may not be ordered and the decision is left to
 	 * implementers.
@@ -431,6 +422,15 @@ public:
 		return maxHeIClusterSize;
 	}
 
+
+    /**
+     * Add a value to our bounds.
+     *
+     * @param val The value to add to our bounds.
+     */
+    void addBound(int val) {
+        boundVector.push_back(val);
+    }
 };
 
 }

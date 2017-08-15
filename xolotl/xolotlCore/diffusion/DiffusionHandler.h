@@ -38,8 +38,8 @@ public:
 	 */
 	virtual void initializeOFill(IReactionNetwork *network, int *ofill) {
 		// Get all the reactants
-		auto reactants = network->getAll();
-		int networkSize = reactants->size();
+		auto& reactants = network->getAll();
+		int networkSize = reactants.size();
 		int dof = network->getDOF();
 
 		// Clear the index vector
@@ -48,7 +48,7 @@ public:
 		// Loop on the reactants
 		for (int i = 0; i < networkSize; i++) {
 			// Get the i-th cluster
-			auto cluster = (PSICluster *) reactants->at(i);
+			auto cluster = (PSICluster *) reactants.at(i);
 			// Get its diffusion coefficient
 			double diffFactor = cluster->getDiffusionFactor();
 

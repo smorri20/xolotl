@@ -80,14 +80,14 @@ void Diffusion3DHandler::computeDiffusion(IReactionNetwork *network,
 		double hxLeft, double hxRight, int ix,
 		double sy, int iy, double sz, int iz) {
 	// Get all the reactants
-	auto reactants = network->getAll();
+	auto& reactants = network->getAll();
 	// Get the number of diffusing clusters
 	int nDiff = indexVector.size();
 
 	// Loop on them
 	for (int i = 0; i < nDiff; i++) {
 		// Get the diffusing cluster and its index
-		auto cluster = (PSICluster *) reactants->at(indexVector[i]);
+		auto cluster = (PSICluster *) reactants.at(indexVector[i]);
 		int index = cluster->getId() - 1;
 
 		// Get the initial concentrations
@@ -119,14 +119,14 @@ void Diffusion3DHandler::computePartialsForDiffusion(
 		double *val, int *indices, double hxLeft, double hxRight, int ix,
 		double sy, int iy, double sz, int iz) {
 	// Get all the reactants
-	auto reactants = network->getAll();
+	auto& reactants = network->getAll();
 	// Get the number of diffusing clusters
 	int nDiff = indexVector.size();
 
 	// Loop on them
 	for (int i = 0; i < nDiff; i++) {
 		// Get the diffusing cluster and its index
-		auto cluster = (PSICluster *) reactants->at(indexVector[i]);
+		auto cluster = (PSICluster *) reactants.at(indexVector[i]);
 		int index = cluster->getId() - 1;
 		// Get the diffusion coefficient of the cluster
 		double diffCoeff = cluster->getDiffusionCoefficient();

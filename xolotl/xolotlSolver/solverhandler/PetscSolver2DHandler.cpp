@@ -8,9 +8,6 @@ namespace xolotlSolver {
 void PetscSolver2DHandler::createSolverContext(DM &da) {
 	PetscErrorCode ierr;
 
-	// Initialize the all reactants pointer
-	allReactants = network->getAll();
-
 	// Set the last temperature to 0
 	lastTemperature = 0.0;
 

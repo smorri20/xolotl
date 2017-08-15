@@ -930,9 +930,6 @@ IReactant * PSIClusterReactionNetwork::getSuper(const std::string& type,
 	return retReactant.get();
 }
 
-const std::shared_ptr<std::vector<IReactant *>> & PSIClusterReactionNetwork::getAll() const {
-	return allReactants;
-}
 
 std::vector<IReactant *> PSIClusterReactionNetwork::getAll(
 		const std::string& name) const {
@@ -1024,7 +1021,7 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 
 		clusters->push_back(reactant);
 		// Add the pointer to the list of all clusters
-		allReactants->push_back(reactant.get());
+        allReactants.push_back(reactant.get());
 	}
 
 	return;
@@ -1074,7 +1071,7 @@ void PSIClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 		auto clusters = clusterTypeMap[reactant->getType()];
 		clusters->push_back(reactant);
 		// Add the pointer to the list of all clusters
-		allReactants->push_back(reactant.get());
+		allReactants.push_back(reactant.get());
 	}
 
 	return;
@@ -1091,9 +1088,9 @@ void PSIClusterReactionNetwork::removeReactants(
 	ReactionNetwork::ReactantMatcher doomedReactantMatcher(doomedReactants);
 
 	// Remove the doomed reactants from our collection of all known reactants.
-	auto ariter = std::remove_if(allReactants->begin(), allReactants->end(),
+	auto ariter = std::remove_if(allReactants.begin(), allReactants.end(),
 			doomedReactantMatcher);
-	allReactants->erase(ariter, allReactants->end());
+	allReactants.erase(ariter, allReactants.end());
 
 	// Remove the doomed reactants from the type-specific cluster vectors.
 	// First, determine all cluster types used by clusters in the collection
@@ -1132,7 +1129,7 @@ void PSIClusterReactionNetwork::reinitializeNetwork() {
 	numHeVClusters = 0;
 	// Reset the Ids
 	int id = 0;
-	for (auto it = allReactants->begin(); it != allReactants->end(); ++it) {
+	for (auto it = allReactants.begin(); it != allReactants.end(); ++it) {
 		id++;
 		(*it)->setId(id);
 		(*it)->setHeMomentumId(id);
@@ -1165,7 +1162,7 @@ void PSIClusterReactionNetwork::reinitializeNetwork() {
 
 void PSIClusterReactionNetwork::reinitializeConnectivities() {
 	// Loop on all the reactants to reset their connectivities
-	for (auto it = allReactants->begin(); it != allReactants->end(); ++it) {
+	for (auto it = allReactants.begin(); it != allReactants.end(); ++it) {
 		(*it)->resetConnectivities();
 	}
 
@@ -1175,20 +1172,19 @@ void PSIClusterReactionNetwork::reinitializeConnectivities() {
 void PSIClusterReactionNetwork::updateConcentrationsFromArray(
 		double * concentrations) {
 	// Local Declarations
-	auto reactants = getAll();
-	int size = reactants->size();
+	int size = allReactants.size();
 	int id = 0;
 
 	// Set the concentrations
 	concUpdateCounter->increment();	// increment the update concentration counter
 	for (int i = 0; i < size; i++) {
-		id = reactants->at(i)->getId() - 1;
-		reactants->at(i)->setConcentration(concentrations[id]);
+		id = allReactants.at(i)->getId() - 1;
+		allReactants.at(i)->setConcentration(concentrations[id]);
 	}
 
 	// Set the moments
 	for (int i = size - numSuperClusters; i < size; i++) {
-		auto cluster = (PSISuperCluster *) reactants->at(i);
+		auto cluster = (PSISuperCluster *) allReactants.at(i);
 		id = cluster->getId() - 1;
 		cluster->setZerothMomentum(concentrations[id]);
 		id = cluster->getHeMomentumId() - 1;
@@ -1214,7 +1210,7 @@ void PSIClusterReactionNetwork::getDiagonalFill(int *diagFill) {
 	// Get the connectivity for each reactant
 	for (int i = 0; i < networkSize; i++) {
 		// Get the reactant and its connectivity
-		auto reactant = allReactants->at(i);
+		auto& reactant = allReactants.at(i);
 		connectivity = reactant->getConnectivity();
 		connectivityLength = connectivity.size();
 		// Get the reactant id so that the connectivity can be lined up in
@@ -1449,7 +1445,6 @@ void PSIClusterReactionNetwork::computeRateConstants() {
 
 void PSIClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset) {
 	// Initial declarations
-	IReactant * cluster;
 	PSISuperCluster * superCluster;
 	double flux = 0.0;
 	int reactantIndex = 0;
@@ -1457,7 +1452,7 @@ void PSIClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset) {
 
 	// ----- Compute all of the new fluxes -----
 	for (int i = 0; i < networkSize; i++) {
-		cluster = allReactants->at(i);
+		auto& cluster = allReactants.at(i);
 		// Compute the flux
 		flux = cluster->getTotalFlux();
 		// Update the concentration of the cluster
@@ -1497,7 +1492,7 @@ void PSIClusterReactionNetwork::computeAllPartials(double *vals, int *indices,
 
 	// Update the column in the Jacobian that represents each normal reactant
 	for (int i = 0; i < networkSize - superClusters.size(); i++) {
-		auto reactant = allReactants->at(i);
+		auto& reactant = allReactants.at(i);
 		// Get the reactant index
 		reactantIndex = reactant->getId() - 1;
 

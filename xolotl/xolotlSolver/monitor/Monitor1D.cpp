@@ -1167,10 +1167,10 @@ PetscErrorCode monitorSeries1D(TS ts, PetscInt timestep, PetscReal time,
 		}
 
 		// Get all the reactants to have access to their names
-		auto reactants = network->getAll();
+		auto& reactants = network->getAll();
 
 		for (int i = 0; i < loopSize; i++) {
-			auto cluster = reactants->at(i);
+			auto cluster = reactants.at(i);
 			// Get the data provider and give it the points
 			auto thePoints = std::make_shared<std::vector<xolotlViz::Point> >(
 					myPoints[i]);

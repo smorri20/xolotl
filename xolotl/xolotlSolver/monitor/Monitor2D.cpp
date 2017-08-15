@@ -450,8 +450,8 @@ PetscErrorCode monitorSurface2D(TS ts, PetscInt timestep, PetscReal time,
 		surfacePlot2D->getDataProvider()->setPoints(myPoints);
 
 		// Get the iCluster cluster to have access to its name
-		auto reactants = network->getAll();
-		auto cluster = reactants->at(iCluster);
+		auto& reactants = network->getAll();
+		auto cluster = reactants.at(iCluster);
 
 		// Change the title of the plot and the name of the data
 		std::stringstream title;

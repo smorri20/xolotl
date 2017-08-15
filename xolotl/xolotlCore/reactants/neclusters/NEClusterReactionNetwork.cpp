@@ -286,9 +286,6 @@ IReactant * NEClusterReactionNetwork::getSuper(const std::string& type,
 	return retReactant.get();
 }
 
-const std::shared_ptr<std::vector<IReactant *>> & NEClusterReactionNetwork::getAll() const {
-	return allReactants;
-}
 
 std::vector<IReactant *> NEClusterReactionNetwork::getAll(
 		const std::string& name) const {
@@ -381,7 +378,7 @@ void NEClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 
 		clusters->push_back(reactant);
 		// Add the pointer to the list of all clusters
-		allReactants->push_back(reactant.get());
+		allReactants.push_back(reactant.get());
 	}
 
 	return;
@@ -431,7 +428,7 @@ void NEClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 		auto clusters = clusterTypeMap[reactant->getType()];
 		clusters->push_back(reactant);
 		// Add the pointer to the list of all clusters
-		allReactants->push_back(reactant.get());
+		allReactants.push_back(reactant.get());
 	}
 
 	return;
@@ -448,9 +445,9 @@ void NEClusterReactionNetwork::removeReactants(
 	ReactionNetwork::ReactantMatcher doomedReactantMatcher(doomedReactants);
 
 	// Remove the doomed reactants from our collection of all known reactants.
-	auto ariter = std::remove_if(allReactants->begin(), allReactants->end(),
+	auto ariter = std::remove_if(allReactants.begin(), allReactants.end(),
 			doomedReactantMatcher);
-	allReactants->erase(ariter, allReactants->end());
+	allReactants.erase(ariter, allReactants.end());
 
 	// Remove the doomed reactants from the type-specific cluster vectors.
 	// First, determine all cluster types used by clusters in the collection
@@ -489,7 +486,7 @@ void NEClusterReactionNetwork::reinitializeNetwork() {
 	numXeClusters = 0;
 	// Reset the Ids
 	int id = 0;
-	for (auto it = allReactants->begin(); it != allReactants->end(); ++it) {
+	for (auto it = allReactants.begin(); it != allReactants.end(); ++it) {
 		id++;
 		(*it)->setId(id);
 		(*it)->setXeMomentumId(id);
@@ -515,7 +512,7 @@ void NEClusterReactionNetwork::reinitializeNetwork() {
 
 void NEClusterReactionNetwork::reinitializeConnectivities() {
 	// Loop on all the reactants to reset their connectivities
-	for (auto it = allReactants->begin(); it != allReactants->end(); ++it) {
+	for (auto it = allReactants.begin(); it != allReactants.end(); ++it) {
 		(*it)->resetConnectivities();
 	}
 
@@ -525,21 +522,20 @@ void NEClusterReactionNetwork::reinitializeConnectivities() {
 void NEClusterReactionNetwork::updateConcentrationsFromArray(
 		double * concentrations) {
 	// Local Declarations
-	auto reactants = getAll();
-	int size = reactants->size();
+	int size = allReactants.size();
 	int id = 0;
 
 	// Set the concentrations
 	concUpdateCounter->increment();	// increment the update concentration counter
 	for (int i = 0; i < size; i++) {
-		id = reactants->at(i)->getId() - 1;
-		reactants->at(i)->setConcentration(concentrations[id]);
+		id = allReactants.at(i)->getId() - 1;
+		allReactants.at(i)->setConcentration(concentrations[id]);
 	}
 
 	// Set the moments
 	for (int i = size - numSuperClusters; i < size; i++) {
 		// Get the superCluster
-		auto cluster = (NESuperCluster *) reactants->at(i);
+		auto cluster = (NESuperCluster *) allReactants.at(i);
 		id = cluster->getId() - 1;
 		cluster->setZerothMomentum(concentrations[id]);
 		id = cluster->getXeMomentumId() - 1;
@@ -563,7 +559,7 @@ void NEClusterReactionNetwork::getDiagonalFill(int *diagFill) {
 	// Get the connectivity for each reactant
 	for (int i = 0; i < networkSize; i++) {
 		// Get the reactant and its connectivity
-		auto reactant = allReactants->at(i);
+		auto reactant = allReactants.at(i);
 		connectivity = reactant->getConnectivity();
 		connectivityLength = connectivity.size();
 		// Get the reactant id so that the connectivity can be lined up in
@@ -659,7 +655,7 @@ void NEClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset) {
 
 	// ----- Compute all of the new fluxes -----
 	for (int i = 0; i < networkSize; i++) {
-		cluster = allReactants->at(i);
+		cluster = allReactants.at(i);
 		// Compute the flux
 		flux = cluster->getTotalFlux();
 		// Update the concentration of the cluster
@@ -693,7 +689,7 @@ void NEClusterReactionNetwork::computeAllPartials(double *vals, int *indices,
 
 	// Update the column in the Jacobian that represents each normal reactant
 	for (int i = 0; i < networkSize - superClusters.size(); i++) {
-		auto reactant = allReactants->at(i);
+		auto reactant = allReactants.at(i);
 		// Get the reactant index
 		reactantIndex = reactant->getId() - 1;
 

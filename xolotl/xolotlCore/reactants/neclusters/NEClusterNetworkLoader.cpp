@@ -275,10 +275,10 @@ void NEClusterNetworkLoader::applyGrouping(
 	NESuperCluster * newCluster;
 	int nXe = 0;
 	// Loop on all the reactants to update the pairs vector with super clusters
-	auto reactants = network->getAll();
-	for (int i = 0; i < reactants->size(); i++) {
+	auto& reactants = network->getAll();
+	for (int i = 0; i < reactants.size(); i++) {
 		// Get the cluster
-		cluster = (NECluster *) reactants->at(i);
+		cluster = (NECluster *) reactants.at(i);
 		// Get their production and dissociation vectors
 		auto react = cluster->reactingPairs;
 		auto combi = cluster->combiningReactants;
