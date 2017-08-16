@@ -5,14 +5,6 @@
 
 using namespace xolotlCore;
 
-ReactionNetwork::ReactionNetwork() :
-		temperature(0.0), networkSize(0), dissociationsEnabled(true), numVClusters(
-				0), numIClusters(0), numSuperClusters(0), maxVClusterSize(0), maxIClusterSize(
-				0) {
-//    concUpdateCounter = xolotlPerf::getHandlerRegistry()->getEventCounter("net_conc_updates");
-
-	return;
-}
 
 ReactionNetwork::ReactionNetwork(
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
@@ -26,28 +18,6 @@ ReactionNetwork::ReactionNetwork(
 	return;
 }
 
-ReactionNetwork::ReactionNetwork(const ReactionNetwork &other) {
-	handlerRegistry = other.handlerRegistry;
-	allReactants = other.allReactants;
-	temperature = other.temperature;
-	networkSize = other.networkSize;
-	names = other.names;
-	compoundNames = other.compoundNames;
-	dissociationsEnabled = other.dissociationsEnabled;
-	numVClusters = other.numVClusters;
-	numIClusters = other.numIClusters;
-	numSuperClusters = other.numSuperClusters;
-	maxVClusterSize = other.maxVClusterSize;
-	maxIClusterSize = other.maxIClusterSize;
-
-	// TODO - do we copy the source ReactionNetwork's counter also?
-	// Or should we have our own counter?  How to distinguish them by name?
-
-	// Counter for the number of times the network concentration is updated.
-	concUpdateCounter = handlerRegistry->getEventCounter("net_conc_updates");
-
-	return;
-}
 
 double ReactionNetwork::calculateReactionRateConstant(
 		ProductionReaction * reaction) const {
@@ -90,18 +60,6 @@ void ReactionNetwork::updateConcentrationsFromArray(double * concentrations) {
 	}
 
 	return;
-}
-
-void ReactionNetwork::askReactantsToReleaseNetwork(void) {
-
-	// Loop on each reactant to release the network
-	for (auto iter = allReactants.begin(); iter != allReactants.end();
-			++iter) {
-		IReactant* currReactant = *iter;
-		assert(currReactant != NULL);
-
-		currReactant->releaseReactionNetwork();
-	}
 }
 
 void ReactionNetwork::setTemperature(double temp) {

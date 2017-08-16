@@ -9,16 +9,20 @@ namespace xolotlCore {
 //! This class represents a cluster composed entirely of hydrogen.
 class HCluster: public PSICluster {
 
-private:
-
-
 public:
+
+    /**
+     * Default constructor, deleted because we require info to construct.
+     */
+    HCluster() = delete;
 
 	/**
 	 * The constructor. All HClusters must be initialized with a size.
 	 * @param nH the number of hydrogen atoms in the cluster
 	 */
-	HCluster(int nH, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+	HCluster(int nH,
+            IReactionNetwork& _network,
+            std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	//! The destructor
 	~HCluster();

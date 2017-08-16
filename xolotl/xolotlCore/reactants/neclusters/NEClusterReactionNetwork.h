@@ -83,12 +83,6 @@ private:
 	int maxXeIClusterSize;
 
 	/**
-	 * This operation sets the default values of the properties table and names
-	 * for this network. It is used on construction and during a copy.
-	 */
-	void setDefaultPropsAndNames();
-
-	/**
 	 * Calculate the dissociation constant of the first cluster with respect to
 	 * the single-species cluster of the same type based on the current clusters
 	 * atomic volume, reaction rate constant, and binding energies.
@@ -98,13 +92,14 @@ private:
 	 */
 	double calculateDissociationConstant(DissociationReaction * reaction) const;
 
-	/**
-	 * The Constructor
-	 */
-	NEClusterReactionNetwork();
 
 public:
 
+    /**
+     * Default constructor, deleted to force construction using parameters.
+     */
+    NEClusterReactionNetwork() = delete;
+    
 	/**
 	 * The Constructor
 	 *
@@ -113,12 +108,6 @@ public:
 	NEClusterReactionNetwork(
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
-	/**
-	 * The copy constructor.
-	 *
-	 * @param other
-	 */
-	NEClusterReactionNetwork(const NEClusterReactionNetwork &other);
 
 	/**
 	 * Computes the full reaction connectivity matrix for this network.

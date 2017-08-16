@@ -7,8 +7,9 @@
 using namespace xolotlCore;
 
 HeVCluster::HeVCluster(int numHe, int numV,
+        IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(registry), numHe(numHe), numV(numV) {
+		PSICluster(_network, registry), numHe(numHe), numV(numV) {
 	// Set the cluster size as the sum of
 	// the number of Helium and Vacancies
 	size = numHe + numV;

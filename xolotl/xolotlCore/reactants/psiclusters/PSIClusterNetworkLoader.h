@@ -113,7 +113,8 @@ protected:
 	 * @param numI The number of interstitial defects
 	 * @return The new cluster
 	 */
-	std::shared_ptr<PSICluster> createPSICluster(int numHe, int numV, int numI);
+	std::shared_ptr<PSICluster> createPSICluster(int numHe, int numV, int numI,
+                                IReactionNetwork& network);
 
 	/**
 	 * This operation computes the formation energy associated to the

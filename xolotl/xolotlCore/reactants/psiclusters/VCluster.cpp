@@ -7,8 +7,9 @@
 using namespace xolotlCore;
 
 VCluster::VCluster(int nV,
+        IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(registry) {
+		PSICluster(_network, registry) {
 	// Set the size
 	size = nV;
 	// Set the reactant name appropriately

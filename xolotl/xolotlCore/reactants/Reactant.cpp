@@ -10,22 +10,10 @@
 // Namespaces
 using namespace xolotlCore;
 
-Reactant::Reactant() :
+Reactant::Reactant(IReactionNetwork& _network,
+                std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		concentration(0.0), id(0), xeMomId(0), heMomId(0), vMomId(0), temperature(
-				0.0), typeName(""), network(nullptr), handlerRegistry(nullptr), size(
-				0), formationEnergy(0.0), diffusionFactor(0.0), diffusionCoefficient(
-				0.0), migrationEnergy(0.0), name("Reactant"), reactionRadius(
-				0.0) {
-	// Setup the composition map.
-	compositionMap[xeType] = 0;
-	compositionMap[heType] = 0;
-	compositionMap[vType] = 0;
-	compositionMap[iType] = 0;
-}
-
-Reactant::Reactant(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		concentration(0.0), id(0), xeMomId(0), heMomId(0), vMomId(0), temperature(
-				0.0), typeName(""), network(nullptr), handlerRegistry(registry), size(
+				0.0), typeName(""), network(_network), handlerRegistry(registry), size(
 				0), formationEnergy(0.0), diffusionFactor(0.0), diffusionCoefficient(
 				0.0), migrationEnergy(0.0), name("Reactant"), reactionRadius(
 				0.0) {
@@ -72,7 +60,7 @@ void Reactant::recomputeDiffusionCoefficient(double temp) {
 std::vector<int> Reactant::getConnectivity() const {
 	// The connectivity array by default is filled with
 	// zeros.
-	int connectivityLength = network->getDOF();
+	int connectivityLength = network.getDOF();
 	std::vector<int> connectivity = std::vector<int>(connectivityLength, 0);
 
 	// This reactant should be connected to itself

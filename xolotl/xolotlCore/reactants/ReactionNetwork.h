@@ -230,12 +230,13 @@ protected:
 	}
 
 
-	/**
-	 * The default constructor. It initializes the properties and reactants vector.
-	 */
-	ReactionNetwork();
-
 public:
+
+    /**
+     * Default constructor, deleted because we need params to construct.
+     */
+    ReactionNetwork() = delete;
+
 
 	/**
 	 * The constructor that takes the performance handler registry.
@@ -245,12 +246,6 @@ public:
 	 */
 	ReactionNetwork(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
-	/**
-	 * The copy constructor.
-	 *
-	 * @param other The ReactionNetwork to copy
-	 */
-	ReactionNetwork(const ReactionNetwork &other);
 
 	/**
 	 * The destructor.
@@ -434,22 +429,6 @@ public:
 	 * does not overrun is up to the caller.
 	 */
 	virtual void updateConcentrationsFromArray(double * concentrations);
-
-	/**
-	 * Request that all reactants in the network release their
-	 * pointers to the network, to break cycles and allow the
-	 * network and the clusters/reactant objects it contains to
-	 * be destroyed gracefully.
-	 *
-	 * Should only be done when the network is no longer needed.
-	 * Ideally, we would do this from the network's destructor.
-	 * However, unless the reactants in the network release their
-	 * shared_ptrs to the network, the reference count on the
-	 * network's shared_ptr will never reach zero and the
-	 * object it owns will never be destroyed.  (Hence, the
-	 * reactant objects will also never be destroyed.)
-	 */
-	void askReactantsToReleaseNetwork();
 
 	/**
 	 * Get the diagonal fill for the Jacobian, corresponding to the reactions.

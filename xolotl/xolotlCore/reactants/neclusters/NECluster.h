@@ -128,11 +128,6 @@ protected:
 	 */
 	const std::set<int> & getDissociationConnectivitySet() const;
 
-	/**
-	 * The default constructor is protected
-	 */
-	NECluster();
-
 public:
 
 	/**
@@ -170,12 +165,18 @@ public:
 	 */
 	std::vector<ClusterPair> emissionPairs;
 
+    /**
+     * Default constructor, deleted because we require info to construct.
+     */
+    NECluster() = delete;
+
 	/**
 	 * The default constructor
 	 *
 	 * @param registry The performance handler registry
 	 */
-	NECluster(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+	NECluster(IReactionNetwork& _network,
+                std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
 	 * The copy constructor
@@ -191,20 +192,9 @@ public:
 	}
 
 	/**
-	 * Returns a reactant created using the copy constructor
+     * Update reactant using other reactants in its network.
 	 */
-	virtual std::shared_ptr<IReactant> clone() {
-		return std::shared_ptr<IReactant>(new NECluster(*this));
-	}
-
-	/**
-	 * Sets the collection of other clusters that make up
-	 * the reaction network in which this cluster exists.
-	 *
-	 * @param network The reaction network of which this cluster is a part
-	 */
-	virtual void setReactionNetwork(
-			const std::shared_ptr<IReactionNetwork> reactionNetwork);
+	virtual void updateFromNetwork();
 
 	/**
 	 * Create a production pair associated with the given reaction.

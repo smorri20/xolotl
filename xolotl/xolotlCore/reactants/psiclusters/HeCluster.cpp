@@ -7,8 +7,9 @@
 using namespace xolotlCore;
 
 HeCluster::HeCluster(int nHe,
+        IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(registry) {
+		PSICluster(_network, registry) {
 	// Set the size
 	size = nHe;
 	// Update the composition map

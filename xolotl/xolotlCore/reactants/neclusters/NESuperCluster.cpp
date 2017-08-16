@@ -12,9 +12,11 @@ using namespace xolotlCore;
 std::vector<double> momentumPartials;
 
 NESuperCluster::NESuperCluster(double num, int nTot, int width, double radius,
-		double energy, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		NECluster(registry), numXe(num), nTot(nTot), l0(0.0), l1(0.0), dispersion(
-				0.0), momentumFlux(0.0) {
+		double energy,
+        IReactionNetwork& _network,
+        std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
+		NECluster(_network, registry), numXe(num), nTot(nTot), l0(0.0),
+        l1(0.0), dispersion(0.0), momentumFlux(0.0) {
 	// Set the cluster size
 	size = (int) numXe;
 
@@ -63,16 +65,7 @@ NESuperCluster::NESuperCluster(NESuperCluster &other) :
 	return;
 }
 
-std::shared_ptr<IReactant> NESuperCluster::clone() {
-	std::shared_ptr<IReactant> reactant(new NESuperCluster(*this));
-
-	return reactant;
-}
-
-void NESuperCluster::setReactionNetwork(
-		const std::shared_ptr<IReactionNetwork> reactionNetwork) {
-	// Call the superclass's method to actually set the reference
-	Reactant::setReactionNetwork(reactionNetwork);
+void NESuperCluster::updateFromNetwork() {
 
 	// Clear the flux-related arrays
 	reactingPairs.clear();
@@ -227,7 +220,7 @@ void NESuperCluster::optimizeReactions() {
 			auto reaction = std::make_shared<ProductionReaction>(firstReactant,
 					secondReactant);
 			// Add it to the network
-			reaction = network->addProductionReaction(reaction);
+			reaction = network.addProductionReaction(reaction);
 
 			// Create a new SuperClusterProductionPair
 			SuperClusterProductionPair superPair(firstReactant, secondReactant,
@@ -303,7 +296,7 @@ void NESuperCluster::optimizeReactions() {
 			auto reaction = std::make_shared<ProductionReaction>(this,
 					combiningReactant);
 			// Add it to the network
-			reaction = network->addProductionReaction(reaction);
+			reaction = network.addProductionReaction(reaction);
 
 			// Create a new SuperClusterProductionPair with NULL as the second cluster because
 			// we do not need it
@@ -379,7 +372,7 @@ void NESuperCluster::optimizeReactions() {
 			auto reaction = std::make_shared<DissociationReaction>(
 					dissociatingCluster, this, otherEmittedCluster);
 			// Add it to the network
-			reaction = network->addDissociationReaction(reaction);
+			reaction = network.addDissociationReaction(reaction);
 
 			// Create a new SuperClusterProductionPair
 			SuperClusterDissociationPair superPair(dissociatingCluster,
@@ -450,7 +443,7 @@ void NESuperCluster::optimizeReactions() {
 			auto reaction = std::make_shared<DissociationReaction>(this,
 					firstCluster, secondCluster);
 			// Add it to the network
-			reaction = network->addDissociationReaction(reaction);
+			reaction = network.addDissociationReaction(reaction);
 
 			// Create a new SuperClusterProductionPair
 			SuperClusterDissociationPair superPair(firstCluster, secondCluster,
@@ -556,7 +549,7 @@ void NESuperCluster::resetConnectivities() {
 	// this cluster is not connected to them
 
 	// Initialize the partial vector for the momentum
-	int dof = network->getDOF();
+	int dof = network.getDOF();
 	momentumPartials.resize(dof, 0.0);
 
 	return;

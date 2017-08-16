@@ -5,8 +5,9 @@
 using namespace xolotlCore;
 
 InterstitialCluster::InterstitialCluster(int nI,
+        IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(registry) {
+		PSICluster(_network, registry) {
 	// Set the size
 	size = nI;
 	// Update the composition map

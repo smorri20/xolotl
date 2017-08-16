@@ -4,6 +4,7 @@
 #include <NESuperCluster.h>
 #include <HDF5Utils.h>
 #include <xolotlPerf.h>
+#include <cassert>
 
 using namespace xolotlCore;
 
@@ -21,19 +22,22 @@ using namespace xolotlCore;
 //}
 
 std::shared_ptr<NECluster> NEClusterNetworkLoader::createNECluster(int numXe,
-		int numV, int numI) {
+		int numV, int numI,
+        IReactionNetwork& network) {
+
 	// Local Declarations
-	std::shared_ptr<NECluster> cluster;
+    NECluster* cluster = nullptr;
 
 	// Determine the type of the cluster given the number of each species.
 	// Create a new cluster by that type and specify the names of the
 	// property keys.
 	if (numXe > 0) {
 		// Create a new XeVCluster
-		cluster = std::make_shared<XeCluster>(numXe, handlerRegistry);
+		cluster = new XeCluster(numXe, network, handlerRegistry);
 	}
+    assert(cluster != nullptr);
 
-	return cluster;
+	return std::shared_ptr<NECluster>(cluster);
 }
 
 NEClusterNetworkLoader::NEClusterNetworkLoader(
@@ -84,7 +88,7 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::load() {
 		numV = (int) (*lineIt)[1];
 		numI = (int) (*lineIt)[2];
 		// Create the cluster
-		auto nextCluster = createNECluster(numXe, numV, numI);
+		auto nextCluster = createNECluster(numXe, numV, numI, *network);
 
 		// Energies
 		formationEnergy = (*lineIt)[3];
@@ -99,9 +103,9 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::load() {
 
 		// Check if we want dummy reactions
 		if (dummyReactions) {
-			// Create a dummy cluster (Reactant) from the existing cluster
-			auto dummyCluster = std::static_pointer_cast<Reactant>(
-					nextCluster->Reactant::clone());
+			// Create a dummy cluster (just a stock Reactant) 
+            // from the existing cluster
+            auto dummyCluster = std::make_shared<Reactant>(*nextCluster);
 			// Add the cluster to the network
 			network->add(dummyCluster);
 			// Add it to the list so that we can set the network later
@@ -115,8 +119,8 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::load() {
 	}
 
 	// Set the reaction network for each reactant
-	for (auto currCluster : reactants) {
-		currCluster->setReactionNetwork(network);
+	for (auto& currCluster : reactants) {
+		currCluster->updateFromNetwork();
 	}
 
 	// Create the reactions
@@ -163,7 +167,7 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::generate(
 		// Set the composition
 		numXe = i;
 		// Create the cluster
-		auto nextCluster = createNECluster(numXe, 0, 0);
+		auto nextCluster = createNECluster(numXe, 0, 0, *network);
 
 		// Set the other attributes
 		if (i <= xeFormationEnergies.size())
@@ -186,8 +190,8 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::generate(
 	}
 
 	// Set the network for all of the reactants. This MUST be done manually.
-	for (auto currCluster : reactants) {
-		currCluster->setReactionNetwork(network);
+	for (auto& currCluster : reactants) {
+		currCluster->updateFromNetwork();
 	}
 
 	// Create the reactions
@@ -252,7 +256,7 @@ void NEClusterNetworkLoader::applyGrouping(
 		energy = energy / (double) count;
 		// Create the cluster
 		superCluster = std::make_shared<NESuperCluster>(size, count, count,
-				radius, energy, handlerRegistry);
+				radius, energy, *network, handlerRegistry);
 		// Set the HeV vector
 		superCluster->setXeVector(tempVector);
 		// Add this cluster to the network and clusters
@@ -398,8 +402,8 @@ void NEClusterNetworkLoader::applyGrouping(
 	// Get the super cluster map
 	auto superMap = network->getAll(NESuperType);
 	// Set the reaction network for each super reactant
-	for (auto currCluster : superMap) {
-		currCluster->setReactionNetwork(network);
+	for (auto& currCluster : superMap) {
+		currCluster->updateFromNetwork();
 	}
 
 	// Remove Xe clusters bigger than xeMin from the network

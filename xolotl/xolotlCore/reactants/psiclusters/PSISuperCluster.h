@@ -217,18 +217,15 @@ private:
 	 */
 	double vMomentumFlux;
 
-	/**
-	 * The default constructor is private because PSIClusters must always be
-	 * initialized with a size.
-	 */
-	PSISuperCluster() :
-			PSICluster(), numHe(0.0), numV(0.0), nTot(0), sectionHeWidth(0), sectionVWidth(
-					0), lowerHe(0), upperHe(0), lowerV(0), upperV(0), l0(0.0), l1He(
-					0.0), l1V(0.0), dispersionHe(0.0), dispersionV(0.0), heMomentumFlux(
-					0.0), vMomentumFlux(0.0) {
-	}
 
 public:
+
+
+    /**
+     * Default constructor, deleted because we require info to construct.
+     */
+    PSISuperCluster() = delete;
+
 
 	/**
 	 * The constructor. All SuperClusters must be initialized with its
@@ -244,7 +241,9 @@ public:
 	 * @param registry The performance handler registry
 	 */
 	PSISuperCluster(double numHe, double numV, int nTot, int heWidth,
-			int vWidth, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+			int vWidth,
+            IReactionNetwork& _network,
+            std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
 	 * Copy constructor.
@@ -258,23 +257,9 @@ public:
 	}
 
 	/**
-	 * This operation returns a Reactant that is created using the copy
-	 * constructor of PSISuperCluster.
-	 *
-	 * @return A copy of this reactant
+     * Update reactant using other reactants in its network.
 	 */
-	virtual std::shared_ptr<IReactant> clone() {
-		return std::make_shared<PSISuperCluster>(*this);
-	}
-
-	/**
-	 * Sets the collection of other clusters that make up
-	 * the reaction network in which this cluster exists.
-	 *
-	 * @param network The reaction network of which this cluster is a part
-	 */
-	void setReactionNetwork(
-			const std::shared_ptr<IReactionNetwork> reactionNetwork);
+	void updateFromNetwork();
 
 	/**
 	 * Create a production pair associated with the given reaction.

@@ -18,7 +18,7 @@ class IReactionNetwork;
  *
  * Reactants inherently know the other reactants with which they interact. They
  * declare their interactions with other reactants in the network after it is
- * set (setReactionNetwork) via the getConnectivity() operation. "Connectivity"
+ * set (updateFromNetwork) via the getConnectivity() operation. "Connectivity"
  * indicates whether two Reacants interact, via any mechanism, in an abstract
  * sense (as if they were nodes connected by an edge on a network graph).
  *
@@ -35,11 +35,6 @@ public:
 	 */
 	virtual ~IReactant() {
 	}
-
-	/**
-	 * Returns a reactant created using the copy constructor
-	 */
-	virtual std::shared_ptr<IReactant> clone() = 0;
 
 	/**
 	 * Create a production pair associated with the given reaction.
@@ -125,22 +120,9 @@ public:
 	virtual double getTotalFlux() = 0;
 
 	/**
-	 * This operation sets the collection of other reactants that make up
-	 * the reaction network in which this reactant exists.
-	 *
-	 * @param network The reaction network of which this reactant is a part
+     * Update reactant using other reactants in its network.
 	 */
-	virtual void setReactionNetwork(
-			std::shared_ptr<IReactionNetwork> reactionNetwork) = 0;
-
-	/**
-	 * Release the reaction network object.
-	 *
-	 * This should only be done when the reaction network is no longer needed
-	 * by the program, and is done to break dependence cycles that would
-	 * otherwise keep the network and reactant objects from being destroyed.
-	 */
-	virtual void releaseReactionNetwork() = 0;
+    virtual void updateFromNetwork() = 0;
 
 	/**
 	 * This operation signifies that the reactant with reactant Id should be

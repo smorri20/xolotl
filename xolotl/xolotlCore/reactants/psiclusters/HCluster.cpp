@@ -3,8 +3,10 @@
 
 using namespace xolotlCore;
 
-HCluster::HCluster(int nH, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(registry) {
+HCluster::HCluster(int nH,
+                    IReactionNetwork& _network,
+                    std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
+		PSICluster(_network, registry) {
 	// Set the size appropriately
 	size = nH;
 	// Set the reactant name appropriately

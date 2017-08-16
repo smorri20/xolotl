@@ -31,7 +31,7 @@ std::shared_ptr<IReactionNetwork> HDF5NetworkLoader::load() {
 		numV = (int) (*lineIt)[1];
 		numI = (int) (*lineIt)[2];
 		// Create the cluster
-		auto nextCluster = createPSICluster(numHe, numV, numI);
+		auto nextCluster = createPSICluster(numHe, numV, numI, *network);
 
 		// Energies
 		formationEnergy = (*lineIt)[3];
@@ -46,9 +46,9 @@ std::shared_ptr<IReactionNetwork> HDF5NetworkLoader::load() {
 
 		// Check if we want dummy reactions
 		if (dummyReactions) {
-			// Create a dummy cluster (Reactant) from the existing cluster
-			auto dummyCluster = std::static_pointer_cast<Reactant>(
-					nextCluster->Reactant::clone());
+			// Create a dummy cluster (just a stock Reactant)
+            // from the existing cluster
+            auto dummyCluster = std::make_shared<Reactant>(*nextCluster);
 			// Add the cluster to the network
 			network->add(dummyCluster);
 			// Add it to the list so that we can set the network later
@@ -61,10 +61,9 @@ std::shared_ptr<IReactionNetwork> HDF5NetworkLoader::load() {
 		}
 	}
 
-	// Set the reaction network for each reactant
-	for (auto reactantsIt = reactants.begin(); reactantsIt != reactants.end();
-			++reactantsIt) {
-		(*reactantsIt)->setReactionNetwork(network);
+	// Ask reactants to update now that they are in network.
+    for (auto& currReactant : reactants) {
+        currReactant->updateFromNetwork();
 	}
 
 	// Check if we want dummy reactions

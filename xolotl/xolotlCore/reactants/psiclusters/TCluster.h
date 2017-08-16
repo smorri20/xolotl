@@ -9,12 +9,17 @@ namespace xolotlCore {
 //! This class represents a cluster composed entirely of tritium.
 class TCluster : public HCluster {
 
-private:
-
 public:
 
+    /**
+     * Default constructor, deleted because we require info to construct.
+     */
+    TCluster() = delete;
+
 	//! The constructor. All TClusters must be initialized with a size.
-	TCluster(int nT, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+	TCluster(int nT,
+            IReactionNetwork& _network,
+            std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	//! Destructor
 	~TCluster();

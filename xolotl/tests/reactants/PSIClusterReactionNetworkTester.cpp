@@ -323,14 +323,6 @@ BOOST_AUTO_TEST_CASE(checkRefCounts) {
 			"After creation, network ref count: " << network.use_count());
 	BOOST_REQUIRE_EQUAL(network.use_count(), network->size() + 1);
 
-	// Tell the network to break dependency cycles between
-	// the Reactants in the network and the network itself.
-	// In a "real" use, this allows the network and Reactants
-	// to be destroyed gracefully when the shared_ptr pointing
-	// to the network goes out of scope, because it allows
-	// the network's reference count to reach zero.
-	network->askReactantsToReleaseNetwork();
-
 	// All objects from within the network should have released their
 	// shared_ptr to the network, so our shared_ptr should be the
 	// only remaining shared_ptr.  Thus, the network's reference

@@ -5,16 +5,10 @@
 
 using namespace xolotlCore;
 
-NECluster::NECluster() :
-		Reactant() {
-	// Set the reactant name appropriately
-	name = "NECluster";
 
-	return;
-}
-
-NECluster::NECluster(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		Reactant(registry) {
+NECluster::NECluster(IReactionNetwork& _network,
+        std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
+		Reactant(_network, registry) {
 	// Set the reactant name appropriately
 	name = "NECluster";
 
@@ -111,7 +105,7 @@ void NECluster::optimizeReactions() {
 		auto newReaction = std::make_shared<ProductionReaction>((*it).first,
 				(*it).second);
 		// Add it to the network
-		newReaction = network->addProductionReaction(newReaction);
+		newReaction = network.addProductionReaction(newReaction);
 		// Link it to the pair
 		(*it).reaction = newReaction;
 	}
@@ -121,7 +115,7 @@ void NECluster::optimizeReactions() {
 		auto newReaction = std::make_shared<ProductionReaction>((*it).combining,
 				this);
 		// Add it to the network
-		newReaction = network->addProductionReaction(newReaction);
+		newReaction = network.addProductionReaction(newReaction);
 		// Link it to the pair
 		(*it).reaction = newReaction;
 	}
@@ -131,7 +125,7 @@ void NECluster::optimizeReactions() {
 		auto newReaction = std::make_shared<DissociationReaction>((*it).first,
 				(*it).second, this);
 		// Add it to the network
-		newReaction = network->addDissociationReaction(newReaction);
+		newReaction = network.addDissociationReaction(newReaction);
 		// Link it to the pair
 		(*it).reaction = newReaction;
 	}
@@ -140,7 +134,7 @@ void NECluster::optimizeReactions() {
 		auto newReaction = std::make_shared<DissociationReaction>(this,
 				(*it).first, (*it).second);
 		// Add it to the network
-		newReaction = network->addDissociationReaction(newReaction);
+		newReaction = network.addDissociationReaction(newReaction);
 		// Link it to the pair
 		(*it).reaction = newReaction;
 	}
@@ -164,13 +158,13 @@ static std::vector<int> getFullConnectivityVector(std::set<int> connectivitySet,
 
 std::vector<int> NECluster::getReactionConnectivity() const {
 	// Create the full vector from the set and return it
-	return getFullConnectivityVector(reactionConnectivitySet, network->getDOF());
+	return getFullConnectivityVector(reactionConnectivitySet, network.getDOF());
 }
 
 std::vector<int> NECluster::getDissociationConnectivity() const {
 	// Create the full vector from the set and return it
 	return getFullConnectivityVector(dissociationConnectivitySet,
-			network->getDOF());
+			network.getDOF());
 }
 
 void NECluster::resetConnectivities() {
@@ -222,10 +216,7 @@ void NECluster::resetConnectivities() {
 	return;
 }
 
-void NECluster::setReactionNetwork(
-		const std::shared_ptr<IReactionNetwork> reactionNetwork) {
-	// Call the superclass's method to actually set the reference
-	Reactant::setReactionNetwork(reactionNetwork);
+void NECluster::updateFromNetwork() {
 
 	// Clear the flux-related arrays
 	reactingPairs.clear();
@@ -336,7 +327,7 @@ double NECluster::getCombinationFlux() const {
 
 std::vector<double> NECluster::getPartialDerivatives() const {
 	// Local Declarations
-	std::vector<double> partials(network->getDOF(), 0.0);
+	std::vector<double> partials(network.getDOF(), 0.0);
 
 	// Get the partial derivatives for each reaction type
 	getProductionPartialDerivatives(partials);
@@ -515,7 +506,7 @@ double NECluster::getLeftSideRate() const {
 }
 
 std::vector<int> NECluster::getConnectivity() const {
-	int connectivityLength = network->getDOF();
+	int connectivityLength = network.getDOF();
 	std::vector<int> connectivity = std::vector<int>(connectivityLength, 0);
 	auto reactionConnVector = getReactionConnectivity();
 	auto dissociationConnVector = getDissociationConnectivity();

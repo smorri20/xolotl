@@ -7,8 +7,9 @@
 using namespace xolotlCore;
 
 XeCluster::XeCluster(int nXe,
+        IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		NECluster(registry) {
+		NECluster(_network, registry) {
 	// Set the size
 	size = nXe;
 	// Update the composition map

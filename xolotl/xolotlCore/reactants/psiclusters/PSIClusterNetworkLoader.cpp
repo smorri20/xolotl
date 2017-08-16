@@ -16,6 +16,7 @@
 #include <PSIClusterReactionNetwork.h>
 #include <xolotlPerf.h>
 #include <MathUtils.h>
+#include <cassert>
 
 using namespace xolotlCore;
 
@@ -32,32 +33,35 @@ static inline double convertStrToDouble(const std::string& inString) {
 			strtod(inString.c_str(), NULL);
 }
 
-std::shared_ptr<PSICluster> PSIClusterNetworkLoader::createPSICluster(int numHe,
-		int numV, int numI) {
+std::shared_ptr<PSICluster> PSIClusterNetworkLoader::createPSICluster(
+        int numHe, int numV, int numI,
+        IReactionNetwork& network) {
+
 	// Local Declarations
-	std::shared_ptr<PSICluster> cluster;
+    PSICluster* cluster = nullptr;
 
 	// Determine the type of the cluster given the number of each species.
 	// Create a new cluster by that type and specify the names of the
 	// property keys.
 	if (numHe > 0 && numV > 0) {
 		// Create a new HeVCluster
-		cluster = std::make_shared<HeVCluster>(numHe, numV, handlerRegistry);
+		cluster = new HeVCluster(numHe, numV, network, handlerRegistry);
 	} else if (numHe > 0 && numI > 0) {
 		throw std::string("HeliumInterstitialCluster is not yet implemented.");
 		// FIXME! Add code to add it to the list
 	} else if (numHe > 0) {
 		// Create a new HeCluster
-		cluster = std::make_shared<HeCluster>(numHe, handlerRegistry);
+		cluster = new HeCluster(numHe, network, handlerRegistry);
 	} else if (numV > 0) {
 		// Create a new VCluster
-		cluster = std::make_shared<VCluster>(numV, handlerRegistry);
+		cluster = new VCluster(numV, network, handlerRegistry);
 	} else if (numI > 0) {
 		// Create a new ICluster
-		cluster = std::make_shared<InterstitialCluster>(numI, handlerRegistry);
+		cluster = new InterstitialCluster(numI, network, handlerRegistry);
 	}
+    assert(cluster != nullptr);
 
-	return cluster;
+    return std::shared_ptr<PSICluster>(cluster);
 }
 
 PSIClusterNetworkLoader::PSIClusterNetworkLoader(
@@ -119,7 +123,7 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::load() {
 				numV = std::stoi(loadedLine[1]);
 				numI = std::stoi(loadedLine[2]);
 				// Create the cluster
-				auto nextCluster = createPSICluster(numHe, numV, numI);
+				auto nextCluster = createPSICluster(numHe, numV, numI, *network);
 				// Load the energies
 				formationEnergy = convertStrToDouble(loadedLine[3]);
 				migrationEnergy = convertStrToDouble(loadedLine[4]);
@@ -139,9 +143,9 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::load() {
 			loadedLine = reader.loadLine();
 		}
 
-		// Set the network for all of the reactants. This MUST be done manually.
+		// Update reactants now that they are in network.
 		for (auto currCluster : reactants) {
-			currCluster->setReactionNetwork(network);
+			currCluster->updateFromNetwork();
 		}
 	}
 
@@ -199,7 +203,7 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 		// Set the composition
 		numI = i;
 		// Create the cluster
-		auto nextCluster = createPSICluster(numHe, numV, numI);
+		auto nextCluster = createPSICluster(numHe, numV, numI, *network);
 
 		// Set the other attributes
 		if (i <= iFormationEnergies.size())
@@ -229,7 +233,7 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 		// Set the composition
 		numHe = i;
 		// Create the cluster
-		auto nextCluster = createPSICluster(numHe, numV, numI);
+		auto nextCluster = createPSICluster(numHe, numV, numI, *network);
 
 		// Set the other attributes
 		nextCluster->setFormationEnergy(0.0);
@@ -259,7 +263,7 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 		numV = i;
 		std::shared_ptr<PSICluster> nextCluster = nullptr;
 		if (numV < 11) {
-			nextCluster = createPSICluster(numHe, numV, numI);
+			nextCluster = createPSICluster(numHe, numV, numI, *network);
 
 			// Set its other attributes
 			if (i <= vFormationEnergies.size())
@@ -286,7 +290,7 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 			numHe = j;
 			// Create the cluster only if it is not going to be grouped
 			if (numHe < vMin && numV < vMin) {
-				nextCluster = createPSICluster(numHe, numV, numI);
+				nextCluster = createPSICluster(numHe, numV, numI, *network);
 				// Set its attributes
 				nextCluster->setFormationEnergy(0.0);
 				nextCluster->setDiffusionFactor(0.0);
@@ -304,9 +308,9 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 		numHe = 0;
 	}
 
-	// Set the network for all of the reactants. This MUST be done manually.
+	// Update reactants now that they are in network.
 	for (auto currCluster : reactants) {
-		currCluster->setReactionNetwork(network);
+		currCluster->updateFromNetwork();
 	}
 
 	// Check if we want dummy reactions
@@ -497,7 +501,7 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 			if (count == heWidth * vWidth) {
 				// Everything is fine, the cluster is full
 				superCluster = std::make_shared<PSISuperCluster>(heSize, vSize,
-						count, heWidth, vWidth, handlerRegistry);
+						count, heWidth, vWidth, *network, handlerRegistry);
 
 				std::cout << "normal: " << superCluster->getName() << " "
 						<< heWidth << " " << vWidth << std::endl;
@@ -505,6 +509,7 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 				// The cluster is smaller than we thought because we are at the edge
 				superCluster = std::make_shared<PSISuperCluster>(heSize, vSize,
 						count, heHigh - heLow + 1, vHigh - vLow + 1,
+                        *network,
 						handlerRegistry);
 
 				std::cout << "irregular: " << superCluster->getName() << " "
@@ -513,7 +518,7 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 			}
 			// Add this cluster to the network and clusters
 			network->addSuper(superCluster);
-			superCluster->setReactionNetwork(network);
+			superCluster->updateFromNetwork();
 			// Set the HeV vector
 			superCluster->setHeVVector(tempVector);
 

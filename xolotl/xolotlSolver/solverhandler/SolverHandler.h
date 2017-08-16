@@ -130,10 +130,6 @@ protected:
 public:
 
 	~SolverHandler() {
-		// Break "pointer" cycles so that network, clusters, reactants
-		// will deallocate when the std::shared_ptrs owning them
-		// are destroyed.
-		network->askReactantsToReleaseNetwork();
 	}
 
 	/**

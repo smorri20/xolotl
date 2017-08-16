@@ -5,16 +5,9 @@
 
 using namespace xolotlCore;
 
-PSICluster::PSICluster() :
-		Reactant() {
-	// Set the reactant name appropriately
-	name = "PSICluster";
-
-	return;
-}
-
-PSICluster::PSICluster(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		Reactant(registry) {
+PSICluster::PSICluster(IReactionNetwork& _network,
+        std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
+		Reactant(_network, registry) {
 	// Set the reactant name appropriately
 	name = "PSICluster";
 
@@ -42,7 +35,7 @@ void PSICluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
 	auto it = reactingPairs.end() - 1;
 
 	// Add the reaction to the network
-	reaction = network->addProductionReaction(reaction);
+	reaction = network.addProductionReaction(reaction);
 	// Link it to the pair
 	(*it).reaction = reaction;
 
@@ -101,7 +94,7 @@ void PSICluster::createCombination(std::shared_ptr<ProductionReaction> reaction,
 		auto newReaction = std::make_shared<ProductionReaction>((*it).combining,
 				this);
 		// Add it to the network
-		newReaction = network->addProductionReaction(newReaction);
+		newReaction = network.addProductionReaction(newReaction);
 		// Link it to the pair
 		(*it).reaction = newReaction;
 	}
@@ -153,7 +146,7 @@ void PSICluster::createDissociation(
 		auto newReaction = std::make_shared<DissociationReaction>((*it).first,
 				(*it).second, this);
 		// Add it to the network
-		newReaction = network->addDissociationReaction(newReaction);
+		newReaction = network.addDissociationReaction(newReaction);
 		// Link it to the pair
 		(*it).reaction = newReaction;
 	}
@@ -182,7 +175,7 @@ void PSICluster::createEmission(std::shared_ptr<DissociationReaction> reaction,
 	auto it = emissionPairs.end() - 1;
 
 	// Add the reaction to the network
-	reaction = network->addDissociationReaction(reaction);
+	reaction = network.addDissociationReaction(reaction);
 	// Link it to the pair
 	(*it).reaction = reaction;
 
@@ -205,13 +198,13 @@ static std::vector<int> getFullConnectivityVector(std::set<int> connectivitySet,
 
 std::vector<int> PSICluster::getReactionConnectivity() const {
 	// Create the full vector from the set and return it
-	return getFullConnectivityVector(reactionConnectivitySet, network->getDOF());
+	return getFullConnectivityVector(reactionConnectivitySet, network.getDOF());
 }
 
 std::vector<int> PSICluster::getDissociationConnectivity() const {
 	// Create the full vector from the set and return it
 	return getFullConnectivityVector(dissociationConnectivitySet,
-			network->getDOF());
+			network.getDOF());
 }
 
 void PSICluster::resetConnectivities() {
@@ -269,10 +262,7 @@ void PSICluster::resetConnectivities() {
 	return;
 }
 
-void PSICluster::setReactionNetwork(
-		const std::shared_ptr<IReactionNetwork> reactionNetwork) {
-	// Call the superclass's method to actually set the reference
-	Reactant::setReactionNetwork(reactionNetwork);
+void PSICluster::updateFromNetwork() {
 
 	// Clear the flux-related arrays
 	reactingPairs.clear();
@@ -371,7 +361,7 @@ double PSICluster::getCombinationFlux() const {
 
 std::vector<double> PSICluster::getPartialDerivatives() const {
 	// Local Declarations
-	std::vector<double> partials(network->getDOF(), 0.0);
+	std::vector<double> partials(network.getDOF(), 0.0);
 
 	// Get the partial derivatives for each reaction type
 	getProductionPartialDerivatives(partials);
@@ -572,7 +562,7 @@ double PSICluster::getLeftSideRate() const {
 }
 
 std::vector<int> PSICluster::getConnectivity() const {
-	int connectivityLength = network->getDOF();
+	int connectivityLength = network.getDOF();
 	std::vector<int> connectivity = std::vector<int>(connectivityLength, 0);
 	auto reactionConnVector = getReactionConnectivity();
 	auto dissociationConnVector = getDissociationConnectivity();

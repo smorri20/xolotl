@@ -17,8 +17,9 @@ std::vector<double> vMomentumPartials;
 
 PSISuperCluster::PSISuperCluster(double numHe, double numV, int nTot,
 		int heWidth, int vWidth,
+        IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(registry), numHe(numHe), numV(numV), nTot(nTot), lowerHe(0), upperHe(
+		PSICluster(_network, registry), numHe(numHe), numV(numV), nTot(nTot), lowerHe(0), upperHe(
 				0), lowerV(0), upperV(0), l0(0.0), l1He(0.0), l1V(0.0), dispersionHe(
 				0.0), dispersionV(0.0), heMomentumFlux(0.0), vMomentumFlux(0.0) {
 	// Set the cluster size as the sum of
@@ -90,7 +91,7 @@ void PSISuperCluster::createProduction(
 	if (it == effReactingList.end()) {
 		// It was not already in so add it
 		// Add the production reaction to the network
-		reaction = network->addProductionReaction(reaction);
+		reaction = network.addProductionReaction(reaction);
 		// Create a new SuperClusterProductionPair
 		SuperClusterProductionPair superPair((PSICluster *) reaction->first,
 				(PSICluster *) reaction->second, reaction.get());
@@ -169,7 +170,7 @@ void PSISuperCluster::createCombination(
 		auto newReaction = std::make_shared<ProductionReaction>(this,
 				secondCluster);
 		// Add it to the network
-		newReaction = network->addProductionReaction(newReaction);
+		newReaction = network.addProductionReaction(newReaction);
 		// Create a new SuperClusterProductionPair
 		SuperClusterProductionPair superPair((PSICluster *) secondCluster,
 				nullptr, newReaction.get());
@@ -222,7 +223,7 @@ void PSISuperCluster::createDissociation(
 		auto newReaction = std::make_shared<DissociationReaction>(
 				reaction->dissociating, this, emittedCluster);
 		// Add it to the network
-		newReaction = network->addDissociationReaction(newReaction);
+		newReaction = network.addDissociationReaction(newReaction);
 		// Create a new SuperClusterDissociationPair
 		SuperClusterDissociationPair superPair(
 				(PSICluster *) reaction->dissociating,
@@ -270,7 +271,7 @@ void PSISuperCluster::createEmission(
 	if (it == effEmissionList.end()) {
 		// It was not already in so add it
 		// Add the reaction to the network
-		reaction = network->addDissociationReaction(reaction);
+		reaction = network.addDissociationReaction(reaction);
 		// Create a new SuperClusterDissociationPair
 		SuperClusterDissociationPair superPair((PSICluster *) reaction->first,
 				(PSICluster *) reaction->second, reaction.get());
@@ -298,10 +299,7 @@ void PSISuperCluster::createEmission(
 	return;
 }
 
-void PSISuperCluster::setReactionNetwork(
-		const std::shared_ptr<IReactionNetwork> reactionNetwork) {
-	// Call the superclass's method to actually set the reference
-	Reactant::setReactionNetwork(reactionNetwork);
+void PSISuperCluster::updateFromNetwork() {
 
 	// Clear the flux-related arrays
 	reactingPairs.clear();
@@ -451,7 +449,7 @@ void PSISuperCluster::resetConnectivities() {
 	// this cluster is not connected to them
 
 	// Initialize the partial vector for the momentum
-	int dof = network->getDOF();
+	int dof = network.getDOF();
 	heMomentumPartials.resize(dof, 0.0);
 	vMomentumPartials.resize(dof, 0.0);
 

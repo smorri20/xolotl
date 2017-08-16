@@ -2,8 +2,10 @@
 
 using namespace xolotlCore;
 
-TCluster::TCluster(int nT, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		HCluster(nT, registry) {
+TCluster::TCluster(int nT,
+        IReactionNetwork& _network,
+        std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
+		HCluster(nT, _network, registry) {
 	// Set the reactant name appropriately
 	name = "Tritium";
 }

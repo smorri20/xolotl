@@ -9,7 +9,10 @@
 
 using namespace xolotlCore;
 
-void NEClusterReactionNetwork::setDefaultPropsAndNames() {
+
+NEClusterReactionNetwork::NEClusterReactionNetwork(
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
+		ReactionNetwork(registry) {
 
 	// Initialize default properties
 	dissociationsEnabled = true;
@@ -25,8 +28,6 @@ void NEClusterReactionNetwork::setDefaultPropsAndNames() {
 	maxXeVClusterSize = 0;
 	maxXeIClusterSize = 0;
 
-	// Initialize the current and last size to 0
-	networkSize = 0;
 	// Set the reactant names
 	names.push_back(xeType);
 	names.push_back(vType);
@@ -44,56 +45,6 @@ void NEClusterReactionNetwork::setDefaultPropsAndNames() {
         clusterTypeMap.insert( { currName, ReactionNetwork::ReactantVector() } );
     }
 
-	return;
-}
-
-NEClusterReactionNetwork::NEClusterReactionNetwork() :
-		ReactionNetwork() {
-	// Setup the properties map and the name lists
-	setDefaultPropsAndNames();
-
-	return;
-}
-
-NEClusterReactionNetwork::NEClusterReactionNetwork(
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		ReactionNetwork(registry) {
-	// Setup the properties map and the name lists
-	setDefaultPropsAndNames();
-
-	return;
-}
-
-NEClusterReactionNetwork::NEClusterReactionNetwork(
-		const NEClusterReactionNetwork &other) :
-		ReactionNetwork(other) {
-	// The size and ids do not need to be copied. They will be fixed when the
-	// reactants are added.
-
-	// Reset the properties table so that it can be properly updated when the
-	// network is filled.
-	setDefaultPropsAndNames();
-	// Get all of the reactants from the other network and add them to this one
-	// Load the single-species clusters. Calling getAll() will not work because
-	// it is not const.
-	std::vector<std::shared_ptr<IReactant> > reactants;
-	for (auto it = other.singleSpeciesMap.begin();
-			it != other.singleSpeciesMap.end(); ++it) {
-		reactants.push_back(it->second);
-	}
-	// Load the mixed-species clusters
-	for (auto it = other.mixedSpeciesMap.begin();
-			it != other.mixedSpeciesMap.end(); ++it) {
-		reactants.push_back(it->second);
-	}
-	// Load the super-species clusters
-	for (auto it = other.superSpeciesMap.begin();
-			it != other.superSpeciesMap.end(); ++it) {
-		reactants.push_back(it->second);
-	}
-	for (unsigned int i = 0; i < reactants.size(); i++) {
-		add(reactants[i]->clone());
-	}
 
 	return;
 }

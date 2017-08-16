@@ -157,18 +157,15 @@ private:
 	 */
 	double momentumFlux;
 
-	/**
-	 * The default constructor is private because NEClusters must always be
-	 * initialized with a size.
-	 */
-	NESuperCluster() :
-			NECluster() {
-	}
-
 public:
 
 	//! The vector of Xe clusters it will replace
 	std::vector<NECluster *> xeVector;
+
+    /**
+     * Default constructor, deleted because we require info to construct.
+     */
+    NESuperCluster() = delete;
 
 	/**
 	 * The constructor. All NESuperClusters must be initialized with its
@@ -179,10 +176,12 @@ public:
 	 * @param width The width of this super cluster in the xenon direction
 	 * @param radius The mean radius
 	 * @param energy The formation energy
+     * @param _network The network this cluster will belong to.
 	 * @param registry The performance handler registry
 	 */
 	NESuperCluster(double numXe, int nTot, int width, double radius,
 			double energy,
+            IReactionNetwork& _network,
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
@@ -197,21 +196,9 @@ public:
 	}
 
 	/**
-	 * This operation returns a Reactant that is created using the copy
-	 * constructor of NESuperCluster.
-	 *
-	 * @return A copy of this reactant
+     * Update reactant using other reactants in its network.
 	 */
-	virtual std::shared_ptr<IReactant> clone();
-
-	/**
-	 * Sets the collection of other clusters that make up
-	 * the reaction network in which this cluster exists.
-	 *
-	 * @param network The reaction network of which this cluster is a part
-	 */
-	void setReactionNetwork(
-			const std::shared_ptr<IReactionNetwork> reactionNetwork);
+	void updateFromNetwork();
 
 	/**
 	 * Group the same reactions together and add the reactions to the network lists.

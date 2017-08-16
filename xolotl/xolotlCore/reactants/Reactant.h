@@ -20,7 +20,7 @@ namespace xolotlCore {
  *
  * Reactants inherently know the other reactants with which they interact. They
  * declare their interactions with other reactants in the network after it is
- * set (setReactionNetwork) via the getConnectivity() operation. "Connectivity"
+ * set (updateFromNetwork) via the getConnectivity() operation. "Connectivity"
  * indicates whether two Reacants interact, via any mechanism, in an abstract
  * sense (as if they were nodes connected by an edge on a network graph).
  *
@@ -85,7 +85,7 @@ protected:
 	/**
 	 * The reaction network that includes this reactant.
 	 */
-	std::shared_ptr<IReactionNetwork> network;
+    IReactionNetwork& network;
 
 	/**
 	 * The map that contains the composition of this cluster.
@@ -159,19 +159,20 @@ protected:
 	 */
 	void recomputeDiffusionCoefficient(double temp);
 
-	/**
-	 * The constructor.
-	 */
-	Reactant();
-
 public:
+
+    /**
+     * Default constructor, deleted because we require info to construct.
+     */
+    Reactant() = delete;
 
 	/**
 	 * The constructor.
 	 *
 	 * @param registry The performance handler registry to use
 	 */
-	Reactant(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+	Reactant(IReactionNetwork& _network,
+                std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
 	 * The copy constructor. All reactants MUST be deep copied.
@@ -184,13 +185,6 @@ public:
 	 * The destructor
 	 */
 	virtual ~Reactant() {
-	}
-
-	/**
-	 * Returns a reactant created using the copy constructor
-	 */
-	virtual std::shared_ptr<IReactant> clone() {
-		return std::shared_ptr<IReactant>(new Reactant(*this));
 	}
 
 	/**
@@ -293,27 +287,17 @@ public:
 		return 0.0;
 	}
 
+#if READY
+#else
 	/**
-	 * This operation sets the collection of other reactants that make up
-	 * the reaction network in which this reactant exists.
-	 *
-	 * @param network The reaction network of which this reactant is a part
+     * Update reactant using other reactants in its network.
 	 */
-	virtual void setReactionNetwork(
-			std::shared_ptr<IReactionNetwork> reactionNetwork) {
-		network = reactionNetwork;
-	}
-
-	/**
-	 * Release the reaction network object.
-	 *
-	 * This should only be done when the reaction network is no longer needed
-	 * by the program, and is done to break dependence cycles that would
-	 * otherwise keep the network and reactant objects from being destroyed.
-	 */
-	void releaseReactionNetwork() {
-		network.reset();
-	}
+    virtual void updateFromNetwork() {
+        // Nothing to do - derived classes do any meaningful work.
+        // Required to be defined because we create explicit Reactant objects,
+        // e.g. as dummy objects.
+    }
+#endif // READY
 
 	/**
 	 * This operation signifies that the reactant with reactant Id should be
@@ -371,7 +355,7 @@ public:
 	 * ReactionNetwork::getAll() operation.
 	 */
 	virtual std::vector<double> getPartialDerivatives() const {
-		return std::vector<double>(network->getDOF(), 0.0);
+		return std::vector<double>(network.getDOF(), 0.0);
 	}
 
 	/**
