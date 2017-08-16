@@ -82,13 +82,13 @@ void TrapMutationHandler::initialize(IReactionNetwork *network,
 		for (int j = 0; j < bubbles.size(); j++) {
 			// Get the bubble and its composition
 			auto bubble =  (PSICluster *) bubbles[j];
-			auto comp = bubble->getComposition();
+			auto& comp = bubble->getComposition();
 
 			// We are only interested in bubbles with one, two, or three vacancies
-			if (comp[vType] > 3) continue;
+			if (comp.at(vType) > 3) continue;
 
 			// Connect with He if the number of helium in the bubble is the same
-			if (comp[heType] == heSize) {
+			if (comp.at(heType) == heSize) {
 				bubble->setDissociationConnectivity(cluster->getId());
 			}
 		}
@@ -150,9 +150,9 @@ void TrapMutationHandler::initializeIndex1D(int surfacePos,
 				for (int m = 0; m < bubbles.size(); m++) {
 					// Get the bubble and its composition
 					auto bubble =  (PSICluster *) bubbles[m];
-					auto comp = bubble->getComposition();
+					auto& comp = bubble->getComposition();
 					// Get the correct bubble
-					if (comp[heType] == l+1 && comp[vType] == sizeVec[l]) {
+					if (comp.at(heType) == l+1 && comp.at(vType) == sizeVec[l]) {
 						// Add this bubble to the indices
 						indices.push_back(m);
 					}
@@ -221,9 +221,9 @@ void TrapMutationHandler::initializeIndex2D(std::vector<int> surfacePos,
 					for (int m = 0; m < bubbles.size(); m++) {
 						// Get the bubble and its composition
 						auto bubble =  (PSICluster *) bubbles[m];
-						auto comp = bubble->getComposition();
+						auto& comp = bubble->getComposition();
 						// Get the correct bubble
-						if (comp[heType] == l+1 && comp[vType] == sizeVec[l]) {
+						if (comp.at(heType) == l+1 && comp.at(vType) == sizeVec[l]) {
 							// Add this bubble to the indices
 							indices.push_back(m);
 						}
@@ -248,9 +248,9 @@ void TrapMutationHandler::initializeIndex2D(std::vector<int> surfacePos,
 						for (int m = 0; m < bubbles.size(); m++) {
 							// Get the bubble and its composition
 							auto bubble =  (PSICluster *) bubbles[m];
-							auto comp = bubble->getComposition();
+							auto& comp = bubble->getComposition();
 							// Get the correct bubble
-							if (comp[heType] == l+1 && comp[vType] == sigma3SizeVec[l]) {
+							if (comp.at(heType) == l+1 && comp.at(vType) == sigma3SizeVec[l]) {
 								// Check if this bubble is already in the indices
 								if (std::find(indices.begin(), indices.end(), m) == indices.end()) {
 									// Add this bubble to the indices
@@ -329,9 +329,9 @@ void TrapMutationHandler::initializeIndex3D(std::vector<std::vector<int> > surfa
 						for (int m = 0; m < bubbles.size(); m++) {
 							// Get the bubble and its composition
 							auto bubble =  (PSICluster *) bubbles[m];
-							auto comp = bubble->getComposition();
+							auto& comp = bubble->getComposition();
 							// Get the correct bubble
-							if (comp[heType] == l+1 && comp[vType] == sizeVec[l]) {
+							if (comp.at(heType) == l+1 && comp.at(vType) == sizeVec[l]) {
 								// Add this bubble to the indices
 								indices.push_back(m);
 							}
@@ -357,9 +357,9 @@ void TrapMutationHandler::initializeIndex3D(std::vector<std::vector<int> > surfa
 							for (int m = 0; m < bubbles.size(); m++) {
 								// Get the bubble and its composition
 								auto bubble =  (PSICluster *) bubbles[m];
-								auto comp = bubble->getComposition();
+								auto& comp = bubble->getComposition();
 								// Get the correct bubble
-								if (comp[heType] == l+1 && comp[vType] == sigma3SizeVec[l]) {
+								if (comp.at(heType) == l+1 && comp.at(vType) == sigma3SizeVec[l]) {
 									// Check if this bubble is already in the indices
 									if (std::find(indices.begin(), indices.end(), m) == indices.end()) {
 										// Add this bubble to the indices
@@ -432,20 +432,20 @@ void TrapMutationHandler::computeTrapMutation(IReactionNetwork *network,
 		bubbleIndex = bubble->getId() - 1;
 
 		// Get the helium cluster with the same number of He and its ID
-		auto comp = bubble->getComposition();
-		heCluster = (PSICluster *) network->get(heType, comp[heType]);
+		auto& comp = bubble->getComposition();
+		heCluster = (PSICluster *) network->get(heType, comp.at(heType));
 		heIndex = heCluster->getId() - 1;
 
 		// Get the interstitial cluster with the same number of I as the number
 		// of vacancies in the bubble and its ID
-		iCluster = (PSICluster *) network->get(iType, comp[vType]);
+		iCluster = (PSICluster *) network->get(iType, comp.at(vType));
 		iIndex = iCluster->getId() - 1;
 
 		// Get the initial concentration of helium
 		double oldConc = concOffset[heIndex];
 
 		// Check the desorption
-		if (comp[heType] == desorp.size) {
+		if (comp.at(heType) == desorp.size) {
 			// Get the left side rate (combination + emission)
 			double totalRate = heCluster->getLeftSideRate();
 			// Define the trap-mutation rate taking into account the desorption
@@ -485,17 +485,17 @@ int TrapMutationHandler::computePartialsForTrapMutation(
 		bubbleIndex = bubble->getId() - 1;
 
 		// Get the helium cluster with the same number of He and its ID
-		auto comp = bubble->getComposition();
-		heCluster = (PSICluster *) network->get(heType, comp[heType]);
+		auto& comp = bubble->getComposition();
+		heCluster = (PSICluster *) network->get(heType, comp.at(heType));
 		heIndex = heCluster->getId() - 1;
 
 		// Get the interstitial cluster with the same number of I as the number
 		// of vacancies in the bubble and its ID
-		iCluster = (PSICluster *) network->get(iType, comp[vType]);
+		iCluster = (PSICluster *) network->get(iType, comp.at(vType));
 		iIndex = iCluster->getId() - 1;
 
 		// Check the desorption
-		if (comp[heType] == desorp.size) {
+		if (comp.at(heType) == desorp.size) {
 			// Get the left side rate (combination + emission)
 			double totalRate = heCluster->getLeftSideRate();
 			// Define the trap-mutation rate taking into account the desorption

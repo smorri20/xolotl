@@ -235,8 +235,8 @@ void NEClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 	// Only add a complete reactant
 	if (reactant != NULL) {
 		// Get the composition
-		auto composition = reactant->getComposition();
-		std::string compStr = reactant->getCompositionString();
+		auto& composition = reactant->getComposition();
+		const std::string& compStr = reactant->getCompositionString();
 
 		// Get the species sizes
 		numXe = composition.at(xeType);
@@ -311,7 +311,7 @@ void NEClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 	// Only add a complete reactant
 	if (reactant != NULL) {
 		// Get the composition
-		auto composition = reactant->getComposition();
+		auto& composition = reactant->getComposition();
 		// Get the species sizes
 		numXe = composition.at(xeType);
 		numV = composition.at(vType);
@@ -322,7 +322,7 @@ void NEClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 		isMixed = ((numXe > 0) + (numV > 0) + (numI > 0)) > 1;
 		// Only add the element if we don't already have it
 		// Add the compound or regular reactant.
-		std::string compStr = reactant->getCompositionString();
+		const std::string& compStr = reactant->getCompositionString();
 		if (!isMixed && superSpeciesMap.count(compStr) == 0) {
 			// Put the compound in its map
 			superSpeciesMap[compStr] = reactant;

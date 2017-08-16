@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(checkIO) {
 		auto line = networkVector.at(id);
 
 		// Check the composition
-		auto composition = reactant->getComposition();
+		auto& composition = reactant->getComposition();
 		BOOST_REQUIRE_EQUAL((int) line[0], composition["He"]);
 		BOOST_REQUIRE_EQUAL((int) line[1], composition["V"]);
 		BOOST_REQUIRE_EQUAL((int) line[2], composition["I"]);

@@ -822,8 +822,8 @@ PetscErrorCode monitorBursting2D(TS ts, PetscInt, PetscReal time, Vec solution,
 				for (int i = 0; i < clusters.size(); i++) {
 					auto cluster = clusters[i];
 					// Get the V cluster of the same size
-					auto comp = cluster->getComposition();
-					auto vCluster = network->get(vType, comp[vType]);
+					auto& comp = cluster->getComposition();
+					auto vCluster = network->get(vType, comp.at(vType));
 					int vId = vCluster->getId() - 1;
 					int id = cluster->getId() - 1;
 					gridPointSolution[vId] = gridPointSolution[id];

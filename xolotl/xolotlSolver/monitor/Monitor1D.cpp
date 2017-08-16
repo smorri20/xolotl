@@ -1994,8 +1994,8 @@ PetscErrorCode monitorBursting1D(TS ts, PetscInt, PetscReal time, Vec solution,
 				for (int i = 0; i < clusters.size(); i++) {
 					auto cluster = clusters[i];
 					// Get the V cluster of the same size
-					auto comp = cluster->getComposition();
-					auto vCluster = network->get(vType, comp[vType]);
+					auto& comp = cluster->getComposition();
+					auto vCluster = network->get(vType, comp.at(vType));
 					int vId = vCluster->getId() - 1;
 					int id = cluster->getId() - 1;
 					gridPointSolution[vId] = gridPointSolution[id];
@@ -2059,7 +2059,7 @@ PetscErrorCode monitorBursting1D(TS ts, PetscInt, PetscReal time, Vec solution,
 				// Loop on them to reset their concentration at this grid point
 				for (int i = 0; i < clusters.size(); i++) {
 					auto cluster = clusters[i];
-					auto comp = cluster->getComposition();
+					auto& comp = cluster->getComposition();
 					int id = cluster->getId() - 1;
 					gridPointSolution[id] = 0.0;
 				}
@@ -2472,8 +2472,8 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 			// Add the Id to the vector
 			indices1D.push_back(id);
 			// Add the number of heliums of this cluster to the weight
-			auto comp = cluster->getComposition();
-			weights1D.push_back(comp[heType]);
+			auto& comp = cluster->getComposition();
+			weights1D.push_back(comp.at(heType));
 			radii1D.push_back(cluster->getReactionRadius());
 		}
 	}
