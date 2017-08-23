@@ -24,6 +24,12 @@ class ReactionNetwork: public IReactionNetwork {
 
 protected:
 
+    /**
+     * Nice name for map of reactants, keyed by their composition.
+     */
+    using ReactantMap = std::map<IReactant::Composition, std::shared_ptr<IReactant> >;
+
+
 	/**
 	 * A functor useful for identifying a set of reactants by their
 	 * composition from a container, e.g., when removing a collection
@@ -185,6 +191,22 @@ protected:
 	 */
 	std::map<Species, ReactantVector> clusterTypeMap;
 
+
+	/**
+	 * The map of single-species clusters, indexed by their composition.
+	 */
+    ReactantMap singleSpeciesMap;
+
+	/**
+	 * The map of mixed or compound species clusters, indexed by 
+     * their composition.
+	 */
+    ReactantMap mixedSpeciesMap;
+
+	/**
+	 * The map of super species clusters, indexed by their composition.
+	 */
+    ReactantMap superSpeciesMap;
 
 	/**
 	 * Calculate the reaction constant dependent on the

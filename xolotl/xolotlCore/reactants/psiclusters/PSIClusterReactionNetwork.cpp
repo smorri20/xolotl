@@ -804,10 +804,10 @@ IReactant * PSIClusterReactionNetwork::get(Species type,
 	if ((type == Species::He || type == Species::V || type == Species::I) && size >= 1) {
 		composition[type] = size;
 		//std::string encodedName = PSICluster::encodeCompositionAsName(composition);
-		// Make sure the reactant is in the map
-		std::string compStr = Reactant::toCanonicalString(type, composition);
-		if (singleSpeciesMap.count(compStr)) {
-			retReactant = singleSpeciesMap.at(compStr);
+		// Check if the reactant is in the map
+        auto iter = singleSpeciesMap.find(composition);
+        if (iter != singleSpeciesMap.end()) {
+            retReactant = iter->second;
 		}
 	}
 
@@ -834,10 +834,10 @@ IReactant * PSIClusterReactionNetwork::getCompound(Species type,
 		composition[Species::V] = sizes[1];
 		composition[Species::I] = sizes[2];
 
-		// Make sure the reactant is in the map
-		std::string compStr = Reactant::toCanonicalString(type, composition);
-		if (mixedSpeciesMap.count(compStr)) {
-			retReactant = mixedSpeciesMap.at(compStr);
+		// Check if the reactant is in the map
+        auto iter = mixedSpeciesMap.find(composition);
+        if (iter != mixedSpeciesMap.end()) {
+			retReactant = iter->second;
 		}
 	}
 
@@ -863,10 +863,11 @@ IReactant * PSIClusterReactionNetwork::getSuper(Species type,
 		composition[Species::He] = sizes[0];
 		composition[Species::V] = sizes[1];
 		composition[Species::I] = sizes[2];
-		// Make sure the reactant is in the map
-		std::string compStr = Reactant::toCanonicalString(type, composition);
-		if (superSpeciesMap.count(compStr)) {
-			retReactant = superSpeciesMap.at(compStr);
+
+		// Check if the reactant is in the map
+        auto iter = superSpeciesMap.find(composition);
+        if (iter != superSpeciesMap.end()) {
+			retReactant = iter->second;
 		}
 	}
 
@@ -885,7 +886,7 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 	if (reactant != NULL) {
 		// Get the composition
 		auto& composition = reactant->getComposition();
-		const std::string& compStr = reactant->getCompositionString();
+
 		// Get the species sizes
 		numHe = composition.at(Species::He);
 		numV = composition.at(Species::V);
@@ -897,9 +898,10 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 		isMixed = ((numHe > 0) + (numV > 0) + (numI > 0)) > 1;
 		// Only add the element if we don't already have it
 		// Add the compound or regular reactant.
-		if (isMixed && mixedSpeciesMap.count(compStr) == 0) {
+		if (isMixed && mixedSpeciesMap.count(composition) == 0) {
 			// Put the compound in its map
-			mixedSpeciesMap[compStr] = reactant;
+            mixedSpeciesMap.emplace(composition, reactant);
+
 			// Figure out whether we have HeV or HeI and set the keys
 			if (numV > 0) {
 				numClusters = &numHeVClusters;
@@ -908,9 +910,9 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 				numClusters = &numHeIClusters;
 				maxClusterSize = &maxHeIClusterSize;
 			}
-		} else if (!isMixed && singleSpeciesMap.count(compStr) == 0) {
+		} else if (!isMixed && singleSpeciesMap.count(composition) == 0) {
 			/// Put the reactant in its map
-			singleSpeciesMap[compStr] = reactant;
+            singleSpeciesMap.emplace(composition, reactant);
 
 			// Figure out whether we have He, V or I and set the keys
 			if (numHe > 0) {
@@ -961,7 +963,7 @@ void PSIClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 	if (reactant != NULL) {
 		// Get the composition
 		auto& composition = reactant->getComposition();
-		const std::string& compStr = reactant->getCompositionString();
+
 		// Get the species sizes
 		numHe = composition.at(Species::He);
 		numV = composition.at(Species::V);
@@ -972,9 +974,10 @@ void PSIClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 		isMixed = ((numHe > 0) + (numV > 0) + (numI > 0)) > 1;
 		// Only add the element if we don't already have it
 		// Add the compound or regular reactant.
-		if (isMixed && superSpeciesMap.count(compStr) == 0) {
+		if (isMixed && superSpeciesMap.count(composition) == 0) {
 			// Put the compound in its map
-			superSpeciesMap[compStr] = reactant;
+            superSpeciesMap.emplace(composition, reactant);
+
 			// Set the key
 			numClusters = &numSuperClusters;
 		} else {
@@ -1039,10 +1042,12 @@ void PSIClusterReactionNetwork::removeReactants(
 	// container to move the doomed elements to the end of the container,
 	// but the std::map doesn't support reordering.
 	for (auto reactant : doomedReactants) {
-		if (reactant->isMixed())
-			mixedSpeciesMap.erase(reactant->getCompositionString());
-		else
-			singleSpeciesMap.erase(reactant->getCompositionString());
+		if (reactant->isMixed()) {
+			mixedSpeciesMap.erase(reactant->getComposition());
+        }
+		else {
+			singleSpeciesMap.erase(reactant->getComposition());
+        }
 	}
 
 	return;

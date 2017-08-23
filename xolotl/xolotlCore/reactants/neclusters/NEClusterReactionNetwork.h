@@ -32,27 +32,6 @@ class NEClusterReactionNetwork: public ReactionNetwork {
 private:
 
 	/**
-	 * The map of single-species clusters, indexed by a string representation
-	 * of a map that contains the name of the reactant and its size.
-	 */
-	std::unordered_map<std::string, std::shared_ptr<IReactant> > singleSpeciesMap;
-
-	/**
-	 * The map of mixed or compound species clusters, indexed by a 
-	 * string representation of a map that contains the name of the
-	 * constituents of the compound reactant and their sizes.
-	 */
-	std::unordered_map<std::string, std::shared_ptr<IReactant> > mixedSpeciesMap;
-
-	/**
-	 * The map of super species clusters, indexed by a string representation
-	 * of a map that contains the name of the constituents of the
-	 * compound reactant and their sizes.
-	 */
-	std::unordered_map<std::string, std::shared_ptr<IReactant> > superSpeciesMap;
-
-
-	/**
 	 * Number of Xe clusters in our network.
 	 */
 	int numXeClusters;
