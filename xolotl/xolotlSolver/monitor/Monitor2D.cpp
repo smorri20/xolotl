@@ -534,7 +534,7 @@ PetscErrorCode monitorMovingSurface2D(TS ts, PetscInt timestep, PetscReal time,
 	auto network = solverHandler->getNetwork();
 
 	// Get all the interstitial clusters
-	auto interstitials = network->getAll(Species::I);
+	auto const& interstitials = network->getAll(Species::I);
 	// Get the single vacancy ID
 	auto singleVacancyCluster = network->get(xolotlCore::Species::V, 1);
 	int vacancyIndex = -1;
@@ -734,7 +734,7 @@ PetscErrorCode monitorBursting2D(TS ts, PetscInt, PetscReal time, Vec solution,
 	// Get the network
 	auto network = solverHandler->getNetwork();
 	// Get all the super clusters
-	auto superClusters = network->getAll(Species::PSISuper);
+	auto const& superClusters = network->getAll(Species::PSISuper);
 
 	// Get the physical grid
 	auto grid = solverHandler->getXGrid();
@@ -807,7 +807,7 @@ PetscErrorCode monitorBursting2D(TS ts, PetscInt, PetscReal time, Vec solution,
 						<< prob << " " << test << std::endl;
 
 				// Get all the helium clusters
-				auto clusters = network->getAll(Species::He);
+				auto const& clusters = network->getAll(Species::He);
 				// Loop on them to reset their concentration at this grid point
 				for (int i = 0; i < clusters.size(); i++) {
 					auto cluster = clusters[i];
@@ -816,11 +816,11 @@ PetscErrorCode monitorBursting2D(TS ts, PetscInt, PetscReal time, Vec solution,
 				}
 
 				// Get all the HeV clusters
-				clusters = network->getAll(Species::HeV);
+				auto const& heVClusters = network->getAll(Species::HeV);
 				// Loop on them to transfer their concentration to the V cluster of the
 				// same size at this grid point
-				for (int i = 0; i < clusters.size(); i++) {
-					auto cluster = clusters[i];
+				for (int i = 0; i < heVClusters.size(); i++) {
+					auto cluster = heVClusters[i];
 					// Get the V cluster of the same size
 					auto& comp = cluster->getComposition();
 					auto vCluster = network->get(Species::V, comp.at(Species::V));
@@ -833,7 +833,7 @@ PetscErrorCode monitorBursting2D(TS ts, PetscInt, PetscReal time, Vec solution,
 				// Loop on the super clusters to transfer their concentration to the V cluster of the
 				// same size at this grid point
 				for (int i = 0; i < superClusters.size(); i++) {
-					auto cluster = (PSISuperCluster *) superClusters[i];
+					auto cluster = std::static_pointer_cast<PSISuperCluster>(superClusters[i]);
 					// Get the V cluster of the same size
 					double numV = cluster->getNumV();
 					int truncV = (int) numV;

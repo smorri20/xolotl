@@ -22,12 +22,6 @@ namespace xolotlCore {
  */
 class ReactionNetwork: public IReactionNetwork {
 
-public:
-    /**
-     * Nice name for vector of reactants that are not owned by the container.
-     */
-    using ReactantVector = std::vector<std::shared_ptr<IReactant> >;
-
 protected:
 
 	/**
@@ -48,7 +42,7 @@ protected:
 		 * Build a ReactantMatcher.
 		 * @param reactants The collection of reactants we are to recognize.
 		 */
-		ReactantMatcher(const std::vector<IReactant*>& reactants) {
+		ReactantMatcher(const IReactionNetwork::ReactantVector& reactants) {
 			for (auto reactant : reactants) {
 				compStrings.insert(reactant->getCompositionString());
 			}
@@ -292,7 +286,10 @@ public:
 	 * @return The list of all of the reactants in the network or null if the
 	 * type is invalid
 	 */
-	virtual std::vector<IReactant *> getAll(Species type) const override;
+    virtual const IReactionNetwork::ReactantVector& getAll(Species type) const override {
+
+        return clusterTypeMap.at(type);
+    }
 
 	/**
 	 * This operation adds a reactant or a compound reactant to the network.
@@ -314,15 +311,6 @@ public:
 	 * @param reactant The reactant that should be added to the network
 	 */
 	virtual void addSuper(std::shared_ptr<IReactant> reactant) {
-		return;
-	}
-
-	/**
-	 * This operation removes a group of reactants from the network.
-	 *
-	 * @param reactants The reactants that should be removed.
-	 */
-	virtual void removeReactants(const std::vector<IReactant*>& reactants) {
 		return;
 	}
 

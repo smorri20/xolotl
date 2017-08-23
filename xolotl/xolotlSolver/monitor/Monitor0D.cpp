@@ -177,7 +177,7 @@ PetscErrorCode monitorScatter0D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network and its size
 	auto network = solverHandler->getNetwork();
 	int networkSize = network->size();
-	auto superClusters = network->getAll(Species::NESuper);
+	auto const& superClusters = network->getAll(Species::NESuper);
 
 	// Create a Point vector to store the data to give to the data provider
 	// for the visualization
@@ -201,7 +201,7 @@ PetscErrorCode monitorScatter0D(TS ts, PetscInt timestep, PetscReal time,
 	int nXe = networkSize - superClusters.size() + 1;
 	for (int i = 0; i < superClusters.size(); i++) {
 		// Get the cluster
-		auto cluster = (NESuperCluster *) superClusters[i];
+		auto cluster = std::static_pointer_cast<NESuperCluster>(superClusters[i]);
 		// Get the width
 		int width = cluster->getSectionWidth();
 		// Loop on the width
@@ -288,7 +288,7 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network
 	auto network = solverHandler->getNetwork();
 	// Get all the super clusters
-	auto superClusters = network->getAll(Species::PSISuper);
+	auto const& superClusters = network->getAll(Species::PSISuper);
 
 	// Get the physical grid
 	auto grid = solverHandler->getXGrid();
@@ -344,11 +344,9 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 
 				else {
 					// Look for superClusters !
-					PSISuperCluster * superCluster = nullptr;
-					// Loop on the super clusters
 					for (int l = 0; l < superClusters.size(); l++) {
 						// Get the super cluster
-						superCluster = (PSISuperCluster *) superClusters[l];
+						auto superCluster = std::static_pointer_cast<PSISuperCluster>(superClusters[l]);
 						// Get its boundaries
 						auto boundaries = superCluster->getBoundaries();
 						// Is it the right one?
@@ -442,7 +440,7 @@ PetscErrorCode monitorMeanSize0D(TS ts, PetscInt timestep, PetscReal time,
 	int dof = network->getDOF();
 
 	// Get all the super clusters
-	auto superClusters = network->getAll(Species::PSISuper);
+	auto const& superClusters = network->getAll(Species::PSISuper);
 
 	// Create the output file
 	std::ofstream outputFile;
@@ -475,7 +473,7 @@ PetscErrorCode monitorMeanSize0D(TS ts, PetscInt timestep, PetscReal time,
 	// Loop on the super clusters
 	for (int l = 0; l < superClusters.size(); l++) {
 		// Get the super cluster
-		auto superCluster = (PSISuperCluster *) superClusters[l];
+		auto superCluster = std::static_pointer_cast<PSISuperCluster>(superClusters[l]);
 		// Get its boundaries
 		auto boundaries = superCluster->getBoundaries();
 		// Get its diameter
@@ -684,7 +682,7 @@ PetscErrorCode setupPetsc0DMonitor(TS ts) {
 	// retention or the cumulative value and others
 	if (flagMeanSize) {
 		// Get all the vacancy clusters
-		auto vClusters = network->getAll(Species::V);
+		auto const& vClusters = network->getAll(Species::V);
 
 		// Loop on the helium clusters
 		for (unsigned int i = 0; i < vClusters.size(); i++) {

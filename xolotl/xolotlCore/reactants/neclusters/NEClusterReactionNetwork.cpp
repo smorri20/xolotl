@@ -82,7 +82,7 @@ void NEClusterReactionNetwork::createReactionConnectivity() {
 	firstSize = 1;
 	auto singleXeCluster = get(Species::Xe, firstSize);
 	// Get all the Xe clusters
-	auto xeClusters = getAll(Species::Xe);
+	auto const& xeClusters = getAll(Species::Xe);
 	// Loop on them
 	for (auto it = xeClusters.begin(); it != xeClusters.end(); it++) {
 		// Get the size of the second reactant and product
@@ -96,7 +96,7 @@ void NEClusterReactionNetwork::createReactionConnectivity() {
 						|| (*it)->getDiffusionFactor() > 0.0)) {
 			// Create a production reaction
 			auto reaction = std::make_shared<ProductionReaction>(
-					singleXeCluster, (*it));
+					singleXeCluster, (*it).get());
 			// Tell the reactants that they are in this reaction
 			singleXeCluster->createCombination(reaction);
 			(*it)->createCombination(reaction);
@@ -355,8 +355,10 @@ void NEClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 	return;
 }
 
+// TODO check if this is identical to the PSI vesrion,
+// and move upwards in class hierarchy if so.
 void NEClusterReactionNetwork::removeReactants(
-		const std::vector<IReactant*>& doomedReactants) {
+		const IReactionNetwork::ReactantVector& doomedReactants) {
 
 	// Build a ReactantMatcher functor for the doomed reactants.
 	// Doing this here allows us to construct the canonical composition
@@ -467,7 +469,7 @@ void NEClusterReactionNetwork::updateConcentrationsFromArray(
 
 void NEClusterReactionNetwork::getDiagonalFill(int *diagFill) {
 	// Get all the super clusters
-	auto superClusters = getAll(Species::NESuper);
+	auto const& superClusters = getAll(Species::NESuper);
 
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = getDOF();
@@ -568,10 +570,9 @@ void NEClusterReactionNetwork::computeRateConstants() {
 void NEClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset) {
 	// Initial declarations
 	IReactant * cluster;
-	NESuperCluster * superCluster;
 	double flux = 0.0;
 	int reactantIndex = 0;
-	auto superClusters = getAll(Species::NESuper);
+	auto const& superClusters = getAll(Species::NESuper);
 
 	// ----- Compute all of the new fluxes -----
 	for (int i = 0; i < networkSize; i++) {
@@ -585,7 +586,7 @@ void NEClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset) {
 
 	// ---- Moments ----
 	for (int i = 0; i < superClusters.size(); i++) {
-		superCluster = (xolotlCore::NESuperCluster *) superClusters[i];
+		auto superCluster = std::static_pointer_cast<xolotlCore::NESuperCluster>(superClusters[i]);
 
 		// Compute the xenon momentum flux
 		flux = superCluster->getMomentumFlux();
@@ -605,7 +606,7 @@ void NEClusterReactionNetwork::computeAllPartials(double *vals, int *indices,
 	std::vector<double> clusterPartials;
 	clusterPartials.resize(dof, 0.0);
 	// Get the super clusters
-	auto superClusters = getAll(Species::NESuper);
+	auto const& superClusters = getAll(Species::NESuper);
 
 	// Update the column in the Jacobian that represents each normal reactant
 	for (int i = 0; i < networkSize - superClusters.size(); i++) {
@@ -637,7 +638,7 @@ void NEClusterReactionNetwork::computeAllPartials(double *vals, int *indices,
 
 	// Update the column in the Jacobian that represents the moment for the super clusters
 	for (int i = 0; i < superClusters.size(); i++) {
-		auto reactant = (NESuperCluster *) superClusters[i];
+		auto reactant = std::static_pointer_cast<NESuperCluster>(superClusters[i]);
 
 		// Get the super cluster index
 		reactantIndex = reactant->getId() - 1;

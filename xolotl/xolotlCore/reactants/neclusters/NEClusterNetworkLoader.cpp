@@ -209,7 +209,7 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::generate(
 void NEClusterNetworkLoader::applyGrouping(
 		std::shared_ptr<IReactionNetwork> network) {
 	// Get the xenon cluster map
-	auto xeMap = network->getAll(Species::Xe);
+	auto const& xeMap = network->getAll(Species::Xe);
 
 	// Create a temporary vector for the loop
 	std::vector<NECluster *> tempVector;
@@ -400,7 +400,7 @@ void NEClusterNetworkLoader::applyGrouping(
 	}
 
 	// Get the super cluster map
-	auto superMap = network->getAll(Species::NESuper);
+	auto const& superMap = network->getAll(Species::NESuper);
 	// Set the reaction network for each super reactant
 	for (auto& currCluster : superMap) {
 		currCluster->updateFromNetwork();
@@ -408,7 +408,7 @@ void NEClusterNetworkLoader::applyGrouping(
 
 	// Remove Xe clusters bigger than xeMin from the network
 	// Loop on the Xe clusters
-	std::vector<IReactant*> doomedReactants;
+    std::vector<std::shared_ptr<IReactant> > doomedReactants;
 	for (auto currCluster : xeMap) {
 
 		// Get the cluster's size.

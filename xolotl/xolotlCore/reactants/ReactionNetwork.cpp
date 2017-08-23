@@ -80,22 +80,6 @@ double ReactionNetwork::getTemperature() const {
 	return temperature;
 }
 
-std::vector<IReactant *> ReactionNetwork::getAll(Species type) const {
-	// Local Declarations
-	std::vector<IReactant *> reactants;
-
-	// Only pull the reactants if the name is valid
-    // TODO fix clients of getAll so they can use directly without 
-    // shared pointers.
-    // TODO fix so can validate type string.
-    reactants.reserve(clusterTypeMap.at(type).size());
-    for (auto& currReactant : clusterTypeMap.at(type)) {
-
-        reactants.push_back(currReactant.get());
-    }
-
-	return reactants;
-}
 
 std::shared_ptr<ProductionReaction> ReactionNetwork::addProductionReaction(
 		std::shared_ptr<ProductionReaction> reaction) {

@@ -20,6 +20,11 @@ class IReactant;
 class IReactionNetwork {
 
 public:
+    /**
+     * Nice name for vector of Reactants, e.g., as returned by getAll.
+     */
+    using ReactantVector = std::vector<std::shared_ptr<IReactant> >;
+
 
 	/**
 	 * The destructor.
@@ -80,10 +85,9 @@ public:
 	 * implementers.
 	 *
 	 * @param type The reactant or compound reactant type
-	 * @return The list of all of the reactants in the network or null if the
-	 * type is invalid
+	 * @return The list of all of the reactants in the network.
 	 */
-	virtual std::vector<IReactant *> getAll(Species type) const = 0;
+    virtual const ReactantVector& getAll(Species type) const = 0;
 
 	/**
 	 * This operation adds a reactant or a compound reactant to the network.
@@ -109,7 +113,7 @@ public:
 	 *
 	 * @param reactants The reactants that should be removed.
 	 */
-	virtual void removeReactants(const std::vector<IReactant*>& reactants) = 0;
+    virtual void removeReactants(const ReactantVector& reactants) = 0;
 
 	/**
 	 * This operation reinitializes the network.

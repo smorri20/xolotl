@@ -558,7 +558,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC,
 	const int dof = network->getDOF();
 
 	// Get all the He clusters in the network
-	auto heliums = network->getAll(xolotlCore::Species::He);
+	auto const& heliums = network->getAll(xolotlCore::Species::He);
 
 	// Compute the total concentration of atoms contained in bubbles
 	double atomConc = 0.0;

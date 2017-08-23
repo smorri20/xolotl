@@ -224,7 +224,7 @@ public:
 	 *
 	 * @param reactants The reactants that should be removed.
 	 */
-	void removeReactants(const std::vector<IReactant*>& reactants);
+	void removeReactants(const IReactionNetwork::ReactantVector& reactants) override;
 
 	/**
 	 * This operation reinitializes the network.
