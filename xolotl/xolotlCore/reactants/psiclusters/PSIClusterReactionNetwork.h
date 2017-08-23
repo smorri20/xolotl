@@ -69,7 +69,7 @@ private:
 	 * @param reaction The reaction
 	 * @return The dissociation constant
 	 */
-	double calculateDissociationConstant(DissociationReaction * reaction) const;
+	double calculateDissociationConstant(const DissociationReaction& reaction) const override;
 
 	/**
 	 * Calculate the binding energy for the dissociation cluster to emit the single
@@ -78,7 +78,7 @@ private:
 	 * @param reaction The reaction
 	 * @return The binding energy corresponding to this dissociation
 	 */
-	virtual double computeBindingEnergy(DissociationReaction * reaction) const;
+	double computeBindingEnergy(const DissociationReaction& reaction) const override;
 
 	/**
 	 * This operation returns the super cluster that contains the original cluster

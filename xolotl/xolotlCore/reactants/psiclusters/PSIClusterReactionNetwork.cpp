@@ -48,8 +48,8 @@ PSIClusterReactionNetwork::PSIClusterReactionNetwork(
 }
 
 
-double PSIClusterReactionNetwork::calculateDissociationConstant(
-		DissociationReaction * reaction) const {
+double PSIClusterReactionNetwork::calculateDissociationConstant(const DissociationReaction& reaction ) const {
+
 	// If the dissociations are not allowed
 	if (!dissociationsEnabled)
 		return 0.0;
@@ -65,7 +65,7 @@ double PSIClusterReactionNetwork::calculateDissociationConstant(
 			* xolotlCore::tungstenLatticeConstant;
 
 	// Get the rate constant from the reverse reaction
-	double kPlus = reaction->reverseReaction->kConstant;
+	double kPlus = reaction.reverseReaction->kConstant;
 
 	// Calculate and return
 	double bindingEnergy = computeBindingEnergy(reaction);
@@ -1345,12 +1345,14 @@ void PSIClusterReactionNetwork::computeRateConstants() {
 	double biggestProductionRate = 0.0;
 
 	// Loop on all the production reactions
-	for (auto iter = allProductionReactions.begin();
-			iter != allProductionReactions.end(); iter++) {
+    for (auto& currReactionInfo : productionReactionMap) {
+
+        auto& currReaction = currReactionInfo.second;
+
 		// Compute the rate
-		rate = calculateReactionRateConstant(iter->get());
+		rate = calculateReactionRateConstant(*currReaction);
 		// Set it in the reaction
-		(*iter)->kConstant = rate;
+		currReaction->kConstant = rate;
 
 		// Check if the rate is the biggest one up to now
 		if (rate > biggestProductionRate)
@@ -1358,12 +1360,15 @@ void PSIClusterReactionNetwork::computeRateConstants() {
 	}
 
 	// Loop on all the dissociation reactions
-	for (auto iter = allDissociationReactions.begin();
-			iter != allDissociationReactions.end(); iter++) {
+    for (auto& currReactionInfo : dissociationReactionMap) {
+
+        auto& currReaction = currReactionInfo.second;
+
 		// Compute the rate
-		rate = calculateDissociationConstant(iter->get());
+		rate = calculateDissociationConstant(*currReaction);
+
 		// Set it in the reaction
-		(*iter)->kConstant = rate;
+		currReaction->kConstant = rate;
 	}
 
 	// Set the biggest rate
@@ -1523,29 +1528,28 @@ void PSIClusterReactionNetwork::computeAllPartials(double *vals, int *indices,
 	return;
 }
 
-double PSIClusterReactionNetwork::computeBindingEnergy(
-		DissociationReaction * reaction) const {
+double PSIClusterReactionNetwork::computeBindingEnergy(const DissociationReaction& reaction) const {
 
 	double bindingEnergy = 5.0;
-	if (reaction->dissociating->getType() == Species::He
-			&& reaction->first->getType() == Species::He) {
-		if (reaction->dissociating->getSize() == 2)
+	if (reaction.dissociating->getType() == Species::He
+			&& reaction.first->getType() == Species::He) {
+		if (reaction.dissociating->getSize() == 2)
 			bindingEnergy = 0.5;
 		else
 			bindingEnergy = 1.0;
 	}
-	if (reaction->dissociating->getType() == Species::V
-			&& reaction->first->getType() == Species::V) {
-		int size = reaction->dissociating->getSize();
+	if (reaction.dissociating->getType() == Species::V
+			&& reaction.first->getType() == Species::V) {
+		int size = reaction.dissociating->getSize();
 		bindingEnergy = 1.73
 				- 2.59
 						* (pow((double) size, 2.0 / 3.0)
 								- pow((double) size - 1.0, 2.0 / 3.0));
 	}
-	if ((reaction->dissociating->getType() == Species::HeV)
-			&& (reaction->first->getType() == Species::V
-					|| reaction->second->getType() == Species::V)) {
-		auto& comp = reaction->dissociating->getComposition();
+	if ((reaction.dissociating->getType() == Species::HeV)
+			&& (reaction.first->getType() == Species::V
+					|| reaction.second->getType() == Species::V)) {
+		auto& comp = reaction.dissociating->getComposition();
 		bindingEnergy = 1.73
 				- 2.59
 						* (pow((double) comp.at(Species::V), 2.0 / 3.0)
@@ -1556,21 +1560,21 @@ double PSIClusterReactionNetwork::computeBindingEnergy(
 										+ ((double) comp.at(Species::He)
 												/ (double) comp.at(Species::V)));
 	}
-	if (reaction->dissociating->getType() == Species::PSISuper
-			&& (reaction->first->getType() == Species::V
-					|| reaction->second->getType() == Species::V)) {
-		auto superCluster = (PSISuperCluster *) reaction->dissociating;
-		auto& comp = reaction->dissociating->getComposition();
+	if (reaction.dissociating->getType() == Species::PSISuper
+			&& (reaction.first->getType() == Species::V
+					|| reaction.second->getType() == Species::V)) {
+		auto superCluster = (PSISuperCluster *) reaction.dissociating;
+		auto& comp = reaction.dissociating->getComposition();
 		double numV = (double) comp.at(Species::V);
 		double numHe = (double) comp.at(Species::He);
 		bindingEnergy = 1.73
 				- 2.59 * (pow(numV, 2.0 / 3.0) - pow(numV - 1.0, 2.0 / 3.0))
 				+ 2.5 * log(1.0 + (numHe / numV));
 	}
-	if (reaction->first->getType() == Species::I
-			|| reaction->second->getType() == Species::I) {
-		if (reaction->dissociating->getType() == Species::HeV) {
-			auto& comp = reaction->dissociating->getComposition();
+	if (reaction.first->getType() == Species::I
+			|| reaction.second->getType() == Species::I) {
+		if (reaction.dissociating->getType() == Species::HeV) {
+			auto& comp = reaction.dissociating->getComposition();
 			bindingEnergy =
 					4.88
 							+ 2.59
@@ -1582,16 +1586,16 @@ double PSIClusterReactionNetwork::computeBindingEnergy(
 											1.0
 													+ ((double) comp.at(Species::He)
 															/ (double) comp.at(Species::V)));
-		} else if (reaction->dissociating->getType() == Species::PSISuper) {
-			auto superCluster = (PSISuperCluster *) reaction->dissociating;
-			auto& comp = reaction->dissociating->getComposition();
+		} else if (reaction.dissociating->getType() == Species::PSISuper) {
+			auto superCluster = (PSISuperCluster *) reaction.dissociating;
+			auto& comp = reaction.dissociating->getComposition();
 			double numV = (double) comp.at(Species::V);
 			double numHe = (double) comp.at(Species::He);
 			bindingEnergy = 4.88
 					+ 2.59 * (pow(numV, 2.0 / 3.0) - pow(numV - 1.0, 2.0 / 3.0))
 					- 2.5 * log(1.0 + (numHe / numV));
-		} else if (reaction->dissociating->getType() == Species::He) {
-			int size = reaction->dissociating->getSize();
+		} else if (reaction.dissociating->getType() == Species::He) {
+			int size = reaction.dissociating->getSize();
 			switch (size) {
 			case 1:
 				bindingEnergy = 4.31;
@@ -1625,9 +1629,9 @@ double PSIClusterReactionNetwork::computeBindingEnergy(
 	}
 
 //	if (bindingEnergy < -5.0)
-//	std::cout << "dissociation: " << reaction->dissociating->getName() << " -> "
-//			<< reaction->first->getName() << " + "
-//			<< reaction->second->getName() << " : " << bindingEnergy
+//	std::cout << "dissociation: " << reaction.dissociating->getName() << " -> "
+//			<< reaction.first->getName() << " + "
+//			<< reaction.second->getName() << " : " << bindingEnergy
 //			<< std::endl;
 
 	return max(bindingEnergy, -5.0);

@@ -87,25 +87,15 @@ protected:
 	 */
 	std::shared_ptr<xolotlPerf::IEventCounter> concUpdateCounter;
 
-	/**
-	 * All known production reactions in the network.
-	 */
-	std::vector<std::shared_ptr<ProductionReaction> > allProductionReactions;
-
-	/**
-	 * Map of known ProductionReactions for quickly
-	 * identifying known reactions.
-	 */
+    /**
+     * All known ProductionReactions in the network, keyed by a
+     * representation of the reaction.
+     */
 	std::map<ProductionReaction::KeyType, std::shared_ptr<ProductionReaction> > productionReactionMap;
 
 	/**
-	 * All known dissociation reactions in the network.
-	 */
-	std::vector<std::shared_ptr<DissociationReaction> > allDissociationReactions;
-
-	/**
-	 * Map of known DissociationReactions for quickly
-	 * identifying known reactions.
+	 * All known dissociation reactions in the network, keyed by a
+     * representation of the reaction.
 	 */
 	std::map<DissociationReaction::KeyType,
 			std::shared_ptr<DissociationReaction> > dissociationReactionMap;
@@ -217,7 +207,7 @@ protected:
 	 * @param reaction The reaction
 	 * @return The rate
 	 */
-	double calculateReactionRateConstant(ProductionReaction * reaction) const;
+	double calculateReactionRateConstant(const ProductionReaction& reaction) const;
 
 	/**
 	 * Calculate the dissociation constant of the first cluster with respect to
@@ -229,10 +219,7 @@ protected:
 	 * @param reaction The reaction
 	 * @return The dissociation constant
 	 */
-	virtual double calculateDissociationConstant(
-			DissociationReaction * reaction) const {
-		return 0.0;
-	}
+	virtual double calculateDissociationConstant(const DissociationReaction& reaction) const = 0;
 
 	/**
 	 * Calculate the binding energy for the dissociation cluster to emit the single
@@ -241,9 +228,7 @@ protected:
 	 * @param reaction The reaction
 	 * @return The binding energy corresponding to this dissociation
 	 */
-	virtual double computeBindingEnergy(DissociationReaction * reaction) const {
-		return 0.0;
-	}
+	virtual double computeBindingEnergy(const DissociationReaction& reaction) const = 0;
 
 
 public:

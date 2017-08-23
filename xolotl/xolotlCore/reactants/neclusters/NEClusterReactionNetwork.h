@@ -69,8 +69,20 @@ private:
 	 * @param reaction The reaction
 	 * @return The dissociation constant
 	 */
-	double calculateDissociationConstant(DissociationReaction * reaction) const;
+	double calculateDissociationConstant(const DissociationReaction& reaction) const override;
 
+
+	/**
+	 * Calculate the binding energy for the dissociation cluster to emit the single
+	 * and second cluster.
+	 *
+	 * @param reaction The reaction
+	 * @return The binding energy corresponding to this dissociation
+	 */
+	virtual double computeBindingEnergy(const DissociationReaction& reaction) const override {
+        // TODO is this really supposed to be 0?
+        return 0.0;
+    }
 
 public:
 

@@ -19,15 +19,15 @@ ReactionNetwork::ReactionNetwork(
 }
 
 
-double ReactionNetwork::calculateReactionRateConstant(
-		ProductionReaction * reaction) const {
+double ReactionNetwork::calculateReactionRateConstant(const ProductionReaction& reaction) const {
+
 	// Get the reaction radii
-	double r_first = reaction->first->getReactionRadius();
-	double r_second = reaction->second->getReactionRadius();
+	double r_first = reaction.first->getReactionRadius();
+	double r_second = reaction.second->getReactionRadius();
 
 	// Get the diffusion coefficients
-	double firstDiffusion = reaction->first->getDiffusionCoefficient();
-	double secondDiffusion = reaction->second->getDiffusionCoefficient();
+	double firstDiffusion = reaction.first->getDiffusionCoefficient();
+	double secondDiffusion = reaction.second->getDiffusionCoefficient();
 
 	// Calculate and return
 	double k_plus = 4.0 * xolotlCore::pi
@@ -95,7 +95,6 @@ std::shared_ptr<ProductionReaction> ReactionNetwork::addProductionReaction(
 	// We did not yet know about the given reaction.
 	// Save it.
 	productionReactionMap.emplace(key, reaction);
-	allProductionReactions.emplace_back(reaction);
 
 	return reaction;
 }
@@ -126,7 +125,6 @@ std::shared_ptr<DissociationReaction> ReactionNetwork::addDissociationReaction(
 
 	// Add the dissociation reaction to our set of known reactions.
 	dissociationReactionMap.emplace(key, reaction);
-	allDissociationReactions.emplace_back(reaction);
 
 	// Return the newly-added dissociation reaction.
 	return reaction;

@@ -49,8 +49,8 @@ NEClusterReactionNetwork::NEClusterReactionNetwork(
 	return;
 }
 
-double NEClusterReactionNetwork::calculateDissociationConstant(
-		DissociationReaction * reaction) const {
+double NEClusterReactionNetwork::calculateDissociationConstant(const DissociationReaction& reaction) const {
+
 	// If the dissociations are not allowed
 	if (!dissociationsEnabled)
 		return 0.0;
@@ -61,7 +61,7 @@ double NEClusterReactionNetwork::calculateDissociationConstant(
 			* xolotlCore::uraniumDioxydeLatticeConstant;
 
 	// Get the rate constant from the reverse reaction
-	double kPlus = reaction->reverseReaction->kConstant;
+	double kPlus = reaction.reverseReaction->kConstant;
 
 	// Calculate and return
 	double bindingEnergy = computeBindingEnergy(reaction);
@@ -544,12 +544,14 @@ void NEClusterReactionNetwork::computeRateConstants() {
 	double biggestProductionRate = 0.0;
 
 	// Loop on all the production reactions
-	for (auto iter = allProductionReactions.begin();
-			iter != allProductionReactions.end(); iter++) {
+    for (auto& currReactionInfo : productionReactionMap) {
+			
+        auto& currReaction = currReactionInfo.second;
+
 		// Compute the rate
-		rate = calculateReactionRateConstant(iter->get());
+		rate = calculateReactionRateConstant(*currReaction);
 		// Set it in the reaction
-		(*iter)->kConstant = rate;
+		currReaction->kConstant = rate;
 
 		// Check if the rate is the biggest one up to now
 		if (rate > biggestProductionRate)
@@ -557,12 +559,14 @@ void NEClusterReactionNetwork::computeRateConstants() {
 	}
 
 	// Loop on all the dissociation reactions
-	for (auto iter = allDissociationReactions.begin();
-			iter != allDissociationReactions.end(); iter++) {
+    for (auto& currReactionInfo : dissociationReactionMap) {
+
+        auto& currReaction = currReactionInfo.second;
+
 		// Compute the rate
-		rate = calculateDissociationConstant(iter->get());
+		rate = calculateDissociationConstant(*currReaction);
 		// Set it in the reaction
-		(*iter)->kConstant = rate;
+		currReaction->kConstant = rate;
 	}
 
 	// Set the biggest rate
