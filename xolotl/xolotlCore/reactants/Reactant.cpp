@@ -10,23 +10,24 @@
 // Namespaces
 using namespace xolotlCore;
 
+// TODO modify signature to take type as argument.
 Reactant::Reactant(IReactionNetwork& _network,
                 std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		concentration(0.0), id(0), xeMomId(0), heMomId(0), vMomId(0), temperature(
-				0.0), typeName(""), network(_network), handlerRegistry(registry), size(
+				0.0), type(Species::Invalid), network(_network), handlerRegistry(registry), size(
 				0), formationEnergy(0.0), diffusionFactor(0.0), diffusionCoefficient(
 				0.0), migrationEnergy(0.0), name("Reactant"), reactionRadius(
 				0.0) {
 	// Setup the composition map.
-	compositionMap[xeType] = 0;
-	compositionMap[heType] = 0;
-	compositionMap[vType] = 0;
-	compositionMap[iType] = 0;
+	compositionMap[Species::Xe] = 0;
+	compositionMap[Species::He] = 0;
+	compositionMap[Species::V] = 0;
+	compositionMap[Species::I] = 0;
 }
 
 Reactant::Reactant(Reactant &other) :
-		concentration(other.concentration), name(other.name), typeName(
-				other.typeName), id(other.id), xeMomId(other.xeMomId), heMomId(
+		concentration(other.concentration), name(other.name), 
+                type(other.type), id(other.id), xeMomId(other.xeMomId), heMomId(
 				other.heMomId), vMomId(other.vMomId), temperature(
 				other.temperature), network(other.network), handlerRegistry(
 				other.handlerRegistry), size(other.size), formationEnergy(
@@ -36,10 +37,10 @@ Reactant::Reactant(Reactant &other) :
 				other.reactionConnectivitySet), dissociationConnectivitySet(
 				other.dissociationConnectivitySet) {
 	// Setup the composition map.
-	compositionMap[xeType] = other.compositionMap[xeType];
-	compositionMap[heType] = other.compositionMap[heType];
-	compositionMap[vType] = other.compositionMap[vType];
-	compositionMap[iType] = other.compositionMap[iType];
+	compositionMap[Species::Xe] = other.compositionMap[Species::Xe];
+	compositionMap[Species::He] = other.compositionMap[Species::He];
+	compositionMap[Species::V] = other.compositionMap[Species::V];
+	compositionMap[Species::I] = other.compositionMap[Species::I];
 }
 
 void Reactant::recomputeDiffusionCoefficient(double temp) {
@@ -69,8 +70,8 @@ std::vector<int> Reactant::getConnectivity() const {
 	return connectivity;
 }
 
-std::string Reactant::toCanonicalString(std::string type,
-		const std::map<std::string, int>& composition) {
+std::string Reactant::toCanonicalString(Species type,
+        const IReactant::Composition& composition) {
 
 	// Construct the canonical string representation of the given composition.
 	// Note that this can only be considered to produce a canonical
@@ -80,12 +81,12 @@ std::string Reactant::toCanonicalString(std::string type,
 	// of how the map was produced.  Thankfully, std::map is an
 	// ordered map and gives this guarantee.
 	std::ostringstream ostr;
-	ostr << type << ':';
+	ostr << toString(type) << ':';
 	for (auto iter = composition.begin(); iter != composition.end(); ++iter) {
 		// Add the current reactant's name and size to the string.
 		// Note that we don't really care about nice formatting, since
 		// this isn't intended to be a human-readable string.
-		ostr << iter->first << iter->second;
+		ostr << toString(iter->first) << iter->second;
 	}
 	return ostr.str();
 }

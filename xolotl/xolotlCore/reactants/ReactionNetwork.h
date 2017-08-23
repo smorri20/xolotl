@@ -132,12 +132,12 @@ protected:
 	/**
 	 * The names of the reactants supported by this network.
 	 */
-	std::vector<std::string> names;
+    std::vector<Species> names;
 
 	/**
 	 * The names of the compound reactants supported by this network.
 	 */
-	std::vector<std::string> compoundNames;
+    std::vector<Species> compoundNames;
 
 	/**
 	 * The biggest rate for this cluster
@@ -167,12 +167,12 @@ protected:
 	/**
 	 * Maximum size of a vacancy cluster.
 	 */
-	int maxVClusterSize;
+    IReactant::SizeType maxVClusterSize;
 
 	/**
 	 * Maximum size of an interstitial cluster.
 	 */
-	int maxIClusterSize;
+    IReactant::SizeType maxIClusterSize;
 
 	/**
 	 * This vector contains the information on the group bounds in both directions.
@@ -189,7 +189,7 @@ protected:
 	/**
 	 * This map stores all of the clusters in the network by type.
 	 */
-	std::map<std::string, ReactantVector> clusterTypeMap;
+	std::map<Species, ReactantVector> clusterTypeMap;
 
 
 	/**
@@ -270,26 +270,6 @@ public:
 	 */
 	virtual double getTemperature() const;
 
-	/**
-	 * This operation returns a reactant with the given type and size if it
-	 * exists in the network or null if not.
-	 *
-	 * @param type The type of the reactant
-	 * @param size The size of the reactant
-	 * @return A pointer to the reactant
-	 */
-	virtual IReactant * get(const std::string& type, const int size) const;
-
-	/**
-	 * This operation returns a compound reactant with the given type and size if it
-	 * exists in the network or null if not.
-	 *
-	 * @param type The type of the compound reactant
-	 * @param sizes An array containing the sizes of each piece of the reactant
-	 * @return A pointer to the compound reactant
-	 */
-	virtual IReactant * getCompound(const std::string& type,
-			const std::vector<int>& sizes) const;
 
 	/**
 	 * This operation returns all reactants in the network without regard for
@@ -298,7 +278,7 @@ public:
 	 *
 	 * @return The list of all of the reactants in the network
 	 */
-    virtual const std::vector<IReactant*> & getAll() const {
+    virtual const std::vector<IReactant*> & getAll() const override {
 
         return allReactants;
     }
@@ -312,7 +292,7 @@ public:
 	 * @return The list of all of the reactants in the network or null if the
 	 * type is invalid
 	 */
-	virtual std::vector<IReactant *> getAll(const std::string& type) const;
+	virtual std::vector<IReactant *> getAll(Species type) const override;
 
 	/**
 	 * This operation adds a reactant or a compound reactant to the network.
@@ -361,7 +341,10 @@ public:
 	 * @return A vector with one entry for each of the distinct reactant types
 	 * in the network
 	 */
-	const std::vector<std::string> & getNames() const;
+	const std::vector<Species> & getNames() const override {
+
+        return names;
+    }
 
 	/**
 	 * This operation returns the names of the compound reactants in the
@@ -370,7 +353,10 @@ public:
 	 * @return A vector with one each for each of the distinct compound
 	 * reactant types in the network
 	 */
-	const std::vector<std::string> & getCompoundNames() const;
+	const std::vector<Species> & getCompoundNames() const override {
+
+        return compoundNames;
+    }
 
 	/**
 	 * This operation returns the size or number of reactants in the network.
@@ -583,14 +569,14 @@ public:
 	/**
 	 * Maximum vacancy cluster size in our network.
 	 */
-	int getMaxVClusterSize() const {
+    IReactant::SizeType getMaxVClusterSize() const {
 		return maxVClusterSize;
 	}
 
 	/**
 	 * Maximum interstitial cluster size in our network.
 	 */
-	int getMaxIClusterSize() const {
+    IReactant::SizeType getMaxIClusterSize() const {
 		return maxIClusterSize;
 	}
 

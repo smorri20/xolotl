@@ -42,12 +42,12 @@ void PSICluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
 	// Update the coefficients
 	double firstHeDistance = 0.0, firstVDistance = 0.0, secondHeDistance = 0.0,
 			secondVDistance = 0.0;
-	if (reaction->first->getType() == PSISuperType) {
+	if (reaction->first->getType() == Species::PSISuper) {
 		auto super = (PSICluster *) reaction->first;
 		firstHeDistance = super->getHeDistance(c);
 		firstVDistance = super->getVDistance(d);
 	}
-	if (reaction->second->getType() == PSISuperType) {
+	if (reaction->second->getType() == Species::PSISuper) {
 		auto super = (PSICluster *) reaction->second;
 		secondHeDistance = super->getHeDistance(c);
 		secondVDistance = super->getVDistance(d);
@@ -101,7 +101,7 @@ void PSICluster::createCombination(std::shared_ptr<ProductionReaction> reaction,
 
 	// Update the coefficients
 	double heDistance = 0.0, vDistance = 0.0;
-	if (secondCluster->getType() == PSISuperType) {
+	if (secondCluster->getType() == Species::PSISuper) {
 		auto super = (PSICluster *) secondCluster;
 		heDistance = super->getHeDistance(a);
 		vDistance = super->getVDistance(b);
@@ -153,7 +153,7 @@ void PSICluster::createDissociation(
 
 	// Update the coefficients
 	double firstHeDistance = 0.0, firstVDistance = 0.0;
-	if (reaction->dissociating->getType() == PSISuperType) {
+	if (reaction->dissociating->getType() == Species::PSISuper) {
 		auto super = (PSICluster *) reaction->dissociating;
 		firstHeDistance = super->getHeDistance(a);
 		firstVDistance = super->getVDistance(b);

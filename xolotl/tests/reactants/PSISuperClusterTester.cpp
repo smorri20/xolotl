@@ -60,10 +60,10 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	network->reinitializeConnectivities();
 
 	// Check the reaction connectivity of the super cluster
-	auto reactant = network->getAll(PSISuperType).at(0);
+	auto reactant = network->getAll(Species::PSISuper).at(0);
 
 	// Check the type name
-	BOOST_REQUIRE_EQUAL(PSISuperType, reactant->getType());
+	BOOST_REQUIRE_EQUAL(Species::PSISuper, reactant->getType());
 	auto reactionConnectivity = reactant->getConnectivity();
 
 	// Check the connectivity for He, V, and I
@@ -113,9 +113,9 @@ BOOST_AUTO_TEST_CASE(checkTotalFlux) {
 	network->reinitializeConnectivities();
 
 	// Check the reaction connectivity of the super cluster
-	auto cluster = network->getAll(PSISuperType).at(0);
+	auto cluster = network->getAll(Species::PSISuper).at(0);
 	// Get one that it combines with (He)
-	auto secondCluster = (PSICluster *) network->get(heType, 1);
+	auto secondCluster = (PSICluster *) network->get(Species::He, 1);
 	// Set the concentrations
 	cluster->setConcentration(0.5);
 	secondCluster->setConcentration(0.5);
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	network->reinitializeConnectivities();
 
 	// Check the reaction connectivity of the super cluster
-	auto cluster = network->getAll(PSISuperType).at(0);
+	auto cluster = network->getAll(Species::PSISuper).at(0);
 
 	// Local Declarations
 	// The vector of partial derivatives to compare with
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(checkReactionRadius) {
 	auto network = loader.load();
 
 	// Check the reaction connectivity of the super cluster
-	auto cluster = network->getAll(PSISuperType).at(0);
+	auto cluster = network->getAll(Species::PSISuper).at(0);
 
 	// Check the radius
 	BOOST_REQUIRE_CLOSE(0.137265, cluster->getReactionRadius(), 0.001);

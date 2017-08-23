@@ -107,7 +107,7 @@ public:
 	/**
 	 * This method defines which trap-mutation is allowed at each grid point.
 	 * The stored indices correspond to the HeV bubbles, and more precisely to their
-	 * rank in the bubbles vector obtained with bubbles = network->getAll(heVType).
+	 * rank in the bubbles vector obtained with bubbles = network->getAll(Species::HeV).
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
@@ -118,7 +118,7 @@ public:
 	/**
 	 * This method defines which trap-mutation is allowed at each grid point.
 	 * The stored indices correspond to the HeV bubbles, and more precisely to their
-	 * rank in the bubbles vector obtained with bubbles = network->getAll(heVType).
+	 * rank in the bubbles vector obtained with bubbles = network->getAll(Species::HeV).
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
@@ -129,7 +129,7 @@ public:
 	/**
 	 * This method defines which trap-mutation is allowed at each grid point.
 	 * The stored indices correspond to the HeV bubbles, and more precisely to their
-	 * rank in the bubbles vector obtained with bubbles = network->getAll(heVType).
+	 * rank in the bubbles vector obtained with bubbles = network->getAll(Species::HeV).
 	 *
 	 * \see ITrapMutationHandler.h
 	 */

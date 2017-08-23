@@ -121,7 +121,7 @@ public:
 		FluxHandler::initializeFluxHandler(network, surfacePos, grid);
 
 		// Set the flux index corresponding the the single helium cluster here
-		auto fluxCluster = network->get(heType, 1);
+		auto fluxCluster = network->get(Species::He, 1);
 		// Check that the helium cluster is present in the network
 		if (!fluxCluster) {
 			throw std::string(
@@ -131,7 +131,7 @@ public:
 		fluxIndices.push_back(fluxCluster->getId() - 1);
 
 //		// Set the V index corresponding the the single vacancy cluster here
-//		auto vCluster = network->get(vType, 1);
+//		auto vCluster = network->get(Species::V, 1);
 //		// Check that the V cluster is present in the network
 //		if (!vCluster) {
 //			throw std::string(
@@ -141,7 +141,7 @@ public:
 //		vDefectIndex = vCluster->getId() - 1;
 //
 //		// Set the I index corresponding the the single interstitial cluster here
-//		auto iCluster = network->get(iType, 1);
+//		auto iCluster = network->get(Species::I, 1);
 //		// Check that the V cluster is present in the network
 //		if (!iCluster) {
 //			throw std::string(

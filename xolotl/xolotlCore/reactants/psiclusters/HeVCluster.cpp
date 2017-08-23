@@ -15,15 +15,15 @@ HeVCluster::HeVCluster(int numHe, int numV,
 	size = numHe + numV;
 
 	// Update the composition map
-	compositionMap[heType] = numHe;
-	compositionMap[vType] = numV;
+	compositionMap[Species::He] = numHe;
+	compositionMap[Species::V] = numV;
 
 	// Set the reactant name appropriately
 	std::stringstream nameStream;
 	nameStream << "He_" << numHe << "V_" << numV;
 	name = nameStream.str();
 	// Set the typename appropriately
-	typeName = heVType;
+	type = Species::HeV;
 
 	// Compute the reaction radius
 	// It is the same formula for HeV clusters

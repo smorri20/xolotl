@@ -70,17 +70,17 @@ private:
 	/**
 	 * Maximum size of Xe clusters in our network.
 	 */
-	int maxXeClusterSize;
+    IReactant::SizeType maxXeClusterSize;
 
 	/**
 	 * Maximum size of XeV clusters in our network.
 	 */
-	int maxXeVClusterSize;
+    IReactant::SizeType maxXeVClusterSize;
 
 	/**
 	 * Maximum size of XeI clusters in our network.
 	 */
-	int maxXeIClusterSize;
+    IReactant::SizeType maxXeIClusterSize;
 
 	/**
 	 * Calculate the dissociation constant of the first cluster with respect to
@@ -150,7 +150,7 @@ public:
 	 * @param size the size of the reactant
 	 * @return A pointer to the reactant
 	 */
-	IReactant * get(const std::string& type, const int size) const;
+	IReactant * get(Species type, IReactant::SizeType size) const override;
 
 	/**
 	 * This operation returns a compound reactant with the given type and size
@@ -163,8 +163,8 @@ public:
 	 * and I are contained in the mixed-species cluster.
 	 * @return A pointer to the compound reactant
 	 */
-	IReactant * getCompound(const std::string& type,
-			const std::vector<int>& sizes) const;
+	IReactant * getCompound(Species type,
+			const std::vector<IReactant::SizeType>& sizes) const override;
 
 	/**
 	 * This operation returns a super reactant with the given type and size
@@ -174,7 +174,7 @@ public:
 	 * @param size The size of the reactant.
 	 * @return A pointer to the super reactant
 	 */
-	IReactant * getSuper(const std::string& type, const int size) const;
+	IReactant * getSuper(Species type, IReactant::SizeType size) const;
 
 
 	/**
@@ -318,21 +318,21 @@ public:
 	/**
 	 * Maximum size of Xe clusters in our network.
 	 */
-	int getMaxXeClusterSize() const {
+    IReactant::SizeType getMaxXeClusterSize() const {
 		return maxXeClusterSize;
 	}
 
 	/**
 	 * Maximum size of XeV clusters in our network.
 	 */
-	int getMaxXeVClusterSize() const {
+    IReactant::SizeType getMaxXeVClusterSize() const {
 		return maxXeVClusterSize;
 	}
 
 	/**
 	 * Maximum size of XeI clusters in our network.
 	 */
-	int getMaxXeIClusterSize() const {
+    IReactant::SizeType getMaxXeIClusterSize() const {
 		return maxXeIClusterSize;
 	}
 

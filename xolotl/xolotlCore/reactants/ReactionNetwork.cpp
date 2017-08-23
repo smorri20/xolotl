@@ -80,23 +80,7 @@ double ReactionNetwork::getTemperature() const {
 	return temperature;
 }
 
-IReactant * ReactionNetwork::get(const std::string& type,
-		const int size) const {
-	// Local Declarations
-	std::shared_ptr<IReactant> retReactant;
-
-	return (IReactant *) retReactant.get();
-}
-
-IReactant * ReactionNetwork::getCompound(const std::string& type,
-		const std::vector<int>& sizes) const {
-	// Local Declarations
-	std::shared_ptr<IReactant> retReactant;
-
-	return (IReactant *) retReactant.get();
-}
-
-std::vector<IReactant *> ReactionNetwork::getAll(const std::string& name) const {
+std::vector<IReactant *> ReactionNetwork::getAll(Species type) const {
 	// Local Declarations
 	std::vector<IReactant *> reactants;
 
@@ -104,21 +88,13 @@ std::vector<IReactant *> ReactionNetwork::getAll(const std::string& name) const 
     // TODO fix clients of getAll so they can use directly without 
     // shared pointers.
     // TODO fix so can validate type string.
-    reactants.reserve(clusterTypeMap.at(name).size());
-    for (auto& currReactant : clusterTypeMap.at(name)) {
+    reactants.reserve(clusterTypeMap.at(type).size());
+    for (auto& currReactant : clusterTypeMap.at(type)) {
 
         reactants.push_back(currReactant.get());
     }
 
 	return reactants;
-}
-
-const std::vector<std::string> & ReactionNetwork::getNames() const {
-	return names;
-}
-
-const std::vector<std::string> & ReactionNetwork::getCompoundNames() const {
-	return compoundNames;
 }
 
 std::shared_ptr<ProductionReaction> ReactionNetwork::addProductionReaction(

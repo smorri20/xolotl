@@ -169,16 +169,16 @@ private:
 	int sectionVWidth;
 
 	//! The lower bound in the helium direction.
-	int lowerHe;
+    IReactant::SizeType lowerHe;
 
 	//! The lower bound in the vacancy direction.
-	int lowerV;
+    IReactant::SizeType lowerV;
 
 	//! The upper bound in the helium direction.
-	int upperHe;
+    IReactant::SizeType upperHe;
 
 	//! The upper bound in the vacancy direction.
-	int upperV;
+    IReactant::SizeType upperV;
 
 	//! The 0th order momentum (mean).
 	double l0;
@@ -599,33 +599,23 @@ public:
 	 *
 	 * @return The boundaries
 	 */
-	std::vector<int> getBoundaries() const {
-		std::vector<int> boundaries;
-		boundaries.push_back(lowerHe);
-		boundaries.push_back(upperHe);
-		boundaries.push_back(lowerV);
-		boundaries.push_back(upperV);
-		return boundaries;
+	std::vector<IReactant::SizeType> getBoundaries() const {
+
+        return {lowerHe, upperHe, lowerV, upperV };
 	}
 
 	/**
-	 * This operation returns true if the given numbers are contained in the group
+     * Detect if given number of He and V are in this cluster's group.
 	 *
-	 * @return True if contained
+     * @param _nHe number of He of interest.
+     * @param _nV number of V of interest
+	 * @return True if _nHe and _nV is contained in our super cluster.
 	 */
-	bool isIn(int a, int b) const {
+	bool isIn(IReactant::SizeType _nHe, IReactant::SizeType _nV) const {
 
 		// Try with key and map later
-
-		if (a < lowerHe)
-			return false;
-		if (a > upperHe)
-			return false;
-		if (b < lowerV)
-			return false;
-		if (b > upperV)
-			return false;
-		return true;
+        return ((_nHe >= lowerHe) and (_nHe <= upperHe)) and
+            ((_nV >= lowerV) and (_nV <= upperV));
 	}
 
 };

@@ -13,14 +13,14 @@ HeCluster::HeCluster(int nHe,
 	// Set the size
 	size = nHe;
 	// Update the composition map
-	compositionMap[heType] = size;
+	compositionMap[Species::He] = size;
 
 	// Set the reactant name appropriately
 	std::stringstream nameStream;
 	nameStream << "He_" << size;
 	name = nameStream.str();
 	// Set the typename appropriately
-	typeName = heType;
+	type = Species::He;
 
 	// Compute the reaction radius
 	double FourPi = 4.0 * xolotlCore::pi;

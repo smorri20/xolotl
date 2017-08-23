@@ -194,7 +194,7 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) {
 	const int dof = network->getDOF();
 
 	// Get the single vacancy ID
-	auto singleVacancyCluster = network->get(xolotlCore::vType, 1);
+	auto singleVacancyCluster = network->get(xolotlCore::Species::V, 1);
 	int vacancyIndex = -1;
 	if (singleVacancyCluster)
 		vacancyIndex = singleVacancyCluster->getId() - 1;
@@ -652,7 +652,7 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
 
 	// Store the total number of He clusters in the network for the
 	// modified trap-mutation
-	int nHelium = network->getAll(xolotlCore::heType).size();
+	int nHelium = network->getAll(xolotlCore::Species::He).size();
 
 	// Declarations for variables used in the loop
 	double atomConc = 0.0, totalAtomConc = 0.0;

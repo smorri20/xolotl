@@ -26,7 +26,7 @@ void XGBAdvectionHandler::initialize(IReactionNetwork *network,
 			continue;
 
 		// Keep only the helium clusters
-		if (cluster->getType() != heType)
+		if (cluster->getType() != Species::He)
 			continue;
 
 		// Get its size

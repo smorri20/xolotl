@@ -28,13 +28,13 @@ PSIClusterReactionNetwork::PSIClusterReactionNetwork(
 	maxHeIClusterSize = 0;
 
 	// Set the reactant names
-	names.push_back(heType);
-	names.push_back(vType);
-	names.push_back(iType);
+	names.push_back(Species::He);
+	names.push_back(Species::V);
+	names.push_back(Species::I);
 	// Set the compound reactant names
-	compoundNames.push_back(heVType);
-	compoundNames.push_back(heIType);
-	compoundNames.push_back(PSISuperType);
+	compoundNames.push_back(Species::HeV);
+	compoundNames.push_back(Species::HeI);
+	compoundNames.push_back(Species::PSISuper);
 
 	// Specify cluster types we know about.
     for (auto& currName : names) {
@@ -78,19 +78,20 @@ double PSIClusterReactionNetwork::calculateDissociationConstant(
 
 void PSIClusterReactionNetwork::createReactionConnectivity() {
 	// Initial declarations
-	int firstSize = 0, secondSize = 0, productSize = 0;
+    IReactant::SizeType firstSize = 0, secondSize = 0, productSize = 0;
 
 	// Single species clustering (He, V, I)
 	// We know here that only Xe_1 can cluster so we simplify the search
 	// X_(a-i) + X_i --> X_a
 	// Make a vector of types
-	std::vector<string> typeVec = { heType, vType, iType };
+    std::vector<Species> typeVec { Species::He, Species::V, Species::I };
 	// Loop on it
 	for (auto tvIter = typeVec.begin(); tvIter != typeVec.end(); ++tvIter) {
-		string typeName = *tvIter;
+
+        auto currType = *tvIter;
 
 		// Get all the reactants of this type
-		auto allTypeReactants = getAll(typeName);
+		auto allTypeReactants = getAll(currType);
 		// Loop on them
 		for (auto firstIt = allTypeReactants.begin();
 				firstIt != allTypeReactants.end(); firstIt++) {
@@ -103,7 +104,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 				secondSize = (*secondIt)->getSize();
 				productSize = firstSize + secondSize;
 				// Get the product
-				auto product = get(typeName, productSize);
+				auto product = get(currType, productSize);
 				// Check that the reaction can occur
 				if (product
 						&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -126,9 +127,9 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 	// Helium absorption by HeV clusters
 	// He_(a) + (He_b)(V_c) --> [He_(a+b)](V_c)
 	// Get all the He and HeV clusters
-	auto allHeReactants = getAll(heType);
-	auto allHeVReactants = getAll(heVType);
-	auto allSuperReactants = getAll(PSISuperType);
+	auto allHeReactants = getAll(Species::He);
+	auto allHeVReactants = getAll(Species::HeV);
+	auto allSuperReactants = getAll(Species::PSISuper);
 	// Loop on the He clusters
 	for (auto firstIt = allHeReactants.begin(); firstIt != allHeReactants.end();
 			firstIt++) {
@@ -143,10 +144,10 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			// Get its composition
 			auto& comp = (*secondIt)->getComposition();
 			// Create the composition of the potential product
-			std::vector<int> compositionVec = { comp.at(heType) + firstSize,
-					comp.at(vType), 0 };
+			std::vector<IReactant::SizeType> compositionVec { comp.at(Species::He) + firstSize,
+					comp.at(Species::V), 0 };
 			// Get the product
-			auto product = getCompound(heVType, compositionVec);
+			auto product = getCompound(Species::HeV, compositionVec);
 
 			// Check if the product can be a super cluster
 			if (!product) {
@@ -211,7 +212,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 	// Vacancy absorption by HeV clusters
 	// (He_a)(V_b) + V_c --> (He_a)[V_(b+c)]
 	// Get all the V clusters
-	auto allVReactants = getAll(vType);
+	auto allVReactants = getAll(Species::V);
 	// Loop on the V clusters
 	// Loop on the HeV clusters
 	for (auto firstIt = allVReactants.begin(); firstIt != allVReactants.end();
@@ -227,10 +228,10 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			// Get its composition
 			auto& comp = (*secondIt)->getComposition();
 			// Create the composition of the potential product
-			std::vector<int> compositionVec = { comp.at(heType), comp.at(vType)
+			std::vector<IReactant::SizeType> compositionVec = { comp.at(Species::He), comp.at(Species::V)
 					+ firstSize, 0 };
 			// Get the product
-			auto product = getCompound(heVType, compositionVec);
+			auto product = getCompound(Species::HeV, compositionVec);
 
 			// Check if the product can be a super cluster
 			if (!product) {
@@ -304,9 +305,9 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			// Get its size
 			secondSize = (*secondIt)->getSize();
 			// Create the composition of the potential product
-			std::vector<int> compositionVec = { firstSize, secondSize, 0 };
+			std::vector<IReactant::SizeType> compositionVec = { firstSize, secondSize, 0 };
 			// Get the product
-			auto product = getCompound(heVType, compositionVec);
+			auto product = getCompound(Species::HeV, compositionVec);
 
 			// Check if the product can be a super cluster
 			if (!product) {
@@ -336,7 +337,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 	// Vacancy reduction by Interstitial absorption in HeV clusters
 	// (He_a)(V_b) + (I_c) --> (He_a)[V_(b-c)]
 	// Get all the I clusters
-	auto allIReactants = getAll(iType);
+	auto allIReactants = getAll(Species::I);
 	// Loop on them
 	for (auto firstIt = allIReactants.begin(); firstIt != allIReactants.end();
 			firstIt++) {
@@ -349,16 +350,16 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			auto& comp = (*secondIt)->getComposition();
 			// The product can be He or HeV
 			IReactant * product = nullptr;
-			if (comp.at(vType) == firstSize) {
+			if (comp.at(Species::V) == firstSize) {
 				// The product is He
-				product = get(heType, comp.at(heType));
+				product = get(Species::He, comp.at(Species::He));
 			} else {
 				// The product is HeV
 				// Create the composition of the potential product
-				std::vector<int> compositionVec = { comp.at(heType), comp.at(vType)
+				std::vector<IReactant::SizeType> compositionVec = { comp.at(Species::He), comp.at(Species::V)
 						- firstSize, 0 };
 				// Get the product
-				product = getCompound(heVType, compositionVec);
+				product = getCompound(Species::HeV, compositionVec);
 			}
 			// Check that the reaction can occur
 			if (product
@@ -385,18 +386,18 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			// Get its boundaries
 			auto boundaries = superCluster->getBoundaries();
 			// Loop on them
-			for (int i = boundaries[0]; i <= boundaries[1]; i++) {
-				for (int j = boundaries[2]; j <= boundaries[3]; j++) {
+			for (auto i = boundaries[0]; i <= boundaries[1]; i++) {
+				for (auto j = boundaries[2]; j <= boundaries[3]; j++) {
 					// The product might be HeV or He
 					// Get the product
 					if (j == firstSize) {
 						// The product is He
-						product = get(heType, i);
+						product = get(Species::He, i);
 					}
 					else {
 						// Create the composition of the potential product
-						std::vector<int> compositionVec = { i, j - firstSize, 0 };
-						product = getCompound(heVType, compositionVec);
+						std::vector<IReactant::SizeType> compositionVec = { i, j - firstSize, 0 };
+						product = getCompound(Species::HeV, compositionVec);
 
 						// If the product doesn't exist check for super clusters
 						if (!product) {
@@ -440,7 +441,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //			secondSize = (*secondIt)->getSize();
 //			// Get the simple product
 //			productSize = firstSize + secondSize;
-//			auto product = get(heType, productSize);
+//			auto product = get(Species::He, productSize);
 //			// Doesn't do anything if the product exist
 //			if (product)
 //				continue;
@@ -454,7 +455,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //				// Create the composition of the potential product
 //				std::vector<int> compositionVec = { firstSize + secondSize,
 //						iSize, 0 };
-//				product = getCompound(heVType, compositionVec);
+//				product = getCompound(Species::HeV, compositionVec);
 //				// Check that the reaction can occur
 //				if (product
 //						&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -488,9 +489,9 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //			// Get its composition
 //			auto& comp = (*secondIt)->getComposition();
 //			// Get the simple product
-//			std::vector<int> compositionVec = { firstSize + comp.at(heType),
-//					comp.at(vType), 0 };
-//			auto product = getCompound(heVType, compositionVec);
+//			std::vector<int> compositionVec = { firstSize + comp.at(Species::He),
+//					comp.at(Species::V), 0 };
+//			auto product = getCompound(Species::HeV, compositionVec);
 //			// Doesn't do anything if the product exist
 //			if (product)
 //				continue;
@@ -502,8 +503,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //				// Get the size of the I cluster
 //				int iSize = (*it)->getSize();
 //				// Create the composition of the potential product
-//				compositionVec[1] = comp.at(vType) + iSize;
-//				product = getCompound(heVType, compositionVec);
+//				compositionVec[1] = comp.at(Species::V) + iSize;
+//				product = getCompound(Species::HeV, compositionVec);
 //				// Check that the reaction can occur
 //				if (product
 //						&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -543,7 +544,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			if (firstSize > secondSize) {
 				// Get the product
 				productSize = firstSize - secondSize;
-				auto product = get(iType, productSize);
+				auto product = get(Species::I, productSize);
 				// Check that the reaction can occur
 				if (product
 						&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -559,7 +560,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			} else if (firstSize < secondSize) {
 				// Get the product
 				productSize = secondSize - firstSize;
-				auto product = get(vType, productSize);
+				auto product = get(Species::V, productSize);
 				// Check that the reaction can occur
 				if (product
 						&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -592,7 +593,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //	// Helium absorption by HeI clusters
 //	// He_(a) + (He_b)(I_c) --> [He_(a+b)](I_c)
 //	// Get all the HeI clusters
-//	auto allHeIReactants = getAll(heIType);
+//	auto allHeIReactants = getAll(Species::HeI);
 //	// Loop on the He clusters
 //	for (auto firstIt = allHeReactants.begin(); firstIt != allHeReactants.end();
 //			firstIt++) {
@@ -604,10 +605,10 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //			// Get its composition
 //			auto& comp = (*secondIt)->getComposition();
 //			// Create the composition of the potential product
-//			std::vector<int> compositionVec = { comp.at(heType) + firstSize, 0,
-//					comp.at(iType) };
+//			std::vector<int> compositionVec = { comp.at(Species::He) + firstSize, 0,
+//					comp.at(Species::I) };
 //			// Get the product
-//			auto product = getCompound(heIType, compositionVec);
+//			auto product = getCompound(Species::HeI, compositionVec);
 //			// Check that the reaction can occur
 //			if (product
 //					&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -629,16 +630,16 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //	// Single Interstitial absorption by HeI clusters
 //	// (He_a)(I_b) + I --> (He_a)[I_(b+1)]
 //	// Get the single interstitial cluster
-//	auto singleInterstitialCluster = get(iType, 1);
+//	auto singleInterstitialCluster = get(Species::I, 1);
 //	// Loop on the HeI clusters
 //	for (auto secondIt = allHeIReactants.begin();
 //			secondIt != allHeIReactants.end(); secondIt++) {
 //		// Get its composition
 //		auto& comp = (*secondIt)->getComposition();
 //		// Create the composition of the potential product
-//		std::vector<int> compositionVec = { comp.at(heType), 0, comp.at(iType) + 1 };
+//		std::vector<int> compositionVec = { comp.at(Species::He), 0, comp.at(Species::I) + 1 };
 //		// Get the product
-//		auto product = getCompound(heIType, compositionVec);
+//		auto product = getCompound(Species::HeI, compositionVec);
 //		// Check that the reaction can occur
 //		if (product
 //				&& (singleInterstitialCluster->getDiffusionFactor() > 0.0
@@ -671,7 +672,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //			// Create the composition of the potential product
 //			std::vector<int> compositionVec = { firstSize, 0, secondSize };
 //			// Get the product
-//			auto product = getCompound(heIType, compositionVec);
+//			auto product = getCompound(Species::HeI, compositionVec);
 //			// Check that the reaction can occur
 //			if (product
 //					&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -704,16 +705,16 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //			auto& comp = (*secondIt)->getComposition();
 //			// The product can be He or HeI
 //			IReactant * product = nullptr;
-//			if (comp.at(iType) == firstSize) {
+//			if (comp.at(Species::I) == firstSize) {
 //				// The product is He
-//				product = get(heType, comp.at(heType));
+//				product = get(Species::He, comp.at(Species::He));
 //			} else {
 //				// The product is HeI
 //				// Create the composition of the potential product
-//				std::vector<int> compositionVec = { comp.at(heType), 0, comp.at(iType)
+//				std::vector<int> compositionVec = { comp.at(Species::He), 0, comp.at(Species::I)
 //						- firstSize };
 //				// Get the product
-//				product = getCompound(heIType, compositionVec);
+//				product = getCompound(Species::HeI, compositionVec);
 //			}
 //			// Check that the reaction can occur
 //			if (product
@@ -747,15 +748,15 @@ void PSIClusterReactionNetwork::checkDissociationConnectivity(
 	}
 	// remove He+He
 	if (reaction->first->getSize() == 1 && reaction->second->getSize() == 1
-			&& reaction->first->getType() == heType
-			&& reaction->second->getType() == heType) {
+			&& reaction->first->getType() == Species::He
+			&& reaction->second->getType() == Species::He) {
 		// Don't add the reverse reaction
 		return;
 	}
 
 //	// Check for trap mutations (with XOR)
-//	if ((reaction->first->getType() == iType)
-//			== !(reaction->second->getType() == iType)) {
+//	if ((reaction->first->getType() == Species::I)
+//			== !(reaction->second->getType() == Species::I)) {
 //		// Don't add the reverse reaction
 //		return;
 //	}
@@ -786,20 +787,21 @@ double PSIClusterReactionNetwork::getTemperature() const {
 	return temperature;
 }
 
-IReactant * PSIClusterReactionNetwork::get(const std::string& type,
-		const int size) const {
+IReactant * PSIClusterReactionNetwork::get(Species type,
+		IReactant::SizeType size) const {
 	// Local Declarations
-	static std::map<std::string, int> composition = { { heType, 0 },
-			{ vType, 0 }, { iType, 0 }, { xeType, 0 } };
+    static IReactant::Composition composition {
+            { Species::He, 0 },
+			{ Species::V, 0 }, { Species::I, 0 }, { Species::Xe, 0 } };
 	std::shared_ptr<IReactant> retReactant;
 
 	// Initialize the values because it's static
-	composition[heType] = 0;
-	composition[vType] = 0;
-	composition[iType] = 0;
+	composition[Species::He] = 0;
+	composition[Species::V] = 0;
+	composition[Species::I] = 0;
 
 	// Only pull the reactant if the name and size are valid
-	if ((type == heType || type == vType || type == iType) && size >= 1) {
+	if ((type == Species::He || type == Species::V || type == Species::I) && size >= 1) {
 		composition[type] = size;
 		//std::string encodedName = PSICluster::encodeCompositionAsName(composition);
 		// Make sure the reactant is in the map
@@ -812,24 +814,25 @@ IReactant * PSIClusterReactionNetwork::get(const std::string& type,
 	return retReactant.get();
 }
 
-IReactant * PSIClusterReactionNetwork::getCompound(const std::string& type,
-		const std::vector<int>& sizes) const {
+IReactant * PSIClusterReactionNetwork::getCompound(Species type,
+		const std::vector<IReactant::SizeType>& sizes) const {
 	// Local Declarations
-	static std::map<std::string, int> composition = { { heType, 0 },
-			{ vType, 0 }, { iType, 0 }, { xeType, 0 } };
+    static IReactant::Composition composition {
+            { Species::He, 0 },
+			{ Species::V, 0 }, { Species::I, 0 }, { Species::Xe, 0 } };
 	std::shared_ptr<IReactant> retReactant;
 
 	// Initialize the values because it's static
-	composition[heType] = 0;
-	composition[vType] = 0;
-	composition[iType] = 0;
+	composition[Species::He] = 0;
+	composition[Species::V] = 0;
+	composition[Species::I] = 0;
 
 	// Only pull the reactant if the name is valid and there are enough sizes
 	// to fill the composition.
-	if ((type == heVType || type == heIType) && sizes.size() == 3) {
-		composition[heType] = sizes[0];
-		composition[vType] = sizes[1];
-		composition[iType] = sizes[2];
+	if ((type == Species::HeV || type == Species::HeI) && sizes.size() == 3) {
+		composition[Species::He] = sizes[0];
+		composition[Species::V] = sizes[1];
+		composition[Species::I] = sizes[2];
 
 		// Make sure the reactant is in the map
 		std::string compStr = Reactant::toCanonicalString(type, composition);
@@ -841,24 +844,25 @@ IReactant * PSIClusterReactionNetwork::getCompound(const std::string& type,
 	return retReactant.get();
 }
 
-IReactant * PSIClusterReactionNetwork::getSuper(const std::string& type,
-		const std::vector<int>& sizes) const {
+IReactant * PSIClusterReactionNetwork::getSuper(Species type,
+		const std::vector<IReactant::SizeType>& sizes) const {
 	// Local Declarations
-	static std::map<std::string, int> composition = { { heType, 0 },
-			{ vType, 0 }, { iType, 0 }, { xeType, 0 } };
+    static IReactant::Composition composition {
+            { Species::He, 0 },
+			{ Species::V, 0 }, { Species::I, 0 }, { Species::Xe, 0 } };
 	std::shared_ptr<IReactant> retReactant;
 
 	// Setup the composition map to default values
-	composition[heType] = 0;
-	composition[vType] = 0;
-	composition[iType] = 0;
+	composition[Species::He] = 0;
+	composition[Species::V] = 0;
+	composition[Species::I] = 0;
 
 	// Only pull the reactant if the name is valid and there are enough sizes
 	// to fill the composition.
-	if (type == PSISuperType && sizes.size() == 3) {
-		composition[heType] = sizes[0];
-		composition[vType] = sizes[1];
-		composition[iType] = sizes[2];
+	if (type == Species::PSISuper && sizes.size() == 3) {
+		composition[Species::He] = sizes[0];
+		composition[Species::V] = sizes[1];
+		composition[Species::I] = sizes[2];
 		// Make sure the reactant is in the map
 		std::string compStr = Reactant::toCanonicalString(type, composition);
 		if (superSpeciesMap.count(compStr)) {
@@ -875,7 +879,7 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 	int numHe = 0, numV = 0, numI = 0;
 	bool isMixed = false;
 	int* numClusters = nullptr;
-	int* maxClusterSize = nullptr;
+    IReactant::SizeType* maxClusterSize = nullptr;
 
 	// Only add a complete reactant
 	if (reactant != NULL) {
@@ -883,9 +887,9 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 		auto& composition = reactant->getComposition();
 		const std::string& compStr = reactant->getCompositionString();
 		// Get the species sizes
-		numHe = composition.at(heType);
-		numV = composition.at(vType);
-		numI = composition.at(iType);
+		numHe = composition.at(Species::He);
+		numV = composition.at(Species::V);
+		numI = composition.at(Species::I);
 
 		// Determine if the cluster is a compound. If there is more than one
 		// type, then the check below will sum to greater than one and we know
@@ -930,7 +934,7 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 		// Increment the number of total clusters of this type
 		(*numClusters)++;
 		// Increment the max cluster size key
-		int clusterSize = numHe + numV + numI;
+        IReactant::SizeType clusterSize = numHe + numV + numI;
 		(*maxClusterSize) = std::max(clusterSize, (*maxClusterSize));
 		// Update the size
 		++networkSize;
@@ -959,9 +963,9 @@ void PSIClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 		auto& composition = reactant->getComposition();
 		const std::string& compStr = reactant->getCompositionString();
 		// Get the species sizes
-		numHe = composition.at(heType);
-		numV = composition.at(vType);
-		numI = composition.at(iType);
+		numHe = composition.at(Species::He);
+		numV = composition.at(Species::V);
+		numI = composition.at(Species::I);
 		// Determine if the cluster is a compound. If there is more than one
 		// type, then the check below will sum to greater than one and we know
 		// that we have a mixed cluster.
@@ -1015,7 +1019,7 @@ void PSIClusterReactionNetwork::removeReactants(
 	// Remove the doomed reactants from the type-specific cluster vectors.
 	// First, determine all cluster types used by clusters in the collection
 	// of doomed reactants...
-	std::set<std::string> typesUsed;
+	std::set<Species> typesUsed;
 	for (auto reactant : doomedReactants) {
 		typesUsed.insert(reactant->getType());
 	}
@@ -1055,7 +1059,7 @@ void PSIClusterReactionNetwork::reinitializeNetwork() {
 		(*it)->setHeMomentumId(id);
 		(*it)->setVMomentumId(id);
 
-		if ((*it)->getType() == heVType)
+		if ((*it)->getType() == Species::HeV)
 			numHeVClusters++;
 	}
 
@@ -1063,7 +1067,7 @@ void PSIClusterReactionNetwork::reinitializeNetwork() {
 	networkSize = id;
 
 	// Get all the super clusters and loop on them
-    for (auto& currCluster : clusterTypeMap[PSISuperType]) {
+    for (auto& currCluster : clusterTypeMap[Species::PSISuper]) {
 
 		id++;
 		currCluster->setHeMomentumId(id);
@@ -1073,7 +1077,7 @@ void PSIClusterReactionNetwork::reinitializeNetwork() {
 		// Update the HeV size
 		auto cluster = (PSISuperCluster *) currCluster.get();
 		auto bounds = cluster->getBoundaries();
-		int clusterSize = bounds[1] + bounds[3];
+        IReactant::SizeType clusterSize = bounds[1] + bounds[3];
 		maxHeVClusterSize = max(maxHeVClusterSize, clusterSize);
 	}
 
@@ -1118,7 +1122,7 @@ void PSIClusterReactionNetwork::updateConcentrationsFromArray(
 
 void PSIClusterReactionNetwork::getDiagonalFill(int *diagFill) {
 	// Get all the super clusters
-	auto superClusters = getAll(PSISuperType);
+	auto superClusters = getAll(Species::PSISuper);
 
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = getDOF();
@@ -1201,7 +1205,7 @@ double PSIClusterReactionNetwork::getTotalAtomConcentration() {
 	double heliumConc = 0.0;
 
 	// Get all the He clusters
-	auto heClusters = getAll(heType);
+	auto heClusters = getAll(Species::He);
 	// Loop on them
 	for (int i = 0; i < heClusters.size(); i++) {
 		// Get the cluster and its composition
@@ -1213,7 +1217,7 @@ double PSIClusterReactionNetwork::getTotalAtomConcentration() {
 	}
 
 	// Get all the HeV clusters
-	auto heVClusters = getAll(heVType);
+	auto heVClusters = getAll(Species::HeV);
 	// Loop on them
 	for (int i = 0; i < heVClusters.size(); i++) {
 		// Get the cluster and its composition
@@ -1221,11 +1225,11 @@ double PSIClusterReactionNetwork::getTotalAtomConcentration() {
 		auto& comp = cluster->getComposition();
 
 		// Add the concentration times the He content to the total helium concentration
-		heliumConc += cluster->getConcentration() * comp.at(heType);
+		heliumConc += cluster->getConcentration() * comp.at(Species::He);
 	}
 
 	// Get all the super clusters
-	auto superClusters = getAll(PSISuperType);
+	auto superClusters = getAll(Species::PSISuper);
 	// Loop on them
 	for (int i = 0; i < superClusters.size(); i++) {
 		// Get the cluster
@@ -1243,7 +1247,7 @@ double PSIClusterReactionNetwork::getTotalTrappedAtomConcentration() {
 	double heliumConc = 0.0;
 
 	// Get all the HeV clusters
-	auto heVClusters = getAll(heVType);
+	auto heVClusters = getAll(Species::HeV);
 	// Loop on them
 	for (int i = 0; i < heVClusters.size(); i++) {
 		// Get the cluster and its composition
@@ -1251,11 +1255,11 @@ double PSIClusterReactionNetwork::getTotalTrappedAtomConcentration() {
 		auto& comp = cluster->getComposition();
 
 		// Add the concentration times the He content to the total helium concentration
-		heliumConc += cluster->getConcentration() * comp.at(heType);
+		heliumConc += cluster->getConcentration() * comp.at(Species::He);
 	}
 
 	// Get all the super clusters
-	auto superClusters = getAll(PSISuperType);
+	auto superClusters = getAll(Species::PSISuper);
 	// Loop on them
 	for (int i = 0; i < superClusters.size(); i++) {
 		// Get the cluster
@@ -1273,7 +1277,7 @@ double PSIClusterReactionNetwork::getTotalVConcentration() {
 	double vConc = 0.0;
 
 	// Get all the V clusters
-	auto vClusters = getAll(vType);
+	auto vClusters = getAll(Species::V);
 	// Loop on them
 	for (int i = 0; i < vClusters.size(); i++) {
 		// Get the cluster and its composition
@@ -1285,7 +1289,7 @@ double PSIClusterReactionNetwork::getTotalVConcentration() {
 	}
 
 	// Get all the HeV clusters
-	auto heVClusters = getAll(heVType);
+	auto heVClusters = getAll(Species::HeV);
 	// Loop on them
 	for (int i = 0; i < heVClusters.size(); i++) {
 		// Get the cluster and its composition
@@ -1293,11 +1297,11 @@ double PSIClusterReactionNetwork::getTotalVConcentration() {
 		auto& comp = cluster->getComposition();
 
 		// Add the concentration times the V content to the total vacancy concentration
-		vConc += cluster->getConcentration() * comp.at(vType);
+		vConc += cluster->getConcentration() * comp.at(Species::V);
 	}
 
 	// Get all the super clusters
-	auto superClusters = getAll(PSISuperType);
+	auto superClusters = getAll(Species::PSISuper);
 	// Loop on them
 	for (int i = 0; i < superClusters.size(); i++) {
 		// Get the cluster
@@ -1315,7 +1319,7 @@ double PSIClusterReactionNetwork::getTotalIConcentration() {
 	double iConc = 0.0;
 
 	// Get all the V clusters
-	auto iClusters = getAll(iType);
+	auto iClusters = getAll(Species::I);
 	// Loop on them
 	for (int i = 0; i < iClusters.size(); i++) {
 		// Get the cluster and its composition
@@ -1368,7 +1372,7 @@ void PSIClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset) {
 	PSISuperCluster * superCluster;
 	double flux = 0.0;
 	int reactantIndex = 0;
-	auto superClusters = getAll(PSISuperType);
+	auto superClusters = getAll(Species::PSISuper);
 
 	// ----- Compute all of the new fluxes -----
 	for (int i = 0; i < networkSize; i++) {
@@ -1408,7 +1412,7 @@ void PSIClusterReactionNetwork::computeAllPartials(double *vals, int *indices,
 	std::vector<double> clusterPartials;
 	clusterPartials.resize(dof, 0.0);
 	// Get the super clusters
-	auto superClusters = getAll(PSISuperType);
+	auto superClusters = getAll(Species::PSISuper);
 
 	// Update the column in the Jacobian that represents each normal reactant
 	for (int i = 0; i < networkSize - superClusters.size(); i++) {
@@ -1519,70 +1523,70 @@ double PSIClusterReactionNetwork::computeBindingEnergy(
 		DissociationReaction * reaction) const {
 
 	double bindingEnergy = 5.0;
-	if (reaction->dissociating->getType() == heType
-			&& reaction->first->getType() == heType) {
+	if (reaction->dissociating->getType() == Species::He
+			&& reaction->first->getType() == Species::He) {
 		if (reaction->dissociating->getSize() == 2)
 			bindingEnergy = 0.5;
 		else
 			bindingEnergy = 1.0;
 	}
-	if (reaction->dissociating->getType() == vType
-			&& reaction->first->getType() == vType) {
+	if (reaction->dissociating->getType() == Species::V
+			&& reaction->first->getType() == Species::V) {
 		int size = reaction->dissociating->getSize();
 		bindingEnergy = 1.73
 				- 2.59
 						* (pow((double) size, 2.0 / 3.0)
 								- pow((double) size - 1.0, 2.0 / 3.0));
 	}
-	if ((reaction->dissociating->getType() == heVType)
-			&& (reaction->first->getType() == vType
-					|| reaction->second->getType() == vType)) {
+	if ((reaction->dissociating->getType() == Species::HeV)
+			&& (reaction->first->getType() == Species::V
+					|| reaction->second->getType() == Species::V)) {
 		auto& comp = reaction->dissociating->getComposition();
 		bindingEnergy = 1.73
 				- 2.59
-						* (pow((double) comp.at(vType), 2.0 / 3.0)
-								- pow((double) comp.at(vType) - 1.0, 2.0 / 3.0))
+						* (pow((double) comp.at(Species::V), 2.0 / 3.0)
+								- pow((double) comp.at(Species::V) - 1.0, 2.0 / 3.0))
 				+ 2.5
 						* log(
 								1.0
-										+ ((double) comp.at(heType)
-												/ (double) comp.at(vType)));
+										+ ((double) comp.at(Species::He)
+												/ (double) comp.at(Species::V)));
 	}
-	if (reaction->dissociating->getType() == PSISuperType
-			&& (reaction->first->getType() == vType
-					|| reaction->second->getType() == vType)) {
+	if (reaction->dissociating->getType() == Species::PSISuper
+			&& (reaction->first->getType() == Species::V
+					|| reaction->second->getType() == Species::V)) {
 		auto superCluster = (PSISuperCluster *) reaction->dissociating;
 		auto& comp = reaction->dissociating->getComposition();
-		double numV = (double) comp.at(vType);
-		double numHe = (double) comp.at(heType);
+		double numV = (double) comp.at(Species::V);
+		double numHe = (double) comp.at(Species::He);
 		bindingEnergy = 1.73
 				- 2.59 * (pow(numV, 2.0 / 3.0) - pow(numV - 1.0, 2.0 / 3.0))
 				+ 2.5 * log(1.0 + (numHe / numV));
 	}
-	if (reaction->first->getType() == iType
-			|| reaction->second->getType() == iType) {
-		if (reaction->dissociating->getType() == heVType) {
+	if (reaction->first->getType() == Species::I
+			|| reaction->second->getType() == Species::I) {
+		if (reaction->dissociating->getType() == Species::HeV) {
 			auto& comp = reaction->dissociating->getComposition();
 			bindingEnergy =
 					4.88
 							+ 2.59
-									* (pow((double) comp.at(vType), 2.0 / 3.0)
-											- pow((double) comp.at(vType) - 1.0,
+									* (pow((double) comp.at(Species::V), 2.0 / 3.0)
+											- pow((double) comp.at(Species::V) - 1.0,
 													2.0 / 3.0))
 							- 2.5
 									* log(
 											1.0
-													+ ((double) comp.at(heType)
-															/ (double) comp.at(vType)));
-		} else if (reaction->dissociating->getType() == PSISuperType) {
+													+ ((double) comp.at(Species::He)
+															/ (double) comp.at(Species::V)));
+		} else if (reaction->dissociating->getType() == Species::PSISuper) {
 			auto superCluster = (PSISuperCluster *) reaction->dissociating;
 			auto& comp = reaction->dissociating->getComposition();
-			double numV = (double) comp.at(vType);
-			double numHe = (double) comp.at(heType);
+			double numV = (double) comp.at(Species::V);
+			double numHe = (double) comp.at(Species::He);
 			bindingEnergy = 4.88
 					+ 2.59 * (pow(numV, 2.0 / 3.0) - pow(numV - 1.0, 2.0 / 3.0))
 					- 2.5 * log(1.0 + (numHe / numV));
-		} else if (reaction->dissociating->getType() == heType) {
+		} else if (reaction->dissociating->getType() == Species::He) {
 			int size = reaction->dissociating->getSize();
 			switch (size) {
 			case 1:
@@ -1631,7 +1635,7 @@ IReactant * PSIClusterReactionNetwork::getSuperFromComp(int nHe, int nV) const {
 	IReactant * toReturn = nullptr;
 	static std::vector<IReactant *> superClusters;
 	int superSize = superClusters.size();
-	if (superSize == 0) superClusters = getAll(PSISuperType);
+	if (superSize == 0) superClusters = getAll(Species::PSISuper);
 	// Find the right indices for He and V
 	int i = -1, j = -1;
 	for (auto it = boundVector.begin(); it != boundVector.end(); it++) {

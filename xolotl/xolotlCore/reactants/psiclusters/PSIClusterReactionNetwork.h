@@ -69,17 +69,17 @@ private:
 	/**
 	 * Maximum size of He clusters in our network.
 	 */
-	int maxHeClusterSize;
+    IReactant::SizeType maxHeClusterSize;
 
 	/**
 	 * Maximum size of HeV clusters in our network.
 	 */
-	int maxHeVClusterSize;
+    IReactant::SizeType maxHeVClusterSize;
 
 	/**
 	 * Maximum size of HeI clusters in our network.
 	 */
-	int maxHeIClusterSize;
+    IReactant::SizeType  maxHeIClusterSize;
 
 	/**
 	 * Calculate the dissociation constant of the first cluster with respect to
@@ -172,7 +172,7 @@ public:
 	 * @param size the size of the reactant
 	 * @return A pointer to the reactant
 	 */
-	IReactant * get(const std::string& type, const int size) const;
+	IReactant * get(Species type, IReactant::SizeType size) const override;
 
 	/**
 	 * This operation returns a compound reactant with the given type and size
@@ -185,8 +185,8 @@ public:
 	 * and I are contained in the mixed-species cluster.
 	 * @return A pointer to the compound reactant
 	 */
-	IReactant * getCompound(const std::string& type,
-			const std::vector<int>& sizes) const;
+	IReactant * getCompound(Species type,
+                            const std::vector<IReactant::SizeType>& sizes) const override;
 
 	/**
 	 * This operation returns a super reactant with the given type and size
@@ -199,8 +199,8 @@ public:
 	 * and I are contained in the mixed-species cluster.
 	 * @return A pointer to the compound reactant
 	 */
-	IReactant * getSuper(const std::string& type,
-			const std::vector<int>& sizes) const;
+	IReactant * getSuper(Species type, 
+                const std::vector<IReactant::SizeType>& sizes) const;
 
 
 	/**
@@ -376,21 +376,21 @@ public:
 	/**
 	 * Maximum size of He clusters in our network.
 	 */
-	int getMaxHeClusterSize() const {
+    IReactant::SizeType getMaxHeClusterSize() const {
 		return maxHeClusterSize;
 	}
 
 	/**
 	 * Maximum size of HeV clusters in our network.
 	 */
-	int getMaxHeVClusterSize() const {
+    IReactant::SizeType getMaxHeVClusterSize() const {
 		return maxHeVClusterSize;
 	}
 
 	/**
 	 * Maximum size of HeI clusters in our network.
 	 */
-	int getMaxHeIClusterSize() const {
+    IReactant::SizeType getMaxHeIClusterSize() const {
 		return maxHeIClusterSize;
 	}
 

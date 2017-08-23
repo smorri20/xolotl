@@ -2,7 +2,7 @@
 #define IREACTANT_H
 
 // Includes
-#include "IReactionNetwork.h"
+#include "Species.h"
 #include "ReactantUtils.h"
 #include <memory>
 #include <vector>
@@ -29,6 +29,17 @@ class IReactionNetwork;
 class IReactant {
 
 public:
+    /**
+     * A nice name for type of variable holding amount of a species.
+     */
+    using SizeType = uint32_t;
+
+    /**
+     * Nice name for type of variable holding Reactant's composition map.
+     */
+    using Composition = std::map<Species, SizeType>;
+
+
 
 	/**
 	 * The destructor
@@ -203,9 +214,9 @@ public:
 	 * This operation returns the reactant's type. It is up to subclasses to
 	 * define exactly what the allowed types may be.
 	 *
-	 * @return The type of this reactant as a string
+	 * @return The type of this reactant.
 	 */
-	virtual std::string getType() const = 0;
+	virtual Species getType() const = 0;
 
 	/**
 	 * This operation returns the composition of this reactant. This map is empty
@@ -214,7 +225,7 @@ public:
 	 * @return The composition returned as a map with keys naming distinct
 	 * elements and values indicating the amount of the element present.
 	 */
-	virtual const std::map<std::string, int> & getComposition() const = 0;
+    virtual const Composition & getComposition() const = 0;
 
 	/**
 	 * Get a string containing the canonical representation of the
@@ -316,7 +327,7 @@ public:
 	 * @return The total size of this reactant including the contributions
 	 * from all species types
 	 */
-	virtual int getSize() const = 0;
+	virtual SizeType getSize() const = 0;
 
 	/**
 	 * This operation retrieves the formation energy for this reactant.

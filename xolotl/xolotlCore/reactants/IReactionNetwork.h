@@ -52,7 +52,7 @@ public:
 	 * @param size The size of the reactant
 	 * @return A pointer to the reactant
 	 */
-	virtual IReactant * get(const std::string& type, const int size) const = 0;
+	virtual IReactant * get(Species type, IReactant::SizeType size) const = 0;
 
 	/**
 	 * This operation returns a compound reactant with the given type and size if it
@@ -62,8 +62,8 @@ public:
 	 * @param sizes An array containing the sizes of each piece of the reactant
 	 * @return A pointer to the compound reactant
 	 */
-	virtual IReactant * getCompound(const std::string& type,
-			const std::vector<int>& sizes) const = 0;
+	virtual IReactant * getCompound(Species type,
+			const std::vector<IReactant::SizeType>& sizes) const = 0;
 
 	/**
 	 * This operation returns all reactants in the network without regard for
@@ -83,7 +83,7 @@ public:
 	 * @return The list of all of the reactants in the network or null if the
 	 * type is invalid
 	 */
-	virtual std::vector<IReactant *> getAll(const std::string& type) const = 0;
+	virtual std::vector<IReactant *> getAll(Species type) const = 0;
 
 	/**
 	 * This operation adds a reactant or a compound reactant to the network.
@@ -130,7 +130,7 @@ public:
 	 * @return A vector with one entry for each of the distinct reactant types
 	 * in the network
 	 */
-	virtual const std::vector<std::string> & getNames() const = 0;
+	virtual const std::vector<Species> & getNames() const = 0;
 
 	/**
 	 * This operation returns the names of the compound reactants in the
@@ -139,7 +139,7 @@ public:
 	 * @return A vector with one each for each of the distinct compound
 	 * reactant types in the network
 	 */
-	virtual const std::vector<std::string> & getCompoundNames() const = 0;
+	virtual const std::vector<Species> & getCompoundNames() const = 0;
 
 	/**
 	 * This operation returns the size or number of reactants in the network.

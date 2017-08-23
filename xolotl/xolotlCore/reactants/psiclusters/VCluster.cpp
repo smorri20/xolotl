@@ -17,10 +17,10 @@ VCluster::VCluster(int nV,
 	nameStream << "V_" << size;
 	name = nameStream.str();
 	// Set the typename appropriately
-	typeName = vType;
+	type = Species::V;
 
 	// Update the composition map
-	compositionMap[vType] = size;
+	compositionMap[Species::V] = size;
 
 	// Compute the reaction radius
 	// It is the same formula for HeV clusters

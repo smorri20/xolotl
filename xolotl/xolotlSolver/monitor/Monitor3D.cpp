@@ -679,9 +679,9 @@ PetscErrorCode monitorMovingSurface3D(TS ts, PetscInt timestep, PetscReal time,
 	auto network = solverHandler->getNetwork();
 
 	// Get all the interstitial clusters
-	auto interstitials = network->getAll("I");
+	auto interstitials = network->getAll(Species::I);
 	// Get the single vacancy ID
-	auto singleVacancyCluster = network->get(xolotlCore::vType, 1);
+	auto singleVacancyCluster = network->get(xolotlCore::Species::V, 1);
 	int vacancyIndex = -1;
 	if (singleVacancyCluster)
 		vacancyIndex = singleVacancyCluster->getId() - 1;
@@ -920,7 +920,7 @@ PetscErrorCode monitorBursting3D(TS ts, PetscInt, PetscReal time, Vec solution,
 	// Get the network
 	auto network = solverHandler->getNetwork();
 	// Get all the super clusters
-	auto superClusters = network->getAll(PSISuperType);
+	auto superClusters = network->getAll(Species::PSISuper);
 
 	// Get the physical grid
 	auto grid = solverHandler->getXGrid();
@@ -997,7 +997,7 @@ PetscErrorCode monitorBursting3D(TS ts, PetscInt, PetscReal time, Vec solution,
 							<< std::endl;
 
 					// Get all the helium clusters
-					auto clusters = network->getAll(heType);
+					auto clusters = network->getAll(Species::He);
 					// Loop on them to reset their concentration at this grid point
 					for (int i = 0; i < clusters.size(); i++) {
 						auto cluster = clusters[i];
@@ -1006,14 +1006,14 @@ PetscErrorCode monitorBursting3D(TS ts, PetscInt, PetscReal time, Vec solution,
 					}
 
 					// Get all the HeV clusters
-					clusters = network->getAll(heVType);
+					clusters = network->getAll(Species::HeV);
 					// Loop on them to transfer their concentration to the V cluster of the
 					// same size at this grid point
 					for (int i = 0; i < clusters.size(); i++) {
 						auto cluster = clusters[i];
 						// Get the V cluster of the same size
 						auto& comp = cluster->getComposition();
-						auto vCluster = network->get(vType, comp.at(vType));
+						auto vCluster = network->get(Species::V, comp.at(Species::V));
 						int vId = vCluster->getId() - 1;
 						int id = cluster->getId() - 1;
 						gridPointSolution[vId] = gridPointSolution[id];
@@ -1027,7 +1027,7 @@ PetscErrorCode monitorBursting3D(TS ts, PetscInt, PetscReal time, Vec solution,
 						// Get the V cluster of the same size
 						double numV = cluster->getNumV();
 						int truncV = (int) numV;
-						auto vCluster = network->get(vType, truncV);
+						auto vCluster = network->get(Species::V, truncV);
 						int vId = vCluster->getId() - 1;
 						int id = cluster->getId() - 1;
 						double conc = cluster->getTotalConcentration();

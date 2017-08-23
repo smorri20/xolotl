@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(checkModifiedTrapMutation) {
 	BOOST_REQUIRE_CLOSE(updatedConcOffset[19], 0.0, 0.01); // Create He5V
 
 	// Initialize the indices and values to set in the Jacobian
-	int nHelium = network->getAll(heType).size();
+	int nHelium = network->getAll(Species::He).size();
 	int indices[3 * nHelium];
 	double val[3 * nHelium];
 	// Get the pointer on them for the compute modified trap-mutation method

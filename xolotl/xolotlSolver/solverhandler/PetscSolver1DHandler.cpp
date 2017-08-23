@@ -179,7 +179,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) {
 	const int dof = network->getDOF();
 
 	// Get the single vacancy ID
-	auto singleVacancyCluster = network->get(xolotlCore::vType, 1);
+	auto singleVacancyCluster = network->get(xolotlCore::Species::V, 1);
 	int vacancyIndex = -1;
 	if (singleVacancyCluster)
 		vacancyIndex = singleVacancyCluster->getId() - 1;
@@ -558,7 +558,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC,
 	const int dof = network->getDOF();
 
 	// Get all the He clusters in the network
-	auto heliums = network->getAll(xolotlCore::heType);
+	auto heliums = network->getAll(xolotlCore::Species::He);
 
 	// Compute the total concentration of atoms contained in bubbles
 	double atomConc = 0.0;

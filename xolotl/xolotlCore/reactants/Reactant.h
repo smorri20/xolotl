@@ -3,6 +3,7 @@
 
 // Includes
 #include "IReactant.h"
+#include "IReactionNetwork.h"
 #include <math.h>
 #include <sstream>
 #include <set>
@@ -54,7 +55,7 @@ protected:
 	/**
 	 * The type name of the reactant.
 	 */
-	std::string typeName;
+    Species type;
 
 	/**
 	 * An integer identification number for this reactant.
@@ -90,7 +91,7 @@ protected:
 	/**
 	 * The map that contains the composition of this cluster.
 	 */
-	std::map<std::string, int> compositionMap;
+    IReactant::Composition compositionMap;
 
 	/**
 	 * The performance handler registry that will be used with
@@ -102,7 +103,7 @@ protected:
 	 * The total size of this cluster including the contributions from all
 	 * species.
 	 */
-	int size;
+    IReactant::SizeType size;
 
 	/**
 	 * The diffusion factor, D_0, that is used to calculate the diffusion
@@ -287,8 +288,6 @@ public:
 		return 0.0;
 	}
 
-#if READY
-#else
 	/**
      * Update reactant using other reactants in its network.
 	 */
@@ -297,7 +296,6 @@ public:
         // Required to be defined because we create explicit Reactant objects,
         // e.g. as dummy objects.
     }
-#endif // READY
 
 	/**
 	 * This operation signifies that the reactant with reactant Id should be
@@ -381,7 +379,7 @@ public:
 	 *
 	 * @return The name
 	 */
-	const std::string getName() const {
+	const std::string getName() const override {
 		return name;
 	}
 
@@ -389,10 +387,10 @@ public:
 	 * This operation returns the reactant's type. It is up to subclasses to
 	 * define exactly what the allowed types may be.
 	 *
-	 * @return The type of this reactant as a string
+	 * @return The type of this reactant.
 	 */
-	std::string getType() const {
-		return typeName;
+    Species getType() const override {
+		return type;
 	}
 
 	/**
@@ -402,9 +400,10 @@ public:
 	 * @return The composition returned as a map with keys naming distinct
 	 * elements and values indicating the amount of the element present.
 	 */
-	virtual const std::map<std::string, int> & getComposition() const {
+    virtual const IReactant::Composition & getComposition() const override {
 		return compositionMap;
 	}
+
 
 	/**
 	 * Get a string containing the canonical representation of the
@@ -416,7 +415,7 @@ public:
 	 * @return A string containing the canonical representation of our
 	 * composition.
 	 */
-	virtual const std::string & getCompositionString() const {
+	virtual const std::string & getCompositionString() const override {
 		if (compString.empty()) {
 			compString = toCanonicalString(getType(), compositionMap);
 		}
@@ -528,7 +527,7 @@ public:
 	 * @return The total size of this reactant including the contributions
 	 * from all species types
 	 */
-	int getSize() const {
+    IReactant::SizeType getSize() const override {
 		return size;
 	}
 
@@ -638,8 +637,8 @@ public:
 	 * @return A string containing the canonical representation of our
 	 * composition.
 	 */
-	static std::string toCanonicalString(std::string type,
-			const std::map<std::string, int>& composition);
+	static std::string toCanonicalString(Species type,
+            const IReactant::Composition& composition);
 
 };
 

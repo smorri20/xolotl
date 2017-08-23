@@ -21,7 +21,7 @@ NESuperCluster::NESuperCluster(double num, int nTot, int width, double radius,
 	size = (int) numXe;
 
 	// Update the composition map
-	compositionMap[xeType] = (int) (numXe * (double) nTot);
+	compositionMap[Species::Xe] = (int) (numXe * (double) nTot);
 
 	// Set the width
 	sectionWidth = width;
@@ -39,7 +39,7 @@ NESuperCluster::NESuperCluster(double num, int nTot, int width, double radius,
 	nameStream << "Xe_" << numXe;
 	name = nameStream.str();
 	// Set the typename appropriately
-	typeName = "NESuper";
+	type = Species::NESuper;
 
 	return;
 }
@@ -188,8 +188,8 @@ void NESuperCluster::computeDispersion() {
 	else {
 		dispersion = 2.0
 				* (nXeSquare
-						- ((double) compositionMap[xeType]
-								* ((double) compositionMap[xeType]
+						- ((double) compositionMap[Species::Xe]
+								* ((double) compositionMap[Species::Xe]
 										/ (double) sectionWidth)))
 				/ ((double) (sectionWidth * (sectionWidth - 1)));
 	}
