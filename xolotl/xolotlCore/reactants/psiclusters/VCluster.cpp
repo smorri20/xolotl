@@ -20,7 +20,7 @@ VCluster::VCluster(int nV,
 	type = Species::V;
 
 	// Update the composition map
-	compositionMap[Species::V] = size;
+	composition[_network.getCompIndex(Species::V)] = size;
 
 	// Compute the reaction radius
 	// It is the same formula for HeV clusters

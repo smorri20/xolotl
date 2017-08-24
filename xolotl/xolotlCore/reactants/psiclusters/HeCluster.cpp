@@ -13,7 +13,7 @@ HeCluster::HeCluster(int nHe,
 	// Set the size
 	size = nHe;
 	// Update the composition map
-	compositionMap[Species::He] = size;
+    composition[_network.getCompIndex(Species::He)] = size;
 
 	// Set the reactant name appropriately
 	std::stringstream nameStream;

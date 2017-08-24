@@ -9,16 +9,19 @@ ProductionReaction::ProductionReaction(IReactant * _reactant1,
 
 	// We made an assumption about ordering.
 	// Check if we were wrong, and if so, swap.
-	if (_reactant2->getCompositionString()
-			< _reactant1->getCompositionString()) {
-		auto tmp = first;
-		first = second;
-		second = tmp;
+	if (_reactant2->getComposition() < _reactant1->getComposition()) {
+
+        std::swap(first, second);
 	}
+
+    auto const& firstComp = first->getComposition();
+    auto const& secondComp = second->getComposition();
 
 	// Determine our descriptive key and cache it.
 	// This assumes that our reactants are ordered.
-	descKey = first->getCompositionString() + second->getCompositionString();
+    descKey.reserve(firstComp.size() + secondComp.size());
+    descKey.insert(descKey.end(), firstComp.begin(), firstComp.end());
+    descKey.insert(descKey.end(), secondComp.begin(), secondComp.end());
 }
 
 DissociationReaction::DissociationReaction(IReactant * dissociatingPtr,
@@ -28,17 +31,21 @@ DissociationReaction::DissociationReaction(IReactant * dissociatingPtr,
 
 	// We made an assumption about ordering.
 	// Check if we were wrong, and if so, swap.
-	if (_reactant2->getCompositionString()
-			< _reactant1->getCompositionString()) {
-		auto tmp = first;
-		first = second;
-		second = tmp;
+	if (_reactant2->getComposition() < _reactant1->getComposition()) {
+
+        std::swap(first, second);
 	}
+
+    auto const& dissComp = dissociating->getComposition();
+    auto const& firstComp = first->getComposition();
+    auto const& secondComp = second->getComposition();
 
 	// Determine our descriptive key and cache it.
 	// This assumes that our reactants are ordered.
-	descKey = dissociating->getCompositionString()
-			+ first->getCompositionString() + second->getCompositionString();
+    descKey.reserve(dissComp.size() + firstComp.size() + secondComp.size());
+    descKey.insert(descKey.end(), dissComp.begin(), dissComp.end());
+    descKey.insert(descKey.end(), firstComp.begin(), firstComp.end());
+    descKey.insert(descKey.end(), secondComp.begin(), secondComp.end());
 }
 
 } // namespace xolotlCore

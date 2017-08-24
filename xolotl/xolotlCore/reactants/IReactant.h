@@ -35,9 +35,13 @@ public:
     using SizeType = uint32_t;
 
     /**
-     * Nice name for type of variable holding Reactant's composition map.
+     * Nice name for type of variable holding Reactant's composition.
+     * TODO can this be an array with a size determined at compile time?
+     * would require IReactant to be a template class,
+     * and the number of items in the composition array to be 
+     * obtained at compile time from the appropriate reaction network.
      */
-    using Composition = std::map<Species, SizeType>;
+    using Composition = std::vector<SizeType>;
 
 
 
@@ -227,18 +231,6 @@ public:
 	 */
     virtual const Composition & getComposition() const = 0;
 
-	/**
-	 * Get a string containing the canonical representation of the
-	 * composition of this reactant.  The string is not intended to
-	 * be human-readable, but rather is useful for keys in reactant maps
-	 * and for composition match tests (as opposed to comparisons of
-	 * the composition maps themselves).
-	 * TODO is this the same information as our name?
-	 *
-	 * @return A string containing the canonical representation of our
-	 * composition.
-	 */
-	virtual const std::string & getCompositionString() const = 0;
 
 	/**
 	 * This operation sets the id of the reactant, The id is zero by default

@@ -41,7 +41,7 @@ protected:
 		 * The canonical composition string representations of the reactants
 		 * we are to find.
 		 */
-		std::set<std::string> compStrings;
+		std::set<IReactant::Composition> comps;
 
 	public:
 		/**
@@ -50,7 +50,7 @@ protected:
 		 */
 		ReactantMatcher(const IReactionNetwork::ReactantVector& reactants) {
 			for (auto reactant : reactants) {
-				compStrings.insert(reactant->getCompositionString());
+				comps.insert(reactant->getComposition());
 			}
 		}
 
@@ -61,8 +61,8 @@ protected:
 		 * representation is in our set.
 		 */
 		bool operator()(const IReactant* testReactant) const {
-			auto iter = compStrings.find(testReactant->getCompositionString());
-			return (iter != compStrings.end());
+			auto iter = comps.find(testReactant->getComposition());
+			return (iter != comps.end());
 		}
 
 		/**

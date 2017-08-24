@@ -823,7 +823,7 @@ PetscErrorCode monitorBursting2D(TS ts, PetscInt, PetscReal time, Vec solution,
 					auto cluster = heVClusters[i];
 					// Get the V cluster of the same size
 					auto& comp = cluster->getComposition();
-					auto vCluster = network->get(Species::V, comp.at(Species::V));
+					auto vCluster = network->get(Species::V, comp[network->getCompIndex(Species::V)] );
 					int vId = vCluster->getId() - 1;
 					int id = cluster->getId() - 1;
 					gridPointSolution[vId] = gridPointSolution[id];

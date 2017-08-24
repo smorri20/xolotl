@@ -15,8 +15,8 @@ HeInterstitialCluster::HeInterstitialCluster(int numHelium, int numInterstitial,
 	size = numHe + numI;
 
 	// Update the composition map
-	compositionMap[Species::He] = numHe;
-	compositionMap[Species::I] = numI;
+	composition[_network.getCompIndex(Species::He)] = numHe;
+	composition[_network.getCompIndex(Species::I)] = numI;
 
 	// Set the reactant name appropriately
 	std::stringstream nameStream;

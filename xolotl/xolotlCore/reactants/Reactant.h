@@ -31,15 +31,6 @@ namespace xolotlCore {
  */
 class Reactant: public IReactant {
 
-private:
-	/**
-	 * A string description of our type/composition map that can
-	 * be used for quick comparisons.
-	 * Computed on demand by getCompositionString() and cached.
-	 * Note: must be kept consistent with contents of compositionMap.
-	 */
-	mutable std::string compString;
-
 protected:
 
 	/**
@@ -91,7 +82,7 @@ protected:
 	/**
 	 * The map that contains the composition of this cluster.
 	 */
-    IReactant::Composition compositionMap;
+    IReactant::Composition composition;
 
 	/**
 	 * The performance handler registry that will be used with
@@ -401,26 +392,9 @@ public:
 	 * elements and values indicating the amount of the element present.
 	 */
     virtual const IReactant::Composition & getComposition() const override {
-		return compositionMap;
+        return composition;
 	}
 
-
-	/**
-	 * Get a string containing the canonical representation of the
-	 * composition of this reactant.  The string is not intended to
-	 * be human-readable, but rather is useful for keys in reactant maps
-	 * and for composition match tests (as opposed to comparisons of
-	 * the composition maps themselves).
-	 *
-	 * @return A string containing the canonical representation of our
-	 * composition.
-	 */
-	virtual const std::string & getCompositionString() const override {
-		if (compString.empty()) {
-			compString = toCanonicalString(getType(), compositionMap);
-		}
-		return compString;
-	}
 
 	/**
 	 * This operation sets the id of the reactant, The id is zero by default
@@ -624,6 +598,7 @@ public:
 		return false;
 	}
 
+#if READY
 	/**
 	 * Get a string containing the canonical representation of the
 	 * given composition.  The string is not intended to
@@ -639,7 +614,7 @@ public:
 	 */
 	static std::string toCanonicalString(Species type,
             const IReactant::Composition& composition);
-
+#endif // READY
 };
 
 } // end namespace xolotlCore

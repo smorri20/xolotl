@@ -13,7 +13,7 @@ XeCluster::XeCluster(int nXe,
 	// Set the size
 	size = nXe;
 	// Update the composition map
-	compositionMap[Species::Xe] = size;
+	composition[_network.getCompIndex(Species::Xe)] = size;
 
 	// Set the reactant name appropriately
 	std::stringstream nameStream;

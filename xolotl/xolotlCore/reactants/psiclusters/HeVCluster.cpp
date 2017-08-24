@@ -15,8 +15,8 @@ HeVCluster::HeVCluster(int numHe, int numV,
 	size = numHe + numV;
 
 	// Update the composition map
-	compositionMap[Species::He] = numHe;
-	compositionMap[Species::V] = numV;
+	composition[_network.getCompIndex(Species::He)] = numHe;
+	composition[_network.getCompIndex(Species::V)] = numV;
 
 	// Set the reactant name appropriately
 	std::stringstream nameStream;

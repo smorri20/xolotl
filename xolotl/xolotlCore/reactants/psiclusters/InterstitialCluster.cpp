@@ -11,7 +11,7 @@ InterstitialCluster::InterstitialCluster(int nI,
 	// Set the size
 	size = nI;
 	// Update the composition map
-	compositionMap[Species::I] = size;
+	composition[_network.getCompIndex(Species::I)] = size;
 
 	// Set the reactant name appropriately
 	std::stringstream nameStream;

@@ -31,6 +31,18 @@ class NEClusterReactionNetwork: public ReactionNetwork {
 
 private:
 
+    /**
+     * Nice name for mapping between the Species we care about 
+     * and the indices within an IReactant's Composition array.
+     */
+    using CompositionIndexMap = std::unordered_map<Species, int32_t>;
+
+    /**
+     * Number of items in the IReactant::Composition vector for
+     * Species that we care about.
+     */
+    static const uint32_t nCompositionItems;
+
 	/**
 	 * Number of Xe clusters in our network.
 	 */
@@ -60,6 +72,11 @@ private:
 	 * Maximum size of XeI clusters in our network.
 	 */
     IReactant::SizeType maxXeIClusterSize;
+
+    /**
+     * Mapping of Species to index within IReactant composition map.
+     */
+    static CompositionIndexMap compIndexMap;
 
 	/**
 	 * Calculate the dissociation constant of the first cluster with respect to
@@ -327,6 +344,22 @@ public:
 		return maxXeIClusterSize;
 	}
 
+    /**
+     * Access mapping from Species to index within a Reactant's 
+     * composition array.
+     */
+    virtual int32_t getCompIndex(Species s) const override {
+        return compIndexMap.at(s);
+    }
+
+    /**
+     * Obtain length of composition vector.
+     *
+     * @return Number of items in the Composition vector.
+     */
+    virtual uint32_t getCompositionLength() const override {
+        return nCompositionItems;
+    }
 };
 
 }

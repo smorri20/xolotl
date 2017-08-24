@@ -275,6 +275,23 @@ public:
 	 */
 	virtual bool getDissociationsEnabled() const = 0;
 
+
+    /**
+     * Access mapping from Species to index within a Reactant's 
+     * composition array.
+     *
+     * @param s Species of interest.
+     * @return Index within Composition corresponding to Species s.
+     */
+    virtual int32_t getCompIndex(Species s) const = 0;
+
+
+    /**
+     * Obtain length of composition vector.
+     *
+     * @return Number of items in the Composition vector.
+     */
+    virtual uint32_t getCompositionLength() const = 0;
 };
 
 }

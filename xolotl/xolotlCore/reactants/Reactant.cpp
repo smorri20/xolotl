@@ -17,12 +17,14 @@ Reactant::Reactant(IReactionNetwork& _network,
 				0.0), type(Species::Invalid), network(_network), handlerRegistry(registry), size(
 				0), formationEnergy(0.0), diffusionFactor(0.0), diffusionCoefficient(
 				0.0), migrationEnergy(0.0), name("Reactant"), reactionRadius(
-				0.0) {
-	// Setup the composition map.
-	compositionMap[Species::Xe] = 0;
-	compositionMap[Species::He] = 0;
-	compositionMap[Species::V] = 0;
-	compositionMap[Species::I] = 0;
+				0.0),
+#if READY
+#else
+                // TODO need to get the size from our network.
+                // Even better, at compile time.
+                composition(network.getCompositionLength(), 0) {
+#endif // READY
+
 }
 
 Reactant::Reactant(Reactant &other) :
@@ -35,12 +37,9 @@ Reactant::Reactant(Reactant &other) :
 				other.diffusionCoefficient), migrationEnergy(
 				other.migrationEnergy), reactionRadius(other.reactionRadius), reactionConnectivitySet(
 				other.reactionConnectivitySet), dissociationConnectivitySet(
-				other.dissociationConnectivitySet) {
-	// Setup the composition map.
-	compositionMap[Species::Xe] = other.compositionMap[Species::Xe];
-	compositionMap[Species::He] = other.compositionMap[Species::He];
-	compositionMap[Species::V] = other.compositionMap[Species::V];
-	compositionMap[Species::I] = other.compositionMap[Species::I];
+				other.dissociationConnectivitySet),
+                composition(other.composition) {
+
 }
 
 void Reactant::recomputeDiffusionCoefficient(double temp) {
@@ -70,6 +69,7 @@ std::vector<int> Reactant::getConnectivity() const {
 	return connectivity;
 }
 
+#if READY
 std::string Reactant::toCanonicalString(Species type,
         const IReactant::Composition& composition) {
 
@@ -90,6 +90,7 @@ std::string Reactant::toCanonicalString(Species type,
 	}
 	return ostr.str();
 }
+#endif // READY
 
 void Reactant::setTemperature(double temp) {
 	temperature = temp;

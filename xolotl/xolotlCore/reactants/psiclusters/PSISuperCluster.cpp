@@ -27,8 +27,8 @@ PSISuperCluster::PSISuperCluster(double numHe, double numV, int nTot,
 	size = (int) (numHe + numV);
 
 	// Update the composition map
-	compositionMap[Species::He] = (int) numHe;
-	compositionMap[Species::V] = (int) numV;
+	composition[_network.getCompIndex(Species::He)] = (int) numHe;
+	composition[_network.getCompIndex(Species::V)] = (int) numV;
 
 	// Set the width
 	sectionHeWidth = heWidth;

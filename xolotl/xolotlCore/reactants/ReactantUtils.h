@@ -1,12 +1,12 @@
 #ifndef REACTANTUTILS_H
 #define REACTANTUTILS_H
 
-#include <string>
-#include "IReactant.h"
+#include <vector>
 
 namespace xolotlCore {
 
 class IReactant;
+
 
 /**
  * This is a public class that is used to store a reaction.
@@ -20,7 +20,12 @@ public:
 	 * Type of a canonical key describing this ProductionReaction that
 	 * can be used to compare it to other ProductionReactions.
 	 */
-	typedef std::string KeyType;
+#if READY
+    // We have dependency between IReactant.h and this file.
+    using KeyType = std::vector<IReactant::SizeType>;
+#else
+    using KeyType = std::vector<uint32_t>;
+#endif // READY
 
 protected:
 	/**
@@ -44,7 +49,7 @@ public:
 	/**
 	 * Find the canonical key describing this ProductionReaction.
 	 */
-	KeyType descriptiveKey() const {
+	const KeyType& descriptiveKey() const {
 		return descKey;
 	}
 };
