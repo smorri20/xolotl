@@ -27,8 +27,8 @@ PSISuperCluster::PSISuperCluster(double numHe, double numV, int nTot,
 	size = (int) (numHe + numV);
 
 	// Update the composition map
-	composition[_network.getCompIndex(Species::He)] = (int) numHe;
-	composition[_network.getCompIndex(Species::V)] = (int) numV;
+	composition[toCompIdx(Species::He)] = (int) numHe;
+	composition[toCompIdx(Species::V)] = (int) numV;
 
 	// Set the width
 	sectionHeWidth = heWidth;
@@ -46,7 +46,7 @@ PSISuperCluster::PSISuperCluster(double numHe, double numV, int nTot,
 	nameStream << "He_" << numHe << "V_" << numV;
 	name = nameStream.str();
 	// Set the typename appropriately
-	type = Species::PSISuper;
+	type = ReactantType::PSISuper;
 
 	return;
 }
@@ -103,12 +103,12 @@ void PSISuperCluster::createProduction(
 	// Update the coefficients
 	double firstHeDistance = 0.0, firstVDistance = 0.0, secondHeDistance = 0.0,
 			secondVDistance = 0.0;
-	if (reaction->first->getType() == Species::PSISuper) {
+	if (reaction->first->getType() == ReactantType::PSISuper) {
 		auto super = (PSICluster *) reaction->first;
 		firstHeDistance = super->getHeDistance(c);
 		firstVDistance = super->getVDistance(d);
 	}
-	if (reaction->second->getType() == Species::PSISuper) {
+	if (reaction->second->getType() == ReactantType::PSISuper) {
 		auto super = (PSICluster *) reaction->second;
 		secondHeDistance = super->getHeDistance(c);
 		secondVDistance = super->getVDistance(d);
@@ -235,7 +235,7 @@ void PSISuperCluster::createDissociation(
 
 	// Update the coefficients
 	double firstHeDistance = 0.0, firstVDistance = 0.0;
-	if (reaction->dissociating->getType() == Species::PSISuper) {
+	if (reaction->dissociating->getType() == ReactantType::PSISuper) {
 		auto super = (PSICluster *) reaction->dissociating;
 		firstHeDistance = super->getHeDistance(a);
 		firstVDistance = super->getVDistance(b);

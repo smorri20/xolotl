@@ -119,6 +119,7 @@ protected:
 	 */
 	int networkSize;
 
+#if READY
 	/**
 	 * The names of the reactants supported by this network.
 	 */
@@ -128,6 +129,7 @@ protected:
 	 * The names of the compound reactants supported by this network.
 	 */
     std::vector<Species> compoundNames;
+#endif // READY
 
 	/**
 	 * The biggest rate for this cluster
@@ -179,7 +181,7 @@ protected:
 	/**
 	 * This map stores all of the clusters in the network by type.
 	 */
-	std::map<Species, ReactantVector> clusterTypeMap;
+	std::map<ReactantType, ReactantVector> clusterTypeMap;
 
 
 	/**
@@ -293,7 +295,7 @@ public:
 	 * @return The list of all of the reactants in the network or null if the
 	 * type is invalid
 	 */
-    virtual const IReactionNetwork::ReactantVector& getAll(Species type) const override {
+    virtual const IReactionNetwork::ReactantVector& getAll(ReactantType type) const override {
 
         return clusterTypeMap.at(type);
     }
@@ -330,6 +332,7 @@ public:
 		return;
 	}
 
+#if READY
 	/**
 	 * This operation returns the names of the reactants in the network.
 	 *
@@ -352,6 +355,7 @@ public:
 
         return compoundNames;
     }
+#endif // READY
 
 	/**
 	 * This operation returns the size or number of reactants in the network.

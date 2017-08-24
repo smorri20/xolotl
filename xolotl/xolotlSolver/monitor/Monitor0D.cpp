@@ -177,7 +177,7 @@ PetscErrorCode monitorScatter0D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network and its size
 	auto network = solverHandler->getNetwork();
 	int networkSize = network->size();
-	auto const& superClusters = network->getAll(Species::NESuper);
+	auto const& superClusters = network->getAll(ReactantType::NESuper);
 
 	// Create a Point vector to store the data to give to the data provider
 	// for the visualization
@@ -288,7 +288,7 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network
 	auto network = solverHandler->getNetwork();
 	// Get all the super clusters
-	auto const& superClusters = network->getAll(Species::PSISuper);
+	auto const& superClusters = network->getAll(ReactantType::PSISuper);
 
 	// Get the physical grid
 	auto grid = solverHandler->getXGrid();
@@ -317,7 +317,7 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 			double conc = 0.0;
 			// V clusters
 			if (j == 0) {
-				cluster = network->get(Species::V, i);
+				cluster = network->get(ReactantType::V, i);
 				if (cluster) {
 					// Get the ID of the cluster
 					int id = cluster->getId() - 1;
@@ -326,7 +326,7 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 			}
 			// He clusters
 			else if (i == 0) {
-				cluster = network->get(Species::He, j);
+				cluster = network->get(ReactantType::He, j);
 				if (cluster) {
 					// Get the ID of the cluster
 					int id = cluster->getId() - 1;
@@ -335,7 +335,10 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 			}
 			// HeV clusters
 			else {
-				cluster = network->getCompound(Species::HeV, { j, i, 0 });
+                IReactant::Composition testComp;
+                testComp[toCompIdx(Species::He)] = j;
+                testComp[toCompIdx(Species::V)] = i;
+				cluster = network->getCompound(ReactantType::HeV, testComp);
 				if (cluster) {
 					// Get the ID of the cluster
 					int id = cluster->getId() - 1;
@@ -440,7 +443,7 @@ PetscErrorCode monitorMeanSize0D(TS ts, PetscInt timestep, PetscReal time,
 	int dof = network->getDOF();
 
 	// Get all the super clusters
-	auto const& superClusters = network->getAll(Species::PSISuper);
+	auto const& superClusters = network->getAll(ReactantType::PSISuper);
 
 	// Create the output file
 	std::ofstream outputFile;
@@ -682,7 +685,7 @@ PetscErrorCode setupPetsc0DMonitor(TS ts) {
 	// retention or the cumulative value and others
 	if (flagMeanSize) {
 		// Get all the vacancy clusters
-		auto const& vClusters = network->getAll(Species::V);
+		auto const& vClusters = network->getAll(ReactantType::V);
 
 		// Loop on the helium clusters
 		for (unsigned int i = 0; i < vClusters.size(); i++) {

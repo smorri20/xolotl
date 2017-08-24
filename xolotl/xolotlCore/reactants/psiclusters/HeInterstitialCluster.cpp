@@ -15,15 +15,15 @@ HeInterstitialCluster::HeInterstitialCluster(int numHelium, int numInterstitial,
 	size = numHe + numI;
 
 	// Update the composition map
-	composition[_network.getCompIndex(Species::He)] = numHe;
-	composition[_network.getCompIndex(Species::I)] = numI;
+	composition[toCompIdx(Species::He)] = numHe;
+	composition[toCompIdx(Species::I)] = numI;
 
 	// Set the reactant name appropriately
 	std::stringstream nameStream;
 	nameStream << "He_" << numHe << "I_" << numI;
 	name = nameStream.str();
 	// Set the typename appropriately
-	type = Species::HeI;
+	type = ReactantType::HeI;
 
 	// Compute the reaction radius
 	reactionRadius = (sqrt(3.0) / 4.0) * xolotlCore::tungstenLatticeConstant

@@ -3,6 +3,7 @@
 
 // Includes
 #include "Species.h"
+#include "ReactantType.h"
 #include "ReactantUtils.h"
 #include <memory>
 #include <vector>
@@ -35,13 +36,20 @@ public:
     using SizeType = uint32_t;
 
     /**
-     * Nice name for type of variable holding Reactant's composition.
-     * TODO can this be an array with a size determined at compile time?
-     * would require IReactant to be a template class,
-     * and the number of items in the composition array to be 
-     * obtained at compile time from the appropriate reaction network.
+     * Type of a reactant's composition.
+     * It is an array of values, one per known Species.
+     * The array values are ordered according to the integer values of
+     * the Species enums, so casting a Species value to an int can
+     * be used to index into the array to get the concentration of
+     * that Species.
      */
-    using Composition = std::vector<SizeType>;
+    struct Composition : public std::array<SizeType, static_cast<int>(Species::last) + 1> {
+        Composition()
+        {
+            // By default, initialize all species concentrations to 0.
+            fill(0);
+        }
+    };
 
 
 
@@ -220,7 +228,7 @@ public:
 	 *
 	 * @return The type of this reactant.
 	 */
-	virtual Species getType() const = 0;
+	virtual ReactantType getType() const = 0;
 
 	/**
 	 * This operation returns the composition of this reactant. This map is empty

@@ -27,6 +27,8 @@ public:
     using KeyType = std::vector<uint32_t>;
 #endif // READY
 
+    
+
 protected:
 	/**
 	 * A descriptive key in canonical form that can be used for

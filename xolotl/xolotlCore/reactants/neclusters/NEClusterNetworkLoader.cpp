@@ -209,7 +209,7 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::generate(
 void NEClusterNetworkLoader::applyGrouping(
 		std::shared_ptr<IReactionNetwork> network) {
 	// Get the xenon cluster map
-	auto const& xeMap = network->getAll(Species::Xe);
+	auto const& xeMap = network->getAll(ReactantType::Xe);
 
 	// Create a temporary vector for the loop
 	std::vector<NECluster *> tempVector;
@@ -228,7 +228,7 @@ void NEClusterNetworkLoader::applyGrouping(
 	// Loop on the xenon groups
 	for (int k = xeMin; k <= xeMap.size(); k++) {
 		// Get the corresponding cluster
-		cluster = (NECluster *) network->get(Species::Xe, k);
+		cluster = (NECluster *) network->get(ReactantType::Xe, k);
 
 		// Verify if the cluster exists
 		if (!cluster)
@@ -292,7 +292,7 @@ void NEClusterNetworkLoader::applyGrouping(
 		// Loop on its reacting pairs
 		for (int l = 0; l < react.size(); l++) {
 			// Test the first reactant
-			if (react[l].first->getType() == Species::Xe) {
+			if (react[l].first->getType() == ReactantType::Xe) {
 				// Get its size
 				nXe = react[l].first->getSize();
 				// Test its size
@@ -305,7 +305,7 @@ void NEClusterNetworkLoader::applyGrouping(
 			}
 
 			// Test the second reactant
-			if (react[l].second->getType() == Species::Xe) {
+			if (react[l].second->getType() == ReactantType::Xe) {
 				// Get its size
 				nXe = react[l].second->getSize();
 				// Test its size
@@ -321,7 +321,7 @@ void NEClusterNetworkLoader::applyGrouping(
 		// Loop on its combining reactants
 		for (int l = 0; l < combi.size(); l++) {
 			// Test the combining reactant
-			if (combi[l].combining->getType() == Species::Xe) {
+			if (combi[l].combining->getType() == ReactantType::Xe) {
 				// Get its size
 				nXe = combi[l].combining->getSize();
 				// Test its size
@@ -337,7 +337,7 @@ void NEClusterNetworkLoader::applyGrouping(
 		// Loop on its dissociating pairs
 		for (int l = 0; l < disso.size(); l++) {
 			// Test the first reactant
-			if (disso[l].first->getType() == Species::Xe) {
+			if (disso[l].first->getType() == ReactantType::Xe) {
 				// Get its size
 				nXe = disso[l].first->getSize();
 				// Test its size
@@ -350,7 +350,7 @@ void NEClusterNetworkLoader::applyGrouping(
 			}
 
 			// Test the second reactant
-			if (disso[l].second->getType() == Species::Xe) {
+			if (disso[l].second->getType() == ReactantType::Xe) {
 				// Get its size
 				nXe = disso[l].second->getSize();
 				// Test its size
@@ -366,7 +366,7 @@ void NEClusterNetworkLoader::applyGrouping(
 		// Loop on its emission pairs
 		for (int l = 0; l < emi.size(); l++) {
 			// Test the first reactant
-			if (emi[l].first->getType() == Species::Xe) {
+			if (emi[l].first->getType() == ReactantType::Xe) {
 				// Get its size
 				nXe = emi[l].first->getSize();
 				// Test its size
@@ -379,7 +379,7 @@ void NEClusterNetworkLoader::applyGrouping(
 			}
 
 			// Test the second reactant
-			if (emi[l].second->getType() == Species::Xe) {
+			if (emi[l].second->getType() == ReactantType::Xe) {
 				// Get its size
 				nXe = emi[l].second->getSize();
 				// Test its size
@@ -400,7 +400,7 @@ void NEClusterNetworkLoader::applyGrouping(
 	}
 
 	// Get the super cluster map
-	auto const& superMap = network->getAll(Species::NESuper);
+	auto const& superMap = network->getAll(ReactantType::NESuper);
 	// Set the reaction network for each super reactant
 	for (auto& currCluster : superMap) {
 		currCluster->updateFromNetwork();

@@ -57,7 +57,7 @@ public:
 	 * @param size The size of the reactant
 	 * @return A pointer to the reactant
 	 */
-	virtual IReactant * get(Species type, IReactant::SizeType size) const = 0;
+	virtual IReactant * get(ReactantType type, IReactant::SizeType size) const = 0;
 
 	/**
 	 * This operation returns a compound reactant with the given type and size if it
@@ -67,8 +67,8 @@ public:
 	 * @param sizes An array containing the sizes of each piece of the reactant
 	 * @return A pointer to the compound reactant
 	 */
-	virtual IReactant * getCompound(Species type,
-			const std::vector<IReactant::SizeType>& sizes) const = 0;
+	virtual IReactant * getCompound(ReactantType type,
+            const IReactant::Composition& comp) const = 0;
 
 	/**
 	 * This operation returns all reactants in the network without regard for
@@ -87,7 +87,7 @@ public:
 	 * @param type The reactant or compound reactant type
 	 * @return The list of all of the reactants in the network.
 	 */
-    virtual const ReactantVector& getAll(Species type) const = 0;
+    virtual const ReactantVector& getAll(ReactantType type) const = 0;
 
 	/**
 	 * This operation adds a reactant or a compound reactant to the network.
@@ -128,6 +128,7 @@ public:
 	 */
 	virtual void reinitializeConnectivities() = 0;
 
+#if READY
 	/**
 	 * This operation returns the names of the reactants in the network.
 	 *
@@ -144,6 +145,7 @@ public:
 	 * reactant types in the network
 	 */
 	virtual const std::vector<Species> & getCompoundNames() const = 0;
+#endif // READY
 
 	/**
 	 * This operation returns the size or number of reactants in the network.
@@ -274,24 +276,6 @@ public:
 	 * @returns true if reactions are enabled, false otherwise.
 	 */
 	virtual bool getDissociationsEnabled() const = 0;
-
-
-    /**
-     * Access mapping from Species to index within a Reactant's 
-     * composition array.
-     *
-     * @param s Species of interest.
-     * @return Index within Composition corresponding to Species s.
-     */
-    virtual int32_t getCompIndex(Species s) const = 0;
-
-
-    /**
-     * Obtain length of composition vector.
-     *
-     * @return Number of items in the Composition vector.
-     */
-    virtual uint32_t getCompositionLength() const = 0;
 };
 
 }

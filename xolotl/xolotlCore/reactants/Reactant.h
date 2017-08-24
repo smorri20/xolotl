@@ -46,7 +46,7 @@ protected:
 	/**
 	 * The type name of the reactant.
 	 */
-    Species type;
+    ReactantType type;
 
 	/**
 	 * An integer identification number for this reactant.
@@ -380,7 +380,7 @@ public:
 	 *
 	 * @return The type of this reactant.
 	 */
-    Species getType() const override {
+    ReactantType getType() const override {
 		return type;
 	}
 
@@ -597,24 +597,6 @@ public:
 	virtual bool isMixed() const {
 		return false;
 	}
-
-#if READY
-	/**
-	 * Get a string containing the canonical representation of the
-	 * given composition.  The string is not intended to
-	 * be human-readable, but rather is useful for keys in reactant maps
-	 * and for composition match tests (as opposed to comparisons of
-	 * the composition maps themselves).
-	 *
-	 * @param type The type that will be used with the given composition.
-	 * @param composition A map containing the names and amounts of each
-	 * part of the reactant.
-	 * @return A string containing the canonical representation of our
-	 * composition.
-	 */
-	static std::string toCanonicalString(Species type,
-            const IReactant::Composition& composition);
-#endif // READY
 };
 
 } // end namespace xolotlCore

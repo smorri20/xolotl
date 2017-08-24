@@ -10,27 +10,6 @@
 using namespace xolotlCore;
 
 
-// When defining this mapping, the index values of the mapping
-// should be small integers, sequential starting from 0, and 
-// defined for all types of reactants that our reaction network
-// knows about.
-//
-// Note that in defining this we are assuming that the program
-// will not create multiple types of reaction networks, since
-// our mappings will not be compatible with the other types of networks.
-// If we need to create multiple types of reaction networks,
-// we need to move this mapping to the base class, and define it
-// for every Species value, and pay the cost of increased size of
-// the IReactant::Composition vectors.
-NEClusterReactionNetwork::CompositionIndexMap NEClusterReactionNetwork::compIndexMap {
-    { Species::Xe, 0 },
-    { Species::V, 1 },
-    { Species::I, 2 }
-};
-const uint32_t NEClusterReactionNetwork::nCompositionItems = 3;
-
-
-
 NEClusterReactionNetwork::NEClusterReactionNetwork(
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		ReactionNetwork(registry) {
@@ -49,23 +28,19 @@ NEClusterReactionNetwork::NEClusterReactionNetwork(
 	maxXeVClusterSize = 0;
 	maxXeIClusterSize = 0;
 
-	// Set the reactant names
-	names.push_back(Species::Xe);
-	names.push_back(Species::V);
-	names.push_back(Species::I);
-	// Set the compound reactant names
-	compoundNames.push_back(Species::XeV);
-	compoundNames.push_back(Species::XeI);
-	compoundNames.push_back(Species::NESuper);
-
-	// Setup the cluster type map
-    for (auto& currName : names) {
-        clusterTypeMap.insert( { currName, ReactionNetwork::ReactantVector() } );
+    // Ensure our per-type cluster map can store Reactants of the
+    // types we know about.
+    std::vector<ReactantType> knownClusterTypes {
+        ReactantType::V,
+        ReactantType::I,
+        ReactantType::Xe,
+        ReactantType::XeV,
+        ReactantType::XeI,
+        ReactantType::NESuper
+    };
+    for (auto& currType : knownClusterTypes) {
+        clusterTypeMap.insert( { currType, ReactionNetwork::ReactantVector() } );
     }
-    for (auto& currName : compoundNames) {
-        clusterTypeMap.insert( { currName, ReactionNetwork::ReactantVector() } );
-    }
-
 
 	return;
 }
@@ -101,16 +76,16 @@ void NEClusterReactionNetwork::createReactionConnectivity() {
 	// We know here that only Xe_1 can cluster so we simplify the search
 	// Xe_(a-i) + Xe_i --> Xe_a
 	firstSize = 1;
-	auto singleXeCluster = get(Species::Xe, firstSize);
+	auto singleXeCluster = get(ReactantType::Xe, firstSize);
 	// Get all the Xe clusters
-	auto const& xeClusters = getAll(Species::Xe);
+	auto const& xeClusters = getAll(ReactantType::Xe);
 	// Loop on them
 	for (auto it = xeClusters.begin(); it != xeClusters.end(); it++) {
 		// Get the size of the second reactant and product
 		secondSize = (*it)->getSize();
 		productSize = firstSize + secondSize;
 		// Get the product cluster for the reaction
-		auto product = get(Species::Xe, productSize);
+		auto product = get(ReactantType::Xe, productSize);
 		// Check that the reaction can occur
 		if (product
 				&& (singleXeCluster->getDiffusionFactor() > 0.0
@@ -166,15 +141,15 @@ double NEClusterReactionNetwork::getTemperature() const {
 	return temperature;
 }
 
-IReactant * NEClusterReactionNetwork::get(Species type,
+IReactant * NEClusterReactionNetwork::get(ReactantType type,
 		IReactant::SizeType size) const {
 	// Local Declarations
 	std::shared_ptr<IReactant> retReactant;
 
 	// Only pull the reactant if the name and size are valid
-	if ((type == Species::Xe || type == Species::V || type == Species::I) && size >= 1) {
-        IReactant::Composition composition(nCompositionItems, 0);
-		composition[getCompIndex(type)] = size;
+	if ((type == ReactantType::Xe || type == ReactantType::V || type == ReactantType::I) && size >= 1) {
+        IReactant::Composition composition;
+		composition[toCompIdx(toSpecies(type))] = size;
 		//std::string encodedName = NECluster::encodeCompositionAsName(composition);
 		// Check if the reactant is in the map
         auto iter = singleSpeciesMap.find(composition);
@@ -186,21 +161,18 @@ IReactant * NEClusterReactionNetwork::get(Species type,
 	return retReactant.get();
 }
 
-IReactant * NEClusterReactionNetwork::getCompound(Species type,
-		const std::vector<IReactant::SizeType>& sizes) const {
+IReactant * NEClusterReactionNetwork::getCompound(ReactantType type,
+        const IReactant::Composition& comp) const {
+
 	// Local Declarations
 	std::shared_ptr<IReactant> retReactant;
 
 	// Only pull the reactant if the name is valid and there are enough sizes
 	// to fill the composition.
-	if ((type == Species::XeV || type == Species::XeI) && sizes.size() == 3) {
-        IReactant::Composition composition(nCompositionItems, 0);
-		composition[getCompIndex(Species::Xe)] = sizes[0];
-		composition[getCompIndex(Species::V)] = sizes[1];
-		composition[getCompIndex(Species::I)] = sizes[2];
+	if (type == ReactantType::XeV || type == ReactantType::XeI) {
 
 		// Check if the reactant is in the map
-        auto iter = mixedSpeciesMap.find(composition);
+        auto iter = mixedSpeciesMap.find(comp);
         if (iter != mixedSpeciesMap.end()) {
             retReactant = iter->second;
         }
@@ -209,15 +181,15 @@ IReactant * NEClusterReactionNetwork::getCompound(Species type,
 	return retReactant.get();
 }
 
-IReactant * NEClusterReactionNetwork::getSuper(Species type,
+IReactant * NEClusterReactionNetwork::getSuper(ReactantType type,
 		IReactant::SizeType size) const {
 	// Local Declarations
 	std::shared_ptr<IReactant> retReactant;
 
 	// Only pull the reactant if the name and size are valid.
-	if (type == Species::NESuper && size >= 1) {
-        IReactant::Composition composition(nCompositionItems, 0);
-		composition[getCompIndex(Species::Xe)] = size;
+	if (type == ReactantType::NESuper && size >= 1) {
+        IReactant::Composition composition;
+		composition[toCompIdx(Species::Xe)] = size;
 
 		// Check if the reactant is in the map
         auto iter = superSpeciesMap.find(composition);
@@ -243,9 +215,9 @@ void NEClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 		auto& composition = reactant->getComposition();
 
 		// Get the species sizes
-		numXe = composition[getCompIndex(Species::Xe)] ;
-		numV = composition[getCompIndex(Species::V)] ;
-		numI = composition[getCompIndex(Species::I)] ;
+		numXe = composition[toCompIdx(Species::Xe)] ;
+		numV = composition[toCompIdx(Species::V)] ;
+		numI = composition[toCompIdx(Species::I)] ;
 
 		// Determine if the cluster is a compound. If there is more than one
 		// type, then the check below will sum to greater than one and we know
@@ -318,9 +290,9 @@ void NEClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 		// Get the composition
 		auto& composition = reactant->getComposition();
 		// Get the species sizes
-		numXe = composition[getCompIndex(Species::Xe)] ;
-		numV = composition[getCompIndex(Species::V)] ;
-		numI = composition[getCompIndex(Species::I)] ;
+		numXe = composition[toCompIdx(Species::Xe)] ;
+		numV = composition[toCompIdx(Species::V)] ;
+		numI = composition[toCompIdx(Species::I)] ;
 		// Determine if the cluster is a compound. If there is more than one
 		// type, then the check below will sum to greater than one and we know
 		// that we have a mixed cluster.
@@ -377,7 +349,7 @@ void NEClusterReactionNetwork::removeReactants(
 	// Remove the doomed reactants from the type-specific cluster vectors.
 	// First, determine all cluster types used by clusters in the collection
 	// of doomed reactants...
-	std::set<Species> typesUsed;
+	std::set<ReactantType> typesUsed;
 	for (auto reactant : doomedReactants) {
 		typesUsed.insert(reactant->getType());
 	}
@@ -420,7 +392,7 @@ void NEClusterReactionNetwork::reinitializeNetwork() {
 
 		(*it)->optimizeReactions();
 
-		if ((*it)->getType() == Species::Xe)
+		if ((*it)->getType() == ReactantType::Xe)
 			numXeClusters++;
 	}
 
@@ -428,7 +400,7 @@ void NEClusterReactionNetwork::reinitializeNetwork() {
 	networkSize = id;
 
 	// Get all the super clusters and loop on them
-    for (auto& currCluster : clusterTypeMap.at(Species::NESuper)) {
+    for (auto& currCluster : clusterTypeMap.at(ReactantType::NESuper)) {
 		id++;
 		currCluster->setXeMomentumId(id);
 	}
@@ -473,7 +445,7 @@ void NEClusterReactionNetwork::updateConcentrationsFromArray(
 
 void NEClusterReactionNetwork::getDiagonalFill(int *diagFill) {
 	// Get all the super clusters
-	auto const& superClusters = getAll(Species::NESuper);
+	auto const& superClusters = getAll(ReactantType::NESuper);
 
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = getDOF();
@@ -580,7 +552,7 @@ void NEClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset) {
 	IReactant * cluster;
 	double flux = 0.0;
 	int reactantIndex = 0;
-	auto const& superClusters = getAll(Species::NESuper);
+	auto const& superClusters = getAll(ReactantType::NESuper);
 
 	// ----- Compute all of the new fluxes -----
 	for (int i = 0; i < networkSize; i++) {
@@ -614,7 +586,7 @@ void NEClusterReactionNetwork::computeAllPartials(double *vals, int *indices,
 	std::vector<double> clusterPartials;
 	clusterPartials.resize(dof, 0.0);
 	// Get the super clusters
-	auto const& superClusters = getAll(Species::NESuper);
+	auto const& superClusters = getAll(ReactantType::NESuper);
 
 	// Update the column in the Jacobian that represents each normal reactant
 	for (int i = 0; i < networkSize - superClusters.size(); i++) {

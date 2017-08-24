@@ -11,14 +11,14 @@ InterstitialCluster::InterstitialCluster(int nI,
 	// Set the size
 	size = nI;
 	// Update the composition map
-	composition[_network.getCompIndex(Species::I)] = size;
+	composition[toCompIdx(Species::I)] = size;
 
 	// Set the reactant name appropriately
 	std::stringstream nameStream;
 	nameStream << "I_" << size;
 	name = nameStream.str();
 	// Set the typename appropriately
-	type = Species::I;
+	type = ReactantType::I;
 
 	// Compute the reaction radius
 	double EightPi = 8.0 * xolotlCore::pi;

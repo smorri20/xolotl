@@ -13,14 +13,14 @@ XeCluster::XeCluster(int nXe,
 	// Set the size
 	size = nXe;
 	// Update the composition map
-	composition[_network.getCompIndex(Species::Xe)] = size;
+	composition[toCompIdx(Species::Xe)] = size;
 
 	// Set the reactant name appropriately
 	std::stringstream nameStream;
 	nameStream << "Xe_" << size;
 	name = nameStream.str();
 	// Set the typename appropriately
-	type = Species::Xe;
+	type = ReactantType::Xe;
 
 	// Compute the reaction radius
 	double FourPi = 4.0 * xolotlCore::pi;

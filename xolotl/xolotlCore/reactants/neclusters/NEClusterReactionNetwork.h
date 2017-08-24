@@ -31,18 +31,6 @@ class NEClusterReactionNetwork: public ReactionNetwork {
 
 private:
 
-    /**
-     * Nice name for mapping between the Species we care about 
-     * and the indices within an IReactant's Composition array.
-     */
-    using CompositionIndexMap = std::unordered_map<Species, int32_t>;
-
-    /**
-     * Number of items in the IReactant::Composition vector for
-     * Species that we care about.
-     */
-    static const uint32_t nCompositionItems;
-
 	/**
 	 * Number of Xe clusters in our network.
 	 */
@@ -72,11 +60,6 @@ private:
 	 * Maximum size of XeI clusters in our network.
 	 */
     IReactant::SizeType maxXeIClusterSize;
-
-    /**
-     * Mapping of Species to index within IReactant composition map.
-     */
-    static CompositionIndexMap compIndexMap;
 
 	/**
 	 * Calculate the dissociation constant of the first cluster with respect to
@@ -158,7 +141,7 @@ public:
 	 * @param size the size of the reactant
 	 * @return A pointer to the reactant
 	 */
-	IReactant * get(Species type, IReactant::SizeType size) const override;
+	IReactant * get(ReactantType type, IReactant::SizeType size) const override;
 
 	/**
 	 * This operation returns a compound reactant with the given type and size
@@ -171,8 +154,8 @@ public:
 	 * and I are contained in the mixed-species cluster.
 	 * @return A pointer to the compound reactant
 	 */
-	IReactant * getCompound(Species type,
-			const std::vector<IReactant::SizeType>& sizes) const override;
+	IReactant * getCompound(ReactantType type,
+            const IReactant::Composition& comp) const override;
 
 	/**
 	 * This operation returns a super reactant with the given type and size
@@ -182,7 +165,7 @@ public:
 	 * @param size The size of the reactant.
 	 * @return A pointer to the super reactant
 	 */
-	IReactant * getSuper(Species type, IReactant::SizeType size) const;
+	IReactant * getSuper(ReactantType type, IReactant::SizeType size) const;
 
 
 	/**
@@ -343,23 +326,6 @@ public:
     IReactant::SizeType getMaxXeIClusterSize() const {
 		return maxXeIClusterSize;
 	}
-
-    /**
-     * Access mapping from Species to index within a Reactant's 
-     * composition array.
-     */
-    virtual int32_t getCompIndex(Species s) const override {
-        return compIndexMap.at(s);
-    }
-
-    /**
-     * Obtain length of composition vector.
-     *
-     * @return Number of items in the Composition vector.
-     */
-    virtual uint32_t getCompositionLength() const override {
-        return nCompositionItems;
-    }
 };
 
 }

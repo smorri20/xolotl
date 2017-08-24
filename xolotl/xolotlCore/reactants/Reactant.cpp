@@ -14,16 +14,10 @@ using namespace xolotlCore;
 Reactant::Reactant(IReactionNetwork& _network,
                 std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		concentration(0.0), id(0), xeMomId(0), heMomId(0), vMomId(0), temperature(
-				0.0), type(Species::Invalid), network(_network), handlerRegistry(registry), size(
+				0.0), type(ReactantType::Invalid), network(_network), handlerRegistry(registry), size(
 				0), formationEnergy(0.0), diffusionFactor(0.0), diffusionCoefficient(
 				0.0), migrationEnergy(0.0), name("Reactant"), reactionRadius(
-				0.0),
-#if READY
-#else
-                // TODO need to get the size from our network.
-                // Even better, at compile time.
-                composition(network.getCompositionLength(), 0) {
-#endif // READY
+				0.0) {
 
 }
 
@@ -68,29 +62,6 @@ std::vector<int> Reactant::getConnectivity() const {
 
 	return connectivity;
 }
-
-#if READY
-std::string Reactant::toCanonicalString(Species type,
-        const IReactant::Composition& composition) {
-
-	// Construct the canonical string representation of the given composition.
-	// Note that this can only be considered to produce a canonical
-	// representation of the reactant map's contents if the reactant map
-	// is kept in a collection where we are guaranteed that iterating
-	// over its contents will always be done in the same order, regardless
-	// of how the map was produced.  Thankfully, std::map is an
-	// ordered map and gives this guarantee.
-	std::ostringstream ostr;
-	ostr << toString(type) << ':';
-	for (auto iter = composition.begin(); iter != composition.end(); ++iter) {
-		// Add the current reactant's name and size to the string.
-		// Note that we don't really care about nice formatting, since
-		// this isn't intended to be a human-readable string.
-		ostr << toString(iter->first) << iter->second;
-	}
-	return ostr.str();
-}
-#endif // READY
 
 void Reactant::setTemperature(double temp) {
 	temperature = temp;

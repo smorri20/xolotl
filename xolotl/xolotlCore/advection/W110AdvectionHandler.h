@@ -50,7 +50,7 @@ public:
 			if (xolotlCore::equal(diffFactor, 0.0)) continue;
 
 			// Keep only the helium clusters
-			if (cluster->getType() != Species::He) continue;
+			if (cluster->getType() != ReactantType::He) continue;
 
 			// Get its size
 			int heSize = cluster->getSize();
