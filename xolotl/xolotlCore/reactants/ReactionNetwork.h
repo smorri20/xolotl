@@ -27,7 +27,7 @@ protected:
     /**
      * Nice name for map of reactants, keyed by their composition.
      */
-    using ReactantMap = std::map<IReactant::Composition, std::shared_ptr<IReactant> >;
+    using ReactantMap = std::unordered_map<IReactant::Composition, std::shared_ptr<IReactant> >;
 
 
 	/**
@@ -119,18 +119,6 @@ protected:
 	 */
 	int networkSize;
 
-#if READY
-	/**
-	 * The names of the reactants supported by this network.
-	 */
-    std::vector<Species> names;
-
-	/**
-	 * The names of the compound reactants supported by this network.
-	 */
-    std::vector<Species> compoundNames;
-#endif // READY
-
 	/**
 	 * The biggest rate for this cluster
 	 */
@@ -181,7 +169,7 @@ protected:
 	/**
 	 * This map stores all of the clusters in the network by type.
 	 */
-	std::map<ReactantType, ReactantVector> clusterTypeMap;
+	std::unordered_map<ReactantType, ReactantVector> clusterTypeMap;
 
 
 	/**
@@ -331,31 +319,6 @@ public:
 	virtual void reinitializeNetwork() {
 		return;
 	}
-
-#if READY
-	/**
-	 * This operation returns the names of the reactants in the network.
-	 *
-	 * @return A vector with one entry for each of the distinct reactant types
-	 * in the network
-	 */
-	const std::vector<Species> & getNames() const override {
-
-        return names;
-    }
-
-	/**
-	 * This operation returns the names of the compound reactants in the
-	 * network.
-	 *
-	 * @return A vector with one each for each of the distinct compound
-	 * reactant types in the network
-	 */
-	const std::vector<Species> & getCompoundNames() const override {
-
-        return compoundNames;
-    }
-#endif // READY
 
 	/**
 	 * This operation returns the size or number of reactants in the network.

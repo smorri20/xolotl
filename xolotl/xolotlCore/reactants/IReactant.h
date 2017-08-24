@@ -2,12 +2,14 @@
 #define IREACTANT_H
 
 // Includes
+#include <memory>
+#include <numeric>
+#include <vector>
+#include <unordered_map>
+#include <map>
 #include "Species.h"
 #include "ReactantType.h"
 #include "ReactantUtils.h"
-#include <memory>
-#include <vector>
-#include <map>
 
 namespace xolotlCore {
 
@@ -409,5 +411,22 @@ public:
 };
 
 } // end namespace xolotlCore
+
+// For an IReactant::Composition to be used as a key in an std::unordered_map,
+// we need to define a hash function for it.
+// Since std::unordered_map uses std::hash on its keys, and because
+// ours is a user-defined type, we add our hash function to the std namespace.
+namespace std {
+
+template<>
+struct hash<xolotlCore::IReactant::Composition> {
+
+    size_t operator()(const xolotlCore::IReactant::Composition& comp) const {
+        // This may not be a good hash function - needs to be evaluated
+        // for the compositions Xolotl uses.
+        return std::accumulate(comp.begin(), comp.end(), 0);
+    }
+};
+}
 
 #endif

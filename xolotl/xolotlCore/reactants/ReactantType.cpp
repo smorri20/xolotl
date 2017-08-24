@@ -1,12 +1,12 @@
 #include <string>
-#include <map>
+#include <unordered_map>
 #include "ReactantType.h"
 
 namespace xolotlCore {
 
 std::string toString(ReactantType rtype) {
 
-    static std::map<ReactantType, std::string> smap {
+    static std::unordered_map<ReactantType, std::string> smap {
         { ReactantType::Invalid, "Invalid_reactant_type" },
         { ReactantType::V, "V" },
         { ReactantType::I, "I" },
@@ -27,7 +27,7 @@ std::string toString(ReactantType rtype) {
 
 Species toSpecies(ReactantType rtype) {
     // Map of all single species reactant types, plus Invalid.
-    static std::map<ReactantType, Species> smap {
+    static std::unordered_map<ReactantType, Species> smap {
         { ReactantType::Invalid, Species::Invalid },
         { ReactantType::V, Species::V },
         { ReactantType::I, Species::I },

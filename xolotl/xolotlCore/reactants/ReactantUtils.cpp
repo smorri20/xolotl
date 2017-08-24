@@ -18,10 +18,11 @@ ProductionReaction::ProductionReaction(IReactant * _reactant1,
     auto const& secondComp = second->getComposition();
 
 	// Determine our descriptive key and cache it.
-	// This assumes that our reactants are ordered.
-    descKey.reserve(firstComp.size() + secondComp.size());
-    descKey.insert(descKey.end(), firstComp.begin(), firstComp.end());
-    descKey.insert(descKey.end(), secondComp.begin(), secondComp.end());
+	// This assumes that our reactants are ordered, and our key is
+    // big enough for all types of reactions.
+    auto nextBegin = std::copy(firstComp.begin(), firstComp.end(), descKey.begin());
+    nextBegin = std::copy(secondComp.begin(), secondComp.end(), nextBegin);
+    std::fill(nextBegin, descKey.end(), 0);
 }
 
 DissociationReaction::DissociationReaction(IReactant * dissociatingPtr,
@@ -42,10 +43,9 @@ DissociationReaction::DissociationReaction(IReactant * dissociatingPtr,
 
 	// Determine our descriptive key and cache it.
 	// This assumes that our reactants are ordered.
-    descKey.reserve(dissComp.size() + firstComp.size() + secondComp.size());
-    descKey.insert(descKey.end(), dissComp.begin(), dissComp.end());
-    descKey.insert(descKey.end(), firstComp.begin(), firstComp.end());
-    descKey.insert(descKey.end(), secondComp.begin(), secondComp.end());
+    auto nextBegin = std::copy(dissComp.begin(), dissComp.end(), descKey.begin());
+    nextBegin = std::copy(firstComp.begin(), firstComp.end(), nextBegin);
+    std::copy(secondComp.begin(), secondComp.end(), nextBegin);
 }
 
 } // namespace xolotlCore

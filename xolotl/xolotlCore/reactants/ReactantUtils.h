@@ -1,7 +1,7 @@
 #ifndef REACTANTUTILS_H
 #define REACTANTUTILS_H
 
-#include <vector>
+#include <array>
 
 namespace xolotlCore {
 
@@ -24,7 +24,7 @@ public:
     // We have dependency between IReactant.h and this file.
     using KeyType = std::vector<IReactant::SizeType>;
 #else
-    using KeyType = std::vector<uint32_t>;
+    using KeyType = std::array<uint32_t, 3*(static_cast<int>(Species::last) + 1)>;
 #endif // READY
 
     
@@ -121,4 +121,20 @@ public:
 
 }
 
+// For the Reaction KeyTypes  to be used as a key in an std::unordered_map,
+// we need to define a hash function for it.
+// Since std::unordered_map uses std::hash on its keys, and because
+// ours is a user-defined type, we add our hash function to the std namespace.
+namespace std {
+
+template<>
+struct hash<xolotlCore::Reaction::KeyType> {
+
+    size_t operator()(const xolotlCore::Reaction::KeyType& val) const {
+        // This may not be a good hash function - needs to be evaluated
+        // for the compositions Xolotl uses.
+        return std::accumulate(val.begin(), val.end(), 0);
+    }
+};
+}
 #endif /* REACTANTUTILS_H */

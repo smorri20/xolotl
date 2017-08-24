@@ -128,25 +128,6 @@ public:
 	 */
 	virtual void reinitializeConnectivities() = 0;
 
-#if READY
-	/**
-	 * This operation returns the names of the reactants in the network.
-	 *
-	 * @return A vector with one entry for each of the distinct reactant types
-	 * in the network
-	 */
-	virtual const std::vector<Species> & getNames() const = 0;
-
-	/**
-	 * This operation returns the names of the compound reactants in the
-	 * network.
-	 *
-	 * @return A vector with one each for each of the distinct compound
-	 * reactant types in the network
-	 */
-	virtual const std::vector<Species> & getCompoundNames() const = 0;
-#endif // READY
-
 	/**
 	 * This operation returns the size or number of reactants in the network.
 	 *

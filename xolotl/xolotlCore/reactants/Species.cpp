@@ -1,12 +1,12 @@
 #include <string>
-#include <map>
+#include <unordered_map>
 #include "Species.h"
 
 namespace xolotlCore {
 
 std::string toString(const Species& s) {
 
-    static std::map<Species, std::string> smap {
+    static std::unordered_map<Species, std::string> smap {
         { Species::Invalid, "Invalid_species" },
         { Species::V, "V" },
         { Species::I, "I" },
