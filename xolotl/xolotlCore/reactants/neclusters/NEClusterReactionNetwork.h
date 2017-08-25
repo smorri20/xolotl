@@ -100,6 +100,12 @@ public:
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 
+    /**
+     * Copy constructor, deleted to prevent use.
+     */
+    NEClusterReactionNetwork(const NEClusterReactionNetwork& other) = delete;
+
+
 	/**
 	 * Computes the full reaction connectivity matrix for this network.
 	 */

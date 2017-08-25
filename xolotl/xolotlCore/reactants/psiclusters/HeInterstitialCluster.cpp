@@ -37,10 +37,4 @@ HeInterstitialCluster::HeInterstitialCluster(int numHelium, int numInterstitial,
 	return;
 }
 
-HeInterstitialCluster::HeInterstitialCluster(HeInterstitialCluster &other) :
-		PSICluster(other) {
-	numHe = other.numHe;
-	numI = other.numI;
 
-	return;
-}

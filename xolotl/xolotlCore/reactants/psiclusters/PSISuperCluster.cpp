@@ -51,31 +51,6 @@ PSISuperCluster::PSISuperCluster(double numHe, double numV, int nTot,
 	return;
 }
 
-PSISuperCluster::PSISuperCluster(PSISuperCluster &other) :
-		PSICluster(other) {
-	numHe = other.numHe;
-	numV = other.numV;
-	nTot = other.nTot;
-	sectionHeWidth = other.sectionHeWidth;
-	sectionVWidth = other.sectionVWidth;
-	l0 = other.l0;
-	l1He = other.l1He;
-	l1V = other.l1V;
-	lowerHe = other.lowerHe;
-	upperHe = other.upperHe;
-	lowerV = other.lowerV;
-	upperV = other.upperV;
-	dispersionHe = other.dispersionHe;
-	dispersionV = other.dispersionV;
-	effReactingList = other.effReactingList;
-	effCombiningList = other.effCombiningList;
-	effDissociatingList = other.effDissociatingList;
-	effEmissionList = other.effEmissionList;
-	heMomentumFlux = other.heMomentumFlux;
-	vMomentumFlux = other.vMomentumFlux;
-
-	return;
-}
 
 void PSISuperCluster::createProduction(
 		std::shared_ptr<ProductionReaction> reaction, int a, int b, int c,

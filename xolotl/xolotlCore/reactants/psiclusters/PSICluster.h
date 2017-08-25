@@ -194,12 +194,11 @@ public:
 	PSICluster(IReactionNetwork& _network,
         std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
+
 	/**
-	 * The copy constructor
-	 *
-	 * @param other The cluster to copy
+	 * Copy constructor, deleted to prevent use.
 	 */
-	PSICluster(PSICluster &other);
+	PSICluster(PSICluster &other) = delete;
 
 	/**
 	 * The destructor

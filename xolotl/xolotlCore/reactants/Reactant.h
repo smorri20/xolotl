@@ -167,7 +167,12 @@ public:
                 std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
-	 * The copy constructor. All reactants MUST be deep copied.
+	 * Copy constructor.
+     * Only used to construct dummy cluster objects of Reactant type
+     * as a copy of the Reactant part of objects of a more derived type.
+     * The more derived types initialize their base class' data, and
+     * we don't have a ctor that lets them specify all of our data,
+     * so we use this ctor to copy the Reactant data.
 	 *
 	 * @param other The reactant to copy
 	 */

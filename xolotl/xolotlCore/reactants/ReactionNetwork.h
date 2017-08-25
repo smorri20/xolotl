@@ -237,6 +237,10 @@ public:
 	 */
 	ReactionNetwork(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
+    /**
+     * Copy constructor, deleted to prevent use.
+     */
+    ReactionNetwork(const ReactionNetwork& other) = delete;
 
 	/**
 	 * The destructor.

@@ -15,16 +15,6 @@ NECluster::NECluster(IReactionNetwork& _network,
 	return;
 }
 
-// The copy constructor
-NECluster::NECluster(NECluster &other) :
-		Reactant(other), reactingPairs(other.reactingPairs), combiningReactants(
-				other.combiningReactants), dissociatingPairs(
-				other.dissociatingPairs), emissionPairs(other.emissionPairs) {
-	// Recompute all of the temperature-dependent quantities
-	setTemperature(other.getTemperature());
-
-	return;
-}
 
 void NECluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
 		int a, int b) {

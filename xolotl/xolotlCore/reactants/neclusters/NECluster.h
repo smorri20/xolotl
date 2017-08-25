@@ -179,11 +179,9 @@ public:
                 std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
-	 * The copy constructor
-	 *
-	 * @param other The cluster to copy
+	 * Copy constructor, deleted to prevent use.
 	 */
-	NECluster(NECluster &other);
+	NECluster(NECluster &other) = delete;
 
 	/**
 	 * The destructor

@@ -44,26 +44,6 @@ NESuperCluster::NESuperCluster(double num, int nTot, int width, double radius,
 	return;
 }
 
-NESuperCluster::NESuperCluster(NESuperCluster &other) :
-		NECluster(other) {
-	numXe = other.numXe;
-	nTot = other.nTot;
-	sectionWidth = other.sectionWidth;
-	l0 = other.l0;
-	l1 = other.l1;
-	dispersion = other.dispersion;
-	reactingMap = other.reactingMap;
-	combiningMap = other.combiningMap;
-	dissociatingMap = other.dissociatingMap;
-	emissionMap = other.emissionMap;
-	effReactingList = other.effReactingList;
-	effCombiningList = other.effCombiningList;
-	effDissociatingList = other.effDissociatingList;
-	effEmissionList = other.effEmissionList;
-	momentumFlux = other.momentumFlux;
-
-	return;
-}
 
 void NESuperCluster::updateFromNetwork() {
 

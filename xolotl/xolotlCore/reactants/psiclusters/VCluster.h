@@ -29,6 +29,12 @@ public:
         IReactionNetwork& _network,
         std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
+    /**
+     * Copy constructor, deleted to prevent use.
+     */
+    VCluster(const VCluster& other) = delete;
+
+
 	//! Destructor
 	~VCluster() {
 	}

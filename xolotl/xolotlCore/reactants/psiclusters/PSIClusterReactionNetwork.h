@@ -106,6 +106,11 @@ public:
 	PSIClusterReactionNetwork(
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
+    /**
+     * Copy constructor, deleted to prevent use.
+     */
+    PSIClusterReactionNetwork(const PSIClusterReactionNetwork& other) = delete;
+
 	/**
 	 * Computes the full reaction connectivity matrix for this network.
 	 */

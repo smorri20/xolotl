@@ -21,6 +21,8 @@ Reactant::Reactant(IReactionNetwork& _network,
 
 }
 
+// See comment in header about the necessity for this,
+// when we don't need copy ctors for classes derived from Reactant.
 Reactant::Reactant(Reactant &other) :
 		concentration(other.concentration), name(other.name), 
                 type(other.type), id(other.id), xeMomId(other.xeMomId), heMomId(

@@ -46,11 +46,9 @@ public:
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
-	 * Copy constructor
-	 *
-	 * @param other the reactant to be copied
+	 * Copy constructor, deleted to prevent use.
 	 */
-	HeInterstitialCluster(HeInterstitialCluster &other);
+	HeInterstitialCluster(HeInterstitialCluster &other) = delete;
 
 	//! Destructor
 	~HeInterstitialCluster() {}

@@ -14,16 +14,6 @@ PSICluster::PSICluster(IReactionNetwork& _network,
 	return;
 }
 
-// The copy constructor
-PSICluster::PSICluster(PSICluster &other) :
-		Reactant(other), reactingPairs(other.reactingPairs), combiningReactants(
-				other.combiningReactants), dissociatingPairs(
-				other.dissociatingPairs), emissionPairs(other.emissionPairs) {
-	// Recompute all of the temperature-dependent quantities
-	setTemperature(other.getTemperature());
-
-	return;
-}
 
 void PSICluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
 		int a, int b, int c, int d) {

@@ -33,10 +33,3 @@ HeVCluster::HeVCluster(int numHe, int numV,
 	return;
 }
 
-HeVCluster::HeVCluster(HeVCluster &other) :
-		PSICluster(other) {
-	numHe = other.numHe;
-	numV = other.numV;
-
-	return;
-}

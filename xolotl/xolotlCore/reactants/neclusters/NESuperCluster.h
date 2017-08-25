@@ -185,11 +185,9 @@ public:
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
-	 * Copy constructor.
-	 *
-	 * @param other the reactant to be copied
+	 * Copy constructor, deleted to prevent use.
 	 */
-	NESuperCluster(NESuperCluster &other);
+	NESuperCluster(NESuperCluster &other) = delete;
 
 	//! Destructor
 	~NESuperCluster() {

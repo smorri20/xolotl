@@ -49,6 +49,7 @@ std::shared_ptr<IReactionNetwork> HDF5NetworkLoader::load() {
 			// Create a dummy cluster (just a stock Reactant)
             // from the existing cluster
             auto dummyCluster = std::make_shared<Reactant>(*nextCluster);
+
 			// Add the cluster to the network
 			network->add(dummyCluster);
 			// Add it to the list so that we can set the network later
