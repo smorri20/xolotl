@@ -79,7 +79,7 @@ protected:
 
 		//! The constructor
 		ClusterPair(PSICluster * firstPtr, PSICluster * secondPtr) :
-				first(firstPtr), second(secondPtr), reaction(nullptr), a00(0.0), a10(
+				first(firstPtr), second(secondPtr), a00(0.0), a10(
 						0.0), a20(0.0), a01(0.0), a02(0.0), a11(0.0), a12(0.0), a21(
 						0.0), a22(0.0) {
 		}
@@ -121,7 +121,7 @@ protected:
 
 		//! The constructor
 		CombiningCluster(PSICluster * ptr) :
-				combining(ptr), reaction(nullptr), a0(0.0), a1(0.0), a2(0.0) {
+				combining(ptr), a0(0.0), a1(0.0), a2(0.0) {
 		}
 	};
 

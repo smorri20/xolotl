@@ -2,11 +2,13 @@
 #define REACTANT_H
 
 // Includes
-#include "IReactant.h"
-#include "IReactionNetwork.h"
 #include <math.h>
 #include <sstream>
 #include <set>
+#include "IReactant.h"
+#include "IReactionNetwork.h"
+#include "ProductionReaction.h"
+#include "DissociationReaction.h"
 
 namespace xolotlPerf {
 class IHandlerRegistry;

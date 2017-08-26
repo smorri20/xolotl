@@ -1,16 +1,18 @@
 #ifndef IREACTIONNETWORK_H
 #define IREACTIONNETWORK_H
 
-#include "IReactant.h"
-#include "ReactantUtils.h"
 #include <string>
 #include <vector>
 #include <map>
 #include <memory>
+#include "IReactant.h"
+
 
 namespace xolotlCore {
 
 class IReactant;
+class ProductionReaction;
+class DissociationReaction;
 
 /**
  *  This class manages the set of reactants and compound reactants

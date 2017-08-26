@@ -2,11 +2,12 @@
 #define REACTION_NETWORK_H
 
 // Includes
-#include "IReactionNetwork.h"
-#include <Constants.h>
 #include <set>
 #include <map>
 #include <unordered_map>
+#include <Constants.h>
+#include "IReactionNetwork.h"
+#include "Reactant.h"
 
 namespace xolotlPerf {
 class IHandlerRegistry;

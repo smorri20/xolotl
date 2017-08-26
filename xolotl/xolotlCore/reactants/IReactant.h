@@ -9,11 +9,12 @@
 #include <map>
 #include "Species.h"
 #include "ReactantType.h"
-#include "ReactantUtils.h"
 
 namespace xolotlCore {
 
 class IReactionNetwork;
+class ProductionReaction;
+class DissociationReaction;
 
 /**
  * A reactant is a general reacting body in a reaction network. It represents
