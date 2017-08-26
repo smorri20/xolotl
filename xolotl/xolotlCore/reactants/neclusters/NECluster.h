@@ -173,10 +173,15 @@ public:
 	/**
 	 * The default constructor
 	 *
-	 * @param registry The performance handler registry
+     * @param _network The network to which we wil belong.
+	 * @param _registry The performance handler registry.
+     * @param _name Our name.
 	 */
 	NECluster(IReactionNetwork& _network,
-                std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+                std::shared_ptr<xolotlPerf::IHandlerRegistry> _registry,
+                const std::string& _name = "NECluster") :
+        Reactant(_network, _registry, _name) {
+    }
 
 	/**
 	 * Copy constructor, deleted to prevent use.
@@ -192,7 +197,7 @@ public:
 	/**
      * Update reactant using other reactants in its network.
 	 */
-	virtual void updateFromNetwork();
+	virtual void updateFromNetwork() override;
 
 	/**
 	 * Create a production pair associated with the given reaction.

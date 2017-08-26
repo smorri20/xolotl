@@ -12,12 +12,12 @@ using namespace xolotlCore;
 
 // TODO modify signature to take type as argument.
 Reactant::Reactant(IReactionNetwork& _network,
-                std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
+                std::shared_ptr<xolotlPerf::IHandlerRegistry> registry,
+                const std::string& _name) :
 		concentration(0.0), id(0), xeMomId(0), heMomId(0), vMomId(0), temperature(
 				0.0), type(ReactantType::Invalid), network(_network), handlerRegistry(registry), size(
 				0), formationEnergy(0.0), diffusionFactor(0.0), diffusionCoefficient(
-				0.0), migrationEnergy(0.0), name("Reactant"), reactionRadius(
-				0.0) {
+				0.0), migrationEnergy(0.0), name(_name), reactionRadius(0.0) {
 
 }
 

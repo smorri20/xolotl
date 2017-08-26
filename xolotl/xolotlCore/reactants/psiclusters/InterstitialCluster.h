@@ -2,6 +2,7 @@
 #define INTERSTITIALCLUSTER_H
 
 // Includes
+#include <sstream>
 #include "PSICluster.h"
 
 namespace xolotlCore {
@@ -10,6 +11,14 @@ namespace xolotlCore {
  * This class represents a cluster composed entirely of interstitial defects.
  */
 class InterstitialCluster: public PSICluster {
+
+    static
+    std::string buildName(IReactant::SizeType nI) {
+        // Set the reactant name appropriately
+        std::stringstream nameStream;
+        nameStream << "I_" << nI;
+        return nameStream.str();
+    }
 
 public:
 

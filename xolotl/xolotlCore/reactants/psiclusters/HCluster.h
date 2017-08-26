@@ -22,7 +22,13 @@ public:
 	 */
 	HCluster(int nH,
             IReactionNetwork& _network,
-            std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+            std::shared_ptr<xolotlPerf::IHandlerRegistry> registry,
+            const std::string& _name = "Hydrogen") :
+        PSICluster(_network, registry, _name) {
+
+        // Set the size appropriately
+        size = nH;
+    }
 
     /**
      * Copy constructor, deleted to prevent use.
@@ -30,7 +36,8 @@ public:
     HCluster(const HCluster& other) = delete;
 
 	//! The destructor
-	~HCluster();
+	~HCluster() {
+    }
 
 };
 //end class HCluster

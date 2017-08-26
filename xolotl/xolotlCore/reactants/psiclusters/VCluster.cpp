@@ -9,13 +9,10 @@ using namespace xolotlCore;
 VCluster::VCluster(int nV,
         IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(_network, registry) {
+		PSICluster(_network, registry, buildName(nV)) {
+
 	// Set the size
 	size = nV;
-	// Set the reactant name appropriately
-	std::stringstream nameStream;
-	nameStream << "V_" << size;
-	name = nameStream.str();
 	// Set the typename appropriately
 	type = ReactantType::V;
 

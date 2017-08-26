@@ -192,7 +192,13 @@ public:
 	 * @param registry The performance handler registry
 	 */
 	PSICluster(IReactionNetwork& _network,
-        std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+        std::shared_ptr<xolotlPerf::IHandlerRegistry> registry,
+        const std::string& _name = "PSICluster") 
+      : Reactant(_network, registry, _name) {
+
+    }
+
+
 
 
 	/**
@@ -209,7 +215,7 @@ public:
 	/**
      * Update reactant using other reactants in its network.
 	 */
-	virtual void updateFromNetwork();
+	virtual void updateFromNetwork() override;
 
 	/**
 	 * Create a production pair associated with the given reaction.

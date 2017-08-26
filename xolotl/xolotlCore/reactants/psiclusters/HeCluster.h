@@ -2,6 +2,7 @@
 #define HECLUSTER_H
 
 // Includes
+#include <sstream>
 #include "PSICluster.h"
 #include <xolotlPerf.h>
 
@@ -11,6 +12,15 @@ namespace xolotlCore {
  * This class represents a cluster composed entirely of helium.
  */
 class HeCluster: public PSICluster {
+
+private:
+    static
+    std::string buildName(IReactant::SizeType size) {
+        // Set the reactant name appropriately
+        std::stringstream nameStream;
+        nameStream << "He_" << size;
+        return nameStream.str();
+    }
 
 public:
 

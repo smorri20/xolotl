@@ -9,16 +9,13 @@ using namespace xolotlCore;
 XeCluster::XeCluster(int nXe,
         IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		NECluster(_network, registry) {
+		NECluster(_network, registry, buildName(nXe)) {
+
 	// Set the size
 	size = nXe;
 	// Update the composition map
 	composition[toCompIdx(Species::Xe)] = size;
 
-	// Set the reactant name appropriately
-	std::stringstream nameStream;
-	nameStream << "Xe_" << size;
-	name = nameStream.str();
 	// Set the typename appropriately
 	type = ReactantType::Xe;
 

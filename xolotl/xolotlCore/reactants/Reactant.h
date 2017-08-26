@@ -163,10 +163,13 @@ public:
 	/**
 	 * The constructor.
 	 *
-	 * @param registry The performance handler registry to use
+     * @param _network The network we will belong to.
+     * @param _name Our human-readable name.
+	 * @param _registry The performance handler registry to use
 	 */
 	Reactant(IReactionNetwork& _network,
-                std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+                std::shared_ptr<xolotlPerf::IHandlerRegistry> _registry,
+                const std::string& _name = "Reactant");
 
 	/**
 	 * Copy constructor.

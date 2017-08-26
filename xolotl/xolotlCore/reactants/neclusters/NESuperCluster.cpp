@@ -15,7 +15,8 @@ NESuperCluster::NESuperCluster(double num, int nTot, int width, double radius,
 		double energy,
         IReactionNetwork& _network,
         std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		NECluster(_network, registry), numXe(num), nTot(nTot), l0(0.0),
+		NECluster(_network, registry, buildName(num)),
+        numXe(num), nTot(nTot), l0(0.0),
         l1(0.0), dispersion(0.0), momentumFlux(0.0) {
 	// Set the cluster size
 	size = (int) numXe;
@@ -34,10 +35,6 @@ NESuperCluster::NESuperCluster(double num, int nTot, int width, double radius,
 	migrationEnergy = std::numeric_limits<double>::infinity();
 	diffusionFactor = 0.0;
 
-	// Set the reactant name appropriately
-	std::stringstream nameStream;
-	nameStream << "Xe_" << numXe;
-	name = nameStream.str();
 	// Set the typename appropriately
 	type = ReactantType::NESuper;
 

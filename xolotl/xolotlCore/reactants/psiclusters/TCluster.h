@@ -19,7 +19,9 @@ public:
 	//! The constructor. All TClusters must be initialized with a size.
 	TCluster(int nT,
             IReactionNetwork& _network,
-            std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+            std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
+		HCluster(nT, _network, registry, "Tritium") {
+    }
 
     /**
      * Copy constructor, deleted to prevent use.
@@ -27,7 +29,8 @@ public:
     TCluster(const TCluster& other) = delete;
 
 	//! Destructor
-	~TCluster();
+	~TCluster() {
+    }
 
 };
 //end class TCluster

@@ -7,16 +7,13 @@ using namespace xolotlCore;
 InterstitialCluster::InterstitialCluster(int nI,
         IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(_network, registry) {
+		PSICluster(_network, registry, buildName(nI)) {
+
 	// Set the size
 	size = nI;
 	// Update the composition map
 	composition[toCompIdx(Species::I)] = size;
 
-	// Set the reactant name appropriately
-	std::stringstream nameStream;
-	nameStream << "I_" << size;
-	name = nameStream.str();
 	// Set the typename appropriately
 	type = ReactantType::I;
 

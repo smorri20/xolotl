@@ -2,6 +2,7 @@
 #define HEINTERSTITIALCLUSTER_H
 
 // Includes
+#include <sstream>
 #include "PSICluster.h"
 #include <string>
 #include <map>
@@ -21,6 +22,12 @@ private:
 	//! The number of interstitial defects in this cluster.
 	int numI;
 
+    static
+    std::string buildName(IReactant::SizeType nHe, IReactant::SizeType nI) {
+        std::stringstream nameStream;
+        nameStream << "He_" << nHe << "I_" << nI;
+        return nameStream.str();
+    }
 
 public:
 

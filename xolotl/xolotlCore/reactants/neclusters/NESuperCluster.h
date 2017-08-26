@@ -13,6 +13,14 @@ namespace xolotlCore {
  */
 class NESuperCluster: public NECluster {
 
+private:
+    static
+    std::string buildName(IReactant::SizeType nXe) {
+        std::stringstream nameStream;
+        nameStream << "Xe_" << nXe;
+        return nameStream.str();
+    }
+
 protected:
 
 	/**
@@ -196,7 +204,7 @@ public:
 	/**
      * Update reactant using other reactants in its network.
 	 */
-	void updateFromNetwork();
+	void updateFromNetwork() override;
 
 	/**
 	 * Group the same reactions together and add the reactions to the network lists.

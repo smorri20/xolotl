@@ -12,6 +12,14 @@ namespace xolotlCore {
  */
 class VCluster: public PSICluster {
 
+private:
+	static
+    std::string buildName(IReactant::SizeType nV) {
+        std::stringstream nameStream;
+        nameStream << "V_" << nV;
+        return nameStream.str();
+    }
+
 public:
 
     /**

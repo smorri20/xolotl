@@ -19,7 +19,9 @@ public:
 	//! The constructor. All DClusters must be initialized with a size.
 	DCluster(int nD,
             IReactionNetwork& _network,
-            std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+            std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) : 
+        HCluster(nD, _network, registry, "Deuterium") {
+    }
 
     /**
      * Copy constructor, deleted to prevent use.
@@ -27,7 +29,8 @@ public:
     DCluster(const DCluster& other) = delete;
 
 	//! Destructor
-	~DCluster();
+	~DCluster() {
+    }
 
 };
 //end class DCluster

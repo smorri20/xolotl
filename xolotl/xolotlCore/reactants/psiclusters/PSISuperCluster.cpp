@@ -15,11 +15,12 @@ std::vector<double> heMomentumPartials;
  */
 std::vector<double> vMomentumPartials;
 
-PSISuperCluster::PSISuperCluster(double numHe, double numV, int nTot,
+PSISuperCluster::PSISuperCluster(double _numHe, double _numV, int _nTot,
 		int heWidth, int vWidth,
         IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(_network, registry), numHe(numHe), numV(numV), nTot(nTot), lowerHe(0), upperHe(
+		PSICluster(_network, registry, buildName(_numHe, _numV)),
+        numHe(_numHe), numV(_numV), nTot(_nTot), lowerHe(0), upperHe(
 				0), lowerV(0), upperV(0), l0(0.0), l1He(0.0), l1V(0.0), dispersionHe(
 				0.0), dispersionV(0.0), heMomentumFlux(0.0), vMomentumFlux(0.0) {
 	// Set the cluster size as the sum of
@@ -41,10 +42,6 @@ PSISuperCluster::PSISuperCluster(double numHe, double numV, int nTot,
 	migrationEnergy = std::numeric_limits<double>::infinity();
 	diffusionFactor = 0.0;
 
-	// Set the reactant name appropriately
-	std::stringstream nameStream;
-	nameStream << "He_" << numHe << "V_" << numV;
-	name = nameStream.str();
 	// Set the typename appropriately
 	type = ReactantType::PSISuper;
 
@@ -270,17 +267,6 @@ void PSISuperCluster::createEmission(
 	(*it).a20 += vDistance;
 	(*it).a21 += vDistance * heFactor;
 	(*it).a22 += vDistance * vFactor;
-
-	return;
-}
-
-void PSISuperCluster::updateFromNetwork() {
-
-	// Clear the flux-related arrays
-	reactingPairs.clear();
-	combiningReactants.clear();
-	dissociatingPairs.clear();
-	emissionPairs.clear();
 
 	return;
 }

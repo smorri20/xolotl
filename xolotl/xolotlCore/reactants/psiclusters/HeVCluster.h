@@ -14,6 +14,8 @@ namespace xolotlCore {
 class HeVCluster: public PSICluster {
 
 private:
+    // TODO do we need to keep these species counts here, 
+    // since they are in the composition?
 
 	//! The number of helium atoms in this cluster.
 	int numHe;
@@ -21,6 +23,13 @@ private:
 	//! The number of atomic vacancies in this cluster.
 	int numV;
 
+
+	static
+    std::string buildName(IReactant::SizeType nHe, IReactant::SizeType nV) {
+        std::stringstream nameStream;
+        nameStream << "He_" << nHe << "V_" << nV;
+        return nameStream.str();
+    }
 
 public:
 

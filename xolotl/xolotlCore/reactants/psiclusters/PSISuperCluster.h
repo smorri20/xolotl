@@ -13,6 +13,14 @@ namespace xolotlCore {
  */
 class PSISuperCluster: public PSICluster {
 
+private:
+    static
+    std::string buildName(IReactant::SizeType nHe, IReactant::SizeType nV) {
+        std::stringstream nameStream;
+        nameStream << "He_" << nHe << "V_" << nV;
+        return nameStream.str();
+    }
+
 protected:
 
 	/**
@@ -253,11 +261,6 @@ public:
 	//! Destructor
 	~PSISuperCluster() {
 	}
-
-	/**
-     * Update reactant using other reactants in its network.
-	 */
-	void updateFromNetwork();
 
 	/**
 	 * Create a production pair associated with the given reaction.

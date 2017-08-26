@@ -9,16 +9,13 @@ using namespace xolotlCore;
 HeCluster::HeCluster(int nHe,
         IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(_network, registry) {
+		PSICluster(_network, registry, buildName(nHe)) {
+
 	// Set the size
 	size = nHe;
 	// Update the composition map
     composition[toCompIdx(Species::He)] = size;
 
-	// Set the reactant name appropriately
-	std::stringstream nameStream;
-	nameStream << "He_" << size;
-	name = nameStream.str();
 	// Set the typename appropriately
 	type = ReactantType::He;
 

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "NECluster.h"
 #include <xolotlPerf.h>
 #include <Constants.h>
@@ -6,23 +7,12 @@
 using namespace xolotlCore;
 
 
-NECluster::NECluster(IReactionNetwork& _network,
-        std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		Reactant(_network, registry) {
-	// Set the reactant name appropriately
-	name = "NECluster";
-
-	return;
-}
-
-
 void NECluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
 		int a, int b) {
-	// Create a cluster pair from the given reaction
-	ClusterPair pair((NECluster *) reaction->first,
+
+	// Add a cluster pair for given reaction 
+	reactingPairs.emplace_back((NECluster *) reaction->first,
 			(NECluster *) reaction->second);
-	// Add the pair to the list
-	reactingPairs.push_back(pair);
 	// Setup the connectivity array
 	setReactionConnectivity(reaction->first->getId());
 	setReactionConnectivity(reaction->second->getId());
@@ -40,10 +30,8 @@ void NECluster::createCombination(std::shared_ptr<ProductionReaction> reaction,
 	else
 		secondCluster = reaction->first;
 
-	// Creates the combining cluster
-	CombiningCluster combCluster((NECluster *) secondCluster);
-	// Push the product into the list of clusters that combine with this one
-	combiningReactants.push_back(combCluster);
+	// Add the combining cluster to list of clusters that combine with us
+	combiningReactants.emplace_back((NECluster *) secondCluster);
 
 	// Setup the connectivity array
 	setReactionConnectivity(id);
@@ -61,12 +49,10 @@ void NECluster::createDissociation(
 	else
 		emittedCluster = reaction->first;
 
-	// Create the pair of them where it is important that the
+	// Add a pair where it is important that the
 	// dissociating cluster is the first one
-	ClusterPair pair((NECluster *) reaction->dissociating,
+	dissociatingPairs.emplace_back((NECluster *) reaction->dissociating,
 			(NECluster *) emittedCluster);
-	// Add the pair to the dissociating pair vector
-	dissociatingPairs.push_back(pair);
 
 	// Setup the connectivity array
 	setDissociationConnectivity(reaction->dissociating->getId());
@@ -76,11 +62,10 @@ void NECluster::createDissociation(
 
 void NECluster::createEmission(std::shared_ptr<DissociationReaction> reaction,
 		int a, int b) {
-	// Create the pair of emitted clusters
-	ClusterPair pair((NECluster *) reaction->first,
-			(NECluster *) reaction->second);
-	// Add the pair to the emission pair vector
-	emissionPairs.push_back(pair);
+
+	// Add the pair of emitted clusters.
+	emissionPairs.emplace_back((NECluster *) reaction->first,
+                    			(NECluster *) reaction->second);
 
 	// Setup the connectivity array to itself
 	setReactionConnectivity(id);
@@ -90,44 +75,49 @@ void NECluster::createEmission(std::shared_ptr<DissociationReaction> reaction,
 
 void NECluster::optimizeReactions() {
 	// Loop on the pairs to add reactions to the network
-	for (auto it = reactingPairs.begin(); it != reactingPairs.end(); it++) {
-		// Create the corresponding production reaction
-		auto newReaction = std::make_shared<ProductionReaction>((*it).first,
-				(*it).second);
-		// Add it to the network
-		newReaction = network.addProductionReaction(newReaction);
-		// Link it to the pair
-		(*it).reaction = newReaction;
-	}
-	for (auto it = combiningReactants.begin(); it != combiningReactants.end();
-			it++) {
-		// Create the corresponding production reaction
-		auto newReaction = std::make_shared<ProductionReaction>((*it).combining,
-				this);
-		// Add it to the network
-		newReaction = network.addProductionReaction(newReaction);
-		// Link it to the pair
-		(*it).reaction = newReaction;
-	}
-	for (auto it = dissociatingPairs.begin(); it != dissociatingPairs.end();
-			it++) {
-		// Create the corresponding dissociation reaction
-		auto newReaction = std::make_shared<DissociationReaction>((*it).first,
-				(*it).second, this);
-		// Add it to the network
-		newReaction = network.addDissociationReaction(newReaction);
-		// Link it to the pair
-		(*it).reaction = newReaction;
-	}
-	for (auto it = emissionPairs.begin(); it != emissionPairs.end(); it++) {
-		// Create the corresponding dissociation reaction
-		auto newReaction = std::make_shared<DissociationReaction>(this,
-				(*it).first, (*it).second);
-		// Add it to the network
-		newReaction = network.addDissociationReaction(newReaction);
-		// Link it to the pair
-		(*it).reaction = newReaction;
-	}
+    std::for_each(reactingPairs.begin(), reactingPairs.end(),
+        [this](ClusterPair& currPair) {
+            // Create the corresponding production reaction
+            auto newReaction = std::make_shared<ProductionReaction>(currPair.first,
+                    currPair.second);
+            // Add it to the network
+            newReaction = network.addProductionReaction(newReaction);
+            // Link it to the pair
+            currPair.reaction = newReaction;
+        });
+
+    std::for_each(combiningReactants.begin(), combiningReactants.end(),
+        [this](CombiningCluster& cc) {
+            // Create the corresponding production reaction
+            auto newReaction = std::make_shared<ProductionReaction>(cc.combining,
+                    this);
+            // Add it to the network
+            newReaction = network.addProductionReaction(newReaction);
+            // Link it to the pair
+            cc.reaction = newReaction;
+        });
+
+    std::for_each(dissociatingPairs.begin(), dissociatingPairs.end(),
+        [this](ClusterPair& currPair) {
+            // Create the corresponding dissociation reaction
+            auto newReaction = std::make_shared<DissociationReaction>(currPair.first,
+                    currPair.second, this);
+            // Add it to the network
+            newReaction = network.addDissociationReaction(newReaction);
+            // Link it to the pair
+            currPair.reaction = newReaction;
+        });
+
+    std::for_each(emissionPairs.begin(), emissionPairs.end(),
+        [this](ClusterPair& currPair) {
+            // Create the corresponding dissociation reaction
+            auto newReaction = std::make_shared<DissociationReaction>(this,
+                    currPair.first, currPair.second);
+            // Add it to the network
+            newReaction = network.addDissociationReaction(newReaction);
+            // Link it to the pair
+            currPair.reaction = newReaction;
+        });
 
 	return;
 }
@@ -174,33 +164,34 @@ void NECluster::resetConnectivities() {
 	setReactionConnectivity(xeMomId);
 	setDissociationConnectivity(xeMomId);
 
-	// Loop on the reacting pairs
-	for (auto it = reactingPairs.begin(); it != reactingPairs.end(); ++it) {
-		// The cluster is connecting to both clusters in the pair
-		setReactionConnectivity((*it).first->id);
-		setReactionConnectivity((*it).first->xeMomId);
-		setReactionConnectivity((*it).second->id);
-		setReactionConnectivity((*it).second->xeMomId);
-	}
+	// Apply to each reacting pair.
+    std::for_each(reactingPairs.begin(), reactingPairs.end(),
+        [this](const ClusterPair& currPair) {
+            // The cluster is connecting to both clusters in the pair
+            setReactionConnectivity(currPair.first->id);
+            setReactionConnectivity(currPair.first->xeMomId);
+            setReactionConnectivity(currPair.second->id);
+            setReactionConnectivity(currPair.second->xeMomId);
+        });
 
-	// Loop on the combining reactants
-	for (auto it = combiningReactants.begin(); it != combiningReactants.end();
-			++it) {
-		// The cluster is connecting to the combining cluster
-		setReactionConnectivity((*it).combining->id);
-		setReactionConnectivity((*it).combining->xeMomId);
-	}
+	// Apply to each combining cluster.
+    std::for_each(combiningReactants.begin(), combiningReactants.end(),
+        [this](const CombiningCluster& cc) {
+            // The cluster is connecting to the combining cluster
+            setReactionConnectivity(cc.combining->id);
+            setReactionConnectivity(cc.combining->xeMomId);
+        });
 
-	// Loop on the effective dissociating pairs
-	for (auto it = dissociatingPairs.begin(); it != dissociatingPairs.end();
-			++it) {
-		// The cluster is connecting to the dissociating cluster which
-		// is the first one by definition
-		setDissociationConnectivity((*it).first->id);
-		setDissociationConnectivity((*it).first->xeMomId);
-	}
+	// Apply to each effective dissociating pair
+    std::for_each(dissociatingPairs.begin(), dissociatingPairs.end(),
+        [this](const ClusterPair& currPair) {
+            // The cluster is connecting to the dissociating cluster which
+            // is the first one by definition
+            setDissociationConnectivity(currPair.first->id);
+            setDissociationConnectivity(currPair.first->xeMomId);
+        });
 
-	// Don't loop on the emission pairs because
+	// Don't apply to the emission pairs because
 	// this cluster is not connected to them
 
 	return;
@@ -232,39 +223,30 @@ double NECluster::getTotalFlux() {
 }
 
 double NECluster::getDissociationFlux() const {
-	// Initial declarations
-	int nPairs = 0;
-	double flux = 0.0;
-	NECluster *dissociatingCluster = nullptr;
 
-	// Set the total number of reactants that dissociate to form this one
-	nPairs = dissociatingPairs.size();
-	// Loop over all dissociating clusters that form this cluster
-	for (int j = 0; j < nPairs; j++) {
-		// Get the dissociating cluster
-		dissociatingCluster = dissociatingPairs[j].first;
-		// Calculate the Dissociation flux
-		flux += dissociatingPairs[j].reaction->kConstant
-				* dissociatingCluster->getConcentration(
-						dissociatingPairs[j].firstDistance);
-	}
+    // Sum dissociation flux over all pairs that dissociate to form this one.
+    double flux = std::accumulate(dissociatingPairs.begin(), dissociatingPairs.end(),
+            0.0,
+            [](double running, const ClusterPair& currPair) {
+                // Get the dissociating cluster
+                auto& dissociatingCluster = currPair.first;
+                // Calculate the Dissociation flux
+                return running + (currPair.reaction->kConstant * 
+                        dissociatingCluster->getConcentration(currPair.firstDistance));
+            });
 
 	// Return the flux
 	return flux;
 }
 
 double NECluster::getEmissionFlux() const {
-	// Initial declarations
-	int nPairs = 0;
-	double flux = 0.0;
 
-	// Set the total number of emission pairs
-	nPairs = emissionPairs.size();
-	// Loop over all the pairs
-	for (int i = 0; i < nPairs; i++) {
-		// Update the flux
-		flux += emissionPairs[i].reaction->kConstant;
-	}
+    // Sum reaction rate constants over all emission pair reactions.
+    double flux = std::accumulate(emissionPairs.begin(), emissionPairs.end(),
+            0.0,
+            [](double running, const ClusterPair& currPair) {
+                return running + currPair.reaction->kConstant;
+            });
 
 	return flux * concentration;
 }
@@ -295,22 +277,18 @@ double NECluster::getProductionFlux() const {
 }
 
 double NECluster::getCombinationFlux() const {
-	// Local declarations
-	double flux = 0.0;
-	int nReactants = 0;
-	NECluster *combiningCluster = nullptr;
 
-	// Set the total number of reactants that combine to form this one
-	nReactants = combiningReactants.size();
-	// Loop over all possible clusters
-	for (int j = 0; j < nReactants; j++) {
-		// Get the cluster that combines with this one
-		combiningCluster = combiningReactants[j].combining;
-		// Calculate Second term of production flux
-		flux += combiningReactants[j].reaction->kConstant
-				* combiningCluster->getConcentration(
-						combiningReactants[j].distance);
-	}
+    double flux = std::accumulate(combiningReactants.begin(), combiningReactants.end(),
+            0.0,
+            [](double running, const CombiningCluster& currPair) {
+                // Get the cluster that combines with this one
+                auto& combiningCluster = currPair.combining;
+                // Calculate Second term of production flux
+                return running + 
+                    (currPair.reaction->kConstant * 
+                        combiningCluster->getConcentration(currPair.distance));
+
+            });
 
 	return flux * concentration;
 }
@@ -376,10 +354,6 @@ void NECluster::getProductionPartialDerivatives(
 
 void NECluster::getCombinationPartialDerivatives(
 		std::vector<double> & partials) const {
-	// Initial declarations
-	int numReactants = 0, otherIndex = 0;
-	NECluster *cluster = nullptr;
-	double value = 0.0;
 
 	// Combination
 	// A + B --> D, A being this cluster
@@ -388,30 +362,26 @@ void NECluster::getCombinationPartialDerivatives(
 	// Thus, the partial derivatives
 	// dF(C_A)/dC_A = - k+_(A,B)*C_B
 	// dF(C_A)/dC_B = - k+_(A,B)*C_A
-	numReactants = combiningReactants.size();
-	for (int i = 0; i < numReactants; i++) {
-		cluster = (NECluster *) combiningReactants[i].combining;
-		// Remember that the flux due to combinations is OUTGOING (-=)!
-		// Compute the contribution from this cluster
-		partials[id - 1] -= combiningReactants[i].reaction->kConstant
-				* cluster->getConcentration(combiningReactants[i].distance);
-		// Compute the contribution from the combining cluster
-		value = combiningReactants[i].reaction->kConstant * concentration;
-		// Get the index of cluster
-		otherIndex = cluster->id - 1;
-		partials[otherIndex] -= value;
-		otherIndex = cluster->xeMomId - 1;
-		partials[otherIndex] -= value * combiningReactants[i].distance;
-	}
+    std::for_each(combiningReactants.begin(), combiningReactants.end(),
+        [this,&partials](const CombiningCluster& cc) {
+
+            NECluster* cluster = (NECluster *) cc.combining;
+            // Remember that the flux due to combinations is OUTGOING (-=)!
+            // Compute the contribution from this cluster
+            partials[id - 1] -= cc.reaction->kConstant * 
+                cluster->getConcentration(cc.distance);
+            // Compute the contribution from the combining cluster
+            double value = cc.reaction->kConstant * concentration;
+
+            partials[cluster->id - 1] -= value;
+            partials[cluster->xeMomId - 1] -= value * cc.distance;
+        });
 
 	return;
 }
 
 void NECluster::getDissociationPartialDerivatives(
 		std::vector<double> & partials) const {
-	// Initial declarations
-	int numPairs = 0, index = 0;
-	NECluster *cluster = nullptr;
 
 	// Dissociation
 	// A --> B + D, B being this cluster
@@ -419,24 +389,20 @@ void NECluster::getDissociationPartialDerivatives(
 	// F(C_B) = k-_(B,D)*C_A
 	// Thus, the partial derivatives
 	// dF(C_B)/dC_A = k-_(B,D)
-	numPairs = dissociatingPairs.size();
-	for (int i = 0; i < numPairs; i++) {
-		// Get the dissociating cluster
-		cluster = dissociatingPairs[i].first;
-		index = cluster->id - 1;
-		partials[index] += dissociatingPairs[i].reaction->kConstant;
-		index = cluster->xeMomId - 1;
-		partials[index] += dissociatingPairs[i].reaction->kConstant
-				* dissociatingPairs[i].firstDistance;
-	}
+    std::for_each(dissociatingPairs.begin(), dissociatingPairs.end(),
+        [&partials](const ClusterPair& currPair) {
+            // Get the dissociating cluster
+            NECluster* cluster = currPair.first;
+            partials[cluster->id - 1] += currPair.reaction->kConstant;
+            partials[cluster->xeMomId - 1] += currPair.reaction->kConstant * 
+                currPair.firstDistance;
+        });
 
 	return;
 }
 
 void NECluster::getEmissionPartialDerivatives(
 		std::vector<double> & partials) const {
-	// Initial declarations
-	int numPairs = 0, index = 0;
 
 	// Emission
 	// A --> B + D, A being this cluster
@@ -444,13 +410,14 @@ void NECluster::getEmissionPartialDerivatives(
 	// F(C_A) = - k-_(B,D)*C_A
 	// Thus, the partial derivatives
 	// dF(C_A)/dC_A = - k-_(B,D)
-	numPairs = emissionPairs.size();
-	for (int i = 0; i < numPairs; i++) {
-		// Modify the partial derivative. Remember that the flux
-		// due to emission is OUTGOING (-=)!
-		index = id - 1;
-		partials[index] -= emissionPairs[i].reaction->kConstant;
-	}
+    double emissionFlux = std::accumulate(emissionPairs.begin(), emissionPairs.end(),
+            0.0,
+            [](double running, const ClusterPair& currPair) {
+                return running + currPair.reaction->kConstant;
+            });
+
+    // Recall emission flux is OUTGOING
+    partials[id - 1] -= emissionFlux;
 
 	return;
 }
@@ -474,25 +441,25 @@ void NECluster::setMigrationEnergy(const double energy) {
 }
 
 double NECluster::getLeftSideRate() const {
-	// Initialize the rate and the cluster pointer
-	double totalRate = 0.0;
-	NECluster *cluster = nullptr;
 
-	// Loop on the combining reactants
-	for (int i = 0; i < combiningReactants.size(); i++) {
-		cluster = (NECluster *) combiningReactants[i].combining;
-		// Add the rate to the total rate
-		totalRate += combiningReactants[i].reaction->kConstant
-				* cluster->concentration;
-	}
+    // Sum reaction rate contributions over all combining clusters.
+    double combiningRateTotal = std::accumulate(combiningReactants.begin(), combiningReactants.end(),
+            0.0,
+            [](double running, const CombiningCluster& currPair) {
+                auto const& cluster = (NECluster*) currPair.combining;
 
-	// Loop on the emission pairs
-	for (int i = 0; i < emissionPairs.size(); i++) {
-		// Add the rate to the total rate
-		totalRate += emissionPairs[i].reaction->kConstant;
-	}
+                return running + (currPair.reaction->kConstant * 
+                                    cluster->concentration);
+            });
 
-	return totalRate;
+	// Sum reaction rate constants over all emission pairs.
+    double emissionRateTotal = std::accumulate(emissionPairs.begin(), emissionPairs.end(),
+            0.0,
+            [](double running, const ClusterPair& currPair) {
+                return running + currPair.reaction->kConstant;
+            });
+
+	return combiningRateTotal + emissionRateTotal;
 }
 
 std::vector<int> NECluster::getConnectivity() const {

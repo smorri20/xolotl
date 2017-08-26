@@ -9,7 +9,8 @@ using namespace xolotlCore;
 HeInterstitialCluster::HeInterstitialCluster(int numHelium, int numInterstitial,
         IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(_network, registry), numHe(numHelium), numI(numInterstitial) {
+		PSICluster(_network, registry, buildName(numHelium, numInterstitial)),
+        numHe(numHelium), numI(numInterstitial) {
 	// Set the cluster size as the sum of
 	// the number of Helium and Interstitials
 	size = numHe + numI;
@@ -18,10 +19,6 @@ HeInterstitialCluster::HeInterstitialCluster(int numHelium, int numInterstitial,
 	composition[toCompIdx(Species::He)] = numHe;
 	composition[toCompIdx(Species::I)] = numI;
 
-	// Set the reactant name appropriately
-	std::stringstream nameStream;
-	nameStream << "He_" << numHe << "I_" << numI;
-	name = nameStream.str();
 	// Set the typename appropriately
 	type = ReactantType::HeI;
 

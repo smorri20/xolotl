@@ -12,6 +12,14 @@ namespace xolotlCore {
  */
 class XeCluster: public NECluster {
 
+private:
+    static
+    std::string buildName(IReactant::SizeType nXe) {
+        std::stringstream nameStream;
+        nameStream << "Xe_" << nXe;
+        return nameStream.str();
+    }
+
 public:
 
     /**
