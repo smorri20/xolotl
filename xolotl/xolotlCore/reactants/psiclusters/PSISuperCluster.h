@@ -15,7 +15,7 @@ class PSISuperCluster: public PSICluster {
 
 private:
     static
-    std::string buildName(IReactant::SizeType nHe, IReactant::SizeType nV) {
+    std::string buildName(double nHe, double nV) {
         std::stringstream nameStream;
         nameStream << "He_" << nHe << "V_" << nV;
         return nameStream.str();
