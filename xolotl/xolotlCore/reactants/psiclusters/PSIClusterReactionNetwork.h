@@ -30,6 +30,12 @@ namespace xolotlCore {
 class PSIClusterReactionNetwork: public ReactionNetwork {
 
 private:
+    /**
+     * Nice name for map supporting quick lookup of supercluster containing 
+     * specifc number of He and V.
+     */
+    using HeVToSuperClusterMap = std::map<std::pair<IReactant::SizeType, IReactant::SizeType>, std::reference_wrapper<IReactant> >;
+
 	/**
 	 * Number of He clusters in our network.
 	 */
@@ -61,6 +67,12 @@ private:
     IReactant::SizeType  maxHeIClusterSize;
 
 
+    /**
+     * Map supporting quick identification of super cluster containing
+     * given number of He and V.
+     */
+    HeVToSuperClusterMap superClusterLookupMap;
+
 	/**
 	 * Calculate the dissociation constant of the first cluster with respect to
 	 * the single-species cluster of the same type based on the current clusters
@@ -81,14 +93,29 @@ private:
 	double computeBindingEnergy(const DissociationReaction& reaction) const override;
 
 	/**
-	 * This operation returns the super cluster that contains the original cluster
-	 * with nHe helium atoms and nV vacancies.
+	 * This operation returns the super cluster that contains the 
+     * original cluster with nHe helium atoms and nV vacancies.
+     * Throws std::out_of_range if nHe or nV are out of range, or
+     * there is no supercluster that contains the cluster with nHe and nV.
 	 *
 	 * @param nHe the type of the compound reactant
 	 * @param nV an array containing the sizes of each piece of the reactant.
-	 * @return A pointer to the super cluster
+	 * @return The super cluster representing the cluster with nHe helium
+     * and nV vacancies.
 	 */
-	IReactant * getSuperFromComp(int nHe, int nV) const;
+    IReactant * getSuperFromComp(IReactant::SizeType nHe, IReactant::SizeType nV) const;
+
+
+    /**
+     * Find the lower bound of the interval within boundVector containing 
+     * the given count.
+     * Throws std::out_of_range if no interval contains count.
+     *
+     * @param count The value of interest.
+     * @return The lower bound of the interval within boundVector 
+     * containing the given count.
+     */
+    IReactant::SizeType FindBoundsIntervalBase(IReactant::SizeType count) const;
 
 
 public:
@@ -380,13 +407,17 @@ public:
 
 
     /**
-     * Add a value to our bounds.
+     * Construct the super cluster lookup map, keyed by number of He atoms
+     * and vacancies.
      *
-     * @param val The value to add to our bounds.
+     * @param bounds Vector indicating boundaries of intervals to use 
+     *               for num Helium and num Vacancies in super clusters.
+     *               Assumed to be sorted smallest to largest, and that
+     *               last element is one past the last interval's largest 
+     *               allowed value.
      */
-    void addBound(int val) {
-        boundVector.push_back(val);
-    }
+    void buildSuperClusterIndex(const std::vector<IReactant::SizeType>& bounds);
+
 };
 
 }

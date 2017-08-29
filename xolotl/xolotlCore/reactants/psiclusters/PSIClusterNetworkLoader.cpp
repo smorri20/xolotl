@@ -441,9 +441,10 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 	int nHeGroup = maxHe / heSectionWidth + 1;
 
 	// Loop on the vacancy groups
+    std::vector<IReactant::SizeType> superClusterBounds;
 	for (int k = 0; k < nVGroup; k++) {
 		// Add the bound the the network vector
-        network->addBound(vIndex);
+        superClusterBounds.emplace_back(vIndex);
 
 
 		// Loop on the helium groups
@@ -549,7 +550,11 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 	}
 
 	// Add the bound the the network vector
-    network->addBound(maxV+1);
+    superClusterBounds.emplace_back(maxV+1);
+
+    // Now that we have the bound vector defined, tell the network to 
+    // build its quick-lookup map for super clusters
+    network->buildSuperClusterIndex(superClusterBounds);
 
 	return;
 }

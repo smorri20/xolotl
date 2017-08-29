@@ -5,6 +5,7 @@
 #include <set>
 #include <map>
 #include <unordered_map>
+#include <algorithm>
 #include <Constants.h>
 #include "IReactionNetwork.h"
 #include "Reactant.h"
@@ -158,7 +159,7 @@ protected:
 	/**
 	 * This vector contains the information on the group bounds in both directions.
 	 */
-	std::vector<int> boundVector;
+	std::vector<IReactant::SizeType> boundVector;
 
 
 	/**
@@ -220,6 +221,32 @@ protected:
 	 * @return The binding energy corresponding to this dissociation
 	 */
 	virtual double computeBindingEnergy(const DissociationReaction& reaction) const = 0;
+
+
+    /**
+     * Find lower bound of interval in boundVector that contains a value.
+     * Assumes that:
+     *   boundVector is sorted
+     *   boundVector indicates non-overlapping intervals
+     *   boundVector last element indicates the upper bound of the last 
+           interval (one past, following usual C++ standard library convention.)
+     *   0 is not included in the first boundVector interval.
+     *
+     * @param val  The value of interest.
+     * @return The lower bound of the interval in boundVector that contains
+     *       'val.'  If there is no such interval, returns 0.
+     */
+    IReactant::SizeType findBoundsIntervalBase(IReactant::SizeType val) const {
+        // Find the first item that is *greater than* the given count.
+        auto iter = std::upper_bound(boundVector.begin(), boundVector.end(), val);
+
+        // There are three cases for iter:
+        // * std::upper_bound returned begin() => val is smaller than any interval.
+        // * std::upper_bound returned end() => val is larger than any interval.
+        // * otherwise => iter points to *next* item after interval we want.
+        return ((iter != boundVector.begin()) and (iter != boundVector.end())) ?
+            *(iter - 1) : 0;
+    }
 
 
 public:

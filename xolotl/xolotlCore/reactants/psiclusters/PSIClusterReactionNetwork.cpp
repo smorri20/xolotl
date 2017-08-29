@@ -1,3 +1,4 @@
+#include <cassert>
 #include "PSIClusterReactionNetwork.h"
 #include "PSICluster.h"
 #include "PSISuperCluster.h"
@@ -1003,6 +1004,28 @@ void PSIClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 	return;
 }
 
+
+void PSIClusterReactionNetwork::buildSuperClusterIndex(const std::vector<IReactant::SizeType>& bounds) {
+
+    // Save the bounds to use.
+    boundVector = bounds;
+
+    // Build a map of super clusters, keyed by (baseHe, baseV) pairs
+    // where base* indicates the lower bound of the super cluster's
+    // interval for that species type.
+    auto const& superClusters = clusterTypeMap[ReactantType::PSISuper];
+    std::for_each(superClusters.begin(), superClusters.end(),
+        [this](const std::shared_ptr<IReactant>& currCluster) {
+            // Add the super cluster to our lookup map based on
+            // its He and V intervals.
+            auto const& comp = currCluster->getComposition();
+            auto heBoundsIntervalBase = findBoundsIntervalBase(comp[toCompIdx(Species::He)]);
+            auto vBoundsIntervalBase = findBoundsIntervalBase(comp[toCompIdx(Species::V)]);
+            superClusterLookupMap.emplace(std::make_pair(heBoundsIntervalBase, vBoundsIntervalBase), *currCluster);
+        });
+}
+
+
 void PSIClusterReactionNetwork::removeReactants(
 		const IReactionNetwork::ReactantVector& doomedReactants) {
 
@@ -1636,26 +1659,28 @@ double PSIClusterReactionNetwork::computeBindingEnergy(const DissociationReactio
 	return max(bindingEnergy, -5.0);
 }
 
+IReactant * PSIClusterReactionNetwork::getSuperFromComp(IReactant::SizeType nHe, IReactant::SizeType nV) const {
 
-IReactant * PSIClusterReactionNetwork::getSuperFromComp(int nHe, int nV) const {
-	// Initial declarations
-	IReactant * toReturn = nullptr;
+    IReactant* ret = nullptr;
 
-    auto const& superClusters = getAll(ReactantType::PSISuper);
-    auto superSize = superClusters.size();
+    auto heIntervalBase = findBoundsIntervalBase(nHe);
+    auto vIntervalBase = findBoundsIntervalBase(nV);
 
-	// Find the right indices for He and V
-	int i = -1, j = -1;
-	for (auto it = boundVector.begin(); it != boundVector.end(); it++) {
-		if (nHe >= *it) i++;
-		if (nV >= *it) j++;
-	}
-
-	// Compute the super index
-	int index = i + (j * (boundVector.size() - 1)) - std::min(j+1, 3) * 3;
-	// Get the super cluster
-	if (index < superSize)
-		toReturn = superClusters[index].get();
-
-	return toReturn;
+    if((heIntervalBase != 0) and (vIntervalBase != 0)) {
+        auto iter = superClusterLookupMap.find(std::make_pair(nHe, nV));
+        if(iter != superClusterLookupMap.end()) {
+            IReactant& super = iter->second;    // Get ref from reference_wrapper.
+            ret = &super;                      // Return pointer to actual object.
+        }
+    }
+#if READY
+    if(ret) {
+        const auto& retbounds = static_cast<PSISuperCluster*>(ret)->getBoundaries();
+        assert((nHe >= retbounds[0] and nHe <= retbounds[1]));
+        assert((nV >= retbounds[2] and nV <= retbounds[3]));
+    }
+#endif // READY
+    return ret;
 }
+
+
