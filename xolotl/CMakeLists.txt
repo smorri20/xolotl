@@ -100,7 +100,7 @@ include_directories(${CMAKE_SOURCE_DIR}
                     ${CMAKE_BINARY_DIR}
                     ${PETSC_INCLUDES})
 
-configure_file ("${CMAKE_SOURCE_DIR}/XolotlConfig.h.in" "${CMAKE_SOURCE_DIR}/XolotlConfig.h")
+                configure_file ("${CMAKE_SOURCE_DIR}/XolotlConfig.h.in" "${CMAKE_BINARY_DIR}/XolotlConfig.h")
 
 # Setup the library list
 set(XOLOTL_LIBS xolotlReactants xolotlSolver xolotlIO xolotlPerf xolotlViz 
