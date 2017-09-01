@@ -44,7 +44,19 @@ public:
         std::copy(secondComp.begin(), secondComp.end(), nextBegin);
     }
 };
-}
+
+
+/**
+ * Output a basic description of the reaction to the given output stream.
+ *
+ * @param os Output stream on which to write description.
+ * @param reaction Reaction to describe.
+ * @return Output stream after having written description.
+ */
+std::ostream& operator<<(std::ostream& os, const ProductionReaction& reaction);
+
+} // namespace xolotlCore
+
 
 // For the Reaction KeyTypes  to be used as a key in an std::unordered_map,
 // we need to define a hash function for it.

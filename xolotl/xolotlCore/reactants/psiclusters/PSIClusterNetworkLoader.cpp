@@ -5,6 +5,7 @@
  *      Author: jaybilly
  */
 
+#include <fstream>
 #include "PSIClusterNetworkLoader.h"
 #include <TokenizedLineReader.h>
 #include <HeCluster.h>
@@ -91,7 +92,7 @@ PSIClusterNetworkLoader::PSIClusterNetworkLoader(
 	return;
 }
 
-std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::load() {
+std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::load(const IOptions& options) {
 	// Local Declarations
 	TokenizedLineReader<std::string> reader;
 	std::vector<std::string> loadedLine;
@@ -161,11 +162,20 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::load() {
 	// Recompute Ids and network size and redefine the connectivities
 	network->reinitializeNetwork();
 
+    // Dump the network we've created, if desired.
+    auto netDebugOpts = options.getNetworkDebugOptions();
+    if(netDebugOpts.first) {
+        // Dump the network we've created for comparison with baseline version.
+        std::ofstream networkStream(netDebugOpts.second);
+        network->dumpTo(networkStream);
+    }
+
+
 	return network;
 }
 
 std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
-		IOptions &options) {
+		const IOptions &options) {
 	// Initial declarations
 	maxI = options.getMaxI(), maxHe = options.getMaxImpurity(), maxV =
 			options.getMaxV();
@@ -324,6 +334,14 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 
 	// Recompute Ids and network size and redefine the connectivities
 	network->reinitializeNetwork();
+
+    // Dump the network we've created, if desired.
+    auto netDebugOpts = options.getNetworkDebugOptions();
+    if(netDebugOpts.first) {
+        // Dump the network we've created for comparison with baseline version.
+        std::ofstream networkStream(netDebugOpts.second);
+        network->dumpTo(networkStream);
+    }
 
 	return network;
 }

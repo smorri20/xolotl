@@ -259,6 +259,13 @@ public:
 	 * @returns true if reactions are enabled, false otherwise.
 	 */
 	virtual bool getDissociationsEnabled() const = 0;
+
+    /**
+     * Dump a representation of the network to the given output stream.
+     *
+     * @param os Output stream on which to write network description.
+     */
+    virtual void dumpTo(std::ostream& os) const = 0;
 };
 
 }

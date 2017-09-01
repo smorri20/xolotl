@@ -1,7 +1,7 @@
 #ifndef XCORE_DISSOCIATION_REACTION_H
 #define XCORE_DISSOCIATION_REACTION_H
 
-#include "Reaction.h"
+#include "ProductionReaction.h"
 
 namespace xolotlCore {
 
@@ -59,7 +59,16 @@ public:
     }
 };
 
-}
+/**
+ * Output a basic description of the reaction to the given output stream.
+ *
+ * @param os Output stream on which to write description.
+ * @param reaction Reaction to describe.
+ * @return Output stream after having written description.
+ */
+std::ostream& operator<<(std::ostream& os, const DissociationReaction& reaction);
+
+} // namespace xolotlCore
 
 // For the Reaction KeyTypes  to be used as a key in an std::unordered_map,
 // we need to define a hash function for it.

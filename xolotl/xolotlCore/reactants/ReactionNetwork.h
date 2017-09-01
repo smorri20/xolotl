@@ -6,6 +6,7 @@
 #include <map>
 #include <unordered_map>
 #include <algorithm>
+#include <cassert>
 #include <Constants.h>
 #include "IReactionNetwork.h"
 #include "Reactant.h"
@@ -155,6 +156,8 @@ protected:
 	 * Maximum size of an interstitial cluster.
 	 */
     IReactant::SizeType maxIClusterSize;
+
+    std::map<ReactantType, IReactant::SizeType> maxClusterSizeMap;
 
 	/**
 	 * This vector contains the information on the group bounds in both directions.
@@ -358,6 +361,7 @@ public:
 	 * @return The number of reactants in the network
 	 */
 	int size() {
+        assert(networkSize == allReactants.size());
 		return networkSize;
 	}
 
@@ -543,6 +547,7 @@ public:
 	 * Number of vacancy clusters in our network.
 	 */
 	int getNumVClusters() const {
+        assert(numVClusters == clusterTypeMap.at(ReactantType::V).size());
 		return numVClusters;
 	}
 
@@ -550,6 +555,7 @@ public:
 	 * Number of interstitial clusters in our network.
 	 */
 	int getNumIClusters() const {
+        assert(numIClusters == clusterTypeMap.at(ReactantType::I).size());
 		return numIClusters;
 	}
 
@@ -557,6 +563,7 @@ public:
 	 * Number of super clusters in our network.
 	 */
 	int getNumSuperClusters() const {
+        assert(numSuperClusters == clusterTypeMap.at(ReactantType::PSISuper).size());
 		return numSuperClusters;
 	}
 
@@ -564,6 +571,7 @@ public:
 	 * Maximum vacancy cluster size in our network.
 	 */
     IReactant::SizeType getMaxVClusterSize() const {
+        assert(maxVClusterSize == maxClusterSizeMap.at(ReactantType::V));
 		return maxVClusterSize;
 	}
 
@@ -571,9 +579,17 @@ public:
 	 * Maximum interstitial cluster size in our network.
 	 */
     IReactant::SizeType getMaxIClusterSize() const {
+        assert(maxIClusterSize == maxClusterSizeMap.at(ReactantType::I));
 		return maxIClusterSize;
 	}
 
+
+    /**
+     * Dump a representation of the network to the given output stream.
+     *
+     * @param os Output stream on which to write network description.
+     */
+    void dumpTo(std::ostream& os) const override;
 };
 
 }

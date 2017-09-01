@@ -4,7 +4,6 @@
 #include <Constants.h>
 #include <MathUtils.h>
 
-
 using namespace xolotlCore;
 
 void PSICluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
@@ -48,6 +47,7 @@ void PSICluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
 
 void PSICluster::createCombination(std::shared_ptr<ProductionReaction> reaction,
 		int a, int b) {
+
 	// Look for the other cluster
 	IReactant * secondCluster;
 	if (reaction->first->getId() == id)
@@ -56,10 +56,19 @@ void PSICluster::createCombination(std::shared_ptr<ProductionReaction> reaction,
 		secondCluster = reaction->first;
 
 	// Check if the reaction was already added
+#if READY
     auto it = std::find_if(combiningReactants.rbegin(), combiningReactants.rend(),
                 [&secondCluster](const CombiningCluster& cc) {
                     return secondCluster == cc.combining;
                 });
+#else
+    std::vector<CombiningCluster>::reverse_iterator it;
+    for (it = combiningReactants.rbegin(); it != combiningReactants.rend(); ++it) {
+        if(secondCluster == it->combining) {
+            break;
+        }
+    }
+#endif // READY
 	if (it == combiningReactants.rend()) {
 		// It was not already in so add it
 		// Add the combining cluster.
@@ -92,6 +101,7 @@ void PSICluster::createCombination(std::shared_ptr<ProductionReaction> reaction,
 void PSICluster::createDissociation(
 		std::shared_ptr<DissociationReaction> reaction, int a, int b, int c,
 		int d) {
+
 	// Look for the other cluster
 	IReactant * emittedCluster;
 	if (reaction->first->getId() == id)

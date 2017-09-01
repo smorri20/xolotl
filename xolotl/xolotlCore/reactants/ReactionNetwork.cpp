@@ -3,8 +3,8 @@
 #include <iostream>
 #include <cassert>
 
-using namespace xolotlCore;
 
+namespace xolotlCore {
 
 ReactionNetwork::ReactionNetwork(
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
@@ -130,3 +130,45 @@ std::shared_ptr<DissociationReaction> ReactionNetwork::addDissociationReaction(
 	return reaction;
 }
 
+void ReactionNetwork::dumpTo(std::ostream& os) const {
+
+    // Dump flat view of reactants.
+    assert(networkSize == allReactants.size());
+    os << networkSize << " reactants:\n";
+    for (auto const& currReactant : allReactants) {
+        os << *currReactant << '\n';
+    }
+
+    // Dump reactants of each type.
+    // TODO what does this give us that the flat view doesn't?
+    os << "per-type reactant map:\n";
+    std::vector<ReactantType> knownTypes {
+		ReactantType::He,
+		ReactantType::V,
+		ReactantType::I,
+		ReactantType::HeV,
+		ReactantType::HeI,
+		ReactantType::PSISuper
+    };
+    for (auto const& currType : knownTypes) {
+        auto const& currTypeReactants = clusterTypeMap.at(currType);
+        os << currTypeReactants.size() << " " << toString(currType) << " reactants:\n";
+        for (auto const& currReactant : currTypeReactants) {
+            os << *currReactant << '\n';
+        }
+    }
+
+    // Dump ProductionReactions.
+    os << productionReactionMap.size() << " production reactions:\n";
+    for (auto const& currMapItem : productionReactionMap) {
+        os << *(currMapItem.second) << '\n';
+    }
+
+    // Dump DissociationReactions.
+    os << dissociationReactionMap.size() << " dissociation reactions:\n";
+    for (auto const& currMapItem : dissociationReactionMap) {
+        os << *(currMapItem.second) << '\n';
+    }
+}
+
+} // xolotlCore

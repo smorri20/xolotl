@@ -2,6 +2,7 @@
 #include "PSISuperCluster.h"
 #include "PSIClusterReactionNetwork.h"
 #include <MathUtils.h>
+#include <xolotlPerf.h>
 
 using namespace xolotlCore;
 
@@ -52,6 +53,7 @@ PSISuperCluster::PSISuperCluster(double _numHe, double _numV, int _nTot,
 void PSISuperCluster::createProduction(
 		std::shared_ptr<ProductionReaction> reaction, int a, int b, int c,
 		int d) {
+
 	// Check if the reaction was already added
 	std::forward_list<SuperClusterProductionPair>::iterator it;
 	for (it = effReactingList.begin(); it != effReactingList.end(); it++) {
@@ -121,6 +123,7 @@ void PSISuperCluster::createProduction(
 
 void PSISuperCluster::createCombination(
 		std::shared_ptr<ProductionReaction> reaction, int a, int b) {
+
 	setReactionConnectivity(id);
 	// Look for the other cluster
 	IReactant * secondCluster;

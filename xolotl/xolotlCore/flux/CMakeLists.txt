@@ -13,11 +13,12 @@ file(GLOB HEADERS *.h)
 file(GLOB SRC *.cpp)
 
 #Include directories
-include_directories(${CMAKE_SOURCE_DIR}/xolotlCore)
-include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/commandline)
-include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants)
-include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants/psiclusters)
-include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore
+                    ${CMAKE_SOURCE_DIR}/xolotlCore/commandline
+                    ${CMAKE_SOURCE_DIR}/xolotlCore/reactants
+                    ${CMAKE_SOURCE_DIR}/xolotlCore/reactants/psiclusters
+                    ${CMAKE_SOURCE_DIR}/xolotlPerf
+                    ${CMAKE_BINARY_DIR})
 
 #Add the libraries
 add_library(${LIBRARY_NAME} STATIC ${SRC})

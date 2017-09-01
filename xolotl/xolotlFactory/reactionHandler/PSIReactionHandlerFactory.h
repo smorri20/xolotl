@@ -63,7 +63,7 @@ public:
 			theNetworkLoaderHandler->setDummyReactions();
 		// Load the network
 		if (options.useHDF5())
-			theNetworkHandler = theNetworkLoaderHandler->load();
+			theNetworkHandler = theNetworkLoaderHandler->load(options);
 		else theNetworkHandler = theNetworkLoaderHandler->generate(options);
 
 		if (procId == 0) {

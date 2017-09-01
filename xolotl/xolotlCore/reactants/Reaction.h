@@ -1,9 +1,28 @@
 #ifndef XCORE_REACTION_H
 #define XCORE_REACTION_H
 
+#include "xolotlCore/reactants/reactantsConfig.h"
 #include "IReactant.h"
 
 namespace xolotlCore {
+
+#if defined(USE_ORIG_REACTANT_COMP_STRING)
+// The original implementation ordered reactants first/second based
+// on lexicographical ordering of their composition strings.
+// We would prefer not to use composition strings for performance reasons,
+// but for verification that we are initializing the same reaction network,
+// we need to use the same comparison function.
+inline
+bool compStringCompare(const IReactant& _r1, const IReactant& _r2) {
+
+    // build composition strings for the two reactant compositions,
+    // that is in the same format as their old composition strings.
+    std::string r1str = getCompString(_r1);
+    std::string r2str = getCompString(_r2);
+
+    return r1str < r2str;
+}
+#endif // defined(USE_ORIG_REACTANT_COMP_STRING)
 
 /**
  * This is a public class that is used to store a reaction.
@@ -28,7 +47,11 @@ protected:
      * @param _r2 The other reactant.
      */
     Reaction(IReactant* _r1, IReactant* _r2)
+#if defined(USE_ORIG_REACTANT_COMP_STRING)
+      : paramsCorrectlyOrdered( compStringCompare(*_r1, *_r2) ),
+#else
       : paramsCorrectlyOrdered( _r1->getComposition() < _r2->getComposition() ),
+#endif // defined(USE_ORIG_REACTANT_COMP_STRING)
         first(paramsCorrectlyOrdered ? _r1 : _r2),
         second(paramsCorrectlyOrdered ? _r2 : _r1),
         kConstant(0.0) {

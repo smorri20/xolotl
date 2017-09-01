@@ -7,6 +7,8 @@
 #include <vector>
 #include <unordered_map>
 #include <map>
+#include <sstream>
+#include "xolotlCore/reactants/reactantsConfig.h"
 #include "Species.h"
 #include "ReactantType.h"
 
@@ -411,6 +413,46 @@ public:
 
 };
 
+
+/**
+ * Output basic description of an IReactant's composition to the given output
+ * stream.
+ *
+ * @param os Output stream on which to write description.
+ * @param comp Composition to describe.
+ * @return Output stream after having written description.
+ */
+std::ostream& operator<<(std::ostream& os, const IReactant::Composition& comp);
+
+
+/**
+ * Output basic description of an IReactant to the given output stream.
+ *
+ * @param os Output stream on which to write description.
+ * @param r Reactant to describe.
+ * @return Output stream after having written description.
+ */
+std::ostream& operator<<(std::ostream& os, const IReactant& r);
+
+
+#if defined(USE_ORIG_REACTANT_COMP_STRING)
+inline
+std::string getCompString(const IReactant& r) {
+    std::vector<Species> knownTypes {
+        Species::He,
+        Species::I,
+        Species::V,
+        Species::Xe
+    };
+    std::ostringstream ostr;
+    ostr << toString(r.getType()) << ':';
+    for(auto const& currType : knownTypes) {
+        ostr << toString(currType) << r.getComposition()[toCompIdx(currType)];
+    }
+    return ostr.str();
+}
+#endif // defined(USE_ORIG_REACTANT_COMP_STRING)
+
 } // end namespace xolotlCore
 
 // For an IReactant::Composition to be used as a key in an std::unordered_map,
@@ -429,5 +471,6 @@ struct hash<xolotlCore::IReactant::Composition> {
     }
 };
 }
+
 
 #endif

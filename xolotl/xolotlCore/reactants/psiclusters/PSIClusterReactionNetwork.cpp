@@ -1,4 +1,5 @@
 #include <cassert>
+#include <iterator>
 #include "PSIClusterReactionNetwork.h"
 #include "PSICluster.h"
 #include "PSISuperCluster.h"
@@ -6,10 +7,8 @@
 #include <Constants.h>
 #include <MathUtils.h>
 
-using namespace xolotlCore;
 
-
-
+namespace xolotlCore {
 
 PSIClusterReactionNetwork::PSIClusterReactionNetwork(
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
@@ -41,6 +40,7 @@ PSIClusterReactionNetwork::PSIClusterReactionNetwork(
     };
     for (auto& currType : knownClusterTypes) {
         clusterTypeMap.insert( { currType, ReactionNetwork::ReactantVector() } );
+        maxClusterSizeMap.insert( { currType, 0 } );
     }
 
 	return;
@@ -78,6 +78,11 @@ double PSIClusterReactionNetwork::calculateDissociationConstant(const Dissociati
 void PSIClusterReactionNetwork::createReactionConnectivity() {
 	// Initial declarations
     IReactant::SizeType firstSize = 0, secondSize = 0, productSize = 0;
+
+#if READY
+    CheckSizes();
+#else
+#endif // READY
 
 	// Single species clustering (He, V, I)
 	// We know here that only Xe_1 can cluster so we simplify the search
@@ -157,7 +162,6 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 				// Check if it is a super cluster from the map
 				product = getSuperFromComp(newNumHe, newNumV);
 			}
-
 			// Check that the reaction can occur
 			if (product
 					&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -190,7 +194,6 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
                     auto newNumHe = i + firstSize;
                     auto newNumV = j;
 					product = getSuperFromComp(newNumHe, newNumV);
-
 					// Check that the reaction can occur
 					if (product
 							&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -245,7 +248,6 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			if (!product) {
 				product = getSuperFromComp(newNumHe, newNumV);
 			}
-
 			// Check that the reaction can occur
 			if (product
 					&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -279,7 +281,6 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
                     auto newNumHe = i;
                     auto newNumV = j + firstSize;
 					product = getSuperFromComp(newNumHe, newNumV);
-
 					// Check that the reaction can occur
 					if (product
 							&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -330,7 +331,6 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			if (!product) {
 				product = getSuperFromComp(newNumHe, newNumV);
 			}
-
 			// Check that the reaction can occur
 			if (product
 					&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -426,7 +426,6 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 							product = getSuperFromComp(newNumHe, newNumV);
 						}
 					}
-
 					// Check that the reaction can occur
 					if (product
 							&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -796,6 +795,8 @@ void PSIClusterReactionNetwork::checkDissociationConnectivity(
 	reaction->second->createDissociation(dissociationReaction, a, b, c, d);
 	emittingReactant->createEmission(dissociationReaction, a, b, c, d);
 
+    CheckSizes();
+
 	return;
 }
 
@@ -816,6 +817,8 @@ IReactant * PSIClusterReactionNetwork::get(ReactantType type,
 
 	// Local Declarations
 	std::shared_ptr<IReactant> retReactant;
+
+    CheckSizes();
 
 	// Only pull the reactant if the name and size are valid
 	if ((type == ReactantType::He || type == ReactantType::V || type == ReactantType::I) && size >= 1) {
@@ -840,6 +843,8 @@ IReactant * PSIClusterReactionNetwork::getCompound(ReactantType type,
 	// Local Declarations
 	std::shared_ptr<IReactant> retReactant;
 
+    CheckSizes();
+
 	// Only pull the reactant if the name is valid and there are enough sizes
 	// to fill the composition.
 	if (type == ReactantType::HeV || type == ReactantType::HeI) {
@@ -859,6 +864,8 @@ IReactant * PSIClusterReactionNetwork::getSuper(ReactantType type,
 
 	// Local Declarations
 	std::shared_ptr<IReactant> retReactant;
+
+    CheckSizes();
 
 	// Only pull the reactant if the name is valid and there are enough sizes
 	// to fill the composition.
@@ -938,6 +945,9 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 		// Increment the max cluster size key
         IReactant::SizeType clusterSize = numHe + numV + numI;
 		(*maxClusterSize) = std::max(clusterSize, (*maxClusterSize));
+        if(clusterSize > maxClusterSizeMap[reactant->getType()]) {
+            maxClusterSizeMap[reactant->getType()] = clusterSize;
+        }
 		// Update the size
 		++networkSize;
 		// Set the id for this cluster
@@ -950,7 +960,29 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
         allReactants.push_back(reactant.get());
 	}
 
+    CheckSizes();
+
 	return;
+}
+
+void PSIClusterReactionNetwork::CheckSizes() const {
+
+#if READY
+    assert(numHeClusters == clusterTypeMap.at(ReactantType::He).size());
+    assert(numVClusters == clusterTypeMap.at(ReactantType::V).size());
+    assert(numIClusters == clusterTypeMap.at(ReactantType::I).size());
+    assert(numHeVClusters == clusterTypeMap.at(ReactantType::HeV).size());
+    assert(numHeIClusters == clusterTypeMap.at(ReactantType::HeI).size());
+    assert(numSuperClusters == clusterTypeMap.at(ReactantType::PSISuper).size());
+    assert(maxHeClusterSize == maxClusterSizeMap.at(ReactantType::He));
+    assert(maxVClusterSize == maxClusterSizeMap.at(ReactantType::V));
+    assert(maxIClusterSize == maxClusterSizeMap.at(ReactantType::I));
+    assert(maxHeVClusterSize == maxClusterSizeMap.at(ReactantType::HeV));
+    assert(maxHeIClusterSize == maxClusterSizeMap.at(ReactantType::HeI));
+
+    assert(networkSize == allReactants.size());
+#else
+#endif // READY
 }
 
 void PSIClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
@@ -1019,8 +1051,11 @@ void PSIClusterReactionNetwork::buildSuperClusterIndex(const std::vector<IReacta
             // Add the super cluster to our lookup map based on
             // its He and V intervals.
             auto const& comp = currCluster->getComposition();
-            auto heBoundsIntervalBase = findBoundsIntervalBase(comp[toCompIdx(Species::He)]);
-            auto vBoundsIntervalBase = findBoundsIntervalBase(comp[toCompIdx(Species::V)]);
+            auto currHe = comp[toCompIdx(Species::He)];
+            auto currV = comp[toCompIdx(Species::V)];
+            auto heBoundsIntervalBase = findBoundsIntervalBase(currHe);
+            auto vBoundsIntervalBase = findBoundsIntervalBase(currV);
+
             superClusterLookupMap.emplace(std::make_pair(heBoundsIntervalBase, vBoundsIntervalBase), *currCluster);
         });
 }
@@ -1106,7 +1141,12 @@ void PSIClusterReactionNetwork::reinitializeNetwork() {
 		auto bounds = cluster->getBoundaries();
         IReactant::SizeType clusterSize = bounds[1] + bounds[3];
 		maxHeVClusterSize = max(maxHeVClusterSize, clusterSize);
+        if(clusterSize > maxClusterSizeMap[ReactantType::HeV]) {
+            maxClusterSizeMap[ReactantType::HeV] = clusterSize;
+        }
 	}
+
+    CheckSizes();
 
 	return;
 }
@@ -1117,6 +1157,8 @@ void PSIClusterReactionNetwork::reinitializeConnectivities() {
 		(*it)->resetConnectivities();
 	}
 
+    CheckSizes();
+
 	return;
 }
 
@@ -1125,6 +1167,11 @@ void PSIClusterReactionNetwork::updateConcentrationsFromArray(
 	// Local Declarations
 	int size = allReactants.size();
 	int id = 0;
+
+#if READY
+    CheckSizes();
+#else
+#endif // READY
 
 	// Set the concentrations
 	concUpdateCounter->increment();	// increment the update concentration counter
@@ -1659,7 +1706,8 @@ double PSIClusterReactionNetwork::computeBindingEnergy(const DissociationReactio
 	return max(bindingEnergy, -5.0);
 }
 
-IReactant * PSIClusterReactionNetwork::getSuperFromComp(IReactant::SizeType nHe, IReactant::SizeType nV) const {
+
+IReactant * PSIClusterReactionNetwork::getSuperFromComp(IReactant::SizeType nHe, IReactant::SizeType nV) {
 
     IReactant* ret = nullptr;
 
@@ -1667,20 +1715,16 @@ IReactant * PSIClusterReactionNetwork::getSuperFromComp(IReactant::SizeType nHe,
     auto vIntervalBase = findBoundsIntervalBase(nV);
 
     if((heIntervalBase != 0) and (vIntervalBase != 0)) {
-        auto iter = superClusterLookupMap.find(std::make_pair(nHe, nV));
+        auto iter = superClusterLookupMap.find(std::make_pair(heIntervalBase, vIntervalBase));
         if(iter != superClusterLookupMap.end()) {
             IReactant& super = iter->second;    // Get ref from reference_wrapper.
             ret = &super;                      // Return pointer to actual object.
+            assert(static_cast<PSISuperCluster*>(ret)->isIn(nHe, nV));
         }
     }
-#if READY
-    if(ret) {
-        const auto& retbounds = static_cast<PSISuperCluster*>(ret)->getBoundaries();
-        assert((nHe >= retbounds[0] and nHe <= retbounds[1]));
-        assert((nV >= retbounds[2] and nV <= retbounds[3]));
-    }
-#endif // READY
+
     return ret;
 }
 
+} // namespace xolotlCore
 

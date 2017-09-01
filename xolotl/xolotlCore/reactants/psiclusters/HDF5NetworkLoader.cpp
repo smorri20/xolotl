@@ -9,7 +9,7 @@
 
 using namespace xolotlCore;
 
-std::shared_ptr<IReactionNetwork> HDF5NetworkLoader::load() {
+std::shared_ptr<IReactionNetwork> HDF5NetworkLoader::load(const IOptions& options) {
 	// Get the dataset from the HDF5 files
 	auto networkVector = xolotlCore::HDF5Utils::readNetwork(fileName);
 

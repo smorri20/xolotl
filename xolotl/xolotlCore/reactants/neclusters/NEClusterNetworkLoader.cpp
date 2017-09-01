@@ -1,10 +1,11 @@
+#include <fstream>
+#include <cassert>
 #include "NEClusterNetworkLoader.h"
 #include <NEClusterReactionNetwork.h>
 #include <XeCluster.h>
 #include <NESuperCluster.h>
 #include <HDF5Utils.h>
 #include <xolotlPerf.h>
-#include <cassert>
 
 using namespace xolotlCore;
 
@@ -65,7 +66,7 @@ NEClusterNetworkLoader::NEClusterNetworkLoader(
 	return;
 }
 
-std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::load() {
+std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::load(const IOptions& options) {
 	// Get the dataset from the HDF5 files
 	auto networkVector = xolotlCore::HDF5Utils::readNetwork(fileName);
 
@@ -132,11 +133,19 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::load() {
 		applyGrouping(network);
 	}
 
+    // Dump the network we've created, if desired.
+    auto netDebugOpts = options.getNetworkDebugOptions();
+    if(netDebugOpts.first) {
+        // Dump the network we've created for comparison with baseline version.
+        std::ofstream networkStream(netDebugOpts.second);
+        network->dumpTo(networkStream);
+    }
+
 	return network;
 }
 
 std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::generate(
-		IOptions &options) {
+		const IOptions &options) {
 	// Initial declarations
 	int maxXe = options.getMaxImpurity();
 	int numXe = 0;
@@ -202,6 +211,14 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::generate(
 		// Apply sectional grouping
 		applyGrouping(network);
 	}
+
+    // Dump the network we've created, if desired.
+    auto netDebugOpts = options.getNetworkDebugOptions();
+    if(netDebugOpts.first) {
+        // Dump the network we've created for comparison with baseline version.
+        std::ofstream networkStream(netDebugOpts.second);
+        network->dumpTo(networkStream);
+    }
 
 	return network;
 }

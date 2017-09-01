@@ -7,8 +7,7 @@
 #include <MathUtils.h>
 #include <Constants.h>
 
-// Namespaces
-using namespace xolotlCore;
+namespace xolotlCore {
 
 // TODO modify signature to take type as argument.
 Reactant::Reactant(IReactionNetwork& _network,
@@ -91,4 +90,37 @@ void Reactant::setMigrationEnergy(const double energy) {
 
 	return;
 }
+
+
+
+std::ostream&
+operator<<(std::ostream& os, const IReactant::Composition& comp) {
+    std::vector<Species> compSpecies {
+        Species::He,
+        Species::I,
+        Species::V,
+        Species::Xe
+    };
+    for(auto const& currSpecies: compSpecies) {
+        os << toString(currSpecies) << comp[toCompIdx(currSpecies)];
+    }
+    return os;
+}
+
+
+std::ostream&
+operator<<(std::ostream& os, const IReactant& reactant) {
+    os << "id: " << reactant.getId() << "; "
+        << "type: " << toString(reactant.getType()) << "; "
+#if defined(USE_ORIG_REACTANT_COMP_STRING)
+        // Output a string in format used by previous implementations,
+        // to support comparisons.
+        << "comp: " << getCompString(reactant);
+#else
+        << "comp: " << reactant.getComposition();
+#endif // defined(USE_ORIG_REACTANT_COMP_STRING)
+    return os;
+}
+
+} // namespace xolotlCore
 

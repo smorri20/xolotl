@@ -160,7 +160,7 @@ public:
 	 *
 	 * @return network The reaction network
 	 */
-	virtual std::shared_ptr<IReactionNetwork> load();
+	virtual std::shared_ptr<IReactionNetwork> load(const IOptions& options) override;
 
 	/**
 	 * This operation will generate the reaction network from options.
@@ -169,7 +169,7 @@ public:
 	 * @param options The command line options
 	 * @return network The reaction network
 	 */
-	virtual std::shared_ptr<IReactionNetwork> generate(IOptions &options);
+	virtual std::shared_ptr<IReactionNetwork> generate(const IOptions &options) override;
 
 	/**
 	 * This operation will apply a sectional grouping method to the network.

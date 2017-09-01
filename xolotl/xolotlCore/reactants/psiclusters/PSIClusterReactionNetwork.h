@@ -2,16 +2,16 @@
 #define PSI_CLUSTER_REACTION_NETWORK_H
 
 // Includes
-//#include <xolotlPerf.h>
+#include <iostream>
+#include <iomanip>
 #include <string>
 #include <vector>
 #include <memory>
 #include <map>
 #include <unordered_map>
-#include <ReactionNetwork.h>
-#include <iostream>
-#include <iomanip>
 #include <algorithm>
+#include "ReactionNetwork.h"
+#include "PSISuperCluster.h"
 
 namespace xolotlCore {
 
@@ -30,6 +30,8 @@ namespace xolotlCore {
 class PSIClusterReactionNetwork: public ReactionNetwork {
 
 private:
+    void CheckSizes(void) const;
+
     /**
      * Nice name for map supporting quick lookup of supercluster containing 
      * specifc number of He and V.
@@ -93,27 +95,25 @@ private:
 	double computeBindingEnergy(const DissociationReaction& reaction) const override;
 
 	/**
-	 * This operation returns the super cluster that contains the 
-     * original cluster with nHe helium atoms and nV vacancies.
-     * Throws std::out_of_range if nHe or nV are out of range, or
-     * there is no supercluster that contains the cluster with nHe and nV.
+     * Find the super cluster that contains the original cluster with nHe
+     * helium atoms and nV vacancies.
 	 *
 	 * @param nHe the type of the compound reactant
 	 * @param nV an array containing the sizes of each piece of the reactant.
 	 * @return The super cluster representing the cluster with nHe helium
-     * and nV vacancies.
+     * and nV vacancies, or nullptr if no such cluster exists.
 	 */
-    IReactant * getSuperFromComp(IReactant::SizeType nHe, IReactant::SizeType nV) const;
+    IReactant * getSuperFromComp(IReactant::SizeType nHe, IReactant::SizeType nV);
 
 
     /**
      * Find the lower bound of the interval within boundVector containing 
      * the given count.
-     * Throws std::out_of_range if no interval contains count.
+     * Assumes that lower bound of smallest interval is 1.
      *
      * @param count The value of interest.
      * @return The lower bound of the interval within boundVector 
-     * containing the given count.
+     * containing the given count.  Returns 0 if no such interval exists.
      */
     IReactant::SizeType FindBoundsIntervalBase(IReactant::SizeType count) const;
 
@@ -367,6 +367,7 @@ public:
 	 * Number of He clusters in our network.
 	 */
 	int getNumHeClusters() const {
+        assert(numHeClusters == clusterTypeMap.at(ReactantType::He).size());
 		return numHeClusters;
 	}
 
@@ -374,6 +375,7 @@ public:
 	 * Number of HeV clusters in our network.
 	 */
 	int getNumHeVClusters() const {
+        assert(numHeVClusters == clusterTypeMap.at(ReactantType::HeV).size());
 		return numHeVClusters;
 	}
 
@@ -381,6 +383,7 @@ public:
 	 * Number of HeI clusters in our network.
 	 */
 	int getNumHeIClusters() const {
+        assert(numHeIClusters == clusterTypeMap.at(ReactantType::HeI).size());
 		return numHeIClusters;
 	}
 
@@ -388,6 +391,7 @@ public:
 	 * Maximum size of He clusters in our network.
 	 */
     IReactant::SizeType getMaxHeClusterSize() const {
+        assert(maxHeClusterSize == maxClusterSizeMap.at(ReactantType::He));
 		return maxHeClusterSize;
 	}
 
@@ -395,6 +399,7 @@ public:
 	 * Maximum size of HeV clusters in our network.
 	 */
     IReactant::SizeType getMaxHeVClusterSize() const {
+        assert(maxHeVClusterSize == maxClusterSizeMap.at(ReactantType::HeV));
 		return maxHeVClusterSize;
 	}
 
@@ -402,6 +407,7 @@ public:
 	 * Maximum size of HeI clusters in our network.
 	 */
     IReactant::SizeType getMaxHeIClusterSize() const {
+        assert(maxHeIClusterSize == maxClusterSizeMap.at(ReactantType::HeI));
 		return maxHeIClusterSize;
 	}
 
@@ -417,9 +423,8 @@ public:
      *               allowed value.
      */
     void buildSuperClusterIndex(const std::vector<IReactant::SizeType>& bounds);
-
 };
 
-}
+} // namespace xolotlCore
 
 #endif

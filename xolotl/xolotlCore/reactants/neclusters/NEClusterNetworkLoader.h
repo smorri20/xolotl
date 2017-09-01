@@ -110,9 +110,10 @@ public:
 	 * the format specified previously. The network will be empty if it can not
 	 * be loaded.
 	 *
+     * @param options The command line options.
 	 * @return network The reaction network
 	 */
-	virtual std::shared_ptr<IReactionNetwork> load();
+	virtual std::shared_ptr<IReactionNetwork> load(const IOptions& options) override;
 
 	/**
 	 * This operation will generate the reaction network from options.
@@ -121,7 +122,7 @@ public:
 	 * @param options The command line options
 	 * @return network The reaction network
 	 */
-	virtual std::shared_ptr<IReactionNetwork> generate(IOptions &options);
+	virtual std::shared_ptr<IReactionNetwork> generate(const IOptions &options) override;
 
 	/**
 	 * This operation will apply a grouping method to the network.

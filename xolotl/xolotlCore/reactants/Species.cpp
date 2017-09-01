@@ -4,7 +4,7 @@
 
 namespace xolotlCore {
 
-std::string toString(const Species& s) {
+std::string toString(Species s) {
 
     static std::unordered_map<Species, std::string> smap {
         { Species::Invalid, "Invalid_species" },
