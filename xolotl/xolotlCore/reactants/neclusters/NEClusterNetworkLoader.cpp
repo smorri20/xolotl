@@ -136,9 +136,13 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::load(const IOptions& o
     // Dump the network we've created, if desired.
     auto netDebugOpts = options.getNetworkDebugOptions();
     if(netDebugOpts.first) {
-        // Dump the network we've created for comparison with baseline version.
-        std::ofstream networkStream(netDebugOpts.second);
-        network->dumpTo(networkStream);
+        int rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        if(rank == 0) {
+            // Dump the network we've created for comparison with baseline.
+            std::ofstream networkStream(netDebugOpts.second);
+            network->dumpTo(networkStream);
+        }
     }
 
 	return network;
@@ -215,9 +219,13 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::generate(
     // Dump the network we've created, if desired.
     auto netDebugOpts = options.getNetworkDebugOptions();
     if(netDebugOpts.first) {
-        // Dump the network we've created for comparison with baseline version.
-        std::ofstream networkStream(netDebugOpts.second);
-        network->dumpTo(networkStream);
+        int rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        if(rank == 0) {
+            // Dump the network we've created for comparison with baseline.
+            std::ofstream networkStream(netDebugOpts.second);
+            network->dumpTo(networkStream);
+        }
     }
 
 	return network;

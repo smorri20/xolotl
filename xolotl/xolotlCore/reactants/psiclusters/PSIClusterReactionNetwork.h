@@ -30,44 +30,11 @@ namespace xolotlCore {
 class PSIClusterReactionNetwork: public ReactionNetwork {
 
 private:
-    void CheckSizes(void) const;
-
     /**
      * Nice name for map supporting quick lookup of supercluster containing 
      * specifc number of He and V.
      */
     using HeVToSuperClusterMap = std::map<std::pair<IReactant::SizeType, IReactant::SizeType>, std::reference_wrapper<IReactant> >;
-
-	/**
-	 * Number of He clusters in our network.
-	 */
-	int numHeClusters;
-
-	/**
-	 * Number of HeV clusters in our network.
-	 */
-	int numHeVClusters;
-
-	/**
-	 * Number of HeI clusters in our network.
-	 */
-	int numHeIClusters;
-
-	/**
-	 * Maximum size of He clusters in our network.
-	 */
-    IReactant::SizeType maxHeClusterSize;
-
-	/**
-	 * Maximum size of HeV clusters in our network.
-	 */
-    IReactant::SizeType maxHeVClusterSize;
-
-	/**
-	 * Maximum size of HeI clusters in our network.
-	 */
-    IReactant::SizeType  maxHeIClusterSize;
-
 
     /**
      * Map supporting quick identification of super cluster containing
@@ -292,8 +259,8 @@ public:
 	 *
 	 * @return The number of degrees of freedom
 	 */
-	virtual int getDOF() {
-		return networkSize + 2 * numSuperClusters;
+	virtual int getDOF() const override {
+		return size() + 2 * getAll(ReactantType::PSISuper).size();
 	}
 
 	/**
@@ -362,55 +329,6 @@ public:
 	 * this cluster
 	 */
 	virtual void computeAllPartials(double *vals, int *indices, int *size);
-
-	/**
-	 * Number of He clusters in our network.
-	 */
-	int getNumHeClusters() const {
-        assert(numHeClusters == clusterTypeMap.at(ReactantType::He).size());
-		return numHeClusters;
-	}
-
-	/**
-	 * Number of HeV clusters in our network.
-	 */
-	int getNumHeVClusters() const {
-        assert(numHeVClusters == clusterTypeMap.at(ReactantType::HeV).size());
-		return numHeVClusters;
-	}
-
-	/**
-	 * Number of HeI clusters in our network.
-	 */
-	int getNumHeIClusters() const {
-        assert(numHeIClusters == clusterTypeMap.at(ReactantType::HeI).size());
-		return numHeIClusters;
-	}
-
-	/**
-	 * Maximum size of He clusters in our network.
-	 */
-    IReactant::SizeType getMaxHeClusterSize() const {
-        assert(maxHeClusterSize == maxClusterSizeMap.at(ReactantType::He));
-		return maxHeClusterSize;
-	}
-
-	/**
-	 * Maximum size of HeV clusters in our network.
-	 */
-    IReactant::SizeType getMaxHeVClusterSize() const {
-        assert(maxHeVClusterSize == maxClusterSizeMap.at(ReactantType::HeV));
-		return maxHeVClusterSize;
-	}
-
-	/**
-	 * Maximum size of HeI clusters in our network.
-	 */
-    IReactant::SizeType getMaxHeIClusterSize() const {
-        assert(maxHeIClusterSize == maxClusterSizeMap.at(ReactantType::HeI));
-		return maxHeIClusterSize;
-	}
-
 
     /**
      * Construct the super cluster lookup map, keyed by number of He atoms

@@ -135,14 +135,14 @@ public:
 	 *
 	 * @return The number of reactants in the network
 	 */
-	virtual int size() = 0;
+	virtual int size() const = 0;
 
 	/**
 	 * This operation returns the size or number of reactants and momentums in the network.
 	 *
 	 * @return The number of degrees of freedom
 	 */
-	virtual int getDOF() = 0;
+	virtual int getDOF() const = 0;
 
 	/**
 	 * This operation adds a production reaction to the network.

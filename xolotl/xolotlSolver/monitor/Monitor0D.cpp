@@ -295,7 +295,7 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the maximum size of HeV clusters
 	auto psiNetwork = dynamic_cast<PSIClusterReactionNetwork*>(network);
-	auto maxHeVClusterSize = psiNetwork->getMaxHeVClusterSize();
+	auto maxHeVClusterSize = psiNetwork->getMaxClusterSize(ReactantType::HeV);
 
 	// Create a Point vector to store the data to give to the data provider
 	// for the visualization

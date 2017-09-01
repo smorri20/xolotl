@@ -12,35 +12,18 @@ using namespace xolotlCore;
 
 NEClusterReactionNetwork::NEClusterReactionNetwork(
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		ReactionNetwork(registry) {
+		ReactionNetwork( {
+                    ReactantType::V,
+                    ReactantType::I,
+                    ReactantType::Xe,
+                    ReactantType::XeV,
+                    ReactantType::XeI,
+                    ReactantType::NESuper
+                },
+                ReactantType::NESuper, registry) {
 
 	// Initialize default properties
 	dissociationsEnabled = true;
-	numXeClusters = 0;
-	numVClusters = 0;
-	numIClusters = 0;
-	numXeVClusters = 0;
-	numXeIClusters = 0;
-	numSuperClusters = 0;
-	maxXeClusterSize = 0;
-	maxVClusterSize = 0;
-	maxIClusterSize = 0;
-	maxXeVClusterSize = 0;
-	maxXeIClusterSize = 0;
-
-    // Ensure our per-type cluster map can store Reactants of the
-    // types we know about.
-    std::vector<ReactantType> knownClusterTypes {
-        ReactantType::V,
-        ReactantType::I,
-        ReactantType::Xe,
-        ReactantType::XeV,
-        ReactantType::XeI,
-        ReactantType::NESuper
-    };
-    for (auto& currType : knownClusterTypes) {
-        clusterTypeMap.insert( { currType, ReactionNetwork::ReactantVector() } );
-    }
 
 	return;
 }
@@ -206,8 +189,6 @@ void NEClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 	// Local Declarations
 	int numXe = 0, numV = 0, numI = 0;
 	bool isMixed = false;
-	int* numClusters = nullptr;
-    IReactant::SizeType* maxClusterSize = nullptr;
 
 	// Only add a complete reactant
 	if (reactant != NULL) {
@@ -228,30 +209,9 @@ void NEClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 		if (isMixed && mixedSpeciesMap.count(composition) == 0) {
 			// Put the compound in its map
             mixedSpeciesMap.emplace(composition, reactant);
-
-			// Figure out whether we have XeV or XeI
-			if (numV > 0) {
-				numClusters = &numXeVClusters;
-				maxClusterSize = &maxXeVClusterSize;
-			} else {
-				numClusters = &numXeIClusters;
-				maxClusterSize = &maxXeIClusterSize;
-			}
 		} else if (!isMixed && singleSpeciesMap.count(composition) == 0) {
 			/// Put the reactant in its map
             singleSpeciesMap.emplace(composition, reactant);
-
-			// Figure out whether we have Xe, V or I
-			if (numXe > 0) {
-				numClusters = &numXeClusters;
-				maxClusterSize = &maxXeClusterSize;
-			} else if (numV > 0) {
-				numClusters = &numVClusters;
-				maxClusterSize = &maxVClusterSize;
-			} else {
-				numClusters = &numIClusters;
-				maxClusterSize = &maxIClusterSize;
-			}
 		} else {
 			std::stringstream errStream;
 			errStream << "NEClusterReactionNetwork Message: "
@@ -260,15 +220,15 @@ void NEClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 			throw errStream.str();
 		}
 
-		// Increment the number of total clusters of this type
-		(*numClusters)++;
 		// Increment the max cluster size key
         IReactant::SizeType clusterSize = numXe + numV + numI;
-		(*maxClusterSize) = std::max(clusterSize, *maxClusterSize);
-		// Update the size
-		++networkSize;
+        if(clusterSize > maxClusterSizeMap[reactant->getType()]) {
+            maxClusterSizeMap[reactant->getType()] = clusterSize;
+        }
+
 		// Set the id for this cluster
-		reactant->setId(networkSize);
+        // (It is networkSize+1 because we haven't added it to the network yet.)
+		reactant->setId(size() + 1);
 		// Add to our per-type map.
         clusterTypeMap.at(reactant->getType()).push_back(reactant);
 
@@ -283,7 +243,6 @@ void NEClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 	// Local Declarations
 	int numXe = 0, numV = 0, numI = 0;
 	bool isMixed = false;
-	int* numClusters = nullptr;
 
 	// Only add a complete reactant
 	if (reactant != NULL) {
@@ -302,9 +261,6 @@ void NEClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 		if (!isMixed && superSpeciesMap.count(composition) == 0) {
 			// Put the compound in its map
             superSpeciesMap.emplace(composition, reactant);
-
-			// Set the key
-			numClusters = &numSuperClusters;
 		} else {
 			std::stringstream errStream;
 			errStream << "NEClusterReactionNetwork Message: "
@@ -313,12 +269,9 @@ void NEClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 			throw errStream.str();
 		}
 
-		// Increment the number of total clusters of this type
-		(*numClusters)++;
-		// Update the size
-		++networkSize;
 		// Set the id for this cluster
-		reactant->setId(networkSize);
+        // (It is networkSize+1 because we haven't added it to the network yet.)
+		reactant->setId(size() + 1);
 		// Add to our per-type map.
         clusterTypeMap.at(reactant->getType()).push_back(reactant);
 
@@ -381,8 +334,7 @@ void NEClusterReactionNetwork::removeReactants(
 }
 
 void NEClusterReactionNetwork::reinitializeNetwork() {
-	// Recount the number of Xe clusters
-	numXeClusters = 0;
+
 	// Reset the Ids
 	int id = 0;
 	for (auto it = allReactants.begin(); it != allReactants.end(); ++it) {
@@ -391,13 +343,7 @@ void NEClusterReactionNetwork::reinitializeNetwork() {
 		(*it)->setXeMomentumId(id);
 
 		(*it)->optimizeReactions();
-
-		if ((*it)->getType() == ReactantType::Xe)
-			numXeClusters++;
 	}
-
-	// Reset the network size
-	networkSize = id;
 
 	// Get all the super clusters and loop on them
     for (auto& currCluster : clusterTypeMap.at(ReactantType::NESuper)) {
@@ -431,7 +377,7 @@ void NEClusterReactionNetwork::updateConcentrationsFromArray(
 	}
 
 	// Set the moments
-	for (int i = size - numSuperClusters; i < size; i++) {
+	for (int i = size - getAll(ReactantType::NESuper).size(); i < size; i++) {
 		// Get the superCluster
 		auto cluster = (NESuperCluster *) allReactants.at(i);
 		id = cluster->getId() - 1;
@@ -455,7 +401,7 @@ void NEClusterReactionNetwork::getDiagonalFill(int *diagFill) {
 	int connectivityLength, id, index;
 
 	// Get the connectivity for each reactant
-	for (int i = 0; i < networkSize; i++) {
+	for (int i = 0; i < size(); i++) {
 		// Get the reactant and its connectivity
 		auto reactant = allReactants.at(i);
 		connectivity = reactant->getConnectivity();
@@ -555,7 +501,7 @@ void NEClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset) {
 	auto const& superClusters = getAll(ReactantType::NESuper);
 
 	// ----- Compute all of the new fluxes -----
-	for (int i = 0; i < networkSize; i++) {
+	for (int i = 0; i < size(); i++) {
 		cluster = allReactants.at(i);
 		// Compute the flux
 		flux = cluster->getTotalFlux();
@@ -589,7 +535,7 @@ void NEClusterReactionNetwork::computeAllPartials(double *vals, int *indices,
 	auto const& superClusters = getAll(ReactantType::NESuper);
 
 	// Update the column in the Jacobian that represents each normal reactant
-	for (int i = 0; i < networkSize - superClusters.size(); i++) {
+	for (int i = 0; i < this->size() - superClusters.size(); i++) {
 		auto reactant = allReactants.at(i);
 		// Get the reactant index
 		reactantIndex = reactant->getId() - 1;

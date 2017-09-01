@@ -1277,8 +1277,8 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the maximum size of HeV clusters
 	auto psiNetwork = dynamic_cast<PSIClusterReactionNetwork*>(network);
-	auto maxHeVClusterSize = psiNetwork->getMaxHeVClusterSize();
-    auto maxVClusterSize = psiNetwork->getMaxVClusterSize();
+	auto maxHeVClusterSize = psiNetwork->getMaxClusterSize(ReactantType::HeV);
+    auto maxVClusterSize = psiNetwork->getMaxClusterSize(ReactantType::V);
 
 	// Loop on the grid points
 	for (xi = xs; xi < xs + xm; xi++) {
@@ -1560,9 +1560,9 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the maximum size of HeV clusters
 	auto psiNetwork = dynamic_cast<PSIClusterReactionNetwork*>(network);
-    IReactant::SizeType maxHeVClusterSize = psiNetwork->getMaxHeVClusterSize();
+    IReactant::SizeType maxHeVClusterSize = psiNetwork->getMaxClusterSize(ReactantType::HeV);
 	// Get the maximum size of V clusters
-    IReactant::SizeType maxVClusterSize = psiNetwork->getMaxVClusterSize();
+    IReactant::SizeType maxVClusterSize = psiNetwork->getMaxClusterSize(ReactantType::V);
 	// Get the number of He in the max HeV cluster
     IReactant::SizeType maxHeSize = (maxHeVClusterSize - maxVClusterSize);
 	// Get the maximum stable HeV cluster
@@ -1574,7 +1574,7 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
 	if (!maxCluster) {
 		// Get the maximum size of Xe clusters
 		auto neNetwork = dynamic_cast<NEClusterReactionNetwork*>(network);
-		int maxXeClusterSize = neNetwork->getMaxXeClusterSize();
+		int maxXeClusterSize = neNetwork->getMaxClusterSize(ReactantType::Xe);
 		maxCluster = network->get(ReactantType::Xe, maxXeClusterSize);
 	}
 

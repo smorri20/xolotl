@@ -7,14 +7,30 @@
 namespace xolotlCore {
 
 ReactionNetwork::ReactionNetwork(
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		handlerRegistry(registry), temperature(0.0), networkSize(0), dissociationsEnabled(
-				true), numVClusters(0), numIClusters(0), numSuperClusters(0), maxVClusterSize(
-				0), maxIClusterSize(0) {
+        const std::set<ReactantType>& _knownReactantTypes,
+        ReactantType _superClusterType,
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> _registry) :
+        knownReactantTypes(_knownReactantTypes),
+        superClusterType(_superClusterType),
+		handlerRegistry(_registry),
+        temperature(0.0),
+        dissociationsEnabled(true) {
+
 	// Counter for the number of times the network concentration is updated.
 	concUpdateCounter = handlerRegistry->getEventCounter("net_conc_updates");
 	// Setup the vector to hold all of the reactants
 
+    // Ensure our per-type cluster map can store Reactants of the types
+    // we support.
+    for (auto const& currType : knownReactantTypes) {
+        clusterTypeMap.insert( {currType, ReactionNetwork::ReactantVector() } );
+    }
+
+    // Ensure we have a baseline for determining max cluster size for
+    // the types we support.
+    for (auto const& currType : knownReactantTypes) {
+        maxClusterSizeMap.insert( {currType, 0 } );
+    }
 	return;
 }
 
@@ -67,7 +83,7 @@ void ReactionNetwork::setTemperature(double temp) {
 	temperature = temp;
 
 	// Update the temperature for all of the clusters
-	for (int i = 0; i < networkSize; i++) {
+	for (int i = 0; i < size(); i++) {
 		// This part will set the temperature in each reactant
 		// and recompute the diffusion coefficient
 		allReactants.at(i)->setTemperature(temp);
@@ -133,8 +149,7 @@ std::shared_ptr<DissociationReaction> ReactionNetwork::addDissociationReaction(
 void ReactionNetwork::dumpTo(std::ostream& os) const {
 
     // Dump flat view of reactants.
-    assert(networkSize == allReactants.size());
-    os << networkSize << " reactants:\n";
+    os << size() << " reactants:\n";
     for (auto const& currReactant : allReactants) {
         os << *currReactant << '\n';
     }
@@ -142,14 +157,7 @@ void ReactionNetwork::dumpTo(std::ostream& os) const {
     // Dump reactants of each type.
     // TODO what does this give us that the flat view doesn't?
     os << "per-type reactant map:\n";
-    std::vector<ReactantType> knownTypes {
-		ReactantType::He,
-		ReactantType::V,
-		ReactantType::I,
-		ReactantType::HeV,
-		ReactantType::HeI,
-		ReactantType::PSISuper
-    };
+    auto const& knownTypes = getKnownReactantTypes();
     for (auto const& currType : knownTypes) {
         auto const& currTypeReactants = clusterTypeMap.at(currType);
         os << currTypeReactants.size() << " " << toString(currType) << " reactants:\n";

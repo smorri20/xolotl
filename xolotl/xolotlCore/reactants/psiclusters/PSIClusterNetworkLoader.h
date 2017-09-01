@@ -35,26 +35,6 @@ namespace xolotlCore {
  * last. Each species is ordered from the smallest cluster size, (1), to the
  * maximum size for that cluster. Instances of the appropriate cluster type are
  * instantiated during the loading process, but returned as PSIClusters.
- *
- * The ReactionNetwork's map of properties will contains the following
- * information about the network with the following keys:
- * > maxHeClusterSize - The number of He atoms in the largest single-species
- *  He cluster.
- * > maxVClusterSize - The number of atomic vacancies in the largest
- * single-species V cluster.
- * > maxIClusterSize - The number of interstitials in the largest
- * single-species I cluster.
- * > maxMixedClusterSize - The number of species of all types in the largest
- * mixed species in the network. It is equal to the sum of the max single
- * species helium and vacancy cluster sizes by default.
- * > numHeClusters - The number of single-species He clusters of all sizes in
- * the network.
- * > numVClusters - The number of single-species V clusters of all sizes in the
- * network.
- * > numIClusters - The number of single-species I clusters of all sizes in the
- * network.
- * > numMixedClusters - The number of mixed-species clusters of all sizes in the
- * network.
  */
 class PSIClusterNetworkLoader: public NetworkLoader {
 

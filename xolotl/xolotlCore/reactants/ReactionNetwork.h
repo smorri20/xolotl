@@ -25,6 +25,12 @@ namespace xolotlCore {
  */
 class ReactionNetwork: public IReactionNetwork {
 
+private:
+    /**
+     * Types of reactants that we support.
+     */
+    std::set<ReactantType> knownReactantTypes;
+
 protected:
 
     /**
@@ -117,12 +123,6 @@ protected:
 	double temperature;
 
 	/**
-	 * The size of the network. It is also used to set the id of new reactants
-	 * that are added to the network.
-	 */
-	int networkSize;
-
-	/**
 	 * The biggest rate for this cluster
 	 */
 	double biggestRate;
@@ -132,31 +132,10 @@ protected:
 	 */
 	bool dissociationsEnabled;
 
-	/**
-	 * Number of vacancy clusters in our network.
-	 */
-	int numVClusters;
-
-	/**
-	 * Number of interstitial clusters in our network.
-	 */
-	int numIClusters;
-
-	/**
-	 * Number of super clusters in our network.
-	 */
-	int numSuperClusters;
-
-	/**
-	 * Maximum size of a vacancy cluster.
-	 */
-    IReactant::SizeType maxVClusterSize;
-
-	/**
-	 * Maximum size of an interstitial cluster.
-	 */
-    IReactant::SizeType maxIClusterSize;
-
+    /**
+     * Maximum cluster sizes currently in the network for each 
+     * of the reactant types we support.
+     */
     std::map<ReactantType, IReactant::SizeType> maxClusterSizeMap;
 
 	/**
@@ -192,6 +171,11 @@ protected:
 	 * The map of super species clusters, indexed by their composition.
 	 */
     ReactantMap superSpeciesMap;
+
+    /**
+     * Type of super cluster known by our network.
+     */
+    ReactantType superClusterType;
 
 	/**
 	 * Calculate the reaction constant dependent on the
@@ -252,6 +236,17 @@ protected:
     }
 
 
+    /**
+     * Obtain reactant types supported by our network.
+     * A reactant type might be returned even though no reactant
+     * of that type currently exists in the network.
+     *
+     * @return Collection of reactant types supported by our network.
+     */
+    const std::set<ReactantType>& getKnownReactantTypes() const {
+        return knownReactantTypes;
+    }
+
 public:
 
     /**
@@ -264,9 +259,13 @@ public:
 	 * The constructor that takes the performance handler registry.
 	 * It initializes the properties and reactants vector.
 	 *
-	 * @param registry The performance handler registry
+     * @param _knownReactantTypes Reactant types that we support.
+     * @param _superClusterType Type of super cluster we should use.
+	 * @param _registry The performance handler registry
 	 */
-	ReactionNetwork(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+	ReactionNetwork(const std::set<ReactantType>& _knownReactantTypes,
+                    ReactantType _superClusterType,
+                    std::shared_ptr<xolotlPerf::IHandlerRegistry> _registry);
 
     /**
      * Copy constructor, deleted to prevent use.
@@ -360,9 +359,8 @@ public:
 	 *
 	 * @return The number of reactants in the network
 	 */
-	int size() {
-        assert(networkSize == allReactants.size());
-		return networkSize;
+	int size() const override {
+		return allReactants.size();
 	}
 
 	/**
@@ -370,8 +368,8 @@ public:
 	 *
 	 * @return The number of degrees of freedom
 	 */
-	virtual int getDOF() {
-		return networkSize;
+	virtual int getDOF() const override {
+		return size();
 	}
 
 	/**
@@ -543,46 +541,16 @@ public:
 		dissociationsEnabled = false;
 	}
 
-	/**
-	 * Number of vacancy clusters in our network.
-	 */
-	int getNumVClusters() const {
-        assert(numVClusters == clusterTypeMap.at(ReactantType::V).size());
-		return numVClusters;
-	}
-
-	/**
-	 * Number of interstitial clusters in our network.
-	 */
-	int getNumIClusters() const {
-        assert(numIClusters == clusterTypeMap.at(ReactantType::I).size());
-		return numIClusters;
-	}
-
-	/**
-	 * Number of super clusters in our network.
-	 */
-	int getNumSuperClusters() const {
-        assert(numSuperClusters == clusterTypeMap.at(ReactantType::PSISuper).size());
-		return numSuperClusters;
-	}
-
-	/**
-	 * Maximum vacancy cluster size in our network.
-	 */
-    IReactant::SizeType getMaxVClusterSize() const {
-        assert(maxVClusterSize == maxClusterSizeMap.at(ReactantType::V));
-		return maxVClusterSize;
-	}
-
-	/**
-	 * Maximum interstitial cluster size in our network.
-	 */
-    IReactant::SizeType getMaxIClusterSize() const {
-        assert(maxIClusterSize == maxClusterSizeMap.at(ReactantType::I));
-		return maxIClusterSize;
-	}
-
+    /**
+     * Find maximum cluster size currently in the network 
+     * for the given reactant type.
+     *
+     * @param rtype Reactant type of interest.
+     * @return Maximum size of cluster of type rtype currently in network.
+     */
+    IReactant::SizeType getMaxClusterSize(ReactantType rtype) const {
+        return maxClusterSizeMap.at(rtype);
+    }
 
     /**
      * Dump a representation of the network to the given output stream.

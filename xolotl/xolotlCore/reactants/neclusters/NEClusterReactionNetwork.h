@@ -32,36 +32,6 @@ class NEClusterReactionNetwork: public ReactionNetwork {
 private:
 
 	/**
-	 * Number of Xe clusters in our network.
-	 */
-	int numXeClusters;
-
-	/**
-	 * Number of XeV clusters in our network.
-	 */
-	int numXeVClusters;
-
-	/**
-	 * Number of XeI clusters in our network.
-	 */
-	int numXeIClusters;
-
-	/**
-	 * Maximum size of Xe clusters in our network.
-	 */
-    IReactant::SizeType maxXeClusterSize;
-
-	/**
-	 * Maximum size of XeV clusters in our network.
-	 */
-    IReactant::SizeType maxXeVClusterSize;
-
-	/**
-	 * Maximum size of XeI clusters in our network.
-	 */
-    IReactant::SizeType maxXeIClusterSize;
-
-	/**
 	 * Calculate the dissociation constant of the first cluster with respect to
 	 * the single-species cluster of the same type based on the current clusters
 	 * atomic volume, reaction rate constant, and binding energies.
@@ -252,8 +222,8 @@ public:
 	 *
 	 * @return The number of degrees of freedom
 	 */
-	virtual int getDOF() {
-		return networkSize + numSuperClusters;
+	virtual int getDOF() const override {
+		return size() + getAll(ReactantType::NESuper).size();
 	}
 
 	/**
@@ -290,48 +260,6 @@ public:
 	 * this cluster
 	 */
 	virtual void computeAllPartials(double *vals, int *indices, int *size);
-
-	/**
-	 * Number of Xe clusters in our network.
-	 */
-	int getNumXeClusters() const {
-		return numXeClusters;
-	}
-
-	/**
-	 * Number of XeV clusters in our network.
-	 */
-	int getNumXeVClusters() const {
-		return numXeVClusters;
-	}
-
-	/**
-	 * Number of XeI clusters in our network.
-	 */
-	int getNumXeIClusters() const {
-		return numXeIClusters;
-	}
-
-	/**
-	 * Maximum size of Xe clusters in our network.
-	 */
-    IReactant::SizeType getMaxXeClusterSize() const {
-		return maxXeClusterSize;
-	}
-
-	/**
-	 * Maximum size of XeV clusters in our network.
-	 */
-    IReactant::SizeType getMaxXeVClusterSize() const {
-		return maxXeVClusterSize;
-	}
-
-	/**
-	 * Maximum size of XeI clusters in our network.
-	 */
-    IReactant::SizeType getMaxXeIClusterSize() const {
-		return maxXeIClusterSize;
-	}
 };
 
 }

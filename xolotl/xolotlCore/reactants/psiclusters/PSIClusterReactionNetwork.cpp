@@ -7,41 +7,22 @@
 #include <Constants.h>
 #include <MathUtils.h>
 
-
 namespace xolotlCore {
 
 PSIClusterReactionNetwork::PSIClusterReactionNetwork(
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		ReactionNetwork(registry) {
+		ReactionNetwork( {
+                    ReactantType::V,
+                    ReactantType::I,
+                    ReactantType::He,
+                    ReactantType::HeV,
+                    ReactantType::HeI,
+                    ReactantType::PSISuper
+                },
+                ReactantType::PSISuper, registry) {
 
 	// Initialize default properties
 	dissociationsEnabled = true;
-	numHeClusters = 0;
-	numVClusters = 0;
-	numIClusters = 0;
-	numHeVClusters = 0;
-	numHeIClusters = 0;
-	numSuperClusters = 0;
-	maxHeClusterSize = 0;
-	maxVClusterSize = 0;
-	maxIClusterSize = 0;
-	maxHeVClusterSize = 0;
-	maxHeIClusterSize = 0;
-
-    // Ensure our per-type cluster map can store Reactants of the
-    // types we know about.
-    std::vector<ReactantType> knownClusterTypes {
-        ReactantType::V,
-        ReactantType::I,
-        ReactantType::He,
-        ReactantType::HeV,
-        ReactantType::HeI,
-        ReactantType::PSISuper
-    };
-    for (auto& currType : knownClusterTypes) {
-        clusterTypeMap.insert( { currType, ReactionNetwork::ReactantVector() } );
-        maxClusterSizeMap.insert( { currType, 0 } );
-    }
 
 	return;
 }
@@ -78,11 +59,6 @@ double PSIClusterReactionNetwork::calculateDissociationConstant(const Dissociati
 void PSIClusterReactionNetwork::createReactionConnectivity() {
 	// Initial declarations
     IReactant::SizeType firstSize = 0, secondSize = 0, productSize = 0;
-
-#if READY
-    CheckSizes();
-#else
-#endif // READY
 
 	// Single species clustering (He, V, I)
 	// We know here that only Xe_1 can cluster so we simplify the search
@@ -795,8 +771,6 @@ void PSIClusterReactionNetwork::checkDissociationConnectivity(
 	reaction->second->createDissociation(dissociationReaction, a, b, c, d);
 	emittingReactant->createEmission(dissociationReaction, a, b, c, d);
 
-    CheckSizes();
-
 	return;
 }
 
@@ -817,8 +791,6 @@ IReactant * PSIClusterReactionNetwork::get(ReactantType type,
 
 	// Local Declarations
 	std::shared_ptr<IReactant> retReactant;
-
-    CheckSizes();
 
 	// Only pull the reactant if the name and size are valid
 	if ((type == ReactantType::He || type == ReactantType::V || type == ReactantType::I) && size >= 1) {
@@ -843,8 +815,6 @@ IReactant * PSIClusterReactionNetwork::getCompound(ReactantType type,
 	// Local Declarations
 	std::shared_ptr<IReactant> retReactant;
 
-    CheckSizes();
-
 	// Only pull the reactant if the name is valid and there are enough sizes
 	// to fill the composition.
 	if (type == ReactantType::HeV || type == ReactantType::HeI) {
@@ -865,8 +835,6 @@ IReactant * PSIClusterReactionNetwork::getSuper(ReactantType type,
 	// Local Declarations
 	std::shared_ptr<IReactant> retReactant;
 
-    CheckSizes();
-
 	// Only pull the reactant if the name is valid and there are enough sizes
 	// to fill the composition.
 	if (type == ReactantType::PSISuper) {
@@ -886,8 +854,6 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 	// Local Declarations
 	int numHe = 0, numV = 0, numI = 0;
 	bool isMixed = false;
-	int* numClusters = nullptr;
-    IReactant::SizeType* maxClusterSize = nullptr;
 
 	// Only add a complete reactant
 	if (reactant != NULL) {
@@ -908,30 +874,9 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 		if (isMixed && mixedSpeciesMap.count(composition) == 0) {
 			// Put the compound in its map
             mixedSpeciesMap.emplace(composition, reactant);
-
-			// Figure out whether we have HeV or HeI and set the keys
-			if (numV > 0) {
-				numClusters = &numHeVClusters;
-				maxClusterSize = &maxHeVClusterSize;
-			} else {
-				numClusters = &numHeIClusters;
-				maxClusterSize = &maxHeIClusterSize;
-			}
 		} else if (!isMixed && singleSpeciesMap.count(composition) == 0) {
 			/// Put the reactant in its map
             singleSpeciesMap.emplace(composition, reactant);
-
-			// Figure out whether we have He, V or I and set the keys
-			if (numHe > 0) {
-				numClusters = &numHeClusters;
-				maxClusterSize = &maxHeClusterSize;
-			} else if (numV > 0) {
-				numClusters = &numVClusters;
-				maxClusterSize = &maxVClusterSize;
-			} else {
-				numClusters = &numIClusters;
-				maxClusterSize = &maxIClusterSize;
-			}
 		} else {
 			std::stringstream errStream;
 			errStream << "PSIClusterReactionNetwork Message: "
@@ -940,18 +885,15 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 			throw errStream.str();
 		}
 
-		// Increment the number of total clusters of this type
-		(*numClusters)++;
-		// Increment the max cluster size key
+		// Increment the max cluster size for the new cluster's type.
         IReactant::SizeType clusterSize = numHe + numV + numI;
-		(*maxClusterSize) = std::max(clusterSize, (*maxClusterSize));
         if(clusterSize > maxClusterSizeMap[reactant->getType()]) {
             maxClusterSizeMap[reactant->getType()] = clusterSize;
         }
-		// Update the size
-		++networkSize;
+
 		// Set the id for this cluster
-		reactant->setId(networkSize);
+        // (It is networkSize+1 because we haven't added it to the network yet.)
+		reactant->setId(size()+1);
 
         // Add reactant to our per-type map.
         clusterTypeMap.at(reactant->getType()).push_back(reactant);
@@ -960,36 +902,13 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
         allReactants.push_back(reactant.get());
 	}
 
-    CheckSizes();
-
 	return;
-}
-
-void PSIClusterReactionNetwork::CheckSizes() const {
-
-#if READY
-    assert(numHeClusters == clusterTypeMap.at(ReactantType::He).size());
-    assert(numVClusters == clusterTypeMap.at(ReactantType::V).size());
-    assert(numIClusters == clusterTypeMap.at(ReactantType::I).size());
-    assert(numHeVClusters == clusterTypeMap.at(ReactantType::HeV).size());
-    assert(numHeIClusters == clusterTypeMap.at(ReactantType::HeI).size());
-    assert(numSuperClusters == clusterTypeMap.at(ReactantType::PSISuper).size());
-    assert(maxHeClusterSize == maxClusterSizeMap.at(ReactantType::He));
-    assert(maxVClusterSize == maxClusterSizeMap.at(ReactantType::V));
-    assert(maxIClusterSize == maxClusterSizeMap.at(ReactantType::I));
-    assert(maxHeVClusterSize == maxClusterSizeMap.at(ReactantType::HeV));
-    assert(maxHeIClusterSize == maxClusterSizeMap.at(ReactantType::HeI));
-
-    assert(networkSize == allReactants.size());
-#else
-#endif // READY
 }
 
 void PSIClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 	// Local Declarations
 	int numHe = 0, numV = 0, numI = 0;
 	bool isMixed = false;
-	int* numClusters = nullptr;
 
 	// Only add a complete reactant
 	if (reactant != NULL) {
@@ -1009,9 +928,6 @@ void PSIClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 		if (isMixed && superSpeciesMap.count(composition) == 0) {
 			// Put the compound in its map
             superSpeciesMap.emplace(composition, reactant);
-
-			// Set the key
-			numClusters = &numSuperClusters;
 		} else {
 			std::stringstream errStream;
 			errStream << "PSIClusterReactionNetwork Message: "
@@ -1020,12 +936,9 @@ void PSIClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 			throw errStream.str();
 		}
 
-		// Increment the number of total clusters of this type
-		(*numClusters)++;
-		// Update the size
-		++networkSize;
 		// Set the id for this cluster
-		reactant->setId(networkSize);
+        // (It is networkSize+1 because we haven't added it to the network yet.)
+		reactant->setId(size() + 1);
 		// Add cluster to our per-type map.
         clusterTypeMap.at(reactant->getType()).push_back(reactant);
 
@@ -1111,8 +1024,7 @@ void PSIClusterReactionNetwork::removeReactants(
 }
 
 void PSIClusterReactionNetwork::reinitializeNetwork() {
-	// Recount HeV clusters
-	numHeVClusters = 0;
+
 	// Reset the Ids
 	int id = 0;
 	for (auto it = allReactants.begin(); it != allReactants.end(); ++it) {
@@ -1120,13 +1032,7 @@ void PSIClusterReactionNetwork::reinitializeNetwork() {
 		(*it)->setId(id);
 		(*it)->setHeMomentumId(id);
 		(*it)->setVMomentumId(id);
-
-		if ((*it)->getType() == ReactantType::HeV)
-			numHeVClusters++;
 	}
-
-	// Reset the network size
-	networkSize = id;
 
 	// Get all the super clusters and loop on them
     for (auto& currCluster : clusterTypeMap[ReactantType::PSISuper]) {
@@ -1140,13 +1046,10 @@ void PSIClusterReactionNetwork::reinitializeNetwork() {
 		auto cluster = (PSISuperCluster *) currCluster.get();
 		auto bounds = cluster->getBoundaries();
         IReactant::SizeType clusterSize = bounds[1] + bounds[3];
-		maxHeVClusterSize = max(maxHeVClusterSize, clusterSize);
         if(clusterSize > maxClusterSizeMap[ReactantType::HeV]) {
             maxClusterSizeMap[ReactantType::HeV] = clusterSize;
         }
 	}
-
-    CheckSizes();
 
 	return;
 }
@@ -1157,8 +1060,6 @@ void PSIClusterReactionNetwork::reinitializeConnectivities() {
 		(*it)->resetConnectivities();
 	}
 
-    CheckSizes();
-
 	return;
 }
 
@@ -1168,11 +1069,6 @@ void PSIClusterReactionNetwork::updateConcentrationsFromArray(
 	int size = allReactants.size();
 	int id = 0;
 
-#if READY
-    CheckSizes();
-#else
-#endif // READY
-
 	// Set the concentrations
 	concUpdateCounter->increment();	// increment the update concentration counter
 	for (int i = 0; i < size; i++) {
@@ -1181,7 +1077,7 @@ void PSIClusterReactionNetwork::updateConcentrationsFromArray(
 	}
 
 	// Set the moments
-	for (int i = size - numSuperClusters; i < size; i++) {
+	for (int i = size - getAll(ReactantType::PSISuper).size(); i < size; i++) {
 		auto cluster = (PSISuperCluster *) allReactants.at(i);
 		id = cluster->getId() - 1;
 		cluster->setZerothMomentum(concentrations[id]);
@@ -1206,7 +1102,7 @@ void PSIClusterReactionNetwork::getDiagonalFill(int *diagFill) {
 	int connectivityLength, id, index;
 
 	// Get the connectivity for each reactant
-	for (int i = 0; i < networkSize; i++) {
+	for (int i = 0; i < size(); i++) {
 		// Get the reactant and its connectivity
 		auto& reactant = allReactants.at(i);
 		connectivity = reactant->getConnectivity();
@@ -1453,7 +1349,7 @@ void PSIClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset) {
 	auto const& superClusters = getAll(ReactantType::PSISuper);
 
 	// ----- Compute all of the new fluxes -----
-	for (int i = 0; i < networkSize; i++) {
+	for (int i = 0; i < size(); i++) {
 		auto& cluster = allReactants.at(i);
 		// Compute the flux
 		flux = cluster->getTotalFlux();
@@ -1493,7 +1389,7 @@ void PSIClusterReactionNetwork::computeAllPartials(double *vals, int *indices,
 	auto const& superClusters = getAll(ReactantType::PSISuper);
 
 	// Update the column in the Jacobian that represents each normal reactant
-	for (int i = 0; i < networkSize - superClusters.size(); i++) {
+	for (int i = 0; i < this->size() - superClusters.size(); i++) {
 		auto& reactant = allReactants.at(i);
 		// Get the reactant index
 		reactantIndex = reactant->getId() - 1;
