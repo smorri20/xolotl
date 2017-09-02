@@ -70,31 +70,37 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
         auto currType = *tvIter;
 
-		// Get all the reactants of this type
-		auto const& allTypeReactants = getAll(currType);
-		// Loop on them
-		for (auto firstIt = allTypeReactants.begin();
-				firstIt != allTypeReactants.end(); firstIt++) {
+		// Consider all reactants of the current type.
+		auto const& currTypeReactantMap = getAll(currType);
+		for (auto firstIt = currTypeReactantMap.begin();
+				firstIt != currTypeReactantMap.end(); firstIt++) {
+
+            auto& firstReactant = *(firstIt->second);
+
 			// Get its size
-			firstSize = (*firstIt)->getSize();
+			firstSize = firstReactant.getSize();
 			// Loop on the second cluster starting at the same pointer to avoid double counting
-			for (auto secondIt = firstIt; secondIt != allTypeReactants.end();
+			for (auto secondIt = firstIt; secondIt != currTypeReactantMap.end();
 					secondIt++) {
+
+                auto& secondReactant = *(secondIt->second);
+
 				// Get its size
-				secondSize = (*secondIt)->getSize();
+				secondSize = secondReactant.getSize();
 				productSize = firstSize + secondSize;
 				// Get the product
 				auto product = get(currType, productSize);
 				// Check that the reaction can occur
 				if (product
-						&& ((*firstIt)->getDiffusionFactor() > 0.0
-								|| (*secondIt)->getDiffusionFactor() > 0.0)) {
+						&& (firstReactant.getDiffusionFactor() > 0.0
+								|| secondReactant.getDiffusionFactor() > 0.0)) {
 					// Create a production reaction
+                    // TODO watch whether taking these addresses is safe when stack goes away.  Will be a non-issue when we convert Reactions to use refs.
 					auto reaction = std::make_shared<ProductionReaction>(
-							(*firstIt).get(), (*secondIt).get());
+							&firstReactant, &secondReactant);
 					// Tell the reactants that they are in this reaction
-					(*firstIt)->createCombination(reaction);
-					(*secondIt)->createCombination(reaction);
+					firstReactant.createCombination(reaction);
+					secondReactant.createCombination(reaction);
 					product->createProduction(reaction);
 
 					// Check if the reverse reaction is allowed
@@ -106,23 +112,24 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
 	// Helium absorption by HeV clusters
 	// He_(a) + (He_b)(V_c) --> [He_(a+b)](V_c)
-	// Get all the He and HeV clusters
-	auto const& allHeReactants = getAll(ReactantType::He);
-	auto const& allHeVReactants = getAll(ReactantType::HeV);
-	auto const& allSuperReactants = getAll(ReactantType::PSISuper);
-	// Loop on the He clusters
-	for (auto firstIt = allHeReactants.begin(); firstIt != allHeReactants.end();
-			firstIt++) {
+    // Consider each He reactant.
+    for (auto const& heMapItem : getAll(ReactantType::He)) {
+
+        auto& heReactant = *(heMapItem.second);
+
 		// Skip if it can't diffuse
-		if (xolotlCore::equal((*firstIt)->getDiffusionFactor(), 0.0))
+		if (xolotlCore::equal(heReactant.getDiffusionFactor(), 0.0))
 			continue;
 		// Get its size
-		firstSize = (*firstIt)->getSize();
-		// Loop on the HeV clusters
-		for (auto secondIt = allHeVReactants.begin();
-				secondIt != allHeVReactants.end(); secondIt++) {
+		firstSize = heReactant.getSize();
+
+		// Consider product with each HeV cluster
+        for (auto const& heVMapItem : getAll(ReactantType::HeV)) {
+
+            auto& heVReactant = *(heVMapItem.second);
+
 			// Get its composition
-			auto& comp = (*secondIt)->getComposition();
+			auto& comp = heVReactant.getComposition();
 			// Create the composition of the potential product
             auto newNumHe = comp[toCompIdx(Species::He)] + firstSize;
             auto newNumV = comp[toCompIdx(Species::V)];
@@ -140,14 +147,15 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			}
 			// Check that the reaction can occur
 			if (product
-					&& ((*firstIt)->getDiffusionFactor() > 0.0
-							|| (*secondIt)->getDiffusionFactor() > 0.0)) {
+					&& (heReactant.getDiffusionFactor() > 0.0
+							|| heVReactant.getDiffusionFactor() > 0.0)) {
 				// Create a production reaction
-				auto reaction = std::make_shared<ProductionReaction>((*firstIt).get(),
-						(*secondIt).get());
+                // TODO verify safe to take address of these refs on stack.
+				auto reaction = std::make_shared<ProductionReaction>(
+                        &heReactant, &heVReactant);
 				// Tell the reactants that they are in this reaction
-				(*firstIt)->createCombination(reaction);
-				(*secondIt)->createCombination(reaction);
+				heReactant.createCombination(reaction);
+				heVReactant.createCombination(reaction);
 				product->createProduction(reaction, newNumHe, newNumV);
 
 				// Check if the reverse reaction is allowed
@@ -156,13 +164,14 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			}
 		}
 
-		// Loop on the super clusters
-		for (auto secondIt = allSuperReactants.begin();
-				secondIt != allSuperReactants.end(); secondIt++) {
-			auto superCluster = std::static_pointer_cast<PSISuperCluster>(*secondIt);
+		// Consider product with each super cluster
+        for (auto const& superMapItem : getAll(ReactantType::PSISuper)) {
+
+            auto& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
+
 			IReactant * product = nullptr;
 			// Get its boundaries
-			auto boundaries = superCluster->getBoundaries();
+			auto const& boundaries = superCluster.getBoundaries();
 			// Loop on them
 			for (int i = boundaries[0]; i <= boundaries[1]; i++) {
 				for (int j = boundaries[2]; j <= boundaries[3]; j++) {
@@ -172,14 +181,14 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 					product = getSuperFromComp(newNumHe, newNumV);
 					// Check that the reaction can occur
 					if (product
-							&& ((*firstIt)->getDiffusionFactor() > 0.0
-									|| (*secondIt)->getDiffusionFactor() > 0.0)) {
+							&& (heReactant.getDiffusionFactor() > 0.0
+									|| superCluster.getDiffusionFactor() > 0.0)) {
 						// Create a production reaction
 						auto reaction = std::make_shared<ProductionReaction>(
-								(*firstIt).get(), (*secondIt).get());
+								&heReactant, &superCluster);
 						// Tell the reactants that they are in this reaction
-						(*firstIt)->createCombination(reaction, i, j);
-						(*secondIt)->createCombination(reaction, i, j);
+						heReactant.createCombination(reaction, i, j);
+						superCluster.createCombination(reaction, i, j);
 						product->createProduction(reaction, newNumHe, newNumV,
                                 i, j);
 
@@ -194,22 +203,23 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
 	// Vacancy absorption by HeV clusters
 	// (He_a)(V_b) + V_c --> (He_a)[V_(b+c)]
-	// Get all the V clusters
-	auto const& allVReactants = getAll(ReactantType::V);
-	// Loop on the V clusters
-	// Loop on the HeV clusters
-	for (auto firstIt = allVReactants.begin(); firstIt != allVReactants.end();
-			firstIt++) {
+	// Consider each V cluster.
+    for (auto const& vMapItem : getAll(ReactantType::V)) {
+
+        auto& vReactant = *(vMapItem.second);
+
 		// Skip if it can't diffuse
-		if (xolotlCore::equal((*firstIt)->getDiffusionFactor(), 0.0))
+		if (xolotlCore::equal(vReactant.getDiffusionFactor(), 0.0))
 			continue;
 		// Get the V size
-		firstSize = (*firstIt)->getSize();
-		// Loop on the HeV clusters
-		for (auto secondIt = allHeVReactants.begin();
-				secondIt != allHeVReactants.end(); secondIt++) {
+		firstSize = vReactant.getSize();
+		// Consider product with every HeV cluster.
+        for (auto const& heVMapItem : getAll(ReactantType::HeV)) {
+
+            auto& heVReactant = *(heVMapItem.second);
+
 			// Get its composition
-			auto& comp = (*secondIt)->getComposition();
+			auto& comp = heVReactant.getComposition();
 			// Create the composition of the potential product
             auto newNumHe = comp[toCompIdx(Species::He)];
             auto newNumV = comp[toCompIdx(Species::V)] + firstSize;
@@ -226,14 +236,14 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			}
 			// Check that the reaction can occur
 			if (product
-					&& ((*firstIt)->getDiffusionFactor() > 0.0
-							|| (*secondIt)->getDiffusionFactor() > 0.0)) {
+					&& (vReactant.getDiffusionFactor() > 0.0
+							|| heVReactant.getDiffusionFactor() > 0.0)) {
 				// Create a production reaction
-				auto reaction = std::make_shared<ProductionReaction>((*firstIt).get(),
-						(*secondIt).get());
+				auto reaction = std::make_shared<ProductionReaction>(&vReactant,
+						&heVReactant);
 				// Tell the reactants that they are in this reaction
-				(*firstIt)->createCombination(reaction);
-				(*secondIt)->createCombination(reaction);
+				vReactant.createCombination(reaction);
+				heVReactant.createCombination(reaction);
 				product->createProduction(reaction, newNumHe, newNumV);
 
 				// Check if the reverse reaction is allowed
@@ -242,13 +252,13 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			}
 		}
 
-		// Loop on the super clusters
-		for (auto secondIt = allSuperReactants.begin();
-				secondIt != allSuperReactants.end(); secondIt++) {
-			auto superCluster = std::static_pointer_cast<PSISuperCluster>(*secondIt);
+		// Consider product with super clusters.
+        for (auto const& superMapItem : getAll(ReactantType::PSISuper)) {
+
+            auto& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
 			IReactant * product = nullptr;
 			// Get its boundaries
-			auto boundaries = superCluster->getBoundaries();
+			auto const& boundaries = superCluster.getBoundaries();
 			// Loop on them
 			for (int i = boundaries[0]; i <= boundaries[1]; i++) {
 				for (int j = boundaries[2]; j <= boundaries[3]; j++) {
@@ -259,14 +269,14 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 					product = getSuperFromComp(newNumHe, newNumV);
 					// Check that the reaction can occur
 					if (product
-							&& ((*firstIt)->getDiffusionFactor() > 0.0
-									|| (*secondIt)->getDiffusionFactor() > 0.0)) {
+							&& (vReactant.getDiffusionFactor() > 0.0
+									|| superCluster.getDiffusionFactor() > 0.0)) {
 						// Create a production reaction
 						auto reaction = std::make_shared<ProductionReaction>(
-								(*firstIt).get(), (*secondIt).get());
+								&vReactant, &superCluster);
 						// Tell the reactants that they are in this reaction
-						(*firstIt)->createCombination(reaction, i, j);
-						(*secondIt)->createCombination(reaction, i, j);
+						vReactant.createCombination(reaction, i, j);
+						superCluster.createCombination(reaction, i, j);
 						product->createProduction(reaction,
                                 newNumHe, newNumV,
                                 i, j);
@@ -283,16 +293,20 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
 	// Helium-Vacancy clustering
 	// He_a + V_b --> (He_a)(V_b)
-	// Loop on the He clusters
-	for (auto firstIt = allHeReactants.begin(); firstIt != allHeReactants.end();
-			firstIt++) {
+	// Consider each He cluster.
+    for (auto const& heMapItem : getAll(ReactantType::He)) {
+
+        auto& heReactant = *(heMapItem.second);
+
 		// Get its size
-		firstSize = (*firstIt)->getSize();
-		// Loop on the HeV clusters
-		for (auto secondIt = allVReactants.begin();
-				secondIt != allVReactants.end(); secondIt++) {
+		firstSize = heReactant.getSize();
+		// Consider product with each V cluster.
+        for (auto const& vMapItem : getAll(ReactantType::V)) {
+
+            auto& vReactant = *(vMapItem.second);
+
 			// Get its size
-			secondSize = (*secondIt)->getSize();
+			secondSize = vReactant.getSize();
 			// Create the composition of the potential product
             auto newNumHe = firstSize;
             auto newNumV = secondSize;
@@ -309,14 +323,14 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			}
 			// Check that the reaction can occur
 			if (product
-					&& ((*firstIt)->getDiffusionFactor() > 0.0
-							|| (*secondIt)->getDiffusionFactor() > 0.0)) {
+					&& (heReactant.getDiffusionFactor() > 0.0
+							|| vReactant.getDiffusionFactor() > 0.0)) {
 				// Create a production reaction
-				auto reaction = std::make_shared<ProductionReaction>((*firstIt).get(),
-						(*secondIt).get());
+				auto reaction = std::make_shared<ProductionReaction>(
+                        &heReactant, &vReactant);
 				// Tell the reactants that they are in this reaction
-				(*firstIt)->createCombination(reaction);
-				(*secondIt)->createCombination(reaction);
+				heReactant.createCombination(reaction);
+				vReactant.createCombination(reaction);
 				product->createProduction(reaction, newNumHe, newNumV);
 
 				// Check if the reverse reaction is allowed
@@ -328,18 +342,20 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
 	// Vacancy reduction by Interstitial absorption in HeV clusters
 	// (He_a)(V_b) + (I_c) --> (He_a)[V_(b-c)]
-	// Get all the I clusters
-	auto const& allIReactants = getAll(ReactantType::I);
-	// Loop on them
-	for (auto firstIt = allIReactants.begin(); firstIt != allIReactants.end();
-			firstIt++) {
+	// Consider each I cluster
+    for (auto const& iMapItem : getAll(ReactantType::I)) {
+
+        auto& iReactant = *(iMapItem.second);
+
 		// Get its size
-		firstSize = (*firstIt)->getSize();
-		// Loop on the HeV clusters
-		for (auto secondIt = allHeVReactants.begin();
-				secondIt != allHeVReactants.end(); secondIt++) {
+		firstSize = iReactant.getSize();
+		// Consider product with each HeV cluster.
+        for (auto const& heVMapItem : getAll(ReactantType::HeV)) {            
+
+            auto& heVReactant = *(heVMapItem.second);
+
 			// Get its composition
-			auto& comp = (*secondIt)->getComposition();
+			auto& comp = heVReactant.getComposition();
 			// The product can be He or HeV
 			IReactant * product = nullptr;
 			if (comp[toCompIdx(Species::V)] == firstSize) {
@@ -356,14 +372,14 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			}
 			// Check that the reaction can occur
 			if (product
-					&& ((*firstIt)->getDiffusionFactor() > 0.0
-							|| (*secondIt)->getDiffusionFactor() > 0.0)) {
+					&& (iReactant.getDiffusionFactor() > 0.0
+							|| heVReactant.getDiffusionFactor() > 0.0)) {
 				// Create a production reaction
-				auto reaction = std::make_shared<ProductionReaction>((*firstIt).get(),
-						(*secondIt).get());
+				auto reaction = std::make_shared<ProductionReaction>(&iReactant,
+						&heVReactant);
 				// Tell the reactants that they are in this reaction
-				(*firstIt)->createCombination(reaction);
-				(*secondIt)->createCombination(reaction);
+				iReactant.createCombination(reaction);
+				heVReactant.createCombination(reaction);
 				product->createProduction(reaction);
 
 				// Check if the reverse reaction is allowed
@@ -371,13 +387,12 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			}
 		}
 
-		// Loop on the super clusters
-		for (auto secondIt = allSuperReactants.begin();
-				secondIt != allSuperReactants.end(); secondIt++) {
-			auto superCluster = std::static_pointer_cast<PSISuperCluster>(*secondIt);
+        // Consider product with all super clusters.
+        for (auto const& superMapItem : getAll(ReactantType::PSISuper)) {            
+            auto& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
 			IReactant * product = nullptr;
 			// Get its boundaries
-			auto boundaries = superCluster->getBoundaries();
+			auto boundaries = superCluster.getBoundaries();
 			// Loop on them
 			for (auto i = boundaries[0]; i <= boundaries[1]; i++) {
 				for (auto j = boundaries[2]; j <= boundaries[3]; j++) {
@@ -404,14 +419,14 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 					}
 					// Check that the reaction can occur
 					if (product
-							&& ((*firstIt)->getDiffusionFactor() > 0.0
-									|| (*secondIt)->getDiffusionFactor() > 0.0)) {
+							&& (iReactant.getDiffusionFactor() > 0.0
+									|| superCluster.getDiffusionFactor() > 0.0)) {
 						// Create a production reaction
 						auto reaction = std::make_shared<ProductionReaction>(
-								(*firstIt).get(), (*secondIt).get());
+								&iReactant, &superCluster);
 						// Tell the reactants that they are in this reaction
-						(*firstIt)->createCombination(reaction, i, j);
-						(*secondIt)->createCombination(reaction, i, j);
+						iReactant.createCombination(reaction, i, j);
+						superCluster.createCombination(reaction, i, j);
 						product->createProduction(reaction,
                                 newNumHe, newNumV,
                                 i, j);
@@ -529,16 +544,21 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 	//        --> I_(a-b), if a > b
 	//        --> V_(b-a), if a < b
 	//        --> 0, if a = b
-	// Loop on the I clusters
-	for (auto firstIt = allIReactants.begin(); firstIt != allIReactants.end();
-			firstIt++) {
+	// Consider all I clusters.
+    for (auto const& iMapItem : getAll(ReactantType::I)) {        
+
+        auto& iReactant = *(iMapItem.second);
+
 		// Get its size
-		firstSize = (*firstIt)->getSize();
-		// Loop on the V clusters
-		for (auto secondIt = allVReactants.begin();
-				secondIt != allVReactants.end(); secondIt++) {
+		firstSize = iReactant.getSize();
+
+		// Consider product with each V cluster.
+        for (auto const& vMapItem : getAll(ReactantType::V)) {
+
+            auto& vReactant = *(vMapItem.second);
+
 			// Get its size
-			secondSize = (*secondIt)->getSize();
+			secondSize = vReactant.getSize();
 			// Check the possibilities
 			if (firstSize > secondSize) {
 				// Get the product
@@ -546,14 +566,14 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 				auto product = get(ReactantType::I, productSize);
 				// Check that the reaction can occur
 				if (product
-						&& ((*firstIt)->getDiffusionFactor() > 0.0
-								|| (*secondIt)->getDiffusionFactor() > 0.0)) {
+						&& (iReactant.getDiffusionFactor() > 0.0
+								|| vReactant.getDiffusionFactor() > 0.0)) {
 					// Create a production reaction
 					auto reaction = std::make_shared<ProductionReaction>(
-							(*firstIt).get(), (*secondIt).get());
+							&iReactant, &vReactant);
 					// Tell the reactants that they are in this reaction
-					(*firstIt)->createCombination(reaction);
-					(*secondIt)->createCombination(reaction);
+					iReactant.createCombination(reaction);
+					vReactant.createCombination(reaction);
 					product->createProduction(reaction);
 				}
 			} else if (firstSize < secondSize) {
@@ -562,28 +582,28 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 				auto product = get(ReactantType::V, productSize);
 				// Check that the reaction can occur
 				if (product
-						&& ((*firstIt)->getDiffusionFactor() > 0.0
-								|| (*secondIt)->getDiffusionFactor() > 0.0)) {
+						&& (iReactant.getDiffusionFactor() > 0.0
+								|| vReactant.getDiffusionFactor() > 0.0)) {
 					// Create a production reaction
 					auto reaction = std::make_shared<ProductionReaction>(
-							(*firstIt).get(), (*secondIt).get());
+							&iReactant, &vReactant);
 					// Tell the reactants that they are in this reaction
-					(*firstIt)->createCombination(reaction);
-					(*secondIt)->createCombination(reaction);
+					iReactant.createCombination(reaction);
+					vReactant.createCombination(reaction);
 					product->createProduction(reaction);
 				}
 
 			} else {
 				// Annihilation
 				// Check that the reaction can occur
-				if (((*firstIt)->getDiffusionFactor() > 0.0
-						|| (*secondIt)->getDiffusionFactor() > 0.0)) {
+				if ((iReactant.getDiffusionFactor() > 0.0
+						|| vReactant.getDiffusionFactor() > 0.0)) {
 					// Create a production reaction
 					auto reaction = std::make_shared<ProductionReaction>(
-							(*firstIt).get(), (*secondIt).get());
+							&iReactant, &vReactant);
 					// Tell the reactants that they are in this reaction
-					(*firstIt)->createCombination(reaction);
-					(*secondIt)->createCombination(reaction);
+					iReactant.createCombination(reaction);
+					vReactant.createCombination(reaction);
 				}
 			}
 		}
@@ -896,7 +916,7 @@ void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
 		reactant->setId(size()+1);
 
         // Add reactant to our per-type map.
-        clusterTypeMap.at(reactant->getType()).push_back(reactant);
+        clusterTypeMap.at(reactant->getType()).emplace(reactant->getComposition(), reactant);
 
 		// Add the pointer to the list of all clusters
         allReactants.push_back(reactant.get());
@@ -940,7 +960,7 @@ void PSIClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
         // (It is networkSize+1 because we haven't added it to the network yet.)
 		reactant->setId(size() + 1);
 		// Add cluster to our per-type map.
-        clusterTypeMap.at(reactant->getType()).push_back(reactant);
+        clusterTypeMap.at(reactant->getType()).emplace(reactant->getComposition(), reactant);
 
 		// Add the pointer to the list of all clusters
 		allReactants.push_back(reactant.get());
@@ -960,16 +980,18 @@ void PSIClusterReactionNetwork::buildSuperClusterIndex(const std::vector<IReacta
     // interval for that species type.
     auto const& superClusters = clusterTypeMap[ReactantType::PSISuper];
     std::for_each(superClusters.begin(), superClusters.end(),
-        [this](const std::shared_ptr<IReactant>& currCluster) {
+        [this](const ReactantMap::value_type& currMapItem) {
+
             // Add the super cluster to our lookup map based on
             // its He and V intervals.
-            auto const& comp = currCluster->getComposition();
+            auto& currCluster = *(currMapItem.second);
+            auto const& comp = currCluster.getComposition();
             auto currHe = comp[toCompIdx(Species::He)];
             auto currV = comp[toCompIdx(Species::V)];
             auto heBoundsIntervalBase = findBoundsIntervalBase(currHe);
             auto vBoundsIntervalBase = findBoundsIntervalBase(currV);
 
-            superClusterLookupMap.emplace(std::make_pair(heBoundsIntervalBase, vBoundsIntervalBase), *currCluster);
+            superClusterLookupMap.emplace(std::make_pair(heBoundsIntervalBase, vBoundsIntervalBase), currCluster);
         });
 }
 
@@ -1001,9 +1023,12 @@ void PSIClusterReactionNetwork::removeReactants(
 	// doomed reactants.
 	for (auto currType : typesUsed) {
 		auto& clusters = clusterTypeMap[currType];
-		auto citer = std::remove_if(clusters.begin(), clusters.end(),
-				doomedReactantMatcher);
-		clusters.erase(citer, clusters.end());
+
+        for(auto const& currDoomedReactant : doomedReactants) {
+            auto iter = clusters.find(currDoomedReactant->getComposition());
+            assert(iter != clusters.end());
+            clusters.erase(iter);
+        }
 	}
 
 	// Remove the doomed reactants from the SpeciesMap.
@@ -1035,16 +1060,17 @@ void PSIClusterReactionNetwork::reinitializeNetwork() {
 	}
 
 	// Get all the super clusters and loop on them
-    for (auto& currCluster : clusterTypeMap[ReactantType::PSISuper]) {
+    for (auto const& currMapItem : clusterTypeMap[ReactantType::PSISuper]) {
+
+        auto& currCluster = static_cast<PSISuperCluster&>(*(currMapItem.second));
 
 		id++;
-		currCluster->setHeMomentumId(id);
+		currCluster.setHeMomentumId(id);
 		id++;
-		currCluster->setVMomentumId(id);
+		currCluster.setVMomentumId(id);
 
 		// Update the HeV size
-		auto cluster = (PSISuperCluster *) currCluster.get();
-		auto bounds = cluster->getBoundaries();
+		auto const& bounds = currCluster.getBoundaries();
         IReactant::SizeType clusterSize = bounds[1] + bounds[3];
         if(clusterSize > maxClusterSizeMap[ReactantType::HeV]) {
             maxClusterSizeMap[ReactantType::HeV] = clusterSize;
@@ -1091,9 +1117,6 @@ void PSIClusterReactionNetwork::updateConcentrationsFromArray(
 }
 
 void PSIClusterReactionNetwork::getDiagonalFill(int *diagFill) {
-	// Get all the super clusters
-	auto const& superClusters = getAll(ReactantType::PSISuper);
-
 	// Degrees of freedom is the total number of clusters in the network
 	const int dof = getDOF();
 
@@ -1127,14 +1150,16 @@ void PSIClusterReactionNetwork::getDiagonalFill(int *diagFill) {
 		dFillMap[id] = columnIds;
 	}
 	// Get the connectivity for each moment
-	for (int i = 0; i < superClusters.size(); i++) {
+    for (auto const& superMapItem : getAll(ReactantType::PSISuper)) {
+
+        auto const& reactant = static_cast<PSISuperCluster&>(*(superMapItem.second));
+
 		// Get the reactant and its connectivity
-		auto reactant = superClusters[i];
-		connectivity = reactant->getConnectivity();
+		connectivity = reactant.getConnectivity();
 		connectivityLength = connectivity.size();
 		// Get the helium momentum id so that the connectivity can be lined up in
 		// the proper column
-		id = reactant->getHeMomentumId() - 1;
+		id = reactant.getHeMomentumId() - 1;
 
 		// Create the vector that will be inserted into the dFill map
 		std::vector<int> columnIds;
@@ -1154,7 +1179,7 @@ void PSIClusterReactionNetwork::getDiagonalFill(int *diagFill) {
 
 		// Get the vacancy momentum id so that the connectivity can be lined up in
 		// the proper column
-		id = reactant->getVMomentumId() - 1;
+		id = reactant.getVMomentumId() - 1;
 
 		// Add it to the diagonal fill block
 		for (int j = 0; j < connectivityLength; j++) {
@@ -1174,39 +1199,36 @@ double PSIClusterReactionNetwork::getTotalAtomConcentration() {
 	// Initial declarations
 	double heliumConc = 0.0;
 
-	// Get all the He clusters
-	auto const& heClusters = getAll(ReactantType::He);
-	// Loop on them
-	for (int i = 0; i < heClusters.size(); i++) {
+	// Sum over all He clusters.
+    for (auto const& currMapItem : getAll(ReactantType::He)) {
+
 		// Get the cluster and its composition
-		auto cluster = heClusters[i];
-		double size = cluster->getSize();
+		auto const& cluster = *(currMapItem.second);
+		double size = cluster.getSize();
 
 		// Add the concentration times the He content to the total helium concentration
-		heliumConc += cluster->getConcentration() * size;
+		heliumConc += cluster.getConcentration() * size;
 	}
 
-	// Get all the HeV clusters
-	auto const& heVClusters = getAll(ReactantType::HeV);
-	// Loop on them
-	for (int i = 0; i < heVClusters.size(); i++) {
+    // Sum over all HeV clusters.
+    for (auto const& currMapItem : getAll(ReactantType::HeV)) {
+
 		// Get the cluster and its composition
-		auto cluster = heVClusters[i];
-		auto& comp = cluster->getComposition();
+		auto const& cluster = *(currMapItem.second);
+		auto& comp = cluster.getComposition();
 
 		// Add the concentration times the He content to the total helium concentration
-		heliumConc += cluster->getConcentration() * comp[toCompIdx(Species::He)] ;
+		heliumConc += cluster.getConcentration() * comp[toCompIdx(Species::He)] ;
 	}
 
-	// Get all the super clusters
-	auto const& superClusters = getAll(ReactantType::PSISuper);
-	// Loop on them
-	for (int i = 0; i < superClusters.size(); i++) {
+	// Sum over all super clusters.
+    for (auto const& currMapItem : getAll(ReactantType::PSISuper)) {
+
 		// Get the cluster
-		auto cluster = std::static_pointer_cast<PSISuperCluster>(superClusters[i]);
+		auto const& cluster = static_cast<PSISuperCluster&>(*(currMapItem.second));
 
 		// Add its total helium concentration helium concentration
-		heliumConc += cluster->getTotalHeliumConcentration();
+		heliumConc += cluster.getTotalHeliumConcentration();
 	}
 
 	return heliumConc;
@@ -1216,27 +1238,23 @@ double PSIClusterReactionNetwork::getTotalTrappedAtomConcentration() {
 	// Initial declarations
 	double heliumConc = 0.0;
 
-	// Get all the HeV clusters
-	auto const& heVClusters = getAll(ReactantType::HeV);
-	// Loop on them
-	for (int i = 0; i < heVClusters.size(); i++) {
+    // Sum over all HeV clusters.
+    for (auto const& currMapItem : getAll(ReactantType::HeV)) {
 		// Get the cluster and its composition
-		auto cluster = heVClusters[i];
-		auto& comp = cluster->getComposition();
+		auto const& cluster = *(currMapItem.second);
+		auto& comp = cluster.getComposition();
 
 		// Add the concentration times the He content to the total helium concentration
-		heliumConc += cluster->getConcentration() * comp[toCompIdx(Species::He)] ;
+		heliumConc += cluster.getConcentration() * comp[toCompIdx(Species::He)] ;
 	}
 
-	// Get all the super clusters
-	auto const& superClusters = getAll(ReactantType::PSISuper);
-	// Loop on them
-	for (int i = 0; i < superClusters.size(); i++) {
+	// Sum over all super clusters.
+    for (auto const& currMapItem : getAll(ReactantType::PSISuper)) {
 		// Get the cluster
-		auto cluster = std::static_pointer_cast<PSISuperCluster>(superClusters[i]);
+		auto const& cluster = static_cast<PSISuperCluster&>(*(currMapItem.second));
 
 		// Add its total helium concentration
-		heliumConc += cluster->getTotalHeliumConcentration();
+		heliumConc += cluster.getTotalHeliumConcentration();
 	}
 
 	return heliumConc;
@@ -1246,39 +1264,33 @@ double PSIClusterReactionNetwork::getTotalVConcentration() {
 	// Initial declarations
 	double vConc = 0.0;
 
-	// Get all the V clusters
-	auto const& vClusters = getAll(ReactantType::V);
-	// Loop on them
-	for (int i = 0; i < vClusters.size(); i++) {
+	// Sum over all V clusters.
+    for (auto const& currMapItem : getAll(ReactantType::V)) {
 		// Get the cluster and its composition
-		auto cluster = vClusters[i];
-		double size = cluster->getSize();
+		auto const& cluster = *(currMapItem.second);
+		double size = cluster.getSize();
 
 		// Add the concentration times the V content to the total vacancy concentration
-		vConc += cluster->getConcentration() * size;
+		vConc += cluster.getConcentration() * size;
 	}
 
-	// Get all the HeV clusters
-	auto const& heVClusters = getAll(ReactantType::HeV);
-	// Loop on them
-	for (int i = 0; i < heVClusters.size(); i++) {
+	// Sum over all HeV clusters
+    for (auto const& currMapItem : getAll(ReactantType::HeV)) {
 		// Get the cluster and its composition
-		auto cluster = heVClusters[i];
-		auto& comp = cluster->getComposition();
+		auto const& cluster = *(currMapItem.second);
+		auto& comp = cluster.getComposition();
 
 		// Add the concentration times the V content to the total vacancy concentration
-		vConc += cluster->getConcentration() * comp[toCompIdx(Species::V)] ;
+		vConc += cluster.getConcentration() * comp[toCompIdx(Species::V)] ;
 	}
 
-	// Get all the super clusters
-	auto const& superClusters = getAll(ReactantType::PSISuper);
-	// Loop on them
-	for (int i = 0; i < superClusters.size(); i++) {
+	// Sum over all super clusters
+    for (auto const& currMapItem : getAll(ReactantType::PSISuper)) {
 		// Get the cluster
-		auto cluster = std::static_pointer_cast<PSISuperCluster>(superClusters[i]);
+		auto const& cluster = static_cast<PSISuperCluster&>(*(currMapItem.second));
 
 		// Add its total vacancy concentration
-		vConc += cluster->getTotalVacancyConcentration();
+		vConc += cluster.getTotalVacancyConcentration();
 	}
 
 	return vConc;
@@ -1288,16 +1300,14 @@ double PSIClusterReactionNetwork::getTotalIConcentration() {
 	// Initial declarations
 	double iConc = 0.0;
 
-	// Get all the V clusters
-	auto const& iClusters = getAll(ReactantType::I);
-	// Loop on them
-	for (int i = 0; i < iClusters.size(); i++) {
+	// Sum over all I clusters
+    for (auto const& currMapItem : getAll(ReactantType::I)) {
 		// Get the cluster and its composition
-		auto cluster = iClusters[i];
-		double size = cluster->getSize();
+		auto const& cluster = *(currMapItem.second);
+		double size = cluster.getSize();
 
 		// Add the concentration times the I content to the total interstitial concentration
-		iConc += cluster->getConcentration() * size;
+		iConc += cluster.getConcentration() * size;
 	}
 
 	return iConc;
@@ -1346,7 +1356,6 @@ void PSIClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset) {
 	// Initial declarations
 	double flux = 0.0;
 	int reactantIndex = 0;
-	auto const& superClusters = getAll(ReactantType::PSISuper);
 
 	// ----- Compute all of the new fluxes -----
 	for (int i = 0; i < size(); i++) {
@@ -1359,19 +1368,20 @@ void PSIClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset) {
 	}
 
 	// ---- Moments ----
-	for (int i = 0; i < superClusters.size(); i++) {
-		auto superCluster = std::static_pointer_cast<PSISuperCluster>(superClusters[i]);
+    for (auto const& currMapItem : getAll(ReactantType::PSISuper)) {
+
+		auto const& superCluster = static_cast<PSISuperCluster&>(*(currMapItem.second));
 
 		// Compute the helium momentum flux
-		flux = superCluster->getHeMomentumFlux();
+		flux = superCluster.getHeMomentumFlux();
 		// Update the concentration of the cluster
-		reactantIndex = superCluster->getHeMomentumId() - 1;
+		reactantIndex = superCluster.getHeMomentumId() - 1;
 		updatedConcOffset[reactantIndex] += flux;
 
 		// Compute the vacancy momentum flux
-		flux = superCluster->getVMomentumFlux();
+		flux = superCluster.getVMomentumFlux();
 		// Update the concentration of the cluster
-		reactantIndex = superCluster->getVMomentumId() - 1;
+		reactantIndex = superCluster.getVMomentumId() - 1;
 		updatedConcOffset[reactantIndex] += flux;
 	}
 
@@ -1417,14 +1427,15 @@ void PSIClusterReactionNetwork::computeAllPartials(double *vals, int *indices,
 	}
 
 	// Update the column in the Jacobian that represents the moment for the super clusters
-	for (int i = 0; i < superClusters.size(); i++) {
-		auto reactant = std::static_pointer_cast<PSISuperCluster>(superClusters[i]);
+    for (auto const& currMapItem : superClusters) {
+
+		auto const& reactant = static_cast<PSISuperCluster&>(*(currMapItem.second));
 
 		// Get the super cluster index
-		reactantIndex = reactant->getId() - 1;
+		reactantIndex = reactant.getId() - 1;
 
 		// Get the partial derivatives
-		reactant->getPartialDerivatives(clusterPartials);
+		reactant.getPartialDerivatives(clusterPartials);
 		// Get the list of column ids from the map
 		auto pdColIdsVector = dFillMap.at(reactantIndex);
 		// Number of partial derivatives
@@ -1444,10 +1455,10 @@ void PSIClusterReactionNetwork::computeAllPartials(double *vals, int *indices,
 		}
 
 		// Get the helium momentum index
-		reactantIndex = reactant->getHeMomentumId() - 1;
+		reactantIndex = reactant.getHeMomentumId() - 1;
 
 		// Get the partial derivatives
-		reactant->getHeMomentPartialDerivatives(clusterPartials);
+		reactant.getHeMomentPartialDerivatives(clusterPartials);
 		// Get the list of column ids from the map
 		pdColIdsVector = dFillMap.at(reactantIndex);
 		// Number of partial derivatives
@@ -1467,10 +1478,10 @@ void PSIClusterReactionNetwork::computeAllPartials(double *vals, int *indices,
 		}
 
 		// Get the vacancy momentum index
-		reactantIndex = reactant->getVMomentumId() - 1;
+		reactantIndex = reactant.getVMomentumId() - 1;
 
 		// Get the partial derivatives
-		reactant->getVMomentPartialDerivatives(clusterPartials);
+		reactant.getVMomentPartialDerivatives(clusterPartials);
 		// Get the list of column ids from the map
 		pdColIdsVector = dFillMap.at(reactantIndex);
 		// Number of partial derivatives

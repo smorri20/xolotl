@@ -23,7 +23,7 @@ ReactionNetwork::ReactionNetwork(
     // Ensure our per-type cluster map can store Reactants of the types
     // we support.
     for (auto const& currType : knownReactantTypes) {
-        clusterTypeMap.insert( {currType, ReactionNetwork::ReactantVector() } );
+        clusterTypeMap.insert( {currType, IReactionNetwork::ReactantMap() } );
     }
 
     // Ensure we have a baseline for determining max cluster size for
@@ -159,10 +159,10 @@ void ReactionNetwork::dumpTo(std::ostream& os) const {
     os << "per-type reactant map:\n";
     auto const& knownTypes = getKnownReactantTypes();
     for (auto const& currType : knownTypes) {
-        auto const& currTypeReactants = clusterTypeMap.at(currType);
-        os << currTypeReactants.size() << " " << toString(currType) << " reactants:\n";
-        for (auto const& currReactant : currTypeReactants) {
-            os << *currReactant << '\n';
+        auto const& currTypeReactantMap = clusterTypeMap.at(currType);
+        os << currTypeReactantMap.size() << " " << toString(currType) << " reactants:\n";
+        for (auto const& currMapItem : currTypeReactantMap) {
+            os << *(currMapItem.second) << '\n';
         }
     }
 

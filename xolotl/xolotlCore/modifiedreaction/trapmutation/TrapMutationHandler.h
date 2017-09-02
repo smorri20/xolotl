@@ -58,9 +58,9 @@ protected:
 	 * The vector containing the indices of the bubbles created through modified
 	 * trap-mutation for each grid point. The difference between this vector and depthVec
 	 * is that this one is used for the actual computation whereas the other one is
-	 * defined by the user. indexVector is created with the depthVec information.
+	 * defined by the user. tmBubbles is created with the depthVec information.
 	 */
-	std::vector<std::vector<std::vector<std::vector<int> > > > indexVector;
+	std::vector<std::vector<std::vector<std::vector<std::reference_wrapper<IReactant> > > > > tmBubbles;
 
 	/**
 	 * The desorption information

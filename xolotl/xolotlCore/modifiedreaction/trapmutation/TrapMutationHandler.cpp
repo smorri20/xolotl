@@ -11,10 +11,6 @@ void TrapMutationHandler::initialize(IReactionNetwork *network,
 	// Add the needed reaction (dissociation) connectivity
 	// Each (He_i)(V) cluster and I clusters are connected to He_i
 
-	// Get all the He clusters from the network
-	auto const& heClusters = network->getAll(ReactantType::He);
-	// Get all the HeV bubbles from the network
-	auto const& bubbles = network->getAll(ReactantType::HeV);
 	// Get the single interstitial cluster
 	auto singleInterstitial = (PSICluster *) network->get(ReactantType::I, 1);
 	// Get the double interstitial cluster
@@ -27,7 +23,7 @@ void TrapMutationHandler::initialize(IReactionNetwork *network,
 	if (!singleInterstitial || !doubleInterstitial || !tripleInterstitial) {
 		// Clear the vector of HeV indices created by He undergoing trap-mutation
 		// at each grid point
-		indexVector.clear();
+		tmBubbles.clear();
 
 		// Change the value of ny and nz in 1D and 2D so that the same loop
 		// works in every case
@@ -37,25 +33,23 @@ void TrapMutationHandler::initialize(IReactionNetwork *network,
 		// Loop on the grid points in the Z direction
 		for (int k = 0; k < nz; k++) {
 			// Create the temporary 2D vector
-			std::vector<std::vector<std::vector<int> > > temp2DVector;
+			std::vector<std::vector<std::vector<std::reference_wrapper<IReactant> > > > temp2DVector;
 			// Loop on the grid points in the Y direction
 			for (int j = 0; j < ny; j++) {
 				// Create the temporary 1D vector
-				std::vector<std::vector<int> > temp1DVector;
+				std::vector<std::vector<std::reference_wrapper<IReactant> > > temp1DVector;
 				// Loop on the grid points in the depth direction
 				for (int i = 0; i < grid.size(); i++) {
-					// Create the list (vector) of indices at this grid point
-					std::vector<int> indices;
-					// And give it empty to the 1D vector
-					temp1DVector.push_back(indices);
+					// Indicate no bubbles at this grid point.
+					temp1DVector.emplace_back();
 				}
 
 				// Give the 1D vector to the 2D vector
-				temp2DVector.push_back(temp1DVector);
+				temp2DVector.emplace_back(temp1DVector);
 			}
 
 			// Give the 2D vector to the final vector
-			indexVector.push_back(temp2DVector);
+			tmBubbles.emplace_back(temp2DVector);
 		}
 		// Inform the user
 		std::cout << "The modified trap-mutation won't happen because "
@@ -65,31 +59,33 @@ void TrapMutationHandler::initialize(IReactionNetwork *network,
 	}
 
 	// Loop on the He clusters
-	for (int i = 0; i < heClusters.size(); i++) {
+    for (const auto& heMapItem : network->getAll(ReactantType::He)) {
+
 		// Get the cluster and its size
-		auto cluster = std::static_pointer_cast<PSICluster>(heClusters[i]);
-		int heSize = cluster->getSize();
+        auto& cluster = static_cast<PSICluster&>(*(heMapItem.second));
+		int heSize = cluster.getSize();
 
 		// The helium cluster is connected to itself
-		cluster->setDissociationConnectivity(cluster->getId());
+		cluster.setDissociationConnectivity(cluster.getId());
 
 		// The single and double interstitial clusters are connected to He
-		singleInterstitial->setDissociationConnectivity(cluster->getId());
-		doubleInterstitial->setDissociationConnectivity(cluster->getId());
-		tripleInterstitial->setDissociationConnectivity(cluster->getId());
+		singleInterstitial->setDissociationConnectivity(cluster.getId());
+		doubleInterstitial->setDissociationConnectivity(cluster.getId());
+		tripleInterstitial->setDissociationConnectivity(cluster.getId());
 
 		// Loop on the bubbles
-		for (int j = 0; j < bubbles.size(); j++) {
+        for (const auto& hevMapItem : network->getAll(ReactantType::HeV)) {
+
 			// Get the bubble and its composition
-			auto bubble =  std::static_pointer_cast<PSICluster>(bubbles[j]);
-			auto& comp = bubble->getComposition();
+            auto& bubble = static_cast<PSICluster&>(*(hevMapItem.second));
+			auto& comp = bubble.getComposition();
 
 			// We are only interested in bubbles with one, two, or three vacancies
             if (comp[toCompIdx(Species::V)] > 3) continue;
 
 			// Connect with He if the number of helium in the bubble is the same
 			if (comp[toCompIdx(Species::He)] == heSize) {
-				bubble->setDissociationConnectivity(cluster->getId());
+				bubble.setDissociationConnectivity(cluster.getId());
 			}
 		}
 	}
@@ -113,28 +109,22 @@ void TrapMutationHandler::initializeIndex1D(int surfacePos,
 		std::vector<double> grid) {
 	// Clear the vector of HeV indices created by He undergoing trap-mutation
 	// at each grid point
-	indexVector.clear();
+	tmBubbles.clear();
 
-	// Get all the He clusters from the network
-	auto const& heClusters = network->getAll(ReactantType::He);
-	// Get all the HeV bubbles from the network
-	auto const& bubbles = network->getAll(ReactantType::HeV);
+
 	// No GB trap mutation handler in 1D for now
 
 	// Create the temporary 2D vector
-	std::vector<std::vector<std::vector<int> > > temp2DVector;
+	std::vector<std::vector<std::vector<std::reference_wrapper<IReactant> > > > temp2DVector;
 	// Create the temporary 1D vector
-	std::vector<std::vector<int> > temp1DVector;
+	std::vector<std::vector<std::reference_wrapper<IReactant> > > temp1DVector;
 
 	// Loop on the grid points in the depth direction
 	for (int i = 0; i < grid.size(); i++) {
-		// Create the list (vector) of indices at this grid point
-		std::vector<int> indices;
-
 		// If we are on the left side of the surface there is no
 		// modified trap-mutation
 		if (i <= surfacePos) {
-			temp1DVector.push_back(indices);
+			temp1DVector.emplace_back();
 			continue;
 		}
 
@@ -142,33 +132,34 @@ void TrapMutationHandler::initializeIndex1D(int surfacePos,
 		double depth = grid[i] - grid[surfacePos];
 
 		// Loop on the depth vector
+		std::vector<std::reference_wrapper<IReactant> > indices;
 		for (int l = 0; l < depthVec.size(); l++) {
 			// Check if a helium cluster undergo TM at this depth
 			if (std::fabs(depth - depthVec[l])  < 0.01) {
 				// Add the bubble of size l+1 to the indices
 				// Loop on the bubbles
-				for (int m = 0; m < bubbles.size(); m++) {
+                for (auto const& heVMapItem : network->getAll(ReactantType::HeV)) {
 					// Get the bubble and its composition
-					auto bubble =  std::static_pointer_cast<PSICluster>(bubbles[m]);
-					auto& comp = bubble->getComposition();
+					auto& bubble =  static_cast<PSICluster&>(*(heVMapItem.second));
+					auto const& comp = bubble.getComposition();
 					// Get the correct bubble
 					if (comp[toCompIdx(Species::He)] == l+1 && comp[toCompIdx(Species::V)] == sizeVec[l]) {
 						// Add this bubble to the indices
-						indices.push_back(m);
+                        indices.emplace_back(bubble);
 					}
 				}
 			}
 		}
 
 		// Add indices to the index vector
-		temp1DVector.push_back(indices);
+		temp1DVector.emplace_back(indices);
 	}
 
 	// Give the 1D vector to the 2D vector
-	temp2DVector.push_back(temp1DVector);
+	temp2DVector.emplace_back(temp1DVector);
 
 	// Give the 2D vector to the final vector
-	indexVector.push_back(temp2DVector);
+	tmBubbles.emplace_back(temp2DVector);
 
 	return;
 }
@@ -179,12 +170,8 @@ void TrapMutationHandler::initializeIndex2D(std::vector<int> surfacePos,
 		std::vector<double> grid, int ny, double hy) {
 	// Clear the vector of HeV indices created by He undergoing trap-mutation
 	// at each grid point
-	indexVector.clear();
+	tmBubbles.clear();
 
-	// Get all the He clusters from the network
-	auto const& heClusters = network->getAll(ReactantType::He);
-	// Get all the HeV bubbles from the network
-	auto const& bubbles = network->getAll(ReactantType::HeV);
 	// Create a Sigma 3 trap mutation handler because it is the
 	// only one available right now
 	auto sigma3Handler = new Sigma3TrapMutationHandler();
@@ -192,15 +179,15 @@ void TrapMutationHandler::initializeIndex2D(std::vector<int> surfacePos,
 	auto sigma3SizeVec = sigma3Handler->getSizeVector();
 
 	// Create the temporary 2D vector
-	std::vector<std::vector<std::vector<int> > > temp2DVector;
+	std::vector<std::vector<std::vector<std::reference_wrapper<IReactant> > > > temp2DVector;
 	// Loop on the grid points in the Y direction
 	for (int j = 0; j < ny; j++) {
 		// Create the temporary 1D vector
-		std::vector<std::vector<int> > temp1DVector;
+		std::vector<std::vector<std::reference_wrapper<IReactant> > > temp1DVector;
 		// Loop on the grid points in the depth direction
 		for (int i = 0; i < grid.size(); i++) {
 			// Create the list (vector) of indices at this grid point
-			std::vector<int> indices;
+			std::vector<std::reference_wrapper<IReactant> > indices;
 
 			// If we are on the left side of the surface there is no
 			// modified trap-mutation
@@ -218,14 +205,14 @@ void TrapMutationHandler::initializeIndex2D(std::vector<int> surfacePos,
 				if (std::fabs(depth - depthVec[l])  < 0.01) {
 					// Add the bubble of size l+1 to the indices
 					// Loop on the bubbles
-					for (int m = 0; m < bubbles.size(); m++) {
+                    for (auto const& heVMapItem : network->getAll(ReactantType::HeV)) {
 						// Get the bubble and its composition
-						auto bubble =  std::static_pointer_cast<PSICluster>(bubbles[m]);
-						auto& comp = bubble->getComposition();
+						auto& bubble =  static_cast<PSICluster&>(*(heVMapItem.second));
+						auto const& comp = bubble.getComposition();
 						// Get the correct bubble
 						if (comp[toCompIdx(Species::He)] == l+1 && comp[toCompIdx(Species::V)] == sizeVec[l]) {
 							// Add this bubble to the indices
-							indices.push_back(m);
+							indices.emplace_back(bubble);
 						}
 					}
 				}
@@ -245,16 +232,21 @@ void TrapMutationHandler::initializeIndex2D(std::vector<int> surfacePos,
 					if (std::fabs(distance - sigma3DistanceVec[l])  < 0.01) {
 						// Add the bubble of size l+1 to the indices
 						// Loop on the bubbles
-						for (int m = 0; m < bubbles.size(); m++) {
+                        for (auto const& heVMapItem : network->getAll(ReactantType::HeV)) {
 							// Get the bubble and its composition
-							auto bubble =  std::static_pointer_cast<PSICluster>(bubbles[m]);
-							auto& comp = bubble->getComposition();
+							auto& bubble = static_cast<PSICluster&>(*(heVMapItem.second));
+							auto const& comp = bubble.getComposition();
 							// Get the correct bubble
 							if (comp[toCompIdx(Species::He)] == l+1 && comp[toCompIdx(Species::V)] == sigma3SizeVec[l]) {
-								// Check if this bubble is already in the indices
-								if (std::find(indices.begin(), indices.end(), m) == indices.end()) {
+								// Check if this bubble is already 
+                                // associated with this grid point.
+                                auto biter = std::find_if(indices.begin(), indices.end(),
+                                    [&bubble](const IReactant& testReactant) {
+                                        return testReactant.getId() == bubble.getId();
+                                    });
+                                if (biter == indices.end()) {
 									// Add this bubble to the indices
-									indices.push_back(m);
+									indices.emplace_back(bubble);
 								}
 							}
 						}
@@ -271,7 +263,7 @@ void TrapMutationHandler::initializeIndex2D(std::vector<int> surfacePos,
 	}
 
 	// Give the 2D vector to the final vector
-	indexVector.push_back(temp2DVector);
+	tmBubbles.push_back(temp2DVector);
 
 	// Clear the memory
 	delete sigma3Handler;
@@ -285,12 +277,8 @@ void TrapMutationHandler::initializeIndex3D(std::vector<std::vector<int> > surfa
 		std::vector<double> grid, int ny, double hy, int nz, double hz) {
 	// Clear the vector of HeV indices created by He undergoing trap-mutation
 	// at each grid point
-	indexVector.clear();
+	tmBubbles.clear();
 
-	// Get all the He clusters from the network
-	auto const& heClusters = network->getAll(ReactantType::He);
-	// Get all the HeV bubbles from the network
-	auto const& bubbles = network->getAll(ReactantType::HeV);
 	// Create a Sigma 3 trap mutation handler because it is the
 	// only one available right now
 	auto sigma3Handler = new Sigma3TrapMutationHandler();
@@ -300,20 +288,20 @@ void TrapMutationHandler::initializeIndex3D(std::vector<std::vector<int> > surfa
 	// Loop on the grid points in the Z direction
 	for (int k = 0; k < nz; k++) {
 		// Create the temporary 2D vector
-		std::vector<std::vector<std::vector<int> > > temp2DVector;
+		std::vector<std::vector<std::vector<std::reference_wrapper<IReactant> > > > temp2DVector;
 		// Loop on the grid points in the Y direction
 		for (int j = 0; j < ny; j++) {
 			// Create the temporary 1D vector
-			std::vector<std::vector<int> > temp1DVector;
+			std::vector<std::vector<std::reference_wrapper<IReactant> > > temp1DVector;
 			// Loop on the grid points in the depth direction
 			for (int i = 0; i < grid.size(); i++) {
 				// Create the list (vector) of indices at this grid point
-				std::vector<int> indices;
+				std::vector<std::reference_wrapper<IReactant> > indices;
 
 				// If we are on the left side of the surface there is no
 				// modified trap-mutation
 				if (i <= surfacePos[j][k]) {
-					temp1DVector.push_back(indices);
+					temp1DVector.emplace_back(indices);
 					continue;
 				}
 
@@ -326,14 +314,14 @@ void TrapMutationHandler::initializeIndex3D(std::vector<std::vector<int> > surfa
 					if (std::fabs(depth - depthVec[l])  < 0.01) {
 						// Add the bubble of size l+1 to the indices
 						// Loop on the bubbles
-						for (int m = 0; m < bubbles.size(); m++) {
+                        for (auto const& heVMapItem : network->getAll(ReactantType::HeV)) {
 							// Get the bubble and its composition
-							auto bubble =  std::static_pointer_cast<PSICluster>(bubbles[m]);
-							auto& comp = bubble->getComposition();
+							auto& bubble =  static_cast<PSICluster&>(*(heVMapItem.second));
+							auto const& comp = bubble.getComposition();
 							// Get the correct bubble
 							if (comp[toCompIdx(Species::He)] == l+1 && comp[toCompIdx(Species::V)] == sizeVec[l]) {
 								// Add this bubble to the indices
-								indices.push_back(m);
+								indices.emplace_back(bubble);
 							}
 						}
 					}
@@ -354,16 +342,21 @@ void TrapMutationHandler::initializeIndex3D(std::vector<std::vector<int> > surfa
 						if (std::fabs(distance - sigma3DistanceVec[l])  < 0.01) {
 							// Add the bubble of size l+1 to the indices
 							// Loop on the bubbles
-							for (int m = 0; m < bubbles.size(); m++) {
+                            for (auto const& heVMapItem : network->getAll(ReactantType::HeV)) {
 								// Get the bubble and its composition
-								auto bubble =  std::static_pointer_cast<PSICluster>(bubbles[m]);
-								auto& comp = bubble->getComposition();
+								auto& bubble = static_cast<PSICluster&>(*(heVMapItem.second));
+								auto const& comp = bubble.getComposition();
 								// Get the correct bubble
 								if (comp[toCompIdx(Species::He)] == l+1 && comp[toCompIdx(Species::V)] == sigma3SizeVec[l]) {
-									// Check if this bubble is already in the indices
-									if (std::find(indices.begin(), indices.end(), m) == indices.end()) {
+									// Check if this bubble is already
+                                    // associated with this grid point.
+                                    auto biter = std::find_if(indices.begin(), indices.end(),
+                                        [&bubble](const IReactant& testReactant) {
+                                            return testReactant.getId() == bubble.getId();
+                                        });
+                                    if (biter == indices.end()) {
 										// Add this bubble to the indices
-										indices.push_back(m);
+										indices.emplace_back(bubble);
 									}
 								}
 							}
@@ -380,7 +373,7 @@ void TrapMutationHandler::initializeIndex3D(std::vector<std::vector<int> > surfa
 		}
 
 		// Give the 2D vector to the final vector
-		indexVector.push_back(temp2DVector);
+		tmBubbles.push_back(temp2DVector);
 	}
 
 	// Clear the memory
@@ -413,33 +406,26 @@ void TrapMutationHandler::updateDisappearingRate(double conc) {
 void TrapMutationHandler::computeTrapMutation(IReactionNetwork *network,
 		double *concOffset, double *updatedConcOffset,
 		int xi, int yj, int zk) {
-	// Get all the HeV bubbles
-	auto const& bubbles = network->getAll(ReactantType::HeV);
-	// Initialyze the pointers to interstitial and helium clusters and their ID
-	PSICluster * iCluster = nullptr, * heCluster = nullptr;
-	int iIndex = -1, heIndex = -1, bubbleIndex = -1;
 
 	// Initialize the rate of the reaction
 	double rate = 0.0;
 
-	// Get the pointer to list of indices at this grid point
-	std::vector<int> * indices = &indexVector[zk][yj][xi];
-
 	// Loop on the list
-	for (int i = 0; i < indices->size(); i++) {
+    for (IReactant const& currReactant : tmBubbles[zk][yj][xi]) {
+
 		// Get the stored bubble and its ID
-		auto bubble = std::static_pointer_cast<PSICluster>(bubbles[indices->at(i)]);
-		bubbleIndex = bubble->getId() - 1;
+		auto const& bubble = static_cast<PSICluster const&>(currReactant);
+		auto bubbleIndex = bubble.getId() - 1;
 
 		// Get the helium cluster with the same number of He and its ID
-		auto& comp = bubble->getComposition();
-		heCluster = (PSICluster *) network->get(ReactantType::He, comp[toCompIdx(Species::He)]);
-		heIndex = heCluster->getId() - 1;
+		auto& comp = bubble.getComposition();
+		auto heCluster = (PSICluster *) network->get(ReactantType::He, comp[toCompIdx(Species::He)]);
+		auto heIndex = heCluster->getId() - 1;
 
 		// Get the interstitial cluster with the same number of I as the number
 		// of vacancies in the bubble and its ID
-		iCluster = (PSICluster *) network->get(ReactantType::I, comp[toCompIdx(Species::V)]);
-		iIndex = iCluster->getId() - 1;
+		auto iCluster = (PSICluster *) network->get(ReactantType::I, comp[toCompIdx(Species::V)]);
+		auto iIndex = iCluster->getId() - 1;
 
 		// Get the initial concentration of helium
 		double oldConc = concOffset[heIndex];
@@ -467,32 +453,29 @@ void TrapMutationHandler::computeTrapMutation(IReactionNetwork *network,
 int TrapMutationHandler::computePartialsForTrapMutation(
 		IReactionNetwork *network, double *val,
 		int *indices, int xi, int yj, int zk) {
-	// Get all the HeV bubbles
-	auto const& bubbles = network->getAll(ReactantType::HeV);
-	// Initialyze the pointers to interstitial and helium clusters and their ID
-	PSICluster * iCluster = nullptr, * heCluster = nullptr;
-	int iIndex = -1, heIndex = -1, bubbleIndex = -1;
 
 	// Initialize the rate of the reaction
 	double rate = 0.0;
 
-	// Get the pointer to list of indices at this grid point
-	std::vector<int> * clusterIndices = &indexVector[zk][yj][xi];
-	// Loop on the list
-	for (int i = 0; i < clusterIndices->size(); i++) {
+	// Consider all bubbles at this grid point.
+    // TODO Relying on convention for indices in indices/vals arrays is
+    // error prone - could be done with multiple parallel arrays.
+    uint32_t i = 0;
+    for (IReactant const& currReactant : tmBubbles[zk][yj][xi]) {
+
 		// Get the stored bubble and its ID
-		auto bubble = std::static_pointer_cast<PSICluster>(bubbles[clusterIndices->at(i)]);
-		bubbleIndex = bubble->getId() - 1;
+		auto const& bubble = static_cast<PSICluster const&>(currReactant);
+		auto bubbleIndex = bubble.getId() - 1;
 
 		// Get the helium cluster with the same number of He and its ID
-		auto& comp = bubble->getComposition();
-		heCluster = (PSICluster *) network->get(ReactantType::He, comp[toCompIdx(Species::He)]);
-		heIndex = heCluster->getId() - 1;
+		auto const& comp = bubble.getComposition();
+		auto heCluster = (PSICluster *) network->get(ReactantType::He, comp[toCompIdx(Species::He)]);
+		auto heIndex = heCluster->getId() - 1;
 
 		// Get the interstitial cluster with the same number of I as the number
 		// of vacancies in the bubble and its ID
-		iCluster = (PSICluster *) network->get(ReactantType::I, comp[toCompIdx(Species::V)]);
-		iIndex = iCluster->getId() - 1;
+		auto iCluster = (PSICluster *) network->get(ReactantType::I, comp[toCompIdx(Species::V)]);
+		auto iIndex = iCluster->getId() - 1;
 
 		// Check the desorption
 		if (comp[toCompIdx(Species::He)] == desorp.size) {
@@ -506,19 +489,23 @@ int TrapMutationHandler::computePartialsForTrapMutation(
 		}
 
 		// Set the helium cluster partial derivative
-		indices[i * 3] = heIndex;
-		val[i * 3] = -rate;
+        auto baseIndex = i*3;
+		indices[baseIndex] = heIndex;
+		val[baseIndex] = -rate;
 
 		// Set the bubble cluster partial derivative
-		indices[(i * 3) + 1] = bubbleIndex;
-		val[(i * 3) + 1] = rate;
+		indices[(baseIndex) + 1] = bubbleIndex;
+		val[(baseIndex) + 1] = rate;
 
 		// Set the interstitial cluster partial derivative
-		indices[(i * 3) + 2] = iIndex;
-		val[(i * 3) + 2] = rate;
+		indices[(baseIndex) + 2] = iIndex;
+		val[(baseIndex) + 2] = rate;
+
+        // Advance to next indices/vals index.
+        ++i;
 	}
 
-	return clusterIndices->size();
+	return (tmBubbles[zk][yj][xi]).size();
 }
 
 }/* end namespace xolotlCore */

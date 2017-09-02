@@ -28,6 +28,12 @@ public:
     using ReactantVector = std::vector<std::shared_ptr<IReactant> >;
 
 
+    /**
+     * Nice name for map of reactants, keyed by their composition.
+     */
+    using ReactantMap = std::unordered_map<IReactant::Composition, std::shared_ptr<IReactant> >;
+
+
 	/**
 	 * The destructor.
 	 */
@@ -89,7 +95,7 @@ public:
 	 * @param type The reactant or compound reactant type
 	 * @return The list of all of the reactants in the network.
 	 */
-    virtual const ReactantVector& getAll(ReactantType type) const = 0;
+    virtual const ReactantMap& getAll(ReactantType type) const = 0;
 
 	/**
 	 * This operation adds a reactant or a compound reactant to the network.

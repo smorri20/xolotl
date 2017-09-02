@@ -199,19 +199,21 @@ PetscErrorCode monitorScatter0D(TS ts, PetscInt timestep, PetscReal time,
 		myPoints->push_back(aPoint);
 	}
 	int nXe = networkSize - superClusters.size() + 1;
-	for (int i = 0; i < superClusters.size(); i++) {
+
+    for (auto const& superMapItem : superClusters) {
+
 		// Get the cluster
-		auto cluster = std::static_pointer_cast<NESuperCluster>(superClusters[i]);
+        auto const& cluster = static_cast<NESuperCluster&>(*(superMapItem.second));
 		// Get the width
-		int width = cluster->getSectionWidth();
+		int width = cluster.getSectionWidth();
 		// Loop on the width
 		for (int k = 0; k < width; k++) {
 			// Compute the distance
-			double dist = cluster->getDistance(nXe + k);
+			double dist = cluster.getDistance(nXe + k);
 			// Create a Point with the concentration[i] as the value
 			// and add it to myPoints
 			xolotlViz::Point aPoint;
-			aPoint.value = cluster->getConcentration(dist);
+			aPoint.value = cluster.getConcentration(dist);
 			aPoint.t = time;
 			aPoint.x = (double) nXe + k;
 			myPoints->push_back(aPoint);
@@ -287,8 +289,7 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the network
 	auto network = solverHandler->getNetwork();
-	// Get all the super clusters
-	auto const& superClusters = network->getAll(ReactantType::PSISuper);
+
 
 	// Get the physical grid
 	auto grid = solverHandler->getXGrid();
@@ -347,17 +348,18 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 
 				else {
 					// Look for superClusters !
-					for (int l = 0; l < superClusters.size(); l++) {
+                    for (auto const& superMapItem : network->getAll(ReactantType::PSISuper)) {
+
 						// Get the super cluster
-						auto superCluster = std::static_pointer_cast<PSISuperCluster>(superClusters[l]);
+						auto const& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
 						// Get its boundaries
-						auto boundaries = superCluster->getBoundaries();
+						auto const& boundaries = superCluster.getBoundaries();
 						// Is it the right one?
 						if (j >= boundaries[0] && j <= boundaries[1]
 								&& i >= boundaries[2] && i <= boundaries[3]) {
-							conc = superCluster->getConcentration(
-									superCluster->getHeDistance(j),
-									superCluster->getVDistance(i));
+							conc = superCluster.getConcentration(
+									superCluster.getHeDistance(j),
+									superCluster.getVDistance(i));
 							break;
 						}
 					}
@@ -442,9 +444,6 @@ PetscErrorCode monitorMeanSize0D(TS ts, PetscInt timestep, PetscReal time,
 	auto network = solverHandler->getNetwork();
 	int dof = network->getDOF();
 
-	// Get all the super clusters
-	auto const& superClusters = network->getAll(ReactantType::PSISuper);
-
 	// Create the output file
 	std::ofstream outputFile;
 	std::stringstream name;
@@ -473,16 +472,16 @@ PetscErrorCode monitorMeanSize0D(TS ts, PetscInt timestep, PetscReal time,
 //				<< gridPointSolution[indices0D[i]] << std::endl;
 //	}
 
-	// Loop on the super clusters
-	for (int l = 0; l < superClusters.size(); l++) {
+	// Consider each super cluster.
+    for (auto const& superMapItem : network->getAll(ReactantType::PSISuper)) {
 		// Get the super cluster
-		auto superCluster = std::static_pointer_cast<PSISuperCluster>(superClusters[l]);
+		auto const& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
 		// Get its boundaries
-		auto boundaries = superCluster->getBoundaries();
+		auto const& boundaries = superCluster.getBoundaries();
 		// Get its diameter
-		double diam = 2.0 * superCluster->getReactionRadius();
+		double diam = 2.0 * superCluster.getReactionRadius();
 		// Get its concentration
-		double conc = superCluster->getConcentration(0.0, 0.0);
+		double conc = superCluster.getConcentration(0.0, 0.0);
 		outputFile << boundaries[0] << " " << boundaries[1] << " "
 				<< boundaries[2] << " " << boundaries[3] << " " << conc
 				<< std::endl;
@@ -684,18 +683,17 @@ PetscErrorCode setupPetsc0DMonitor(TS ts) {
 	// Initialize indices0D and weights0D if we want to compute the
 	// retention or the cumulative value and others
 	if (flagMeanSize) {
-		// Get all the vacancy clusters
-		auto const& vClusters = network->getAll(ReactantType::V);
 
-		// Loop on the helium clusters
-		for (unsigned int i = 0; i < vClusters.size(); i++) {
-			auto cluster = vClusters[i];
-			int id = cluster->getId() - 1;
+		// Consider each vacancy cluster.
+        for (auto const& vMapItem : network->getAll(ReactantType::V)) {
+			auto const& cluster = *(vMapItem.second);
+
+			int id = cluster.getId() - 1;
 			// Add the Id to the vector
 			indices0D.push_back(id);
 			// Add the number of heliums of this cluster to the weight
-			weights0D.push_back(cluster->getSize());
-			radii0D.push_back(cluster->getReactionRadius());
+			weights0D.push_back(cluster.getSize());
+			radii0D.push_back(cluster.getReactionRadius());
 		}
 	}
 

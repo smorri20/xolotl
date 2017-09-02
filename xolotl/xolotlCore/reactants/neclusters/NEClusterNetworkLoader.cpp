@@ -424,17 +424,18 @@ void NEClusterNetworkLoader::applyGrouping(
 		cluster->emissionPairs = emi;
 	}
 
-	// Get the super cluster map
-	auto const& superMap = network->getAll(ReactantType::NESuper);
 	// Set the reaction network for each super reactant
-	for (auto& currCluster : superMap) {
-		currCluster->updateFromNetwork();
+    for (auto const& superMapItem : network->getAll(ReactantType::NESuper)) {
+        auto& currCluster = static_cast<NESuperCluster&>(*(superMapItem.second));
+		currCluster.updateFromNetwork();
 	}
 
 	// Remove Xe clusters bigger than xeMin from the network
 	// Loop on the Xe clusters
     std::vector<std::shared_ptr<IReactant> > doomedReactants;
-	for (auto currCluster : xeMap) {
+	for (auto const& currMapItem : xeMap) {
+
+        auto& currCluster = currMapItem.second;
 
 		// Get the cluster's size.
 		nXe = currCluster->getSize();

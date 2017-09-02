@@ -677,9 +677,6 @@ PetscErrorCode monitorMovingSurface3D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the network
 	auto network = solverHandler->getNetwork();
-
-	// Get all the interstitial clusters
-	auto const& interstitials = network->getAll(ReactantType::I);
 	// Get the single vacancy ID
 	auto singleVacancyCluster = network->get(xolotlCore::ReactantType::V, 1);
 	int vacancyIndex = -1;
@@ -724,15 +721,17 @@ PetscErrorCode monitorMovingSurface3D(TS ts, PetscInt timestep, PetscReal time,
 				double newFlux = 0.0;
 
 				// Loop on all the interstitial clusters
-				for (int i = 0; i < interstitials.size(); i++) {
+                for (auto const& iMapItem : network->getAll(ReactantType::I)) {
+
 					// Get the cluster
-					auto cluster = interstitials.at(i);
+					auto const& cluster = *(iMapItem.second);
+
 					// Get its id and concentration
-					int id = cluster->getId() - 1;
+					int id = cluster.getId() - 1;
 					double conc = gridPointSolution[id];
 					// Get its size and diffusion coefficient
-					int size = cluster->getSize();
-					double coef = cluster->getDiffusionCoefficient();
+					int size = cluster.getSize();
+					double coef = cluster.getDiffusionCoefficient();
 
 					// Factor for finite difference
 					double hxLeft = grid[xi] - grid[xi - 1];
@@ -996,46 +995,43 @@ PetscErrorCode monitorBursting3D(TS ts, PetscInt, PetscReal time, Vec solution,
 							<< distance << " " << prob << " " << test
 							<< std::endl;
 
-					// Get all the helium clusters
-					auto const& clusters = network->getAll(ReactantType::He);
-					// Loop on them to reset their concentration at this grid point
-					for (int i = 0; i < clusters.size(); i++) {
-						auto cluster = clusters[i];
-						int id = cluster->getId() - 1;
+					// Consider each He to reset their concentration at this grid point
+                    for (auto const& heMapItem : network->getAll(ReactantType::He)) {
+						auto const& cluster = *(heMapItem.second);
+						int id = cluster.getId() - 1;
 						gridPointSolution[id] = 0.0;
 					}
 
-					// Get all the HeV clusters
-					auto const& heVClusters = network->getAll(ReactantType::HeV);
-					// Loop on them to transfer their concentration to the V cluster of the
+					// Consider each HeV cluster to transfer their concentration to the V cluster of the
 					// same size at this grid point
-					for (int i = 0; i < heVClusters.size(); i++) {
-						auto cluster = heVClusters[i];
+                    for (auto const& heVMapItem : network->getAll(ReactantType::HeV)) {
+						auto const& cluster = *(heVMapItem.second);
+
 						// Get the V cluster of the same size
-						auto& comp = cluster->getComposition();
+						auto const& comp = cluster.getComposition();
 						auto vCluster = network->get(ReactantType::V, comp[toCompIdx(Species::V)] );
 						int vId = vCluster->getId() - 1;
-						int id = cluster->getId() - 1;
+						int id = cluster.getId() - 1;
 						gridPointSolution[vId] = gridPointSolution[id];
 						gridPointSolution[id] = 0.0;
 					}
 
 					// Loop on the superClusters to transfer their concentration to the V cluster of the
 					// same size at this grid point
-					for (int i = 0; i < superClusters.size(); i++) {
-						auto cluster = std::static_pointer_cast<PSISuperCluster>(superClusters[i]);
+                    for (auto const& superMapItem : superClusters) {
+						auto const& cluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
 						// Get the V cluster of the same size
-						double numV = cluster->getNumV();
+						double numV = cluster.getNumV();
 						int truncV = (int) numV;
 						auto vCluster = network->get(ReactantType::V, truncV);
 						int vId = vCluster->getId() - 1;
-						int id = cluster->getId() - 1;
-						double conc = cluster->getTotalConcentration();
+						int id = cluster.getId() - 1;
+						double conc = cluster.getTotalConcentration();
 						gridPointSolution[vId] = conc * numV / (double) truncV;
 						gridPointSolution[id] = 0.0;
-						id = cluster->getHeMomentumId() - 1;
+						id = cluster.getHeMomentumId() - 1;
 						gridPointSolution[id] = 0.0;
-						id = cluster->getVMomentumId() - 1;
+						id = cluster.getVMomentumId() - 1;
 						gridPointSolution[id] = 0.0;
 					}
 				}

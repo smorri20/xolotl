@@ -247,8 +247,6 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 
 	// Get the network
 	auto network = solverHandler->getNetwork();
-	// Get all the super clusters
-	auto const& superClusters = network->getAll(ReactantType::PSISuper);
 
 	// Get the array of concentration
 	PetscReal **solutionArray;
@@ -285,11 +283,11 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 		}
 
 		// Loop on all the super clusters
-		for (int l = 0; l < superClusters.size(); l++) {
-			auto cluster = std::static_pointer_cast<xolotlCore::PSISuperCluster>(superClusters[l]);
-			heConcentration += cluster->getTotalHeliumConcentration()
+        for (auto const& superMapItem : network->getAll(ReactantType::PSISuper)) {
+			auto const& cluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
+			heConcentration += cluster.getTotalHeliumConcentration()
 					* (grid[xi] - grid[xi - 1]);
-			bubbleConcentration += cluster->getTotalConcentration()
+			bubbleConcentration += cluster.getTotalConcentration()
 					* (grid[xi] - grid[xi - 1]);
 		}
 	}
@@ -372,8 +370,6 @@ PetscErrorCode computeXenonRetention1D(TS ts, PetscInt, PetscReal time,
 
 	// Get the network
 	auto network = solverHandler->getNetwork();
-	// Get all the super clusters
-	auto const& superClusters = network->getAll(ReactantType::NESuper);
 
 	// Get the array of concentration
 	PetscReal **solutionArray;
@@ -412,14 +408,14 @@ PetscErrorCode computeXenonRetention1D(TS ts, PetscInt, PetscReal time,
 		}
 
 		// Loop on all the super clusters
-		for (int i = 0; i < superClusters.size(); i++) {
-			auto cluster = std::static_pointer_cast<xolotlCore::NESuperCluster>(superClusters[i]);
-			xeConcentration += cluster->getTotalXenonConcentration()
+        for (auto const& superMapItem : network->getAll(ReactantType::NESuper)) {
+			auto const& cluster = static_cast<NESuperCluster&>(*(superMapItem.second));
+			xeConcentration += cluster.getTotalXenonConcentration()
 					* (grid[xi] - grid[xi - 1]);
-			bubbleConcentration += cluster->getTotalConcentration()
+			bubbleConcentration += cluster.getTotalConcentration()
 					* (grid[xi] - grid[xi - 1]);
-			radii += cluster->getTotalConcentration()
-					* cluster->getReactionRadius() * (grid[xi] - grid[xi - 1]);
+			radii += cluster.getTotalConcentration()
+					* cluster.getReactionRadius() * (grid[xi] - grid[xi - 1]);
 		}
 	}
 
@@ -505,8 +501,6 @@ PetscErrorCode computeHeliumConc1D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the network
 	auto network = solverHandler->getNetwork();
-	// Get all the super clusters
-	auto const& superClusters = network->getAll(ReactantType::PSISuper);
 
 	// Get the position of the surface
 	int surfacePos = solverHandler->getSurfacePosition();
@@ -566,18 +560,19 @@ PetscErrorCode computeHeliumConc1D(TS ts, PetscInt timestep, PetscReal time,
 						* (grid[xi] - grid[xi - 1]);
 			}
 
-			// Loop on the super clusters
-			for (int l = 0; l < superClusters.size(); l++) {
+			// Consider each super cluster.
+            for (auto const& currMapItem : network->getAll(ReactantType::PSISuper)) {
+
 				// Get the super cluster
-				auto superCluster = std::static_pointer_cast<PSISuperCluster>(superClusters[l]);
+				auto const& superCluster = static_cast<PSISuperCluster&>(*(currMapItem.second));
 				// Get its boundaries
-				auto boundaries = superCluster->getBoundaries();
+				auto const& boundaries = superCluster.getBoundaries();
 				// Is it the right one?
 				for (int i = boundaries[0]; i <= boundaries[1]; i++) {
 					for (int j = boundaries[2]; j <= boundaries[3]; j++) {
-						heConcLocal[i] += superCluster->getConcentration(
-								superCluster->getHeDistance(i),
-								superCluster->getVDistance(j))
+						heConcLocal[i] += superCluster.getConcentration(
+								superCluster.getHeDistance(i),
+								superCluster.getVDistance(j))
 								* (grid[xi] - grid[xi - 1]);
 					}
 				}
@@ -933,19 +928,20 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 				myPoints->push_back(aPoint);
 			}
 			int nXe = networkSize - superClusters.size() + 1;
-			for (int i = 0; i < superClusters.size(); i++) {
+
+            for (auto const& superMapItem : superClusters) {
 				// Get the cluster
-				auto cluster = std::static_pointer_cast<NESuperCluster>(superClusters[i]);
+				auto const& cluster = static_cast<NESuperCluster&>(*(superMapItem.second));
 				// Get the width
-				int width = cluster->getSectionWidth();
+				int width = cluster.getSectionWidth();
 				// Loop on the width
 				for (int k = 0; k < width; k++) {
 					// Compute the distance
-					double dist = cluster->getDistance(nXe + k);
+					double dist = cluster.getDistance(nXe + k);
 					// Create a Point with the concentration[i] as the value
 					// and add it to myPoints
 					xolotlViz::Point aPoint;
-					aPoint.value = cluster->getConcentration(dist);
+					aPoint.value = cluster.getConcentration(dist);
 					aPoint.t = time;
 					aPoint.x = (double) nXe + k;
 					myPoints->push_back(aPoint);
@@ -971,11 +967,12 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 				myPoints->push_back(aPoint);
 			}
 			int nXe = networkSize - superClusters.size() + 1;
-			for (int i = 0; i < superClusters.size(); i++) {
+
+            for (auto const& superMapItem : superClusters) {
 				// Get the cluster
-				auto cluster = std::static_pointer_cast<NESuperCluster>(superClusters[i]);
+				auto const& cluster = static_cast<NESuperCluster&>(*(superMapItem.second));
 				// Get the width
-				int width = cluster->getSectionWidth();
+				int width = cluster.getSectionWidth();
 				// Loop on the width
 				for (int k = 0; k < width; k++) {
 					double conc = 0.0;
@@ -1035,16 +1032,18 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 						MPI_COMM_WORLD);
 			}
 			int nXe = networkSize - superClusters.size() + 1;
-			for (int i = 0; i < superClusters.size(); i++) {
+
+            for (auto const& superMapItem : superClusters) {
+
 				// Get the cluster
-				auto cluster = std::static_pointer_cast<NESuperCluster>(superClusters[i]);
+				auto const& cluster = static_cast<NESuperCluster&>(*(superMapItem.second));
 				// Get the width
-				int width = cluster->getSectionWidth();
+				int width = cluster.getSectionWidth();
 				// Loop on the width
 				for (int k = 0; k < width; k++) {
 					// Compute the distance
-					double dist = cluster->getDistance(nXe + k);
-					double conc = cluster->getConcentration(dist);
+					double dist = cluster.getDistance(nXe + k);
+					double conc = cluster.getConcentration(dist);
 					// Send the value of each concentration to the master process
 					MPI_Send(&conc, 1, MPI_DOUBLE, 0, 10, MPI_COMM_WORLD);
 				}
@@ -1269,8 +1268,6 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the network
 	auto network = solverHandler->getNetwork();
-	// Get all the super clusters
-	auto const& superClusters = network->getAll(ReactantType::PSISuper);
 
 	// Get the physical grid
 	auto grid = solverHandler->getXGrid();
@@ -1333,18 +1330,18 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 
 					else {
 						// Look for superClusters !
-						for (int l = 0; l < superClusters.size(); l++) {
+                        for (auto const& superMapItem : network->getAll(ReactantType::PSISuper)) {
 							// Get the super cluster
-							auto superCluster = std::static_pointer_cast<PSISuperCluster>(superClusters[l]);
+							auto const& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
 							// Get its boundaries
-							auto boundaries = superCluster->getBoundaries();
+							auto const& boundaries = superCluster.getBoundaries();
 							// Is it the right one?
 							if (j >= boundaries[0] && j <= boundaries[1]
 									&& i >= boundaries[2]
 									&& i <= boundaries[3]) {
-								conc = superCluster->getConcentration(
-										superCluster->getHeDistance(j),
-										superCluster->getVDistance(i));
+								conc = superCluster.getConcentration(
+										superCluster.getHeDistance(j),
+										superCluster.getVDistance(i));
 								break;
 							}
 						}
@@ -1440,9 +1437,6 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network
 	auto network = solverHandler->getNetwork();
 
-	// Get all the super clusters
-	auto const& superClusters = network->getAll(ReactantType::PSISuper);
-
 	// Get the physical grid
 	auto grid = solverHandler->getXGrid();
 
@@ -1482,10 +1476,11 @@ PetscErrorCode monitorMeanSize1D(TS ts, PetscInt timestep, PetscReal time,
 			}
 
 			// Loop on all the super clusters
-			for (int i = 0; i < superClusters.size(); i++) {
-				auto cluster = std::static_pointer_cast<xolotlCore::PSISuperCluster>(superClusters[i]);
-				concTot += cluster->getTotalConcentration();
-				heliumTot += cluster->getTotalHeliumConcentration();
+            for (auto const& superMapItem : network->getAll(ReactantType::PSISuper)) {
+
+				auto const& cluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
+				concTot += cluster.getTotalConcentration();
+				heliumTot += cluster.getTotalHeliumConcentration();
 			}
 
 			// Compute the mean size of helium at this depth
@@ -1700,18 +1695,17 @@ PetscErrorCode monitorMovingSurface1D(TS ts, PetscInt, PetscReal time,
 		// Initialize the value for the flux
 		double newFlux = 0.0;
 
-		// Get all the interstitial clusters
-		auto const& interstitials = network->getAll(ReactantType::I);
-		// Loop on them
-		for (unsigned int i = 0; i < interstitials.size(); i++) {
+		// Consider each interstitial cluster.
+        for (auto const& iMapItem : network->getAll(ReactantType::I)) {
 			// Get the cluster
-			auto cluster = interstitials.at(i);
+			auto const& cluster = *(iMapItem.second);
+
 			// Get its id and concentration
-			int id = cluster->getId() - 1;
+			int id = cluster.getId() - 1;
 			double conc = gridPointSolution[id];
 			// Get its size and diffusion coefficient
-			int size = cluster->getSize();
-			double coef = cluster->getDiffusionCoefficient();
+			int size = cluster.getSize();
+			double coef = cluster.getDiffusionCoefficient();
 
 			// Factor for finite difference
 			double hxLeft = grid[xi] - grid[xi - 1];
@@ -1898,8 +1892,6 @@ PetscErrorCode monitorBursting1D(TS ts, PetscInt, PetscReal time, Vec solution,
 
 	// Get the network
 	auto network = solverHandler->getNetwork();
-	// Get all the super clusters
-	auto const& superClusters = network->getAll(ReactantType::PSISuper);
 
 	// Get the physical grid
 	auto grid = solverHandler->getXGrid();
@@ -1981,46 +1973,44 @@ PetscErrorCode monitorBursting1D(TS ts, PetscInt, PetscReal time, Vec solution,
 				doingCrater = true;
 			} else {
 				// Pinhole case
-				// Get all the helium clusters
-				auto const& clusters = network->getAll(ReactantType::He);
-				// Loop on them to reset their concentration at this grid point
-				for (int i = 0; i < clusters.size(); i++) {
-					auto cluster = clusters[i];
-					int id = cluster->getId() - 1;
+				// Consider each He to reset their concentration at this grid point
+                for (auto const& heMapItem : network->getAll(ReactantType::He)) {
+					auto const& cluster = *(heMapItem.second);
+
+					int id = cluster.getId() - 1;
 					gridPointSolution[id] = 0.0;
 				}
 
-				// Get all the HeV clusters
-				auto const& heVClusters = network->getAll(ReactantType::HeV);
-				// Loop on them to transfer their concentration to the V cluster of the
+				// Consider each HeV cluster to transfer their concentration to the V cluster of the
 				// same size at this grid point
-				for (int i = 0; i < heVClusters.size(); i++) {
-					auto cluster = heVClusters[i];
+                for (auto const& heVMapItem : network->getAll(ReactantType::HeV)) {
+					auto const& cluster = *(heVMapItem.second);
+
 					// Get the V cluster of the same size
-					auto& comp = cluster->getComposition();
+					auto const & comp = cluster.getComposition();
 					auto vCluster = network->get(ReactantType::V, comp[toCompIdx(Species::V)] );
 					int vId = vCluster->getId() - 1;
-					int id = cluster->getId() - 1;
+					int id = cluster.getId() - 1;
 					gridPointSolution[vId] = gridPointSolution[id];
 					gridPointSolution[id] = 0.0;
 				}
 
 				// Loop on the super clusters to transfer their concentration to the V cluster of the
 				// same size at this grid point
-				for (int i = 0; i < superClusters.size(); i++) {
-					auto cluster = std::static_pointer_cast<PSISuperCluster>(superClusters[i]);
+                for (auto const& superMapItem : network->getAll(ReactantType::PSISuper)) {
+					auto const& cluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
 					// Get the V cluster of the same size
-					double numV = cluster->getNumV();
+					double numV = cluster.getNumV();
 					int truncV = (int) numV;
 					auto vCluster = network->get(ReactantType::V, truncV);
 					int vId = vCluster->getId() - 1;
-					int id = cluster->getId() - 1;
-					double conc = cluster->getTotalConcentration();
+					int id = cluster.getId() - 1;
+					double conc = cluster.getTotalConcentration();
 					gridPointSolution[vId] = conc * numV / (double) truncV;
 					gridPointSolution[id] = 0.0;
-					id = cluster->getHeMomentumId() - 1;
+					id = cluster.getHeMomentumId() - 1;
 					gridPointSolution[id] = 0.0;
-					id = cluster->getVMomentumId() - 1;
+					id = cluster.getVMomentumId() - 1;
 					gridPointSolution[id] = 0.0;
 				}
 			}
@@ -2049,32 +2039,31 @@ PetscErrorCode monitorBursting1D(TS ts, PetscInt, PetscReal time, Vec solution,
 				network->updateConcentrationsFromArray(gridPointSolution);
 
 				// Get all the helium clusters
-				auto const& clusters = network->getAll(ReactantType::He);
-				// Loop on them to reset their concentration at this grid point
-				for (int i = 0; i < clusters.size(); i++) {
-					auto cluster = clusters[i];
-					int id = cluster->getId() - 1;
+				// Consider each He cluster to reset their concentration at this grid point
+                for (auto const& heMapItem : network->getAll(ReactantType::He)) {
+
+					auto const& cluster = *(heMapItem.second);
+					int id = cluster.getId() - 1;
 					gridPointSolution[id] = 0.0;
 				}
 
-				// Get all the HeV clusters
-				auto const& heVClusters = network->getAll(ReactantType::HeV);
-				// Loop on them to reset their concentration at this grid point
-				for (int i = 0; i < heVClusters.size(); i++) {
-					auto cluster = heVClusters[i];
-					auto& comp = cluster->getComposition();
-					int id = cluster->getId() - 1;
+				// Consider each HeV cluster to reset their 
+                // concentration at this grid point
+                for (auto const& heVMapItem : network->getAll(ReactantType::HeV)) {
+                    auto const& cluster = *(heVMapItem.second);
+					auto const& comp = cluster.getComposition();
+					int id = cluster.getId() - 1;
 					gridPointSolution[id] = 0.0;
 				}
 
 				// Loop on the super clusters to reset their concentration at this grid point
-				for (int i = 0; i < superClusters.size(); i++) {
-					auto cluster = std::static_pointer_cast<PSISuperCluster>(superClusters[i]);
-					int id = cluster->getId() - 1;
+                for (auto const& superMapItem : network->getAll(ReactantType::PSISuper)) {
+					auto const& cluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
+					int id = cluster.getId() - 1;
 					gridPointSolution[id] = 0.0;
-					id = cluster->getHeMomentumId() - 1;
+					id = cluster.getHeMomentumId() - 1;
 					gridPointSolution[id] = 0.0;
-					id = cluster->getVMomentumId() - 1;
+					id = cluster.getVMomentumId() - 1;
 					gridPointSolution[id] = 0.0;
 				}
 			}
@@ -2451,33 +2440,30 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 	// Initialize indices1D and weights1D if we want to compute the
 	// retention or the cumulative value and others
 	if (flagMeanSize || flagConc || flagHeRetention) {
-		// Get all the helium clusters
-		auto const& heClusters = network->getAll(ReactantType::He);
-
-		// Get all the helium-vacancy clusters
-		auto const& heVClusters = network->getAll(ReactantType::HeV);
 
 		// Loop on the helium clusters
-		for (unsigned int i = 0; i < heClusters.size(); i++) {
-			auto cluster = heClusters[i];
-			int id = cluster->getId() - 1;
+        for (auto const& heMapItem : network->getAll(ReactantType::He)) {
+			auto const& cluster = *(heMapItem.second);
+
+			int id = cluster.getId() - 1;
 			// Add the Id to the vector
 			indices1D.push_back(id);
 			// Add the number of heliums of this cluster to the weight
-			weights1D.push_back(cluster->getSize());
-			radii1D.push_back(cluster->getReactionRadius());
+			weights1D.push_back(cluster.getSize());
+			radii1D.push_back(cluster.getReactionRadius());
 		}
 
 		// Loop on the helium-vacancy clusters
-		for (unsigned int i = 0; i < heVClusters.size(); i++) {
-			auto cluster = heVClusters[i];
-			int id = cluster->getId() - 1;
+        for (auto const& heVMapItem : network->getAll(ReactantType::HeV)) {
+			auto const& cluster = *(heVMapItem.second);
+
+			int id = cluster.getId() - 1;
 			// Add the Id to the vector
 			indices1D.push_back(id);
 			// Add the number of heliums of this cluster to the weight
-			auto& comp = cluster->getComposition();
+			auto& comp = cluster.getComposition();
 			weights1D.push_back(comp[toCompIdx(Species::He)] );
-			radii1D.push_back(cluster->getReactionRadius());
+			radii1D.push_back(cluster.getReactionRadius());
 		}
 	}
 
@@ -2528,19 +2514,16 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 	// Set the monitor to compute the xenon fluence and the retention
 	// for the retention calculation
 	if (flagXeRetention) {
-
-		// Get all the xenon clusters
-		auto const& xeClusters = network->getAll(ReactantType::Xe);
-
 		// Loop on the xenon clusters
-		for (unsigned int i = 0; i < xeClusters.size(); i++) {
-			auto cluster = xeClusters[i];
-			int id = cluster->getId() - 1;
+        for (auto const& xeMapItem : network->getAll(ReactantType::Xe)) {
+			auto const& cluster = *(xeMapItem.second);
+
+			int id = cluster.getId() - 1;
 			// Add the Id to the vector
 			indices1D.push_back(id);
 			// Add the number of heliums of this cluster to the weight
-			weights1D.push_back(cluster->getSize());
-			radii1D.push_back(cluster->getReactionRadius());
+			weights1D.push_back(cluster.getSize());
+			radii1D.push_back(cluster.getReactionRadius());
 		}
 
 		// Get the last time step written in the HDF5 file

@@ -491,7 +491,7 @@ public:
 	 *
 	 * @return The momentum flux
 	 */
-	double getHeMomentumFlux() {
+	double getHeMomentumFlux() const {
 		return heMomentumFlux;
 	}
 
@@ -500,7 +500,7 @@ public:
 	 *
 	 * @return The momentum flux
 	 */
-	double getVMomentumFlux() {
+	double getVMomentumFlux() const {
 		return vMomentumFlux;
 	}
 
@@ -581,7 +581,7 @@ public:
 	 *
 	 * @return The average number of vacancies
 	 */
-	double getNumV() {
+	double getNumV() const {
 		return numV;
 	}
 
@@ -590,7 +590,7 @@ public:
 	 *
 	 * @return The number of clusters
 	 */
-	double getNTot() {
+	double getNTot() const {
 		return nTot;
 	}
 

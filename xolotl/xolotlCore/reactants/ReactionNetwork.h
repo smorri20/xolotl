@@ -33,12 +33,6 @@ private:
 
 protected:
 
-    /**
-     * Nice name for map of reactants, keyed by their composition.
-     */
-    using ReactantMap = std::unordered_map<IReactant::Composition, std::shared_ptr<IReactant> >;
-
-
 	/**
 	 * A functor useful for identifying a set of reactants by their
 	 * composition from a container, e.g., when removing a collection
@@ -47,7 +41,7 @@ protected:
 	class ReactantMatcher {
 	private:
 		/**
-		 * The canonical composition string representations of the reactants
+		 * The canonical composition representations of the reactants
 		 * we are to find.
 		 */
 		std::set<IReactant::Composition> comps;
@@ -66,7 +60,7 @@ protected:
 		/**
 		 * Determine if the given reactant is in our set.
 		 * @param testReactant The reactant to check.
-		 * @return true iff the reactant's composition's canonical string
+		 * @return true iff the reactant's composition's canonical
 		 * representation is in our set.
 		 */
 		bool operator()(const IReactant* testReactant) const {
@@ -77,11 +71,22 @@ protected:
 		/**
 		 * Determine if the given reactant is in our set.
 		 * @param testReactant The reactant to check.
-		 * @return true iff the reactant's composition's canonical string
-		 * representation is in our set.
+		 * @return true iff the reactant's composition's canonical 
+		 * representation is in our set of doomed reactants.
 		 */
 		bool operator()(const std::shared_ptr<IReactant> testReactant) const {
 			return this->operator()(testReactant.get());
+		}
+
+        /**
+         * Determine if the given reactant is in our set.
+         * @param testMapItem ReactantMap item for reactant to check.
+         * @return true iff the reactant composition's representation
+         * is in our set of doomed reactants.
+         */
+		bool operator()(const ReactantMap::value_type& testMapItem) const {
+            auto const& testReactant = testMapItem.second;
+			return this->operator()(testReactant);
 		}
 	};
 
@@ -153,7 +158,7 @@ protected:
 	/**
 	 * This map stores all of the clusters in the network by type.
 	 */
-	std::unordered_map<ReactantType, ReactantVector> clusterTypeMap;
+	std::unordered_map<ReactantType, ReactantMap> clusterTypeMap;
 
 
 	/**
@@ -317,7 +322,7 @@ public:
 	 * @return The list of all of the reactants in the network or null if the
 	 * type is invalid
 	 */
-    virtual const IReactionNetwork::ReactantVector& getAll(ReactantType type) const override {
+    virtual const ReactantMap& getAll(ReactantType type) const override {
 
         return clusterTypeMap.at(type);
     }
