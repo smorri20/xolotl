@@ -136,10 +136,11 @@ IReactant * NEClusterReactionNetwork::get(ReactantType type,
 	if ((type == ReactantType::Xe || type == ReactantType::V || type == ReactantType::I) && size >= 1) {
         IReactant::Composition composition;
 		composition[toCompIdx(toSpecies(type))] = size;
-		//std::string encodedName = NECluster::encodeCompositionAsName(composition);
-		// Check if the reactant is in the map
-        auto iter = singleSpeciesMap.find(composition);
-        if (iter != singleSpeciesMap.end()) {
+
+		// Check if we know about the reactant.
+        auto const& currReactantMap = clusterTypeMap.at(type);
+        auto iter = currReactantMap.find(composition);
+        if (iter != currReactantMap.end()) {
             retReactant = iter->second;
         }
 	}
@@ -158,8 +159,9 @@ IReactant * NEClusterReactionNetwork::getCompound(ReactantType type,
 	if (type == ReactantType::XeV || type == ReactantType::XeI) {
 
 		// Check if the reactant is in the map
-        auto iter = mixedSpeciesMap.find(comp);
-        if (iter != mixedSpeciesMap.end()) {
+        auto const& currReactantMap = clusterTypeMap.at(type);
+        auto iter = currReactantMap.find(comp);
+        if (iter != currReactantMap.end()) {
             retReactant = iter->second;
         }
 	}
@@ -178,8 +180,9 @@ IReactant * NEClusterReactionNetwork::getSuper(ReactantType type,
 		composition[toCompIdx(Species::Xe)] = size;
 
 		// Check if the reactant is in the map
-        auto iter = superSpeciesMap.find(composition);
-        if (iter != superSpeciesMap.end()) {
+        auto const& currTypeMap = clusterTypeMap.at(type);
+        auto iter = currTypeMap.find(composition);
+        if (iter != currTypeMap.end()) {
             retReactant = iter->second;
 		}
 	}
@@ -189,97 +192,90 @@ IReactant * NEClusterReactionNetwork::getSuper(ReactantType type,
 
 
 void NEClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
-	// Local Declarations
-	int numXe = 0, numV = 0, numI = 0;
-	bool isMixed = false;
 
 	// Only add a complete reactant
-	if (reactant != NULL) {
+	if (reactant) {
 		// Get the composition
 		auto& composition = reactant->getComposition();
 
-		// Get the species sizes
-		numXe = composition[toCompIdx(Species::Xe)] ;
-		numV = composition[toCompIdx(Species::V)] ;
-		numI = composition[toCompIdx(Species::I)] ;
+        // Get the species sizes
+        auto numXe = composition[toCompIdx(Species::Xe)] ;
+        auto numV = composition[toCompIdx(Species::V)] ;
+        auto numI = composition[toCompIdx(Species::I)] ;
 
-		// Determine if the cluster is a compound. If there is more than one
-		// type, then the check below will sum to greater than one and we know
-		// that we have a mixed cluster.
-		isMixed = ((numXe > 0) + (numV > 0) + (numI > 0)) > 1;
-		// Only add the element if we don't already have it
-		// Add the compound or regular reactant.
-		if (isMixed && mixedSpeciesMap.count(composition) == 0) {
-			// Put the compound in its map
-            mixedSpeciesMap.emplace(composition, reactant);
-		} else if (!isMixed && singleSpeciesMap.count(composition) == 0) {
-			/// Put the reactant in its map
-            singleSpeciesMap.emplace(composition, reactant);
-		} else {
-			std::stringstream errStream;
-			errStream << "NEClusterReactionNetwork Message: "
-					<< "Duplicate Reactant (Xe=" << numXe << ",V=" << numV
-					<< ",I=" << numI << ") not added!" << std::endl;
-			throw errStream.str();
-		}
+        // Add element if we don't already know about it.
+        auto& currTypeMap = clusterTypeMap[reactant->getType()];
+        auto iter = currTypeMap.find(composition);
+        if (iter == currTypeMap.end()) {
 
-		// Increment the max cluster size key
-        IReactant::SizeType clusterSize = numXe + numV + numI;
-        if(clusterSize > maxClusterSizeMap[reactant->getType()]) {
-            maxClusterSizeMap[reactant->getType()] = clusterSize;
+            // Set the id for this cluster
+            // (It is networkSize+1 because we haven't added 
+            // it to the network yet.)
+            reactant->setId(size() + 1);
+
+            // Add to our per-type map.
+            currTypeMap.emplace(reactant->getComposition(), reactant);
+
+            // Add the pointer to the list of all clusters
+            allReactants.push_back(reactant.get());
+
+            // Update max cluster size for this type if necessary.
+            // TODO if clusterSize always is same as reactant->getSize,
+            // just use reactant->getSize and avoid extracting
+            // individual species sizes except in the exception case.
+            // (See PSI implementation for an example.)
+            IReactant::SizeType clusterSize = numXe + numV + numI;
+            assert(clusterSize == reactant->getSize());
+            maxClusterSizeMap[reactant->getType()] = std::max(reactant->getSize(), maxClusterSizeMap[reactant->getType()]);
+
+        } else {
+
+            std::stringstream errStream;
+            errStream << "NEClusterReactionNetwork Message: "
+                    << "Duplicate Reactant (Xe=" << numXe << ",V=" << numV
+                    << ",I=" << numI << ") not added!" << std::endl;
+            throw errStream.str();
         }
-
-		// Set the id for this cluster
-        // (It is networkSize+1 because we haven't added it to the network yet.)
-		reactant->setId(size() + 1);
-		// Add to our per-type map.
-        clusterTypeMap.at(reactant->getType()).emplace(reactant->getComposition(), reactant);
-
-		// Add the pointer to the list of all clusters
-		allReactants.push_back(reactant.get());
 	}
 
 	return;
 }
 
 void NEClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
-	// Local Declarations
-	int numXe = 0, numV = 0, numI = 0;
-	bool isMixed = false;
 
 	// Only add a complete reactant
-	if (reactant != NULL) {
+	if (reactant) {
 		// Get the composition
 		auto& composition = reactant->getComposition();
-		// Get the species sizes
-		numXe = composition[toCompIdx(Species::Xe)] ;
-		numV = composition[toCompIdx(Species::V)] ;
-		numI = composition[toCompIdx(Species::I)] ;
-		// Determine if the cluster is a compound. If there is more than one
-		// type, then the check below will sum to greater than one and we know
-		// that we have a mixed cluster.
-		isMixed = ((numXe > 0) + (numV > 0) + (numI > 0)) > 1;
-		// Only add the element if we don't already have it
-		// Add the compound or regular reactant.
-		if (!isMixed && superSpeciesMap.count(composition) == 0) {
-			// Put the compound in its map
-            superSpeciesMap.emplace(composition, reactant);
+
+        // Add the element if we don't already know about it.
+        auto& currTypeMap = clusterTypeMap[reactant->getType()];
+        auto iter = currTypeMap.find(composition);
+        if (iter == currTypeMap.end()) {
+
+            // Set the id for this cluster
+            // (It is networkSize+1 because we haven't added it 
+            // to the network yet.)
+            reactant->setId(size() + 1);
+
+            // Add the pointer to the list of all clusters
+            allReactants.push_back(reactant.get());
+
+            // Add to our per-type map.
+            currTypeMap.emplace(reactant->getComposition(), reactant);
+
 		} else {
+            // Get the species sizes
+            auto numXe = composition[toCompIdx(Species::Xe)] ;
+            auto numV = composition[toCompIdx(Species::V)] ;
+            auto numI = composition[toCompIdx(Species::I)] ;
+
 			std::stringstream errStream;
 			errStream << "NEClusterReactionNetwork Message: "
 					<< "Duplicate Super Reactant (Xe=" << numXe << ",V=" << numV
 					<< ",I=" << numI << ") not added!" << std::endl;
 			throw errStream.str();
 		}
-
-		// Set the id for this cluster
-        // (It is networkSize+1 because we haven't added it to the network yet.)
-		reactant->setId(size() + 1);
-		// Add to our per-type map.
-        clusterTypeMap.at(reactant->getType()).emplace(reactant->getComposition(), reactant);
-
-		// Add the pointer to the list of all clusters
-		allReactants.push_back(reactant.get());
 	}
 
 	return;
@@ -318,20 +314,6 @@ void NEClusterReactionNetwork::removeReactants(
             auto iter = clusters.find(currDoomedReactant->getComposition());
             assert(iter != clusters.end());
             clusters.erase(iter);
-        }
-	}
-
-	// Remove the doomed reactants from the SpeciesMap.
-	// We cannot use std::remove_if and our ReactantMatcher here
-	// because std::remove_if reorders the elements in the underlying
-	// container to move the doomed elements to the end of the container,
-	// but the std::map doesn't support reordering.
-	for (auto reactant : doomedReactants) {
-		if (reactant->isMixed()) {
-			mixedSpeciesMap.erase(reactant->getComposition());
-        }
-		else {
-			singleSpeciesMap.erase(reactant->getComposition());
         }
 	}
 

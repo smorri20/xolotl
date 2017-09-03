@@ -160,23 +160,6 @@ protected:
 	 */
 	std::unordered_map<ReactantType, ReactantMap> clusterTypeMap;
 
-
-	/**
-	 * The map of single-species clusters, indexed by their composition.
-	 */
-    ReactantMap singleSpeciesMap;
-
-	/**
-	 * The map of mixed or compound species clusters, indexed by 
-     * their composition.
-	 */
-    ReactantMap mixedSpeciesMap;
-
-	/**
-	 * The map of super species clusters, indexed by their composition.
-	 */
-    ReactantMap superSpeciesMap;
-
     /**
      * Type of super cluster known by our network.
      */
