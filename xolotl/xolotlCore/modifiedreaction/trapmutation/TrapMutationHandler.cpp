@@ -31,14 +31,21 @@ void TrapMutationHandler::initialize(IReactionNetwork *network,
 		if (ny == 0) ny = 1;
 
 		// Loop on the grid points in the Z direction
+        // TODO even with the reserve ops, this might involve lots of
+        // separate memory allocations.
+        tmBubbles.reserve(nz);
 		for (int k = 0; k < nz; k++) {
 			// Create the temporary 2D vector
-			std::vector<std::vector<std::vector<std::reference_wrapper<IReactant> > > > temp2DVector;
+            ReactantRefVector2D temp2DVector;
+
 			// Loop on the grid points in the Y direction
+            temp2DVector.reserve(ny);
 			for (int j = 0; j < ny; j++) {
 				// Create the temporary 1D vector
-				std::vector<std::vector<std::reference_wrapper<IReactant> > > temp1DVector;
+                ReactantRefVector1D temp1DVector;
+
 				// Loop on the grid points in the depth direction
+                temp1DVector.reserve(grid.size());
 				for (int i = 0; i < grid.size(); i++) {
 					// Indicate no bubbles at this grid point.
 					temp1DVector.emplace_back();
@@ -115,9 +122,9 @@ void TrapMutationHandler::initializeIndex1D(int surfacePos,
 	// No GB trap mutation handler in 1D for now
 
 	// Create the temporary 2D vector
-	std::vector<std::vector<std::vector<std::reference_wrapper<IReactant> > > > temp2DVector;
+    ReactantRefVector2D temp2DVector;
 	// Create the temporary 1D vector
-	std::vector<std::vector<std::reference_wrapper<IReactant> > > temp1DVector;
+    ReactantRefVector1D temp1DVector;
 
 	// Loop on the grid points in the depth direction
 	for (int i = 0; i < grid.size(); i++) {
@@ -179,11 +186,15 @@ void TrapMutationHandler::initializeIndex2D(std::vector<int> surfacePos,
 	auto sigma3SizeVec = sigma3Handler->getSizeVector();
 
 	// Create the temporary 2D vector
-	std::vector<std::vector<std::vector<std::reference_wrapper<IReactant> > > > temp2DVector;
+    ReactantRefVector2D temp2DVector;
+
 	// Loop on the grid points in the Y direction
+    temp2DVector.reserve(ny);
 	for (int j = 0; j < ny; j++) {
+
 		// Create the temporary 1D vector
-		std::vector<std::vector<std::reference_wrapper<IReactant> > > temp1DVector;
+        ReactantRefVector1D temp1DVector;
+
 		// Loop on the grid points in the depth direction
 		for (int i = 0; i < grid.size(); i++) {
 			// Create the list (vector) of indices at this grid point
@@ -286,13 +297,18 @@ void TrapMutationHandler::initializeIndex3D(std::vector<std::vector<int> > surfa
 	auto sigma3SizeVec = sigma3Handler->getSizeVector();
 
 	// Loop on the grid points in the Z direction
+    tmBubbles.reserve(nz);
 	for (int k = 0; k < nz; k++) {
+
 		// Create the temporary 2D vector
-		std::vector<std::vector<std::vector<std::reference_wrapper<IReactant> > > > temp2DVector;
+        ReactantRefVector2D temp2DVector;
+
 		// Loop on the grid points in the Y direction
+        temp2DVector.reserve(ny);
 		for (int j = 0; j < ny; j++) {
 			// Create the temporary 1D vector
-			std::vector<std::vector<std::reference_wrapper<IReactant> > > temp1DVector;
+            ReactantRefVector1D temp1DVector;
+
 			// Loop on the grid points in the depth direction
 			for (int i = 0; i < grid.size(); i++) {
 				// Create the list (vector) of indices at this grid point
