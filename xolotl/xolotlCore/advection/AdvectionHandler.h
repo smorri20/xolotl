@@ -47,28 +47,28 @@ public:
 	 *
 	 * @param pos The location of the sink
 	 */
-	void setLocation(double pos) {location = pos;}
+	void setLocation(double pos) override {location = pos;}
 
 	/**
 	 * Get the total number of advecting clusters in the network.
 	 *
 	 * @return The number of advecting clusters
 	 */
-	int getNumberOfAdvecting() {return indexVector.size();}
+	int getNumberOfAdvecting() const override {return indexVector.size();}
 
 	/**
 	 * Get the vector of index of advecting clusters in the network.
 	 *
 	 * @return The vector of advecting clusters
 	 */
-	std::vector<int> getIndexVector() {return indexVector;}
+	const std::vector<int>& getIndexVector() const override {return indexVector;}
 
 	/**
 	 * Get the location of the sink.
 	 *
 	 * @return The location
 	 */
-	double getLocation() {return location;}
+	double getLocation() const override {return location;}
 
 };
 //end class AdvectionHandler

@@ -28,7 +28,7 @@ void Diffusion2DHandler::initializeDiffusionGrid(std::vector<IAdvectionHandler *
 	}
 
 	// Initialize the grid position
-	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
+	std::array<double, 3> gridPosition { 0.0, 0.0, 0.0 };
 
 	// Loop on the advection handlers
 	for (int l = 0; l < advectionHandlers.size(); l++) {

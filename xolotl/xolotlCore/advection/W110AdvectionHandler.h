@@ -29,7 +29,7 @@ public:
 	 * @param ofill The pointer to the array that will contain the value 1 at the indices
 	 * of the advecting clusters
 	 */
-	void initialize(IReactionNetwork *network, int *ofill) {
+	void initialize(IReactionNetwork *network, int *ofill) override {
 		// Get all the reactants and their number
 		auto& reactants = network->getAll();
 		int networkSize = reactants.size();

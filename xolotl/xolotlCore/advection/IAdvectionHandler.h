@@ -2,9 +2,11 @@
 #define IADVECTIONHANDLER_H
 
 // Includes
+#include <array>
+#include <memory>
+#include "Point3D.h"
 #include <PSICluster.h>
 #include <IReactionNetwork.h>
-#include <memory>
 
 namespace xolotlCore {
 
@@ -81,9 +83,9 @@ public:
 	 * @param iz The position on the z grid
 	 */
 	virtual void computeAdvection(IReactionNetwork *network,
-			std::vector<double> &pos, double **concVector, double *updatedConcOffset,
+			const Point3D& pos, double **concVector, double *updatedConcOffset,
 			double hxLeft, double hxRight, int ix,
-			double hy = 0.0, int iy = 0, double hz = 0.0, int iz = 0) = 0;
+			double hy = 0.0, int iy = 0, double hz = 0.0, int iz = 0) const = 0;
 
 	/**
 	 * Compute the partial derivatives due to the advection of all the helium clusters given
@@ -106,9 +108,9 @@ public:
 	 * @param iz The position on the z grid
 	 */
 	virtual void computePartialsForAdvection(IReactionNetwork *network,
-			double *val, int *indices, std::vector<double> &pos,
+			double *val, int *indices, const Point3D& pos,
 			double hxLeft, double hxRight, int ix,
-			double hy = 0.0, int iy = 0, double hz = 0.0, int iz = 0) = 0;
+			double hy = 0.0, int iy = 0, double hz = 0.0, int iz = 0) const = 0;
 
 	/**
 	 * Compute the indices that will determine where the partial derivatives will
@@ -118,7 +120,7 @@ public:
 	 * @param pos The position on the grid
 	 * @return The indices for the position in the Jacobian
 	 */
-	virtual std::vector<int> getStencilForAdvection(std::vector<double> &pos) = 0;
+	virtual std::array<int, 3> getStencilForAdvection(const Point3D& pos) const = 0;
 
 	/**
 	 * Check whether the grid point is located on the sink surface or not.
@@ -126,28 +128,28 @@ public:
 	 * @param pos The position on the grid
 	 * @return True if the point is on the sink
 	 */
-	virtual bool isPointOnSink(std::vector<double> &pos) = 0;
+    virtual bool isPointOnSink(const Point3D& pos) const = 0;
 
 	/**
 	 * Get the total number of advecting clusters in the network.
 	 *
 	 * @return The number of advecting clusters
 	 */
-	virtual int getNumberOfAdvecting() = 0;
+	virtual int getNumberOfAdvecting() const = 0;
 
 	/**
 	 * Get the vector of index of advecting clusters in the network.
 	 *
 	 * @return The vector of advecting clusters
 	 */
-	virtual std::vector<int> getIndexVector() = 0;
+	virtual const std::vector<int>& getIndexVector() const = 0;
 
 	/**
 	 * Get the location of the sink.
 	 *
 	 * @return The location
 	 */
-	virtual double getLocation() = 0;
+	virtual double getLocation() const = 0;
 
 };
 //end class IAdvectionHandler

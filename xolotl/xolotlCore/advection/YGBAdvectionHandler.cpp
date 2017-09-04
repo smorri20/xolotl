@@ -79,9 +79,9 @@ void YGBAdvectionHandler::initialize(IReactionNetwork *network,
 }
 
 void YGBAdvectionHandler::computeAdvection(IReactionNetwork *network,
-		std::vector<double> &pos, double **concVector,
+		const Point3D& pos, double **concVector,
 		double *updatedConcOffset, double hxLeft, double hxRight, int ix,
-		double hy, int iy, double hz, int iz) {
+		double hy, int iy, double hz, int iz) const {
 	// Get all the reactant
 	auto& reactants = network->getAll();
 	// Get the number of advecting cluster
@@ -134,8 +134,8 @@ void YGBAdvectionHandler::computeAdvection(IReactionNetwork *network,
 
 void YGBAdvectionHandler::computePartialsForAdvection(
 		IReactionNetwork *network, double *val, int *indices,
-		std::vector<double> &pos, double hxLeft, double hxRight, int ix,
-		double hy, int iy, double hz, int iz) {
+		const Point3D& pos, double hxLeft, double hxRight, int ix,
+		double hy, int iy, double hz, int iz) const {
 	// Get all the reactant
 	auto& reactants = network->getAll();
 	// Get the number of advecting cluster
@@ -183,19 +183,14 @@ void YGBAdvectionHandler::computePartialsForAdvection(
 	return;
 }
 
-std::vector<int> YGBAdvectionHandler::getStencilForAdvection(
-		std::vector<double> &pos) {
+std::array<int, 3> YGBAdvectionHandler::getStencilForAdvection(const Point3D& pos) const {
+
 	// The second index is positive by convention if we are on the sink
 	if (isPointOnSink(pos))
 		return {0, 1, 0};
 	// The second index is positive if pos[1] > location
 	// negative if pos[1] < location
 	return {0, (pos[1] > location) - (pos[1] < location), 0};
-}
-
-bool YGBAdvectionHandler::isPointOnSink(std::vector<double> &pos) {
-	// Return true if pos[1] is equal to location
-	return fabs(location - pos[1]) < 0.001;
 }
 
 }/* end namespace xolotlCore */

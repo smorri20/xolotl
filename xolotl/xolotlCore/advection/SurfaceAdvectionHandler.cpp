@@ -32,7 +32,7 @@ void SurfaceAdvectionHandler::initializeAdvectionGrid(std::vector<IAdvectionHand
 	}
 
 	// Initialize the grid position
-	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
+    Point3D gridPosition { 0.0, 0.0, 0.0 };
 
 	// Loop on the advection handlers
 	for (int l = 0; l < advectionHandlers.size(); l++) {
@@ -76,10 +76,10 @@ void SurfaceAdvectionHandler::initializeAdvectionGrid(std::vector<IAdvectionHand
 }
 
 void SurfaceAdvectionHandler::computeAdvection(
-		IReactionNetwork *network, std::vector<double> &pos,
+		IReactionNetwork *network, const Point3D& pos,
 		double **concVector, double *updatedConcOffset,
 		double hxLeft, double hxRight, int ix,
-		double hy, int iy, double hz, int iz) {
+		double hy, int iy, double hz, int iz) const {
 	// Get all the reactant
 	auto& reactants = network->getAll();
 	// Get the number of advecting cluster
@@ -111,9 +111,9 @@ void SurfaceAdvectionHandler::computeAdvection(
 
 void SurfaceAdvectionHandler::computePartialsForAdvection(
 		IReactionNetwork *network, double *val,
-		int *indices, std::vector<double> &pos,
+		int *indices, const Point3D& pos,
 		double hxLeft, double hxRight, int ix,
-		double hy, int iy, double hz, int iz) {
+		double hy, int iy, double hz, int iz) const {
 	// Get all the reactant
 	auto& reactants = network->getAll();
 	// Get the number of advecting cluster
@@ -146,17 +146,6 @@ void SurfaceAdvectionHandler::computePartialsForAdvection(
 	}
 
 	return;
-}
-
-std::vector<int> SurfaceAdvectionHandler::getStencilForAdvection(
-		std::vector<double> &pos) {
-	// Always return (1, 0, 0)
-	return {1, 0, 0};
-}
-
-bool SurfaceAdvectionHandler::isPointOnSink(std::vector<double> &pos) {
-	// Always return false
-	return false;
 }
 
 }/* end namespace xolotlCore */

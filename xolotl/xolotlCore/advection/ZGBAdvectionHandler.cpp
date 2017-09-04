@@ -79,9 +79,9 @@ void ZGBAdvectionHandler::initialize(IReactionNetwork *network,
 }
 
 void ZGBAdvectionHandler::computeAdvection(IReactionNetwork *network,
-		std::vector<double> &pos, double **concVector,
+		const Point3D& pos, double **concVector,
 		double *updatedConcOffset, double hxLeft, double hxRight, int ix,
-		double hy, int iy, double hz, int iz) {
+		double hy, int iy, double hz, int iz) const {
 	// Get all the reactant
 	auto& reactants = network->getAll();
 	// Get the number of advecting cluster
@@ -134,8 +134,8 @@ void ZGBAdvectionHandler::computeAdvection(IReactionNetwork *network,
 
 void ZGBAdvectionHandler::computePartialsForAdvection(
 		IReactionNetwork *network, double *val, int *indices,
-		std::vector<double> &pos, double hxLeft, double hxRight, int ix,
-		double hy, int iy, double hz, int iz) {
+		const Point3D& pos, double hxLeft, double hxRight, int ix,
+		double hy, int iy, double hz, int iz) const {
 	// Get all the reactant
 	auto& reactants = network->getAll();
 	// Get the number of advecting cluster
@@ -183,19 +183,14 @@ void ZGBAdvectionHandler::computePartialsForAdvection(
 	return;
 }
 
-std::vector<int> ZGBAdvectionHandler::getStencilForAdvection(
-		std::vector<double> &pos) {
+std::array<int, 3> ZGBAdvectionHandler::getStencilForAdvection(const Point3D& pos) const {
+
 	// The third index is positive by convention if we are on the sink
 	if (isPointOnSink(pos))
 		return {0, 0, 1};
 	// The third index is positive if pos[2] > location
 	// negative if pos[2] < location
 	return {0, 0, (pos[2] > location) - (pos[2] < location)};
-}
-
-bool ZGBAdvectionHandler::isPointOnSink(std::vector<double> &pos) {
-	// Return true if pos[2] is equal to location
-	return fabs(location - pos[2]) < 0.001;
 }
 
 }/* end namespace xolotlCore */

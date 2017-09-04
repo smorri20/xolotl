@@ -193,7 +193,7 @@ void PetscSolver0DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	const int dof = network->getDOF();
 
 	// Set the grid position
-	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
+    xolotlCore::Point3D gridPosition { 0.0, 0.0, 0.0 };
 
 	// Get the old and new array offsets
 	concOffset = concs[0];
@@ -273,7 +273,7 @@ void PetscSolver0DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
 	PetscInt reactionSize[dof];
 
 	// Set the grid position
-	std::vector<double> gridPosition = { 0.0, 0.0, 0.0 };
+    xolotlCore::Point3D gridPosition { 0.0, 0.0, 0.0 };
 
 	// Get the temperature from the temperature handler
 	auto temperature = temperatureHandler->getTemperature(gridPosition, ftime);
