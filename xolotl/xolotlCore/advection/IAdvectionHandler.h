@@ -142,7 +142,7 @@ public:
 	 *
 	 * @return The vector of advecting clusters
 	 */
-	virtual const std::vector<int>& getIndexVector() const = 0;
+    virtual const IReactant::ConstRefVector& getAdvectingClusters() = 0;
 
 	/**
 	 * Get the location of the sink.

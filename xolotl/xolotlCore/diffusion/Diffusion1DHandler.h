@@ -37,7 +37,7 @@ public:
 	 */
 	void initializeDiffusionGrid(std::vector<IAdvectionHandler *> advectionHandlers,
 			std::vector<double> grid,
-			int ny = 0, double hy = 0.0, int nz = 0, double hz = 0.0);
+			int ny = 0, double hy = 0.0, int nz = 0, double hz = 0.0) override;
 
 	/**
 	 * Compute the flux due to the diffusion for all the cluster that are diffusing,
@@ -65,7 +65,7 @@ public:
 	void computeDiffusion(IReactionNetwork *network,
 			double **concVector, double *updatedConcOffset,
 			double hxLeft, double hxRight, int ix,
-			double sy = 0.0, int iy = 0, double sz = 0.0, int iz = 0);
+			double sy = 0.0, int iy = 0, double sz = 0.0, int iz = 0) const override;
 
 	/**
 	 * Compute the partials due to the diffusion of all the diffusing clusters given
@@ -100,7 +100,7 @@ public:
 	 */
 	void computePartialsForDiffusion(IReactionNetwork *network,
 			double *val, int *indices, double hxLeft, double hxRight, int ix,
-			double sy = 0.0, int iy = 0, double sz = 0.0, int iz = 0);
+			double sy = 0.0, int iy = 0, double sz = 0.0, int iz = 0) const override;
 
 };
 //end class Diffusion1DHandler

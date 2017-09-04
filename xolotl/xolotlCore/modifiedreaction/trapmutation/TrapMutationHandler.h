@@ -60,8 +60,7 @@ protected:
 	 * is that this one is used for the actual computation whereas the other one is
 	 * defined by the user. tmBubbles is created with the depthVec information.
 	 */
-    using ReactantRefVector = std::vector<std::reference_wrapper<IReactant> >;
-    using ReactantRefVector1D = std::vector<ReactantRefVector>;
+    using ReactantRefVector1D = std::vector<IReactant::RefVector>;
     using ReactantRefVector2D = std::vector<ReactantRefVector1D>;
     using ReactantRefVector3D = std::vector<ReactantRefVector2D>;
     ReactantRefVector3D tmBubbles;

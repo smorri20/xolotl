@@ -449,12 +449,12 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 		surfacePlotXY3D->getDataProvider()->setPoints(myPoints);
 
 		// Get the iCluster cluster to have access to its name
-		auto& reactants = network->getAll();
-		auto cluster = reactants.at(iCluster);
+		auto const& reactants = network->getAll();
+		IReactant const& cluster = reactants.at(iCluster);
 
 		// Change the title of the plot and the name of the data
 		std::stringstream title;
-		title << cluster->getName();
+		title << cluster.getName();
 		surfacePlotXY3D->getDataProvider()->setDataName(title.str());
 		title << " concentration";
 		surfacePlotXY3D->plotLabelProvider->titleLabel = title.str();
@@ -474,7 +474,7 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 
 		// Render and save in file
 		std::stringstream fileName;
-		fileName << cluster->getName() << "_surfaceXY_TS" << timestep << ".pnm";
+		fileName << cluster.getName() << "_surfaceXY_TS" << timestep << ".pnm";
 		surfacePlotXY3D->write(fileName.str());
 	}
 
@@ -595,12 +595,12 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 		surfacePlotXZ3D->getDataProvider()->setPoints(myPoints);
 
 		// Get the iCluster cluster to have access to its name
-		auto& reactants = network->getAll();
-		auto cluster = reactants.at(iCluster);
+		auto const& reactants = network->getAll();
+		IReactant const& cluster = reactants.at(iCluster);
 
 		// Change the title of the plot and the name of the data
 		std::stringstream title;
-		title << cluster->getName();
+		title << cluster.getName();
 		surfacePlotXZ3D->getDataProvider()->setDataName(title.str());
 		title << " concentration";
 		surfacePlotXZ3D->plotLabelProvider->titleLabel = title.str();
@@ -620,7 +620,7 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 
 		// Render and save in file
 		std::stringstream fileName;
-		fileName << cluster->getName() << "_surfaceXZ_TS" << timestep << ".pnm";
+		fileName << cluster.getName() << "_surfaceXZ_TS" << timestep << ".pnm";
 		surfacePlotXZ3D->write(fileName.str());
 	}
 

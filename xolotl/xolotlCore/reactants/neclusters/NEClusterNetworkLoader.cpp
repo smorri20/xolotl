@@ -303,16 +303,18 @@ void NEClusterNetworkLoader::applyGrouping(
 	// Initialize variables for the loop
 	NESuperCluster * newCluster;
 	int nXe = 0;
-	// Loop on all the reactants to update the pairs vector with super clusters
-	auto& reactants = network->getAll();
-	for (int i = 0; i < reactants.size(); i++) {
-		// Get the cluster
-		cluster = (NECluster *) reactants.at(i);
+
+    // Tell each reactant to update the pairs vector with super clusters
+    for (IReactant& currReactant : network->getAll()) {
+
+        auto& cluster = static_cast<NECluster&>(currReactant);
+
 		// Get their production and dissociation vectors
-		auto react = cluster->reactingPairs;
-		auto combi = cluster->combiningReactants;
-		auto disso = cluster->dissociatingPairs;
-		auto emi = cluster->emissionPairs;
+        // TODO can these be updated in place?
+		auto react = cluster.reactingPairs;
+		auto combi = cluster.combiningReactants;
+		auto disso = cluster.dissociatingPairs;
+		auto emi = cluster.emissionPairs;
 
 		// Loop on its reacting pairs
 		for (int l = 0; l < react.size(); l++) {
@@ -418,10 +420,10 @@ void NEClusterNetworkLoader::applyGrouping(
 		}
 
 		// Set their production and dissociation vectors
-		cluster->reactingPairs = react;
-		cluster->combiningReactants = combi;
-		cluster->dissociatingPairs = disso;
-		cluster->emissionPairs = emi;
+		cluster.reactingPairs = react;
+		cluster.combiningReactants = combi;
+		cluster.dissociatingPairs = disso;
+		cluster.emissionPairs = emi;
 	}
 
 	// Set the reaction network for each super reactant

@@ -71,6 +71,18 @@ protected:
 		/**
 		 * Determine if the given reactant is in our set.
 		 * @param testReactant The reactant to check.
+		 * @return true iff the reactant's composition's canonical
+		 * representation is in our set.
+		 */
+		bool operator()(const IReactant& testReactant) const {
+			auto iter = comps.find(testReactant.getComposition());
+			return (iter != comps.end());
+		}
+
+
+		/**
+		 * Determine if the given reactant is in our set.
+		 * @param testReactant The reactant to check.
 		 * @return true iff the reactant's composition's canonical 
 		 * representation is in our set of doomed reactants.
 		 */
@@ -95,11 +107,6 @@ protected:
 	 * this class.
 	 */
 	std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry;
-
-	/**
-	 * Counter for the number of times the network concentration is updated.
-	 */
-	std::shared_ptr<xolotlPerf::IEventCounter> concUpdateCounter;
 
     /**
      * All known ProductionReactions in the network, keyed by a
@@ -152,7 +159,7 @@ protected:
 	/**
      * All reactants known to the network.
 	 */
-    std::vector<IReactant*> allReactants;
+    IReactant::RefVector allReactants;
 
 
 	/**
@@ -281,7 +288,9 @@ public:
 	 *
 	 * @return The temperature
 	 */
-	virtual double getTemperature() const;
+	virtual double getTemperature() const override {
+        return temperature;
+    }
 
 
 	/**
@@ -291,7 +300,7 @@ public:
 	 *
 	 * @return The list of all of the reactants in the network
 	 */
-    virtual const std::vector<IReactant*> & getAll() const override {
+    virtual const IReactant::RefVector& getAll() const override {
 
         return allReactants;
     }

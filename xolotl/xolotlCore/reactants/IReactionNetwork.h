@@ -85,7 +85,7 @@ public:
 	 *
 	 * @return The list of all of the reactants in the network
 	 */
-    virtual const std::vector<IReactant*> & getAll() const = 0;
+    virtual const IReactant::RefVector& getAll() const = 0;
 
 	/**
 	 * This operation returns all reactants in the network with the given type.

@@ -57,6 +57,13 @@ public:
     };
 
 
+    /**
+     * Nice name for vector of IReactant references.
+     */
+    using RefVector = std::vector<std::reference_wrapper<IReactant> >;
+    using ConstRefVector = std::vector<std::reference_wrapper<const IReactant> >;
+
+
 
 	/**
 	 * The destructor

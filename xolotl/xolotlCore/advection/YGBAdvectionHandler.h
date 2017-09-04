@@ -94,7 +94,6 @@ public:
         return fabs(location - pos[1]) < 0.001;
     }
 
-
 };
 //end class YGBAdvectionHandler
 

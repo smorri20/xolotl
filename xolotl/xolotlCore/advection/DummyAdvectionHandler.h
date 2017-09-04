@@ -32,7 +32,7 @@ public:
 	 */
 	void initialize(IReactionNetwork *network, int *ofill) {
 		// Clear the index and sink strength vectors
-		indexVector.clear();
+		advectingClusters.clear();
 		sinkStrengthVector.clear();
 
 		// Return now to leave them empty

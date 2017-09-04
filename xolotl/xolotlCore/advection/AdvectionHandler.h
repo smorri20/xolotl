@@ -18,8 +18,8 @@ protected:
 	//! The location of the sink
 	double location;
 
-	//! The vector containing the indices of the advecting clusters
-	std::vector<int> indexVector;
+	//! The collection of advecting clusters.
+    IReactant::ConstRefVector advectingClusters;
 
 	//! The vector containing the value of the sink strength (called A) of the advecting clusters
 	std::vector<double> sinkStrengthVector;
@@ -40,7 +40,7 @@ public:
 	 *
 	 * @param dim The number of dimensions of the problem
 	 */
-	void setDimension(int dim) {dimension = dim;}
+	void setDimension(int dim) override {dimension = dim;}
 
 	/**
 	 * Set the location of the sink.
@@ -54,14 +54,14 @@ public:
 	 *
 	 * @return The number of advecting clusters
 	 */
-	int getNumberOfAdvecting() const override {return indexVector.size();}
+	int getNumberOfAdvecting() const override {return advectingClusters.size();}
 
 	/**
 	 * Get the vector of index of advecting clusters in the network.
 	 *
 	 * @return The vector of advecting clusters
 	 */
-	const std::vector<int>& getIndexVector() const override {return indexVector;}
+	const IReactant::ConstRefVector& getAdvectingClusters() override {return advectingClusters;}
 
 	/**
 	 * Get the location of the sink.

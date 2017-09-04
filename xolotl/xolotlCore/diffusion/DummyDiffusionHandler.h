@@ -31,9 +31,9 @@ public:
 	 * @param ofill The pointer to the array that will contain the value 1 at the indices
 	 * of the diffusing clusters
 	 */
-	void initializeOFill(IReactionNetwork *network, int *ofill) {
+	void initializeOFill(IReactionNetwork *network, int *ofill) override {
 		// Clear the index vector
-		indexVector.clear();
+		diffusingClusters.clear();
 
 		// And don't do anything else
 		return;
@@ -52,7 +52,7 @@ public:
 	 */
 	void initializeDiffusionGrid(std::vector<IAdvectionHandler *> advectionHandlers,
 			std::vector<double> grid,
-			int ny = 0, double hy = 0.0, int nz = 0, double hz = 0.0) {
+			int ny = 0, double hy = 0.0, int nz = 0, double hz = 0.0) override {
 		// Don't do anything
 		return;
 	}
@@ -80,7 +80,7 @@ public:
 	void computeDiffusion(IReactionNetwork *network,
 			double **concVector, double *updatedConcOffset,
 			double hxLeft, double hxRight, int ix,
-			double sy = 0.0, int iy = 0, double sz = 0.0, int iz = 0) {return;}
+			double sy = 0.0, int iy = 0, double sz = 0.0, int iz = 0) const override {return;}
 
 	/**
 	 * Compute the partials due to the diffusion of all the diffusing clusters given
@@ -104,7 +104,7 @@ public:
 	 */
 	void computePartialsForDiffusion(IReactionNetwork *network,
 			double *val, int *indices, double hxLeft, double hxRight, int ix,
-			double sy = 0.0, int iy = 0, double sz = 0.0, int iz = 0) {return;}
+			double sy = 0.0, int iy = 0, double sz = 0.0, int iz = 0) const override {return;}
 
 };
 //end class DummyDiffusionHandler

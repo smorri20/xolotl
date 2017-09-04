@@ -16,10 +16,6 @@ ReactionNetwork::ReactionNetwork(
         temperature(0.0),
         dissociationsEnabled(true) {
 
-	// Counter for the number of times the network concentration is updated.
-	concUpdateCounter = handlerRegistry->getEventCounter("net_conc_updates");
-	// Setup the vector to hold all of the reactants
-
     // Ensure our per-type cluster map can store Reactants of the types
     // we support.
     for (auto const& currType : knownReactantTypes) {
@@ -55,25 +51,22 @@ double ReactionNetwork::calculateReactionRateConstant(const ProductionReaction& 
 void ReactionNetwork::fillConcentrationsArray(double * concentrations) {
 
 	// Fill the array
-    for(auto& currReactant : getAll()) {
-		auto id = currReactant->getId() - 1;
-		concentrations[id] = currReactant->getConcentration();
-	}
+    std::for_each(allReactants.begin(), allReactants.end(),
+        [&concentrations](const IReactant& currReactant) {
+            auto id = currReactant.getId() - 1;
+            concentrations[id] = currReactant.getConcentration();
+        });
 
 	return;
 }
 
 void ReactionNetwork::updateConcentrationsFromArray(double * concentrations) {
-	// Local Declarations
-	int id = -1;
 
-	// Set the concentrations
-	concUpdateCounter->increment();	// increment the update concentration counter
-	for (auto iter = allReactants.begin(); iter != allReactants.end();
-			++iter) {
-		id = (*iter)->getId() - 1;
-		(*iter)->setConcentration(concentrations[id]);
-	}
+    std::for_each(allReactants.begin(), allReactants.end(),
+        [&concentrations](IReactant& currReactant) {
+            auto id = currReactant.getId() - 1;
+            currReactant.setConcentration(concentrations[id]);
+        });
 
 	return;
 }
@@ -83,19 +76,16 @@ void ReactionNetwork::setTemperature(double temp) {
 	temperature = temp;
 
 	// Update the temperature for all of the clusters
-	for (int i = 0; i < size(); i++) {
-		// This part will set the temperature in each reactant
-		// and recompute the diffusion coefficient
-		allReactants.at(i)->setTemperature(temp);
-	}
+    std::for_each(allReactants.begin(), allReactants.end(),
+        [&temp](IReactant& currReactant) {
+
+            // This part will set the temperature in each reactant
+            // and recompute the diffusion coefficient
+            currReactant.setTemperature(temp);
+        });
 
 	return;
 }
-
-double ReactionNetwork::getTemperature() const {
-	return temperature;
-}
-
 
 std::shared_ptr<ProductionReaction> ReactionNetwork::addProductionReaction(
 		std::shared_ptr<ProductionReaction> reaction) {
@@ -151,7 +141,7 @@ void ReactionNetwork::dumpTo(std::ostream& os) const {
     // Dump flat view of reactants.
     os << size() << " reactants:\n";
     for (auto const& currReactant : allReactants) {
-        os << *currReactant << '\n';
+        os << currReactant << '\n';
     }
 
     // Dump reactants of each type.
