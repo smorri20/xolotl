@@ -94,7 +94,7 @@ protected:
 	 * @return The new cluster
 	 */
 	std::shared_ptr<PSICluster> createPSICluster(int numHe, int numV, int numI,
-                                IReactionNetwork& network);
+                                IReactionNetwork& network) const;
 
 	/**
 	 * This operation computes the formation energy associated to the
@@ -140,7 +140,7 @@ public:
 	 *
 	 * @return network The reaction network
 	 */
-	virtual std::shared_ptr<IReactionNetwork> load(const IOptions& options) override;
+	virtual std::unique_ptr<IReactionNetwork> load(const IOptions& options) const override;
 
 	/**
 	 * This operation will generate the reaction network from options.
@@ -149,14 +149,14 @@ public:
 	 * @param options The command line options
 	 * @return network The reaction network
 	 */
-	virtual std::shared_ptr<IReactionNetwork> generate(const IOptions &options) override;
+	virtual std::unique_ptr<IReactionNetwork> generate(const IOptions &options) override;
 
 	/**
 	 * This operation will apply a sectional grouping method to the network.
 	 *
 	 * @param The network to be modified.
 	 */
-    void applySectionalGrouping(std::shared_ptr<PSIClusterReactionNetwork> network);
+    void applySectionalGrouping(PSIClusterReactionNetwork& network) const;
 
 	/**
 	 * This operation will set the helium size at which the grouping scheme starts.

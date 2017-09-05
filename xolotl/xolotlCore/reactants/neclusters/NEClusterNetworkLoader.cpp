@@ -24,7 +24,7 @@ using namespace xolotlCore;
 
 std::shared_ptr<NECluster> NEClusterNetworkLoader::createNECluster(int numXe,
 		int numV, int numI,
-        IReactionNetwork& network) {
+        IReactionNetwork& network) const {
 
 	// Local Declarations
     NECluster* cluster = nullptr;
@@ -66,7 +66,7 @@ NEClusterNetworkLoader::NEClusterNetworkLoader(
 	return;
 }
 
-std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::load(const IOptions& options) {
+std::unique_ptr<IReactionNetwork> NEClusterNetworkLoader::load(const IOptions& options) const {
 	// Get the dataset from the HDF5 files
 	auto networkVector = xolotlCore::HDF5Utils::readNetwork(fileName);
 
@@ -77,8 +77,9 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::load(const IOptions& o
 	std::vector<std::shared_ptr<Reactant> > reactants;
 
 	// Prepare the network
-	std::shared_ptr<NEClusterReactionNetwork> network = std::make_shared<
-			NEClusterReactionNetwork>(handlerRegistry);
+    // Once we have C++14 support, use std::make_unique.
+	std::unique_ptr<NEClusterReactionNetwork> network (
+			new NEClusterReactionNetwork(handlerRegistry));
 
 	// Loop on the networkVector
 	for (auto lineIt = networkVector.begin(); lineIt != networkVector.end();
@@ -130,7 +131,7 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::load(const IOptions& o
 	// Check if we want dummy reactions
 	if (!dummyReactions) {
 		// Apply grouping
-		applyGrouping(network);
+		applyGrouping(*network);
 	}
 
     // Dump the network we've created, if desired.
@@ -148,15 +149,16 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::load(const IOptions& o
 	return network;
 }
 
-std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::generate(
+std::unique_ptr<IReactionNetwork> NEClusterNetworkLoader::generate(
 		const IOptions &options) {
 	// Initial declarations
 	int maxXe = options.getMaxImpurity();
 	int numXe = 0;
 	double formationEnergy = 0.0, migrationEnergy = 0.0;
 	double diffusionFactor = 0.0;
-	std::shared_ptr<NEClusterReactionNetwork> network = std::make_shared<
-			NEClusterReactionNetwork>(handlerRegistry);
+    // Once we have C++14 support, use std::make_unique.
+	std::unique_ptr<NEClusterReactionNetwork> network (
+			new NEClusterReactionNetwork(handlerRegistry));
 	std::vector<std::shared_ptr<Reactant> > reactants;
 
 	// The diffusion factor for a single xenon in nm^2/s
@@ -213,7 +215,7 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::generate(
 	// Check if we want dummy reactions
 	if (!dummyReactions) {
 		// Apply sectional grouping
-		applyGrouping(network);
+		applyGrouping(*network);
 	}
 
     // Dump the network we've created, if desired.
@@ -231,10 +233,10 @@ std::shared_ptr<IReactionNetwork> NEClusterNetworkLoader::generate(
 	return network;
 }
 
-void NEClusterNetworkLoader::applyGrouping(
-		std::shared_ptr<IReactionNetwork> network) {
+void NEClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
+
 	// Get the xenon cluster map
-	auto const& xeMap = network->getAll(ReactantType::Xe);
+	auto const& xeMap = network.getAll(ReactantType::Xe);
 
 	// Create a temporary vector for the loop
 	std::vector<NECluster *> tempVector;
@@ -253,7 +255,7 @@ void NEClusterNetworkLoader::applyGrouping(
 	// Loop on the xenon groups
 	for (int k = xeMin; k <= xeMap.size(); k++) {
 		// Get the corresponding cluster
-		cluster = (NECluster *) network->get(ReactantType::Xe, k);
+		cluster = (NECluster *) network.get(ReactantType::Xe, k);
 
 		// Verify if the cluster exists
 		if (!cluster)
@@ -281,11 +283,11 @@ void NEClusterNetworkLoader::applyGrouping(
 		energy = energy / (double) count;
 		// Create the cluster
 		superCluster = std::make_shared<NESuperCluster>(size, count, count,
-				radius, energy, *network, handlerRegistry);
+				radius, energy, network, handlerRegistry);
 		// Set the HeV vector
 		superCluster->setXeVector(tempVector);
 		// Add this cluster to the network and clusters
-		network->addSuper(superCluster);
+		network.addSuper(superCluster);
 		// Keep the information of the group
 		superGroupMap[superCount] = superCluster.get();
 
@@ -305,7 +307,7 @@ void NEClusterNetworkLoader::applyGrouping(
 	int nXe = 0;
 
     // Tell each reactant to update the pairs vector with super clusters
-    for (IReactant& currReactant : network->getAll()) {
+    for (IReactant& currReactant : network.getAll()) {
 
         auto& cluster = static_cast<NECluster&>(currReactant);
 
@@ -427,7 +429,7 @@ void NEClusterNetworkLoader::applyGrouping(
 	}
 
 	// Set the reaction network for each super reactant
-    for (auto const& superMapItem : network->getAll(ReactantType::NESuper)) {
+    for (auto const& superMapItem : network.getAll(ReactantType::NESuper)) {
         auto& currCluster = static_cast<NESuperCluster&>(*(superMapItem.second));
 		currCluster.updateFromNetwork();
 	}
@@ -448,10 +450,10 @@ void NEClusterNetworkLoader::applyGrouping(
 			doomedReactants.push_back(currCluster);
 		}
 	}
-	network->removeReactants(doomedReactants);
+	network.removeReactants(doomedReactants);
 
 	// Recompute Ids and network size and redefine the connectivities
-	network->reinitializeNetwork();
+	network.reinitializeNetwork();
 
 	return;
 }

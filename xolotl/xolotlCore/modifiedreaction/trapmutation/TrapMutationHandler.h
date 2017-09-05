@@ -103,9 +103,9 @@ public:
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
-	void initialize(IReactionNetwork *network,
+	void initialize(const IReactionNetwork& network,
 			std::vector<double> grid, int ny = 0, double hy = 0.0,
-			int nz = 0, double hz = 0.0);
+			int nz = 0, double hz = 0.0) override;
 
 	/**
 	 * This method defines which trap-mutation is allowed at each grid point.
@@ -114,9 +114,9 @@ public:
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
-	void initializeIndex1D(int surfacePos, IReactionNetwork *network,
+	void initializeIndex1D(int surfacePos, const IReactionNetwork& network,
 			std::vector<IAdvectionHandler *> advectionHandlers,
-			std::vector<double> grid);
+			std::vector<double> grid) override;
 
 	/**
 	 * This method defines which trap-mutation is allowed at each grid point.
@@ -125,9 +125,9 @@ public:
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
-	void initializeIndex2D(std::vector<int> surfacePos, IReactionNetwork *network,
+	void initializeIndex2D(std::vector<int> surfacePos, const IReactionNetwork& network,
 			std::vector<IAdvectionHandler *> advectionHandlers,
-			std::vector<double> grid, int ny, double hy);
+			std::vector<double> grid, int ny, double hy) override;
 
 	/**
 	 * This method defines which trap-mutation is allowed at each grid point.
@@ -137,10 +137,10 @@ public:
 	 * \see ITrapMutationHandler.h
 	 */
 	void initializeIndex3D(std::vector<std::vector<int> > surfacePos,
-			IReactionNetwork *network,
+			const IReactionNetwork& network,
 			std::vector<IAdvectionHandler *> advectionHandlers,
 			std::vector<double> grid, int ny, double hy,
-			int nz, double hz);
+			int nz, double hz) override;
 
 	/**
 	 * This method update the rate for the modified trap-mutation if the rates
@@ -149,7 +149,7 @@ public:
 	 *
 	 * @param network The network
 	 */
-	void updateTrapMutationRate(IReactionNetwork *network);
+	void updateTrapMutationRate(const IReactionNetwork& network) override;
 
 	/**
 	 * This method set the boolean to remember if we want attenuation or not.
@@ -177,9 +177,9 @@ public:
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
-	void computeTrapMutation(IReactionNetwork *network,
+	void computeTrapMutation(const IReactionNetwork& network,
 			double *concOffset, double *updatedConcOffset,
-			int xi, int yj = 0, int zk = 0);
+			int xi, int yj = 0, int zk = 0) override;
 
 	/**
 	 * Compute the partials due to the modified trap-mutation for all the
@@ -194,9 +194,9 @@ public:
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
-	int computePartialsForTrapMutation(IReactionNetwork *network,
+	int computePartialsForTrapMutation(const IReactionNetwork& network,
 			double *val, int *indices,
-			int xi, int yj = 0, int zk = 0);
+			int xi, int yj = 0, int zk = 0) override;
 
 };
 //end class TrapMutationHandler

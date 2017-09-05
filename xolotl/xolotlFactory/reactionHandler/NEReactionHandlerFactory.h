@@ -18,7 +18,7 @@ protected:
 	std::shared_ptr<xolotlCore::INetworkLoader> theNetworkLoaderHandler;
 
 	//! The network handler
-	std::shared_ptr<xolotlCore::IReactionNetwork> theNetworkHandler;
+    std::unique_ptr<xolotlCore::IReactionNetwork> theNetworkHandler;
 
 public:
 
@@ -83,8 +83,8 @@ public:
 	 *
 	 * @return The network.
 	 */
-	std::shared_ptr<xolotlCore::IReactionNetwork> getNetworkHandler() const {
-		return theNetworkHandler;
+	xolotlCore::IReactionNetwork& getNetworkHandler() const override {
+		return *theNetworkHandler;
 	}
 
 };

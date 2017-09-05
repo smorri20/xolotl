@@ -77,7 +77,7 @@ void SurfaceAdvectionHandler::initializeAdvectionGrid(std::vector<IAdvectionHand
 }
 
 void SurfaceAdvectionHandler::computeAdvection(
-		IReactionNetwork *network, const Point3D& pos,
+		const IReactionNetwork& network, const Point3D& pos,
 		double **concVector, double *updatedConcOffset,
 		double hxLeft, double hxRight, int ix,
 		double hy, int iy, double hz, int iz) const {
@@ -119,7 +119,7 @@ void SurfaceAdvectionHandler::computeAdvection(
 }
 
 void SurfaceAdvectionHandler::computePartialsForAdvection(
-		IReactionNetwork *network, double *val,
+		const IReactionNetwork& network, double *val,
 		int *indices, const Point3D& pos,
 		double hxLeft, double hxRight, int ix,
 		double hy, int iy, double hz, int iz) const {

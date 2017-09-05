@@ -17,9 +17,19 @@ private:
 
 public:
 
-	//! The Constructor
-	PetscSolver3DHandler() {
-	}
+	/**
+     * Default constructor, deleted because we need to construct with objects.
+     */
+	PetscSolver3DHandler() = delete;
+
+    /**
+     * Construct a PetscSolver3DHandler.
+     *
+     * @param _network The reaction network to use.
+     */
+    PetscSolver3DHandler(xolotlCore::IReactionNetwork& _network)
+      : PetscSolverHandler(_network) {
+    }
 
 	//! The Destructor
 	~PetscSolver3DHandler() {

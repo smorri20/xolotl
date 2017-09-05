@@ -77,9 +77,19 @@ protected:
 
 public:
 
-	//! The Constructor
-	PetscSolverHandler() :
-			lastTemperature(0.0) {
+	/**
+     * Default constructor, deleted because we need to construct with objects.
+     */
+	PetscSolverHandler() = delete;
+
+	/**
+     * Construct a PetscSolverHandler.
+     *
+     * @param _network The reaction network to use.
+     */
+	PetscSolverHandler(xolotlCore::IReactionNetwork& _network)
+      : SolverHandler(_network),
+        lastTemperature(0.0) {
 	}
 
 	//! The Destructor

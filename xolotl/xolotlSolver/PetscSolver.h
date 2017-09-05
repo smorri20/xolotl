@@ -38,8 +38,14 @@ private:
 
 public:
 
+    /**
+     * Default constructor, deleted because we must construct using arguments.
+     */
+    PetscSolver() = delete;
+
 	//! The Constructor
-	PetscSolver(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+	PetscSolver(ISolverHandler& _solverHandler, 
+                std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	//! The Destructor
 	~PetscSolver();
@@ -67,9 +73,8 @@ public:
 	 * possibly including but not limited to setting up MPI and loading initial
 	 * conditions. If the solver can not be initialized, this operation will
 	 * throw an exception of type std::string.
-	 * @param solverHandler The solver handler
 	 */
-	void initialize(std::shared_ptr<ISolverHandler> solverHandler);
+	void initialize() override;
 
 	/**
 	 * This operation directs the Solver to perform the solve. If the solve

@@ -75,7 +75,7 @@ void Diffusion3DHandler::initializeDiffusionGrid(std::vector<IAdvectionHandler *
 	return;
 }
 
-void Diffusion3DHandler::computeDiffusion(IReactionNetwork *network,
+void Diffusion3DHandler::computeDiffusion(const IReactionNetwork& network,
 		double **concVector, double *updatedConcOffset,
 		double hxLeft, double hxRight, int ix,
 		double sy, int iy, double sz, int iz) const {
@@ -119,7 +119,7 @@ void Diffusion3DHandler::computeDiffusion(IReactionNetwork *network,
 }
 
 void Diffusion3DHandler::computePartialsForDiffusion(
-		IReactionNetwork *network,
+		const IReactionNetwork& network,
 		double *val, int *indices, double hxLeft, double hxRight, int ix,
 		double sy, int iy, double sz, int iz) const {
 

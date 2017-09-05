@@ -97,13 +97,13 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time,
 	CHKERRQ(ierr);
 
 	// Get the solver handler
-	auto solverHandler = PetscSolver::getSolverHandler();
+	auto& solverHandler = PetscSolver::getSolverHandler();
 
 	// Get the network
-	auto network = solverHandler->getNetwork();
+	auto& network = solverHandler.getNetwork();
 
 	// Network size
-	const int dof = network->getDOF();
+	const int dof = network.getDOF();
 
 	// Get the vector of positions of the surface
 	std::vector<std::vector<int> > surfaceIndices;
@@ -111,7 +111,7 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time,
 		// Create a temporary vector
 		std::vector<int> temp;
 		for (PetscInt j = 0; j < Mz; j++) {
-			temp.push_back(solverHandler->getSurfacePosition(i, j));
+			temp.push_back(solverHandler.getSurfacePosition(i, j));
 		}
 		// Add the temporary vector to the vector of surface indices
 		surfaceIndices.push_back(temp);
@@ -227,10 +227,10 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt, PetscReal time,
 	PetscFunctionBeginUser;
 
 	// Get the solver handler
-	auto solverHandler = PetscSolver::getSolverHandler();
+	auto& solverHandler = PetscSolver::getSolverHandler();
 
 	// Get the flux handler that will be used to compute fluxes.
-	auto fluxHandler = solverHandler->getFluxHandler();
+	auto fluxHandler = solverHandler.getFluxHandler();
 
 	// Get the da from ts
 	DM da;
@@ -242,14 +242,14 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt, PetscReal time,
 	CHKERRQ(ierr);
 
 	// Get the physical grid in the x direction
-	auto grid = solverHandler->getXGrid();
+	auto grid = solverHandler.getXGrid();
 
 	// Get the network
-	auto network = solverHandler->getNetwork();
+	auto& network = solverHandler.getNetwork();
 
 	// Setup step size variables
-	double hy = solverHandler->getStepSizeY();
-	double hz = solverHandler->getStepSizeZ();
+	double hy = solverHandler.getStepSizeY();
+	double hz = solverHandler.getStepSizeZ();
 
 	// Get the array of concentration
 	double ****solutionArray, *gridPointSolution;
@@ -264,7 +264,7 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt, PetscReal time,
 		for (PetscInt yj = ys; yj < ys + ym; yj++) {
 
 			// Get the surface position
-			int surfacePos = solverHandler->getSurfacePosition(yj, zk);
+			int surfacePos = solverHandler.getSurfacePosition(yj, zk);
 
 			for (PetscInt xi = xs; xi < xs + xm; xi++) {
 
@@ -277,10 +277,10 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt, PetscReal time,
 				gridPointSolution = solutionArray[zk][yj][xi];
 
 				// Update the concentration in the network
-				network->updateConcentrationsFromArray(gridPointSolution);
+				network.updateConcentrationsFromArray(gridPointSolution);
 
 				// Get the total helium concentration at this grid point
-				heConcentration += network->getTotalAtomConcentration()
+				heConcentration += network.getTotalAtomConcentration()
 						* (grid[xi] - grid[xi - 1]) * hy * hz;
 			}
 		}
@@ -383,16 +383,16 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 	CHKERRQ(ierr);
 
 	// Get the solver handler
-	auto solverHandler = PetscSolver::getSolverHandler();
+	auto& solverHandler = PetscSolver::getSolverHandler();
 
 	// Get the network
-	auto network = solverHandler->getNetwork();
+	auto& network = solverHandler.getNetwork();
 
 	// Get the physical grid in the x direction
-	auto grid = solverHandler->getXGrid();
+	auto grid = solverHandler.getXGrid();
 
 	// Setup step size variables
-	double hy = solverHandler->getStepSizeY();
+	double hy = solverHandler.getStepSizeY();
 
 	// Choice of the cluster to be plotted
 	int iCluster = 0;
@@ -449,7 +449,7 @@ PetscErrorCode monitorSurfaceXY3D(TS ts, PetscInt timestep, PetscReal time,
 		surfacePlotXY3D->getDataProvider()->setPoints(myPoints);
 
 		// Get the iCluster cluster to have access to its name
-		auto const& reactants = network->getAll();
+		auto const& reactants = network.getAll();
 		IReactant const& cluster = reactants.at(iCluster);
 
 		// Change the title of the plot and the name of the data
@@ -529,16 +529,16 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 	CHKERRQ(ierr);
 
 	// Get the solver handler
-	auto solverHandler = PetscSolver::getSolverHandler();
+	auto& solverHandler = PetscSolver::getSolverHandler();
 
 	// Get the network
-	auto network = solverHandler->getNetwork();
+	auto& network = solverHandler.getNetwork();
 
 	// Get the physical grid in the x direction
-	auto grid = solverHandler->getXGrid();
+	auto grid = solverHandler.getXGrid();
 
 	// Setup step size variables
-	double hz = solverHandler->getStepSizeZ();
+	double hz = solverHandler.getStepSizeZ();
 
 	// Choice of the cluster to be plotted
 	int iCluster = 0;
@@ -595,7 +595,7 @@ PetscErrorCode monitorSurfaceXZ3D(TS ts, PetscInt timestep, PetscReal time,
 		surfacePlotXZ3D->getDataProvider()->setPoints(myPoints);
 
 		// Get the iCluster cluster to have access to its name
-		auto const& reactants = network->getAll();
+		auto const& reactants = network.getAll();
 		IReactant const& cluster = reactants.at(iCluster);
 
 		// Change the title of the plot and the name of the data
@@ -673,25 +673,25 @@ PetscErrorCode monitorMovingSurface3D(TS ts, PetscInt timestep, PetscReal time,
 	CHKERRQ(ierr);
 
 	// Get the solver handler
-	auto solverHandler = PetscSolver::getSolverHandler();
+	auto& solverHandler = PetscSolver::getSolverHandler();
 
 	// Get the network
-	auto network = solverHandler->getNetwork();
+	auto& network = solverHandler.getNetwork();
 	// Get the single vacancy ID
-	auto singleVacancyCluster = network->get(xolotlCore::ReactantType::V, 1);
+	auto singleVacancyCluster = network.get(xolotlCore::ReactantType::V, 1);
 	int vacancyIndex = -1;
 	if (singleVacancyCluster)
 		vacancyIndex = singleVacancyCluster->getId() - 1;
 
 	// Setup step size variables
-	double hy = solverHandler->getStepSizeY();
-	double hz = solverHandler->getStepSizeZ();
+	double hy = solverHandler.getStepSizeY();
+	double hz = solverHandler.getStepSizeZ();
 
 	// Get the initial vacancy concentration
-	double initialVConc = solverHandler->getInitialVConc();
+	double initialVConc = solverHandler.getInitialVConc();
 
 	// Get the physical grid
-	auto grid = solverHandler->getXGrid();
+	auto grid = solverHandler.getXGrid();
 
 	// Get the delta time from the previous timestep to this timestep
 	double dt = time - previousTime;
@@ -700,7 +700,7 @@ PetscErrorCode monitorMovingSurface3D(TS ts, PetscInt timestep, PetscReal time,
 	for (yj = 0; yj < My; yj++) {
 		for (zk = 0; zk < Mz; zk++) {
 			// Get the position of the surface at yj, zk
-			int surfacePos = solverHandler->getSurfacePosition(yj, zk);
+			int surfacePos = solverHandler.getSurfacePosition(yj, zk);
 			xi = surfacePos + 1;
 
 			// Value to now on which processor is the location of the surface,
@@ -721,7 +721,7 @@ PetscErrorCode monitorMovingSurface3D(TS ts, PetscInt timestep, PetscReal time,
 				double newFlux = 0.0;
 
 				// Loop on all the interstitial clusters
-                for (auto const& iMapItem : network->getAll(ReactantType::I)) {
+                for (auto const& iMapItem : network.getAll(ReactantType::I)) {
 
 					// Get the cluster
 					auto const& cluster = *(iMapItem.second);
@@ -796,7 +796,7 @@ PetscErrorCode monitorMovingSurface3D(TS ts, PetscInt timestep, PetscReal time,
 				}
 
 				// Set it in the solver
-				solverHandler->setSurfacePosition(surfacePos, yj, zk);
+				solverHandler.setSurfacePosition(surfacePos, yj, zk);
 
 				// Initialize the vacancy concentration on the new grid points
 				// Loop on the new grid points
@@ -823,8 +823,8 @@ PetscErrorCode monitorMovingSurface3D(TS ts, PetscInt timestep, PetscReal time,
 	// Reinitialize the modified trap-mutation handler if the surface has moved
 	if (surfaceHasMoved) {
 		// Get the modified trap-mutation handler to reinitialize it
-		auto mutationHandler = solverHandler->getMutationHandler();
-		auto advecHandlers = solverHandler->getAdvectionHandlers();
+		auto mutationHandler = solverHandler.getMutationHandler();
+		auto advecHandlers = solverHandler.getAdvectionHandlers();
 
 		// Get the vector of positions of the surface
 		std::vector<std::vector<int> > surfaceIndices;
@@ -832,7 +832,7 @@ PetscErrorCode monitorMovingSurface3D(TS ts, PetscInt timestep, PetscReal time,
 			// Create a temporary vector
 			std::vector<int> temp;
 			for (PetscInt j = 0; j < Mz; j++) {
-				temp.push_back(solverHandler->getSurfacePosition(i, j));
+				temp.push_back(solverHandler.getSurfacePosition(i, j));
 			}
 			// Add the temporary vector to the vector of surface indices
 			surfaceIndices.push_back(temp);
@@ -851,14 +851,14 @@ PetscErrorCode monitorMovingSurface3D(TS ts, PetscInt timestep, PetscReal time,
 		outputFile.open(name.str());
 
 		// Setup step size variables
-		double hy = solverHandler->getStepSizeY();
-		double hz = solverHandler->getStepSizeZ();
+		double hy = solverHandler.getStepSizeY();
+		double hz = solverHandler.getStepSizeZ();
 
 		// Loop on the grid
 		for (yj = 0; yj < My; yj++) {
 			for (zk = 0; zk < Mz; zk++) {
 				// Get the surface position
-				int surfacePos = solverHandler->getSurfacePosition(yj, zk);
+				int surfacePos = solverHandler.getSurfacePosition(yj, zk);
 				// Write it in the file
 				outputFile << (double) yj * hy << " " << (double) zk * hz << " "
 						<< grid[surfacePos] << std::endl;
@@ -908,24 +908,24 @@ PetscErrorCode monitorBursting3D(TS ts, PetscInt, PetscReal time, Vec solution,
 	CHKERRQ(ierr);
 
 	// Get the solver handler
-	auto solverHandler = PetscSolver::getSolverHandler();
+	auto& solverHandler = PetscSolver::getSolverHandler();
 
 	// Get the position of the surface
 	int surfacePos = 0;
 	// Setup step size variables
-	double hy = solverHandler->getStepSizeY();
-	double hz = solverHandler->getStepSizeZ();
+	double hy = solverHandler.getStepSizeY();
+	double hz = solverHandler.getStepSizeZ();
 
 	// Get the network
-	auto network = solverHandler->getNetwork();
+	auto& network = solverHandler.getNetwork();
 	// Get all the super clusters
-	auto const& superClusters = network->getAll(ReactantType::PSISuper);
+	auto const& superClusters = network.getAll(ReactantType::PSISuper);
 
 	// Get the physical grid
-	auto grid = solverHandler->getXGrid();
+	auto grid = solverHandler.getXGrid();
 
 	// Get the flux handler to know the flux amplitude.
-	auto fluxHandler = solverHandler->getFluxHandler();
+	auto fluxHandler = solverHandler.getFluxHandler();
 	double fluxAmplitude = fluxHandler->getFluxAmplitude();
 
 	// Get the delta time from the previous timestep to this timestep
@@ -938,7 +938,7 @@ PetscErrorCode monitorBursting3D(TS ts, PetscInt, PetscReal time, Vec solution,
 	for (zk = zs; zk < zs + zm; zk++) {
 		for (yj = ys; yj < ys + ym; yj++) {
 			// Get the surface position
-			surfacePos = solverHandler->getSurfacePosition(yj, zk);
+			surfacePos = solverHandler.getSurfacePosition(yj, zk);
 
 			for (xi = xs; xi < xs + xm; xi++) {
 				// Skip everything before the surface
@@ -948,13 +948,13 @@ PetscErrorCode monitorBursting3D(TS ts, PetscInt, PetscReal time, Vec solution,
 				// Get the pointer to the beginning of the solution data for this grid point
 				gridPointSolution = solutionArray[zk][yj][xi];
 				// Update the concentration in the network
-				network->updateConcentrationsFromArray(gridPointSolution);
+				network.updateConcentrationsFromArray(gridPointSolution);
 
 				// Get the distance from the surface
 				double distance = grid[xi] - grid[surfacePos];
 
 				// Compute the helium density at this grid point
-				double heDensity = network->getTotalAtomConcentration();
+				double heDensity = network.getTotalAtomConcentration();
 
 				// Compute the radius of the bubble from the number of helium
 				double nV = heDensity * (grid[xi] - grid[xi - 1]) * hy * hz
@@ -996,7 +996,7 @@ PetscErrorCode monitorBursting3D(TS ts, PetscInt, PetscReal time, Vec solution,
 							<< std::endl;
 
 					// Consider each He to reset their concentration at this grid point
-                    for (auto const& heMapItem : network->getAll(ReactantType::He)) {
+                    for (auto const& heMapItem : network.getAll(ReactantType::He)) {
 						auto const& cluster = *(heMapItem.second);
 						int id = cluster.getId() - 1;
 						gridPointSolution[id] = 0.0;
@@ -1004,12 +1004,12 @@ PetscErrorCode monitorBursting3D(TS ts, PetscInt, PetscReal time, Vec solution,
 
 					// Consider each HeV cluster to transfer their concentration to the V cluster of the
 					// same size at this grid point
-                    for (auto const& heVMapItem : network->getAll(ReactantType::HeV)) {
+                    for (auto const& heVMapItem : network.getAll(ReactantType::HeV)) {
 						auto const& cluster = *(heVMapItem.second);
 
 						// Get the V cluster of the same size
 						auto const& comp = cluster.getComposition();
-						auto vCluster = network->get(ReactantType::V, comp[toCompIdx(Species::V)] );
+						auto vCluster = network.get(ReactantType::V, comp[toCompIdx(Species::V)] );
 						int vId = vCluster->getId() - 1;
 						int id = cluster.getId() - 1;
 						gridPointSolution[vId] = gridPointSolution[id];
@@ -1023,7 +1023,7 @@ PetscErrorCode monitorBursting3D(TS ts, PetscInt, PetscReal time, Vec solution,
 						// Get the V cluster of the same size
 						double numV = cluster.getNumV();
 						int truncV = (int) numV;
-						auto vCluster = network->get(ReactantType::V, truncV);
+						auto vCluster = network.get(ReactantType::V, truncV);
 						int vId = vCluster->getId() - 1;
 						int id = cluster.getId() - 1;
 						double conc = cluster.getTotalConcentration();
@@ -1091,10 +1091,10 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 			"setupPetsc3DMonitor: PetscOptionsHasName (-start_stop) failed.");
 
 	// Get the solver handler
-	auto solverHandler = PetscSolver::getSolverHandler();
+	auto& solverHandler = PetscSolver::getSolverHandler();
 
 	// Get the network and its size
-	auto network = solverHandler->getNetwork();
+	auto& network = solverHandler.getNetwork();
 
 	// Get the da from ts
 	DM da;
@@ -1126,22 +1126,22 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 		xolotlCore::HDF5Utils::initializeFile(hdf5OutputName3D);
 
 		// Get the solver handler
-		auto solverHandler = PetscSolver::getSolverHandler();
+		auto& solverHandler = PetscSolver::getSolverHandler();
 
 		// Get the physical grid in the x direction
-		auto grid = solverHandler->getXGrid();
+		auto grid = solverHandler.getXGrid();
 
 		// Setup step size variables
-		double hy = solverHandler->getStepSizeY();
-		double hz = solverHandler->getStepSizeZ();
+		double hy = solverHandler.getStepSizeY();
+		double hz = solverHandler.getStepSizeZ();
 
 		// Save the header in the HDF5 file
 		xolotlCore::HDF5Utils::fillHeader(Mx, grid[1] - grid[0], My, hy, Mz,
 				hz);
 
 		// Save the network in the HDF5 file
-		if (!solverHandler->getNetworkName().empty())
-			xolotlCore::HDF5Utils::fillNetwork(solverHandler->getNetworkName());
+		if (!solverHandler.getNetworkName().empty())
+			xolotlCore::HDF5Utils::fillNetwork(solverHandler.getNetworkName());
 
 		// Finalize the HDF5 file
 		xolotlCore::HDF5Utils::finalizeFile();
@@ -1153,7 +1153,7 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 	}
 
 	// If the user wants the surface to be able to move
-	if (solverHandler->moveSurface()) {
+	if (solverHandler.moveSurface()) {
 		// Initialize nInterstitial3D and previousIFlux3D before monitoring the
 		// interstitial flux
 		for (PetscInt j = 0; j < My; j++) {
@@ -1170,7 +1170,7 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 
 		// Get the last time step written in the HDF5 file
 		int tempTimeStep = -2;
-		std::string networkName = solverHandler->getNetworkName();
+		std::string networkName = solverHandler.getNetworkName();
 		bool hasConcentrations = false;
 		if (!networkName.empty())
 			hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
@@ -1197,7 +1197,7 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 	}
 
 	// If the user wants bubble bursting
-	if (solverHandler->burstBubbles()) {
+	if (solverHandler.burstBubbles()) {
 		// Set the monitor on the bubble bursting
 		// monitorBursting3D will be called at each timestep
 		ierr = TSMonitorSet(ts, monitorBursting3D, NULL, NULL);
@@ -1242,7 +1242,7 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 
 		// Get the last time step written in the HDF5 file
 		int tempTimeStep = -2;
-		std::string networkName = solverHandler->getNetworkName();
+		std::string networkName = solverHandler.getNetworkName();
 		bool hasConcentrations = false;
 		if (!networkName.empty())
 			hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
@@ -1254,7 +1254,7 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 			double time = xolotlCore::HDF5Utils::readPreviousTime(networkName,
 					tempTimeStep);
 			// Initialize the fluence
-			auto fluxHandler = solverHandler->getFluxHandler();
+			auto fluxHandler = solverHandler.getFluxHandler();
 			// The length of the time step
 			double dt = time;
 			// Increment the fluence with the value at this current timestep

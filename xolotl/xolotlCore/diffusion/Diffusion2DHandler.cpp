@@ -67,7 +67,7 @@ void Diffusion2DHandler::initializeDiffusionGrid(std::vector<IAdvectionHandler *
 	return;
 }
 
-void Diffusion2DHandler::computeDiffusion(IReactionNetwork *network,
+void Diffusion2DHandler::computeDiffusion(const IReactionNetwork& network,
 		double **concVector, double *updatedConcOffset,
 		double hxLeft, double hxRight, int ix,
 		double sy, int iy, double, int) const {
@@ -108,7 +108,7 @@ void Diffusion2DHandler::computeDiffusion(IReactionNetwork *network,
 }
 
 void Diffusion2DHandler::computePartialsForDiffusion(
-		IReactionNetwork *network,
+		const IReactionNetwork& network,
 		double *val, int *indices, double hxLeft, double hxRight, int ix,
 		double sy, int iy, double, int) const {
 

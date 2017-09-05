@@ -3,17 +3,17 @@
 
 namespace xolotlCore {
 
-void XGBAdvectionHandler::initialize(IReactionNetwork *network,
+void XGBAdvectionHandler::initialize(const IReactionNetwork& network,
 		int *ofill) {
 	// Get all the reactants and their number
-	int dof = network->getDOF();
+	int dof = network.getDOF();
 
 	// Clear the index and sink strength vectors
 	advectingClusters.clear();
 	sinkStrengthVector.clear();
 
 	// Consider each reactant.
-    for (IReactant const& currReactant : network->getAll()) {
+    for (IReactant const& currReactant : network.getAll()) {
 	
 		auto const& cluster = static_cast<PSICluster const&>(currReactant);
 		// Get its diffusion coefficient
@@ -76,7 +76,7 @@ void XGBAdvectionHandler::initialize(IReactionNetwork *network,
 	return;
 }
 
-void XGBAdvectionHandler::computeAdvection(IReactionNetwork *network,
+void XGBAdvectionHandler::computeAdvection(const IReactionNetwork& network,
 		const Point3D& pos, double **concVector,
 		double *updatedConcOffset, double hxLeft, double hxRight, int ix,
 		double hy, int iy, double hz, int iz) const {
@@ -141,7 +141,7 @@ void XGBAdvectionHandler::computeAdvection(IReactionNetwork *network,
 }
 
 void XGBAdvectionHandler::computePartialsForAdvection(
-		IReactionNetwork *network, double *val, int *indices,
+		const IReactionNetwork& network, double *val, int *indices,
 		const Point3D& pos, double hxLeft, double hxRight, int ix,
 		double hy, int iy, double hz, int iz) const {
 

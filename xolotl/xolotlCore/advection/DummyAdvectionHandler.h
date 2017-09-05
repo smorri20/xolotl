@@ -30,7 +30,7 @@ public:
 	 * @param ofill The pointer to the array that will contain the value 1 at the indices
 	 * of the advecting clusters
 	 */
-	void initialize(IReactionNetwork *network, int *ofill) {
+	void initialize(const IReactionNetwork& network, int *ofill) override {
 		// Clear the index and sink strength vectors
 		advectingClusters.clear();
 		sinkStrengthVector.clear();

@@ -36,15 +36,15 @@ public:
 	 * @param ofill The pointer to the array that will contain the value 1 at the indices
 	 * of the diffusing clusters
 	 */
-	virtual void initializeOFill(IReactionNetwork *network, int *ofill) override {
+	virtual void initializeOFill(const IReactionNetwork& network, int *ofill) override {
 
-		int dof = network->getDOF();
+		int dof = network.getDOF();
 
 		// Clear the index vector
 		diffusingClusters.clear();
 
 		// Consider each cluster.
-        for (IReactant const& currReactant : network->getAll()) {
+        for (IReactant const& currReactant : network.getAll()) {
 
 			auto const& cluster = static_cast<PSICluster const&>(currReactant);
 

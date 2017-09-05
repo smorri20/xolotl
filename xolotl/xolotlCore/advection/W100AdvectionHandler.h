@@ -32,16 +32,16 @@ public:
     // TODO this is nearly identical for the W100, W110, W111, and W211 
     // cases.  Factor the identical parts to a base class, and only
     // have these classes differ in the sinkStrength identification.
-	void initialize(IReactionNetwork *network, int *ofill) override {
+	void initialize(const IReactionNetwork& network, int *ofill) override {
 		// Get all the reactants and their number
-		int dof = network->getDOF();
+		int dof = network.getDOF();
 
 		// Clear the index and sink strength vectors
 		advectingClusters.clear();
 		sinkStrengthVector.clear();
 
 		// Consider each reactant.
-        for (IReactant const& currReactant : network->getAll()) {
+        for (IReactant const& currReactant : network.getAll()) {
 
 			auto const& cluster = static_cast<PSICluster const&>(currReactant);
 

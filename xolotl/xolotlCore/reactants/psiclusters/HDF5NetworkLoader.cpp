@@ -9,7 +9,7 @@
 
 using namespace xolotlCore;
 
-std::shared_ptr<IReactionNetwork> HDF5NetworkLoader::load(const IOptions& options) {
+std::unique_ptr<IReactionNetwork> HDF5NetworkLoader::load(const IOptions& options) const {
 	// Get the dataset from the HDF5 files
 	auto networkVector = xolotlCore::HDF5Utils::readNetwork(fileName);
 
@@ -20,8 +20,8 @@ std::shared_ptr<IReactionNetwork> HDF5NetworkLoader::load(const IOptions& option
 	std::vector<std::shared_ptr<Reactant> > reactants;
 
 	// Prepare the network
-	std::shared_ptr<PSIClusterReactionNetwork> network = std::make_shared<
-			PSIClusterReactionNetwork>(handlerRegistry);
+    std::unique_ptr<PSIClusterReactionNetwork> network (
+			new PSIClusterReactionNetwork(handlerRegistry));
 
 	// Loop on the networkVector
 	for (auto lineIt = networkVector.begin(); lineIt != networkVector.end();
@@ -70,7 +70,7 @@ std::shared_ptr<IReactionNetwork> HDF5NetworkLoader::load(const IOptions& option
 	// Check if we want dummy reactions
 	if (!dummyReactions) {
 		// Apply sectional grouping
-		applySectionalGrouping(network);
+		applySectionalGrouping(*network);
 	}
 
 	// Create the reactions

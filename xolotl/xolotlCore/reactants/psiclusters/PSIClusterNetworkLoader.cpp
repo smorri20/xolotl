@@ -36,7 +36,7 @@ static inline double convertStrToDouble(const std::string& inString) {
 
 std::shared_ptr<PSICluster> PSIClusterNetworkLoader::createPSICluster(
         int numHe, int numV, int numI,
-        IReactionNetwork& network) {
+        IReactionNetwork& network) const {
 
 	// Local Declarations
     PSICluster* cluster = nullptr;
@@ -92,12 +92,14 @@ PSIClusterNetworkLoader::PSIClusterNetworkLoader(
 	return;
 }
 
-std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::load(const IOptions& options) {
+std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::load(const IOptions& options) const {
 	// Local Declarations
 	TokenizedLineReader<std::string> reader;
 	std::vector<std::string> loadedLine;
-	std::shared_ptr<PSIClusterReactionNetwork> network = std::make_shared<
-			PSIClusterReactionNetwork>(handlerRegistry);
+
+    // TODO Once we have C++14, use std::make_unique.
+    std::unique_ptr<PSIClusterReactionNetwork> network (
+            new PSIClusterReactionNetwork(handlerRegistry));
 
 	std::string error(
 			"PSIClusterNetworkLoader Exception: Insufficient or erroneous data.");
@@ -153,7 +155,7 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::load(const IOptions& 
 	// Check if we want dummy reactions
 	if (!dummyReactions) {
 		// Apply sectional grouping
-		applySectionalGrouping(network);
+		applySectionalGrouping(*network);
 	}
 
 	// Create the reactions
@@ -178,7 +180,7 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::load(const IOptions& 
 	return network;
 }
 
-std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
+std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 		const IOptions &options) {
 	// Initial declarations
 	maxI = options.getMaxI(), maxHe = options.getMaxImpurity(), maxV =
@@ -187,8 +189,10 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 	int numHe = 0, numV = 0, numI = 0;
 	double formationEnergy = 0.0, migrationEnergy = 0.0;
 	double diffusionFactor = 0.0;
-	std::shared_ptr<PSIClusterReactionNetwork> network = std::make_shared<
-			PSIClusterReactionNetwork>(handlerRegistry);
+
+    // Once we have C++14, use std::make_unique.
+	std::unique_ptr<PSIClusterReactionNetwork> network (
+			new PSIClusterReactionNetwork(handlerRegistry));
 	std::vector<std::shared_ptr<Reactant> > reactants;
 
 	// I formation energies in eV
@@ -330,7 +334,7 @@ std::shared_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 	// Check if we want dummy reactions
 	if (!dummyReactions) {
 		// Apply sectional grouping
-		applySectionalGrouping(network);
+		applySectionalGrouping(*network);
 	}
 
 	// Create the reactions
@@ -450,8 +454,7 @@ double PSIClusterNetworkLoader::getHeVFormationEnergy(int numHe, int numV) {
 	return energy;
 }
 
-void PSIClusterNetworkLoader::applySectionalGrouping(
-		std::shared_ptr<PSIClusterReactionNetwork> network) {
+void PSIClusterNetworkLoader::applySectionalGrouping(PSIClusterReactionNetwork& network) const {
 
 	// Create a temporary vector for the loop
 	std::vector<std::pair<int, int> > tempVector;
@@ -528,7 +531,7 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 			if (count == heWidth * vWidth) {
 				// Everything is fine, the cluster is full
 				superCluster = std::make_shared<PSISuperCluster>(heSize, vSize,
-						count, heWidth, vWidth, *network, handlerRegistry);
+						count, heWidth, vWidth, network, handlerRegistry);
 
 				std::cout << "normal: " << superCluster->getName() << " "
 						<< heWidth << " " << vWidth << std::endl;
@@ -536,7 +539,7 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 				// The cluster is smaller than we thought because we are at the edge
 				superCluster = std::make_shared<PSISuperCluster>(heSize, vSize,
 						count, heHigh - heLow + 1, vHigh - vLow + 1,
-                        *network,
+                        network,
 						handlerRegistry);
 
 				std::cout << "irregular: " << superCluster->getName() << " "
@@ -544,7 +547,7 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 						<< std::endl;
 			}
 			// Add this cluster to the network and clusters
-			network->addSuper(superCluster);
+			network.addSuper(superCluster);
 			superCluster->updateFromNetwork();
 			// Set the HeV vector
 			superCluster->setHeVVector(tempVector);
@@ -580,7 +583,7 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 
     // Now that we have the bound vector defined, tell the network to 
     // build its quick-lookup map for super clusters
-    network->buildSuperClusterIndex(superClusterBounds);
+    network.buildSuperClusterIndex(superClusterBounds);
 
 	return;
 }

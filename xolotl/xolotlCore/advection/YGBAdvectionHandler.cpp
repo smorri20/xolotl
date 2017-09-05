@@ -3,17 +3,17 @@
 
 namespace xolotlCore {
 
-void YGBAdvectionHandler::initialize(IReactionNetwork *network,
+void YGBAdvectionHandler::initialize(const IReactionNetwork& network,
 		int *ofill) {
 
-	int dof = network->getDOF();
+	int dof = network.getDOF();
 
 	// Clear the index and sink strength vectors
 	advectingClusters.clear();
 	sinkStrengthVector.clear();
 
 	// Loop on all the reactants
-    for(IReactant const& currReactant : network->getAll()) {
+    for(IReactant const& currReactant : network.getAll()) {
 
 		auto const& cluster = static_cast<PSICluster const&>(currReactant);
 
@@ -77,7 +77,7 @@ void YGBAdvectionHandler::initialize(IReactionNetwork *network,
 	return;
 }
 
-void YGBAdvectionHandler::computeAdvection(IReactionNetwork *network,
+void YGBAdvectionHandler::computeAdvection(const IReactionNetwork& network,
 		const Point3D& pos, double **concVector,
 		double *updatedConcOffset, double hxLeft, double hxRight, int ix,
 		double hy, int iy, double hz, int iz) const {
@@ -137,7 +137,7 @@ void YGBAdvectionHandler::computeAdvection(IReactionNetwork *network,
 }
 
 void YGBAdvectionHandler::computePartialsForAdvection(
-		IReactionNetwork *network, double *val, int *indices,
+		const IReactionNetwork& network, double *val, int *indices,
 		const Point3D& pos, double hxLeft, double hxRight, int ix,
 		double hy, int iy, double hz, int iz) const {
 

@@ -104,7 +104,7 @@ public:
 	 * Compute and store the incident flux values at each grid point.
 	 * \see IFluxHandler.h
 	 */
-	virtual void initializeFluxHandler(IReactionNetwork *network,
+	virtual void initializeFluxHandler(IReactionNetwork& network,
 			int surfacePos, std::vector<double> grid);
 
 	/**

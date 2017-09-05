@@ -32,7 +32,7 @@ public:
 	 * @param ofill The pointer to the array that will contain the value 1 at the indices
 	 * of the advecting clusters
 	 */
-	virtual void initialize(IReactionNetwork *network, int *ofill) = 0;
+	virtual void initialize(const IReactionNetwork& network, int *ofill) = 0;
 
 	/**
 	 * Set the number of dimension
@@ -82,7 +82,7 @@ public:
 	 * @param hz The step size in the z direction
 	 * @param iz The position on the z grid
 	 */
-	virtual void computeAdvection(IReactionNetwork *network,
+	virtual void computeAdvection(const IReactionNetwork& network,
 			const Point3D& pos, double **concVector, double *updatedConcOffset,
 			double hxLeft, double hxRight, int ix,
 			double hy = 0.0, int iy = 0, double hz = 0.0, int iz = 0) const = 0;
@@ -107,7 +107,7 @@ public:
 	 * @param hz The step size in the z direction
 	 * @param iz The position on the z grid
 	 */
-	virtual void computePartialsForAdvection(IReactionNetwork *network,
+	virtual void computePartialsForAdvection(const IReactionNetwork& network,
 			double *val, int *indices, const Point3D& pos,
 			double hxLeft, double hxRight, int ix,
 			double hy = 0.0, int iy = 0, double hz = 0.0, int iz = 0) const = 0;

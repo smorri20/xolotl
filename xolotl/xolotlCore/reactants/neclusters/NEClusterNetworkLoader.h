@@ -58,7 +58,7 @@ protected:
 	 * @return The new cluster
 	 */
 	std::shared_ptr<NECluster> createNECluster(int numXe, int numV, int numI,
-        IReactionNetwork& network);
+        IReactionNetwork& network) const;
 
 public:
 
@@ -93,7 +93,7 @@ public:
      * @param options The command line options.
 	 * @return network The reaction network
 	 */
-	virtual std::shared_ptr<IReactionNetwork> load(const IOptions& options) override;
+	virtual std::unique_ptr<IReactionNetwork> load(const IOptions& options) const override;
 
 	/**
 	 * This operation will generate the reaction network from options.
@@ -102,14 +102,14 @@ public:
 	 * @param options The command line options
 	 * @return network The reaction network
 	 */
-	virtual std::shared_ptr<IReactionNetwork> generate(const IOptions &options) override;
+	virtual std::unique_ptr<IReactionNetwork> generate(const IOptions &options) override;
 
 	/**
 	 * This operation will apply a grouping method to the network.
 	 *
 	 * @param The network to be modified.
 	 */
-	void applyGrouping(std::shared_ptr<IReactionNetwork> network);
+	void applyGrouping(IReactionNetwork& network) const;
 
 	/**
 	 * This operation will set the xenon size at which the grouping scheme starts.

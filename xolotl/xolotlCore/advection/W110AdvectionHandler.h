@@ -29,15 +29,15 @@ public:
 	 * @param ofill The pointer to the array that will contain the value 1 at the indices
 	 * of the advecting clusters
 	 */
-	void initialize(IReactionNetwork *network, int *ofill) override {
-		int dof = network->getDOF();
+	void initialize(const IReactionNetwork& network, int *ofill) override {
+		int dof = network.getDOF();
 
 		// Clear the index and sink strength vectors
 		advectingClusters.clear();
 		sinkStrengthVector.clear();
 
 		// Consider each reactant.
-        for (IReactant const& currReactant : network->getAll()) {
+        for (IReactant const& currReactant : network.getAll()) {
 
 			auto const& cluster = static_cast<PSICluster const&>(currReactant);
 

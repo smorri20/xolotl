@@ -20,15 +20,15 @@ void PetscSolver0DHandler::createSolverContext(DM &da) {
 	if (!xolotlCore::equal(temperature, lastTemperature)) {
 		// Update the temperature and rate constants in the network
 		// SetTemperature() does both
-		network->setTemperature(temperature);
+		network.setTemperature(temperature);
 		lastTemperature = temperature;
 	}
 
 	// Recompute Ids and network size and redefine the connectivities
-	network->reinitializeConnectivities();
+	network.reinitializeConnectivities();
 
 	// Degrees of freedom is the total number of clusters in the network
-	const int dof = network->getDOF();
+	const int dof = network.getDOF();
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 Create distributed array (DMDA) to manage parallel grid and vectors
@@ -73,7 +73,7 @@ void PetscSolver0DHandler::createSolverContext(DM &da) {
 			"PetscMemzero (dfill) failed.");
 
 	// Get the diagonal fill
-	network->getDiagonalFill(dfill);
+	network.getDiagonalFill(dfill);
 
 	// Load up the block fills
 	ierr = DMDASetBlockFills(da, dfill, ofill);
@@ -119,10 +119,10 @@ void PetscSolver0DHandler::initializeConcentration(DM &da, Vec &C) {
 
 	// Degrees of freedom is the total number of clusters in the network
 	// + the super clusters
-	const int dof = network->getDOF();
+	const int dof = network.getDOF();
 
 	// Get the single vacancy ID
-	auto singleVacancyCluster = network->get(xolotlCore::ReactantType::V, 1);
+	auto singleVacancyCluster = network.get(xolotlCore::ReactantType::V, 1);
 	int vacancyIndex = -1;
 	if (singleVacancyCluster)
 		vacancyIndex = singleVacancyCluster->getId() - 1;
@@ -190,7 +190,7 @@ void PetscSolver0DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	PetscScalar *concOffset = nullptr, *updatedConcOffset = nullptr;
 
 	// Degrees of freedom is the total number of clusters in the network
-	const int dof = network->getDOF();
+	const int dof = network.getDOF();
 
 	// Set the grid position
     xolotlCore::Point3D gridPosition { 0.0, 0.0, 0.0 };
@@ -204,7 +204,7 @@ void PetscSolver0DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 	// Update the network if the temperature changed
 	if (!xolotlCore::equal(temperature, lastTemperature)) {
-		network->setTemperature(temperature);
+		network.setTemperature(temperature);
 		lastTemperature = temperature;
 	}
 
@@ -213,13 +213,13 @@ void PetscSolver0DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	// fluxes and hold the state data from the last time step. I'm reusing
 	// it because it cuts down on memory significantly (about 400MB per
 	// grid point) at the expense of being a little tricky to comprehend.
-	network->updateConcentrationsFromArray(concOffset);
+	network.updateConcentrationsFromArray(concOffset);
 
 	// ----- Account for flux of incoming particles -----
 	fluxHandler->computeIncidentFlux(ftime, updatedConcOffset, 0, 0);
 
 	// ----- Compute the reaction fluxes over the locally owned part of the grid -----
-	network->computeAllFluxes(updatedConcOffset);
+	network.computeAllFluxes(updatedConcOffset);
 
 	/*
 	 Restore vectors
@@ -264,7 +264,7 @@ void PetscSolver0DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
 	PetscScalar *concOffset = nullptr;
 
 	// Degrees of freedom is the total number of clusters in the network
-	const int dof = network->getDOF();
+	const int dof = network.getDOF();
 
 	// Arguments for MatSetValuesStencil called below
 	MatStencil rowId;
@@ -280,19 +280,19 @@ void PetscSolver0DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
 
 	// Update the network if the temperature changed
 	if (!xolotlCore::equal(temperature, lastTemperature)) {
-		network->setTemperature(temperature);
+		network.setTemperature(temperature);
 		lastTemperature = temperature;
 	}
 
 	// Copy data into the ReactionNetwork so that it can
 	// compute the new concentrations.
 	concOffset = concs[0];
-	network->updateConcentrationsFromArray(concOffset);
+	network.updateConcentrationsFromArray(concOffset);
 
 	// ----- Take care of the reactions for all the reactants -----
 
 	// Compute all the partial derivatives for the reactions
-	network->computeAllPartials(reactionVals, reactionIndices, reactionSize);
+	network.computeAllPartials(reactionVals, reactionIndices, reactionSize);
 
 	// Update the column in the Jacobian that represents each DOF
 	for (int i = 0; i < dof; i++) {

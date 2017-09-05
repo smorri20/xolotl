@@ -36,7 +36,7 @@ public:
      * @param options The command line options.
 	 * @return network The reaction network
 	 */
-	virtual std::shared_ptr<IReactionNetwork> load(const IOptions& options) = 0;
+	virtual std::unique_ptr<IReactionNetwork> load(const IOptions& options) const = 0;
 
 	/**
 	 * This operation will generate the reaction network from options.
@@ -45,7 +45,7 @@ public:
 	 * @param options The command line options
 	 * @return network The reaction network
 	 */
-	virtual std::shared_ptr<IReactionNetwork> generate(const IOptions &options) = 0;
+	virtual std::unique_ptr<IReactionNetwork> generate(const IOptions &options) = 0;
 
 	/**
 	 * This operation will set the name of the file where to take the network from.
