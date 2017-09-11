@@ -79,6 +79,10 @@ std::unique_ptr<IReactionNetwork> HDF5NetworkLoader::load(const IOptions& option
 	// Recompute Ids and network size and redefine the connectivities
 	network->reinitializeNetwork();
 
-	return network;
+    // Need to use move() because return type uses smart pointer to base class,
+    // not derived class that we created.
+    // Some C++11 compilers accept it without the move, but apparently
+    // that is not correct behavior until C++14.
+	return std::move(network);
 }
 

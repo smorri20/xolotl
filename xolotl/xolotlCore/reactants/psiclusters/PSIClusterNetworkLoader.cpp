@@ -176,8 +176,11 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::load(const IOptions& 
         }
     }
 
-
-	return network;
+    // Need to use move() because return type uses smart pointer to base class,
+    // not derived class that we created.
+    // Some C++11 compilers accept it without the move, but apparently
+    // that is not correct behavior until C++14.
+	return std::move(network);
 }
 
 std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
@@ -355,7 +358,11 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
         }
     }
 
-	return network;
+    // Need to use move() because return type uses smart pointer to base class,
+    // not derived class that we created.
+    // Some C++11 compilers accept it without the move, but apparently
+    // that is not correct behavior until C++14.
+	return std::move(network);
 }
 
 double PSIClusterNetworkLoader::getHeVFormationEnergy(int numHe, int numV) {
