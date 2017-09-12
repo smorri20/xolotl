@@ -533,7 +533,7 @@ PetscErrorCode monitorMovingSurface2D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network
 	auto& network = solverHandler.getNetwork();
 	// Get the single vacancy ID
-	auto singleVacancyCluster = network.get(xolotlCore::ReactantType::V, 1);
+	auto singleVacancyCluster = network.get(Species::V, 1);
 	int vacancyIndex = -1;
 	if (singleVacancyCluster)
 		vacancyIndex = singleVacancyCluster->getId() - 1;
@@ -816,7 +816,7 @@ PetscErrorCode monitorBursting2D(TS ts, PetscInt, PetscReal time, Vec solution,
 					auto const& cluster = *(heVMapItem.second);
 					// Get the V cluster of the same size
 					auto const& comp = cluster.getComposition();
-					auto vCluster = network.get(ReactantType::V, comp[toCompIdx(Species::V)] );
+					auto vCluster = network.get(Species::V, comp[toCompIdx(Species::V)] );
 					int vId = vCluster->getId() - 1;
 					int id = cluster.getId() - 1;
 					gridPointSolution[vId] = gridPointSolution[id];
@@ -830,7 +830,7 @@ PetscErrorCode monitorBursting2D(TS ts, PetscInt, PetscReal time, Vec solution,
 					// Get the V cluster of the same size
 					double numV = cluster.getNumV();
 					int truncV = (int) numV;
-					auto vCluster = network.get(ReactantType::V, truncV);
+					auto vCluster = network.get(Species::V, truncV);
 					int vId = vCluster->getId() - 1;
 					int id = cluster.getId() - 1;
 					double conc = cluster.getTotalConcentration();

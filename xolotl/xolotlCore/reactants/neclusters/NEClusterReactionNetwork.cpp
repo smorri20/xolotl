@@ -59,7 +59,7 @@ void NEClusterReactionNetwork::createReactionConnectivity() {
 	// We know here that only Xe_1 can cluster so we simplify the search
 	// Xe_(a-i) + Xe_i --> Xe_a
 	firstSize = 1;
-	auto singleXeCluster = get(ReactantType::Xe, firstSize);
+	auto singleXeCluster = get(Species::Xe, firstSize);
 	// Get all the Xe clusters
 	auto const& xeClusters = getAll(ReactantType::Xe);
 	// Consider each Xe cluster.
@@ -71,7 +71,7 @@ void NEClusterReactionNetwork::createReactionConnectivity() {
 		secondSize = xeReactant.getSize();
 		productSize = firstSize + secondSize;
 		// Get the product cluster for the reaction
-		auto product = get(ReactantType::Xe, productSize);
+		auto product = get(Species::Xe, productSize);
 		// Check that the reaction can occur
 		if (product
 				&& (singleXeCluster->getDiffusionFactor() > 0.0
@@ -119,203 +119,6 @@ void NEClusterReactionNetwork::setTemperature(double temp) {
 	ReactionNetwork::setTemperature(temp);
 
 	computeRateConstants();
-
-	return;
-}
-
-double NEClusterReactionNetwork::getTemperature() const {
-	return temperature;
-}
-
-IReactant * NEClusterReactionNetwork::get(ReactantType type,
-		IReactant::SizeType size) const {
-	// Local Declarations
-	std::shared_ptr<IReactant> retReactant;
-
-	// Only pull the reactant if the name and size are valid
-	if ((type == ReactantType::Xe || type == ReactantType::V || type == ReactantType::I) && size >= 1) {
-        IReactant::Composition composition;
-		composition[toCompIdx(toSpecies(type))] = size;
-
-		// Check if we know about the reactant.
-        auto const& currReactantMap = clusterTypeMap.at(type);
-        auto iter = currReactantMap.find(composition);
-        if (iter != currReactantMap.end()) {
-            retReactant = iter->second;
-        }
-	}
-
-	return retReactant.get();
-}
-
-IReactant * NEClusterReactionNetwork::getCompound(ReactantType type,
-        const IReactant::Composition& comp) const {
-
-	// Local Declarations
-	std::shared_ptr<IReactant> retReactant;
-
-	// Only pull the reactant if the name is valid and there are enough sizes
-	// to fill the composition.
-	if (type == ReactantType::XeV || type == ReactantType::XeI) {
-
-		// Check if the reactant is in the map
-        auto const& currReactantMap = clusterTypeMap.at(type);
-        auto iter = currReactantMap.find(comp);
-        if (iter != currReactantMap.end()) {
-            retReactant = iter->second;
-        }
-	}
-
-	return retReactant.get();
-}
-
-IReactant * NEClusterReactionNetwork::getSuper(ReactantType type,
-		IReactant::SizeType size) const {
-	// Local Declarations
-	std::shared_ptr<IReactant> retReactant;
-
-	// Only pull the reactant if the name and size are valid.
-	if (type == ReactantType::NESuper && size >= 1) {
-        IReactant::Composition composition;
-		composition[toCompIdx(Species::Xe)] = size;
-
-		// Check if the reactant is in the map
-        auto const& currTypeMap = clusterTypeMap.at(type);
-        auto iter = currTypeMap.find(composition);
-        if (iter != currTypeMap.end()) {
-            retReactant = iter->second;
-		}
-	}
-
-	return retReactant.get();
-}
-
-
-void NEClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
-
-	// Only add a complete reactant
-	if (reactant) {
-		// Get the composition
-		auto& composition = reactant->getComposition();
-
-        // Get the species sizes
-        auto numXe = composition[toCompIdx(Species::Xe)] ;
-        auto numV = composition[toCompIdx(Species::V)] ;
-        auto numI = composition[toCompIdx(Species::I)] ;
-
-        // Add element if we don't already know about it.
-        auto& currTypeMap = clusterTypeMap[reactant->getType()];
-        auto iter = currTypeMap.find(composition);
-        if (iter == currTypeMap.end()) {
-
-            // Set the id for this cluster
-            // (It is networkSize+1 because we haven't added 
-            // it to the network yet.)
-            reactant->setId(size() + 1);
-
-            // Add to our per-type map.
-            currTypeMap.emplace(reactant->getComposition(), reactant);
-
-            // Add the pointer to the list of all clusters
-            allReactants.push_back(*reactant);
-
-            // Update max cluster size for this type if necessary.
-            // TODO if clusterSize always is same as reactant->getSize,
-            // just use reactant->getSize and avoid extracting
-            // individual species sizes except in the exception case.
-            // (See PSI implementation for an example.)
-            IReactant::SizeType clusterSize = numXe + numV + numI;
-            assert(clusterSize == reactant->getSize());
-            maxClusterSizeMap[reactant->getType()] = std::max(reactant->getSize(), maxClusterSizeMap[reactant->getType()]);
-
-        } else {
-
-            std::stringstream errStream;
-            errStream << "NEClusterReactionNetwork Message: "
-                    << "Duplicate Reactant (Xe=" << numXe << ",V=" << numV
-                    << ",I=" << numI << ") not added!" << std::endl;
-            throw errStream.str();
-        }
-	}
-
-	return;
-}
-
-void NEClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
-
-	// Only add a complete reactant
-	if (reactant) {
-		// Get the composition
-		auto& composition = reactant->getComposition();
-
-        // Add the element if we don't already know about it.
-        auto& currTypeMap = clusterTypeMap[reactant->getType()];
-        auto iter = currTypeMap.find(composition);
-        if (iter == currTypeMap.end()) {
-
-            // Set the id for this cluster
-            // (It is networkSize+1 because we haven't added it 
-            // to the network yet.)
-            reactant->setId(size() + 1);
-
-            // Add the pointer to the list of all clusters
-            allReactants.push_back(*reactant);
-
-            // Add to our per-type map.
-            currTypeMap.emplace(reactant->getComposition(), reactant);
-
-		} else {
-            // Get the species sizes
-            auto numXe = composition[toCompIdx(Species::Xe)] ;
-            auto numV = composition[toCompIdx(Species::V)] ;
-            auto numI = composition[toCompIdx(Species::I)] ;
-
-			std::stringstream errStream;
-			errStream << "NEClusterReactionNetwork Message: "
-					<< "Duplicate Super Reactant (Xe=" << numXe << ",V=" << numV
-					<< ",I=" << numI << ") not added!" << std::endl;
-			throw errStream.str();
-		}
-	}
-
-	return;
-}
-
-// TODO check if this is identical to the PSI vesrion,
-// and move upwards in class hierarchy if so.
-void NEClusterReactionNetwork::removeReactants(
-		const IReactionNetwork::ReactantVector& doomedReactants) {
-
-	// Build a ReactantMatcher functor for the doomed reactants.
-	// Doing this here allows us to construct the canonical composition
-	// strings for the doomed reactants once and reuse them.
-	// If we used an anonymous functor object in the std::remove_if
-	// calls we would build these strings several times in this function.
-	ReactionNetwork::ReactantMatcher doomedReactantMatcher(doomedReactants);
-
-	// Remove the doomed reactants from our collection of all known reactants.
-	auto ariter = std::remove_if(allReactants.begin(), allReactants.end(),
-			doomedReactantMatcher);
-	allReactants.erase(ariter, allReactants.end());
-
-	// Remove the doomed reactants from the type-specific cluster vectors.
-	// First, determine all cluster types used by clusters in the collection
-	// of doomed reactants...
-	std::set<ReactantType> typesUsed;
-	for (auto reactant : doomedReactants) {
-		typesUsed.insert(reactant->getType());
-	}
-
-	// ...Next, examine each type's collection of clusters and remove the
-	// doomed reactants.
-	for (auto currType : typesUsed) {
-		auto& clusters = clusterTypeMap[currType];
-        for (auto const& currDoomedReactant : doomedReactants) {
-            auto iter = clusters.find(currDoomedReactant->getComposition());
-            assert(iter != clusters.end());
-            clusters.erase(iter);
-        }
-	}
 
 	return;
 }

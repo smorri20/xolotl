@@ -54,6 +54,14 @@ std::string toString(ReactantType rtype);
 
 Species toSpecies(ReactantType rtype);
 
+/**
+ * Obtain the ReactantType that corresponds to a given Species.
+ *
+ * @param s The Species of interest.
+ * @return The ReactantType taht corresponds to Species s.
+ */
+ReactantType toReactantType(Species s);
+
 } // namespace xolotlCore
 
 #endif /* XOLOTL_CORE_REACTANTTYPE_H_ */

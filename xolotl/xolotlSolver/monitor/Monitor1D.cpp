@@ -1299,7 +1299,7 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 				double conc = 0.0;
 				// V clusters
 				if (j == 0) {
-					cluster = network.get(ReactantType::V, i);
+					cluster = network.get(Species::V, i);
 					if (cluster) {
 						// Get the ID of the cluster
 						int id = cluster->getId() - 1;
@@ -1308,7 +1308,7 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 				}
 				// He clusters
 				else if (i == 0) {
-					cluster = network.get(ReactantType::He, j);
+					cluster = network.get(Species::He, j);
 					if (cluster) {
 						// Get the ID of the cluster
 						int id = cluster->getId() - 1;
@@ -1320,7 +1320,7 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
                     IReactant::Composition testComp;
                     testComp[toCompIdx(Species::He)] = j;
                     testComp[toCompIdx(Species::V)] = i;
-					cluster = network.getCompound(ReactantType::HeV, testComp);
+					cluster = network.get(ReactantType::HeV, testComp);
 					if (cluster) {
 						// Get the ID of the cluster
 						int id = cluster->getId() - 1;
@@ -1563,12 +1563,12 @@ PetscErrorCode monitorMaxClusterConc1D(TS ts, PetscInt timestep, PetscReal time,
     IReactant::Composition testComp;
     testComp[toCompIdx(Species::He)] = maxHeSize;
     testComp[toCompIdx(Species::V)] = maxVClusterSize;
-	maxCluster = network.getCompound(ReactantType::HeV, testComp);
+	maxCluster = network.get(ReactantType::HeV, testComp);
 	if (!maxCluster) {
 		// Get the maximum size of Xe clusters
 		auto const& neNetwork = dynamic_cast<NEClusterReactionNetwork const&>(network);
 		int maxXeClusterSize = neNetwork.getMaxClusterSize(ReactantType::Xe);
-		maxCluster = network.get(ReactantType::Xe, maxXeClusterSize);
+		maxCluster = network.get(Species::Xe, maxXeClusterSize);
 	}
 
 	// Boolean to know if the concentration is too big
@@ -1768,7 +1768,7 @@ PetscErrorCode monitorMovingSurface1D(TS ts, PetscInt, PetscReal time,
 
 		// Initialize the vacancy concentration on the new grid points
 		// Get the single vacancy ID
-		auto singleVacancyCluster = network.get(xolotlCore::ReactantType::V, 1);
+		auto singleVacancyCluster = network.get(Species::V, 1);
 		int vacancyIndex = -1;
 		if (singleVacancyCluster)
 			vacancyIndex = singleVacancyCluster->getId() - 1;
@@ -1986,7 +1986,7 @@ PetscErrorCode monitorBursting1D(TS ts, PetscInt, PetscReal time, Vec solution,
 
 					// Get the V cluster of the same size
 					auto const & comp = cluster.getComposition();
-					auto vCluster = network.get(ReactantType::V, comp[toCompIdx(Species::V)] );
+					auto vCluster = network.get(Species::V, comp[toCompIdx(Species::V)] );
 					int vId = vCluster->getId() - 1;
 					int id = cluster.getId() - 1;
 					gridPointSolution[vId] = gridPointSolution[id];
@@ -2000,7 +2000,7 @@ PetscErrorCode monitorBursting1D(TS ts, PetscInt, PetscReal time, Vec solution,
 					// Get the V cluster of the same size
 					double numV = cluster.getNumV();
 					int truncV = (int) numV;
-					auto vCluster = network.get(ReactantType::V, truncV);
+					auto vCluster = network.get(Species::V, truncV);
 					int vId = vCluster->getId() - 1;
 					int id = cluster.getId() - 1;
 					double conc = cluster.getTotalConcentration();

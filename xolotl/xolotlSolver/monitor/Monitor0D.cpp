@@ -318,7 +318,7 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 			double conc = 0.0;
 			// V clusters
 			if (j == 0) {
-				cluster = network.get(ReactantType::V, i);
+				cluster = network.get(Species::V, i);
 				if (cluster) {
 					// Get the ID of the cluster
 					int id = cluster->getId() - 1;
@@ -327,7 +327,7 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 			}
 			// He clusters
 			else if (i == 0) {
-				cluster = network.get(ReactantType::He, j);
+				cluster = network.get(Species::He, j);
 				if (cluster) {
 					// Get the ID of the cluster
 					int id = cluster->getId() - 1;
@@ -339,7 +339,7 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
                 IReactant::Composition testComp;
                 testComp[toCompIdx(Species::He)] = j;
                 testComp[toCompIdx(Species::V)] = i;
-				cluster = network.getCompound(ReactantType::HeV, testComp);
+				cluster = network.get(ReactantType::HeV, testComp);
 				if (cluster) {
 					// Get the ID of the cluster
 					int id = cluster->getId() - 1;

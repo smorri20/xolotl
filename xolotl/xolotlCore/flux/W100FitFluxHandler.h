@@ -56,7 +56,7 @@ public:
 		FluxHandler::initializeFluxHandler(network, surfacePos, grid);
 
 		// Set the flux index corresponding the the single helium cluster here
-		auto fluxCluster = network.get(ReactantType::He, 1);
+		auto fluxCluster = network.get(Species::He, 1);
 		// Check that the helium cluster is present in the network
 		if (!fluxCluster) {
 			throw std::string(
@@ -64,19 +64,19 @@ public:
 					"cannot use the flux option!");
 		}
 		fluxIndices.push_back(fluxCluster->getId() - 1);
-		fluxCluster = network.get(ReactantType::I, 1);
+		fluxCluster = network.get(Species::I, 1);
 		fluxIndices.push_back(fluxCluster->getId() - 1);
-		fluxCluster = network.get(ReactantType::V, 1);
+		fluxCluster = network.get(Species::V, 1);
 		fluxIndices.push_back(fluxCluster->getId() - 1);
-		fluxCluster = network.get(ReactantType::V, 2);
+		fluxCluster = network.get(Species::V, 2);
 		fluxIndices.push_back(fluxCluster->getId() - 1);
-		fluxCluster = network.get(ReactantType::V, 3);
+		fluxCluster = network.get(Species::V, 3);
 		fluxIndices.push_back(fluxCluster->getId() - 1);
-		fluxCluster = network.get(ReactantType::V, 4);
+		fluxCluster = network.get(Species::V, 4);
 		fluxIndices.push_back(fluxCluster->getId() - 1);
-		fluxCluster = network.get(ReactantType::V, 5);
+		fluxCluster = network.get(Species::V, 5);
 		fluxIndices.push_back(fluxCluster->getId() - 1);
-		fluxCluster = network.get(ReactantType::V, 9);
+		fluxCluster = network.get(Species::V, 9);
 		fluxIndices.push_back(fluxCluster->getId() - 1);
 
 		return;

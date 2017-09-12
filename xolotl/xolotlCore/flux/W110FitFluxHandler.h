@@ -56,7 +56,7 @@ public:
 		FluxHandler::initializeFluxHandler(network, surfacePos, grid);
 
 		// Set the flux index corresponding the the single helium cluster here
-		auto fluxCluster = network.get(ReactantType::He, 1);
+		auto fluxCluster = network.get(Species::He, 1);
 		// Check that the helium cluster is present in the network
 		if (!fluxCluster) {
 			throw std::string(

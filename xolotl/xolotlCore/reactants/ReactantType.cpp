@@ -39,6 +39,19 @@ Species toSpecies(ReactantType rtype) {
     return (iter != smap.end()) ? iter->second : Species::Invalid;
 }
 
+ReactantType toReactantType(Species s) {
+    // Map of all single species reactant types, plus Invalid.
+    static std::unordered_map<Species, ReactantType> smap {
+        { Species::Invalid, ReactantType::Invalid },
+        { Species::V, ReactantType::V },
+        { Species::I, ReactantType::I },
+        { Species::He, ReactantType::He },
+        { Species::Xe, ReactantType::Xe }
+    };
+
+    auto iter = smap.find(s);
+    return (iter != smap.end()) ? iter->second : ReactantType::Invalid;
+}
 
 } // namespace xolotlCore
 

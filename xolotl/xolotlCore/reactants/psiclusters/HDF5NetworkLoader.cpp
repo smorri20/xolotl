@@ -17,7 +17,7 @@ std::unique_ptr<IReactionNetwork> HDF5NetworkLoader::load(const IOptions& option
 	int numHe = 0, numV = 0, numI = 0;
 	double formationEnergy = 0.0, migrationEnergy = 0.0;
 	double diffusionFactor = 0.0;
-	std::vector<std::shared_ptr<Reactant> > reactants;
+	std::vector<std::reference_wrapper<Reactant> > reactants;
 
 	// Prepare the network
     std::unique_ptr<PSIClusterReactionNetwork> network (
@@ -48,23 +48,29 @@ std::unique_ptr<IReactionNetwork> HDF5NetworkLoader::load(const IOptions& option
 		if (dummyReactions) {
 			// Create a dummy cluster (just a stock Reactant)
             // from the existing cluster
-            auto dummyCluster = std::make_shared<Reactant>(*nextCluster);
+            // TODO Once C++11 support is widespread, use std::make_unique.
+            std::unique_ptr<Reactant> dummyCluster(new Reactant(*nextCluster));
 
-			// Add the cluster to the network
-			network->add(dummyCluster);
-			// Add it to the list so that we can set the network later
-			reactants.push_back(dummyCluster);
+			// Keep a ref to it so we can trigger its updates after
+            // we add it to the network.
+			reactants.emplace_back(*dummyCluster);
+
+			// Give the cluster to the network
+			network->add(std::move(dummyCluster));
+
 		} else {
-			// Add the cluster to the network
-			network->add(nextCluster);
-			// Add it to the list so that we can set the network later
-			reactants.push_back(nextCluster);
+			// Keep a ref to it so we can trigger its updates after
+            // we add it to the network.
+			reactants.emplace_back(*nextCluster);
+
+			// Give the cluster to the network
+			network->add(std::move(nextCluster));
 		}
 	}
 
 	// Ask reactants to update now that they are in network.
-    for (auto& currReactant : reactants) {
-        currReactant->updateFromNetwork();
+    for (IReactant& currReactant : reactants) {
+        currReactant.updateFromNetwork();
 	}
 
 	// Check if we want dummy reactions

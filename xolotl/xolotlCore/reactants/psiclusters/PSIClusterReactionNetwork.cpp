@@ -89,7 +89,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 				secondSize = secondReactant.getSize();
 				productSize = firstSize + secondSize;
 				// Get the product
-				auto product = get(currType, productSize);
+				auto product = get(toSpecies(currType), productSize);
 				// Check that the reaction can occur
 				if (product
 						&& (firstReactant.getDiffusionFactor() > 0.0
@@ -138,7 +138,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
             IReactant::Composition newComp;
             newComp[toCompIdx(Species::He)] = newNumHe;
             newComp[toCompIdx(Species::V)] = newNumV;
-			auto product = getCompound(ReactantType::HeV, newComp);
+			auto product = get(ReactantType::HeV, newComp);
 
 			// Check if the product can be a super cluster
 			if (!product) {
@@ -228,7 +228,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
             IReactant::Composition newComp;
             newComp[toCompIdx(Species::He)] = newNumHe;
             newComp[toCompIdx(Species::V)] = newNumV;
-			auto product = getCompound(ReactantType::HeV, newComp);
+			auto product = get(ReactantType::HeV, newComp);
 
 			// Check if the product can be a super cluster
 			if (!product) {
@@ -316,7 +316,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
             IReactant::Composition newComp;
             newComp[toCompIdx(Species::He)] = newNumHe;
             newComp[toCompIdx(Species::V)] = newNumV;
-			auto product = getCompound(ReactantType::HeV, newComp);
+			auto product = get(ReactantType::HeV, newComp);
 
 			// Check if the product can be a super cluster
 			if (!product) {
@@ -361,7 +361,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			IReactant * product = nullptr;
 			if (comp[toCompIdx(Species::V)] == firstSize) {
 				// The product is He
-				product = get(ReactantType::He, comp[toCompIdx(Species::He)] );
+				product = get(Species::He, comp[toCompIdx(Species::He)] );
 			} else {
 				// The product is HeV
 				// Create the composition of the potential product
@@ -369,7 +369,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
                 newComp[toCompIdx(Species::He)] = comp[toCompIdx(Species::He)];
                 newComp[toCompIdx(Species::V)] = comp[toCompIdx(Species::V)] - firstSize;
 				// Get the product
-				product = getCompound(ReactantType::HeV, newComp);
+				product = get(ReactantType::HeV, newComp);
 			}
 			// Check that the reaction can occur
 			if (product
@@ -405,14 +405,14 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 					// Get the product
 					if (newNumV == 0) {
 						// The product is He
-						product = get(ReactantType::He, i);
+						product = get(Species::He, i);
 					}
 					else {
 						// Create the composition of the potential product
                         IReactant::Composition newComp;
                         newComp[toCompIdx(Species::He)] = newNumHe;
                         newComp[toCompIdx(Species::V)] = newNumV;
-						product = getCompound(ReactantType::HeV, newComp);
+						product = get(ReactantType::HeV, newComp);
 
 						// If the product doesn't exist check for super clusters
 						if (!product) {
@@ -471,7 +471,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //				// Create the composition of the potential product
 //				std::vector<int> compositionVec = { firstSize + secondSize,
 //						iSize, 0 };
-//				product = getCompound(ReactantType::HeV, compositionVec);
+//				product = get(ReactantType::HeV, compositionVec);
 //				// Check that the reaction can occur
 //				if (product
 //						&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -507,7 +507,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //			// Get the simple product
 //			std::vector<int> compositionVec = { firstSize + comp[toCompIdx(Species::He)],
 //					comp[toCompIdx(Species::V)], 0 };
-//			auto product = getCompound(ReactantType::HeV, compositionVec);
+//			auto product = get(ReactantType::HeV, compositionVec);
 //			// Doesn't do anything if the product exist
 //			if (product)
 //				continue;
@@ -520,7 +520,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //				int iSize = (*it)->getSize();
 //				// Create the composition of the potential product
 //				compositionVec[1] = comp[toCompIdx(Species::V)] + iSize;
-//				product = getCompound(ReactantType::HeV, compositionVec);
+//				product = get(ReactantType::HeV, compositionVec);
 //				// Check that the reaction can occur
 //				if (product
 //						&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -565,7 +565,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			if (firstSize > secondSize) {
 				// Get the product
 				productSize = firstSize - secondSize;
-				auto product = get(ReactantType::I, productSize);
+				auto product = get(Species::I, productSize);
 				// Check that the reaction can occur
 				if (product
 						&& (iReactant.getDiffusionFactor() > 0.0
@@ -581,7 +581,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			} else if (firstSize < secondSize) {
 				// Get the product
 				productSize = secondSize - firstSize;
-				auto product = get(ReactantType::V, productSize);
+				auto product = get(Species::V, productSize);
 				// Check that the reaction can occur
 				if (product
 						&& (iReactant.getDiffusionFactor() > 0.0
@@ -629,7 +629,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //			std::vector<int> compositionVec = { comp[toCompIdx(Species::He)] + firstSize, 0,
 //					comp[toCompIdx(Species::I)] };
 //			// Get the product
-//			auto product = getCompound(ReactantType::HeI, compositionVec);
+//			auto product = get(ReactantType::HeI, compositionVec);
 //			// Check that the reaction can occur
 //			if (product
 //					&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -660,7 +660,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //		// Create the composition of the potential product
 //		std::vector<int> compositionVec = { comp[toCompIdx(Species::He)], 0, comp[toCompIdx(Species::I)] + 1 };
 //		// Get the product
-//		auto product = getCompound(ReactantType::HeI, compositionVec);
+//		auto product = get(ReactantType::HeI, compositionVec);
 //		// Check that the reaction can occur
 //		if (product
 //				&& (singleInterstitialCluster->getDiffusionFactor() > 0.0
@@ -693,7 +693,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //			// Create the composition of the potential product
 //			std::vector<int> compositionVec = { firstSize, 0, secondSize };
 //			// Get the product
-//			auto product = getCompound(ReactantType::HeI, compositionVec);
+//			auto product = get(ReactantType::HeI, compositionVec);
 //			// Check that the reaction can occur
 //			if (product
 //					&& ((*firstIt)->getDiffusionFactor() > 0.0
@@ -735,7 +735,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //				std::vector<int> compositionVec = { comp[toCompIdx(Species::He)] , 0, comp[toCompIdx(Species::I)]
 //						- firstSize };
 //				// Get the product
-//				product = getCompound(ReactantType::HeI, compositionVec);
+//				product = get(ReactantType::HeI, compositionVec);
 //			}
 //			// Check that the reaction can occur
 //			if (product
@@ -804,159 +804,6 @@ void PSIClusterReactionNetwork::setTemperature(double temp) {
 	return;
 }
 
-double PSIClusterReactionNetwork::getTemperature() const {
-	return temperature;
-}
-
-IReactant * PSIClusterReactionNetwork::get(ReactantType type,
-		IReactant::SizeType size) const {
-
-	// Local Declarations
-	std::shared_ptr<IReactant> retReactant;
-
-	// Only pull the reactant if the name and size are valid
-	if ((type == ReactantType::He || type == ReactantType::V || type == ReactantType::I) && size >= 1) {
-
-        IReactant::Composition composition;
-        composition[toCompIdx(toSpecies(type))] = size;
-
-        // Check if we already know about the reactant.
-        auto const& currReactantMap = clusterTypeMap.at(type);
-        auto iter = currReactantMap.find(composition);
-        if (iter != currReactantMap.end()) {
-            retReactant = iter->second;
-        }
-	}
-
-	return retReactant.get();
-}
-
-IReactant * PSIClusterReactionNetwork::getCompound(ReactantType type,
-        const IReactant::Composition& comp) const {
-
-	// Local Declarations
-	std::shared_ptr<IReactant> retReactant;
-
-	// Only pull the reactant if the name is valid and there are enough sizes
-	// to fill the composition.
-	if (type == ReactantType::HeV || type == ReactantType::HeI) {
-
-		// Check if the reactant is in the map
-        auto const& currTypeMap = clusterTypeMap.at(type);
-        auto iter = currTypeMap.find(comp);
-        if (iter != currTypeMap.end()) {
-			retReactant = iter->second;
-		}
-	}
-
-	return retReactant.get();
-}
-
-IReactant * PSIClusterReactionNetwork::getSuper(ReactantType type,
-        const IReactant::Composition& comp) const {
-
-	// Local Declarations
-	std::shared_ptr<IReactant> retReactant;
-
-	// Only pull the reactant if the name is valid and there are enough sizes
-	// to fill the composition.
-	if (type == ReactantType::PSISuper) {
-
-		// Check if we already know about the reactant.
-        auto const& currTypeMap = clusterTypeMap.at(type);
-        auto iter = currTypeMap.find(comp);
-        if (iter != currTypeMap.end()) {
-			retReactant = iter->second;
-		}
-	}
-
-	return retReactant.get();
-}
-
-
-void PSIClusterReactionNetwork::add(std::shared_ptr<IReactant> reactant) {
-
-	// Only add a complete reactant
-	if (reactant) {
-		// Get the composition
-		auto& composition = reactant->getComposition();
-
-        // Add to our network if we don't already know about it.
-        auto& currTypeMap = clusterTypeMap[reactant->getType()];
-        auto iter = currTypeMap.find(composition);
-        if (iter == currTypeMap.end()) {
-
-            // Add reactant to our per-type map.
-            currTypeMap.emplace(reactant->getComposition(), reactant);
-
-            // Set the id for this cluster
-            // (It is networkSize+1 because we haven't added 
-            // it to the network yet.)
-            reactant->setId(size()+1);
-
-            // Add the pointer to the list of all clusters
-            allReactants.emplace_back(*reactant);
-
-            // Update the max cluster size for the new cluster's type.
-            maxClusterSizeMap[reactant->getType()] = std::max(reactant->getSize(), maxClusterSizeMap[reactant->getType()]);
-		} else {
-            // Get the species sizes
-            auto numHe = composition[toCompIdx(Species::He)] ;
-            auto numV = composition[toCompIdx(Species::V)] ;
-            auto numI = composition[toCompIdx(Species::I)] ;
-
-			std::stringstream errStream;
-			errStream << "PSIClusterReactionNetwork Message: "
-					<< "Duplicate Reactant (He=" << numHe << ",V=" << numV
-					<< ",I=" << numI << ") not added!" << std::endl;
-			throw errStream.str();
-		}
-	}
-
-	return;
-}
-
-void PSIClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
-
-	// Only add a complete reactant
-	if (reactant) {
-		// Get the composition
-		auto& composition = reactant->getComposition();
-
-        // Add reactant if we don't already know about it.
-        auto& currTypeMap = clusterTypeMap[reactant->getType()];
-        auto iter = currTypeMap.find(composition);
-        if (iter == currTypeMap.end()) {
-
-            // Set the id for this cluster
-            // (It is networkSize+1 because we haven't added it 
-            // to the network yet.)
-            reactant->setId(size() + 1);
-
-            // Add the pointer to the list of all clusters
-            allReactants.emplace_back(*reactant);
-
-            // Add cluster to our per-type map.
-            currTypeMap.emplace(reactant->getComposition(), reactant);
-
-		} else {
-            // Get the species sizes
-            auto numHe = composition[toCompIdx(Species::He)] ;
-            auto numV = composition[toCompIdx(Species::V)] ;
-            auto numI = composition[toCompIdx(Species::I)] ;
-
-			std::stringstream errStream;
-			errStream << "PSIClusterReactionNetwork Message: "
-					<< "Duplicate Super Reactant (He=" << numHe << ",V=" << numV
-					<< ",I=" << numI << ") not added!" << std::endl;
-			throw errStream.str();
-		}
-	}
-
-	return;
-}
-
-
 void PSIClusterReactionNetwork::buildSuperClusterMap(const std::vector<IReactant::SizeType>& bounds) {
 
     // Save the bounds to use.
@@ -982,44 +829,6 @@ void PSIClusterReactionNetwork::buildSuperClusterMap(const std::vector<IReactant
         });
 }
 
-
-void PSIClusterReactionNetwork::removeReactants(
-		const IReactionNetwork::ReactantVector& doomedReactants) {
-
-	// Build a ReactantMatcher functor for the doomed reactants.
-	// Doing this here allows us to construct the canonical composition
-	// strings for the doomed reactants once and reuse them.
-	// If we used an anonymous functor object in the std::remove_if
-	// calls we would build these strings several times in this function.
-	ReactionNetwork::ReactantMatcher doomedReactantMatcher(doomedReactants);
-
-	// Remove the doomed reactants from our collection of all known reactants.
-	auto ariter = std::remove_if(allReactants.begin(), allReactants.end(),
-			doomedReactantMatcher);
-	allReactants.erase(ariter, allReactants.end());
-
-	// Remove the doomed reactants from the type-specific cluster vectors.
-	// First, determine all cluster types used by clusters in the collection
-	// of doomed reactants...
-	std::set<ReactantType> typesUsed;
-	for (auto reactant : doomedReactants) {
-		typesUsed.insert(reactant->getType());
-	}
-
-	// ...Next, examine each type's collection of clusters and remove the
-	// doomed reactants.
-	for (auto currType : typesUsed) {
-		auto& clusters = clusterTypeMap[currType];
-
-        for(auto const& currDoomedReactant : doomedReactants) {
-            auto iter = clusters.find(currDoomedReactant->getComposition());
-            assert(iter != clusters.end());
-            clusters.erase(iter);
-        }
-	}
-
-	return;
-}
 
 void PSIClusterReactionNetwork::reinitializeNetwork() {
 

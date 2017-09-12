@@ -12,11 +12,11 @@ void TrapMutationHandler::initialize(const IReactionNetwork& network,
 	// Each (He_i)(V) cluster and I clusters are connected to He_i
 
 	// Get the single interstitial cluster
-	auto singleInterstitial = (PSICluster *) network.get(ReactantType::I, 1);
+	auto singleInterstitial = (PSICluster *) network.get(Species::I, 1);
 	// Get the double interstitial cluster
-	auto doubleInterstitial = (PSICluster *) network.get(ReactantType::I, 2);
+	auto doubleInterstitial = (PSICluster *) network.get(Species::I, 2);
 	// Get the triple interstitial cluster
-	auto tripleInterstitial = (PSICluster *) network.get(ReactantType::I, 3);
+	auto tripleInterstitial = (PSICluster *) network.get(Species::I, 3);
 
 	// If the I clusters are not in the network,
 	// there is no trap-mutation
@@ -434,13 +434,15 @@ void TrapMutationHandler::computeTrapMutation(const IReactionNetwork& network,
 		auto bubbleIndex = bubble.getId() - 1;
 
 		// Get the helium cluster with the same number of He and its ID
+        // Note this composition has nonzero entries for both He and I,
+        // so we can't use the network's get function that takes a composition.
 		auto& comp = bubble.getComposition();
-		auto heCluster = (PSICluster *) network.get(ReactantType::He, comp[toCompIdx(Species::He)]);
+		auto heCluster = (PSICluster *) network.get(Species::He, comp[toCompIdx(Species::He)]);
 		auto heIndex = heCluster->getId() - 1;
 
 		// Get the interstitial cluster with the same number of I as the number
 		// of vacancies in the bubble and its ID
-		auto iCluster = (PSICluster *) network.get(ReactantType::I, comp[toCompIdx(Species::V)]);
+		auto iCluster = (PSICluster *) network.get(Species::I, comp[toCompIdx(Species::V)]);
 		auto iIndex = iCluster->getId() - 1;
 
 		// Get the initial concentration of helium
@@ -484,13 +486,15 @@ int TrapMutationHandler::computePartialsForTrapMutation(
 		auto bubbleIndex = bubble.getId() - 1;
 
 		// Get the helium cluster with the same number of He and its ID
+        // Note this composition has non-zero entries for both He and I.
+        // so we can't use the network's get function that takes a composition.
 		auto const& comp = bubble.getComposition();
-		auto heCluster = (PSICluster *) network.get(ReactantType::He, comp[toCompIdx(Species::He)]);
+		auto heCluster = (PSICluster *) network.get(Species::He, comp[toCompIdx(Species::He)]);
 		auto heIndex = heCluster->getId() - 1;
 
 		// Get the interstitial cluster with the same number of I as the number
 		// of vacancies in the bubble and its ID
-		auto iCluster = (PSICluster *) network.get(ReactantType::I, comp[toCompIdx(Species::V)]);
+		auto iCluster = (PSICluster *) network.get(Species::I, comp[toCompIdx(Species::V)]);
 		auto iIndex = iCluster->getId() - 1;
 
 		// Check the desorption

@@ -57,7 +57,7 @@ protected:
 	 * @param numI The number of interstitial defects
 	 * @return The new cluster
 	 */
-	std::shared_ptr<NECluster> createNECluster(int numXe, int numV, int numI,
+	std::unique_ptr<NECluster> createNECluster(int numXe, int numV, int numI,
         IReactionNetwork& network) const;
 
 public:

@@ -19,7 +19,7 @@ ReactionNetwork::ReactionNetwork(
     // Ensure our per-type cluster map can store Reactants of the types
     // we support.
     for (auto const& currType : knownReactantTypes) {
-        clusterTypeMap.insert( {currType, IReactionNetwork::ReactantMap() } );
+        clusterTypeMap.emplace( std::make_pair(currType, IReactionNetwork::ReactantMap()) );
     }
 
     // Ensure we have a baseline for determining max cluster size for
@@ -29,6 +29,70 @@ ReactionNetwork::ReactionNetwork(
     }
 	return;
 }
+
+
+void ReactionNetwork::add(std::unique_ptr<IReactant> reactant) {
+
+    // Ensure we have a valid object to work with.
+    assert(reactant);
+
+    // Get the composition
+    auto& composition = reactant->getComposition();
+
+    // Check if we already know about this reactant.
+    auto& currTypeMap = clusterTypeMap[reactant->getType()];
+    auto iter = currTypeMap.find(composition);
+    if (iter == currTypeMap.end()) {
+
+        // Set the id for this cluster
+        // (It is networkSize+1 because we haven't added 
+        // it to the network yet.)
+        reactant->setId(size()+1);
+
+        // Update the max cluster size for the new cluster's type.
+        maxClusterSizeMap[reactant->getType()] = std::max(reactant->getSize(), maxClusterSizeMap[reactant->getType()]);
+
+        // Note the reactant in our flat list of all reactants.
+        allReactants.emplace_back(*reactant);
+
+        // Give reactant to the appropriate per-type map.
+        currTypeMap.emplace(composition, std::move(reactant));
+
+    } else {
+        std::stringstream errStream;
+        errStream << "ReactionNetwork: not adding duplicate "
+                << toString(reactant->getType()) << ':' << composition;
+
+        throw errStream.str();
+    }
+
+	return;
+}
+
+// TODO have this return an iterator to the appropriate map.  Probably
+// will have to have it return a pair with iter and bool, to ease
+// detection of whether we found it or not.  (Figuring out which
+// map to test the end against is probable less easy.)
+// Alternative is to remove 'get()' entirely and rely on callers
+// to getAll() for particular type, then do their find/test to see if
+// we found it.  That would be (slightly?) faster since now caller
+// has to test return for nullptr anyway, and we're already testing
+// against end() of the appropriate map.
+IReactant * ReactionNetwork::get(ReactantType type,
+        const IReactant::Composition& comp) const {
+
+    IReactant* ret = nullptr;
+
+    // Check if the reactant is in the map
+    auto const& currTypeMap = clusterTypeMap.at(type);
+    auto iter = currTypeMap.find(comp);
+    if (iter != currTypeMap.end()) {
+        ret = iter->second.get();
+    }
+
+	return ret;
+}
+
 
 
 double ReactionNetwork::calculateReactionRateConstant(const ProductionReaction& reaction) const {
@@ -134,6 +198,44 @@ std::shared_ptr<DissociationReaction> ReactionNetwork::addDissociationReaction(
 
 	// Return the newly-added dissociation reaction.
 	return reaction;
+}
+
+void ReactionNetwork::removeReactants(
+		const IReactionNetwork::ReactantVector& doomedReactants) {
+
+	// Build a ReactantMatcher functor for the doomed reactants.
+	// Doing this here allows us to construct the canonical composition
+	// strings for the doomed reactants once and reuse them.
+	// If we used an anonymous functor object in the std::remove_if
+	// calls we would build these strings several times in this function.
+	ReactionNetwork::ReactantMatcher doomedReactantMatcher(doomedReactants);
+
+	// Remove the doomed reactants from our collection of all known reactants.
+	auto ariter = std::remove_if(allReactants.begin(), allReactants.end(),
+			doomedReactantMatcher);
+	allReactants.erase(ariter, allReactants.end());
+
+	// Remove the doomed reactants from the type-specific cluster vectors.
+	// First, determine all cluster types used by clusters in the collection
+	// of doomed reactants...
+	std::set<ReactantType> typesUsed;
+	for (IReactant const& reactant : doomedReactants) {
+		typesUsed.insert(reactant.getType());
+	}
+
+	// ...Next, examine each type's collection of clusters and remove the
+	// doomed reactants.
+	for (auto currType : typesUsed) {
+		auto& clusters = clusterTypeMap[currType];
+
+        for(IReactant const& currDoomedReactant : doomedReactants) {
+            auto iter = clusters.find(currDoomedReactant.getComposition());
+            assert(iter != clusters.end());
+            clusters.erase(iter);
+        }
+	}
+
+	return;
 }
 
 void ReactionNetwork::dumpTo(std::ostream& os) const {

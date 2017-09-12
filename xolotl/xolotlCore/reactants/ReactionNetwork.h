@@ -52,8 +52,8 @@ protected:
 		 * @param reactants The collection of reactants we are to recognize.
 		 */
 		ReactantMatcher(const IReactionNetwork::ReactantVector& reactants) {
-			for (auto reactant : reactants) {
-				comps.insert(reactant->getComposition());
+			for (IReactant const& reactant : reactants) {
+				comps.insert(reactant.getComposition());
 			}
 		}
 
@@ -86,7 +86,7 @@ protected:
 		 * @return true iff the reactant's composition's canonical 
 		 * representation is in our set of doomed reactants.
 		 */
-		bool operator()(const std::shared_ptr<IReactant> testReactant) const {
+		bool operator()(const std::unique_ptr<IReactant>& testReactant) const {
 			return this->operator()(testReactant.get());
 		}
 
@@ -98,7 +98,7 @@ protected:
          */
 		bool operator()(const ReactantMap::value_type& testMapItem) const {
             auto const& testReactant = testMapItem.second;
-			return this->operator()(testReactant);
+			return this->operator()(*testReactant);
 		}
 	};
 
@@ -292,6 +292,34 @@ public:
         return temperature;
     }
 
+	/**
+	 * Retrieve the single-species reactant with the given type and size if it
+	 * exists in the network or null if not.
+     * Convenience function for get() that takes a 
+     * reactant type and composition.
+	 *
+	 * @param species The reactant's single species.
+	 * @param size The size of the reactant.
+	 * @return A pointer to the reactant, or nullptr if it does not 
+     * exist in the network.
+	 */
+	IReactant * get(Species species, IReactant::SizeType size) const override {
+        IReactant::Composition comp;
+        comp[toCompIdx(species)] = size;
+        return get(toReactantType(species), comp);
+    }
+
+	/**
+	 * Retrieve the reactant with the given type and composition if
+	 * exists in the network.
+	 *
+	 * @param type The type of the reactant
+	 * @param comp The composition of the reactant
+	 * @return A pointer to the reactant of type 'type' and with composition
+     * 'comp.' nullptr if no such reactant exists.
+	 */
+	IReactant * get(ReactantType type,
+                            const IReactant::Composition& comp) const override;
 
 	/**
 	 * This operation returns all reactants in the network without regard for
@@ -320,27 +348,17 @@ public:
     }
 
 	/**
-	 * This operation adds a reactant or a compound reactant to the network.
-	 * Adding a reactant to the network does not set the network as the
-	 * reaction network for the reactant. This step must be performed
-	 * separately to allow for the scenario where the network is generated
-	 * entirely before running.
+     * Give the reactant to the network.
 	 *
-	 * @param reactant The reactant that should be added to the network
+	 * This operation sets the id of the reactant to one that is specific
+	 * to this network. Do not share reactants across networks! This id is
+	 * guaranteed to be between 1 and n, including both, for n reactants in
+	 * the network.
+	 *
+	 * @param reactant The reactant that should be added to the network.
 	 */
-	virtual void add(std::shared_ptr<IReactant> reactant) {
-		return;
-	}
+	void add(std::unique_ptr<IReactant> reactant) override;
 
-	/**
-	 * This operation adds a super reactant to the network.
-	 * Used with a grouping method.
-	 *
-	 * @param reactant The reactant that should be added to the network
-	 */
-	virtual void addSuper(std::shared_ptr<IReactant> reactant) {
-		return;
-	}
 
 	/**
 	 * This operation reinitializes the network.
@@ -548,6 +566,13 @@ public:
     IReactant::SizeType getMaxClusterSize(ReactantType rtype) const {
         return maxClusterSizeMap.at(rtype);
     }
+
+	/**
+	 * Remove the given reactants from the network.
+	 *
+	 * @param reactants The reactants that should be removed.
+	 */
+	void removeReactants(const ReactantVector& reactants) override;
 
     /**
      * Dump a representation of the network to the given output stream.

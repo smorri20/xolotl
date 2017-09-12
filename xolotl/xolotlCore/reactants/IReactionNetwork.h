@@ -23,15 +23,15 @@ class IReactionNetwork {
 
 public:
     /**
-     * Nice name for vector of Reactants, e.g., as returned by getAll.
+     * Nice name for vector of Reactants.
      */
-    using ReactantVector = std::vector<std::shared_ptr<IReactant> >;
+    using ReactantVector = std::vector<std::reference_wrapper<IReactant> >;
 
 
     /**
      * Nice name for map of reactants, keyed by their composition.
      */
-    using ReactantMap = std::unordered_map<IReactant::Composition, std::shared_ptr<IReactant> >;
+    using ReactantMap = std::unordered_map<IReactant::Composition, std::unique_ptr<IReactant> >;
 
 
 	/**
@@ -58,24 +58,28 @@ public:
 	virtual double getTemperature() const = 0;
 
 	/**
-	 * This operation returns a reactant with the given type and size if it
+	 * Retrieve the single-species reactant with the given type and size if it
 	 * exists in the network or null if not.
+     * Convenience function for get() that takes a 
+     * reactant type and composition.
 	 *
-	 * @param type The type of the reactant
-	 * @param size The size of the reactant
-	 * @return A pointer to the reactant
+	 * @param species The reactant's single species.
+	 * @param size The size of the reactant.
+	 * @return A pointer to the reactant, or nullptr if it does not 
+     * exist in the network.
 	 */
-	virtual IReactant * get(ReactantType type, IReactant::SizeType size) const = 0;
+	virtual IReactant * get(Species species, IReactant::SizeType size) const = 0;
 
 	/**
-	 * This operation returns a compound reactant with the given type and size if it
-	 * exists in the network or null if not.
+	 * Retrieve the reactant with the given type and composition if
+	 * exists in the network.
 	 *
-	 * @param type The type of the compound reactant
-	 * @param sizes An array containing the sizes of each piece of the reactant
-	 * @return A pointer to the compound reactant
+	 * @param type The type of the reactant
+	 * @param comp The composition of the reactant
+	 * @return A pointer to the reactant of type 'type' and with composition
+     * 'comp.' nullptr if no such reactant exists.
 	 */
-	virtual IReactant * getCompound(ReactantType type,
+	virtual IReactant * get(ReactantType type,
             const IReactant::Composition& comp) const = 0;
 
 	/**
@@ -98,23 +102,11 @@ public:
     virtual const ReactantMap& getAll(ReactantType type) const = 0;
 
 	/**
-	 * This operation adds a reactant or a compound reactant to the network.
-	 * Adding a reactant to the network does not set the network as the
-	 * reaction network for the reactant. This step must be performed
-	 * separately to allow for the scenario where the network is generated
-	 * entirely before running.
+     * Give the reactant to the network.
 	 *
 	 * @param reactant The reactant that should be added to the network
 	 */
-	virtual void add(std::shared_ptr<IReactant> reactant) = 0;
-
-	/**
-	 * This operation adds a super reactant to the network.
-	 * Used with a grouping method.
-	 *
-	 * @param reactant The reactant that should be added to the network
-	 */
-	virtual void addSuper(std::shared_ptr<IReactant> reactant) = 0;
+	virtual void add(std::unique_ptr<IReactant> reactant) = 0;
 
 	/**
 	 * This operation removes a group of reactants from the network.

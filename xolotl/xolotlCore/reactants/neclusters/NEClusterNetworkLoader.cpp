@@ -22,7 +22,7 @@ using namespace xolotlCore;
 //			strtod(inString.c_str(), NULL);
 //}
 
-std::shared_ptr<NECluster> NEClusterNetworkLoader::createNECluster(int numXe,
+std::unique_ptr<NECluster> NEClusterNetworkLoader::createNECluster(int numXe,
 		int numV, int numI,
         IReactionNetwork& network) const {
 
@@ -38,7 +38,9 @@ std::shared_ptr<NECluster> NEClusterNetworkLoader::createNECluster(int numXe,
 	}
     assert(cluster != nullptr);
 
-	return std::shared_ptr<NECluster>(cluster);
+    // TODO when we have widespread C++14 support, use std::make_unique
+    // and construct unique ptr and object pointed to in one memory operation.
+	return std::unique_ptr<NECluster>(cluster);
 }
 
 NEClusterNetworkLoader::NEClusterNetworkLoader(
@@ -74,7 +76,7 @@ std::unique_ptr<IReactionNetwork> NEClusterNetworkLoader::load(const IOptions& o
 	int numXe = 0, numV = 0, numI = 0;
 	double formationEnergy = 0.0, migrationEnergy = 0.0;
 	double diffusionFactor = 0.0;
-	std::vector<std::shared_ptr<Reactant> > reactants;
+	std::vector<std::reference_wrapper<Reactant> > reactants;
 
 	// Prepare the network
     // Once we have C++14 support, use std::make_unique.
@@ -107,22 +109,28 @@ std::unique_ptr<IReactionNetwork> NEClusterNetworkLoader::load(const IOptions& o
 		if (dummyReactions) {
 			// Create a dummy cluster (just a stock Reactant) 
             // from the existing cluster
-            auto dummyCluster = std::make_shared<Reactant>(*nextCluster);
-			// Add the cluster to the network
-			network->add(dummyCluster);
-			// Add it to the list so that we can set the network later
-			reactants.push_back(dummyCluster);
+            // TODO once we have C++14 support, use std::make_unique.
+            std::unique_ptr<Reactant> dummyCluster(new Reactant(*nextCluster));
+
+			// Save access to it so we can trigger updates after
+            // all are added to the network.
+			reactants.emplace_back(*dummyCluster);
+
+			// Give the cluster to the network
+			network->add(std::move(dummyCluster));
 		} else {
-			// Add the cluster to the network
-			network->add(nextCluster);
-			// Add it to the list so that we can set the network later
-			reactants.push_back(nextCluster);
+			// Save access to it so we can trigger updates after
+            // all are added to the network.
+			reactants.emplace_back(*nextCluster);
+
+			// Give the cluster to the network
+			network->add(std::move(nextCluster));
 		}
 	}
 
 	// Set the reaction network for each reactant
-	for (auto& currCluster : reactants) {
-		currCluster->updateFromNetwork();
+	for (Reactant& currCluster : reactants) {
+		currCluster.updateFromNetwork();
 	}
 
 	// Create the reactions
@@ -163,7 +171,7 @@ std::unique_ptr<IReactionNetwork> NEClusterNetworkLoader::generate(
     // Once we have C++14 support, use std::make_unique.
 	std::unique_ptr<NEClusterReactionNetwork> network (
 			new NEClusterReactionNetwork(handlerRegistry));
-	std::vector<std::shared_ptr<Reactant> > reactants;
+	std::vector<std::reference_wrapper<Reactant> > reactants;
 
 	// The diffusion factor for a single xenon in nm^2/s
 	double xeOneDiffusion = 5.0e-3;
@@ -202,15 +210,17 @@ std::unique_ptr<IReactionNetwork> NEClusterNetworkLoader::generate(
 					std::numeric_limits<double>::infinity());
 		}
 
-		// Add the cluster to the network
-		network->add(nextCluster);
-		// Add it to the list so that we can set the network later
-		reactants.push_back(nextCluster);
+        // Save access to it so we can trigger updates once all
+        // are added to the network.
+		reactants.emplace_back(*nextCluster);
+
+		// Give the cluster to the network
+		network->add(std::move(nextCluster));
 	}
 
 	// Set the network for all of the reactants. This MUST be done manually.
-	for (auto& currCluster : reactants) {
-		currCluster->updateFromNetwork();
+	for (Reactant& currCluster : reactants) {
+		currCluster.updateFromNetwork();
 	}
 
 	// Create the reactions
@@ -250,20 +260,20 @@ void NEClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 	std::vector<NECluster *> tempVector;
 
 	// Initialize variables for the loop
-	NECluster * cluster;
-	std::shared_ptr<NESuperCluster> superCluster;
 	int count = 0, superCount = 0, width = sectionWidth;
 	double size = 0.0, radius = 0.0, energy = 0.0;
 
 	// Map to know which cluster is in which group
 	std::map<int, int> clusterGroupMap;
 	// Map to know which super cluster gathers which group
+    // TODO replace use of naked ptr with ref.  Requires fix to use
+    // refs in reactions instead of naked ptrs.
 	std::map<int, NESuperCluster *> superGroupMap;
 
 	// Loop on the xenon groups
 	for (int k = xeMin; k <= xeMap.size(); k++) {
 		// Get the corresponding cluster
-		cluster = (NECluster *) network.get(ReactantType::Xe, k);
+		auto cluster = (NECluster *) network.get(Species::Xe, k);
 
 		// Verify if the cluster exists
 		if (!cluster)
@@ -290,14 +300,17 @@ void NEClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 		radius = radius / (double) count;
 		energy = energy / (double) count;
 		// Create the cluster
-		superCluster = std::make_shared<NESuperCluster>(size, count, count,
-				radius, energy, network, handlerRegistry);
+        std::unique_ptr<NESuperCluster> superCluster(new NESuperCluster(size, count, count,
+				radius, energy, network, handlerRegistry));
+
 		// Set the HeV vector
 		superCluster->setXeVector(tempVector);
-		// Add this cluster to the network and clusters
-		network.addSuper(superCluster);
+
 		// Keep the information of the group
 		superGroupMap[superCount] = superCluster.get();
+
+		// Give this cluster to the network and clusters
+		network.add(std::move(superCluster));
 
 //		std::cout << superCount << " " << count << " "
 //				<< superCluster->getName() << std::endl;
@@ -444,7 +457,7 @@ void NEClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 
 	// Remove Xe clusters bigger than xeMin from the network
 	// Loop on the Xe clusters
-    std::vector<std::shared_ptr<IReactant> > doomedReactants;
+    std::vector<std::reference_wrapper<IReactant> > doomedReactants;
 	for (auto const& currMapItem : xeMap) {
 
         auto& currCluster = currMapItem.second;
@@ -455,7 +468,7 @@ void NEClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 		// Check if the cluster is too large.
 		if (nXe >= xeMin) {
 			// The cluster is too large.  Add it to the ones we will remove.
-			doomedReactants.push_back(currCluster);
+			doomedReactants.push_back(*currCluster);
 		}
 	}
 	network.removeReactants(doomedReactants);
