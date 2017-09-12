@@ -171,10 +171,10 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
 			IReactant * product = nullptr;
 			// Get its boundaries
-			auto const& boundaries = superCluster.getBoundaries();
+			auto const& vBounds = superCluster.getVBounds();
 			// Loop on them
-			for (int i = boundaries[0]; i <= boundaries[1]; i++) {
-				for (int j = boundaries[2]; j <= boundaries[3]; j++) {
+            for (auto const& i : superCluster.getHeBounds()) {
+                for (auto const& j : superCluster.getVBounds()) {
 					// Assume the product can only be a super cluster here
                     auto newNumHe = i + firstSize;
                     auto newNumV = j;
@@ -258,10 +258,11 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
             auto& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
 			IReactant * product = nullptr;
 			// Get its boundaries
-			auto const& boundaries = superCluster.getBoundaries();
+			auto const& heBounds = superCluster.getHeBounds();
+            auto const& vBounds = superCluster.getVBounds();
 			// Loop on them
-			for (int i = boundaries[0]; i <= boundaries[1]; i++) {
-				for (int j = boundaries[2]; j <= boundaries[3]; j++) {
+            for (auto const& i : superCluster.getHeBounds()) {
+                for (auto const& j : superCluster.getVBounds()) {
 
 					// Assume the product can only be a super cluster here
                     auto newNumHe = i;
@@ -392,10 +393,11 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
             auto& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
 			IReactant * product = nullptr;
 			// Get its boundaries
-			auto boundaries = superCluster.getBoundaries();
+			auto const& heBounds = superCluster.getHeBounds();
+            auto const& vBounds = superCluster.getVBounds();
 			// Loop on them
-			for (auto i = boundaries[0]; i <= boundaries[1]; i++) {
-				for (auto j = boundaries[2]; j <= boundaries[3]; j++) {
+            for (auto const& i : superCluster.getHeBounds()) {
+                for (auto const& j : superCluster.getVBounds()) {
 					// The product might be HeV or He
                     auto newNumHe = i;
                     auto newNumV = j - firstSize;
@@ -955,7 +957,7 @@ void PSIClusterReactionNetwork::addSuper(std::shared_ptr<IReactant> reactant) {
 }
 
 
-void PSIClusterReactionNetwork::buildSuperClusterIndex(const std::vector<IReactant::SizeType>& bounds) {
+void PSIClusterReactionNetwork::buildSuperClusterMap(const std::vector<IReactant::SizeType>& bounds) {
 
     // Save the bounds to use.
     boundVector = bounds;
@@ -1043,8 +1045,9 @@ void PSIClusterReactionNetwork::reinitializeNetwork() {
 		currCluster.setVMomentumId(id);
 
 		// Update the HeV size
-		auto const& bounds = currCluster.getBoundaries();
-        IReactant::SizeType clusterSize = bounds[1] + bounds[3];
+        IReactant::SizeType clusterSize = 
+            currCluster.getHeBounds().second +
+            currCluster.getVBounds().second;
         if(clusterSize > maxClusterSizeMap[ReactantType::HeV]) {
             maxClusterSizeMap[ReactantType::HeV] = clusterSize;
         }
@@ -1590,9 +1593,17 @@ double PSIClusterReactionNetwork::computeBindingEnergy(const DissociationReactio
 	return max(bindingEnergy, -5.0);
 }
 
-
 IReactant * PSIClusterReactionNetwork::getSuperFromComp(IReactant::SizeType nHe, IReactant::SizeType nV) {
 
+    // Requests for finding a particular supercluster have high locality.
+    // See if the last supercluster we were asked to find is the right
+    // one for this request.
+    static IReactant* lastRet = nullptr;
+    if(lastRet and static_cast<PSISuperCluster*>(lastRet)->isIn(nHe, nV)) {
+        return lastRet;
+    }
+
+    // We didn't find the last supercluster in our cache, so do a full lookup.
     IReactant* ret = nullptr;
 
     auto heIntervalBase = findBoundsIntervalBase(nHe);
@@ -1601,9 +1612,10 @@ IReactant * PSIClusterReactionNetwork::getSuperFromComp(IReactant::SizeType nHe,
     if((heIntervalBase != 0) and (vIntervalBase != 0)) {
         auto iter = superClusterLookupMap.find(std::make_pair(heIntervalBase, vIntervalBase));
         if(iter != superClusterLookupMap.end()) {
-            IReactant& super = iter->second;    // Get ref from reference_wrapper.
-            ret = &super;                      // Return pointer to actual object.
+            IReactant& super = iter->second;    // Get ref from wrapper
+            ret = &super;                      // Return pointer referenced object
             assert(static_cast<PSISuperCluster*>(ret)->isIn(nHe, nV));
+            lastRet = ret;
         }
     }
 

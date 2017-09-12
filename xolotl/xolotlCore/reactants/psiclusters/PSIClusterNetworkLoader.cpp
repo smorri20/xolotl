@@ -589,8 +589,8 @@ void PSIClusterNetworkLoader::applySectionalGrouping(PSIClusterReactionNetwork& 
     superClusterBounds.emplace_back(maxV+1);
 
     // Now that we have the bound vector defined, tell the network to 
-    // build its quick-lookup map for super clusters
-    network.buildSuperClusterIndex(superClusterBounds);
+    // build its lookup map for super clusters
+    network.buildSuperClusterMap(superClusterBounds);
 
 	return;
 }

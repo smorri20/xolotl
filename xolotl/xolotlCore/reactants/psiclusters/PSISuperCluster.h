@@ -6,6 +6,7 @@
 #include <string>
 #include <forward_list>
 #include <Constants.h>
+#include "IntegerRange.h"
 
 namespace xolotlCore {
 /**
@@ -176,17 +177,15 @@ private:
 	//! The width in the vacancy direction.
 	int sectionVWidth;
 
-	//! The lower bound in the helium direction.
-    IReactant::SizeType lowerHe;
+    /**
+     * Bounds on number of He atoms represented by this cluster.
+     */
+    IntegerRange<IReactant::SizeType> heBounds;
 
-	//! The lower bound in the vacancy direction.
-    IReactant::SizeType lowerV;
-
-	//! The upper bound in the helium direction.
-    IReactant::SizeType upperHe;
-
-	//! The upper bound in the vacancy direction.
-    IReactant::SizeType upperV;
+    /**
+     * Bounds on number of vacancies represented by this cluster.
+     */
+    IntegerRange<IReactant::SizeType> vBounds;
 
 	//! The 0th order momentum (mean).
 	double l0;
@@ -594,16 +593,20 @@ public:
 		return nTot;
 	}
 
-	/**
-	 * Returns a vector containing the information about the group's bounderies
-	 * in the helium and vacancy directions.
-	 *
-	 * @return The boundaries
-	 */
-	std::vector<IReactant::SizeType> getBoundaries() const {
-
-        return {lowerHe, upperHe, lowerV, upperV };
-	}
+    /**
+     * Access bounds on number of He atoms represented by this cluster.
+     */
+    // TODO do we want to make this generic by taking a type parameter?
+    const IntegerRange<IReactant::SizeType>& getHeBounds() const {
+        return heBounds;
+    }
+    
+    /**
+     * Access bounds on number of vacancies represented by this cluster.
+     */
+    const IntegerRange<IReactant::SizeType>& getVBounds() const {
+        return vBounds;
+    }
 
 	/**
      * Detect if given number of He and V are in this cluster's group.
@@ -614,9 +617,7 @@ public:
 	 */
 	bool isIn(IReactant::SizeType _nHe, IReactant::SizeType _nV) const {
 
-		// Try with key and map later
-        return ((_nHe >= lowerHe) and (_nHe <= upperHe)) and
-            ((_nV >= lowerV) and (_nV <= upperV));
+        return heBounds.contains(_nHe) and vBounds.contains(_nV);
 	}
 
 };

@@ -566,10 +566,9 @@ PetscErrorCode computeHeliumConc1D(TS ts, PetscInt timestep, PetscReal time,
 				// Get the super cluster
 				auto const& superCluster = static_cast<PSISuperCluster&>(*(currMapItem.second));
 				// Get its boundaries
-				auto const& boundaries = superCluster.getBoundaries();
 				// Is it the right one?
-				for (int i = boundaries[0]; i <= boundaries[1]; i++) {
-					for (int j = boundaries[2]; j <= boundaries[3]; j++) {
+                for (auto const& i : superCluster.getHeBounds()) {
+                    for (auto const& j : superCluster.getVBounds()) {
 						heConcLocal[i] += superCluster.getConcentration(
 								superCluster.getHeDistance(i),
 								superCluster.getVDistance(j))
@@ -1334,11 +1333,10 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 							// Get the super cluster
 							auto const& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
 							// Get its boundaries
-							auto const& boundaries = superCluster.getBoundaries();
+							auto const& heBounds = superCluster.getHeBounds();
+							auto const& vBounds = superCluster.getVBounds();
 							// Is it the right one?
-							if (j >= boundaries[0] && j <= boundaries[1]
-									&& i >= boundaries[2]
-									&& i <= boundaries[3]) {
+                            if (heBounds.contains(j) and vBounds.contains(i)) {
 								conc = superCluster.getConcentration(
 										superCluster.getHeDistance(j),
 										superCluster.getVDistance(i));

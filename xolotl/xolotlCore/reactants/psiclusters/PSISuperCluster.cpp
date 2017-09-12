@@ -21,8 +21,10 @@ PSISuperCluster::PSISuperCluster(double _numHe, double _numV, int _nTot,
         IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		PSICluster(_network, registry, buildName(_numHe, _numV)),
-        numHe(_numHe), numV(_numV), nTot(_nTot), lowerHe(0), upperHe(
-				0), lowerV(0), upperV(0), l0(0.0), l1He(0.0), l1V(0.0), dispersionHe(
+        numHe(_numHe), numV(_numV), nTot(_nTot),
+        heBounds(0, 0),
+        vBounds(0, 0),
+        l0(0.0), l1He(0.0), l1V(0.0), dispersionHe(
 				0.0), dispersionV(0.0), heMomentumFlux(0.0), vMomentumFlux(0.0) {
 	// Set the cluster size as the sum of
 	// the number of Helium and Vacancies
@@ -302,10 +304,12 @@ void PSISuperCluster::setHeVVector(std::vector<std::pair<int, int> > vec) {
 				/ ((double) (nTot * (sectionVWidth - 1)));
 
 	// Set the boundaries
-	lowerHe = (int) (numHe - (double) sectionHeWidth / 2.0) + 1;
-	upperHe = (int) (numHe - (double) sectionHeWidth / 2.0) + sectionHeWidth;
-	lowerV = (int) (numV - (double) sectionVWidth / 2.0) + 1;
-	upperV = (int) (numV - (double) sectionVWidth / 2.0) + sectionVWidth;
+    heBounds = IntegerRange<IReactant::SizeType>(
+static_cast<IReactant::SizeType>((numHe - (double) sectionHeWidth / 2.0) + 1),
+static_cast<IReactant::SizeType>((numHe - (double) sectionHeWidth / 2.0) + sectionHeWidth) + 1);
+	vBounds = IntegerRange<IReactant::SizeType>(
+static_cast<IReactant::SizeType>((numV - (double) sectionVWidth / 2.0) + 1),
+static_cast<IReactant::SizeType>((numV - (double) sectionVWidth / 2.0) + sectionVWidth) + 1);
 
 	return;
 }
@@ -315,8 +319,8 @@ double PSISuperCluster::getTotalConcentration() const {
 	double heDistance = 0.0, vDistance = 0.0, conc = 0.0;
 
 	// Loop on the indices
-	for (int i = lowerHe; i <= upperHe; i++) {
-		for (int j = lowerV; j <= upperV; j++) {
+    for (auto const& i : heBounds) {
+        for (auto const& j : vBounds) {
 			// Compute the distances
 			heDistance = getHeDistance(i);
 			vDistance = getVDistance(j);
@@ -334,8 +338,8 @@ double PSISuperCluster::getTotalHeliumConcentration() const {
 	double heDistance = 0.0, vDistance = 0.0, conc = 0.0;
 
 	// Loop on the indices
-	for (int i = lowerHe; i <= upperHe; i++) {
-		for (int j = lowerV; j <= upperV; j++) {
+    for (auto const& i : heBounds) {
+        for (auto const& j : vBounds) {
 			// Compute the distances
 			heDistance = getHeDistance(i);
 			vDistance = getVDistance(j);
@@ -353,8 +357,8 @@ double PSISuperCluster::getTotalVacancyConcentration() const {
 	double heDistance = 0.0, vDistance = 0.0, conc = 0.0;
 
 	// Loop on the indices
-	for (int i = lowerHe; i <= upperHe; i++) {
-		for (int j = lowerV; j <= upperV; j++) {
+    for (auto const& i : heBounds) {
+        for (auto const& j : vBounds) {
 			// Compute the distances
 			heDistance = getHeDistance(i);
 			vDistance = getVDistance(j);

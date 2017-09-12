@@ -353,10 +353,10 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 						// Get the super cluster
 						auto const& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
 						// Get its boundaries
-						auto const& boundaries = superCluster.getBoundaries();
+						auto const& heBounds = superCluster.getHeBounds();
+						auto const& vBounds = superCluster.getVBounds();
 						// Is it the right one?
-						if (j >= boundaries[0] && j <= boundaries[1]
-								&& i >= boundaries[2] && i <= boundaries[3]) {
+                        if (heBounds.contains(j) and vBounds.contains(i)) {
 							conc = superCluster.getConcentration(
 									superCluster.getHeDistance(j),
 									superCluster.getVDistance(i));
@@ -477,13 +477,17 @@ PetscErrorCode monitorMeanSize0D(TS ts, PetscInt timestep, PetscReal time,
 		// Get the super cluster
 		auto const& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
 		// Get its boundaries
-		auto const& boundaries = superCluster.getBoundaries();
+		auto const& heBounds = superCluster.getHeBounds();
+		auto const& vBounds = superCluster.getVBounds();
 		// Get its diameter
 		double diam = 2.0 * superCluster.getReactionRadius();
 		// Get its concentration
 		double conc = superCluster.getConcentration(0.0, 0.0);
-		outputFile << boundaries[0] << " " << boundaries[1] << " "
-				<< boundaries[2] << " " << boundaries[3] << " " << conc
+
+        // For compatibility with previous versions, we output
+        // the value of a closed upper bound of the He and V intervals.
+		outputFile << *(heBounds.begin()) << " " << *(heBounds.end()) - 1 << " "
+				<< *(vBounds.begin()) << " " << *(vBounds.end()) - 1 << " " << conc
 				<< std::endl;
 	}
 

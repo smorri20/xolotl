@@ -13,6 +13,24 @@
 #include "ReactionNetwork.h"
 #include "PSISuperCluster.h"
 
+
+
+// Using std::unordered_map often gives better performance than std::map,
+// but requires us to define our own hash function for more complex types.
+using ReactantSizePair = std::pair<xolotlCore::IReactant::SizeType, xolotlCore::IReactant::SizeType>;
+
+namespace std {
+
+template<>
+struct hash<ReactantSizePair> {
+    size_t operator()(const ReactantSizePair& pr) const {
+        return (pr.first << 16) + (pr.second);
+    }
+};
+
+} // namespace std
+
+
 namespace xolotlCore {
 
 /**
@@ -34,7 +52,8 @@ private:
      * Nice name for map supporting quick lookup of supercluster containing 
      * specifc number of He and V.
      */
-    using HeVToSuperClusterMap = std::map<std::pair<IReactant::SizeType, IReactant::SizeType>, std::reference_wrapper<IReactant> >;
+    using HeVToSuperClusterMap = std::unordered_map<ReactantSizePair, std::reference_wrapper<IReactant> >;
+
 
     /**
      * Map supporting quick identification of super cluster containing
@@ -71,18 +90,6 @@ private:
      * and nV vacancies, or nullptr if no such cluster exists.
 	 */
     IReactant * getSuperFromComp(IReactant::SizeType nHe, IReactant::SizeType nV);
-
-
-    /**
-     * Find the lower bound of the interval within boundVector containing 
-     * the given count.
-     * Assumes that lower bound of smallest interval is 1.
-     *
-     * @param count The value of interest.
-     * @return The lower bound of the interval within boundVector 
-     * containing the given count.  Returns 0 if no such interval exists.
-     */
-    IReactant::SizeType FindBoundsIntervalBase(IReactant::SizeType count) const;
 
 
 public:
@@ -340,7 +347,7 @@ public:
      *               last element is one past the last interval's largest 
      *               allowed value.
      */
-    void buildSuperClusterIndex(const std::vector<IReactant::SizeType>& bounds);
+    void buildSuperClusterMap(const std::vector<IReactant::SizeType>& bounds);
 };
 
 } // namespace xolotlCore
