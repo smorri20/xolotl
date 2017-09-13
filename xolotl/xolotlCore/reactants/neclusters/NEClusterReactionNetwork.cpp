@@ -80,8 +80,8 @@ void NEClusterReactionNetwork::createReactionConnectivity() {
 			auto reaction = std::make_shared<ProductionReaction>(
 					singleXeCluster, &xeReactant);
 			// Tell the reactants that they are in this reaction
-			singleXeCluster->createCombination(reaction);
-			xeReactant.createCombination(reaction);
+			singleXeCluster->createCombination(*reaction);
+			xeReactant.createCombination(*reaction);
 			product->createProduction(reaction);
 
 			// Check if the reverse reaction is allowed

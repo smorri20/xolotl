@@ -20,22 +20,29 @@ void NECluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
 	return;
 }
 
-void NECluster::createCombination(std::shared_ptr<ProductionReaction> reaction,
+void NECluster::createCombination(ProductionReaction& reaction,
 		int a, int b) {
 	setReactionConnectivity(id);
 	// Look for the other cluster
-	IReactant * secondCluster;
-	if (reaction->first->getId() == id)
-		secondCluster = reaction->second;
-	else
-		secondCluster = reaction->first;
+	auto otherCluster = static_cast<NECluster*>((reaction.first->getId() == id) ?
+                                reaction.second :
+                                reaction.first);
+
+#if READY
+    // Do we need to check if it is already known in the combiningReactants,
+    // like we do with the PSI cluster?
+#endif // READY
+    // Build a production reaction for it
+    auto newReaction = std::make_shared<ProductionReaction>(otherCluster, this);
+    // Add it to the network
+    newReaction = network.addProductionReaction(newReaction);
 
 	// Add the combining cluster to list of clusters that combine with us
-	combiningReactants.emplace_back((NECluster *) secondCluster);
+	combiningReactants.emplace_back(*newReaction, *otherCluster);
 
 	// Setup the connectivity array
 	setReactionConnectivity(id);
-	setReactionConnectivity(secondCluster->getId());
+	setReactionConnectivity(otherCluster->getId());
 
 	return;
 }
@@ -86,16 +93,20 @@ void NECluster::optimizeReactions() {
             currPair.reaction = newReaction;
         });
 
+#if READY
+    // This looks like it gives the same outcome as what we get from 
+    // doing it in createProduction
     std::for_each(combiningReactants.begin(), combiningReactants.end(),
         [this](CombiningCluster& cc) {
             // Create the corresponding production reaction
-            auto newReaction = std::make_shared<ProductionReaction>(cc.combining,
+            auto newReaction = std::make_shared<ProductionReaction>(&cc.combining,
                     this);
             // Add it to the network
             newReaction = network.addProductionReaction(newReaction);
             // Link it to the pair
             cc.reaction = newReaction;
         });
+#endif // READY
 
     std::for_each(dissociatingPairs.begin(), dissociatingPairs.end(),
         [this](ClusterPair& currPair) {
@@ -178,8 +189,9 @@ void NECluster::resetConnectivities() {
     std::for_each(combiningReactants.begin(), combiningReactants.end(),
         [this](const CombiningCluster& cc) {
             // The cluster is connecting to the combining cluster
-            setReactionConnectivity(cc.combining->id);
-            setReactionConnectivity(cc.combining->xeMomId);
+            NECluster const& combCluster = cc.combining;
+            setReactionConnectivity(combCluster.id);
+            setReactionConnectivity(combCluster.xeMomId);
         });
 
 	// Apply to each effective dissociating pair
@@ -282,11 +294,13 @@ double NECluster::getCombinationFlux() const {
             0.0,
             [](double running, const CombiningCluster& currPair) {
                 // Get the cluster that combines with this one
-                auto& combiningCluster = currPair.combining;
+                NECluster const& combiningCluster = currPair.combining;
+                Reaction const& currReaction = currPair.reaction;
+
                 // Calculate Second term of production flux
                 return running + 
-                    (currPair.reaction->kConstant * 
-                        combiningCluster->getConcentration(currPair.distance));
+                    (currReaction.kConstant * 
+                        combiningCluster.getConcentration(currPair.distance));
 
             });
 
@@ -365,16 +379,18 @@ void NECluster::getCombinationPartialDerivatives(
     std::for_each(combiningReactants.begin(), combiningReactants.end(),
         [this,&partials](const CombiningCluster& cc) {
 
-            NECluster* cluster = (NECluster *) cc.combining;
+            NECluster const& cluster = cc.combining;
+            Reaction const& currReaction = cc.reaction;
+
             // Remember that the flux due to combinations is OUTGOING (-=)!
             // Compute the contribution from this cluster
-            partials[id - 1] -= cc.reaction->kConstant * 
-                cluster->getConcentration(cc.distance);
+            partials[id - 1] -= currReaction.kConstant * 
+                cluster.getConcentration(cc.distance);
             // Compute the contribution from the combining cluster
-            double value = cc.reaction->kConstant * concentration;
+            double value = currReaction.kConstant * concentration;
 
-            partials[cluster->id - 1] -= value;
-            partials[cluster->xeMomId - 1] -= value * cc.distance;
+            partials[cluster.id - 1] -= value;
+            partials[cluster.xeMomId - 1] -= value * cc.distance;
         });
 
 	return;
@@ -446,10 +462,11 @@ double NECluster::getLeftSideRate() const {
     double combiningRateTotal = std::accumulate(combiningReactants.begin(), combiningReactants.end(),
             0.0,
             [](double running, const CombiningCluster& currPair) {
-                auto const& cluster = (NECluster*) currPair.combining;
+                NECluster const& cluster = currPair.combining;
+                Reaction const& currReaction = currPair.reaction;
 
-                return running + (currPair.reaction->kConstant * 
-                                    cluster->concentration);
+                return running + (currReaction.kConstant * 
+                                    cluster.concentration);
             });
 
 	// Sum reaction rate constants over all emission pairs.

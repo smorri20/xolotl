@@ -45,51 +45,48 @@ void PSICluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
 	return;
 }
 
-void PSICluster::createCombination(std::shared_ptr<ProductionReaction> reaction,
+void PSICluster::createCombination(ProductionReaction& reaction,
 		int a, int b) {
 
 	// Look for the other cluster
-	IReactant * secondCluster;
-	if (reaction->first->getId() == id)
-		secondCluster = reaction->second;
-	else
-		secondCluster = reaction->first;
+	auto otherCluster = static_cast<PSICluster*>((reaction.first->getId() == id) ?
+                                reaction.second :
+                                reaction.first);
 
 	// Check if the reaction was already added
 #if READY
     auto it = std::find_if(combiningReactants.rbegin(), combiningReactants.rend(),
-                [&secondCluster](const CombiningCluster& cc) {
-                    return secondCluster == cc.combining;
+                [&otherCluster](const CombiningCluster& cc) {
+                    return otherCluster == cc.combining;
                 });
 #else
     std::vector<CombiningCluster>::reverse_iterator it;
     for (it = combiningReactants.rbegin(); it != combiningReactants.rend(); ++it) {
-        if(secondCluster == it->combining) {
+        if(otherCluster == &(it->combining)) {
             break;
         }
     }
 #endif // READY
 	if (it == combiningReactants.rend()) {
-		// It was not already in so add it
-		// Add the combining cluster.
-		combiningReactants.emplace_back((PSICluster *) secondCluster);
-		it = combiningReactants.rbegin();
 
-		// Create the corresponding production reaction
-		auto newReaction = std::make_shared<ProductionReaction>((*it).combining,
+        // We did not already know about this combination.
+
+        // Create the corresponding production reaction.
+		auto newReaction = std::make_shared<ProductionReaction>(otherCluster,
 				this);
 		// Add it to the network
 		newReaction = network.addProductionReaction(newReaction);
-		// Link it to the pair
-		(*it).reaction = newReaction;
+
+		// Add the combination to our collection.
+		combiningReactants.emplace_back(*newReaction, *otherCluster);
+		it = combiningReactants.rbegin();
 	}
 
 	// Update the coefficients
 	double heDistance = 0.0, vDistance = 0.0;
-	if (secondCluster->getType() == ReactantType::PSISuper) {
-		auto super = (PSICluster *) secondCluster;
-		heDistance = super->getHeDistance(a);
-		vDistance = super->getVDistance(b);
+	if (otherCluster->getType() == ReactantType::PSISuper) {
+		heDistance = otherCluster->getHeDistance(a);
+		vDistance = otherCluster->getVDistance(b);
 	}
 	(*it).a0 += 1.0;
 	(*it).a1 += heDistance;
@@ -223,9 +220,9 @@ void PSICluster::resetConnectivities() {
     std::for_each(combiningReactants.begin(), combiningReactants.end(),
         [this](const CombiningCluster& cc) {
             // The cluster is connecting to the combining cluster
-            setReactionConnectivity(cc.combining->id);
-            setReactionConnectivity(cc.combining->heMomId);
-            setReactionConnectivity(cc.combining->vMomId);
+            setReactionConnectivity(cc.combining.id);
+            setReactionConnectivity(cc.combining.heMomId);
+            setReactionConnectivity(cc.combining.vMomId);
         });
 
 	// Loop on the effective dissociating pairs
@@ -330,11 +327,11 @@ double PSICluster::getCombinationFlux() const {
 
                     // Get the cluster that combines with this one
                     auto const& combiningCluster = cc.combining;
-                    double l0B = combiningCluster->getConcentration(0.0, 0.0);
-                    double lHeB = combiningCluster->getHeMomentum();
-                    double lVB = combiningCluster->getVMomentum();
+                    double l0B = combiningCluster.getConcentration(0.0, 0.0);
+                    double lHeB = combiningCluster.getHeMomentum();
+                    double lVB = combiningCluster.getVMomentum();
                     // Calculate the combination flux
-                    return running + (cc.reaction->kConstant * 
+                    return running + (cc.reaction.kConstant * 
                                         (cc.a0 * l0B + cc.a1 * lHeB + cc.a2 * lVB));
 
                 });
@@ -426,20 +423,20 @@ void PSICluster::getCombinationPartialDerivatives(
 	// dF(C_A)/dC_B = - k+_(A,B)*C_A
     std::for_each(combiningReactants.begin(), combiningReactants.end(),
         [this,&partials](const CombiningCluster& cc) {
-            PSICluster* cluster = (PSICluster *) cc.combining;
-            double l0B = cluster->getConcentration(0.0, 0.0);
-            double lHeB = cluster->getHeMomentum();
-            double lVB = cluster->getVMomentum();
+            auto const& cluster = cc.combining;
+            double l0B = cluster.getConcentration(0.0, 0.0);
+            double lHeB = cluster.getHeMomentum();
+            double lVB = cluster.getVMomentum();
 
             // Remember that the flux due to combinations is OUTGOING (-=)!
             // Compute the contribution from this cluster
-            partials[id - 1] -= cc.reaction->kConstant
+            partials[id - 1] -= cc.reaction.kConstant
                     * (cc.a0 * l0B + cc.a1 * lHeB + cc.a2 * lVB);
             // Compute the contribution from the combining cluster
-            double value = cc.reaction->kConstant * concentration;
-            partials[cluster->id - 1] -= value * cc.a0;
-            partials[cluster->heMomId - 1] -= value * cc.a1;
-            partials[cluster->vMomId - 1] -= value * cc.a2;
+            double value = cc.reaction.kConstant * concentration;
+            partials[cluster.id - 1] -= value * cc.a0;
+            partials[cluster.heMomId - 1] -= value * cc.a1;
+            partials[cluster.vMomId - 1] -= value * cc.a2;
         });
 
 	return;
@@ -512,7 +509,7 @@ double PSICluster::getLeftSideRate() const {
                 0.0,
                 [](double running, const CombiningCluster& cc) {
                     return running + 
-                        (cc.reaction->kConstant * cc.combining->concentration);
+                        (cc.reaction.kConstant * cc.combining.concentration);
                 });
 
     // Sum rate constants over all emission pair reactions.

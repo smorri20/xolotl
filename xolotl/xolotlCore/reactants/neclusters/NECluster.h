@@ -2,9 +2,9 @@
 #define NECLUSTER_H
 
 // Includes
-#include <Reactant.h>
-#include <math.h>
+#include <memory>
 #include <sstream>
+#include <Reactant.h>
 
 namespace xolotlPerf {
 class ITimer;
@@ -33,6 +33,26 @@ namespace xolotlCore {
 class NECluster: public Reactant {
 
 protected:
+
+	/**
+	 * This operation returns a set that contains only the entries of the
+	 * reaction connectivity array that are non-zero.
+	 *
+	 * @return The set of connected reactants. Each entry in the set is the id
+	 * of a connected cluster for forward reactions.
+	 */
+	std::set<int> getReactionConnectivitySet() const;
+
+	/**
+	 * This operation returns a set that contains only the entries of the
+	 * dissociation connectivity array that are non-zero.
+	 *
+	 * @return The set of connected reactants. Each entry in the set is the id
+	 * of a connected cluster for dissociation reactions
+	 */
+	const std::set<int> & getDissociationConnectivitySet() const;
+
+public:
 
 	/**
 	 * This is a protected class that is used to implement the flux calculations
@@ -91,12 +111,20 @@ protected:
 		/**
 		 * The combining cluster
 		 */
-		NECluster * combining;
+        // We use a reference wrapper because we may need to reassign
+        // the original combining reactant to a super cluster after 
+        // construction.
+        std::reference_wrapper<NECluster> combining;
 
 		/**
 		 * The reaction pointer to the list
 		 */
-		std::shared_ptr<Reaction> reaction;
+        // We use a reference wrapper here because it allows NESuperCluster
+        // to edit vectors of CombiningClusters in place when grouping
+        // into superclusters.
+        // TODO can't this be done similar to what we're doing in PSI
+        // to avoid the need for the reference wrappers?
+        std::reference_wrapper<Reaction> reaction;
 
 		/**
 		 * The cluster distance in the group (0.0 for non-super clusters)
@@ -104,31 +132,12 @@ protected:
 		double distance;
 
 		//! The constructor
-		CombiningCluster(NECluster * ptr) :
-				combining(ptr), reaction(nullptr), distance(0.0) {
+		CombiningCluster(Reaction& _reaction, NECluster& _comb) :
+				combining(_comb),
+                reaction(_reaction), distance(0.0) {
 		}
 	};
 
-	/**
-
-	 * This operation returns a set that contains only the entries of the
-	 * reaction connectivity array that are non-zero.
-	 *
-	 * @return The set of connected reactants. Each entry in the set is the id
-	 * of a connected cluster for forward reactions.
-	 */
-	std::set<int> getReactionConnectivitySet() const;
-
-	/**
-	 * This operation returns a set that contains only the entries of the
-	 * dissociation connectivity array that are non-zero.
-	 *
-	 * @return The set of connected reactants. Each entry in the set is the id
-	 * of a connected cluster for dissociation reactions
-	 */
-	const std::set<int> & getDissociationConnectivitySet() const;
-
-public:
 
 	/**
 	 * A vector of ClusterPairs that represents reacting pairs of clusters
@@ -218,8 +227,8 @@ public:
 	 * @param a Number that can be used by daughter classes.
 	 * @param b Number that can be used by daughter classes.
 	 */
-	void createCombination(std::shared_ptr<ProductionReaction> reaction, int a =
-			0, int b = 0);
+	void createCombination(ProductionReaction& reaction, int a =
+			0, int b = 0) override;
 
 	/**
 	 * Create a dissociation pair associated with the given reaction.

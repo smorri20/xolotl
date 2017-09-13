@@ -92,7 +92,7 @@ public:
 	 * @param a Number that can be used by daughter classes.
 	 * @param b Number that can be used by daughter classes.
 	 */
-	virtual void createCombination(std::shared_ptr<ProductionReaction> reaction,
+	virtual void createCombination(ProductionReaction& reaction,
 			int a = 0, int b = 0) = 0;
 
 	/**

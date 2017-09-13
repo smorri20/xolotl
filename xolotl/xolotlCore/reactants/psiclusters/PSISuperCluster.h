@@ -272,7 +272,7 @@ public:
 	 * @param d Vacancy number.
 	 */
 	void createProduction(std::shared_ptr<ProductionReaction> reaction, int a =
-			0, int b = 0, int c = 0, int d = 0);
+			0, int b = 0, int c = 0, int d = 0) override;
 
 	/**
 	 * Create a combination associated with the given reaction.
@@ -282,8 +282,8 @@ public:
 	 * @param a Helium number.
 	 * @param b Vacancy number.
 	 */
-	void createCombination(std::shared_ptr<ProductionReaction> reaction, int a =
-			0, int b = 0);
+	void createCombination(ProductionReaction& reaction,
+                            int a = 0, int b = 0) override;
 
 	/**
 	 * Create a dissociation pair associated with the given reaction.
@@ -296,7 +296,7 @@ public:
 	 * @param d Vacancy number.
 	 */
 	void createDissociation(std::shared_ptr<DissociationReaction> reaction,
-			int a = 0, int b = 0, int c = 0, int d = 0);
+			int a = 0, int b = 0, int c = 0, int d = 0) override;
 
 	/**
 	 * Create an emission pair associated with the given reaction.
@@ -309,7 +309,7 @@ public:
 	 * @param d Vacancy number.
 	 */
 	void createEmission(std::shared_ptr<DissociationReaction> reaction, int a =
-			0, int b = 0, int c = 0, int d = 0);
+			0, int b = 0, int c = 0, int d = 0) override;
 
 	/**
 	 * This operation returns true to signify that this cluster is a mixture of
@@ -317,7 +317,7 @@ public:
 	 *
 	 * @return True if mixed
 	 */
-	virtual bool isMixed() const {
+	virtual bool isMixed() const override {
 		return true;
 	}
 

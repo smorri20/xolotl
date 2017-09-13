@@ -123,21 +123,18 @@ void PSISuperCluster::createProduction(
 	return;
 }
 
-void PSISuperCluster::createCombination(
-		std::shared_ptr<ProductionReaction> reaction, int a, int b) {
+void PSISuperCluster::createCombination(ProductionReaction& reaction, int a, int b) {
 
 	setReactionConnectivity(id);
 	// Look for the other cluster
-	IReactant * secondCluster;
-	if (reaction->first->getId() == id)
-		secondCluster = reaction->second;
-	else
-		secondCluster = reaction->first;
+	auto otherCluster = static_cast<PSICluster*>((reaction.first->getId() == id) ?
+                                reaction.second :
+                                reaction.first);
 
 	// Check if the reaction was already added
 	std::forward_list<SuperClusterProductionPair>::iterator it;
 	for (it = effCombiningList.begin(); it != effCombiningList.end(); it++) {
-		if (secondCluster == (*it).first) {
+		if (otherCluster == (*it).first) {
 			break;
 		}
 	}
@@ -145,11 +142,11 @@ void PSISuperCluster::createCombination(
 		// It was not already in so add it
 		// Create the corresponding production reaction
 		auto newReaction = std::make_shared<ProductionReaction>(this,
-				secondCluster);
+				otherCluster);
 		// Add it to the network
 		newReaction = network.addProductionReaction(newReaction);
 		// Create a new SuperClusterProductionPair
-		SuperClusterProductionPair superPair((PSICluster *) secondCluster,
+		SuperClusterProductionPair superPair((PSICluster *) otherCluster,
 				nullptr, newReaction.get());
 		// Add it
 		effCombiningList.push_front(superPair);

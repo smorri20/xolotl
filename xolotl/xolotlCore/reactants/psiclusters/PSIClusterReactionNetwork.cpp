@@ -99,8 +99,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 					auto reaction = std::make_shared<ProductionReaction>(
 							&firstReactant, &secondReactant);
 					// Tell the reactants that they are in this reaction
-					firstReactant.createCombination(reaction);
-					secondReactant.createCombination(reaction);
+					firstReactant.createCombination(*reaction);
+					secondReactant.createCombination(*reaction);
 					product->createProduction(reaction);
 
 					// Check if the reverse reaction is allowed
@@ -154,8 +154,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 				auto reaction = std::make_shared<ProductionReaction>(
                         &heReactant, &heVReactant);
 				// Tell the reactants that they are in this reaction
-				heReactant.createCombination(reaction);
-				heVReactant.createCombination(reaction);
+				heReactant.createCombination(*reaction);
+				heVReactant.createCombination(*reaction);
 				product->createProduction(reaction, newNumHe, newNumV);
 
 				// Check if the reverse reaction is allowed
@@ -187,8 +187,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 						auto reaction = std::make_shared<ProductionReaction>(
 								&heReactant, &superCluster);
 						// Tell the reactants that they are in this reaction
-						heReactant.createCombination(reaction, i, j);
-						superCluster.createCombination(reaction, i, j);
+						heReactant.createCombination(*reaction, i, j);
+						superCluster.createCombination(*reaction, i, j);
 						product->createProduction(reaction, newNumHe, newNumV,
                                 i, j);
 
@@ -242,8 +242,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 				auto reaction = std::make_shared<ProductionReaction>(&vReactant,
 						&heVReactant);
 				// Tell the reactants that they are in this reaction
-				vReactant.createCombination(reaction);
-				heVReactant.createCombination(reaction);
+				vReactant.createCombination(*reaction);
+				heVReactant.createCombination(*reaction);
 				product->createProduction(reaction, newNumHe, newNumV);
 
 				// Check if the reverse reaction is allowed
@@ -276,8 +276,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 						auto reaction = std::make_shared<ProductionReaction>(
 								&vReactant, &superCluster);
 						// Tell the reactants that they are in this reaction
-						vReactant.createCombination(reaction, i, j);
-						superCluster.createCombination(reaction, i, j);
+						vReactant.createCombination(*reaction, i, j);
+						superCluster.createCombination(*reaction, i, j);
 						product->createProduction(reaction,
                                 newNumHe, newNumV,
                                 i, j);
@@ -330,8 +330,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 				auto reaction = std::make_shared<ProductionReaction>(
                         &heReactant, &vReactant);
 				// Tell the reactants that they are in this reaction
-				heReactant.createCombination(reaction);
-				vReactant.createCombination(reaction);
+				heReactant.createCombination(*reaction);
+				vReactant.createCombination(*reaction);
 				product->createProduction(reaction, newNumHe, newNumV);
 
 				// Check if the reverse reaction is allowed
@@ -379,8 +379,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 				auto reaction = std::make_shared<ProductionReaction>(&iReactant,
 						&heVReactant);
 				// Tell the reactants that they are in this reaction
-				iReactant.createCombination(reaction);
-				heVReactant.createCombination(reaction);
+				iReactant.createCombination(*reaction);
+				heVReactant.createCombination(*reaction);
 				product->createProduction(reaction);
 
 				// Check if the reverse reaction is allowed
@@ -427,8 +427,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 						auto reaction = std::make_shared<ProductionReaction>(
 								&iReactant, &superCluster);
 						// Tell the reactants that they are in this reaction
-						iReactant.createCombination(reaction, i, j);
-						superCluster.createCombination(reaction, i, j);
+						iReactant.createCombination(*reaction, i, j);
+						superCluster.createCombination(*reaction, i, j);
 						product->createProduction(reaction,
                                 newNumHe, newNumV,
                                 i, j);
@@ -480,8 +480,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //					auto reaction = std::make_shared<ProductionReaction>(
 //							(*firstIt).get(), (*secondIt).get());
 //					// Tell the reactants that they are in this reaction
-//					(*firstIt)->createCombination(reaction);
-//					(*secondIt)->createCombination(reaction);
+//					(*firstIt)->createCombination(*reaction);
+//					(*secondIt)->createCombination(*reaction);
 //					product->createProduction(reaction);
 //					(*it)->createProduction(reaction);
 //
@@ -529,8 +529,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //					auto reaction = std::make_shared<ProductionReaction>(
 //							(*firstIt).get(), (*secondIt).get());
 //					// Tell the reactants that they are in this reaction
-//					(*firstIt)->createCombination(reaction);
-//					(*secondIt)->createCombination(reaction);
+//					(*firstIt)->createCombination(*reaction);
+//					(*secondIt)->createCombination(*reaction);
 //					product->createProduction(reaction);
 //					(*it)->createProduction(reaction);
 //
@@ -574,8 +574,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 					auto reaction = std::make_shared<ProductionReaction>(
 							&iReactant, &vReactant);
 					// Tell the reactants that they are in this reaction
-					iReactant.createCombination(reaction);
-					vReactant.createCombination(reaction);
+					iReactant.createCombination(*reaction);
+					vReactant.createCombination(*reaction);
 					product->createProduction(reaction);
 				}
 			} else if (firstSize < secondSize) {
@@ -590,8 +590,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 					auto reaction = std::make_shared<ProductionReaction>(
 							&iReactant, &vReactant);
 					// Tell the reactants that they are in this reaction
-					iReactant.createCombination(reaction);
-					vReactant.createCombination(reaction);
+					iReactant.createCombination(*reaction);
+					vReactant.createCombination(*reaction);
 					product->createProduction(reaction);
 				}
 
@@ -604,8 +604,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 					auto reaction = std::make_shared<ProductionReaction>(
 							&iReactant, &vReactant);
 					// Tell the reactants that they are in this reaction
-					iReactant.createCombination(reaction);
-					vReactant.createCombination(reaction);
+					iReactant.createCombination(*reaction);
+					vReactant.createCombination(*reaction);
 				}
 			}
 		}
@@ -638,8 +638,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //				auto reaction = std::make_shared<ProductionReaction>((*firstIt).get(),
 //						(*secondIt).get());
 //				// Tell the reactants that they are in this reaction
-//				(*firstIt)->createCombination(reaction);
-//				(*secondIt)->createCombination(reaction);
+//				(*firstIt)->createCombination(*reaction);
+//				(*secondIt)->createCombination(*reaction);
 //				product->createProduction(reaction);
 //
 //				// Check if the reverse reaction is allowed
@@ -669,8 +669,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //			auto reaction = std::make_shared<ProductionReaction>(
 //					singleInterstitialCluster, (*secondIt).get());
 //			// Tell the reactants that they are in this reaction
-//			singleInterstitialCluster->createCombination(reaction);
-//			(*secondIt)->createCombination(reaction);
+//			singleInterstitialCluster->createCombination(*reaction);
+//			(*secondIt)->createCombination(*reaction);
 //			product->createProduction(reaction);
 //
 //			// Check if the reverse reaction is allowed
@@ -702,8 +702,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //				auto reaction = std::make_shared<ProductionReaction>((*firstIt).get(),
 //						(*secondIt).get());
 //				// Tell the reactants that they are in this reaction
-//				(*firstIt)->createCombination(reaction);
-//				(*secondIt)->createCombination(reaction);
+//				(*firstIt)->createCombination(*reaction);
+//				(*secondIt)->createCombination(*reaction);
 //				product->createProduction(reaction);
 //
 //				// Check if the reverse reaction is allowed
@@ -745,8 +745,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //				auto reaction = std::make_shared<ProductionReaction>((*firstIt).get(),
 //						(*secondIt));
 //				// Tell the reactants that they are in this reaction
-//				(*firstIt)->createCombination(reaction);
-//				(*secondIt)->createCombination(reaction);
+//				(*firstIt)->createCombination(*reaction);
+//				(*secondIt)->createCombination(*reaction);
 //				product->createProduction(reaction);
 //
 //				// Check if the reverse reaction is allowed

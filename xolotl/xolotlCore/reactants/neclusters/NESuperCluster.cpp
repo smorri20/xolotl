@@ -63,7 +63,7 @@ void NESuperCluster::updateFromNetwork() {
 
 		// Set them in the super cluster map
 		reactingMap[size] = react;
-		combiningMap[size] = combi;
+        combiningMap.insert(std::make_pair(size, combi));
 		dissociatingMap[size] = disso;
 		emissionMap[size] = emi;
 	}
@@ -177,7 +177,7 @@ void NESuperCluster::computeDispersion() {
 void NESuperCluster::optimizeReactions() {
 	// Local declarations
 	double factor = 0.0, distance = 0.0;
-	NECluster *firstReactant, *secondReactant, *combiningReactant,
+	NECluster *firstReactant, *secondReactant,
 			*dissociatingCluster, *otherEmittedCluster, *firstCluster,
 			*secondCluster;
 	int index = 0;
@@ -264,20 +264,21 @@ void NESuperCluster::optimizeReactions() {
 			++mapIt) {
 		// Get the pairs
 		auto clusters = mapIt->second;
+
 		// Loop over all the reacting pairs
 		for (auto it = clusters.begin(); it != clusters.end();) {
 			// Get the combining cluster
-			combiningReactant = (*it).combining;
+			NECluster& combiningReactant = (*it).combining;
 
 			// Create the corresponding production reaction
 			auto reaction = std::make_shared<ProductionReaction>(this,
-					combiningReactant);
+					&combiningReactant);
 			// Add it to the network
 			reaction = network.addProductionReaction(reaction);
 
 			// Create a new SuperClusterProductionPair with NULL as the second cluster because
 			// we do not need it
-			SuperClusterProductionPair superPair(combiningReactant, NULL,
+			SuperClusterProductionPair superPair(&combiningReactant, nullptr,
 					reaction.get());
 
 			// Loop on the whole super cluster to fill this super pair
@@ -288,17 +289,26 @@ void NESuperCluster::optimizeReactions() {
 				distance = getDistance(index);
 				factor = (double) (index - numXe) / dispersion;
 
-				// Get the pairs
-				auto clustersBis = mapItBis->second;
-				// Set the total number of reactants that produce to form this one
-				// Loop over all the reacting pairs
+				// Access the combining pairs
+				auto& clustersBis = mapItBis->second;
+
+				// Set the total number of reactants that produce to 
+                // form this one.
+                // May involve removing items from the vector of
+                // combining cluster objects (clusersBis).
+                // To avoid invalidating iterators into this vector,
+                // we use the idiom of noting which need to get deleted,
+                // a std::remove_if to move the doomed ones to the end
+                // of the vector, and then erase to remove them.
+                std::set<CombiningCluster*> doomedCombining;
 				for (auto itBis = clustersBis.begin();
-						itBis != clustersBis.end();) {
-					// Get the two reacting clusters
-					auto combiningReactantBis = (*itBis).combining;
+						itBis != clustersBis.end(); ++itBis) {
+
+					// Access the current combining cluster
+					NECluster& combiningReactantBis = (*itBis).combining;
 
 					// Check if it is the same reaction
-					if (combiningReactantBis == combiningReactant) {
+					if (&combiningReactantBis == &combiningReactant) {
 						superPair.a000 += 1.0;
 						superPair.a001 += factor;
 						superPair.a010 += (*itBis).distance;
@@ -308,22 +318,34 @@ void NESuperCluster::optimizeReactions() {
 						superPair.a110 += (*itBis).distance * distance;
 						superPair.a111 += (*itBis).distance * distance * factor;
 
-						// Do not delete the element if it is the original one
-						if (itBis == it) {
-							++itBis;
-							continue;
-						}
-
-						// Remove the reaction from the vector
-						itBis = clustersBis.erase(itBis);
+                        // Determine if we need to delete this item.
+						// Do not delete if it is the original one.
+                        if (itBis != it) {
+                            // It is not the original one, so indicate it
+                            // needs to be removed.
+                            // NB: The expression with &(*iter) seems odd -
+                            // why not just use itBis?  We want the 
+                            // address of the object, and itBis is an
+                            // iterator, not the address of the object itself.
+                            // So we dereference the iterator to access
+                            // the object, then take its address.
+                            doomedCombining.emplace(&(*itBis));
+                        }
 					}
-					// Go to the next element
-					else
-						++itBis;
 				}
 
-				// Give back the pairs
-				mapItBis->second = clustersBis;
+                // Now that we know which combining clusters to delete,
+                // Move them all to the end of the vector.
+                auto firstToRemoveIter = std::remove_if(clustersBis.begin(), clustersBis.end(),
+                    [&doomedCombining](CombiningCluster& currCombining) {
+                        // See if currCombiningPair is in our set 
+                        // of doomed items.
+                        auto diter = doomedCombining.find(&currCombining);
+                        return (diter != doomedCombining.end());
+                    });
+                // Now that the doomed are all moved to be contiguous
+                // and at the end of the vector, erase them.
+                clustersBis.erase(firstToRemoveIter, clustersBis.end());
 			}
 
 			// Add the super pair

@@ -1,4 +1,5 @@
 #include <fstream>
+#include <functional>
 #include <cassert>
 #include "NEClusterNetworkLoader.h"
 #include <NEClusterReactionNetwork.h>
@@ -323,10 +324,6 @@ void NEClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 		width = max(sectionWidth * (int) (superCount / 10), sectionWidth);
 	}
 
-	// Initialize variables for the loop
-	NESuperCluster * newCluster;
-	int nXe = 0;
-
     // Tell each reactant to update the pairs vector with super clusters
     for (IReactant& currReactant : network.getAll()) {
 
@@ -335,7 +332,7 @@ void NEClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 		// Get their production and dissociation vectors
         // TODO can these be updated in place?
 		auto react = cluster.reactingPairs;
-		auto combi = cluster.combiningReactants;
+		auto& combi = cluster.combiningReactants;
 		auto disso = cluster.dissociatingPairs;
 		auto emi = cluster.emissionPairs;
 
@@ -344,11 +341,11 @@ void NEClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 			// Test the first reactant
 			if (react[l].first->getType() == ReactantType::Xe) {
 				// Get its size
-				nXe = react[l].first->getSize();
+				auto nXe = react[l].first->getSize();
 				// Test its size
 				if (nXe >= xeMin) {
 					// It has to be replaced by a super cluster
-					newCluster = superGroupMap[clusterGroupMap[nXe]];
+					auto newCluster = superGroupMap[clusterGroupMap[nXe]];
 					react[l].first = newCluster;
 					react[l].firstDistance = newCluster->getDistance(size);
 				}
@@ -357,43 +354,45 @@ void NEClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 			// Test the second reactant
 			if (react[l].second->getType() == ReactantType::Xe) {
 				// Get its size
-				nXe = react[l].second->getSize();
+				auto nXe = react[l].second->getSize();
 				// Test its size
 				if (nXe >= xeMin) {
 					// It has to be replaced by a super cluster
-					newCluster = superGroupMap[clusterGroupMap[nXe]];
+					auto newCluster = superGroupMap[clusterGroupMap[nXe]];
 					react[l].second = newCluster;
 					react[l].secondDistance = newCluster->getDistance(nXe);
 				}
 			}
 		}
 
-		// Loop on its combining reactants
-		for (int l = 0; l < combi.size(); l++) {
-			// Test the combining reactant
-			if (combi[l].combining->getType() == ReactantType::Xe) {
-				// Get its size
-				nXe = combi[l].combining->getSize();
-				// Test its size
-				if (nXe >= xeMin) {
-					// It has to be replaced by a super cluster
-					newCluster = superGroupMap[clusterGroupMap[nXe]];
-					combi[l].combining = newCluster;
-					combi[l].distance = newCluster->getDistance(nXe);
-				}
-			}
-		}
+		// Visit each combining reactant.
+        std::for_each(combi.begin(), combi.end(),
+            [this,&superGroupMap,&clusterGroupMap](NECluster::CombiningCluster& cc) {
+                // Test the combining reactant
+                NECluster& currCombining = cc.combining;
+                if (currCombining.getType() == ReactantType::Xe) {
+                    // Get its size
+                    auto nXe = currCombining.getSize();
+                    // Test its size
+                    if (nXe >= xeMin) {
+                        // It has to be replaced by a super cluster
+                        auto newCluster = superGroupMap[clusterGroupMap[nXe]];
+                        cc.combining = *newCluster;
+                        cc.distance = newCluster->getDistance(nXe);
+                    }
+                }
+            });
 
 		// Loop on its dissociating pairs
 		for (int l = 0; l < disso.size(); l++) {
 			// Test the first reactant
 			if (disso[l].first->getType() == ReactantType::Xe) {
 				// Get its size
-				nXe = disso[l].first->getSize();
+				auto nXe = disso[l].first->getSize();
 				// Test its size
 				if (nXe >= xeMin) {
 					// It has to be replaced by a super cluster
-					newCluster = superGroupMap[clusterGroupMap[nXe]];
+					auto newCluster = superGroupMap[clusterGroupMap[nXe]];
 					disso[l].first = newCluster;
 					disso[l].firstDistance = newCluster->getDistance(nXe);
 				}
@@ -402,11 +401,11 @@ void NEClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 			// Test the second reactant
 			if (disso[l].second->getType() == ReactantType::Xe) {
 				// Get its size
-				nXe = disso[l].second->getSize();
+				auto nXe = disso[l].second->getSize();
 				// Test its size
 				if (nXe >= xeMin) {
 					// It has to be replaced by a super cluster
-					newCluster = superGroupMap[clusterGroupMap[nXe]];
+					auto newCluster = superGroupMap[clusterGroupMap[nXe]];
 					disso[l].second = newCluster;
 					disso[l].secondDistance = newCluster->getDistance(nXe);
 				}
@@ -418,11 +417,11 @@ void NEClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 			// Test the first reactant
 			if (emi[l].first->getType() == ReactantType::Xe) {
 				// Get its size
-				nXe = emi[l].first->getSize();
+				auto nXe = emi[l].first->getSize();
 				// Test its size
 				if (nXe >= xeMin) {
 					// It has to be replaced by a super cluster
-					newCluster = superGroupMap[clusterGroupMap[nXe]];
+					auto newCluster = superGroupMap[clusterGroupMap[nXe]];
 					emi[l].first = newCluster;
 					emi[l].firstDistance = newCluster->getDistance(nXe);
 				}
@@ -431,11 +430,11 @@ void NEClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 			// Test the second reactant
 			if (emi[l].second->getType() == ReactantType::Xe) {
 				// Get its size
-				nXe = emi[l].second->getSize();
+				auto nXe = emi[l].second->getSize();
 				// Test its size
 				if (nXe >= xeMin) {
 					// It has to be replaced by a super cluster
-					newCluster = superGroupMap[clusterGroupMap[nXe]];
+					auto newCluster = superGroupMap[clusterGroupMap[nXe]];
 					emi[l].second = newCluster;
 					emi[l].secondDistance = newCluster->getDistance(nXe);
 				}
@@ -444,7 +443,6 @@ void NEClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 
 		// Set their production and dissociation vectors
 		cluster.reactingPairs = react;
-		cluster.combiningReactants = combi;
 		cluster.dissociatingPairs = disso;
 		cluster.emissionPairs = emi;
 	}
@@ -463,7 +461,7 @@ void NEClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
         auto& currCluster = currMapItem.second;
 
 		// Get the cluster's size.
-		nXe = currCluster->getSize();
+		auto nXe = currCluster->getSize();
 
 		// Check if the cluster is too large.
 		if (nXe >= xeMin) {

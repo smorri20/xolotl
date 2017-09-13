@@ -99,12 +99,12 @@ protected:
 		/**
 		 * The combining cluster
 		 */
-		PSICluster * combining;
+		PSICluster& combining;
 
 		/**
 		 * The reaction pointer to the list
 		 */
-		std::shared_ptr<Reaction> reaction;
+		Reaction& reaction;
 
 		/**
 		 * All the coefficient needed to compute each element
@@ -120,8 +120,10 @@ protected:
 		double a2;
 
 		//! The constructor
-		CombiningCluster(PSICluster * ptr) :
-				combining(ptr), a0(0.0), a1(0.0), a2(0.0) {
+		CombiningCluster(Reaction& _reaction, PSICluster& _comb) :
+				combining(_comb),
+                reaction(_reaction),
+                a0(0.0), a1(0.0), a2(0.0) {
 		}
 	};
 
@@ -228,7 +230,7 @@ public:
 	 * @param d Vacancy number.
 	 */
 	virtual void createProduction(std::shared_ptr<ProductionReaction> reaction,
-			int a = 0, int b = 0, int c = 0, int d = 0);
+			int a = 0, int b = 0, int c = 0, int d = 0) override;
 
 	/**
 	 * Create a combination associated with the given reaction.
@@ -238,8 +240,8 @@ public:
 	 * @param a Helium number.
 	 * @param b Vacancy number.
 	 */
-	virtual void createCombination(std::shared_ptr<ProductionReaction> reaction,
-			int a = 0, int b = 0);
+	virtual void createCombination(ProductionReaction& reaction,
+			int a = 0, int b = 0) override;
 
 	/**
 	 * Create a dissociation pair associated with the given reaction.
@@ -253,7 +255,7 @@ public:
 	 */
 	virtual void createDissociation(
 			std::shared_ptr<DissociationReaction> reaction, int a = 0,
-			int b = 0, int c = 0, int d = 0);
+			int b = 0, int c = 0, int d = 0) override;
 
 	/**
 	 * Create an emission pair associated with the given reaction.
@@ -266,7 +268,7 @@ public:
 	 * @param d Vacancy number.
 	 */
 	virtual void createEmission(std::shared_ptr<DissociationReaction> reaction,
-			int a = 0, int b = 0, int c = 0, int d = 0);
+			int a = 0, int b = 0, int c = 0, int d = 0) override;
 
 	/**
 	 * This operation returns the connectivity array for this cluster for
