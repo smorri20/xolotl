@@ -21,7 +21,7 @@ public:
 	/**
 	 * The dissociating cluster
 	 */
-	IReactant * dissociating;
+	IReactant& dissociating;
 
 	/**
 	 * The revert reaction corresponding to this dissociation
@@ -40,16 +40,16 @@ public:
      * @param _r1 One of the reactants.
      * @param _r2 The other reactant.
      */
-    DissociationReaction(IReactant * _diss, IReactant * _r1, IReactant * _r2)
+    DissociationReaction(IReactant& _diss, IReactant& _r1, IReactant& _r2)
       : KeyedReaction(_r1, _r2),
         dissociating(_diss),
         reverseReaction(nullptr) {
 
         // Build our descriptive key.
         // Assumes our first and second reactants are ordered by composition.
-        auto const& dissComp = dissociating->getComposition();
-        auto const& firstComp = first->getComposition();
-        auto const& secondComp = second->getComposition();
+        auto const& dissComp = dissociating.getComposition();
+        auto const& firstComp = first.getComposition();
+        auto const& secondComp = second.getComposition();
 
         // Determine our descriptive key and cache it.
         // This assumes that our reactants are ordered.
@@ -57,6 +57,12 @@ public:
         nextBegin = std::copy(firstComp.begin(), firstComp.end(), nextBegin);
         std::copy(secondComp.begin(), secondComp.end(), nextBegin);
     }
+
+    /**
+     * Copy constructor, deleted to ensure we are constructed with reactants.
+     */
+    DissociationReaction(const Reaction& other) = delete;
+
 };
 
 /**

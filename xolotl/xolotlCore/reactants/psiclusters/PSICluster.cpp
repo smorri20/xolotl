@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cassert>
 #include "PSICluster.h"
 #include <xolotlPerf.h>
 #include <Constants.h>
@@ -10,27 +11,32 @@ void PSICluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
 		int a, int b, int c, int d) {
 
 	// Add a cluster pair for the given reaction.
-	reactingPairs.emplace_back((PSICluster*)reaction->first, 
-                                (PSICluster*)reaction->second);
+	reactingPairs.emplace_back(
+            &static_cast<PSICluster&>(reaction->first),
+            &static_cast<PSICluster&>(reaction->second));
     auto& newPair = reactingPairs.back();
 
 	// Add the reaction to the network
-	reaction = network.addProductionReaction(reaction);
+	auto newReaction = network.addProductionReaction(reaction);
 	// Link it to the pair
-	newPair.reaction = reaction;
+	newPair.reaction = newReaction;
+
+    // NB: newPair's reactants are same as reaction and newReaction's.
+    // So use newPair only from here on.
+    // TODO Any way to enforce this?
 
 	// Update the coefficients
 	double firstHeDistance = 0.0, firstVDistance = 0.0, secondHeDistance = 0.0,
 			secondVDistance = 0.0;
-	if (reaction->first->getType() == ReactantType::PSISuper) {
-		auto super = (PSICluster *) reaction->first;
-		firstHeDistance = super->getHeDistance(c);
-		firstVDistance = super->getVDistance(d);
+	if (newPair.first->getType() == ReactantType::PSISuper) {
+		auto const& super = static_cast<PSICluster const&>(*(newPair.first));
+		firstHeDistance = super.getHeDistance(c);
+		firstVDistance = super.getVDistance(d);
 	}
-	if (reaction->second->getType() == ReactantType::PSISuper) {
-		auto super = (PSICluster *) reaction->second;
-		secondHeDistance = super->getHeDistance(c);
-		secondVDistance = super->getVDistance(d);
+	if (newPair.second->getType() == ReactantType::PSISuper) {
+		auto const& super = static_cast<PSICluster const&>(*(newPair.second));
+		secondHeDistance = super.getHeDistance(c);
+		secondVDistance = super.getVDistance(d);
 	}
 	newPair.a00 += 1.0;
 	newPair.a10 += firstHeDistance;
@@ -49,7 +55,7 @@ void PSICluster::createCombination(ProductionReaction& reaction,
 		int a, int b) {
 
 	// Look for the other cluster
-	auto otherCluster = static_cast<PSICluster*>((reaction.first->getId() == id) ?
+	auto& otherCluster = static_cast<PSICluster&>((reaction.first.getId() == id) ?
                                 reaction.second :
                                 reaction.first);
 
@@ -62,7 +68,7 @@ void PSICluster::createCombination(ProductionReaction& reaction,
 #else
     std::vector<CombiningCluster>::reverse_iterator it;
     for (it = combiningReactants.rbegin(); it != combiningReactants.rend(); ++it) {
-        if(otherCluster == &(it->combining)) {
+        if(&otherCluster == &(it->combining)) {
             break;
         }
     }
@@ -73,20 +79,20 @@ void PSICluster::createCombination(ProductionReaction& reaction,
 
         // Create the corresponding production reaction.
 		auto newReaction = std::make_shared<ProductionReaction>(otherCluster,
-				this);
+				*this);
 		// Add it to the network
 		newReaction = network.addProductionReaction(newReaction);
 
 		// Add the combination to our collection.
-		combiningReactants.emplace_back(*newReaction, *otherCluster);
+		combiningReactants.emplace_back(*newReaction, otherCluster);
 		it = combiningReactants.rbegin();
 	}
 
 	// Update the coefficients
 	double heDistance = 0.0, vDistance = 0.0;
-	if (otherCluster->getType() == ReactantType::PSISuper) {
-		heDistance = otherCluster->getHeDistance(a);
-		vDistance = otherCluster->getVDistance(b);
+	if (otherCluster.getType() == ReactantType::PSISuper) {
+		heDistance = otherCluster.getHeDistance(a);
+		vDistance = otherCluster.getVDistance(b);
 	}
 	(*it).a0 += 1.0;
 	(*it).a1 += heDistance;
@@ -100,30 +106,30 @@ void PSICluster::createDissociation(
 		int d) {
 
 	// Look for the other cluster
-	IReactant * emittedCluster;
-	if (reaction->first->getId() == id)
-		emittedCluster = reaction->second;
-	else
-		emittedCluster = reaction->first;
+	auto& emittedCluster = static_cast<PSICluster&>((reaction->first.getId() == id) ?
+                                reaction->second :
+                                reaction->first);
 
 	// Check if the reaction was already added
     auto it = std::find_if(dissociatingPairs.rbegin(), dissociatingPairs.rend(),
             [&reaction,&emittedCluster](const ClusterPair& currPair) {
-                return (reaction->dissociating == currPair.first) and
-                        (emittedCluster == currPair.second);
+                return (&(reaction->dissociating) == &static_cast<PSICluster&>(*currPair.first)) and
+                        (&emittedCluster == &static_cast<PSICluster&>(*currPair.second));
 
             });
 	if (it == dissociatingPairs.rend()) {
 		// It was not already in so add it
 		// Add the pair of them where it is important that the
 		// dissociating cluster is the first one
-		dissociatingPairs.emplace_back((PSICluster *) reaction->dissociating,
-				(PSICluster *) emittedCluster);
+		dissociatingPairs.emplace_back(
+                &static_cast<PSICluster&>(reaction->dissociating),
+				&static_cast<PSICluster&>(emittedCluster));
 		it = dissociatingPairs.rbegin();
 
 		// Create the corresponding dissociation reaction
-		auto newReaction = std::make_shared<DissociationReaction>((*it).first,
-				(*it).second, this);
+		auto newReaction = std::make_shared<DissociationReaction>(
+                *(*it).first,
+				*(*it).second, *this);
 		// Add it to the network
 		newReaction = network.addDissociationReaction(newReaction);
 		// Link it to the pair
@@ -132,10 +138,10 @@ void PSICluster::createDissociation(
 
 	// Update the coefficients
 	double firstHeDistance = 0.0, firstVDistance = 0.0;
-	if (reaction->dissociating->getType() == ReactantType::PSISuper) {
-		auto super = (PSICluster *) reaction->dissociating;
-		firstHeDistance = super->getHeDistance(a);
-		firstVDistance = super->getVDistance(b);
+	if (reaction->dissociating.getType() == ReactantType::PSISuper) {
+		auto const& super = static_cast<PSICluster&>(reaction->dissociating);
+		firstHeDistance = super.getHeDistance(a);
+		firstVDistance = super.getVDistance(b);
 	}
 	(*it).a00 += 1.0;
 	(*it).a10 += firstHeDistance;
@@ -148,8 +154,9 @@ void PSICluster::createEmission(std::shared_ptr<DissociationReaction> reaction,
 		int a, int b, int c, int d) {
 
 	// Add the pair of emitted clusters.
-	emissionPairs.emplace_back( (PSICluster *) reaction->first,
-			(PSICluster *) reaction->second);
+	emissionPairs.emplace_back( 
+            &static_cast<PSICluster&>(reaction->first),
+			&static_cast<PSICluster&>(reaction->second));
 	auto& newPair = emissionPairs.back();
 
 	// Add the reaction to the network

@@ -194,8 +194,9 @@ void NESuperCluster::optimizeReactions() {
 			secondReactant = (*it).second;
 
 			// Create the corresponding production reaction
-			auto reaction = std::make_shared<ProductionReaction>(firstReactant,
-					secondReactant);
+			auto reaction = std::make_shared<ProductionReaction>(
+                    *firstReactant,
+					*secondReactant);
 			// Add it to the network
 			reaction = network.addProductionReaction(reaction);
 
@@ -271,8 +272,8 @@ void NESuperCluster::optimizeReactions() {
 			NECluster& combiningReactant = (*it).combining;
 
 			// Create the corresponding production reaction
-			auto reaction = std::make_shared<ProductionReaction>(this,
-					&combiningReactant);
+			auto reaction = std::make_shared<ProductionReaction>(*this,
+					combiningReactant);
 			// Add it to the network
 			reaction = network.addProductionReaction(reaction);
 
@@ -369,7 +370,7 @@ void NESuperCluster::optimizeReactions() {
 
 			// Create a dissociation reaction
 			auto reaction = std::make_shared<DissociationReaction>(
-					dissociatingCluster, this, otherEmittedCluster);
+					*dissociatingCluster, *this, *otherEmittedCluster);
 			// Add it to the network
 			reaction = network.addDissociationReaction(reaction);
 
@@ -439,8 +440,8 @@ void NESuperCluster::optimizeReactions() {
 			secondCluster = (*it).second;
 
 			// Create a dissociation reaction
-			auto reaction = std::make_shared<DissociationReaction>(this,
-					firstCluster, secondCluster);
+			auto reaction = std::make_shared<DissociationReaction>(*this,
+					*firstCluster, *secondCluster);
 			// Add it to the network
 			reaction = network.addDissociationReaction(reaction);
 

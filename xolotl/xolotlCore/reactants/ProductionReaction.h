@@ -26,19 +26,25 @@ public:
      */
     ProductionReaction() = delete;
 
+    /**
+     * Copy constructor, deleted to ensure we are constructed with reactants.
+     */
+    ProductionReaction(const Reaction& other) = delete;
+
+
 	/**
      * Construct a ProductionReaction.
      *
      * @param _r1 One of the reactants.
      * @param _r2 The other reactant.
      */
-	ProductionReaction(IReactant * _r1, IReactant * _r2)
+	ProductionReaction(IReactant& _r1, IReactant& _r2)
       : KeyedReaction(_r1, _r2) {
 
         // Build our decriptive key.
         // Assumes that our reactants are ordered by composition.
-        auto const& firstComp = first->getComposition();
-        auto const& secondComp = second->getComposition();
+        auto const& firstComp = first.getComposition();
+        auto const& secondComp = second.getComposition();
 
         auto nextBegin = std::copy(firstComp.begin(), firstComp.end(), descKey.begin());
         std::copy(secondComp.begin(), secondComp.end(), nextBegin);

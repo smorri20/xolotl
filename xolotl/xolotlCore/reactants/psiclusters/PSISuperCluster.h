@@ -2,11 +2,46 @@
 #define PSISUPERCLUSTER_H
 
 // Includes
-#include "PSICluster.h"
 #include <string>
-#include <forward_list>
+#include <unordered_map>
 #include <Constants.h>
+#include "PSICluster.h"
 #include "IntegerRange.h"
+
+
+
+// We use std::unordered_map for quick lookup of info about 
+// reactions we participate in.
+// The C++ standard library defines a std::hash for keys
+// that are a single pointer, but not for pairs of pointers,
+// so we define our own here.  To improve readability,
+// we define a concise name for type of a pair of IReactant pointers
+// that we use as keys.
+// TODO should this be moved "upward," e.g., into IReactant.h?
+namespace xolotlCore {
+using ReactantAddrPair = std::pair<IReactant*, IReactant*>;
+} // namespace xolotlCore
+
+namespace std {
+
+template<>
+struct hash<xolotlCore::ReactantAddrPair> {
+    size_t operator()(const xolotlCore::ReactantAddrPair& pr) const {
+        // Idea for implementation taken from 
+        // https://www.sultanik.com/blog/HashingPointers.
+        auto sum = reinterpret_cast<uintptr_t>(pr.first) +
+                    reinterpret_cast<uintptr_t>(pr.second);
+        // Ensure result will fit in size_t
+#if SIZE_MAX < UINTPTR_MAX
+        sum %= SIZE_MAX;
+#endif // SIZE_MAX < UINTPTR_MAX
+        return sum;
+    }
+};
+
+} // namespace std
+
+
 
 namespace xolotlCore {
 /**
@@ -24,16 +59,7 @@ private:
 
 protected:
 
-	/**
-	 * This is a protected class that is used to implement the flux calculations
-	 * for two body production reactions.
-	 *
-	 * The constants are stored along the clusters taking part in the
-	 * reaction or dissociation for faster computation because they only change
-	 * when the temperature change. k is computed when setTemperature() is called.
-	 */
-	class SuperClusterProductionPair {
-	public:
+    struct ReactingInfoBase {
 
 		/**
 		 * The first cluster in the pair
@@ -41,15 +67,37 @@ protected:
 		PSICluster * first;
 
 		/**
+		 * The reaction/dissociation constant associated to this
+		 * reaction or dissociation
+		 */
+		const double& kConstant;
+
+		//! The constructor
+		ReactingInfoBase(PSICluster * firstPtr, Reaction * reaction) :
+				first(firstPtr),
+                kConstant(reaction->kConstant) {
+
+		}
+    };
+
+    struct ReactingPairBase : public ReactingInfoBase {
+
+		/**
 		 * The second cluster in the pair
 		 */
 		PSICluster * second;
 
-		/**
-		 * The reaction/dissociation constant associated to this
-		 * reaction or dissociation
-		 */
-		const double * kConstant;
+		//! The constructor
+		ReactingPairBase(PSICluster * firstPtr,
+				    PSICluster * secondPtr, Reaction * reaction) :
+            ReactingInfoBase(firstPtr, reaction),
+            second(secondPtr) {
+
+		}
+    };
+
+
+    struct ProductionCoefficientBase {
 
 		/**
 		 * All the coefficient needed to compute each element
@@ -91,17 +139,87 @@ protected:
 		double a222;
 
 		//! The constructor
-		SuperClusterProductionPair(PSICluster * firstPtr,
-				PSICluster * secondPtr, Reaction * reaction) :
-				first(firstPtr), second(secondPtr), kConstant(
-						&(reaction->kConstant)), a000(0.0), a001(0.0), a002(
-						0.0), a100(0.0), a101(0.0), a102(0.0), a200(0.0), a201(
-						0.0), a202(0.0), a010(0.0), a011(0.0), a012(0.0), a020(
-						0.0), a021(0.0), a022(0.0), a110(0.0), a111(0.0), a112(
-						0.0), a120(0.0), a121(0.0), a122(0.0), a210(0.0), a211(
-						0.0), a212(0.0), a220(0.0), a221(0.0), a222(0.0) {
+		ProductionCoefficientBase() :
+                a000(0.0), a001(0.0), a002(0.0),
+                a100(0.0), a101(0.0), a102(0.0),
+                a200(0.0), a201(0.0), a202(0.0),
+                a010(0.0), a011(0.0), a012(0.0),
+                a020(0.0), a021(0.0), a022(0.0),
+                a110(0.0), a111(0.0), a112(0.0),
+                a120(0.0), a121(0.0), a122(0.0),
+                a210(0.0), a211(0.0), a212(0.0),
+                a220(0.0), a221(0.0), a222(0.0) {
 		}
+    };
+
+	/**
+	 * This is a protected class that is used to implement the flux calculations
+	 * for two body production reactions.
+	 *
+	 * The constants are stored along the clusters taking part in the
+	 * reaction or dissociation for faster computation because they only change
+	 * when the temperature change. k is computed when setTemperature() is called.
+	 */
+	struct SuperClusterProductionPair : public ReactingPairBase, public ProductionCoefficientBase {
+
+        /**
+         * Nice name for key type in map of key to production pair.
+         */
+        using KeyType = ReactantAddrPair;
+
+		//! The constructor
+		SuperClusterProductionPair(PSICluster * firstPtr,
+				    PSICluster * secondPtr, Reaction * reaction) :
+            ReactingPairBase(firstPtr, secondPtr, reaction),
+            ProductionCoefficientBase() {
+
+		}
+
+        /**
+         * Default and copy constructors, deleted to enforce constructing
+         * using reactants.
+         */
+        SuperClusterProductionPair() = delete;
+        SuperClusterProductionPair(const SuperClusterProductionPair& other) = delete;
 	};
+
+    /**
+     * Concise name for type of map of SuperClusterProductionPairs.
+     */
+    using ProductionPairMap = std::unordered_map<SuperClusterProductionPair::KeyType, SuperClusterProductionPair>;
+
+
+    /**
+     * Info about a cluster we combine with.
+     */
+	struct SuperClusterCombiningCluster : public ReactingInfoBase, public ProductionCoefficientBase {
+
+        /**
+         * Concise name for type of keys in map of keys to 
+         * combining cluster info.
+         */
+        using KeyType = IReactant*;
+
+		//! The constructor
+		SuperClusterCombiningCluster(PSICluster* firstPtr, Reaction* reaction) :
+            ReactingInfoBase(firstPtr, reaction),
+            ProductionCoefficientBase() {
+
+		}
+
+        /**
+         * Default and copy construtors, deleted to enforce constructing
+         * using reactants.
+         */
+        SuperClusterCombiningCluster() = delete;
+        SuperClusterCombiningCluster(const SuperClusterCombiningCluster& other) = delete;
+	};
+
+    /**
+     * Concise name for type of map of SuperClusterCombiningClusters.
+     */
+    using CombiningClusterMap = std::unordered_map<SuperClusterCombiningCluster::KeyType, SuperClusterCombiningCluster>;
+
 
 	/**
 	 * This is a protected class that is used to implement the flux calculations
@@ -111,24 +229,12 @@ protected:
 	 * reaction or dissociation for faster computation because they only change
 	 * when the temperature change. k is computed when setTemperature() is called.
 	 */
-	class SuperClusterDissociationPair {
-	public:
+	struct SuperClusterDissociationPair : public ReactingPairBase {
 
-		/**
-		 * The first cluster in the pair
-		 */
-		PSICluster * first;
-
-		/**
-		 * The second cluster in the pair
-		 */
-		PSICluster * second;
-
-		/**
-		 * The reaction/dissociation constant associated to this
-		 * reaction or dissociation
-		 */
-		const double * kConstant;
+        /**
+         * Concise name for type of key into map of dissociation pairs.
+         */
+        using KeyType = ReactantAddrPair;
 
 		/**
 		 * All the coefficient needed to compute each element
@@ -153,12 +259,19 @@ protected:
 
 		//! The constructor
 		SuperClusterDissociationPair(PSICluster * firstPtr,
-				PSICluster * secondPtr, Reaction * reaction) :
-				first(firstPtr), second(secondPtr), kConstant(
-						&(reaction->kConstant)), a00(0.0), a01(0.0), a02(0.0), a10(
-						0.0), a11(0.0), a12(0.0), a20(0.0), a21(0.0), a22(0.0) {
+				    PSICluster * secondPtr, Reaction * reaction) :
+            ReactingPairBase(firstPtr, secondPtr, reaction),
+                a00(0.0), a01(0.0), a02(0.0), 
+                a10(0.0), a11(0.0), a12(0.0),
+                a20(0.0), a21(0.0), a22(0.0) {
+
 		}
 	};
+
+    /**
+     * Concise name for type of map of SuperClusterDissociationPairs.
+     */
+    using DissociationPairMap = std::unordered_map<SuperClusterDissociationPair::KeyType, SuperClusterDissociationPair>;
 
 private:
 
@@ -203,16 +316,16 @@ private:
 	double dispersionV;
 
 	//! The list of optimized effective reacting pairs.
-	std::forward_list<SuperClusterProductionPair> effReactingList;
+    ProductionPairMap effReactingList;
 
 	//! The list of optimized effective combining pairs.
-	std::forward_list<SuperClusterProductionPair> effCombiningList;
+    CombiningClusterMap effCombiningList;
 
 	//! The list of optimized effective dissociating pairs.
-	std::forward_list<SuperClusterDissociationPair> effDissociatingList;
+    DissociationPairMap effDissociatingList;
 
 	//! The list of optimized effective emission pairs.
-	std::forward_list<SuperClusterDissociationPair> effEmissionList;
+    DissociationPairMap effEmissionList;
 
 	/**
 	 * The helium momentum flux.
@@ -271,8 +384,8 @@ public:
 	 * @param c Helium number.
 	 * @param d Vacancy number.
 	 */
-	void createProduction(std::shared_ptr<ProductionReaction> reaction, int a =
-			0, int b = 0, int c = 0, int d = 0) override;
+	void createProduction(std::shared_ptr<ProductionReaction> reaction, 
+            int a = 0, int b = 0, int c = 0, int d = 0) override;
 
 	/**
 	 * Create a combination associated with the given reaction.

@@ -97,7 +97,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 					// Create a production reaction
                     // TODO watch whether taking these addresses is safe when stack goes away.  Will be a non-issue when we convert Reactions to use refs.
 					auto reaction = std::make_shared<ProductionReaction>(
-							&firstReactant, &secondReactant);
+							firstReactant, secondReactant);
 					// Tell the reactants that they are in this reaction
 					firstReactant.createCombination(*reaction);
 					secondReactant.createCombination(*reaction);
@@ -152,7 +152,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 				// Create a production reaction
                 // TODO verify safe to take address of these refs on stack.
 				auto reaction = std::make_shared<ProductionReaction>(
-                        &heReactant, &heVReactant);
+                        heReactant, heVReactant);
 				// Tell the reactants that they are in this reaction
 				heReactant.createCombination(*reaction);
 				heVReactant.createCombination(*reaction);
@@ -185,7 +185,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 									|| superCluster.getDiffusionFactor() > 0.0)) {
 						// Create a production reaction
 						auto reaction = std::make_shared<ProductionReaction>(
-								&heReactant, &superCluster);
+								heReactant, superCluster);
 						// Tell the reactants that they are in this reaction
 						heReactant.createCombination(*reaction, i, j);
 						superCluster.createCombination(*reaction, i, j);
@@ -239,8 +239,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 					&& (vReactant.getDiffusionFactor() > 0.0
 							|| heVReactant.getDiffusionFactor() > 0.0)) {
 				// Create a production reaction
-				auto reaction = std::make_shared<ProductionReaction>(&vReactant,
-						&heVReactant);
+				auto reaction = std::make_shared<ProductionReaction>(
+                        vReactant, heVReactant);
 				// Tell the reactants that they are in this reaction
 				vReactant.createCombination(*reaction);
 				heVReactant.createCombination(*reaction);
@@ -274,7 +274,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 									|| superCluster.getDiffusionFactor() > 0.0)) {
 						// Create a production reaction
 						auto reaction = std::make_shared<ProductionReaction>(
-								&vReactant, &superCluster);
+								vReactant, superCluster);
 						// Tell the reactants that they are in this reaction
 						vReactant.createCombination(*reaction, i, j);
 						superCluster.createCombination(*reaction, i, j);
@@ -328,7 +328,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 							|| vReactant.getDiffusionFactor() > 0.0)) {
 				// Create a production reaction
 				auto reaction = std::make_shared<ProductionReaction>(
-                        &heReactant, &vReactant);
+                        heReactant, vReactant);
 				// Tell the reactants that they are in this reaction
 				heReactant.createCombination(*reaction);
 				vReactant.createCombination(*reaction);
@@ -376,8 +376,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 					&& (iReactant.getDiffusionFactor() > 0.0
 							|| heVReactant.getDiffusionFactor() > 0.0)) {
 				// Create a production reaction
-				auto reaction = std::make_shared<ProductionReaction>(&iReactant,
-						&heVReactant);
+				auto reaction = std::make_shared<ProductionReaction>(
+                        iReactant, heVReactant);
 				// Tell the reactants that they are in this reaction
 				iReactant.createCombination(*reaction);
 				heVReactant.createCombination(*reaction);
@@ -425,7 +425,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 									|| superCluster.getDiffusionFactor() > 0.0)) {
 						// Create a production reaction
 						auto reaction = std::make_shared<ProductionReaction>(
-								&iReactant, &superCluster);
+								iReactant, superCluster);
 						// Tell the reactants that they are in this reaction
 						iReactant.createCombination(*reaction, i, j);
 						superCluster.createCombination(*reaction, i, j);
@@ -572,7 +572,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 								|| vReactant.getDiffusionFactor() > 0.0)) {
 					// Create a production reaction
 					auto reaction = std::make_shared<ProductionReaction>(
-							&iReactant, &vReactant);
+							iReactant, vReactant);
 					// Tell the reactants that they are in this reaction
 					iReactant.createCombination(*reaction);
 					vReactant.createCombination(*reaction);
@@ -588,7 +588,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 								|| vReactant.getDiffusionFactor() > 0.0)) {
 					// Create a production reaction
 					auto reaction = std::make_shared<ProductionReaction>(
-							&iReactant, &vReactant);
+							iReactant, vReactant);
 					// Tell the reactants that they are in this reaction
 					iReactant.createCombination(*reaction);
 					vReactant.createCombination(*reaction);
@@ -602,7 +602,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 						|| vReactant.getDiffusionFactor() > 0.0)) {
 					// Create a production reaction
 					auto reaction = std::make_shared<ProductionReaction>(
-							&iReactant, &vReactant);
+							iReactant, vReactant);
 					// Tell the reactants that they are in this reaction
 					iReactant.createCombination(*reaction);
 					vReactant.createCombination(*reaction);
@@ -763,21 +763,21 @@ void PSIClusterReactionNetwork::checkDissociationConnectivity(
 		std::shared_ptr<ProductionReaction> reaction, int a, int b, int c,
 		int d) {
 	// Check if at least one of the potentially emitted cluster is size one
-	if (reaction->first->getSize() != 1 && reaction->second->getSize() != 1) {
+	if (reaction->first.getSize() != 1 && reaction->second.getSize() != 1) {
 		// Don't add the reverse reaction
 		return;
 	}
 	// remove He+He
-	if (reaction->first->getSize() == 1 && reaction->second->getSize() == 1
-			&& reaction->first->getType() == ReactantType::He
-			&& reaction->second->getType() == ReactantType::He) {
+	if (reaction->first.getSize() == 1 && reaction->second.getSize() == 1
+			&& reaction->first.getType() == ReactantType::He
+			&& reaction->second.getType() == ReactantType::He) {
 		// Don't add the reverse reaction
 		return;
 	}
 
 //	// Check for trap mutations (with XOR)
-//	if ((reaction->first->getType() == ReactantType::I)
-//			== !(reaction->second->getType() == ReactantType::I)) {
+//	if ((reaction->first.getType() == ReactantType::I)
+//			== !(reaction->second.getType() == ReactantType::I)) {
 //		// Don't add the reverse reaction
 //		return;
 //	}
@@ -785,12 +785,12 @@ void PSIClusterReactionNetwork::checkDissociationConnectivity(
 	// The reaction can occur, create the dissociation
 	// Create a dissociation reaction
 	auto dissociationReaction = std::make_shared<DissociationReaction>(
-			emittingReactant, reaction->first, reaction->second);
+			*emittingReactant, reaction->first, reaction->second);
 	// Set the reverse reaction
 	dissociationReaction->reverseReaction = reaction.get();
 	// Tell the reactants that their are in this reaction
-	reaction->first->createDissociation(dissociationReaction, a, b, c, d);
-	reaction->second->createDissociation(dissociationReaction, a, b, c, d);
+	reaction->first.createDissociation(dissociationReaction, a, b, c, d);
+	reaction->second.createDissociation(dissociationReaction, a, b, c, d);
 	emittingReactant->createEmission(dissociationReaction, a, b, c, d);
 
 	return;
@@ -1296,25 +1296,25 @@ void PSIClusterReactionNetwork::computeAllPartials(double *vals, int *indices,
 double PSIClusterReactionNetwork::computeBindingEnergy(const DissociationReaction& reaction) const {
 
 	double bindingEnergy = 5.0;
-	if (reaction.dissociating->getType() == ReactantType::He
-			&& reaction.first->getType() == ReactantType::He) {
-		if (reaction.dissociating->getSize() == 2)
+	if (reaction.dissociating.getType() == ReactantType::He
+			&& reaction.first.getType() == ReactantType::He) {
+		if (reaction.dissociating.getSize() == 2)
 			bindingEnergy = 0.5;
 		else
 			bindingEnergy = 1.0;
 	}
-	if (reaction.dissociating->getType() == ReactantType::V
-			&& reaction.first->getType() == ReactantType::V) {
-		int size = reaction.dissociating->getSize();
+	if (reaction.dissociating.getType() == ReactantType::V
+			&& reaction.first.getType() == ReactantType::V) {
+		int size = reaction.dissociating.getSize();
 		bindingEnergy = 1.73
 				- 2.59
 						* (pow((double) size, 2.0 / 3.0)
 								- pow((double) size - 1.0, 2.0 / 3.0));
 	}
-	if ((reaction.dissociating->getType() == ReactantType::HeV)
-			&& (reaction.first->getType() == ReactantType::V
-					|| reaction.second->getType() == ReactantType::V)) {
-		auto& comp = reaction.dissociating->getComposition();
+	if ((reaction.dissociating.getType() == ReactantType::HeV)
+			&& (reaction.first.getType() == ReactantType::V
+					|| reaction.second.getType() == ReactantType::V)) {
+		auto& comp = reaction.dissociating.getComposition();
 		bindingEnergy = 1.73
 				- 2.59
 						* (pow((double) comp[toCompIdx(Species::V)] , 2.0 / 3.0)
@@ -1325,21 +1325,20 @@ double PSIClusterReactionNetwork::computeBindingEnergy(const DissociationReactio
 										+ ((double) comp[toCompIdx(Species::He)]
 												/ (double) comp[toCompIdx(Species::V)] ));
 	}
-	if (reaction.dissociating->getType() == ReactantType::PSISuper
-			&& (reaction.first->getType() == ReactantType::V
-					|| reaction.second->getType() == ReactantType::V)) {
-		auto superCluster = (PSISuperCluster *) reaction.dissociating;
-		auto& comp = reaction.dissociating->getComposition();
+	if (reaction.dissociating.getType() == ReactantType::PSISuper
+			&& (reaction.first.getType() == ReactantType::V
+					|| reaction.second.getType() == ReactantType::V)) {
+		auto& comp = reaction.dissociating.getComposition();
 		double numV = (double) comp[toCompIdx(Species::V)] ;
 		double numHe = (double) comp[toCompIdx(Species::He)] ;
 		bindingEnergy = 1.73
 				- 2.59 * (pow(numV, 2.0 / 3.0) - pow(numV - 1.0, 2.0 / 3.0))
 				+ 2.5 * log(1.0 + (numHe / numV));
 	}
-	if (reaction.first->getType() == ReactantType::I
-			|| reaction.second->getType() == ReactantType::I) {
-		if (reaction.dissociating->getType() == ReactantType::HeV) {
-			auto& comp = reaction.dissociating->getComposition();
+	if (reaction.first.getType() == ReactantType::I
+			|| reaction.second.getType() == ReactantType::I) {
+		if (reaction.dissociating.getType() == ReactantType::HeV) {
+			auto& comp = reaction.dissociating.getComposition();
 			bindingEnergy =
 					4.88
 							+ 2.59
@@ -1351,16 +1350,15 @@ double PSIClusterReactionNetwork::computeBindingEnergy(const DissociationReactio
 											1.0
 													+ ((double) comp[toCompIdx(Species::He)]
 															/ (double) comp[toCompIdx(Species::V)] ));
-		} else if (reaction.dissociating->getType() == ReactantType::PSISuper) {
-			auto superCluster = (PSISuperCluster *) reaction.dissociating;
-			auto& comp = reaction.dissociating->getComposition();
+		} else if (reaction.dissociating.getType() == ReactantType::PSISuper) {
+			auto& comp = reaction.dissociating.getComposition();
 			double numV = (double) comp[toCompIdx(Species::V)] ;
 			double numHe = (double) comp[toCompIdx(Species::He)] ;
 			bindingEnergy = 4.88
 					+ 2.59 * (pow(numV, 2.0 / 3.0) - pow(numV - 1.0, 2.0 / 3.0))
 					- 2.5 * log(1.0 + (numHe / numV));
-		} else if (reaction.dissociating->getType() == ReactantType::He) {
-			int size = reaction.dissociating->getSize();
+		} else if (reaction.dissociating.getType() == ReactantType::He) {
+			int size = reaction.dissociating.getSize();
 			switch (size) {
 			case 1:
 				bindingEnergy = 4.31;
@@ -1394,9 +1392,9 @@ double PSIClusterReactionNetwork::computeBindingEnergy(const DissociationReactio
 	}
 
 //	if (bindingEnergy < -5.0)
-//	std::cout << "dissociation: " << reaction.dissociating->getName() << " -> "
-//			<< reaction.first->getName() << " + "
-//			<< reaction.second->getName() << " : " << bindingEnergy
+//	std::cout << "dissociation: " << reaction.dissociating.getName() << " -> "
+//			<< reaction.first.getName() << " + "
+//			<< reaction.second.getName() << " : " << bindingEnergy
 //			<< std::endl;
 
 	return max(bindingEnergy, -5.0);

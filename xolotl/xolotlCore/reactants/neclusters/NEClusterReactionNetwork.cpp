@@ -78,7 +78,7 @@ void NEClusterReactionNetwork::createReactionConnectivity() {
 						|| xeReactant.getDiffusionFactor() > 0.0)) {
 			// Create a production reaction
 			auto reaction = std::make_shared<ProductionReaction>(
-					singleXeCluster, &xeReactant);
+					*singleXeCluster, xeReactant);
 			// Tell the reactants that they are in this reaction
 			singleXeCluster->createCombination(*reaction);
 			xeReactant.createCombination(*reaction);
@@ -96,7 +96,7 @@ void NEClusterReactionNetwork::checkDissociationConnectivity(
 		IReactant * emittingReactant,
 		std::shared_ptr<ProductionReaction> reaction) {
 	// Check if at least one of the potentially emitted cluster is size one
-	if (reaction->first->getSize() != 1 && reaction->second->getSize() != 1) {
+	if (reaction->first.getSize() != 1 && reaction->second.getSize() != 1) {
 		// Don't add the reverse reaction
 		return;
 	}
@@ -104,12 +104,12 @@ void NEClusterReactionNetwork::checkDissociationConnectivity(
 	// The reaction can occur, create the dissociation
 	// Create a dissociation reaction
 	auto dissociationReaction = std::make_shared<DissociationReaction>(
-			emittingReactant, reaction->first, reaction->second);
+			*emittingReactant, reaction->first, reaction->second);
 	// Set the reverse reaction
 	dissociationReaction->reverseReaction = reaction.get();
 	// Tell the reactants that their are in this reaction
-	reaction->first->createDissociation(dissociationReaction);
-	reaction->second->createDissociation(dissociationReaction);
+	reaction->first.createDissociation(dissociationReaction);
+	reaction->second.createDissociation(dissociationReaction);
 	emittingReactant->createEmission(dissociationReaction);
 
 	return;

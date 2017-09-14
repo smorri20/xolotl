@@ -98,12 +98,12 @@ IReactant * ReactionNetwork::get(ReactantType type,
 double ReactionNetwork::calculateReactionRateConstant(const ProductionReaction& reaction) const {
 
 	// Get the reaction radii
-	double r_first = reaction.first->getReactionRadius();
-	double r_second = reaction.second->getReactionRadius();
+	double r_first = reaction.first.getReactionRadius();
+	double r_second = reaction.second.getReactionRadius();
 
 	// Get the diffusion coefficients
-	double firstDiffusion = reaction.first->getDiffusionCoefficient();
-	double secondDiffusion = reaction.second->getDiffusionCoefficient();
+	double firstDiffusion = reaction.first.getDiffusionCoefficient();
+	double secondDiffusion = reaction.second.getDiffusionCoefficient();
 
 	// Calculate and return
 	double k_plus = 4.0 * xolotlCore::pi

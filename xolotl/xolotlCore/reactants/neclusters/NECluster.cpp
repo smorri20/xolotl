@@ -11,11 +11,12 @@ void NECluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
 		int a, int b) {
 
 	// Add a cluster pair for given reaction 
-	reactingPairs.emplace_back((NECluster *) reaction->first,
-			(NECluster *) reaction->second);
+	reactingPairs.emplace_back(
+            &static_cast<NECluster&>(reaction->first),
+			&static_cast<NECluster&>(reaction->second));
 	// Setup the connectivity array
-	setReactionConnectivity(reaction->first->getId());
-	setReactionConnectivity(reaction->second->getId());
+	setReactionConnectivity(reaction->first.getId());
+	setReactionConnectivity(reaction->second.getId());
 
 	return;
 }
@@ -24,7 +25,7 @@ void NECluster::createCombination(ProductionReaction& reaction,
 		int a, int b) {
 	setReactionConnectivity(id);
 	// Look for the other cluster
-	auto otherCluster = static_cast<NECluster*>((reaction.first->getId() == id) ?
+	auto& otherCluster = static_cast<NECluster&>((reaction.first.getId() == id) ?
                                 reaction.second :
                                 reaction.first);
 
@@ -33,16 +34,16 @@ void NECluster::createCombination(ProductionReaction& reaction,
     // like we do with the PSI cluster?
 #endif // READY
     // Build a production reaction for it
-    auto newReaction = std::make_shared<ProductionReaction>(otherCluster, this);
+    auto newReaction = std::make_shared<ProductionReaction>(otherCluster, *this);
     // Add it to the network
     newReaction = network.addProductionReaction(newReaction);
 
 	// Add the combining cluster to list of clusters that combine with us
-	combiningReactants.emplace_back(*newReaction, *otherCluster);
+	combiningReactants.emplace_back(*newReaction, otherCluster);
 
 	// Setup the connectivity array
 	setReactionConnectivity(id);
-	setReactionConnectivity(otherCluster->getId());
+	setReactionConnectivity(otherCluster.getId());
 
 	return;
 }
@@ -50,19 +51,18 @@ void NECluster::createCombination(ProductionReaction& reaction,
 void NECluster::createDissociation(
 		std::shared_ptr<DissociationReaction> reaction, int a, int b) {
 	// Look for the other cluster
-	IReactant * emittedCluster;
-	if (reaction->first->getId() == id)
-		emittedCluster = reaction->second;
-	else
-		emittedCluster = reaction->first;
+	auto& emittedCluster = static_cast<NECluster&>((reaction->first.getId() == id) ?
+                                reaction->second :
+                                reaction->first);
 
 	// Add a pair where it is important that the
 	// dissociating cluster is the first one
-	dissociatingPairs.emplace_back((NECluster *) reaction->dissociating,
-			(NECluster *) emittedCluster);
+	dissociatingPairs.emplace_back(
+            &static_cast<NECluster&>(reaction->dissociating),
+			&static_cast<NECluster&>(emittedCluster));
 
 	// Setup the connectivity array
-	setDissociationConnectivity(reaction->dissociating->getId());
+	setDissociationConnectivity(reaction->dissociating.getId());
 
 	return;
 }
@@ -71,8 +71,9 @@ void NECluster::createEmission(std::shared_ptr<DissociationReaction> reaction,
 		int a, int b) {
 
 	// Add the pair of emitted clusters.
-	emissionPairs.emplace_back((NECluster *) reaction->first,
-                    			(NECluster *) reaction->second);
+	emissionPairs.emplace_back(
+            &static_cast<NECluster&>(reaction->first),
+            &static_cast<NECluster&>(reaction->second));
 
 	// Setup the connectivity array to itself
 	setReactionConnectivity(id);
@@ -85,8 +86,8 @@ void NECluster::optimizeReactions() {
     std::for_each(reactingPairs.begin(), reactingPairs.end(),
         [this](ClusterPair& currPair) {
             // Create the corresponding production reaction
-            auto newReaction = std::make_shared<ProductionReaction>(currPair.first,
-                    currPair.second);
+            auto newReaction = std::make_shared<ProductionReaction>(
+                    *currPair.first, *currPair.second);
             // Add it to the network
             newReaction = network.addProductionReaction(newReaction);
             // Link it to the pair
@@ -111,8 +112,9 @@ void NECluster::optimizeReactions() {
     std::for_each(dissociatingPairs.begin(), dissociatingPairs.end(),
         [this](ClusterPair& currPair) {
             // Create the corresponding dissociation reaction
-            auto newReaction = std::make_shared<DissociationReaction>(currPair.first,
-                    currPair.second, this);
+            auto newReaction = std::make_shared<DissociationReaction>(
+                    *currPair.first,
+                    *currPair.second, *this);
             // Add it to the network
             newReaction = network.addDissociationReaction(newReaction);
             // Link it to the pair
@@ -122,8 +124,8 @@ void NECluster::optimizeReactions() {
     std::for_each(emissionPairs.begin(), emissionPairs.end(),
         [this](ClusterPair& currPair) {
             // Create the corresponding dissociation reaction
-            auto newReaction = std::make_shared<DissociationReaction>(this,
-                    currPair.first, currPair.second);
+            auto newReaction = std::make_shared<DissociationReaction>(*this,
+                    *currPair.first, *currPair.second);
             // Add it to the network
             newReaction = network.addDissociationReaction(newReaction);
             // Link it to the pair

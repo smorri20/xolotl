@@ -46,11 +46,11 @@ protected:
      * @param _r1 One of the reactants.
      * @param _r2 The other reactant.
      */
-    Reaction(IReactant* _r1, IReactant* _r2)
+    Reaction(IReactant& _r1, IReactant& _r2)
 #if defined(USE_ORIG_REACTANT_COMP_STRING)
-      : paramsCorrectlyOrdered( compStringCompare(*_r1, *_r2) ),
+      : paramsCorrectlyOrdered( compStringCompare(_r1, _r2) ),
 #else
-      : paramsCorrectlyOrdered( _r1->getComposition() < _r2->getComposition() ),
+      : paramsCorrectlyOrdered( _r1.getComposition() < _r2.getComposition() ),
 #endif // defined(USE_ORIG_REACTANT_COMP_STRING)
         first(paramsCorrectlyOrdered ? _r1 : _r2),
         second(paramsCorrectlyOrdered ? _r2 : _r1),
@@ -69,18 +69,23 @@ public:
      * First cluster in reaction pair.
      * Reactant concentration guaranteed to be <= that of second cluster.
      */
-    IReactant* first;
+    IReactant& first;
 
     /**
      * Second cluster in reaction pair.
      * Reactant concentration guaranteed to be >= that of first cluster.
      */
-    IReactant* second;
+    IReactant& second;
 
     /**
      * Default constructor, deleted to ensure we are constructed with reactants.
      */
     Reaction() = delete;
+
+    /**
+     * Copy constructor, deleted to ensure we are constructed with reactants.
+     */
+    Reaction(const Reaction& other) = delete;
 };
 
 
@@ -117,7 +122,7 @@ protected:
      * @param _r1 One of the reactants.
      * @param _r2 The other reactant.
      */
-    KeyedReaction(IReactant* _r1, IReactant* _r2)
+    KeyedReaction(IReactant& _r1, IReactant& _r2)
       : Reaction(_r1, _r2) {
     }
 
