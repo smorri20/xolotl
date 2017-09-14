@@ -78,6 +78,12 @@ protected:
                 kConstant(reaction->kConstant) {
 
 		}
+
+        /**
+         * Default and copy constructors, disallowed.
+         */
+        ReactingInfoBase() = delete;
+        ReactingInfoBase(const ReactingInfoBase& other) = delete;
     };
 
     struct ReactingPairBase : public ReactingInfoBase {
@@ -94,6 +100,12 @@ protected:
             second(secondPtr) {
 
 		}
+
+        /**
+         * Default and copy constructors, disallowed.
+         */
+        ReactingPairBase() = delete;
+        ReactingPairBase(const ReactingPairBase& other) = delete;
     };
 
 
@@ -150,6 +162,11 @@ protected:
                 a210(0.0), a211(0.0), a212(0.0),
                 a220(0.0), a221(0.0), a222(0.0) {
 		}
+
+        /**
+         * Copy constructor, disallowed.
+         */
+        ProductionCoefficientBase(const ProductionCoefficientBase& other) = delete;
     };
 
 	/**
@@ -266,6 +283,12 @@ protected:
                 a20(0.0), a21(0.0), a22(0.0) {
 
 		}
+
+        /**
+         * Default and copy constructors, disallowed.
+         */
+        SuperClusterDissociationPair() = delete;
+        SuperClusterDissociationPair(const SuperClusterDissociationPair& other) = delete;
 	};
 
     /**

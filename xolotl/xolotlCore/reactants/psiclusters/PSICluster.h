@@ -56,7 +56,7 @@ protected:
 		/**
 		 * The reaction/dissociation pointer to the list
 		 */
-		std::shared_ptr<Reaction> reaction;
+        Reaction& reaction;
 
 		/**
 		 * All the coefficient needed to compute each element
@@ -78,11 +78,24 @@ protected:
 		double a22;
 
 		//! The constructor
-		ClusterPair(PSICluster * firstPtr, PSICluster * secondPtr) :
-				first(firstPtr), second(secondPtr), a00(0.0), a10(
-						0.0), a20(0.0), a01(0.0), a02(0.0), a11(0.0), a12(0.0), a21(
-						0.0), a22(0.0) {
+		ClusterPair(Reaction& _reaction,
+                        PSICluster * firstPtr, PSICluster * secondPtr) :
+				first(firstPtr), second(secondPtr),
+                reaction(_reaction),
+                a00(0.0), a10(0.0), a20(0.0),
+                a01(0.0), a02(0.0), a11(0.0),
+                a12(0.0), a21(0.0), a22(0.0) {
 		}
+
+        /**
+         * Default and copy constructors, disallowed.
+         */
+        ClusterPair() = delete;
+
+        // NB: if PSICluster keeps these in a std::vector,
+        // copy ctor is needed.  Implicit definition is fine.
+        // CombiningCluster(const CombiningCluster& other) = delete;
+        // ClusterPair(const ClusterPair& other) = delete;
 	};
 
 	/**
@@ -93,8 +106,7 @@ protected:
 	 * for faster computation because they only change when the temperature change.
 	 * k+ is computed when setTemperature() is called.
 	 */
-	class CombiningCluster {
-	public:
+	struct CombiningCluster {
 
 		/**
 		 * The combining cluster
@@ -125,6 +137,15 @@ protected:
                 reaction(_reaction),
                 a0(0.0), a1(0.0), a2(0.0) {
 		}
+
+        /**
+         * Default constructor, disallowed to prohibit building without args.
+         */
+        CombiningCluster() = delete;
+
+        // NB: if PSICluster keeps these in a std::vector,
+        // copy ctor is needed.  Implicit definition is fine.
+        // CombiningCluster(const CombiningCluster& other) = delete;
 	};
 
 	/**

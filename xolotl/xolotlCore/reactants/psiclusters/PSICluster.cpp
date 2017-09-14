@@ -10,16 +10,17 @@ using namespace xolotlCore;
 void PSICluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
 		int a, int b, int c, int d) {
 
+	// Add the reaction to the network
+    // TODO do we need to check if we know about it before adding it,
+    // like we do with PSISuperClusters?
+	auto& prref = network.addProductionReaction(reaction);
+
 	// Add a cluster pair for the given reaction.
 	reactingPairs.emplace_back(
+            prref,
             &static_cast<PSICluster&>(reaction->first),
             &static_cast<PSICluster&>(reaction->second));
     auto& newPair = reactingPairs.back();
-
-	// Add the reaction to the network
-	auto newReaction = network.addProductionReaction(reaction);
-	// Link it to the pair
-	newPair.reaction = newReaction;
 
     // NB: newPair's reactants are same as reaction and newReaction's.
     // So use newPair only from here on.
@@ -81,10 +82,10 @@ void PSICluster::createCombination(ProductionReaction& reaction,
 		auto newReaction = std::make_shared<ProductionReaction>(otherCluster,
 				*this);
 		// Add it to the network
-		newReaction = network.addProductionReaction(newReaction);
+		auto& prref  = network.addProductionReaction(newReaction);
 
 		// Add the combination to our collection.
-		combiningReactants.emplace_back(*newReaction, otherCluster);
+		combiningReactants.emplace_back(prref, otherCluster);
 		it = combiningReactants.rbegin();
 	}
 
@@ -119,21 +120,20 @@ void PSICluster::createDissociation(
             });
 	if (it == dissociatingPairs.rend()) {
 		// It was not already in so add it
+        //
+		// Add the corresponding dissociation reaction to the network.
+		auto newReaction = std::make_shared<DissociationReaction>(
+                reaction->dissociating,
+				emittedCluster, *this);
+		auto& drref = network.addDissociationReaction(newReaction);
+
 		// Add the pair of them where it is important that the
 		// dissociating cluster is the first one
 		dissociatingPairs.emplace_back(
+                drref,
                 &static_cast<PSICluster&>(reaction->dissociating),
 				&static_cast<PSICluster&>(emittedCluster));
 		it = dissociatingPairs.rbegin();
-
-		// Create the corresponding dissociation reaction
-		auto newReaction = std::make_shared<DissociationReaction>(
-                *(*it).first,
-				*(*it).second, *this);
-		// Add it to the network
-		newReaction = network.addDissociationReaction(newReaction);
-		// Link it to the pair
-		(*it).reaction = newReaction;
 	}
 
 	// Update the coefficients
@@ -153,16 +153,16 @@ void PSICluster::createDissociation(
 void PSICluster::createEmission(std::shared_ptr<DissociationReaction> reaction,
 		int a, int b, int c, int d) {
 
+	// Add the reaction to the network
+    // TODO do we need to check to see whether we already know about
+    // this reaction?
+	auto& drref = network.addDissociationReaction(reaction);
+
 	// Add the pair of emitted clusters.
 	emissionPairs.emplace_back( 
+            drref,
             &static_cast<PSICluster&>(reaction->first),
 			&static_cast<PSICluster&>(reaction->second));
-	auto& newPair = emissionPairs.back();
-
-	// Add the reaction to the network
-	reaction = network.addDissociationReaction(reaction);
-	// Link it to the pair
-	newPair.reaction = reaction;
 
 	return;
 }
@@ -273,7 +273,7 @@ double PSICluster::getDissociationFlux() const {
 
                         // Calculate the Dissociation flux
                         return running + 
-                            (currPair.reaction->kConstant * 
+                            (currPair.reaction.kConstant * 
                                 (currPair.a00 * l0A + 
                                     currPair.a10 * lHeA + 
                                     currPair.a20 * lVA));
@@ -290,7 +290,7 @@ double PSICluster::getEmissionFlux() const {
                         emissionPairs.end(),
                         0.0,
                         [](double running, const ClusterPair& currPair) {
-                            return running + currPair.reaction->kConstant;
+                            return running + currPair.reaction.kConstant;
                         });
 
 	return flux * concentration;
@@ -313,7 +313,7 @@ double PSICluster::getProductionFlux() const {
                 double lVA = firstReactant->getVMomentum();
                 double lVB = secondReactant->getVMomentum();
                 // Update the flux
-                return running + currPair.reaction->kConstant * 
+                return running + currPair.reaction.kConstant * 
                     (currPair.a00 * l0A * l0B + currPair.a01 * l0A * lHeB +
                         currPair.a02 * l0A * lVB + currPair.a10 * lHeA * l0B +
                         currPair.a11 * lHeA * lHeB + currPair.a12 * lHeA * lVB +
@@ -393,7 +393,7 @@ void PSICluster::getProductionPartialDerivatives(
             double lVB = secondReactant->getVMomentum();
 
             // Compute contribution from the first part of the reacting pair
-            double value = currPair.reaction->kConstant;
+            double value = currPair.reaction.kConstant;
 
             partials[firstReactant->id - 1] += value * 
                 (currPair.a00 * l0B + currPair.a01 * lHeB + currPair.a02 * lVB);
@@ -462,7 +462,7 @@ void PSICluster::getDissociationPartialDerivatives(
         [&partials](const ClusterPair& currPair) {
             // Get the dissociating cluster
             PSICluster* cluster = currPair.first;
-            double value = currPair.reaction->kConstant;
+            double value = currPair.reaction.kConstant;
             partials[cluster->id - 1] += value * currPair.a00;
             partials[cluster->heMomId - 1] += value * currPair.a10;
             partials[cluster->vMomId - 1] += value * currPair.a20;
@@ -484,7 +484,7 @@ void PSICluster::getEmissionPartialDerivatives(
             emissionPairs.end(),
             0.0,
             [](double running, const ClusterPair& currPair) {
-                return running + currPair.reaction->kConstant;
+                return running + currPair.reaction.kConstant;
             });
     partials[id - 1] -= outgoingFlux;
 
@@ -524,7 +524,7 @@ double PSICluster::getLeftSideRate() const {
             emissionPairs.end(),
             0.0,
             [](double running, const ClusterPair& currPair) {
-                return running + currPair.reaction->kConstant;
+                return running + currPair.reaction.kConstant;
             });
 
 	return combiningRateTotal + emissionRateTotal;

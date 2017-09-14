@@ -148,7 +148,7 @@ public:
 	 * @param reaction The reaction that should be added to the network
 	 * @return The pointer to the reaction that is now in the network
 	 */
-	virtual std::shared_ptr<ProductionReaction> addProductionReaction(
+	virtual ProductionReaction& addProductionReaction(
 			std::shared_ptr<ProductionReaction> reaction) = 0;
 
 	/**
@@ -157,7 +157,7 @@ public:
 	 * @param reaction The reaction that should be added to the network
 	 * @return The pointer to the reaction that is now in the network
 	 */
-	virtual std::shared_ptr<DissociationReaction> addDissociationReaction(
+	virtual DissociationReaction& addDissociationReaction(
 			std::shared_ptr<DissociationReaction> reaction) = 0;
 
 	/**

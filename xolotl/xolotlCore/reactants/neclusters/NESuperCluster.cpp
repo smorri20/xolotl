@@ -198,11 +198,11 @@ void NESuperCluster::optimizeReactions() {
                     *firstReactant,
 					*secondReactant);
 			// Add it to the network
-			reaction = network.addProductionReaction(reaction);
+			auto& prref = network.addProductionReaction(reaction);
 
 			// Create a new SuperClusterProductionPair
 			SuperClusterProductionPair superPair(firstReactant, secondReactant,
-					reaction.get());
+					&prref);
 
 			// Loop on the whole super cluster to fill this super pair
 			for (auto mapItBis = mapIt; mapItBis != reactingMap.end();
@@ -275,12 +275,12 @@ void NESuperCluster::optimizeReactions() {
 			auto reaction = std::make_shared<ProductionReaction>(*this,
 					combiningReactant);
 			// Add it to the network
-			reaction = network.addProductionReaction(reaction);
+			auto& prref = network.addProductionReaction(reaction);
 
 			// Create a new SuperClusterProductionPair with NULL as the second cluster because
 			// we do not need it
 			SuperClusterProductionPair superPair(&combiningReactant, nullptr,
-					reaction.get());
+					&prref);
 
 			// Loop on the whole super cluster to fill this super pair
 			for (auto mapItBis = mapIt; mapItBis != combiningMap.end();
@@ -372,11 +372,11 @@ void NESuperCluster::optimizeReactions() {
 			auto reaction = std::make_shared<DissociationReaction>(
 					*dissociatingCluster, *this, *otherEmittedCluster);
 			// Add it to the network
-			reaction = network.addDissociationReaction(reaction);
+			auto& drref = network.addDissociationReaction(reaction);
 
 			// Create a new SuperClusterProductionPair
 			SuperClusterDissociationPair superPair(dissociatingCluster,
-					otherEmittedCluster, reaction.get());
+					otherEmittedCluster, &drref);
 
 			// Loop on the whole super cluster to fill this super pair
 			for (auto mapItBis = mapIt; mapItBis != dissociatingMap.end();
@@ -443,11 +443,11 @@ void NESuperCluster::optimizeReactions() {
 			auto reaction = std::make_shared<DissociationReaction>(*this,
 					*firstCluster, *secondCluster);
 			// Add it to the network
-			reaction = network.addDissociationReaction(reaction);
+			auto& drref = network.addDissociationReaction(reaction);
 
 			// Create a new SuperClusterProductionPair
 			SuperClusterDissociationPair superPair(firstCluster, secondCluster,
-					reaction.get());
+					&drref);
 
 			// Loop on the whole super cluster to fill this super pair
 			for (auto mapItBis = mapIt; mapItBis != emissionMap.end();

@@ -151,26 +151,27 @@ void ReactionNetwork::setTemperature(double temp) {
 	return;
 }
 
-std::shared_ptr<ProductionReaction> ReactionNetwork::addProductionReaction(
+ProductionReaction& ReactionNetwork::addProductionReaction(
 		std::shared_ptr<ProductionReaction> reaction) {
-	// Check if the given ProductionReaction already exists.
+
+    // Ensure we know about the reaction.
+    // Map's emplace() returns a pair (iter, bool) where
+    // iter points to the item in the map and the bool indicates
+    // whether it was added by this emplace() call.
 	auto key = reaction->descriptiveKey();
-	auto iter = productionReactionMap.find(key);
-	if (iter != productionReactionMap.end()) {
-		// We already knew about the reaction, so return the one we
-		// already had defined.
-		return iter->second;
-	}
+    auto eret = productionReactionMap.emplace(key, reaction);
 
-	// We did not yet know about the given reaction.
-	// Save it.
-	productionReactionMap.emplace(key, reaction);
-
-	return reaction;
+    // Regardless of whether we added it in this emplace() call or not,
+    // the iter within eret refers to the desired reaction in the map.
+    return *(eret.first->second);
 }
 
-std::shared_ptr<DissociationReaction> ReactionNetwork::addDissociationReaction(
+DissociationReaction& ReactionNetwork::addDissociationReaction(
 		std::shared_ptr<DissociationReaction> reaction) {
+
+    // Unlike addProductionReaction, we use a check-add approach
+    // instead of emplace() because if the item isn't already in
+    // the network, we will need to contruct its reverse reaction.
 
 	// Check if we already know about this reaction.
 	auto key = reaction->descriptiveKey();
@@ -178,7 +179,7 @@ std::shared_ptr<DissociationReaction> ReactionNetwork::addDissociationReaction(
 	if (iter != dissociationReactionMap.end()) {
 		// We already knew about the reaction.
 		// Return the existing one.
-		return iter->second;
+		return *(iter->second);
 	}
 
 	// We did not yet know about the given reaction.
@@ -187,17 +188,21 @@ std::shared_ptr<DissociationReaction> ReactionNetwork::addDissociationReaction(
 	auto reverseReaction = std::make_shared<ProductionReaction>(reaction->first,
 			reaction->second);
 	// Add this reverse reaction to our set of known reactions.
-	reverseReaction = addProductionReaction(reverseReaction);
+    auto& prref = addProductionReaction(reverseReaction);
 
 	// Indicate that the reverse reaction is the reverse reaction
 	// to the newly-added dissociation reaction.
-	reaction->reverseReaction = reverseReaction.get();
+	reaction->reverseReaction = &prref;
 
 	// Add the dissociation reaction to our set of known reactions.
-	dissociationReactionMap.emplace(key, reaction);
+	auto eret = dissociationReactionMap.emplace(key, reaction);
+
+    // Since we checked earlier and the reaction wasn't in the map,
+    // our emplace() call should have added it.
+    assert(eret.second);
 
 	// Return the newly-added dissociation reaction.
-	return reaction;
+	return *(eret.first->second);
 }
 
 void ReactionNetwork::removeReactants(

@@ -88,12 +88,16 @@ public:
 		/**
 		 * The reaction/dissociation pointer to the list
 		 */
-		std::shared_ptr<Reaction> reaction;
+        // NB: we use a reference_wrapper because we assign
+        // this after constructing the object.
+        // TODO why can't we add this when we construct the object?
+        std::reference_wrapper<Reaction> reaction;
 
 		//! The constructor
-		ClusterPair(NECluster * firstPtr, NECluster * secondPtr) :
-				first(firstPtr), second(secondPtr), reaction(nullptr), firstDistance(
-						0.0), secondDistance(0.0) {
+		ClusterPair(Reaction& _reaction, NECluster * firstPtr, NECluster * secondPtr) :
+				reaction(_reaction),
+                first(firstPtr), second(secondPtr),
+                firstDistance(0.0), secondDistance(0.0) {
 		}
 	};
 

@@ -61,15 +61,15 @@ void PSISuperCluster::createProduction(std::shared_ptr<ProductionReaction> react
 	if (it == effReactingList.end()) {
 		// It was not already in so add it
 		// Add the production reaction to the network
-		auto newReaction = network.addProductionReaction(reaction);
+		auto& prref = network.addProductionReaction(reaction);
 
         // Add info about production to our list.
         auto eret = effReactingList.emplace(std::piecewise_construct,
                             std::forward_as_tuple(rkey),
                             std::forward_as_tuple(
-                                &static_cast<PSICluster&>(newReaction->first),
-                                &static_cast<PSICluster&>(newReaction->second),
-                                newReaction.get() ));
+                                &static_cast<PSICluster&>(prref.first),
+                                &static_cast<PSICluster&>(prref.second),
+                                &prref));
         // Since we already checked and didn't know about the reaction,
         // we had better have added it with our emplace() call.
         assert(eret.second);
@@ -78,7 +78,7 @@ void PSISuperCluster::createProduction(std::shared_ptr<ProductionReaction> react
     assert(it != effReactingList.end());
     auto& prodPair = it->second;    
 
-    // NB: prodPair's reactants are same as reaction and newReaction's.
+    // NB: prodPair's reactants are same as reaction.
     // So use prodPair only from here on.
     // TODO any way to enforce this?
 
@@ -145,14 +145,15 @@ void PSISuperCluster::createCombination(ProductionReaction& reaction, int a, int
 		// Create the corresponding production reaction
 		auto newReaction = std::make_shared<ProductionReaction>(*this,
 				otherCluster);
+
 		// Add it to the network
-		newReaction = network.addProductionReaction(newReaction);
+		auto& prref = network.addProductionReaction(newReaction);
 
         auto eret = effCombiningList.emplace(std::piecewise_construct,
                                 std::forward_as_tuple(rkey),
                                 std::forward_as_tuple(
                                     &static_cast<PSICluster&>(otherCluster),
-				                    newReaction.get()));
+				                    &prref));
         // Since we already checked and didn't know about the reaction then,
         // we had better have added it with our emplace call.
         assert(eret.second);
@@ -197,14 +198,15 @@ void PSISuperCluster::createDissociation(
 		// Create a dissociation reaction
 		auto newReaction = std::make_shared<DissociationReaction>(
 				reaction->dissociating, *this, emittedCluster);
+
 		// Add it to the network
-		newReaction = network.addDissociationReaction(newReaction);
+		auto& drref = network.addDissociationReaction(newReaction);
         auto eret = effDissociatingList.emplace(std::piecewise_construct,
                         std::forward_as_tuple(rkey),
                         std::forward_as_tuple(
 				            &static_cast<PSICluster&>(reaction->dissociating),
 				            &static_cast<PSICluster&>(emittedCluster),
-                            newReaction.get()));
+                            &drref));
         // Since we already checked and didn't know about the reaction then,
         // we had better have added it with our emplace() call.
         assert(eret.second);
@@ -247,14 +249,14 @@ void PSISuperCluster::createEmission(
 	if (it == effEmissionList.end()) {
 		// It was not already in so add it
 		// Add the reaction to the network
-		reaction = network.addDissociationReaction(reaction);
+		auto& drref = network.addDissociationReaction(reaction);
 
         auto eret = effEmissionList.emplace(std::piecewise_construct,
                         std::forward_as_tuple(rkey),
                         std::forward_as_tuple(
                             &static_cast<PSICluster&>(reaction->first),
                             &static_cast<PSICluster&>(reaction->second),
-                            reaction.get()));
+                            &drref));
         // Since we already checked and didn't know about the reaction then,
         // we had better have added it with our emplace() call.
         assert(eret.second);
