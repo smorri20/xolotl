@@ -67,9 +67,9 @@ void PSISuperCluster::createProduction(std::shared_ptr<ProductionReaction> react
         auto eret = effReactingList.emplace(std::piecewise_construct,
                             std::forward_as_tuple(rkey),
                             std::forward_as_tuple(
-                                &static_cast<PSICluster&>(prref.first),
-                                &static_cast<PSICluster&>(prref.second),
-                                &prref));
+                                prref,
+                                static_cast<PSICluster&>(prref.first),
+                                static_cast<PSICluster&>(prref.second)));
         // Since we already checked and didn't know about the reaction,
         // we had better have added it with our emplace() call.
         assert(eret.second);
@@ -85,13 +85,13 @@ void PSISuperCluster::createProduction(std::shared_ptr<ProductionReaction> react
 	// Update the coefficients
 	double firstHeDistance = 0.0, firstVDistance = 0.0, secondHeDistance = 0.0,
 			secondVDistance = 0.0;
-	if (prodPair.first->getType() == ReactantType::PSISuper) {
-		auto const& super = static_cast<PSICluster const&>(*(prodPair.first));
+	if (prodPair.first.getType() == ReactantType::PSISuper) {
+		auto const& super = static_cast<PSICluster const&>(prodPair.first);
 		firstHeDistance = super.getHeDistance(c);
 		firstVDistance = super.getVDistance(d);
 	}
-	if (prodPair.second->getType() == ReactantType::PSISuper) {
-		auto const& super = static_cast<PSICluster const&>(*(prodPair.second));
+	if (prodPair.second.getType() == ReactantType::PSISuper) {
+		auto const& super = static_cast<PSICluster const&>(prodPair.second);
 		secondHeDistance = super.getHeDistance(c);
 		secondVDistance = super.getVDistance(d);
 	}
@@ -152,8 +152,8 @@ void PSISuperCluster::createCombination(ProductionReaction& reaction, int a, int
         auto eret = effCombiningList.emplace(std::piecewise_construct,
                                 std::forward_as_tuple(rkey),
                                 std::forward_as_tuple(
-                                    &static_cast<PSICluster&>(otherCluster),
-				                    &prref));
+                                    prref,
+                                    static_cast<PSICluster&>(otherCluster)));
         // Since we already checked and didn't know about the reaction then,
         // we had better have added it with our emplace call.
         assert(eret.second);
@@ -204,9 +204,9 @@ void PSISuperCluster::createDissociation(
         auto eret = effDissociatingList.emplace(std::piecewise_construct,
                         std::forward_as_tuple(rkey),
                         std::forward_as_tuple(
-				            &static_cast<PSICluster&>(reaction->dissociating),
-				            &static_cast<PSICluster&>(emittedCluster),
-                            &drref));
+                            drref,
+				            static_cast<PSICluster&>(reaction->dissociating),
+				            static_cast<PSICluster&>(emittedCluster)));
         // Since we already checked and didn't know about the reaction then,
         // we had better have added it with our emplace() call.
         assert(eret.second);
@@ -254,9 +254,9 @@ void PSISuperCluster::createEmission(
         auto eret = effEmissionList.emplace(std::piecewise_construct,
                         std::forward_as_tuple(rkey),
                         std::forward_as_tuple(
-                            &static_cast<PSICluster&>(reaction->first),
-                            &static_cast<PSICluster&>(reaction->second),
-                            &drref));
+                            drref,
+                            static_cast<PSICluster&>(reaction->first),
+                            static_cast<PSICluster&>(reaction->second)));
         // Since we already checked and didn't know about the reaction then,
         // we had better have added it with our emplace() call.
         assert(eret.second);
@@ -397,12 +397,12 @@ void PSISuperCluster::resetConnectivities() {
         [this](ProductionPairMap::value_type const& currMapItem) {
             // The cluster is connecting to both clusters in the pair
             auto const& currPair = currMapItem.second;
-            setReactionConnectivity(currPair.first->getId());
-            setReactionConnectivity(currPair.first->getHeMomentumId());
-            setReactionConnectivity(currPair.first->getVMomentumId());
-            setReactionConnectivity(currPair.second->getId());
-            setReactionConnectivity(currPair.second->getHeMomentumId());
-            setReactionConnectivity(currPair.second->getVMomentumId());
+            setReactionConnectivity(currPair.first.getId());
+            setReactionConnectivity(currPair.first.getHeMomentumId());
+            setReactionConnectivity(currPair.first.getVMomentumId());
+            setReactionConnectivity(currPair.second.getId());
+            setReactionConnectivity(currPair.second.getHeMomentumId());
+            setReactionConnectivity(currPair.second.getVMomentumId());
         });
 
 	// Visit all the combining pairs
@@ -410,9 +410,9 @@ void PSISuperCluster::resetConnectivities() {
         [this](CombiningClusterMap::value_type const& currMapItem) {
             // The cluster is connecting to the combining cluster
             auto const& currComb = currMapItem.second;
-            setReactionConnectivity(currComb.first->getId());
-            setReactionConnectivity(currComb.first->getHeMomentumId());
-            setReactionConnectivity(currComb.first->getVMomentumId());
+            setReactionConnectivity(currComb.first.getId());
+            setReactionConnectivity(currComb.first.getHeMomentumId());
+            setReactionConnectivity(currComb.first.getVMomentumId());
         });
 
 	// Loop over all the dissociating pairs
@@ -420,9 +420,9 @@ void PSISuperCluster::resetConnectivities() {
         [this](DissociationPairMap::value_type const& currMapItem) {
             // The cluster is connecting to the combining cluster
             auto const& currPair = currMapItem.second;
-            setDissociationConnectivity(currPair.first->getId());
-            setDissociationConnectivity(currPair.first->getHeMomentumId());
-            setDissociationConnectivity(currPair.first->getVMomentumId());
+            setDissociationConnectivity(currPair.first.getId());
+            setDissociationConnectivity(currPair.first.getHeMomentumId());
+            setDissociationConnectivity(currPair.first.getVMomentumId());
         });
 
 	// Don't loop on the effective emission pairs because
@@ -449,10 +449,10 @@ double PSISuperCluster::getDissociationFlux() {
             auto const& currPair = currMapItem.second;
 
             // Get the dissociating clusters
-            PSICluster* dissociatingCluster = currPair.first;
-            double l0A = dissociatingCluster->getConcentration(0.0, 0.0);
-            double lHeA = dissociatingCluster->getHeMomentum();
-            double lVA = dissociatingCluster->getVMomentum();
+            auto const& dissociatingCluster = currPair.first;
+            double l0A = dissociatingCluster.getConcentration(0.0, 0.0);
+            double lHeA = dissociatingCluster.getHeMomentum();
+            double lVA = dissociatingCluster.getVMomentum();
             // Update the flux
             auto value = currPair.kConstant / (double) nTot;
             flux += value * (currPair.a00 * l0A + currPair.a10 * lHeA + currPair.a20 * lVA);
@@ -506,14 +506,14 @@ double PSISuperCluster::getProductionFlux() {
         auto const& currPair = currMapItem.second;
 
 		// Get the two reacting clusters
-		PSICluster* firstReactant = currPair.first;
-		PSICluster* secondReactant = currPair.second;
-		double l0A = firstReactant->getConcentration(0.0, 0.0);
-		double l0B = secondReactant->getConcentration(0.0, 0.0);
-		double lHeA = firstReactant->getHeMomentum();
-		double lHeB = secondReactant->getHeMomentum();
-		double lVA = firstReactant->getVMomentum();
-		double lVB = secondReactant->getVMomentum();
+		auto const& firstReactant = currPair.first;
+		auto const& secondReactant = currPair.second;
+		double l0A = firstReactant.getConcentration(0.0, 0.0);
+		double l0B = secondReactant.getConcentration(0.0, 0.0);
+		double lHeA = firstReactant.getHeMomentum();
+		double lHeB = secondReactant.getHeMomentum();
+		double lVA = firstReactant.getVMomentum();
+		double lVB = secondReactant.getVMomentum();
 		// Update the flux
 		auto value = currPair.kConstant / (double) nTot;
 		flux += value
@@ -553,10 +553,10 @@ double PSISuperCluster::getCombinationFlux() {
         [this,&flux](CombiningClusterMap::value_type const& currMapItem) {
             // Get the combining cluster
             auto const& currComb = currMapItem.second;
-            PSICluster* combiningCluster = currComb.first;
-            double l0B = combiningCluster->getConcentration(0.0, 0.0);
-            double lHeB = combiningCluster->getHeMomentum();
-            double lVB = combiningCluster->getVMomentum();
+            auto const& combiningCluster = currComb.first;
+            double l0B = combiningCluster.getConcentration(0.0, 0.0);
+            double lHeB = combiningCluster.getHeMomentum();
+            double lVB = combiningCluster.getVMomentum();
             // Update the flux
             auto value = currComb.kConstant / (double) nTot;
             flux += value
@@ -616,32 +616,32 @@ void PSISuperCluster::getProductionPartialDerivatives(
         auto const& currPair = currMapItem.second;
 
 		// Get the two reacting clusters
-		PSICluster* firstReactant = currPair.first;
-		PSICluster* secondReactant = currPair.second;
-		double l0A = firstReactant->getConcentration(0.0, 0.0);
-		double l0B = secondReactant->getConcentration(0.0, 0.0);
-		double lHeA = firstReactant->getHeMomentum();
-		double lHeB = secondReactant->getHeMomentum();
-		double lVA = firstReactant->getVMomentum();
-		double lVB = secondReactant->getVMomentum();
+		auto const& firstReactant = currPair.first;
+		auto const& secondReactant = currPair.second;
+		double l0A = firstReactant.getConcentration(0.0, 0.0);
+		double l0B = secondReactant.getConcentration(0.0, 0.0);
+		double lHeA = firstReactant.getHeMomentum();
+		double lHeB = secondReactant.getHeMomentum();
+		double lVA = firstReactant.getVMomentum();
+		double lVB = secondReactant.getVMomentum();
 
 		// Compute the contribution from the first part of the reacting pair
 		auto value = currPair.kConstant / (double) nTot;
-		auto index = firstReactant->getId() - 1;
+		auto index = firstReactant.getId() - 1;
 		partials[index] += value
 				* (currPair.a000 * l0B + currPair.a010 * lHeB + currPair.a020 * lVB);
 		heMomentumPartials[index] += value
 				* (currPair.a001 * l0B + currPair.a011 * lHeB + currPair.a021 * lVB);
 		vMomentumPartials[index] += value
 				* (currPair.a002 * l0B + currPair.a012 * lHeB + currPair.a022 * lVB);
-		index = firstReactant->getHeMomentumId() - 1;
+		index = firstReactant.getHeMomentumId() - 1;
 		partials[index] += value
 				* (currPair.a100 * l0B + currPair.a110 * lHeB + currPair.a120 * lVB);
 		heMomentumPartials[index] += value
 				* (currPair.a101 * l0B + currPair.a111 * lHeB + currPair.a121 * lVB);
 		vMomentumPartials[index] += value
 				* (currPair.a102 * l0B + currPair.a112 * lHeB + currPair.a122 * lVB);
-		index = firstReactant->getVMomentumId() - 1;
+		index = firstReactant.getVMomentumId() - 1;
 		partials[index] += value
 				* (currPair.a200 * l0B + currPair.a210 * lHeB + currPair.a220 * lVB);
 		heMomentumPartials[index] += value
@@ -649,21 +649,21 @@ void PSISuperCluster::getProductionPartialDerivatives(
 		vMomentumPartials[index] += value
 				* (currPair.a202 * l0B + currPair.a212 * lHeB + currPair.a222 * lVB);
 		// Compute the contribution from the second part of the reacting pair
-		index = secondReactant->getId() - 1;
+		index = secondReactant.getId() - 1;
 		partials[index] += value
 				* (currPair.a000 * l0A + currPair.a100 * lHeA + currPair.a200 * lVA);
 		heMomentumPartials[index] += value
 				* (currPair.a001 * l0A + currPair.a101 * lHeA + currPair.a201 * lVA);
 		vMomentumPartials[index] += value
 				* (currPair.a002 * l0A + currPair.a102 * lHeA + currPair.a202 * lVA);
-		index = secondReactant->getHeMomentumId() - 1;
+		index = secondReactant.getHeMomentumId() - 1;
 		partials[index] += value
 				* (currPair.a010 * l0A + currPair.a110 * lHeA + currPair.a210 * lVA);
 		heMomentumPartials[index] += value
 				* (currPair.a011 * l0A + currPair.a111 * lHeA + currPair.a211 * lVA);
 		vMomentumPartials[index] += value
 				* (currPair.a012 * l0A + currPair.a112 * lHeA + currPair.a212 * lVA);
-		index = secondReactant->getVMomentumId() - 1;
+		index = secondReactant.getVMomentumId() - 1;
 		partials[index] += value
 				* (currPair.a020 * l0A + currPair.a120 * lHeA + currPair.a220 * lVA);
 		heMomentumPartials[index] += value
@@ -691,28 +691,28 @@ void PSISuperCluster::getCombinationPartialDerivatives(
         [this,&partials](CombiningClusterMap::value_type const& currMapItem) {
             // Get the combining clusters
             auto const& currComb = currMapItem.second;
-            PSICluster* cluster = currComb.first;
-            double l0B = cluster->getConcentration(0.0, 0.0);
-            double lHeB = cluster->getHeMomentum();
-            double lVB = cluster->getVMomentum();
+            auto const& cluster = currComb.first;
+            double l0B = cluster.getConcentration(0.0, 0.0);
+            double lHeB = cluster.getHeMomentum();
+            double lVB = cluster.getVMomentum();
 
             // Compute the contribution from the combining cluster
             auto value = currComb.kConstant / (double) nTot;
-            auto index = cluster->getId() - 1;
+            auto index = cluster.getId() - 1;
             partials[index] -= value
                     * (currComb.a000 * l0 + currComb.a100 * l1He + currComb.a200 * l1V);
             heMomentumPartials[index] -= value
                     * (currComb.a001 * l0 + currComb.a101 * l1He + currComb.a201 * l1V);
             vMomentumPartials[index] -= value
                     * (currComb.a002 * l0 + currComb.a102 * l1He + currComb.a202 * l1V);
-            index = cluster->getHeMomentumId() - 1;
+            index = cluster.getHeMomentumId() - 1;
             partials[index] -= value
                     * (currComb.a010 * l0 + currComb.a110 * l1He + currComb.a210 * l1V);
             heMomentumPartials[index] -= value
                     * (currComb.a011 * l0 + currComb.a111 * l1He + currComb.a211 * l1V);
             vMomentumPartials[index] -= value
                     * (currComb.a012 * l0 + currComb.a112 * l1He + currComb.a212 * l1V);
-            index = cluster->getVMomentumId() - 1;
+            index = cluster.getVMomentumId() - 1;
             partials[index] -= value
                     * (currComb.a020 * l0 + currComb.a120 * l1He + currComb.a220 * l1V);
             heMomentumPartials[index] -= value
@@ -762,18 +762,18 @@ void PSISuperCluster::getDissociationPartialDerivatives(
             auto& currPair = currMapItem.second;
 
             // Get the dissociating clusters
-            PSICluster* cluster = currPair.first;
+            auto const& cluster = currPair.first;
             // Compute the contribution from the dissociating cluster
             auto value = currPair.kConstant / (double) nTot;
-            auto index = cluster->getId() - 1;
+            auto index = cluster.getId() - 1;
             partials[index] += value * (currPair.a00);
             heMomentumPartials[index] += value * (currPair.a01);
             vMomentumPartials[index] += value * (currPair.a02);
-            index = cluster->getHeMomentumId() - 1;
+            index = cluster.getHeMomentumId() - 1;
             partials[index] += value * (currPair.a10);
             heMomentumPartials[index] += value * (currPair.a11);
             vMomentumPartials[index] += value * (currPair.a12);
-            index = cluster->getVMomentumId() - 1;
+            index = cluster.getVMomentumId() - 1;
             partials[index] += value * (currPair.a20);
             heMomentumPartials[index] += value * (currPair.a21);
             vMomentumPartials[index] += value * (currPair.a22);

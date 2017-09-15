@@ -64,7 +64,7 @@ protected:
 		/**
 		 * The first cluster in the pair
 		 */
-		PSICluster * first;
+		PSICluster& first;
 
 		/**
 		 * The reaction/dissociation constant associated to this
@@ -73,9 +73,9 @@ protected:
 		const double& kConstant;
 
 		//! The constructor
-		ReactingInfoBase(PSICluster * firstPtr, Reaction * reaction) :
-				first(firstPtr),
-                kConstant(reaction->kConstant) {
+		ReactingInfoBase(Reaction& _reaction, PSICluster& _first) :
+            first(_first),
+            kConstant(_reaction.kConstant) {
 
 		}
 
@@ -91,13 +91,13 @@ protected:
 		/**
 		 * The second cluster in the pair
 		 */
-		PSICluster * second;
+		PSICluster& second;
 
 		//! The constructor
-		ReactingPairBase(PSICluster * firstPtr,
-				    PSICluster * secondPtr, Reaction * reaction) :
-            ReactingInfoBase(firstPtr, reaction),
-            second(secondPtr) {
+		ReactingPairBase(Reaction& _reaction,
+                PSICluster& _first, PSICluster& _second) :
+            ReactingInfoBase(_reaction, _first),
+            second(_second) {
 
 		}
 
@@ -185,9 +185,9 @@ protected:
         using KeyType = ReactantAddrPair;
 
 		//! The constructor
-		SuperClusterProductionPair(PSICluster * firstPtr,
-				    PSICluster * secondPtr, Reaction * reaction) :
-            ReactingPairBase(firstPtr, secondPtr, reaction),
+		SuperClusterProductionPair(Reaction& _reaction,
+                PSICluster& _first, PSICluster& _second) :
+            ReactingPairBase(_reaction, _first, _second),
             ProductionCoefficientBase() {
 
 		}
@@ -218,8 +218,8 @@ protected:
         using KeyType = IReactant*;
 
 		//! The constructor
-		SuperClusterCombiningCluster(PSICluster* firstPtr, Reaction* reaction) :
-            ReactingInfoBase(firstPtr, reaction),
+		SuperClusterCombiningCluster(Reaction& _reaction, PSICluster& _first) :
+            ReactingInfoBase(_reaction, _first),
             ProductionCoefficientBase() {
 
 		}
@@ -275,9 +275,9 @@ protected:
 		double a22;
 
 		//! The constructor
-		SuperClusterDissociationPair(PSICluster * firstPtr,
-				    PSICluster * secondPtr, Reaction * reaction) :
-            ReactingPairBase(firstPtr, secondPtr, reaction),
+		SuperClusterDissociationPair(Reaction& _reaction,
+                PSICluster& _first, PSICluster& _second) :
+            ReactingPairBase(_reaction, _first, _second),
                 a00(0.0), a01(0.0), a02(0.0), 
                 a10(0.0), a11(0.0), a12(0.0),
                 a20(0.0), a21(0.0), a22(0.0) {

@@ -46,12 +46,12 @@ protected:
 		/**
 		 * The first cluster in the pair
 		 */
-		PSICluster * first;
+		PSICluster& first;
 
 		/**
 		 * The second cluster in the pair
 		 */
-		PSICluster * second;
+		PSICluster& second;
 
 		/**
 		 * The reaction/dissociation pointer to the list
@@ -79,8 +79,8 @@ protected:
 
 		//! The constructor
 		ClusterPair(Reaction& _reaction,
-                        PSICluster * firstPtr, PSICluster * secondPtr) :
-				first(firstPtr), second(secondPtr),
+                        PSICluster& _first, PSICluster& _second) :
+				first(_first), second(_second),
                 reaction(_reaction),
                 a00(0.0), a10(0.0), a20(0.0),
                 a01(0.0), a02(0.0), a11(0.0),
