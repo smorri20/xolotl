@@ -93,6 +93,88 @@ private:
     IReactant * getSuperFromComp(IReactant::SizeType nHe, IReactant::SizeType nV);
 
 
+    std::shared_ptr<ProductionReaction> defineReactionBase(
+                            IReactant& r1, IReactant& r2,
+                            int a = 0, int b = 0) {
+
+        // Add a production reaction to our network.
+        auto reaction = std::make_shared<ProductionReaction>(r1, r2);
+
+        // Tell the reactants that they are involved in this reaction
+        r1.participateIn(*reaction, a, b);
+        r2.participateIn(*reaction, a, b);
+
+        return reaction;
+    }
+
+
+    void defineAnnihilationReaction(IReactant& r1, IReactant& r2,
+                                        IReactant& product) {
+
+        // Define the basic reaction.
+        auto reaction = defineReactionBase(r1, r2);
+
+        // Tell the product it results from the reaction.
+        product.resultFrom(reaction);
+    }
+
+
+    void defineCompleteAnnihilationReaction(IReactant& r1, IReactant& r2) {
+
+        // Define the basic reaction
+        defineReactionBase(r1, r2);
+
+        // Nothing else to do since there is no product.
+    }
+
+    void defineProductionReaction(IReactant& r1, IReactant& super,
+                                        IReactant& product,
+                                        int a = 0, int b = 0, int c = 0, int d = 0) {
+
+        // Define the basic production reaction.
+        auto reaction = defineReactionBase(r1, super, c, d);
+
+        // Tell product it is a product of this reaction.
+        product.resultFrom(reaction, a, b, c, d);
+
+        // Check if reverse reaction is allowed.
+        checkForDissociation(&product, reaction, a, b, c, d);
+    }
+
+
+    // TODO should we default a, b, c, d to 0?
+    void defineDissociationReaction(std::shared_ptr<ProductionReaction> forwardReaction,
+                                    IReactant& emitting,
+                                    int a, int b, int c, int d) {
+
+        auto dissociationReaction = std::make_shared<DissociationReaction>(
+                emitting, forwardReaction->first, forwardReaction->second);
+
+        // Set the reverse reaction
+        dissociationReaction->reverseReaction = forwardReaction.get();
+
+        // Tell the reactants that their are in this reaction
+        forwardReaction->first.createDissociation(dissociationReaction, a, b, c, d);
+        forwardReaction->second.createDissociation(dissociationReaction, a, b, c, d);
+        emitting.createEmission(dissociationReaction, a, b, c, d);
+    }
+
+
+	/**
+	 * Add the dissociation connectivity for the reverse reaction if it is allowed.
+	 *
+	 * @param emittingReactant The reactant that would emit the pair
+	 * @param reaction The reaction we want to reverse
+	 * @param a The helium number for the emitting superCluster
+	 * @param b The vacancy number for the emitting superCluster
+	 * @param c The helium number for the emitted superCluster
+	 * @param d The vacancy number for the emitted superCluster
+	 *
+	 */
+	void checkForDissociation(IReactant * emittingReactant,
+			std::shared_ptr<ProductionReaction> reaction, int a = 0, int b = 0,
+			int c = 0, int d = 0);
+
 public:
 
     /**
@@ -117,21 +199,6 @@ public:
 	 * Computes the full reaction connectivity matrix for this network.
 	 */
 	void createReactionConnectivity();
-
-	/**
-	 * Add the dissociation connectivity for the reverse reaction if it is allowed.
-	 *
-	 * @param emittingReactant The reactant that would emit the pair
-	 * @param reaction The reaction we want to reverse
-	 * @param a The helium number for the emitting superCluster
-	 * @param b The vacancy number for the emitting superCluster
-	 * @param c The helium number for the emitted superCluster
-	 * @param d The vacancy number for the emitted superCluster
-	 *
-	 */
-	void checkDissociationConnectivity(IReactant * emittingReactant,
-			std::shared_ptr<ProductionReaction> reaction, int a = 0, int b = 0,
-			int c = 0, int d = 0);
 
 	/**
 	 * This operation sets the temperature at which the reactants currently

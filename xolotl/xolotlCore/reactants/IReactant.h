@@ -72,8 +72,8 @@ public:
 	}
 
 	/**
-	 * Create a production pair associated with the given reaction.
-	 * Create the connectivity.
+	 * Note that we result from the given reaction.
+	 * Assumes the reaction is already in our network.
 	 *
 	 * @param reaction The reaction creating this cluster.
 	 * @param a Number that can be used by daughter classes.
@@ -81,18 +81,18 @@ public:
 	 * @param c Number that can be used by daughter classes.
 	 * @param d Number that can be used by daughter classes.
 	 */
-	virtual void createProduction(std::shared_ptr<ProductionReaction> reaction,
+	virtual void resultFrom(std::shared_ptr<ProductionReaction> reaction,
 			int a = 0, int b = 0, int c = 0, int d = 0) = 0;
 
 	/**
-	 * Create a combination associated with the given reaction.
-	 * Create the connectivity.
+	 * Note that we combine with another cluster in a production reaction.
+	 * Assumes that the reaction is already in our network.
 	 *
 	 * @param reaction The reaction where this cluster takes part.
 	 * @param a Number that can be used by daughter classes.
 	 * @param b Number that can be used by daughter classes.
 	 */
-	virtual void createCombination(ProductionReaction& reaction,
+	virtual void participateIn(ProductionReaction& reaction,
 			int a = 0, int b = 0) = 0;
 
 	/**

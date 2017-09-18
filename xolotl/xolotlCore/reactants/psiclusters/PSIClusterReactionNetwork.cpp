@@ -56,6 +56,8 @@ double PSIClusterReactionNetwork::calculateDissociationConstant(const Dissociati
 	return k_minus;
 }
 
+
+
 void PSIClusterReactionNetwork::createReactionConnectivity() {
 	// Initial declarations
     IReactant::SizeType firstSize = 0, secondSize = 0, productSize = 0;
@@ -94,17 +96,9 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 				if (product
 						&& (firstReactant.getDiffusionFactor() > 0.0
 								|| secondReactant.getDiffusionFactor() > 0.0)) {
-					// Create a production reaction
-                    // TODO watch whether taking these addresses is safe when stack goes away.  Will be a non-issue when we convert Reactions to use refs.
-					auto reaction = std::make_shared<ProductionReaction>(
-							firstReactant, secondReactant);
-					// Tell the reactants that they are in this reaction
-					firstReactant.createCombination(*reaction);
-					secondReactant.createCombination(*reaction);
-					product->createProduction(reaction);
-
-					// Check if the reverse reaction is allowed
-					checkDissociationConnectivity(product, reaction);
+                    
+                    defineProductionReaction(firstReactant, secondReactant,
+                                                *product);
 				}
 			}
 		}
@@ -149,18 +143,10 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			if (product
 					&& (heReactant.getDiffusionFactor() > 0.0
 							|| heVReactant.getDiffusionFactor() > 0.0)) {
-				// Create a production reaction
-                // TODO verify safe to take address of these refs on stack.
-				auto reaction = std::make_shared<ProductionReaction>(
-                        heReactant, heVReactant);
-				// Tell the reactants that they are in this reaction
-				heReactant.createCombination(*reaction);
-				heVReactant.createCombination(*reaction);
-				product->createProduction(reaction, newNumHe, newNumV);
 
-				// Check if the reverse reaction is allowed
-				checkDissociationConnectivity(product, reaction,
-                        newNumHe, newNumV);
+                defineProductionReaction(heReactant, heVReactant,
+                                            *product,
+                                            newNumHe, newNumV);
 			}
 		}
 
@@ -183,18 +169,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 					if (product
 							&& (heReactant.getDiffusionFactor() > 0.0
 									|| superCluster.getDiffusionFactor() > 0.0)) {
-						// Create a production reaction
-						auto reaction = std::make_shared<ProductionReaction>(
-								heReactant, superCluster);
-						// Tell the reactants that they are in this reaction
-						heReactant.createCombination(*reaction, i, j);
-						superCluster.createCombination(*reaction, i, j);
-						product->createProduction(reaction, newNumHe, newNumV,
-                                i, j);
 
-						// Check if the reverse reaction is allowed
-						checkDissociationConnectivity(product, reaction,
-								newNumHe, newNumV, i, j);
+                        defineProductionReaction(heReactant, superCluster, *product, newNumHe, newNumV, i, j);
 					}
 				}
 			}
@@ -238,17 +214,10 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			if (product
 					&& (vReactant.getDiffusionFactor() > 0.0
 							|| heVReactant.getDiffusionFactor() > 0.0)) {
-				// Create a production reaction
-				auto reaction = std::make_shared<ProductionReaction>(
-                        vReactant, heVReactant);
-				// Tell the reactants that they are in this reaction
-				vReactant.createCombination(*reaction);
-				heVReactant.createCombination(*reaction);
-				product->createProduction(reaction, newNumHe, newNumV);
 
-				// Check if the reverse reaction is allowed
-				checkDissociationConnectivity(product, reaction,
-						newNumHe, newNumV);
+                defineProductionReaction(vReactant, heVReactant,
+                                            *product,
+                                            newNumHe, newNumV);
 			}
 		}
 
@@ -272,20 +241,9 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 					if (product
 							&& (vReactant.getDiffusionFactor() > 0.0
 									|| superCluster.getDiffusionFactor() > 0.0)) {
-						// Create a production reaction
-						auto reaction = std::make_shared<ProductionReaction>(
-								vReactant, superCluster);
-						// Tell the reactants that they are in this reaction
-						vReactant.createCombination(*reaction, i, j);
-						superCluster.createCombination(*reaction, i, j);
-						product->createProduction(reaction,
-                                newNumHe, newNumV,
-                                i, j);
-
-						// Check if the reverse reaction is allowed
-						checkDissociationConnectivity(product, reaction,
-                                newNumHe, newNumV,
-                                i, j);
+                        defineProductionReaction(vReactant, superCluster,
+                                    *product,
+                                    newNumHe, newNumV, i, j);
 					}
 				}
 			}
@@ -326,17 +284,10 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			if (product
 					&& (heReactant.getDiffusionFactor() > 0.0
 							|| vReactant.getDiffusionFactor() > 0.0)) {
-				// Create a production reaction
-				auto reaction = std::make_shared<ProductionReaction>(
-                        heReactant, vReactant);
-				// Tell the reactants that they are in this reaction
-				heReactant.createCombination(*reaction);
-				vReactant.createCombination(*reaction);
-				product->createProduction(reaction, newNumHe, newNumV);
 
-				// Check if the reverse reaction is allowed
-				checkDissociationConnectivity(product, reaction,
-						newNumHe, newNumV);
+                defineProductionReaction(heReactant, vReactant,
+                                            *product,
+                                            newNumHe, newNumV);
 			}
 		}
 	}
@@ -375,16 +326,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 			if (product
 					&& (iReactant.getDiffusionFactor() > 0.0
 							|| heVReactant.getDiffusionFactor() > 0.0)) {
-				// Create a production reaction
-				auto reaction = std::make_shared<ProductionReaction>(
-                        iReactant, heVReactant);
-				// Tell the reactants that they are in this reaction
-				iReactant.createCombination(*reaction);
-				heVReactant.createCombination(*reaction);
-				product->createProduction(reaction);
 
-				// Check if the reverse reaction is allowed
-				checkDissociationConnectivity(product, reaction);
+                defineProductionReaction(iReactant, heVReactant, *product);
 			}
 		}
 
@@ -423,20 +366,10 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 					if (product
 							&& (iReactant.getDiffusionFactor() > 0.0
 									|| superCluster.getDiffusionFactor() > 0.0)) {
-						// Create a production reaction
-						auto reaction = std::make_shared<ProductionReaction>(
-								iReactant, superCluster);
-						// Tell the reactants that they are in this reaction
-						iReactant.createCombination(*reaction, i, j);
-						superCluster.createCombination(*reaction, i, j);
-						product->createProduction(reaction,
-                                newNumHe, newNumV,
-                                i, j);
 
-						// Check if the reverse reaction is allowed
-						checkDissociationConnectivity(product, reaction,
-                                newNumHe, newNumV,
-                                i, j);
+                        defineProductionReaction(iReactant, superCluster,
+                                *product,
+                                newNumHe, newNumV, i, j);
 					}
 				}
 			}
@@ -480,10 +413,10 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //					auto reaction = std::make_shared<ProductionReaction>(
 //							(*firstIt).get(), (*secondIt).get());
 //					// Tell the reactants that they are in this reaction
-//					(*firstIt)->createCombination(*reaction);
-//					(*secondIt)->createCombination(*reaction);
-//					product->createProduction(reaction);
-//					(*it)->createProduction(reaction);
+//					(*firstIt)->participateIn(*reaction);
+//					(*secondIt)->participateIn(*reaction);
+//					product->resultFrom(reaction);
+//					(*it)->resultFrom(reaction);
 //
 //					// Stop the loop on I clusters here
 //					break;
@@ -529,10 +462,10 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //					auto reaction = std::make_shared<ProductionReaction>(
 //							(*firstIt).get(), (*secondIt).get());
 //					// Tell the reactants that they are in this reaction
-//					(*firstIt)->createCombination(*reaction);
-//					(*secondIt)->createCombination(*reaction);
-//					product->createProduction(reaction);
-//					(*it)->createProduction(reaction);
+//					(*firstIt)->participateIn(*reaction);
+//					(*secondIt)->participateIn(*reaction);
+//					product->resultFrom(reaction);
+//					(*it)->resultFrom(reaction);
 //
 //					// Stop the loop on I clusters here
 //					break;
@@ -570,13 +503,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 				if (product
 						&& (iReactant.getDiffusionFactor() > 0.0
 								|| vReactant.getDiffusionFactor() > 0.0)) {
-					// Create a production reaction
-					auto reaction = std::make_shared<ProductionReaction>(
-							iReactant, vReactant);
-					// Tell the reactants that they are in this reaction
-					iReactant.createCombination(*reaction);
-					vReactant.createCombination(*reaction);
-					product->createProduction(reaction);
+
+                    defineAnnihilationReaction(iReactant, vReactant, *product);
 				}
 			} else if (firstSize < secondSize) {
 				// Get the product
@@ -586,13 +514,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 				if (product
 						&& (iReactant.getDiffusionFactor() > 0.0
 								|| vReactant.getDiffusionFactor() > 0.0)) {
-					// Create a production reaction
-					auto reaction = std::make_shared<ProductionReaction>(
-							iReactant, vReactant);
-					// Tell the reactants that they are in this reaction
-					iReactant.createCombination(*reaction);
-					vReactant.createCombination(*reaction);
-					product->createProduction(reaction);
+
+                    defineAnnihilationReaction(iReactant, vReactant, *product);
 				}
 
 			} else {
@@ -600,12 +523,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 				// Check that the reaction can occur
 				if ((iReactant.getDiffusionFactor() > 0.0
 						|| vReactant.getDiffusionFactor() > 0.0)) {
-					// Create a production reaction
-					auto reaction = std::make_shared<ProductionReaction>(
-							iReactant, vReactant);
-					// Tell the reactants that they are in this reaction
-					iReactant.createCombination(*reaction);
-					vReactant.createCombination(*reaction);
+                    
+                    defineCompleteAnnihilationReaction(iReactant, vReactant);
 				}
 			}
 		}
@@ -638,12 +557,12 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //				auto reaction = std::make_shared<ProductionReaction>((*firstIt).get(),
 //						(*secondIt).get());
 //				// Tell the reactants that they are in this reaction
-//				(*firstIt)->createCombination(*reaction);
-//				(*secondIt)->createCombination(*reaction);
-//				product->createProduction(reaction);
+//				(*firstIt)->participateIn(*reaction);
+//				(*secondIt)->participateIn(*reaction);
+//				product->resultFrom(reaction);
 //
 //				// Check if the reverse reaction is allowed
-//				checkDissociationConnectivity(product, reaction);
+//				checkForDissociation(product, reaction);
 //			}
 //		}
 //	}
@@ -669,12 +588,12 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //			auto reaction = std::make_shared<ProductionReaction>(
 //					singleInterstitialCluster, (*secondIt).get());
 //			// Tell the reactants that they are in this reaction
-//			singleInterstitialCluster->createCombination(*reaction);
-//			(*secondIt)->createCombination(*reaction);
-//			product->createProduction(reaction);
+//			singleInterstitialCluster->participateIn(*reaction);
+//			(*secondIt)->participateIn(*reaction);
+//			product->resultFrom(reaction);
 //
 //			// Check if the reverse reaction is allowed
-//			checkDissociationConnectivity(product, reaction);
+//			checkForDissociation(product, reaction);
 //		}
 //	}
 //
@@ -702,12 +621,12 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //				auto reaction = std::make_shared<ProductionReaction>((*firstIt).get(),
 //						(*secondIt).get());
 //				// Tell the reactants that they are in this reaction
-//				(*firstIt)->createCombination(*reaction);
-//				(*secondIt)->createCombination(*reaction);
-//				product->createProduction(reaction);
+//				(*firstIt)->participateIn(*reaction);
+//				(*secondIt)->participateIn(*reaction);
+//				product->resultFrom(reaction);
 //
 //				// Check if the reverse reaction is allowed
-//				checkDissociationConnectivity(product, reaction);
+//				checkForDissociation(product, reaction);
 //			}
 //		}
 //	}
@@ -745,12 +664,12 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 //				auto reaction = std::make_shared<ProductionReaction>((*firstIt).get(),
 //						(*secondIt));
 //				// Tell the reactants that they are in this reaction
-//				(*firstIt)->createCombination(*reaction);
-//				(*secondIt)->createCombination(*reaction);
-//				product->createProduction(reaction);
+//				(*firstIt)->participateIn(*reaction);
+//				(*secondIt)->participateIn(*reaction);
+//				product->resultFrom(reaction);
 //
 //				// Check if the reverse reaction is allowed
-//				checkDissociationConnectivity(product, reaction);
+//				checkForDissociation(product, reaction);
 //			}
 //		}
 //	}
@@ -758,7 +677,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 	return;
 }
 
-void PSIClusterReactionNetwork::checkDissociationConnectivity(
+void PSIClusterReactionNetwork::checkForDissociation(
 		IReactant * emittingReactant,
 		std::shared_ptr<ProductionReaction> reaction, int a, int b, int c,
 		int d) {
@@ -783,15 +702,7 @@ void PSIClusterReactionNetwork::checkDissociationConnectivity(
 //	}
 
 	// The reaction can occur, create the dissociation
-	// Create a dissociation reaction
-	auto dissociationReaction = std::make_shared<DissociationReaction>(
-			*emittingReactant, reaction->first, reaction->second);
-	// Set the reverse reaction
-	dissociationReaction->reverseReaction = reaction.get();
-	// Tell the reactants that their are in this reaction
-	reaction->first.createDissociation(dissociationReaction, a, b, c, d);
-	reaction->second.createDissociation(dissociationReaction, a, b, c, d);
-	emittingReactant->createEmission(dissociationReaction, a, b, c, d);
+	defineDissociationReaction(reaction, *emittingReactant, a, b, c, d);
 
 	return;
 }

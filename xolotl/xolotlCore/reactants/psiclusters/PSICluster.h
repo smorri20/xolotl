@@ -241,27 +241,27 @@ public:
 	virtual void updateFromNetwork() override;
 
 	/**
-	 * Create a production pair associated with the given reaction.
-	 * Create the connectivity.
+	 * Note that we result from the given reaction.
+	 * Assumes the reaction is already in our network.
 	 *
 	 * @param reaction The reaction creating this cluster.
-	 * @param a Helium number.
-	 * @param b Vacancy number.
-	 * @param c Helium number.
-	 * @param d Vacancy number.
+	 * @param a Number that can be used by daughter classes.
+	 * @param b Number that can be used by daughter classes.
+	 * @param c Number that can be used by daughter classes.
+	 * @param d Number that can be used by daughter classes.
 	 */
-	virtual void createProduction(std::shared_ptr<ProductionReaction> reaction,
+	virtual void resultFrom(std::shared_ptr<ProductionReaction> reaction,
 			int a = 0, int b = 0, int c = 0, int d = 0) override;
 
 	/**
-	 * Create a combination associated with the given reaction.
-	 * Create the connectivity.
+	 * Note that we combine with another cluster in a production reaction.
+	 * Assumes that the reaction is already in our network.
 	 *
 	 * @param reaction The reaction where this cluster takes part.
-	 * @param a Helium number.
-	 * @param b Vacancy number.
+	 * @param a Number that can be used by daughter classes.
+	 * @param b Number that can be used by daughter classes.
 	 */
-	virtual void createCombination(ProductionReaction& reaction,
+	virtual void participateIn(ProductionReaction& reaction,
 			int a = 0, int b = 0) override;
 
 	/**

@@ -7,7 +7,7 @@
 
 using namespace xolotlCore;
 
-void PSICluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
+void PSICluster::resultFrom(std::shared_ptr<ProductionReaction> reaction,
 		int a, int b, int c, int d) {
 
 	// Add the reaction to the network
@@ -52,7 +52,7 @@ void PSICluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
 	return;
 }
 
-void PSICluster::createCombination(ProductionReaction& reaction,
+void PSICluster::participateIn(ProductionReaction& reaction,
 		int a, int b) {
 
 	// Look for the other cluster

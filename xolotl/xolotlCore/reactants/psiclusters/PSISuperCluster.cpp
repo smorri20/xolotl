@@ -52,7 +52,7 @@ PSISuperCluster::PSISuperCluster(double _numHe, double _numV, int _nTot,
 }
 
 
-void PSISuperCluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
+void PSISuperCluster::resultFrom(std::shared_ptr<ProductionReaction> reaction,
                         int a, int b, int c, int d) {
 
 	// Check if we already know about the reaction.
@@ -129,7 +129,7 @@ void PSISuperCluster::createProduction(std::shared_ptr<ProductionReaction> react
 	return;
 }
 
-void PSISuperCluster::createCombination(ProductionReaction& reaction, int a, int b) {
+void PSISuperCluster::participateIn(ProductionReaction& reaction, int a, int b) {
 
 	setReactionConnectivity(id);
 	// Look for the other cluster

@@ -8,8 +8,8 @@
 using namespace xolotlCore;
 
 
-void NECluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
-		int a, int b) {
+void NECluster::resultFrom(std::shared_ptr<ProductionReaction> reaction,
+		int, int, int, int) {
 
 	// Add a cluster pair for given reaction 
 	reactingPairs.emplace_back(
@@ -23,7 +23,7 @@ void NECluster::createProduction(std::shared_ptr<ProductionReaction> reaction,
 	return;
 }
 
-void NECluster::createCombination(ProductionReaction& reaction,
+void NECluster::participateIn(ProductionReaction& reaction,
 		int a, int b) {
 	setReactionConnectivity(id);
 	// Look for the other cluster

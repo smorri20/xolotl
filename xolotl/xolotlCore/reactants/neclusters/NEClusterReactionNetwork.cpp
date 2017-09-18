@@ -80,19 +80,19 @@ void NEClusterReactionNetwork::createReactionConnectivity() {
 			auto reaction = std::make_shared<ProductionReaction>(
 					*singleXeCluster, xeReactant);
 			// Tell the reactants that they are in this reaction
-			singleXeCluster->createCombination(*reaction);
-			xeReactant.createCombination(*reaction);
-			product->createProduction(reaction);
+			singleXeCluster->participateIn(*reaction);
+			xeReactant.participateIn(*reaction);
+			product->resultFrom(reaction);
 
 			// Check if the reverse reaction is allowed
-			checkDissociationConnectivity(product, reaction);
+			checkForDissociation(product, reaction);
 		}
 	}
 
 	return;
 }
 
-void NEClusterReactionNetwork::checkDissociationConnectivity(
+void NEClusterReactionNetwork::checkForDissociation(
 		IReactant * emittingReactant,
 		std::shared_ptr<ProductionReaction> reaction) {
 	// Check if at least one of the potentially emitted cluster is size one
