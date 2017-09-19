@@ -261,7 +261,7 @@ public:
 	/**
 	 * Add the reactions to the network lists.
 	 */
-	virtual void optimizeReactions();
+	virtual void optimizeReactions() override;
 
 	/**
 	 * This operation returns the connectivity array for this cluster for
@@ -297,7 +297,7 @@ public:
 	 * @return The total change in flux for this cluster due to all
 	 * reactions
 	 */
-	virtual double getTotalFlux();
+	virtual double getTotalFlux() override;
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -341,7 +341,7 @@ public:
 	 * corresponds to the first cluster in the list returned by the
 	 * ReactionNetwork::getAll() operation.
 	 */
-	virtual std::vector<double> getPartialDerivatives() const;
+	virtual std::vector<double> getPartialDerivatives() const override;
 
 	/**
 	 * This operation works as getPartialDerivatives above, but instead of
@@ -356,7 +356,7 @@ public:
 	 * the vector should be equal to ReactionNetwork::size().
 	 *
 	 */
-	virtual void getPartialDerivatives(std::vector<double> & partials) const;
+	virtual void getPartialDerivatives(std::vector<double> & partials) const override;
 
 	/**
 	 * This operation computes the partial derivatives due to production
@@ -406,7 +406,7 @@ public:
 	 * This operation reset the connectivity sets based on the information
 	 * in the production and dissociation vectors.
 	 */
-	void resetConnectivities();
+	void resetConnectivities() override;
 
 	/**
 	 * This operation sets the diffusion factor, D_0, that is used to calculate
@@ -414,14 +414,14 @@ public:
 	 *
 	 * @param factor The diffusion factor
 	 */
-	void setDiffusionFactor(const double factor);
+	void setDiffusionFactor(const double factor) override;
 
 	/**
 	 * This operation sets the migration energy for this reactant.
 	 *
 	 * @param energy The migration energy
 	 */
-	void setMigrationEnergy(const double energy);
+	void setMigrationEnergy(const double energy) override;
 
 	/**
 	 * This operation returns the sum of combination rate and emission rate
@@ -432,7 +432,7 @@ public:
 	 *
 	 * @return The rate
 	 */
-	double getLeftSideRate() const;
+	double getLeftSideRate() const override;
 
 	/**
 	 * This operation returns a list that represents the connectivity
@@ -447,7 +447,7 @@ public:
 	 * with the i-th cluster in the ReactionNetwork and a "0" indicates
 	 * that it does not.
 	 */
-	std::vector<int> getConnectivity() const;
+	std::vector<int> getConnectivity() const override;
 
 };
 

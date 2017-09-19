@@ -41,7 +41,7 @@ public:
 	 * @param registry The performance registry.
 	 */
 	void initializeReactionNetwork(xolotlCore::Options &options,
-			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
+			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) override {
 		// Get the current process ID
 		int procId;
 		MPI_Comm_rank(MPI_COMM_WORLD, &procId);
@@ -74,7 +74,7 @@ public:
 	 *
 	 * @return The network loader.
 	 */
-	std::shared_ptr<xolotlCore::INetworkLoader> getNetworkLoaderHandler() const {
+	std::shared_ptr<xolotlCore::INetworkLoader> getNetworkLoaderHandler() const override {
 		return theNetworkLoaderHandler;
 	}
 

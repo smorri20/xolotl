@@ -281,7 +281,7 @@ public:
 	 *
 	 * @param temp The new temperature
 	 */
-	virtual void setTemperature(double temp);
+	virtual void setTemperature(double temp) override;
 
 	/**
 	 * This operation returns the temperature at which the cluster currently exists.
@@ -365,7 +365,7 @@ public:
 	 *
 	 * It computes the cluster Ids and network size from the allReactants vector.
 	 */
-	virtual void reinitializeNetwork() {
+	virtual void reinitializeNetwork() override {
 		return;
 	}
 
@@ -394,7 +394,7 @@ public:
 	 * @return The pointer to the reaction that is now in the network
 	 */
 	virtual ProductionReaction& addProductionReaction(
-			std::shared_ptr<ProductionReaction> reaction);
+			std::shared_ptr<ProductionReaction> reaction) override;
 
 	/**
 	 * This operation adds a dissociation reaction to the network.
@@ -403,7 +403,7 @@ public:
 	 * @return The pointer to the reaction that is now in the network
 	 */
 	virtual DissociationReaction& addDissociationReaction(
-			std::shared_ptr<DissociationReaction> reaction);
+			std::shared_ptr<DissociationReaction> reaction) override;
 
 	/**
 	 * This operation fills an array of doubles with the concentrations of all
@@ -414,7 +414,7 @@ public:
 	 * array. If the array is too small to hold the concentrations, SIGSEGV will
 	 * be thrown.
 	 */
-	void fillConcentrationsArray(double * concentrations);
+	void fillConcentrationsArray(double * concentrations) override;
 
 	/**
 	 * This operation updates the concentrations for all reactants in the
@@ -425,7 +425,7 @@ public:
 	 * array. Properly aligning the array in memory so that this operation
 	 * does not overrun is up to the caller.
 	 */
-	virtual void updateConcentrationsFromArray(double * concentrations);
+	virtual void updateConcentrationsFromArray(double * concentrations) override;
 
 	/**
 	 * Get the diagonal fill for the Jacobian, corresponding to the reactions.
@@ -435,7 +435,7 @@ public:
 	 *
 	 * @param diagFill The pointer to the vector where the connectivity information is kept
 	 */
-	virtual void getDiagonalFill(int *diagFill) {
+	virtual void getDiagonalFill(int *diagFill) override {
 		return;
 	}
 
@@ -446,7 +446,7 @@ public:
 	 *
 	 * @return The total concentration
 	 */
-	virtual double getTotalAtomConcentration() {
+	virtual double getTotalAtomConcentration() override {
 		return 0.0;
 	}
 
@@ -457,7 +457,7 @@ public:
 	 *
 	 * @return The total concentration
 	 */
-	virtual double getTotalTrappedAtomConcentration() {
+	virtual double getTotalTrappedAtomConcentration() override {
 		return 0.0;
 	}
 
@@ -468,7 +468,7 @@ public:
 	 *
 	 * @return The total concentration
 	 */
-	virtual double getTotalVConcentration() {
+	virtual double getTotalVConcentration() override {
 		return 0.0;
 	}
 
@@ -479,7 +479,7 @@ public:
 	 *
 	 * @return The total concentration
 	 */
-	virtual double getTotalIConcentration() {
+	virtual double getTotalIConcentration() override {
 		return 0.0;
 	}
 
@@ -489,7 +489,7 @@ public:
 	 *
 	 * Need to be overwritten by daughter classes.
 	 */
-	virtual void computeRateConstants() {
+	virtual void computeRateConstants() override {
 		return;
 	}
 
@@ -503,7 +503,7 @@ public:
 	 * @param updatedConcOffset The pointer to the array of the concentration at the grid
 	 * point where the fluxes are computed used to find the next solution
 	 */
-	virtual void computeAllFluxes(double *updatedConcOffset) {
+	virtual void computeAllFluxes(double *updatedConcOffset) override {
 		return;
 	}
 
@@ -521,7 +521,7 @@ public:
 	 * @param size The pointer to the array that will contain the number of reactions for
 	 * this cluster
 	 */
-	virtual void computeAllPartials(double *vals, int *indices, int *size) {
+	virtual void computeAllPartials(double *vals, int *indices, int *size) override {
 		return;
 	}
 
@@ -530,7 +530,7 @@ public:
 	 *
 	 * @return The biggest rate
 	 */
-	double getBiggestRate() const {
+	double getBiggestRate() const override {
 		return biggestRate;
 	}
 
@@ -538,7 +538,7 @@ public:
 	 * Are dissociations enabled?
 	 * @returns true if reactions are enabled, false otherwise.
 	 */
-	bool getDissociationsEnabled() const {
+	bool getDissociationsEnabled() const override {
 		return dissociationsEnabled;
 	}
 

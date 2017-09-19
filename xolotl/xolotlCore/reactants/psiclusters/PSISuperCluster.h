@@ -469,7 +469,7 @@ public:
 	 * @param distV The vacancy distance in the group
 	 * @return The concentration of this reactant
 	 */
-	double getConcentration(double distHe, double distV) const {
+	double getConcentration(double distHe, double distV) const override {
 		return l0 + (distHe * l1He) + (distV * l1V);
 	}
 
@@ -478,7 +478,7 @@ public:
 	 *
 	 * @return The momentum
 	 */
-	double getHeMomentum() const {
+	double getHeMomentum() const override {
 		return l1He;
 	}
 
@@ -487,7 +487,7 @@ public:
 	 *
 	 * @return The momentum
 	 */
-	double getVMomentum() const {
+	double getVMomentum() const override {
 		return l1V;
 	}
 
@@ -518,7 +518,7 @@ public:
 	 * @param he The number of helium
 	 * @return The distance to the mean number of helium in the group
 	 */
-	double getHeDistance(int he) const {
+	double getHeDistance(int he) const override {
 		return (sectionHeWidth == 1) ?
 				0.0 : 2.0 * (he - numHe) / (sectionHeWidth - 1.0);
 	}
@@ -529,7 +529,7 @@ public:
 	 * @param he The number of vacancy
 	 * @return The distance to the mean number of vacancy in the group
 	 */
-	double getVDistance(int v) const {
+	double getVDistance(int v) const override {
 		return (sectionVWidth == 1) ?
 				0.0 : 2.0 * (v - numV) / (sectionVWidth - 1.0);
 	}
@@ -565,7 +565,7 @@ public:
 	 * This operation reset the connectivity sets based on the information
 	 * in the production and dissociation vectors.
 	 */
-	void resetConnectivities();
+	void resetConnectivities() override;
 
 	/**
 	 * This operation returns the total flux of this cluster in the
@@ -574,7 +574,7 @@ public:
 	 * @return The total change in flux for this cluster due to all
 	 * reactions
 	 */
-	double getTotalFlux() {
+	double getTotalFlux() override {
 
 		// Initialize the fluxes
 		heMomentumFlux = 0.0;
@@ -652,7 +652,7 @@ public:
 	 * the vector should be equal to ReactionNetwork::size().
 	 *
 	 */
-	void getPartialDerivatives(std::vector<double> & partials) const;
+	void getPartialDerivatives(std::vector<double> & partials) const override;
 
 	/**
 	 * This operation computes the partial derivatives due to production
@@ -662,7 +662,7 @@ public:
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
 	 */
-	void getProductionPartialDerivatives(std::vector<double> & partials) const;
+	void getProductionPartialDerivatives(std::vector<double> & partials) const override;
 
 	/**
 	 * This operation computes the partial derivatives due to combination
@@ -672,7 +672,7 @@ public:
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
 	 */
-	void getCombinationPartialDerivatives(std::vector<double> & partials) const;
+	void getCombinationPartialDerivatives(std::vector<double> & partials) const override;
 
 	/**
 	 * This operation computes the partial derivatives due to dissociation of
@@ -683,7 +683,7 @@ public:
 	 * network.
 	 */
 	void getDissociationPartialDerivatives(
-			std::vector<double> & partials) const;
+			std::vector<double> & partials) const override;
 
 	/**
 	 * This operation computes the partial derivatives due to emission
@@ -693,7 +693,7 @@ public:
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
 	 */
-	void getEmissionPartialDerivatives(std::vector<double> & partials) const;
+	void getEmissionPartialDerivatives(std::vector<double> & partials) const override;
 
 	/**
 	 * This operation computes the partial derivatives for the helium momentum.

@@ -54,4 +54,22 @@ int toCompIdx(Species s)
 
 } // namespace xolotlCore
 
+
+// For a Species to be used as a key in an std::unordered_map,
+// we need a hash function for it.
+// Some compilers seem to automatically handle this, some need us
+// to do it explicitly.
+// Since std::unordered_map uses std::hash on its keys, and because
+// ours is a user-defined type, we add our hash function to the std namespace.
+namespace std {
+
+template<>
+struct hash<xolotlCore::Species> {
+
+    size_t operator()(const xolotlCore::Species s) const {
+        return static_cast<size_t>(s);
+    }
+};
+} // namespace std
+
 #endif /* XOLOTL_CORE_SPECIES_H_ */

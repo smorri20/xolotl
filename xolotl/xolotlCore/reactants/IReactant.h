@@ -5,6 +5,7 @@
 #include <memory>
 #include <numeric>
 #include <vector>
+#include <array>
 #include <unordered_map>
 #include <map>
 #include <sstream>

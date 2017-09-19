@@ -229,7 +229,7 @@ public:
 	 */
 	virtual void createDissociation(
 			std::shared_ptr<DissociationReaction> reaction, int a = 0,
-			int b = 0, int c = 0, int d = 0) {
+			int b = 0, int c = 0, int d = 0) override {
 		return;
 	}
 
@@ -244,14 +244,14 @@ public:
 	 * @param d Number that can be used by daughter classes.
 	 */
 	virtual void createEmission(std::shared_ptr<DissociationReaction> reaction,
-			int a = 0, int b = 0, int c = 0, int d = 0) {
+			int a = 0, int b = 0, int c = 0, int d = 0) override {
 		return;
 	}
 
 	/**
 	 * Add the reactions to the network lists.
 	 */
-	virtual void optimizeReactions() {
+	virtual void optimizeReactions() override {
 		return;
 	}
 
@@ -263,7 +263,7 @@ public:
 	 * @return The concentration of this reactant
 	 */
 	virtual double getConcentration(double distA = 0.0,
-			double distB = 0.0) const {
+			double distB = 0.0) const override {
 
 		return concentration;
 	}
@@ -274,7 +274,7 @@ public:
 	 *
 	 * @param conc The new concentation
 	 */
-	void setConcentration(double conc) {
+	void setConcentration(double conc) override {
 		concentration = conc;
 	}
 
@@ -285,14 +285,14 @@ public:
 	 * @return The total change in flux for this reactant due to all
 	 * reactions
 	 */
-	virtual double getTotalFlux() {
+	virtual double getTotalFlux() override {
 		return 0.0;
 	}
 
 	/**
      * Update reactant using other reactants in its network.
 	 */
-    virtual void updateFromNetwork() {
+    virtual void updateFromNetwork() override {
         // Nothing to do - derived classes do any meaningful work.
         // Required to be defined because we create explicit Reactant objects,
         // e.g. as dummy objects.
@@ -305,7 +305,7 @@ public:
 	 * @param id The integer id of the reactant that is connected
 	 * to this reactant
 	 */
-	void setReactionConnectivity(int id) {
+	void setReactionConnectivity(int id) override {
 		reactionConnectivitySet.insert(id);
 	}
 
@@ -316,7 +316,7 @@ public:
 	 * @param id The integer id of the reactant that is connected
 	 * to this reactant
 	 */
-	void setDissociationConnectivity(int id) {
+	void setDissociationConnectivity(int id) override {
 		dissociationConnectivitySet.insert(id);
 	}
 
@@ -324,7 +324,7 @@ public:
 	 * This operation reset the connectivity sets based on the information
 	 * in the effective production and dissociation vectors.
 	 */
-	virtual void resetConnectivities() {
+	virtual void resetConnectivities() override {
 		return;
 	}
 
@@ -341,7 +341,7 @@ public:
 	 * with the i-th reactant in the ReactionNetwork and a "0" indicates
 	 * that it does not.
 	 */
-	virtual std::vector<int> getConnectivity() const;
+	virtual std::vector<int> getConnectivity() const override;
 
 	/**
 	 * This operation returns the list of partial derivatives of this reactant
@@ -353,7 +353,7 @@ public:
 	 * corresponds to the first reactant in the list returned by the
 	 * ReactionNetwork::getAll() operation.
 	 */
-	virtual std::vector<double> getPartialDerivatives() const {
+	virtual std::vector<double> getPartialDerivatives() const override {
 		return std::vector<double>(network.getDOF(), 0.0);
 	}
 
@@ -371,7 +371,7 @@ public:
 	 * the list returned by the ReactionNetwork::getAll() operation. The size of
 	 * the vector should be equal to ReactionNetwork::size().
 	 */
-	virtual void getPartialDerivatives(std::vector<double> & partials) const {
+	virtual void getPartialDerivatives(std::vector<double> & partials) const override {
 		// nothing to do.
 	}
 
@@ -413,7 +413,7 @@ public:
 	 *
 	 * @param nId The new id for this reactant
 	 */
-	void setId(int nId) {
+	void setId(int nId) override {
 		id = nId;
 	}
 
@@ -422,7 +422,7 @@ public:
 	 *
 	 * @return The id
 	 */
-	int getId() const {
+	int getId() const override {
 		return id;
 	}
 
@@ -431,7 +431,7 @@ public:
 	 *
 	 * @param nId The new id for this momentum
 	 */
-	void setXeMomentumId(int nId) {
+	void setXeMomentumId(int nId) override {
 		xeMomId = nId;
 	}
 
@@ -440,7 +440,7 @@ public:
 	 *
 	 * @return The id
 	 */
-	int getXeMomentumId() const {
+	int getXeMomentumId() const override {
 		return xeMomId;
 	}
 
@@ -449,7 +449,7 @@ public:
 	 *
 	 * @param nId The new id for this momentum
 	 */
-	void setHeMomentumId(int nId) {
+	void setHeMomentumId(int nId) override {
 		heMomId = nId;
 	}
 
@@ -458,7 +458,7 @@ public:
 	 *
 	 * @return The id
 	 */
-	int getHeMomentumId() const {
+	int getHeMomentumId() const override {
 		return heMomId;
 	}
 
@@ -467,7 +467,7 @@ public:
 	 *
 	 * @param nId The new id for this momentum
 	 */
-	void setVMomentumId(int nId) {
+	void setVMomentumId(int nId) override {
 		vMomId = nId;
 	}
 
@@ -476,7 +476,7 @@ public:
 	 *
 	 * @return The id
 	 */
-	int getVMomentumId() const {
+	int getVMomentumId() const override {
 		return vMomId;
 	}
 
@@ -494,14 +494,14 @@ public:
 	 *
 	 * @param temp The new cluster temperature
 	 */
-	void setTemperature(double temp);
+	void setTemperature(double temp) override;
 
 	/**
 	 * This operation returns the temperature at which the reactant currently exists.
 	 *
 	 * @return The temperature.
 	 */
-	double getTemperature() const {
+	double getTemperature() const override {
 		return temperature;
 	}
 
@@ -520,7 +520,7 @@ public:
 	 *
 	 * @return The value of the formation energy
 	 */
-	double getFormationEnergy() const {
+	double getFormationEnergy() const override {
 		return formationEnergy;
 	}
 
@@ -529,7 +529,7 @@ public:
 	 *
 	 * @param energy The formation energy
 	 */
-	void setFormationEnergy(double energy) {
+	void setFormationEnergy(double energy) override {
 		formationEnergy = energy;
 	}
 
@@ -539,7 +539,7 @@ public:
 	 *
 	 * @return The diffusion factor of this reactant
 	 */
-	double getDiffusionFactor() const {
+	double getDiffusionFactor() const override {
 		return diffusionFactor;
 	}
 
@@ -549,7 +549,7 @@ public:
 	 *
 	 * @param factor The diffusion factor
 	 */
-	virtual void setDiffusionFactor(const double factor);
+	virtual void setDiffusionFactor(const double factor) override;
 
 	/**
 	 * This operation returns the diffusion coefficient for this reactant and is
@@ -557,7 +557,7 @@ public:
 	 *
 	 * @return The diffusion coefficient
 	 */
-	double getDiffusionCoefficient() const {
+	double getDiffusionCoefficient() const override {
 		return diffusionCoefficient;
 	}
 
@@ -566,14 +566,14 @@ public:
 	 *
 	 * @param energy The migration energy
 	 */
-	virtual void setMigrationEnergy(const double energy);
+	virtual void setMigrationEnergy(const double energy) override;
 
 	/**
 	 * This operation retrieves the migration energy for this reactant.
 	 *
 	 * @return the migration energy
 	 */
-	double getMigrationEnergy() const {
+	double getMigrationEnergy() const override {
 		return migrationEnergy;
 	}
 
@@ -583,7 +583,7 @@ public:
 	 *
 	 * @return The reaction radius
 	 */
-	double getReactionRadius() const {
+	double getReactionRadius() const override {
 		return reactionRadius;
 	}
 
@@ -596,7 +596,7 @@ public:
 	 *
 	 * @return The rate
 	 */
-	virtual double getLeftSideRate() const {
+	virtual double getLeftSideRate() const override {
 		return 0.0;
 	}
 
@@ -604,7 +604,7 @@ public:
 	 * This operation returns true if the cluster is a mixed-species or compound
 	 * cluster and false if it is a single species cluster.
 	 */
-	virtual bool isMixed() const {
+	virtual bool isMixed() const override {
 		return false;
 	}
 };

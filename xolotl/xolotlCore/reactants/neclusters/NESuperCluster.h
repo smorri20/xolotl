@@ -209,14 +209,14 @@ public:
 	/**
 	 * Group the same reactions together and add the reactions to the network lists.
 	 */
-	void optimizeReactions();
+	void optimizeReactions() override;
 
 	/**
 	 * This operation returns false.
 	 *
 	 * @return True if mixed
 	 */
-	virtual bool isMixed() const {
+	virtual bool isMixed() const override {
 		return false;
 	}
 
@@ -234,14 +234,14 @@ public:
 	 * @param distB Unused here
 	 * @return The concentration of this reactant
 	 */
-	double getConcentration(double distXe, double distB = 0.0) const;
+	double getConcentration(double distXe, double distB = 0.0) const override;
 
 	/**
 	 * This operation returns the first xenon momentum.
 	 *
 	 * @return The momentum
 	 */
-	double getMomentum() const;
+	double getMomentum() const override;
 
 	/**
 	 * This operation returns the current total concentration of clusters in the group.
@@ -292,7 +292,7 @@ public:
 	 * This operation reset the connectivity sets based on the information
 	 * in the production and dissociation vectors.
 	 */
-	void resetConnectivities();
+	void resetConnectivities() override;
 
 	/**
 	 * This operation returns the total flux of this cluster in the
@@ -301,7 +301,7 @@ public:
 	 * @return The total change in flux for this cluster due to all
 	 * reactions
 	 */
-	double getTotalFlux();
+	double getTotalFlux() override;
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -361,7 +361,7 @@ public:
 	 * the vector should be equal to ReactionNetwork::size().
 	 *
 	 */
-	void getPartialDerivatives(std::vector<double> & partials) const;
+	void getPartialDerivatives(std::vector<double> & partials) const override;
 
 	/**
 	 * This operation computes the partial derivatives due to production
@@ -371,7 +371,7 @@ public:
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
 	 */
-	void getProductionPartialDerivatives(std::vector<double> & partials) const;
+	void getProductionPartialDerivatives(std::vector<double> & partials) const override;
 
 	/**
 	 * This operation computes the partial derivatives due to combination
@@ -381,7 +381,7 @@ public:
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
 	 */
-	void getCombinationPartialDerivatives(std::vector<double> & partials) const;
+	void getCombinationPartialDerivatives(std::vector<double> & partials) const override;
 
 	/**
 	 * This operation computes the partial derivatives due to dissociation of
@@ -392,7 +392,7 @@ public:
 	 * network.
 	 */
 	void getDissociationPartialDerivatives(
-			std::vector<double> & partials) const;
+			std::vector<double> & partials) const override;
 
 	/**
 	 * This operation computes the partial derivatives due to emission
@@ -402,7 +402,7 @@ public:
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
 	 */
-	void getEmissionPartialDerivatives(std::vector<double> & partials) const;
+	void getEmissionPartialDerivatives(std::vector<double> & partials) const override;
 
 	/**
 	 * This operation computes the partial derivatives for the xenon momentum.

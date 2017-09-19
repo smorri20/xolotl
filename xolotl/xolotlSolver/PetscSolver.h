@@ -59,14 +59,14 @@ public:
 	 * for keys and associated values mapped to those keys. A relevant example
 	 * is "startTime" and "0.01" where both are of type std::string.
 	 */
-	void setOptions(const std::map<std::string, std::string>& options);
+	void setOptions(const std::map<std::string, std::string>& options) override;
 
 	/**
 	 * This operation sets up the mesh that will be used by the solver and
 	 * initializes the data on that mesh. This operation will throw an exception
 	 * of type std::string if the mesh can not be setup.
 	 */
-	void setupMesh();
+	void setupMesh() override;
 
 	/**
 	 * This operation performs all necessary initialization for the solver
@@ -80,7 +80,7 @@ public:
 	 * This operation directs the Solver to perform the solve. If the solve
 	 * fails, it will throw an exception of type std::string.
 	 */
-	void solve();
+	void solve() override;
 
 	/**
 	 * This operation performs all necessary finalization for the solver
@@ -88,7 +88,7 @@ public:
 	 * printing diagnostic information. If the solver can not be finalized,
 	 * this operation will throw an exception of type std::string.
 	 */
-	void finalize();
+	void finalize() override;
 	
 }; //end class PetscSolver
 

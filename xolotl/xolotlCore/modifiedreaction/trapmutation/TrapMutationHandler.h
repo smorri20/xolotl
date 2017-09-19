@@ -156,7 +156,7 @@ public:
 	 *
 	 * @param isAttenuation True if we want attenuation
 	 */
-	void setAttenuation(bool isAttenuation);
+	void setAttenuation(bool isAttenuation) override;
 
 	/**
 	 * This method update the rate that makes the modified trap-mutation inefficient
@@ -164,7 +164,7 @@ public:
 	 *
 	 * @param conc The concentration of helium
 	 */
-	void updateDisappearingRate(double conc);
+	void updateDisappearingRate(double conc) override;
 
 	/**
 	 * Compute the flux due to the modified trap-mutation for all the cluster,
