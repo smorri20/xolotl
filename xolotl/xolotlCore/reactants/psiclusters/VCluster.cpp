@@ -7,19 +7,17 @@
 using namespace xolotlCore;
 
 VCluster::VCluster(int nV,
+        IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(registry) {
+		PSICluster(_network, registry, buildName(nV)) {
+
 	// Set the size
 	size = nV;
-	// Set the reactant name appropriately
-	std::stringstream nameStream;
-	nameStream << "V_" << size;
-	name = nameStream.str();
 	// Set the typename appropriately
-	typeName = vType;
+	type = ReactantType::V;
 
 	// Update the composition map
-	compositionMap[vType] = size;
+	composition[toCompIdx(Species::V)] = size;
 
 	// Compute the reaction radius
 	// It is the same formula for HeV clusters

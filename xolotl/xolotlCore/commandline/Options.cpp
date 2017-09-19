@@ -20,6 +20,7 @@
 #include <GroupingOptionHandler.h>
 #include <SputteringOptionHandler.h>
 #include <NetworkParamOptionHandler.h>
+#include <NetworkDebugOptionHandler.h>
 #include <GridParamOptionHandler.h>
 #include "Options.h"
 
@@ -54,7 +55,9 @@ Options::Options() :
 		usePhaseCutFlag(false),
 		maxImpurity(8), maxV(20), maxI(6),
 		nX(10), nY(0), nZ(0),
-		xStepSize(0.5), yStepSize(0.0), zStepSize(0.0) {
+		xStepSize(0.5), yStepSize(0.0), zStepSize(0.0),
+        shouldWriteDebugNetwork(false),
+        debugNetworkFilename("-") {
 
 	// Create the network option handler
 	auto networkHandler = new NetworkOptionHandler();
@@ -92,6 +95,8 @@ Options::Options() :
 	auto sputteringHandler = new SputteringOptionHandler();
 	// Create the network param option handler
 	auto netParamHandler = new NetworkParamOptionHandler();
+	// Create the network param option handler
+	auto netDebugHandler = new NetworkDebugOptionHandler();
 	// Create the grid option handler
 	auto gridParamHandler = new GridParamOptionHandler();
 
@@ -114,6 +119,7 @@ Options::Options() :
 	optionsMap[groupingHandler->key] = groupingHandler;
 	optionsMap[sputteringHandler->key] = sputteringHandler;
 	optionsMap[netParamHandler->key] = netParamHandler;
+	optionsMap[netDebugHandler->key] = netDebugHandler;
 	optionsMap[gridParamHandler->key] = gridParamHandler;
 }
 

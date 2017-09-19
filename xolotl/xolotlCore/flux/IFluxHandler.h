@@ -24,7 +24,7 @@ public:
 	 * @param surfacePos The current position of the surface
 	 * @param grid The grid on the x axis
 	 */
-	virtual void initializeFluxHandler(IReactionNetwork *network,
+	virtual void initializeFluxHandler(IReactionNetwork& network,
 		int surfacePos, std::vector<double> grid) = 0;
 		
 	/**

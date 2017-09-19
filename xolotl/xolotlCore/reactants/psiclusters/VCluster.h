@@ -13,16 +13,19 @@ namespace xolotlCore {
 class VCluster: public PSICluster {
 
 private:
-
-	/**
-	 * The default constructor is private because PSIClusters must always be
-	 * initialized with a size.
-	 */
-	VCluster() :
-			PSICluster() {
-	}
+	static
+    std::string buildName(IReactant::SizeType nV) {
+        std::stringstream nameStream;
+        nameStream << "V_" << nV;
+        return nameStream.str();
+    }
 
 public:
+
+    /**
+     * Default constructor, deleted because we require info to construct.
+     */
+    VCluster() = delete;
 
 	/**
 	 * The constructor. All VClusters must be initialized with a size.
@@ -30,17 +33,18 @@ public:
 	 * @param nV the number of atomic vacancies in the cluster
 	 * @param registry The performance handler registry
 	 */
-	VCluster(int nV, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+	VCluster(int nV,
+        IReactionNetwork& _network,
+        std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+
+    /**
+     * Copy constructor, deleted to prevent use.
+     */
+    VCluster(const VCluster& other) = delete;
+
 
 	//! Destructor
 	~VCluster() {
-	}
-
-	/**
-	 * Returns a reactant created using the copy constructor
-	 */
-	virtual std::shared_ptr<IReactant> clone() {
-		return std::shared_ptr<IReactant>(new VCluster(*this));
 	}
 
 	/**

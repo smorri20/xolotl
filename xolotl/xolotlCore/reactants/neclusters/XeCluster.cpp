@@ -7,19 +7,17 @@
 using namespace xolotlCore;
 
 XeCluster::XeCluster(int nXe,
+        IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		NECluster(registry) {
+		NECluster(_network, registry, buildName(nXe)) {
+
 	// Set the size
 	size = nXe;
 	// Update the composition map
-	compositionMap[xeType] = size;
+	composition[toCompIdx(Species::Xe)] = size;
 
-	// Set the reactant name appropriately
-	std::stringstream nameStream;
-	nameStream << "Xe_" << size;
-	name = nameStream.str();
 	// Set the typename appropriately
-	typeName = "Xe";
+	type = ReactantType::Xe;
 
 	// Compute the reaction radius
 	double FourPi = 4.0 * xolotlCore::pi;

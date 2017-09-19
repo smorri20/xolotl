@@ -7,19 +7,17 @@
 using namespace xolotlCore;
 
 HeCluster::HeCluster(int nHe,
+        IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(registry) {
+		PSICluster(_network, registry, buildName(nHe)) {
+
 	// Set the size
 	size = nHe;
 	// Update the composition map
-	compositionMap[heType] = size;
+    composition[toCompIdx(Species::He)] = size;
 
-	// Set the reactant name appropriately
-	std::stringstream nameStream;
-	nameStream << "He_" << size;
-	name = nameStream.str();
 	// Set the typename appropriately
-	typeName = heType;
+	type = ReactantType::He;
 
 	// Compute the reaction radius
 	double FourPi = 4.0 * xolotlCore::pi;

@@ -574,6 +574,27 @@ public:
 	 */
 	virtual void setZStepSize(double stepSize) = 0;
 
+	/**
+	 * Indicate whether to output the reaction network to a file
+     * (e.g., to support debugging the network).
+	 *
+     * @param shouldWriteNetwork Whether to write reaction network 
+     *        to file once created.
+	 * @param fileName Name of the file to which the network should be written.
+     *        If fileName = "-", network is written to standard output.
+     *        Ignored unless shouldWriteNetwork is true.
+	 */
+	virtual void setNetworkDebugOptions(bool shouldWriteNetwork,
+                                        std::string fileName) = 0;
+
+
+	/**
+	 * Retrieve user's settings for network debugging.
+	 *
+     * @return Pair (b, f) where b indicates whether to write the 
+     *          reaction network to a file, and f indicates the filename to use.
+	 */
+    virtual std::pair<bool, std::string> getNetworkDebugOptions() const = 0;    
 };
 //end class IOptions
 

@@ -59,10 +59,10 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	network->reinitializeConnectivities();
 
 	// Check the reaction connectivity of the super cluster
-	auto reactant = network->getAll(NESuperType).at(0);
+	auto reactant = network->getAll(Species::NESuper).at(0);
 
 	// Check the type name
-	BOOST_REQUIRE_EQUAL(NESuperType, reactant->getType());
+	BOOST_REQUIRE_EQUAL(Species::NESuper, reactant->getType());
 	auto reactionConnectivity = reactant->getConnectivity();
 
 	// Check the connectivity for Xe
@@ -97,10 +97,10 @@ BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 	auto network = loader.load();
 
 	// Check the reaction connectivity of the super cluster
-	auto cluster = (NECluster *) network->getAll(NESuperType).at(0);
+	auto cluster = (NECluster *) network->getAll(Species::NESuper).at(0);
 
 	// Get one that it combines with (Xe1)
-	auto secondCluster = (NECluster *) network->get(xeType, 1);
+	auto secondCluster = (NECluster *) network->get(Species::Xe, 1);
 	// Set the temperature and concentration
 	network->setTemperature(1000.0);
 	cluster->setConcentration(0.5);
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	auto network = loader.load();
 
 	// Check the reaction connectivity of the super cluster
-	auto cluster = (NECluster *) network->getAll(NESuperType).at(0);
+	auto cluster = (NECluster *) network->getAll(Species::NESuper).at(0);
 
 	// Set the temperature in the network
 	int networkSize = network->size();
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(checkReactionRadius) {
 	auto network = loader.load();
 
 	// Check the reaction radius of the super cluster
-	auto cluster = network->getAll(NESuperType).at(0);
+	auto cluster = network->getAll(Species::NESuper).at(0);
 	BOOST_REQUIRE_CLOSE(0.3869446, cluster->getReactionRadius(), 0.001);
 
 	// Finalize MPI

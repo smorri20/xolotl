@@ -1,0 +1,10 @@
+#ifndef XCORE_REACTANTS_CONFIG_H
+#define XCORE_REACTANTS_CONFIG_H
+
+// Should we use the original (rev 1245) string format for
+// IReactant compositions when ordering two reactants, and 
+// for outputting reactant composition when dumping textual
+// network representation?
+#cmakedefine USE_ORIG_REACTANT_COMP_STRING
+
+#endif // XCORE_REACTANTS_CONFIG_H

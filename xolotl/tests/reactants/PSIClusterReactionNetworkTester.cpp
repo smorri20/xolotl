@@ -114,23 +114,23 @@ BOOST_AUTO_TEST_CASE(checkReactants) {
 	auto reactants = psiNetwork->getAll();
 	BOOST_REQUIRE_EQUAL(84U, reactants->size());
 	// Get the clusters by type and check them. Start with He.
-	auto heReactants = psiNetwork->getAll("He");
+	auto const& heReactants = psiNetwork->getAll(Species::He);
 	BOOST_REQUIRE_EQUAL(1U, heReactants.size());
 	BOOST_REQUIRE_EQUAL("He_10", heReactants[0]->getName());
 	// V
-	auto vReactants = psiNetwork->getAll("V");
+	auto const& vReactants = psiNetwork->getAll(Species::V);
 	BOOST_REQUIRE_EQUAL(1U, vReactants.size());
 	BOOST_REQUIRE_EQUAL("V_4", vReactants[0]->getName());
 	// I
-	auto iReactants = psiNetwork->getAll("I");
+	auto const& iReactants = psiNetwork->getAll(Species::I);
 	BOOST_REQUIRE_EQUAL(1U, iReactants.size());
 	BOOST_REQUIRE_EQUAL("I_48", iReactants[0]->getName());
 	// HeV
-	auto heVReactants = psiNetwork->getAll("HeV");
+	auto const& heVReactants = psiNetwork->getAll(Species::HeV);
 	BOOST_REQUIRE_EQUAL(45U, heVReactants.size());
 
 	// HeI
-	auto heIReactants = psiNetwork->getAll("HeI");
+	auto const& heIReactants = psiNetwork->getAll(Species::HeI);
 	BOOST_REQUIRE_EQUAL(36U, heIReactants.size());
 
 	// Add the required He_1, V_1, I_1 clusters to the network.
@@ -322,14 +322,6 @@ BOOST_AUTO_TEST_CASE(checkRefCounts) {
 	BOOST_TEST_MESSAGE(
 			"After creation, network ref count: " << network.use_count());
 	BOOST_REQUIRE_EQUAL(network.use_count(), network->size() + 1);
-
-	// Tell the network to break dependency cycles between
-	// the Reactants in the network and the network itself.
-	// In a "real" use, this allows the network and Reactants
-	// to be destroyed gracefully when the shared_ptr pointing
-	// to the network goes out of scope, because it allows
-	// the network's reference count to reach zero.
-	network->askReactantsToReleaseNetwork();
 
 	// All objects from within the network should have released their
 	// shared_ptr to the network, so our shared_ptr should be the

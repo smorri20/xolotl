@@ -18,7 +18,7 @@ protected:
 	std::string networkName;
 
 	//! The original network created from the network loader.
-	xolotlCore::IReactionNetwork *network;
+	xolotlCore::IReactionNetwork& network;
 
 	//! Vector storing the grid in the x direction
 	std::vector<double> grid;
@@ -127,13 +127,24 @@ protected:
 		return;
 	}
 
+    /**
+     * Constructor.
+     *
+     * @param _network The reaction network to use.
+     */
+    SolverHandler(xolotlCore::IReactionNetwork& _network)
+      : network(_network) {
+    }
+
 public:
 
+    /**
+     * Default constructor, deleted so we ensure we are built 
+     * with needed objects.
+     */
+    SolverHandler() = delete;
+
 	~SolverHandler() {
-		// Break "pointer" cycles so that network, clusters, reactants
-		// will deallocate when the std::shared_ptrs owning them
-		// are destroyed.
-		network->askReactantsToReleaseNetwork();
 	}
 
 	/**
@@ -143,7 +154,6 @@ public:
 	void initializeHandlers(
 			std::shared_ptr<xolotlFactory::IMaterialFactory> material,
 			std::shared_ptr<xolotlCore::ITemperatureHandler> tempHandler,
-			std::shared_ptr<xolotlCore::IReactionNetwork> networkHandler,
 			xolotlCore::Options &options) {
 		// Set the network loader
 		networkName = options.getNetworkFilename();
@@ -161,9 +171,6 @@ public:
 			nX = options.getNX(), nY = options.getNY(), nZ = options.getNZ();
 			hX = options.getXStepSize(), hY = options.getYStepSize(), hZ = options.getZStepSize();
 		}
-
-		// Set the network
-		network = (xolotlCore::IReactionNetwork *) networkHandler.get();
 
 		// Set the flux handler
 		fluxHandler =
@@ -312,7 +319,7 @@ public:
 	 * Get the network.
 	 * \see ISolverHandler.h
 	 */
-	xolotlCore::IReactionNetwork *getNetwork() const {
+	xolotlCore::IReactionNetwork& getNetwork() const {
 		return network;
 	}
 

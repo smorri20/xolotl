@@ -13,15 +13,19 @@ namespace xolotlCore {
 class XeCluster: public NECluster {
 
 private:
-
-	/**
-	 * The default constructor is private because NEClusters must always be
-	 * initialized with a size and performance handler registry
-	 */
-	XeCluster() :
-		NECluster() {}
+    static
+    std::string buildName(IReactant::SizeType nXe) {
+        std::stringstream nameStream;
+        nameStream << "Xe_" << nXe;
+        return nameStream.str();
+    }
 
 public:
+
+    /**
+     * Default constructor, deleted because we require info to construct.
+     */
+    XeCluster() = delete;
 
 	/**
 	 * The constructor. All XeClusters must be initialized with a size.
@@ -29,20 +33,19 @@ public:
 	 * @param nXe the number of helium atoms in the cluster
 	 * @param registry The performance handler registry
 	 */
-	XeCluster(int nXe, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+	XeCluster(int nXe,
+        IReactionNetwork& _network,
+        std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+
+    /**
+     * Copy constructor, deleted to prevent use.
+     */
+    XeCluster(const XeCluster& other) = delete;
 
 	/**
 	 * Destructor
 	 */
 	~XeCluster() {}
-
-	/**
-	 * Returns a reactant created using the copy constructor
-	 */
-	virtual std::shared_ptr<IReactant> clone() {
-		return std::shared_ptr<IReactant> (new XeCluster(*this));
-	}
-
 
 }; //end class XeCluster
 

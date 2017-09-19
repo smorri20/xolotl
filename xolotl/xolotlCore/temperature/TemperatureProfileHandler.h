@@ -59,7 +59,7 @@ public:
 	 * This operation reads in the time and temperature data from the input
 	 * temperature file that was specified by the command line
 	 */
-	virtual void initializeTemperature() {
+	virtual void initializeTemperature() override {
 		// Open file dataFile.dat containing the time and temperature
 		std::ifstream inputFile(tempFile.c_str());
 		std::string line;
@@ -86,7 +86,7 @@ public:
 	 * @param currentTime The time
 	 * @return The temperature
 	 */
-	virtual double getTemperature(const std::vector<double>& position, double currentTime) const {
+	virtual double getTemperature(const Point3D& position, double currentTime) const override {
 		// Initialize the value to return
 		double f = 0.0;
 

@@ -18,7 +18,7 @@ protected:
 	std::shared_ptr<xolotlCore::INetworkLoader> theNetworkLoaderHandler;
 
 	//! The network handler
-	std::shared_ptr<xolotlCore::IReactionNetwork> theNetworkHandler;
+    std::unique_ptr<xolotlCore::IReactionNetwork> theNetworkHandler;
 
 public:
 
@@ -41,7 +41,7 @@ public:
 	 * @param registry The performance registry.
 	 */
 	void initializeReactionNetwork(xolotlCore::Options &options,
-			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
+			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) override {
 		// Get the current process ID
 		int procId;
 		MPI_Comm_rank(MPI_COMM_WORLD, &procId);
@@ -60,7 +60,7 @@ public:
 		if (!map["reaction"]) theNetworkLoaderHandler->setDummyReactions();
 		// Load the network
 		if (options.useHDF5())
-			theNetworkHandler = theNetworkLoaderHandler->load();
+			theNetworkHandler = theNetworkLoaderHandler->load(options);
 		else theNetworkHandler = theNetworkLoaderHandler->generate(options);
 
 		if (procId == 0) {
@@ -74,7 +74,7 @@ public:
 	 *
 	 * @return The network loader.
 	 */
-	std::shared_ptr<xolotlCore::INetworkLoader> getNetworkLoaderHandler() const {
+	std::shared_ptr<xolotlCore::INetworkLoader> getNetworkLoaderHandler() const override {
 		return theNetworkLoaderHandler;
 	}
 
@@ -83,8 +83,8 @@ public:
 	 *
 	 * @return The network.
 	 */
-	std::shared_ptr<xolotlCore::IReactionNetwork> getNetworkHandler() const {
-		return theNetworkHandler;
+	xolotlCore::IReactionNetwork& getNetworkHandler() const override {
+		return *theNetworkHandler;
 	}
 
 };

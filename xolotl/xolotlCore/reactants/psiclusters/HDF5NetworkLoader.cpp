@@ -9,7 +9,7 @@
 
 using namespace xolotlCore;
 
-std::shared_ptr<IReactionNetwork> HDF5NetworkLoader::load() {
+std::unique_ptr<IReactionNetwork> HDF5NetworkLoader::load(const IOptions& options) const {
 	// Get the dataset from the HDF5 files
 	auto networkVector = xolotlCore::HDF5Utils::readNetwork(fileName);
 
@@ -17,11 +17,11 @@ std::shared_ptr<IReactionNetwork> HDF5NetworkLoader::load() {
 	int numHe = 0, numV = 0, numI = 0;
 	double formationEnergy = 0.0, migrationEnergy = 0.0;
 	double diffusionFactor = 0.0;
-	std::vector<std::shared_ptr<Reactant> > reactants;
+	std::vector<std::reference_wrapper<Reactant> > reactants;
 
 	// Prepare the network
-	std::shared_ptr<PSIClusterReactionNetwork> network = std::make_shared<
-			PSIClusterReactionNetwork>(handlerRegistry);
+    std::unique_ptr<PSIClusterReactionNetwork> network (
+			new PSIClusterReactionNetwork(handlerRegistry));
 
 	// Loop on the networkVector
 	for (auto lineIt = networkVector.begin(); lineIt != networkVector.end();
@@ -31,7 +31,7 @@ std::shared_ptr<IReactionNetwork> HDF5NetworkLoader::load() {
 		numV = (int) (*lineIt)[1];
 		numI = (int) (*lineIt)[2];
 		// Create the cluster
-		auto nextCluster = createPSICluster(numHe, numV, numI);
+		auto nextCluster = createPSICluster(numHe, numV, numI, *network);
 
 		// Energies
 		formationEnergy = (*lineIt)[3];
@@ -46,31 +46,37 @@ std::shared_ptr<IReactionNetwork> HDF5NetworkLoader::load() {
 
 		// Check if we want dummy reactions
 		if (dummyReactions) {
-			// Create a dummy cluster (Reactant) from the existing cluster
-			auto dummyCluster = std::static_pointer_cast<Reactant>(
-					nextCluster->Reactant::clone());
-			// Add the cluster to the network
-			network->add(dummyCluster);
-			// Add it to the list so that we can set the network later
-			reactants.push_back(dummyCluster);
+			// Create a dummy cluster (just a stock Reactant)
+            // from the existing cluster
+            // TODO Once C++11 support is widespread, use std::make_unique.
+            std::unique_ptr<Reactant> dummyCluster(new Reactant(*nextCluster));
+
+			// Keep a ref to it so we can trigger its updates after
+            // we add it to the network.
+			reactants.emplace_back(*dummyCluster);
+
+			// Give the cluster to the network
+			network->add(std::move(dummyCluster));
+
 		} else {
-			// Add the cluster to the network
-			network->add(nextCluster);
-			// Add it to the list so that we can set the network later
-			reactants.push_back(nextCluster);
+			// Keep a ref to it so we can trigger its updates after
+            // we add it to the network.
+			reactants.emplace_back(*nextCluster);
+
+			// Give the cluster to the network
+			network->add(std::move(nextCluster));
 		}
 	}
 
-	// Set the reaction network for each reactant
-	for (auto reactantsIt = reactants.begin(); reactantsIt != reactants.end();
-			++reactantsIt) {
-		(*reactantsIt)->setReactionNetwork(network);
+	// Ask reactants to update now that they are in network.
+    for (IReactant& currReactant : reactants) {
+        currReactant.updateFromNetwork();
 	}
 
 	// Check if we want dummy reactions
 	if (!dummyReactions) {
 		// Apply sectional grouping
-		applySectionalGrouping(network);
+		applySectionalGrouping(*network);
 	}
 
 	// Create the reactions
@@ -79,6 +85,10 @@ std::shared_ptr<IReactionNetwork> HDF5NetworkLoader::load() {
 	// Recompute Ids and network size and redefine the connectivities
 	network->reinitializeNetwork();
 
-	return network;
+    // Need to use move() because return type uses smart pointer to base class,
+    // not derived class that we created.
+    // Some C++11 compilers accept it without the move, but apparently
+    // that is not correct behavior until C++14.
+	return std::move(network);
 }
 

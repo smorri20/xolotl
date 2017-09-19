@@ -51,7 +51,7 @@ public:
 	 * temperature file that was specified by the command line if the profile
 	 * option is used;
 	 */
-	virtual void initializeTemperature() {}
+	virtual void initializeTemperature() override {}
 
 	/**
 	 * This operation returns the temperature at the given position
@@ -59,8 +59,9 @@ public:
 	 *
 	 * @return The temperature
 	 */
-	virtual double getTemperature(const std::vector<double>& position,
-			double) const {return surfaceTemperature - position[0] * gradient;}
+	virtual double getTemperature(const Point3D& pos, double) const override {
+        return surfaceTemperature - pos[0] * gradient;
+    }
 
 }; //end class TemperatureGradientHandler
 

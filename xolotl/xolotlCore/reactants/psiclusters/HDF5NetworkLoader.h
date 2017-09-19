@@ -39,7 +39,7 @@ public:
 	 *
 	 * @return The reaction network.
 	 */
-	std::shared_ptr<IReactionNetwork> load();
+	std::unique_ptr<IReactionNetwork> load(const IOptions& options) const override;
 
 };
 

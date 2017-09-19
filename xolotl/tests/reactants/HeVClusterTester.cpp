@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(getSpeciesSize) {
 	HeVCluster cluster(4, 5, registry);
 
 	// Get the composition back
-	auto composition = cluster.getComposition();
+	auto& composition = cluster.getComposition();
 
 	// Check the composition is the created one
 	BOOST_REQUIRE_EQUAL(composition["He"], 4);

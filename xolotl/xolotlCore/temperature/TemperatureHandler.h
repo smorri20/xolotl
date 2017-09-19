@@ -45,7 +45,7 @@ public:
 	 * temperature file that was specified by the command line if the profile
 	 * option is used;
 	 */
-	virtual void initializeTemperature() {}
+	virtual void initializeTemperature() override {}
 
 	/**
 	 * This operation returns the temperature at the given position
@@ -53,8 +53,9 @@ public:
 	 *
 	 * @return The temperature
 	 */
-	virtual double getTemperature(const std::vector<double>& position,
-			double) const {return temperature;}
+	virtual double getTemperature(const Point3D& pos, double) const override {
+        return temperature;
+    }
 
 }; //end class TemperatureHandler
 

@@ -25,7 +25,7 @@ namespace xolotlCore {
  *
  * As a rule, it is possible to access directly some of the private members of
  * this class (id, concentration, reactionRadius, diffusionCoefficient, size,
- * typeName) instead of using the "get" functions for performance reasons. In
+ * type) instead of using the "get" functions for performance reasons. In
  * order to change these values the "set" functions must still be used.
  */
 class PSICluster: public Reactant {
@@ -46,17 +46,17 @@ protected:
 		/**
 		 * The first cluster in the pair
 		 */
-		PSICluster * first;
+		PSICluster& first;
 
 		/**
 		 * The second cluster in the pair
 		 */
-		PSICluster * second;
+		PSICluster& second;
 
 		/**
 		 * The reaction/dissociation pointer to the list
 		 */
-		std::shared_ptr<Reaction> reaction;
+        Reaction& reaction;
 
 		/**
 		 * All the coefficient needed to compute each element
@@ -78,11 +78,24 @@ protected:
 		double a22;
 
 		//! The constructor
-		ClusterPair(PSICluster * firstPtr, PSICluster * secondPtr) :
-				first(firstPtr), second(secondPtr), reaction(nullptr), a00(0.0), a10(
-						0.0), a20(0.0), a01(0.0), a02(0.0), a11(0.0), a12(0.0), a21(
-						0.0), a22(0.0) {
+		ClusterPair(Reaction& _reaction,
+                        PSICluster& _first, PSICluster& _second) :
+				first(_first), second(_second),
+                reaction(_reaction),
+                a00(0.0), a10(0.0), a20(0.0),
+                a01(0.0), a02(0.0), a11(0.0),
+                a12(0.0), a21(0.0), a22(0.0) {
 		}
+
+        /**
+         * Default and copy constructors, disallowed.
+         */
+        ClusterPair() = delete;
+
+        // NB: if PSICluster keeps these in a std::vector,
+        // copy ctor is needed.  Implicit definition is fine.
+        // CombiningCluster(const CombiningCluster& other) = delete;
+        // ClusterPair(const ClusterPair& other) = delete;
 	};
 
 	/**
@@ -93,18 +106,17 @@ protected:
 	 * for faster computation because they only change when the temperature change.
 	 * k+ is computed when setTemperature() is called.
 	 */
-	class CombiningCluster {
-	public:
+	struct CombiningCluster {
 
 		/**
 		 * The combining cluster
 		 */
-		PSICluster * combining;
+		PSICluster& combining;
 
 		/**
 		 * The reaction pointer to the list
 		 */
-		std::shared_ptr<Reaction> reaction;
+		Reaction& reaction;
 
 		/**
 		 * All the coefficient needed to compute each element
@@ -120,9 +132,20 @@ protected:
 		double a2;
 
 		//! The constructor
-		CombiningCluster(PSICluster * ptr) :
-				combining(ptr), reaction(nullptr), a0(0.0), a1(0.0), a2(0.0) {
+		CombiningCluster(Reaction& _reaction, PSICluster& _comb) :
+				combining(_comb),
+                reaction(_reaction),
+                a0(0.0), a1(0.0), a2(0.0) {
 		}
+
+        /**
+         * Default constructor, disallowed to prohibit building without args.
+         */
+        CombiningCluster() = delete;
+
+        // NB: if PSICluster keeps these in a std::vector,
+        // copy ctor is needed.  Implicit definition is fine.
+        // CombiningCluster(const CombiningCluster& other) = delete;
 	};
 
 	/**
@@ -143,11 +166,6 @@ protected:
 	 * of a connected cluster for dissociation reactions
 	 */
 	const std::set<int> & getDissociationConnectivitySet() const;
-
-	/**
-	 * The default constructor is protected
-	 */
-	PSICluster();
 
 public:
 
@@ -186,19 +204,30 @@ public:
 	 */
 	std::vector<ClusterPair> emissionPairs;
 
+    /**
+     * Default constructor, deleted because we require info to construct.
+     */
+    PSICluster() = delete;
+
 	/**
-	 * The default constructor
+	 * Construct a PSICluster.
 	 *
 	 * @param registry The performance handler registry
 	 */
-	PSICluster(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+	PSICluster(IReactionNetwork& _network,
+        std::shared_ptr<xolotlPerf::IHandlerRegistry> registry,
+        const std::string& _name = "PSICluster") 
+      : Reactant(_network, registry, _name) {
+
+    }
+
+
+
 
 	/**
-	 * The copy constructor
-	 *
-	 * @param other The cluster to copy
+	 * Copy constructor, deleted to prevent use.
 	 */
-	PSICluster(PSICluster &other);
+	PSICluster(PSICluster &other) = delete;
 
 	/**
 	 * The destructor
@@ -207,44 +236,33 @@ public:
 	}
 
 	/**
-	 * Returns a reactant created using the copy constructor
+     * Update reactant using other reactants in its network.
 	 */
-	virtual std::shared_ptr<IReactant> clone() {
-		return std::shared_ptr<IReactant>(new PSICluster(*this));
-	}
+	virtual void updateFromNetwork() override;
 
 	/**
-	 * Sets the collection of other clusters that make up
-	 * the reaction network in which this cluster exists.
-	 *
-	 * @param network The reaction network of which this cluster is a part
-	 */
-	virtual void setReactionNetwork(
-			const std::shared_ptr<IReactionNetwork> reactionNetwork);
-
-	/**
-	 * Create a production pair associated with the given reaction.
-	 * Create the connectivity.
+	 * Note that we result from the given reaction.
+	 * Assumes the reaction is already in our network.
 	 *
 	 * @param reaction The reaction creating this cluster.
-	 * @param a Helium number.
-	 * @param b Vacancy number.
-	 * @param c Helium number.
-	 * @param d Vacancy number.
+	 * @param a Number that can be used by daughter classes.
+	 * @param b Number that can be used by daughter classes.
+	 * @param c Number that can be used by daughter classes.
+	 * @param d Number that can be used by daughter classes.
 	 */
-	virtual void createProduction(std::shared_ptr<ProductionReaction> reaction,
-			int a = 0, int b = 0, int c = 0, int d = 0);
+	virtual void resultFrom(std::shared_ptr<ProductionReaction> reaction,
+			int a = 0, int b = 0, int c = 0, int d = 0) override;
 
 	/**
-	 * Create a combination associated with the given reaction.
-	 * Create the connectivity.
+	 * Note that we combine with another cluster in a production reaction.
+	 * Assumes that the reaction is already in our network.
 	 *
 	 * @param reaction The reaction where this cluster takes part.
-	 * @param a Helium number.
-	 * @param b Vacancy number.
+	 * @param a Number that can be used by daughter classes.
+	 * @param b Number that can be used by daughter classes.
 	 */
-	virtual void createCombination(std::shared_ptr<ProductionReaction> reaction,
-			int a = 0, int b = 0);
+	virtual void participateIn(ProductionReaction& reaction,
+			int a = 0, int b = 0) override;
 
 	/**
 	 * Create a dissociation pair associated with the given reaction.
@@ -258,7 +276,7 @@ public:
 	 */
 	virtual void createDissociation(
 			std::shared_ptr<DissociationReaction> reaction, int a = 0,
-			int b = 0, int c = 0, int d = 0);
+			int b = 0, int c = 0, int d = 0) override;
 
 	/**
 	 * Create an emission pair associated with the given reaction.
@@ -271,7 +289,7 @@ public:
 	 * @param d Vacancy number.
 	 */
 	virtual void createEmission(std::shared_ptr<DissociationReaction> reaction,
-			int a = 0, int b = 0, int c = 0, int d = 0);
+			int a = 0, int b = 0, int c = 0, int d = 0) override;
 
 	/**
 	 * This operation returns the connectivity array for this cluster for
@@ -337,7 +355,7 @@ public:
 	 * @return The total change in flux for this cluster due to all
 	 * reactions
 	 */
-	virtual double getTotalFlux() {
+	virtual double getTotalFlux() override {
 		return getProductionFlux() - getCombinationFlux()
 				+ getDissociationFlux() - getEmissionFlux();
 	}
@@ -384,7 +402,7 @@ public:
 	 * corresponds to the first cluster in the list returned by the
 	 * ReactionNetwork::getAll() operation.
 	 */
-	virtual std::vector<double> getPartialDerivatives() const;
+	virtual std::vector<double> getPartialDerivatives() const override;
 
 	/**
 	 * This operation works as getPartialDerivatives above, but instead of
@@ -399,7 +417,7 @@ public:
 	 * the vector should be equal to ReactionNetwork::size().
 	 *
 	 */
-	virtual void getPartialDerivatives(std::vector<double> & partials) const;
+	virtual void getPartialDerivatives(std::vector<double> & partials) const override;
 
 	/**
 	 * This operation computes the partial derivatives due to production
@@ -449,7 +467,7 @@ public:
 	 * This operation reset the connectivity sets based on the information
 	 * in the effective production and dissociation vectors.
 	 */
-	void resetConnectivities();
+	void resetConnectivities() override;
 
 	/**
 	 * This operation sets the diffusion factor, D_0, that is used to calculate
@@ -457,14 +475,14 @@ public:
 	 *
 	 * @param factor The diffusion factor
 	 */
-	void setDiffusionFactor(const double factor);
+	void setDiffusionFactor(const double factor) override;
 
 	/**
 	 * This operation sets the migration energy for this reactant.
 	 *
 	 * @param energy The migration energy
 	 */
-	void setMigrationEnergy(const double energy);
+	void setMigrationEnergy(const double energy) override;
 
 	/**
 	 * This operation returns the sum of combination rate and emission rate
@@ -475,7 +493,7 @@ public:
 	 *
 	 * @return The rate
 	 */
-	double getLeftSideRate() const;
+	double getLeftSideRate() const override;
 
 	/**
 	 * This operation returns a list that represents the connectivity
@@ -490,7 +508,7 @@ public:
 	 * with the i-th cluster in the ReactionNetwork and a "0" indicates
 	 * that it does not.
 	 */
-	std::vector<int> getConnectivity() const;
+	std::vector<int> getConnectivity() const override;
 
 };
 

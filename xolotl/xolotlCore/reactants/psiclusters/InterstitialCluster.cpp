@@ -5,19 +5,17 @@
 using namespace xolotlCore;
 
 InterstitialCluster::InterstitialCluster(int nI,
+        IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(registry) {
+		PSICluster(_network, registry, buildName(nI)) {
+
 	// Set the size
 	size = nI;
 	// Update the composition map
-	compositionMap[iType] = size;
+	composition[toCompIdx(Species::I)] = size;
 
-	// Set the reactant name appropriately
-	std::stringstream nameStream;
-	nameStream << "I_" << size;
-	name = nameStream.str();
 	// Set the typename appropriately
-	typeName = iType;
+	type = ReactantType::I;
 
 	// Compute the reaction radius
 	double EightPi = 8.0 * xolotlCore::pi;

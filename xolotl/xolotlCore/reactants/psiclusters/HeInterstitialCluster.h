@@ -2,6 +2,7 @@
 #define HEINTERSTITIALCLUSTER_H
 
 // Includes
+#include <sstream>
 #include "PSICluster.h"
 #include <string>
 #include <map>
@@ -21,15 +22,19 @@ private:
 	//! The number of interstitial defects in this cluster.
 	int numI;
 
-	/**
-	 * The default constructor is private because PSIClusters must always be
-	 * initialized with a size.
-	 */
-	HeInterstitialCluster() :
-		PSICluster()
-	{ numHe = 0; numI = 0; }
+    static
+    std::string buildName(IReactant::SizeType nHe, IReactant::SizeType nI) {
+        std::stringstream nameStream;
+        nameStream << "He_" << nHe << "I_" << nI;
+        return nameStream.str();
+    }
 
 public:
+
+    /**
+     * Default constructor, deleted because we require info to construct.
+     */
+    HeInterstitialCluster() = delete;
 
 	/**
 	 * The constructor. All HeInterstitialClusters must be initialized with a map
@@ -40,27 +45,20 @@ public:
 	 *
 	 * @param numHe The number of helium atoms in this cluster
 	 * @param numI The number of interstitial defect in this cluster
+     * @param _network The network the cluster will belong to.
 	 * @param registry The performance handler registry
 	 */
 	HeInterstitialCluster(int numHe, int numI,
+            IReactionNetwork& _network,
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
-	 * Copy constructor
-	 *
-	 * @param other the reactant to be copied
+	 * Copy constructor, deleted to prevent use.
 	 */
-	HeInterstitialCluster(HeInterstitialCluster &other);
+	HeInterstitialCluster(HeInterstitialCluster &other) = delete;
 
 	//! Destructor
 	~HeInterstitialCluster() {}
-
-	/**
-	 * Returns a reactant created using the copy constructor
-	 */
-	virtual std::shared_ptr<IReactant> clone() {
-		return std::shared_ptr<IReactant> (new HeInterstitialCluster(*this));
-	}
 
 	/**
 	 * This operation returns true to signify that this cluster is a mixture of

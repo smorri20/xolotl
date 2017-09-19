@@ -13,11 +13,12 @@ file(GLOB HEADERS trapmutation/*.h)
 file(GLOB SRC trapmutation/*.cpp)
 
 #Include directories
-include_directories(${CMAKE_SOURCE_DIR}/xolotlCore)
-include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/modifiedreaction/trapmutation)
-include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants)
-include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/reactants/psiclusters)
-include_directories(${CMAKE_SOURCE_DIR}/xolotlCore/advection)
+include_directories(${CMAKE_SOURCE_DIR}/xolotlCore
+                    ${CMAKE_SOURCE_DIR}/xolotlCore/modifiedreaction/trapmutation
+                    ${CMAKE_SOURCE_DIR}/xolotlCore/reactants
+                    ${CMAKE_SOURCE_DIR}/xolotlCore/reactants/psiclusters
+                    ${CMAKE_SOURCE_DIR}/xolotlCore/advection
+                    ${CMAKE_BINARY_DIR})
 
 #Add a library
 add_library(${LIBRARY_NAME} STATIC ${SRC})

@@ -83,11 +83,11 @@ PetscErrorCode startStop0D(TS ts, PetscInt timestep, PetscReal time,
 	CHKERRQ(ierr);
 
 	// Get the solver handler
-	auto solverHandler = PetscSolver::getSolverHandler();
+	auto& solverHandler = PetscSolver::getSolverHandler();
 
 	// Get the network and dof
-	auto network = solverHandler->getNetwork();
-	const int dof = network->getDOF();
+	auto& network = solverHandler.getNetwork();
+	const int dof = network.getDOF();
 
 	// Open the already created HDF5 file
 	xolotlCore::HDF5Utils::openFile(hdf5OutputName0D);
@@ -172,12 +172,12 @@ PetscErrorCode monitorScatter0D(TS ts, PetscInt timestep, PetscReal time,
 	CHKERRQ(ierr);
 
 	// Get the solver handler
-	auto solverHandler = PetscSolver::getSolverHandler();
+	auto& solverHandler = PetscSolver::getSolverHandler();
 
 	// Get the network and its size
-	auto network = solverHandler->getNetwork();
-	int networkSize = network->size();
-	auto superClusters = network->getAll(NESuperType);
+	auto& network = solverHandler.getNetwork();
+	int networkSize = network.size();
+	auto const& superClusters = network.getAll(ReactantType::NESuper);
 
 	// Create a Point vector to store the data to give to the data provider
 	// for the visualization
@@ -187,7 +187,7 @@ PetscErrorCode monitorScatter0D(TS ts, PetscInt timestep, PetscReal time,
 	gridPointSolution = solutionArray[0];
 
 	// Update the concentration in the network
-	network->updateConcentrationsFromArray(gridPointSolution);
+	network.updateConcentrationsFromArray(gridPointSolution);
 
 	for (int i = 0; i < networkSize - superClusters.size(); i++) {
 		// Create a Point with the concentration[i] as the value
@@ -199,19 +199,21 @@ PetscErrorCode monitorScatter0D(TS ts, PetscInt timestep, PetscReal time,
 		myPoints->push_back(aPoint);
 	}
 	int nXe = networkSize - superClusters.size() + 1;
-	for (int i = 0; i < superClusters.size(); i++) {
+
+    for (auto const& superMapItem : superClusters) {
+
 		// Get the cluster
-		auto cluster = (NESuperCluster *) superClusters[i];
+        auto const& cluster = static_cast<NESuperCluster&>(*(superMapItem.second));
 		// Get the width
-		int width = cluster->getSectionWidth();
+		int width = cluster.getSectionWidth();
 		// Loop on the width
 		for (int k = 0; k < width; k++) {
 			// Compute the distance
-			double dist = cluster->getDistance(nXe + k);
+			double dist = cluster.getDistance(nXe + k);
 			// Create a Point with the concentration[i] as the value
 			// and add it to myPoints
 			xolotlViz::Point aPoint;
-			aPoint.value = cluster->getConcentration(dist);
+			aPoint.value = cluster.getConcentration(dist);
 			aPoint.t = time;
 			aPoint.x = (double) nXe + k;
 			myPoints->push_back(aPoint);
@@ -283,19 +285,18 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 	CHKERRQ(ierr);
 
 	// Get the solver handler
-	auto solverHandler = PetscSolver::getSolverHandler();
+	auto& solverHandler = PetscSolver::getSolverHandler();
 
 	// Get the network
-	auto network = solverHandler->getNetwork();
-	// Get all the super clusters
-	auto superClusters = network->getAll(PSISuperType);
+	auto& network = solverHandler.getNetwork();
+
 
 	// Get the physical grid
-	auto grid = solverHandler->getXGrid();
+	auto grid = solverHandler.getXGrid();
 
 	// Get the maximum size of HeV clusters
-	auto psiNetwork = dynamic_cast<PSIClusterReactionNetwork*>(network);
-	int maxHeVClusterSize = psiNetwork->getMaxHeVClusterSize();
+	auto const& psiNetwork = dynamic_cast<PSIClusterReactionNetwork const&>(network);
+	auto maxHeVClusterSize = psiNetwork.getMaxClusterSize(ReactantType::HeV);
 
 	// Create a Point vector to store the data to give to the data provider
 	// for the visualization
@@ -305,19 +306,19 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 	gridPointSolution = solutionArray[0];
 
 	// Update the concentration in the network
-	network->updateConcentrationsFromArray(gridPointSolution);
+	network.updateConcentrationsFromArray(gridPointSolution);
 
 	// A pointer for the clusters used below
 	IReactant * cluster;
 
 	// Loop on Y = V number
-	for (int i = 0; i <= maxHeVClusterSize / 2; i++) {
+	for (IReactant::SizeType i = 0; i <= maxHeVClusterSize / 2; i++) {
 		// Loop on X = He number
-		for (int j = 0; j <= maxHeVClusterSize / 2; j++) {
+		for (IReactant::SizeType j = 0; j <= maxHeVClusterSize / 2; j++) {
 			double conc = 0.0;
 			// V clusters
 			if (j == 0) {
-				cluster = network->get("V", i);
+				cluster = network.get(Species::V, i);
 				if (cluster) {
 					// Get the ID of the cluster
 					int id = cluster->getId() - 1;
@@ -326,7 +327,7 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 			}
 			// He clusters
 			else if (i == 0) {
-				cluster = network->get("He", j);
+				cluster = network.get(Species::He, j);
 				if (cluster) {
 					// Get the ID of the cluster
 					int id = cluster->getId() - 1;
@@ -335,7 +336,10 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 			}
 			// HeV clusters
 			else {
-				cluster = network->getCompound("HeV", { j, i, 0 });
+                IReactant::Composition testComp;
+                testComp[toCompIdx(Species::He)] = j;
+                testComp[toCompIdx(Species::V)] = i;
+				cluster = network.get(ReactantType::HeV, testComp);
 				if (cluster) {
 					// Get the ID of the cluster
 					int id = cluster->getId() - 1;
@@ -344,19 +348,18 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 
 				else {
 					// Look for superClusters !
-					PSISuperCluster * superCluster = nullptr;
-					// Loop on the super clusters
-					for (int l = 0; l < superClusters.size(); l++) {
+                    for (auto const& superMapItem : network.getAll(ReactantType::PSISuper)) {
+
 						// Get the super cluster
-						superCluster = (PSISuperCluster *) superClusters[l];
+						auto const& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
 						// Get its boundaries
-						auto boundaries = superCluster->getBoundaries();
+						auto const& heBounds = superCluster.getHeBounds();
+						auto const& vBounds = superCluster.getVBounds();
 						// Is it the right one?
-						if (j >= boundaries[0] && j <= boundaries[1]
-								&& i >= boundaries[2] && i <= boundaries[3]) {
-							conc = superCluster->getConcentration(
-									superCluster->getHeDistance(j),
-									superCluster->getVDistance(i));
+                        if (heBounds.contains(j) and vBounds.contains(i)) {
+							conc = superCluster.getConcentration(
+									superCluster.getHeDistance(j),
+									superCluster.getVDistance(i));
 							break;
 						}
 					}
@@ -435,14 +438,11 @@ PetscErrorCode monitorMeanSize0D(TS ts, PetscInt timestep, PetscReal time,
 	CHKERRQ(ierr);
 
 	// Get the solver handler
-	auto solverHandler = PetscSolver::getSolverHandler();
+	auto& solverHandler = PetscSolver::getSolverHandler();
 
 	// Get the network
-	auto network = solverHandler->getNetwork();
-	int dof = network->getDOF();
-
-	// Get all the super clusters
-	auto superClusters = network->getAll(PSISuperType);
+	auto& network = solverHandler.getNetwork();
+	int dof = network.getDOF();
 
 	// Create the output file
 	std::ofstream outputFile;
@@ -461,7 +461,7 @@ PetscErrorCode monitorMeanSize0D(TS ts, PetscInt timestep, PetscReal time,
 //			}
 
 	// Update the concentration in the network
-	network->updateConcentrationsFromArray(gridPointSolution);
+	network.updateConcentrationsFromArray(gridPointSolution);
 
 	// Initialize the total helium and concentration before looping
 	double concTot = 0.0, heliumTot = 0.0;
@@ -472,18 +472,22 @@ PetscErrorCode monitorMeanSize0D(TS ts, PetscInt timestep, PetscReal time,
 //				<< gridPointSolution[indices0D[i]] << std::endl;
 //	}
 
-	// Loop on the super clusters
-	for (int l = 0; l < superClusters.size(); l++) {
+	// Consider each super cluster.
+    for (auto const& superMapItem : network.getAll(ReactantType::PSISuper)) {
 		// Get the super cluster
-		auto superCluster = (PSISuperCluster *) superClusters[l];
+		auto const& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
 		// Get its boundaries
-		auto boundaries = superCluster->getBoundaries();
+		auto const& heBounds = superCluster.getHeBounds();
+		auto const& vBounds = superCluster.getVBounds();
 		// Get its diameter
-		double diam = 2.0 * superCluster->getReactionRadius();
+		double diam = 2.0 * superCluster.getReactionRadius();
 		// Get its concentration
-		double conc = superCluster->getConcentration(0.0, 0.0);
-		outputFile << boundaries[0] << " " << boundaries[1] << " "
-				<< boundaries[2] << " " << boundaries[3] << " " << conc
+		double conc = superCluster.getConcentration(0.0, 0.0);
+
+        // For compatibility with previous versions, we output
+        // the value of a closed upper bound of the He and V intervals.
+		outputFile << *(heBounds.begin()) << " " << *(heBounds.end()) - 1 << " "
+				<< *(vBounds.begin()) << " " << *(vBounds.end()) - 1 << " " << conc
 				<< std::endl;
 	}
 
@@ -538,11 +542,11 @@ PetscErrorCode setupPetsc0DMonitor(TS ts) {
 			"setupPetsc0DMonitor: PetscOptionsHasName (-mean_size) failed.");
 
 	// Get the solver handler
-	auto solverHandler = PetscSolver::getSolverHandler();
+	auto& solverHandler = PetscSolver::getSolverHandler();
 
 	// Get the network and its size
-	auto network = solverHandler->getNetwork();
-	const int networkSize = network->size();
+	auto& network = solverHandler.getNetwork();
+	const int networkSize = network.size();
 
 	// Set the monitor to save the status of the simulation in hdf5 file
 	if (flagStatus) {
@@ -574,14 +578,14 @@ PetscErrorCode setupPetsc0DMonitor(TS ts) {
 		xolotlCore::HDF5Utils::initializeFile(hdf5OutputName0D);
 
 		// Get the solver handler
-		auto solverHandler = PetscSolver::getSolverHandler();
+		auto& solverHandler = PetscSolver::getSolverHandler();
 
 		// Save the header in the HDF5 file
 		xolotlCore::HDF5Utils::fillHeader(Mx, 0.0);
 
 		// Save the network in the HDF5 file
-		if (!solverHandler->getNetworkName().empty())
-			xolotlCore::HDF5Utils::fillNetwork(solverHandler->getNetworkName());
+		if (!solverHandler.getNetworkName().empty())
+			xolotlCore::HDF5Utils::fillNetwork(solverHandler.getNetworkName());
 
 		// Finalize the HDF5 file
 		xolotlCore::HDF5Utils::finalizeFile();
@@ -683,18 +687,17 @@ PetscErrorCode setupPetsc0DMonitor(TS ts) {
 	// Initialize indices0D and weights0D if we want to compute the
 	// retention or the cumulative value and others
 	if (flagMeanSize) {
-		// Get all the vacancy clusters
-		auto vClusters = network->getAll(vType);
 
-		// Loop on the helium clusters
-		for (unsigned int i = 0; i < vClusters.size(); i++) {
-			auto cluster = vClusters[i];
-			int id = cluster->getId() - 1;
+		// Consider each vacancy cluster.
+        for (auto const& vMapItem : network.getAll(ReactantType::V)) {
+			auto const& cluster = *(vMapItem.second);
+
+			int id = cluster.getId() - 1;
 			// Add the Id to the vector
 			indices0D.push_back(id);
 			// Add the number of heliums of this cluster to the weight
-			weights0D.push_back(cluster->getSize());
-			radii0D.push_back(cluster->getReactionRadius());
+			weights0D.push_back(cluster.getSize());
+			radii0D.push_back(cluster.getReactionRadius());
 		}
 	}
 

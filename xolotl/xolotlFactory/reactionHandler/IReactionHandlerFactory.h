@@ -40,7 +40,7 @@ public:
 	 *
 	 * @return The network.
 	 */
-	virtual std::shared_ptr<xolotlCore::IReactionNetwork> getNetworkHandler() const = 0;
+    virtual xolotlCore::IReactionNetwork& getNetworkHandler() const = 0;
 
 	/**
 	 * Function that create the wanted reaction handler factory depending on the given type.

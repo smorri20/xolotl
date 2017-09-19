@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(checkLoad) {
 	// Get the first one of the network
 	auto reactant = (PSICluster *) reactants->at(0);
 	// Check the composition
-	auto composition = reactant->getComposition();
+	auto& composition = reactant->getComposition();
 	BOOST_REQUIRE_EQUAL(composition["He"], 1);
 	BOOST_REQUIRE_EQUAL(composition["V"], 0);
 	BOOST_REQUIRE_EQUAL(composition["I"], 0);
@@ -81,10 +81,10 @@ BOOST_AUTO_TEST_CASE(checkLoad) {
 	// Get the last reactant of the network
 	reactant = (PSICluster *) reactants->at(8);
 	// Check the composition
-	composition = reactant->getComposition();
-	BOOST_REQUIRE_EQUAL(composition["He"], 0);
-	BOOST_REQUIRE_EQUAL(composition["V"], 1);
-	BOOST_REQUIRE_EQUAL(composition["I"], 0);
+	auto& composition2 = reactant->getComposition();
+	BOOST_REQUIRE_EQUAL(composition2["He"], 0);
+	BOOST_REQUIRE_EQUAL(composition2["V"], 1);
+	BOOST_REQUIRE_EQUAL(composition2["I"], 0);
 	// Check the formation energy
 	formationEnergy = reactant->getFormationEnergy();
 	BOOST_REQUIRE_EQUAL(formationEnergy, 3.6);

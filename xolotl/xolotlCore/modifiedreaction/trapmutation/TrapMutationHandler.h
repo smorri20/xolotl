@@ -58,9 +58,12 @@ protected:
 	 * The vector containing the indices of the bubbles created through modified
 	 * trap-mutation for each grid point. The difference between this vector and depthVec
 	 * is that this one is used for the actual computation whereas the other one is
-	 * defined by the user. indexVector is created with the depthVec information.
+	 * defined by the user. tmBubbles is created with the depthVec information.
 	 */
-	std::vector<std::vector<std::vector<std::vector<int> > > > indexVector;
+    using ReactantRefVector1D = std::vector<IReactant::RefVector>;
+    using ReactantRefVector2D = std::vector<ReactantRefVector1D>;
+    using ReactantRefVector3D = std::vector<ReactantRefVector2D>;
+    ReactantRefVector3D tmBubbles;
 
 	/**
 	 * The desorption information
@@ -100,44 +103,44 @@ public:
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
-	void initialize(IReactionNetwork *network,
+	void initialize(const IReactionNetwork& network,
 			std::vector<double> grid, int ny = 0, double hy = 0.0,
-			int nz = 0, double hz = 0.0);
+			int nz = 0, double hz = 0.0) override;
 
 	/**
 	 * This method defines which trap-mutation is allowed at each grid point.
 	 * The stored indices correspond to the HeV bubbles, and more precisely to their
-	 * rank in the bubbles vector obtained with bubbles = network->getAll(heVType).
+	 * rank in the bubbles vector obtained with bubbles = network->getAll(ReactantType::HeV).
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
-	void initializeIndex1D(int surfacePos, IReactionNetwork *network,
+	void initializeIndex1D(int surfacePos, const IReactionNetwork& network,
 			std::vector<IAdvectionHandler *> advectionHandlers,
-			std::vector<double> grid);
+			std::vector<double> grid) override;
 
 	/**
 	 * This method defines which trap-mutation is allowed at each grid point.
 	 * The stored indices correspond to the HeV bubbles, and more precisely to their
-	 * rank in the bubbles vector obtained with bubbles = network->getAll(heVType).
+	 * rank in the bubbles vector obtained with bubbles = network->getAll(ReactantType::HeV).
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
-	void initializeIndex2D(std::vector<int> surfacePos, IReactionNetwork *network,
+	void initializeIndex2D(std::vector<int> surfacePos, const IReactionNetwork& network,
 			std::vector<IAdvectionHandler *> advectionHandlers,
-			std::vector<double> grid, int ny, double hy);
+			std::vector<double> grid, int ny, double hy) override;
 
 	/**
 	 * This method defines which trap-mutation is allowed at each grid point.
 	 * The stored indices correspond to the HeV bubbles, and more precisely to their
-	 * rank in the bubbles vector obtained with bubbles = network->getAll(heVType).
+	 * rank in the bubbles vector obtained with bubbles = network->getAll(ReactantType::HeV).
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
 	void initializeIndex3D(std::vector<std::vector<int> > surfacePos,
-			IReactionNetwork *network,
+			const IReactionNetwork& network,
 			std::vector<IAdvectionHandler *> advectionHandlers,
 			std::vector<double> grid, int ny, double hy,
-			int nz, double hz);
+			int nz, double hz) override;
 
 	/**
 	 * This method update the rate for the modified trap-mutation if the rates
@@ -146,14 +149,14 @@ public:
 	 *
 	 * @param network The network
 	 */
-	void updateTrapMutationRate(IReactionNetwork *network);
+	void updateTrapMutationRate(const IReactionNetwork& network) override;
 
 	/**
 	 * This method set the boolean to remember if we want attenuation or not.
 	 *
 	 * @param isAttenuation True if we want attenuation
 	 */
-	void setAttenuation(bool isAttenuation);
+	void setAttenuation(bool isAttenuation) override;
 
 	/**
 	 * This method update the rate that makes the modified trap-mutation inefficient
@@ -161,7 +164,7 @@ public:
 	 *
 	 * @param conc The concentration of helium
 	 */
-	void updateDisappearingRate(double conc);
+	void updateDisappearingRate(double conc) override;
 
 	/**
 	 * Compute the flux due to the modified trap-mutation for all the cluster,
@@ -174,9 +177,9 @@ public:
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
-	void computeTrapMutation(IReactionNetwork *network,
+	void computeTrapMutation(const IReactionNetwork& network,
 			double *concOffset, double *updatedConcOffset,
-			int xi, int yj = 0, int zk = 0);
+			int xi, int yj = 0, int zk = 0) override;
 
 	/**
 	 * Compute the partials due to the modified trap-mutation for all the
@@ -191,9 +194,9 @@ public:
 	 *
 	 * \see ITrapMutationHandler.h
 	 */
-	int computePartialsForTrapMutation(IReactionNetwork *network,
+	int computePartialsForTrapMutation(const IReactionNetwork& network,
 			double *val, int *indices,
-			int xi, int yj = 0, int zk = 0);
+			int xi, int yj = 0, int zk = 0) override;
 
 };
 //end class TrapMutationHandler

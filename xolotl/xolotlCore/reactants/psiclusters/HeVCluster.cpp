@@ -6,23 +6,21 @@
 
 using namespace xolotlCore;
 
-HeVCluster::HeVCluster(int numHe, int numV,
+HeVCluster::HeVCluster(int _numHe, int _numV,
+        IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-		PSICluster(registry), numHe(numHe), numV(numV) {
+    PSICluster(_network, registry, buildName(_numHe, _numV)),
+        numHe(_numHe), numV(_numV) {
 	// Set the cluster size as the sum of
 	// the number of Helium and Vacancies
 	size = numHe + numV;
 
 	// Update the composition map
-	compositionMap[heType] = numHe;
-	compositionMap[vType] = numV;
+	composition[toCompIdx(Species::He)] = numHe;
+	composition[toCompIdx(Species::V)] = numV;
 
-	// Set the reactant name appropriately
-	std::stringstream nameStream;
-	nameStream << "He_" << numHe << "V_" << numV;
-	name = nameStream.str();
 	// Set the typename appropriately
-	typeName = heVType;
+	type = ReactantType::HeV;
 
 	// Compute the reaction radius
 	// It is the same formula for HeV clusters
@@ -32,10 +30,3 @@ HeVCluster::HeVCluster(int numHe, int numV,
 	return;
 }
 
-HeVCluster::HeVCluster(HeVCluster &other) :
-		PSICluster(other) {
-	numHe = other.numHe;
-	numV = other.numV;
-
-	return;
-}

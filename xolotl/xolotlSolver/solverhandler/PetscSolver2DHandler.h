@@ -17,9 +17,20 @@ private:
 
 public:
 
-	//! The Constructor
-	PetscSolver2DHandler() {
-	}
+	/**
+     * Default constructor, deleted because we need to construct with objects.
+     */
+	PetscSolver2DHandler() = delete;
+
+    /**
+     * Construct a PetscSolver2DHandler.
+     *
+     * @param _network The reaction network to use.
+     */
+    PetscSolver2DHandler(xolotlCore::IReactionNetwork& _network)
+      : PetscSolverHandler(_network) {
+    }
+
 
 	//! The Destructor
 	~PetscSolver2DHandler() {

@@ -2,6 +2,7 @@
 #define HECLUSTER_H
 
 // Includes
+#include <sstream>
 #include "PSICluster.h"
 #include <xolotlPerf.h>
 
@@ -13,15 +14,20 @@ namespace xolotlCore {
 class HeCluster: public PSICluster {
 
 private:
-
-	/**
-	 * The default constructor is private because PSIClusters must always be
-	 * initialized with a size and performance handler registry
-	 */
-	HeCluster() :
-		PSICluster() {}
+    static
+    std::string buildName(IReactant::SizeType size) {
+        // Set the reactant name appropriately
+        std::stringstream nameStream;
+        nameStream << "He_" << size;
+        return nameStream.str();
+    }
 
 public:
+
+    /**
+     * Default constructor, deleted because we require info to construct.
+     */
+    HeCluster() = delete;
 
 	/**
 	 * The constructor. All HeClusters must be initialized with a size.
@@ -29,19 +35,19 @@ public:
 	 * @param nHe the number of helium atoms in the cluster
 	 * @param registry The performance handler registry
 	 */
-	HeCluster(int nHe, std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+	HeCluster(int nHe,
+            IReactionNetwork& _network,
+            std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+
+    /**
+     * Copy constructor, deleted to prevent use.
+     */
+    HeCluster(const HeCluster& other) = delete;
 
 	/**
 	 * Destructor
 	 */
 	~HeCluster() {}
-
-	/**
-	 * Returns a reactant created using the copy constructor
-	 */
-	virtual std::shared_ptr<IReactant> clone() {
-		return std::shared_ptr<IReactant> (new HeCluster(*this));
-	}
 
 }; //end class HeCluster
 

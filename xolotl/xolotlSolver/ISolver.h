@@ -61,9 +61,8 @@ public:
 	 * possibly including but not limited to setting up MPI and loading initial
 	 * conditions. If the solver can not be initialized, this operation will
 	 * throw an exception of type std::string.
-	 * @param solverHandler The solver handler
 	 */
-	virtual void initialize(std::shared_ptr<ISolverHandler> solverHandler) = 0;
+	virtual void initialize() = 0;
 
 	/**
 	 * This operation directs the Solver to perform the solve. If the solve

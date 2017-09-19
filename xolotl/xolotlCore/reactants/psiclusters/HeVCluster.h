@@ -14,6 +14,8 @@ namespace xolotlCore {
 class HeVCluster: public PSICluster {
 
 private:
+    // TODO do we need to keep these species counts here, 
+    // since they are in the composition?
 
 	//! The number of helium atoms in this cluster.
 	int numHe;
@@ -21,15 +23,20 @@ private:
 	//! The number of atomic vacancies in this cluster.
 	int numV;
 
-	/**
-	 * The default constructor is private because PSIClusters must always be
-	 * initialized with a size.
-	 */
-	HeVCluster() :
-		PSICluster()
-	{ numHe = 0; numV = 0; }
+
+	static
+    std::string buildName(IReactant::SizeType nHe, IReactant::SizeType nV) {
+        std::stringstream nameStream;
+        nameStream << "He_" << nHe << "V_" << nV;
+        return nameStream.str();
+    }
 
 public:
+
+    /**
+     * Default constructor, deleted because we require info to construct.
+     */
+    HeVCluster() = delete;
 
 	/**
 	 * The constructor. All HeVClusters must be initialized with a map
@@ -40,27 +47,20 @@ public:
 	 *
 	 * @param numHe The number of helium atoms in this cluster
 	 * @param numV The number of vacancies in this cluster
+     * @param _network The network the cluster will belong to.
 	 * @param registry The performance handler registry
 	 */
 	HeVCluster(int numHe, int numV,
+            IReactionNetwork& _network,
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
-	 * Copy constructor.
-	 *
-	 * @param other the reactant to be copied
+	 * Copy constructor, deleted to prevent use.
 	 */
-	HeVCluster(HeVCluster &other);
+	HeVCluster(HeVCluster &other) = delete;
 
 	//! Destructor
 	~HeVCluster() {}
-
-	/**
-	 * Returns a reactant created using the copy constructor
-	 */
-	virtual std::shared_ptr<IReactant> clone() {
-		return std::shared_ptr<IReactant> (new HeVCluster(*this));
-	}
 
 	/**
 	 * This operation returns true to signify that this cluster is a mixture of
