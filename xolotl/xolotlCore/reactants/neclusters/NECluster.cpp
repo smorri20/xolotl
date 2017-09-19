@@ -8,17 +8,17 @@
 using namespace xolotlCore;
 
 
-void NECluster::resultFrom(std::shared_ptr<ProductionReaction> reaction,
+void NECluster::resultFrom(ProductionReaction& reaction,
 		int, int, int, int) {
 
 	// Add a cluster pair for given reaction 
 	reactingPairs.emplace_back(
-            *reaction,  // TODO verify this is correct
-            &static_cast<NECluster&>(reaction->first),
-			&static_cast<NECluster&>(reaction->second));
+            reaction,  // TODO verify this is correct
+            &static_cast<NECluster&>(reaction.first),
+			&static_cast<NECluster&>(reaction.second));
 	// Setup the connectivity array
-	setReactionConnectivity(reaction->first.getId());
-	setReactionConnectivity(reaction->second.getId());
+	setReactionConnectivity(reaction.first.getId());
+	setReactionConnectivity(reaction.second.getId());
 
 	return;
 }
@@ -36,9 +36,9 @@ void NECluster::participateIn(ProductionReaction& reaction,
     // like we do with the PSI cluster?
 #endif // READY
     // Build a production reaction for it
-    auto newReaction = std::make_shared<ProductionReaction>(otherCluster, *this);
+    std::unique_ptr<ProductionReaction> newReaction(new ProductionReaction(otherCluster, *this));
     // Add it to the network
-    auto& prref = network.addProductionReaction(newReaction);
+    auto& prref = network.add(std::move(newReaction));
 
 	// Add the combining cluster to list of clusters that combine with us
 	combiningReactants.emplace_back(prref, otherCluster);
@@ -50,34 +50,33 @@ void NECluster::participateIn(ProductionReaction& reaction,
 	return;
 }
 
-void NECluster::createDissociation(
-		std::shared_ptr<DissociationReaction> reaction, int a, int b) {
+void NECluster::participateIn(DissociationReaction& reaction, int a, int b) {
 	// Look for the other cluster
-	auto& emittedCluster = static_cast<NECluster&>((reaction->first.getId() == id) ?
-                                reaction->second :
-                                reaction->first);
+	auto& emittedCluster = static_cast<NECluster&>((reaction.first.getId() == id) ?
+                                reaction.second :
+                                reaction.first);
 
 	// Add a pair where it is important that the
 	// dissociating cluster is the first one
 	dissociatingPairs.emplace_back(
-            *reaction,  // TODO is this correct?
-            &static_cast<NECluster&>(reaction->dissociating),
+            reaction,  // TODO is this correct?
+            &static_cast<NECluster&>(reaction.dissociating),
 			&static_cast<NECluster&>(emittedCluster));
 
 	// Setup the connectivity array
-	setDissociationConnectivity(reaction->dissociating.getId());
+	setDissociationConnectivity(reaction.dissociating.getId());
 
 	return;
 }
 
-void NECluster::createEmission(std::shared_ptr<DissociationReaction> reaction,
+void NECluster::emitFrom(DissociationReaction& reaction,
 		int a, int b) {
 
 	// Add the pair of emitted clusters.
 	emissionPairs.emplace_back(
-            *reaction, // TODO is this correct?
-            &static_cast<NECluster&>(reaction->first),
-            &static_cast<NECluster&>(reaction->second));
+            reaction, // TODO is this correct?
+            &static_cast<NECluster&>(reaction.first),
+            &static_cast<NECluster&>(reaction.second));
 
 	// Setup the connectivity array to itself
 	setReactionConnectivity(id);
@@ -90,10 +89,9 @@ void NECluster::optimizeReactions() {
     std::for_each(reactingPairs.begin(), reactingPairs.end(),
         [this](ClusterPair& currPair) {
             // Create the corresponding production reaction
-            auto newReaction = std::make_shared<ProductionReaction>(
-                    *currPair.first, *currPair.second);
+            std::unique_ptr<ProductionReaction> newReaction(new ProductionReaction(*currPair.first, *currPair.second));
             // Add it to the network
-            auto& prref = network.addProductionReaction(newReaction);
+            auto& prref = network.add(std::move(newReaction));
             // Link it to the pair
             // TODO is it the same as what was already there?
             {
@@ -109,10 +107,9 @@ void NECluster::optimizeReactions() {
     std::for_each(combiningReactants.begin(), combiningReactants.end(),
         [this](CombiningCluster& cc) {
             // Create the corresponding production reaction
-            auto newReaction = std::make_shared<ProductionReaction>(&cc.combining,
-                    this);
+            std::unique_ptr<ProductionReaction>(new ProductionReaction(&cc.combining, this));
             // Add it to the network
-            auto& prref = network.addProductionReaction(newReaction);
+            auto& prref = network.add(std::move(newReaction));
             // Link it to the pair
             cc.reaction = prref;
         });
@@ -121,11 +118,9 @@ void NECluster::optimizeReactions() {
     std::for_each(dissociatingPairs.begin(), dissociatingPairs.end(),
         [this](ClusterPair& currPair) {
             // Create the corresponding dissociation reaction
-            auto newReaction = std::make_shared<DissociationReaction>(
-                    *currPair.first,
-                    *currPair.second, *this);
+        std::unique_ptr<DissociationReaction> newReaction(new DissociationReaction(*currPair.first, *currPair.second, *this));
             // Add it to the network
-            auto& drref = network.addDissociationReaction(newReaction);
+            auto& drref = network.add(std::move(newReaction));
             // Link it to the pair
             // TODO is it the same as what was already there?
             {
@@ -138,10 +133,9 @@ void NECluster::optimizeReactions() {
     std::for_each(emissionPairs.begin(), emissionPairs.end(),
         [this](ClusterPair& currPair) {
             // Create the corresponding dissociation reaction
-            auto newReaction = std::make_shared<DissociationReaction>(*this,
-                    *currPair.first, *currPair.second);
+            std::unique_ptr<DissociationReaction> newReaction(new DissociationReaction(*this, *currPair.first, *currPair.second));
             // Add it to the network
-            auto& drref = network.addDissociationReaction(newReaction);
+            auto& drref = network.add(std::move(newReaction));
             // Link it to the pair
             // TODO is it the same as what was already there?
             {

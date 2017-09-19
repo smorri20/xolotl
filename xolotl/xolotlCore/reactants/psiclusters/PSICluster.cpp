@@ -7,19 +7,20 @@
 
 using namespace xolotlCore;
 
-void PSICluster::resultFrom(std::shared_ptr<ProductionReaction> reaction,
+void PSICluster::resultFrom(ProductionReaction& reaction,
 		int a, int b, int c, int d) {
 
 	// Add the reaction to the network
     // TODO do we need to check if we know about it before adding it,
     // like we do with PSISuperClusters?
-	auto& prref = network.addProductionReaction(reaction);
+    std::unique_ptr<ProductionReaction> newReaction(new ProductionReaction(reaction.first, reaction.second));
+	auto& prref = network.add(std::move(newReaction));
 
 	// Add a cluster pair for the given reaction.
 	reactingPairs.emplace_back(
             prref,
-            static_cast<PSICluster&>(reaction->first),
-            static_cast<PSICluster&>(reaction->second));
+            static_cast<PSICluster&>(prref.first),
+            static_cast<PSICluster&>(prref.second));
     auto& newPair = reactingPairs.back();
 
     // NB: newPair's reactants are same as reaction and newReaction's.
@@ -79,10 +80,9 @@ void PSICluster::participateIn(ProductionReaction& reaction,
         // We did not already know about this combination.
 
         // Create the corresponding production reaction.
-		auto newReaction = std::make_shared<ProductionReaction>(otherCluster,
-				*this);
+        std::unique_ptr<ProductionReaction> newReaction(new ProductionReaction(otherCluster, *this));
 		// Add it to the network
-		auto& prref  = network.addProductionReaction(newReaction);
+		auto& prref  = network.add(std::move(newReaction));
 
 		// Add the combination to our collection.
 		combiningReactants.emplace_back(prref, otherCluster);
@@ -102,19 +102,18 @@ void PSICluster::participateIn(ProductionReaction& reaction,
 	return;
 }
 
-void PSICluster::createDissociation(
-		std::shared_ptr<DissociationReaction> reaction, int a, int b, int c,
-		int d) {
+void PSICluster::participateIn(DissociationReaction& reaction,
+        int a, int b, int c, int d) {
 
 	// Look for the other cluster
-	auto& emittedCluster = static_cast<PSICluster&>((reaction->first.getId() == id) ?
-                                reaction->second :
-                                reaction->first);
+	auto& emittedCluster = static_cast<PSICluster&>((reaction.first.getId() == id) ?
+                                reaction.second :
+                                reaction.first);
 
 	// Check if the reaction was already added
     auto it = std::find_if(dissociatingPairs.rbegin(), dissociatingPairs.rend(),
             [&reaction,&emittedCluster](const ClusterPair& currPair) {
-                return (&(reaction->dissociating) == &static_cast<PSICluster&>(currPair.first)) and
+                return (&(reaction.dissociating) == &static_cast<PSICluster&>(currPair.first)) and
                         (&emittedCluster == &static_cast<PSICluster&>(currPair.second));
 
             });
@@ -122,24 +121,22 @@ void PSICluster::createDissociation(
 		// It was not already in so add it
         //
 		// Add the corresponding dissociation reaction to the network.
-		auto newReaction = std::make_shared<DissociationReaction>(
-                reaction->dissociating,
-				emittedCluster, *this);
-		auto& drref = network.addDissociationReaction(newReaction);
+        std::unique_ptr<DissociationReaction> newReaction(new DissociationReaction(reaction.dissociating, emittedCluster, *this));
+		auto& drref = network.add(std::move(newReaction));
 
 		// Add the pair of them where it is important that the
 		// dissociating cluster is the first one
 		dissociatingPairs.emplace_back(
                 drref,
-                static_cast<PSICluster&>(reaction->dissociating),
+                static_cast<PSICluster&>(reaction.dissociating),
 				static_cast<PSICluster&>(emittedCluster));
 		it = dissociatingPairs.rbegin();
 	}
 
 	// Update the coefficients
 	double firstHeDistance = 0.0, firstVDistance = 0.0;
-	if (reaction->dissociating.getType() == ReactantType::PSISuper) {
-		auto const& super = static_cast<PSICluster&>(reaction->dissociating);
+	if (reaction.dissociating.getType() == ReactantType::PSISuper) {
+		auto const& super = static_cast<PSICluster&>(reaction.dissociating);
 		firstHeDistance = super.getHeDistance(a);
 		firstVDistance = super.getVDistance(b);
 	}
@@ -150,19 +147,20 @@ void PSICluster::createDissociation(
 	return;
 }
 
-void PSICluster::createEmission(std::shared_ptr<DissociationReaction> reaction,
+void PSICluster::emitFrom(DissociationReaction& reaction,
 		int a, int b, int c, int d) {
 
 	// Add the reaction to the network
     // TODO do we need to check to see whether we already know about
     // this reaction?
-	auto& drref = network.addDissociationReaction(reaction);
+    std::unique_ptr<DissociationReaction> newReaction(new DissociationReaction(reaction.dissociating, reaction.first, reaction.second));
+	auto& drref = network.add(std::move(newReaction));
 
 	// Add the pair of emitted clusters.
 	emissionPairs.emplace_back( 
             drref,
-            static_cast<PSICluster&>(reaction->first),
-			static_cast<PSICluster&>(reaction->second));
+            static_cast<PSICluster&>(reaction.first),
+			static_cast<PSICluster&>(reaction.second));
 
 	return;
 }

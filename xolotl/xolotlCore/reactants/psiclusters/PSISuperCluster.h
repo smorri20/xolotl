@@ -407,7 +407,7 @@ public:
 	 * @param c Number that can be used by daughter classes.
 	 * @param d Number that can be used by daughter classes.
 	 */
-	void resultFrom(std::shared_ptr<ProductionReaction> reaction, 
+	void resultFrom(ProductionReaction& reaction, 
             int a = 0, int b = 0, int c = 0, int d = 0) override;
 
 	/**
@@ -431,7 +431,7 @@ public:
 	 * @param c Helium number.
 	 * @param d Vacancy number.
 	 */
-	void createDissociation(std::shared_ptr<DissociationReaction> reaction,
+	void participateIn(DissociationReaction& reaction,
 			int a = 0, int b = 0, int c = 0, int d = 0) override;
 
 	/**
@@ -444,8 +444,8 @@ public:
 	 * @param c Helium number.
 	 * @param d Vacancy number.
 	 */
-	void createEmission(std::shared_ptr<DissociationReaction> reaction, int a =
-			0, int b = 0, int c = 0, int d = 0) override;
+	void emitFrom(DissociationReaction& reaction,
+            int a = 0, int b = 0, int c = 0, int d = 0) override;
 
 	/**
 	 * This operation returns true to signify that this cluster is a mixture of

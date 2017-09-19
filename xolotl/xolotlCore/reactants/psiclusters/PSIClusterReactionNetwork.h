@@ -93,18 +93,18 @@ private:
     IReactant * getSuperFromComp(IReactant::SizeType nHe, IReactant::SizeType nV);
 
 
-    std::shared_ptr<ProductionReaction> defineReactionBase(
+    std::unique_ptr<ProductionReaction> defineReactionBase(
                             IReactant& r1, IReactant& r2,
                             int a = 0, int b = 0) {
 
         // Add a production reaction to our network.
-        auto reaction = std::make_shared<ProductionReaction>(r1, r2);
+        std::unique_ptr<ProductionReaction> reaction(new ProductionReaction(r1, r2));
 
         // Tell the reactants that they are involved in this reaction
         r1.participateIn(*reaction, a, b);
         r2.participateIn(*reaction, a, b);
 
-        return reaction;
+        return std::move(reaction);
     }
 
 
@@ -115,7 +115,7 @@ private:
         auto reaction = defineReactionBase(r1, r2);
 
         // Tell the product it results from the reaction.
-        product.resultFrom(reaction);
+        product.resultFrom(*reaction);
     }
 
 
@@ -135,28 +135,28 @@ private:
         auto reaction = defineReactionBase(r1, super, c, d);
 
         // Tell product it is a product of this reaction.
-        product.resultFrom(reaction, a, b, c, d);
+        product.resultFrom(*reaction, a, b, c, d);
 
         // Check if reverse reaction is allowed.
-        checkForDissociation(&product, reaction, a, b, c, d);
+        checkForDissociation(product, *reaction, a, b, c, d);
     }
 
 
     // TODO should we default a, b, c, d to 0?
-    void defineDissociationReaction(std::shared_ptr<ProductionReaction> forwardReaction,
+    void defineDissociationReaction(ProductionReaction& forwardReaction,
                                     IReactant& emitting,
                                     int a, int b, int c, int d) {
 
-        auto dissociationReaction = std::make_shared<DissociationReaction>(
-                emitting, forwardReaction->first, forwardReaction->second);
+        // TODO this can be an object on the stack? we're always using refs.
+        std::unique_ptr<DissociationReaction> dissociationReaction(new DissociationReaction(emitting, forwardReaction.first, forwardReaction.second));
 
         // Set the reverse reaction
-        dissociationReaction->reverseReaction = forwardReaction.get();
+        dissociationReaction->reverseReaction = &forwardReaction;
 
         // Tell the reactants that their are in this reaction
-        forwardReaction->first.createDissociation(dissociationReaction, a, b, c, d);
-        forwardReaction->second.createDissociation(dissociationReaction, a, b, c, d);
-        emitting.createEmission(dissociationReaction, a, b, c, d);
+        forwardReaction.first.participateIn(*dissociationReaction, a, b, c, d);
+        forwardReaction.second.participateIn(*dissociationReaction, a, b, c, d);
+        emitting.emitFrom(*dissociationReaction, a, b, c, d);
     }
 
 
@@ -171,9 +171,9 @@ private:
 	 * @param d The vacancy number for the emitted superCluster
 	 *
 	 */
-	void checkForDissociation(IReactant * emittingReactant,
-			std::shared_ptr<ProductionReaction> reaction, int a = 0, int b = 0,
-			int c = 0, int d = 0);
+	void checkForDissociation(IReactant& emittingReactant,
+			ProductionReaction& reaction,
+            int a = 0, int b = 0, int c = 0, int d = 0);
 
 public:
 

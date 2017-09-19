@@ -151,23 +151,22 @@ void ReactionNetwork::setTemperature(double temp) {
 	return;
 }
 
-ProductionReaction& ReactionNetwork::addProductionReaction(
-		std::shared_ptr<ProductionReaction> reaction) {
+ProductionReaction& ReactionNetwork::add(std::unique_ptr<ProductionReaction> reaction) {
 
     // Ensure we know about the reaction.
     // Map's emplace() returns a pair (iter, bool) where
     // iter points to the item in the map and the bool indicates
     // whether it was added by this emplace() call.
 	auto key = reaction->descriptiveKey();
-    auto eret = productionReactionMap.emplace(key, reaction);
+    auto eret = productionReactionMap.emplace(key, std::move(reaction));
 
     // Regardless of whether we added it in this emplace() call or not,
     // the iter within eret refers to the desired reaction in the map.
     return *(eret.first->second);
 }
 
-DissociationReaction& ReactionNetwork::addDissociationReaction(
-		std::shared_ptr<DissociationReaction> reaction) {
+
+DissociationReaction& ReactionNetwork::add(std::unique_ptr<DissociationReaction> reaction) {
 
     // Unlike addProductionReaction, we use a check-add approach
     // instead of emplace() because if the item isn't already in
@@ -185,17 +184,16 @@ DissociationReaction& ReactionNetwork::addDissociationReaction(
 	// We did not yet know about the given reaction.
 	// Add it, but also link it to its reverse reaction.
 	// First, create the reverse reaction to get a pointer to it.
-	auto reverseReaction = std::make_shared<ProductionReaction>(reaction->first,
-			reaction->second);
+    std::unique_ptr<ProductionReaction> reverseReaction(new ProductionReaction(reaction->first, reaction->second));
 	// Add this reverse reaction to our set of known reactions.
-    auto& prref = addProductionReaction(reverseReaction);
+    auto& prref = add(std::move(reverseReaction));
 
 	// Indicate that the reverse reaction is the reverse reaction
 	// to the newly-added dissociation reaction.
 	reaction->reverseReaction = &prref;
 
 	// Add the dissociation reaction to our set of known reactions.
-	auto eret = dissociationReactionMap.emplace(key, reaction);
+	auto eret = dissociationReactionMap.emplace(key, std::move(reaction));
 
     // Since we checked earlier and the reaction wasn't in the map,
     // our emplace() call should have added it.

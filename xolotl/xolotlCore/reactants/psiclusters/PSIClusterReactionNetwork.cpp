@@ -678,18 +678,18 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 }
 
 void PSIClusterReactionNetwork::checkForDissociation(
-		IReactant * emittingReactant,
-		std::shared_ptr<ProductionReaction> reaction, int a, int b, int c,
-		int d) {
+		IReactant& emittingReactant, ProductionReaction& reaction,
+        int a, int b, int c, int d) {
+
 	// Check if at least one of the potentially emitted cluster is size one
-	if (reaction->first.getSize() != 1 && reaction->second.getSize() != 1) {
+	if (reaction.first.getSize() != 1 && reaction.second.getSize() != 1) {
 		// Don't add the reverse reaction
 		return;
 	}
 	// remove He+He
-	if (reaction->first.getSize() == 1 && reaction->second.getSize() == 1
-			&& reaction->first.getType() == ReactantType::He
-			&& reaction->second.getType() == ReactantType::He) {
+	if (reaction.first.getSize() == 1 && reaction.second.getSize() == 1
+			&& reaction.first.getType() == ReactantType::He
+			&& reaction.second.getType() == ReactantType::He) {
 		// Don't add the reverse reaction
 		return;
 	}
@@ -702,7 +702,7 @@ void PSIClusterReactionNetwork::checkForDissociation(
 //	}
 
 	// The reaction can occur, create the dissociation
-	defineDissociationReaction(reaction, *emittingReactant, a, b, c, d);
+	defineDissociationReaction(reaction, emittingReactant, a, b, c, d);
 
 	return;
 }

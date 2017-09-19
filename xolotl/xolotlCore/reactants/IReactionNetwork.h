@@ -143,22 +143,20 @@ public:
 	virtual int getDOF() const = 0;
 
 	/**
-	 * This operation adds a production reaction to the network.
+	 * Add a production reaction to the network.
 	 *
 	 * @param reaction The reaction that should be added to the network
-	 * @return The pointer to the reaction that is now in the network
+	 * @return The reaction that is now in the network
 	 */
-	virtual ProductionReaction& addProductionReaction(
-			std::shared_ptr<ProductionReaction> reaction) = 0;
+    virtual ProductionReaction& add(std::unique_ptr<ProductionReaction> reaction) = 0;
 
 	/**
-	 * This operation adds a dissociation reaction to the network.
+	 * Add a dissociation reaction to the network.
 	 *
 	 * @param reaction The reaction that should be added to the network
-	 * @return The pointer to the reaction that is now in the network
+	 * @return The reaction that is now in the network
 	 */
-	virtual DissociationReaction& addDissociationReaction(
-			std::shared_ptr<DissociationReaction> reaction) = 0;
+	virtual DissociationReaction& add(std::unique_ptr<DissociationReaction> reaction) = 0;
 
 	/**
 	 * This operation fills an array of doubles with the concentrations of all

@@ -112,14 +112,16 @@ protected:
      * All known ProductionReactions in the network, keyed by a
      * representation of the reaction.
      */
-	std::map<ProductionReaction::KeyType, std::shared_ptr<ProductionReaction> > productionReactionMap;
+    using ProductionReactionMap = std::unordered_map<ProductionReaction::KeyType, std::unique_ptr<ProductionReaction> >;
+    ProductionReactionMap productionReactionMap;
 
 	/**
 	 * All known dissociation reactions in the network, keyed by a
      * representation of the reaction.
 	 */
-	std::map<DissociationReaction::KeyType,
-			std::shared_ptr<DissociationReaction> > dissociationReactionMap;
+    using DissociationReactionMap = std::unordered_map<DissociationReaction::KeyType,
+			std::unique_ptr<DissociationReaction> >;
+    DissociationReactionMap dissociationReactionMap;
 
 	/**
 	 * A map for storing the dfill configuration and accelerating the formation of
@@ -388,22 +390,21 @@ public:
 	}
 
 	/**
-	 * This operation adds a production reaction to the network.
+	 * Add a production reaction to the network.
 	 *
 	 * @param reaction The reaction that should be added to the network
-	 * @return The pointer to the reaction that is now in the network
+	 * @return The reaction that is now in the network
 	 */
-	virtual ProductionReaction& addProductionReaction(
-			std::shared_ptr<ProductionReaction> reaction) override;
+    ProductionReaction& add(std::unique_ptr<ProductionReaction> reaction) override;
+
 
 	/**
-	 * This operation adds a dissociation reaction to the network.
+	 * Add a dissociation reaction to the network.
 	 *
 	 * @param reaction The reaction that should be added to the network
-	 * @return The pointer to the reaction that is now in the network
+	 * @return The reaction that is now in the network
 	 */
-	virtual DissociationReaction& addDissociationReaction(
-			std::shared_ptr<DissociationReaction> reaction) override;
+	DissociationReaction& add(std::unique_ptr<DissociationReaction> reaction) override;
 
 	/**
 	 * This operation fills an array of doubles with the concentrations of all

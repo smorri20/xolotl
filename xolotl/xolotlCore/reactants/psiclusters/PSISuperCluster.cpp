@@ -52,16 +52,17 @@ PSISuperCluster::PSISuperCluster(double _numHe, double _numV, int _nTot,
 }
 
 
-void PSISuperCluster::resultFrom(std::shared_ptr<ProductionReaction> reaction,
+void PSISuperCluster::resultFrom(ProductionReaction& reaction,
                         int a, int b, int c, int d) {
 
 	// Check if we already know about the reaction.
-    auto rkey = std::make_pair(&(reaction->first), &(reaction->second));
+    auto rkey = std::make_pair(&(reaction.first), &(reaction.second));
     auto it = effReactingList.find(rkey);
 	if (it == effReactingList.end()) {
 		// It was not already in so add it
 		// Add the production reaction to the network
-		auto& prref = network.addProductionReaction(reaction);
+        std::unique_ptr<ProductionReaction> newReaction(new ProductionReaction(reaction.first, reaction.second));
+		auto& prref = network.add(std::move(newReaction));
 
         // Add info about production to our list.
         auto eret = effReactingList.emplace(std::piecewise_construct,
@@ -143,11 +144,10 @@ void PSISuperCluster::participateIn(ProductionReaction& reaction, int a, int b) 
 	if (it == effCombiningList.end()) {
 		// It was not already in so add it
 		// Create the corresponding production reaction
-		auto newReaction = std::make_shared<ProductionReaction>(*this,
-				otherCluster);
+        std::unique_ptr<ProductionReaction> newReaction(new ProductionReaction(*this, otherCluster));
 
 		// Add it to the network
-		auto& prref = network.addProductionReaction(newReaction);
+		auto& prref = network.add(std::move(newReaction));
 
         auto eret = effCombiningList.emplace(std::piecewise_construct,
                                 std::forward_as_tuple(rkey),
@@ -181,31 +181,29 @@ void PSISuperCluster::participateIn(ProductionReaction& reaction, int a, int b) 
 	return;
 }
 
-void PSISuperCluster::createDissociation(
-		std::shared_ptr<DissociationReaction> reaction, int a, int b, int c,
-		int d) {
+void PSISuperCluster::participateIn(DissociationReaction& reaction,
+        int a, int b, int c, int d) {
 
 	// Determine which is the other cluster.
-	auto& emittedCluster = static_cast<PSICluster&>((reaction->first.getId() == id) ?
-                            reaction->second :
-                            reaction->first);
+	auto& emittedCluster = static_cast<PSICluster&>((reaction.first.getId() == id) ?
+                            reaction.second :
+                            reaction.first);
 
 	// Check if we already know about the reaction.
-    auto rkey = std::make_pair(&(reaction->dissociating), &emittedCluster);
+    auto rkey = std::make_pair(&(reaction.dissociating), &emittedCluster);
     auto it = effDissociatingList.find(rkey);
 	if (it == effDissociatingList.end()) {
 		// It was not already in so add it
 		// Create a dissociation reaction
-		auto newReaction = std::make_shared<DissociationReaction>(
-				reaction->dissociating, *this, emittedCluster);
+        std::unique_ptr<DissociationReaction> newReaction(new DissociationReaction(reaction.dissociating, *this, emittedCluster));
 
 		// Add it to the network
-		auto& drref = network.addDissociationReaction(newReaction);
+		auto& drref = network.add(std::move(newReaction));
         auto eret = effDissociatingList.emplace(std::piecewise_construct,
                         std::forward_as_tuple(rkey),
                         std::forward_as_tuple(
                             drref,
-				            static_cast<PSICluster&>(reaction->dissociating),
+				            static_cast<PSICluster&>(reaction.dissociating),
 				            static_cast<PSICluster&>(emittedCluster)));
         // Since we already checked and didn't know about the reaction then,
         // we had better have added it with our emplace() call.
@@ -217,8 +215,8 @@ void PSISuperCluster::createDissociation(
 
 	// Update the coefficients
 	double firstHeDistance = 0.0, firstVDistance = 0.0;
-	if (reaction->dissociating.getType() == ReactantType::PSISuper) {
-		auto const& super = static_cast<PSICluster const&>(reaction->dissociating);
+	if (reaction.dissociating.getType() == ReactantType::PSISuper) {
+		auto const& super = static_cast<PSICluster const&>(reaction.dissociating);
 		firstHeDistance = super.getHeDistance(a);
 		firstVDistance = super.getVDistance(b);
 	}
@@ -239,24 +237,24 @@ void PSISuperCluster::createDissociation(
 	return;
 }
 
-void PSISuperCluster::createEmission(
-		std::shared_ptr<DissociationReaction> reaction, int a, int b, int c,
-		int d) {
+void PSISuperCluster::emitFrom(DissociationReaction& reaction,
+        int a, int b, int c, int d) {
 
 	// Check if we already know about the reaction.
-    auto rkey = std::make_pair(&(reaction->first), &(reaction->second));
+    auto rkey = std::make_pair(&(reaction.first), &(reaction.second));
     auto it = effEmissionList.find(rkey);
 	if (it == effEmissionList.end()) {
 		// It was not already in so add it
 		// Add the reaction to the network
-		auto& drref = network.addDissociationReaction(reaction);
+        std::unique_ptr<DissociationReaction> newReaction(new DissociationReaction(reaction.dissociating, reaction.first, reaction.second));
+		auto& drref = network.add(std::move(newReaction));
 
         auto eret = effEmissionList.emplace(std::piecewise_construct,
                         std::forward_as_tuple(rkey),
                         std::forward_as_tuple(
                             drref,
-                            static_cast<PSICluster&>(reaction->first),
-                            static_cast<PSICluster&>(reaction->second)));
+                            static_cast<PSICluster&>(reaction.first),
+                            static_cast<PSICluster&>(reaction.second)));
         // Since we already checked and didn't know about the reaction then,
         // we had better have added it with our emplace() call.
         assert(eret.second);

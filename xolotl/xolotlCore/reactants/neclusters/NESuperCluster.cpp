@@ -194,11 +194,11 @@ void NESuperCluster::optimizeReactions() {
 			secondReactant = (*it).second;
 
 			// Create the corresponding production reaction
-			auto reaction = std::make_shared<ProductionReaction>(
+            std::unique_ptr<ProductionReaction> reaction(new ProductionReaction(
                     *firstReactant,
-					*secondReactant);
+					*secondReactant));
 			// Add it to the network
-			auto& prref = network.addProductionReaction(reaction);
+			auto& prref = network.add(std::move(reaction));
 
 			// Create a new SuperClusterProductionPair
 			SuperClusterProductionPair superPair(firstReactant, secondReactant,
@@ -272,10 +272,9 @@ void NESuperCluster::optimizeReactions() {
 			NECluster& combiningReactant = (*it).combining;
 
 			// Create the corresponding production reaction
-			auto reaction = std::make_shared<ProductionReaction>(*this,
-					combiningReactant);
+            std::unique_ptr<ProductionReaction> reaction(new ProductionReaction(*this, combiningReactant));
 			// Add it to the network
-			auto& prref = network.addProductionReaction(reaction);
+			auto& prref = network.add(std::move(reaction));
 
 			// Create a new SuperClusterProductionPair with NULL as the second cluster because
 			// we do not need it
@@ -369,10 +368,9 @@ void NESuperCluster::optimizeReactions() {
 			otherEmittedCluster = (*it).second;
 
 			// Create a dissociation reaction
-			auto reaction = std::make_shared<DissociationReaction>(
-					*dissociatingCluster, *this, *otherEmittedCluster);
+            std::unique_ptr<DissociationReaction> reaction(new DissociationReaction(*dissociatingCluster, *this, *otherEmittedCluster));
 			// Add it to the network
-			auto& drref = network.addDissociationReaction(reaction);
+			auto& drref = network.add(std::move(reaction));
 
 			// Create a new SuperClusterProductionPair
 			SuperClusterDissociationPair superPair(dissociatingCluster,
@@ -440,10 +438,9 @@ void NESuperCluster::optimizeReactions() {
 			secondCluster = (*it).second;
 
 			// Create a dissociation reaction
-			auto reaction = std::make_shared<DissociationReaction>(*this,
-					*firstCluster, *secondCluster);
+            std::unique_ptr<DissociationReaction> reaction(new DissociationReaction(*this, *firstCluster, *secondCluster));
 			// Add it to the network
-			auto& drref = network.addDissociationReaction(reaction);
+			auto& drref = network.add(std::move(reaction));
 
 			// Create a new SuperClusterProductionPair
 			SuperClusterDissociationPair superPair(firstCluster, secondCluster,
