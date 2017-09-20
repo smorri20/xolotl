@@ -199,8 +199,6 @@ private:
      * @param r2 The super reactant involved in a production reaction.
      * @param pris Information about reactants are involved with each reaction.
      */
-    // TODO pris could be unordered_set, but need to define hash
-    // for PendingPRInfo
     void defineProductionReactions(IReactant& r1, IReactant& super,
                                     const std::vector<PendingPRInfo>& pris);
 
@@ -227,10 +225,11 @@ private:
      * @param dissMap Map of reaction parameters, keyed by the product
      * of the reaction.
      */
-    // TODO PendingDissociationReactionMap's mapped_type  could be 
-    // unordered_set, but need to define hash for PendingPRInfo
-    using PendingDissociationReactionMap = std::unordered_map<IReactant*,
-                                        std::vector<PendingPRInfo const*> >;
+    // TODO possible to use a ref for the key?
+    using PendingDissociationReactionMap = 
+        std::unordered_map<IReactant*,
+        std::vector<std::reference_wrapper<const PendingPRInfo> > >;
+
     void defineDissociationReactions(ProductionReaction& forwardReaction,
                                 const PendingDissociationReactionMap& dissMap);
 

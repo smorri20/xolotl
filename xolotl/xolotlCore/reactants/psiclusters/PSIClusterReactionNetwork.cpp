@@ -77,18 +77,18 @@ void PSIClusterReactionNetwork::defineProductionReactions(
     // Tell all reactants and products they are involved in this reaction
     // with the given parameters.
     std::for_each(pendingPRInfos.begin(), pendingPRInfos.end(),
-        [&prref,&dissMap,&dissociationAllowed](const PendingPRInfo& currPendingPRInfo) {
+        [&prref,&dissMap,&dissociationAllowed](const PendingPRInfo& currPRI) {
             // Tell reactants and current product that they are
             // involved in this reaction according to current parameters.
-            prref.first.participateIn(prref, currPendingPRInfo.i, currPendingPRInfo.j);
-            prref.second.participateIn(prref, currPendingPRInfo.i, currPendingPRInfo.j);
-            currPendingPRInfo.product.resultFrom(prref,
-                                            currPendingPRInfo.numHe,
-                                            currPendingPRInfo.numV,
-                                            currPendingPRInfo.i,
-                                            currPendingPRInfo.j);
+            prref.first.participateIn(prref, currPRI.i, currPRI.j);
+            prref.second.participateIn(prref, currPRI.i, currPRI.j);
+            currPRI.product.resultFrom(prref,
+                                            currPRI.numHe,
+                                            currPRI.numV,
+                                            currPRI.i,
+                                            currPRI.j);
             if (dissociationAllowed) {
-                dissMap[&(currPendingPRInfo.product)].emplace_back(&currPendingPRInfo);
+                dissMap[&(currPRI.product)].emplace_back(currPRI);
             }
         });
 
@@ -116,29 +116,27 @@ PSIClusterReactionNetwork::defineDissociationReactions(
             std::unique_ptr<DissociationReaction> dissociationReaction(new DissociationReaction(emitting, forwardReaction.first, forwardReaction.second, &forwardReaction));
             auto& drref = add(std::move(dissociationReaction));
 
-            // Tell participants in this reaction of their involvement.
-            // TODO aren't forwardReaction.first and second same
-            // reactants as drref's first and second?
-            PendingDissociationReactionMap::mapped_type const& currPendingPRInfos = currMapItem.second;
-            std::for_each(currPendingPRInfos.cbegin(), currPendingPRInfos.cend(),
-                [&drref,&emitting](PendingPRInfo const* currPendingPRInfo) {
+            // Tell all participants in this reaction of their involvement.
+            PendingDissociationReactionMap::mapped_type const& currPRIs = currMapItem.second;
+            std::for_each(currPRIs.cbegin(), currPRIs.cend(),
+                [&drref,&emitting](PendingPRInfo const& currPRI) {
                     // Tell the reactants that they are involved 
                     // in this reaction.
                     drref.first.participateIn(drref,
-                                                currPendingPRInfo->numHe,
-                                                currPendingPRInfo->numV,
-                                                currPendingPRInfo->i,
-                                                currPendingPRInfo->j);
+                                                currPRI.numHe,
+                                                currPRI.numV,
+                                                currPRI.i,
+                                                currPRI.j);
                     drref.second.participateIn(drref,
-                                                currPendingPRInfo->numHe,
-                                                currPendingPRInfo->numV,
-                                                currPendingPRInfo->i,
-                                                currPendingPRInfo->j);
+                                                currPRI.numHe,
+                                                currPRI.numV,
+                                                currPRI.i,
+                                                currPRI.j);
                     emitting.emitFrom(drref,
-                                        currPendingPRInfo->numHe,
-                                        currPendingPRInfo->numV,
-                                        currPendingPRInfo->i,
-                                        currPendingPRInfo->j);
+                                        currPRI.numHe,
+                                        currPRI.numV,
+                                        currPRI.i,
+                                        currPRI.j);
             });
         });
 }

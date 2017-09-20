@@ -151,7 +151,21 @@ void ReactionNetwork::setTemperature(double temp) {
 	return;
 }
 
+#if READY
+static std::shared_ptr<xolotlPerf::IEventCounter> addPRCounter_calls;
+static std::shared_ptr<xolotlPerf::IEventCounter> addPRCounter_adds;
+static std::shared_ptr<xolotlPerf::IEventCounter> addDRCounter_calls;
+static std::shared_ptr<xolotlPerf::IEventCounter> addDRCounter_adds;
+#endif // READY
+
 ProductionReaction& ReactionNetwork::add(std::unique_ptr<ProductionReaction> reaction) {
+
+#if READY
+    if(not addPRCounter_calls) {
+        addPRCounter_calls = handlerRegistry->getEventCounter("addPR_calls");
+    }
+    addPRCounter_calls->increment();
+#endif // READY
 
     // Ensure we know about the reaction.
     // Map's emplace() returns a pair (iter, bool) where
@@ -160,6 +174,15 @@ ProductionReaction& ReactionNetwork::add(std::unique_ptr<ProductionReaction> rea
 	auto key = reaction->descriptiveKey();
     auto eret = productionReactionMap.emplace(key, std::move(reaction));
 
+#if READY
+    if(eret.second == true) {
+        if(not addPRCounter_adds) {
+            addPRCounter_adds = handlerRegistry->getEventCounter("addPR_adds");
+        }
+        addPRCounter_adds->increment();
+    }
+#endif // READY
+
     // Regardless of whether we added it in this emplace() call or not,
     // the iter within eret refers to the desired reaction in the map.
     return *(eret.first->second);
@@ -167,6 +190,13 @@ ProductionReaction& ReactionNetwork::add(std::unique_ptr<ProductionReaction> rea
 
 
 DissociationReaction& ReactionNetwork::add(std::unique_ptr<DissociationReaction> reaction) {
+
+#if READY
+    if(not addDRCounter_calls) {
+        addDRCounter_calls = handlerRegistry->getEventCounter("addDR_calls");
+    }
+    addDRCounter_calls->increment();
+#endif // READY
 
     // Unlike addProductionReaction, we use a check-add approach
     // instead of emplace() because if the item isn't already in
@@ -181,19 +211,17 @@ DissociationReaction& ReactionNetwork::add(std::unique_ptr<DissociationReaction>
 		return *(iter->second);
 	}
 
-	// We did not yet know about the given reaction.
-	// Add it, but also link it to its reverse reaction.
-	// First, create the reverse reaction to get a pointer to it.
-    std::unique_ptr<ProductionReaction> reverseReaction(new ProductionReaction(reaction->first, reaction->second));
-	// Add this reverse reaction to our set of known reactions.
-    auto& prref = add(std::move(reverseReaction));
-
-	// Indicate that the reverse reaction is the reverse reaction
-	// to the newly-added dissociation reaction.
-	reaction->reverseReaction = &prref;
-
 	// Add the dissociation reaction to our set of known reactions.
 	auto eret = dissociationReactionMap.emplace(key, std::move(reaction));
+
+#if READY
+    if(eret.second == true) {
+        if(not addDRCounter_adds) {
+            addDRCounter_adds = handlerRegistry->getEventCounter("addDR_adds");
+        }
+        addDRCounter_adds->increment();
+    }
+#endif // READY
 
     // Since we checked earlier and the reaction wasn't in the map,
     // our emplace() call should have added it.
