@@ -40,10 +40,12 @@ public:
      * @param _r1 One of the reactants.
      * @param _r2 The other reactant.
      */
-    DissociationReaction(IReactant& _diss, IReactant& _r1, IReactant& _r2)
+    DissociationReaction(IReactant& _diss,
+                            IReactant& _r1, IReactant& _r2,
+                            ProductionReaction* _reverse = nullptr)
       : KeyedReaction(_r1, _r2),
         dissociating(_diss),
-        reverseReaction(nullptr) {
+        reverseReaction(_reverse) {
 
         // Build our descriptive key.
         // Assumes our first and second reactants are ordered by composition.

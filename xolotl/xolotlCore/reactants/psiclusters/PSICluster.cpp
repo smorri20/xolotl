@@ -10,22 +10,16 @@ using namespace xolotlCore;
 void PSICluster::resultFrom(ProductionReaction& reaction,
 		int a, int b, int c, int d) {
 
-	// Add the reaction to the network
-    // TODO do we need to check if we know about it before adding it,
-    // like we do with PSISuperClusters?
-    std::unique_ptr<ProductionReaction> newReaction(new ProductionReaction(reaction.first, reaction.second));
-	auto& prref = network.add(std::move(newReaction));
-
 	// Add a cluster pair for the given reaction.
 	reactingPairs.emplace_back(
-            prref,
-            static_cast<PSICluster&>(prref.first),
-            static_cast<PSICluster&>(prref.second));
+            reaction,
+            static_cast<PSICluster&>(reaction.first),
+            static_cast<PSICluster&>(reaction.second));
     auto& newPair = reactingPairs.back();
 
-    // NB: newPair's reactants are same as reaction and newReaction's.
+    // NB: newPair's reactants are same as reaction's.
     // So use newPair only from here on.
-    // TODO Any way to enforce this?
+    // TODO Any way to enforce this beyond splitting it into two functions?
 
 	// Update the coefficients
 	double firstHeDistance = 0.0, firstVDistance = 0.0, secondHeDistance = 0.0,
@@ -78,14 +72,8 @@ void PSICluster::participateIn(ProductionReaction& reaction,
 	if (it == combiningReactants.rend()) {
 
         // We did not already know about this combination.
-
-        // Create the corresponding production reaction.
-        std::unique_ptr<ProductionReaction> newReaction(new ProductionReaction(otherCluster, *this));
-		// Add it to the network
-		auto& prref  = network.add(std::move(newReaction));
-
-		// Add the combination to our collection.
-		combiningReactants.emplace_back(prref, otherCluster);
+		// Note that we combine with the other cluster in this reaction.
+		combiningReactants.emplace_back(reaction, otherCluster);
 		it = combiningReactants.rbegin();
 	}
 
@@ -118,16 +106,13 @@ void PSICluster::participateIn(DissociationReaction& reaction,
 
             });
 	if (it == dissociatingPairs.rend()) {
-		// It was not already in so add it
-        //
-		// Add the corresponding dissociation reaction to the network.
-        std::unique_ptr<DissociationReaction> newReaction(new DissociationReaction(reaction.dissociating, emittedCluster, *this));
-		auto& drref = network.add(std::move(newReaction));
+
+		// We did not already know about it.
 
 		// Add the pair of them where it is important that the
 		// dissociating cluster is the first one
 		dissociatingPairs.emplace_back(
-                drref,
+                reaction,
                 static_cast<PSICluster&>(reaction.dissociating),
 				static_cast<PSICluster&>(emittedCluster));
 		it = dissociatingPairs.rbegin();
@@ -150,15 +135,12 @@ void PSICluster::participateIn(DissociationReaction& reaction,
 void PSICluster::emitFrom(DissociationReaction& reaction,
 		int a, int b, int c, int d) {
 
-	// Add the reaction to the network
+	// Note that we emit from the reaction's reactants according to
+    // the given reaction.
     // TODO do we need to check to see whether we already know about
     // this reaction?
-    std::unique_ptr<DissociationReaction> newReaction(new DissociationReaction(reaction.dissociating, reaction.first, reaction.second));
-	auto& drref = network.add(std::move(newReaction));
-
-	// Add the pair of emitted clusters.
 	emissionPairs.emplace_back( 
-            drref,
+            reaction,
             static_cast<PSICluster&>(reaction.first),
 			static_cast<PSICluster&>(reaction.second));
 

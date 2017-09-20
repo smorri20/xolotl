@@ -93,18 +93,18 @@ private:
     IReactant * getSuperFromComp(IReactant::SizeType nHe, IReactant::SizeType nV);
 
 
-    std::unique_ptr<ProductionReaction> defineReactionBase(
-                            IReactant& r1, IReactant& r2,
-                            int a = 0, int b = 0) {
+    ProductionReaction& defineReactionBase(IReactant& r1, IReactant& r2,
+                            int a = 0, int b = 0) __attribute__((always_inline)) {
 
         // Add a production reaction to our network.
         std::unique_ptr<ProductionReaction> reaction(new ProductionReaction(r1, r2));
+        auto& prref = add(std::move(reaction));
 
         // Tell the reactants that they are involved in this reaction
-        r1.participateIn(*reaction, a, b);
-        r2.participateIn(*reaction, a, b);
+        r1.participateIn(prref, a, b);
+        r2.participateIn(prref, a, b);
 
-        return std::move(reaction);
+        return prref;
     }
 
 
@@ -112,10 +112,10 @@ private:
                                         IReactant& product) {
 
         // Define the basic reaction.
-        auto reaction = defineReactionBase(r1, r2);
+        auto& reaction = defineReactionBase(r1, r2);
 
         // Tell the product it results from the reaction.
-        product.resultFrom(*reaction);
+        product.resultFrom(reaction);
     }
 
 
@@ -132,13 +132,13 @@ private:
                                         int a = 0, int b = 0, int c = 0, int d = 0) {
 
         // Define the basic production reaction.
-        auto reaction = defineReactionBase(r1, super, c, d);
+        auto& reaction = defineReactionBase(r1, super, c, d);
 
         // Tell product it is a product of this reaction.
-        product.resultFrom(*reaction, a, b, c, d);
+        product.resultFrom(reaction, a, b, c, d);
 
         // Check if reverse reaction is allowed.
-        checkForDissociation(product, *reaction, a, b, c, d);
+        checkForDissociation(product, reaction, a, b, c, d);
     }
 
 
@@ -147,16 +147,13 @@ private:
                                     IReactant& emitting,
                                     int a, int b, int c, int d) {
 
-        // TODO this can be an object on the stack? we're always using refs.
-        std::unique_ptr<DissociationReaction> dissociationReaction(new DissociationReaction(emitting, forwardReaction.first, forwardReaction.second));
-
-        // Set the reverse reaction
-        dissociationReaction->reverseReaction = &forwardReaction;
+        std::unique_ptr<DissociationReaction> dissociationReaction(new DissociationReaction(emitting, forwardReaction.first, forwardReaction.second, &forwardReaction));
+        auto& drref = add(std::move(dissociationReaction));
 
         // Tell the reactants that their are in this reaction
-        forwardReaction.first.participateIn(*dissociationReaction, a, b, c, d);
-        forwardReaction.second.participateIn(*dissociationReaction, a, b, c, d);
-        emitting.emitFrom(*dissociationReaction, a, b, c, d);
+        forwardReaction.first.participateIn(drref, a, b, c, d);
+        forwardReaction.second.participateIn(drref, a, b, c, d);
+        emitting.emitFrom(drref, a, b, c, d);
     }
 
 

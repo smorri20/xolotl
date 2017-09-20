@@ -59,18 +59,15 @@ void PSISuperCluster::resultFrom(ProductionReaction& reaction,
     auto rkey = std::make_pair(&(reaction.first), &(reaction.second));
     auto it = effReactingList.find(rkey);
 	if (it == effReactingList.end()) {
-		// It was not already in so add it
-		// Add the production reaction to the network
-        std::unique_ptr<ProductionReaction> newReaction(new ProductionReaction(reaction.first, reaction.second));
-		auto& prref = network.add(std::move(newReaction));
 
+		// We did not already know about this reaction.
         // Add info about production to our list.
         auto eret = effReactingList.emplace(std::piecewise_construct,
                             std::forward_as_tuple(rkey),
                             std::forward_as_tuple(
-                                prref,
-                                static_cast<PSICluster&>(prref.first),
-                                static_cast<PSICluster&>(prref.second)));
+                                reaction,
+                                static_cast<PSICluster&>(reaction.first),
+                                static_cast<PSICluster&>(reaction.second)));
         // Since we already checked and didn't know about the reaction,
         // we had better have added it with our emplace() call.
         assert(eret.second);
@@ -142,17 +139,13 @@ void PSISuperCluster::participateIn(ProductionReaction& reaction, int a, int b) 
     auto rkey = &otherCluster;
     auto it = effCombiningList.find(rkey);
 	if (it == effCombiningList.end()) {
-		// It was not already in so add it
-		// Create the corresponding production reaction
-        std::unique_ptr<ProductionReaction> newReaction(new ProductionReaction(*this, otherCluster));
 
-		// Add it to the network
-		auto& prref = network.add(std::move(newReaction));
-
+		// We did not already know about the reaction.
+        // Note that we combine with the other cluster in this reaction.
         auto eret = effCombiningList.emplace(std::piecewise_construct,
                                 std::forward_as_tuple(rkey),
                                 std::forward_as_tuple(
-                                    prref,
+                                    reaction,
                                     static_cast<PSICluster&>(otherCluster)));
         // Since we already checked and didn't know about the reaction then,
         // we had better have added it with our emplace call.
@@ -193,16 +186,14 @@ void PSISuperCluster::participateIn(DissociationReaction& reaction,
     auto rkey = std::make_pair(&(reaction.dissociating), &emittedCluster);
     auto it = effDissociatingList.find(rkey);
 	if (it == effDissociatingList.end()) {
-		// It was not already in so add it
-		// Create a dissociation reaction
-        std::unique_ptr<DissociationReaction> newReaction(new DissociationReaction(reaction.dissociating, *this, emittedCluster));
+
+		// We did not already know about it.
 
 		// Add it to the network
-		auto& drref = network.add(std::move(newReaction));
         auto eret = effDissociatingList.emplace(std::piecewise_construct,
                         std::forward_as_tuple(rkey),
                         std::forward_as_tuple(
-                            drref,
+                            reaction,
 				            static_cast<PSICluster&>(reaction.dissociating),
 				            static_cast<PSICluster&>(emittedCluster)));
         // Since we already checked and didn't know about the reaction then,
@@ -244,15 +235,14 @@ void PSISuperCluster::emitFrom(DissociationReaction& reaction,
     auto rkey = std::make_pair(&(reaction.first), &(reaction.second));
     auto it = effEmissionList.find(rkey);
 	if (it == effEmissionList.end()) {
-		// It was not already in so add it
-		// Add the reaction to the network
-        std::unique_ptr<DissociationReaction> newReaction(new DissociationReaction(reaction.dissociating, reaction.first, reaction.second));
-		auto& drref = network.add(std::move(newReaction));
 
+		// We did not already know about it.
+        // Note that we emit from the two rectants according to the given
+        // reaction.
         auto eret = effEmissionList.emplace(std::piecewise_construct,
                         std::forward_as_tuple(rkey),
                         std::forward_as_tuple(
-                            drref,
+                            reaction,
                             static_cast<PSICluster&>(reaction.first),
                             static_cast<PSICluster&>(reaction.second)));
         // Since we already checked and didn't know about the reaction then,
