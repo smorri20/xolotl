@@ -720,24 +720,34 @@ void PSIClusterReactionNetwork::buildSuperClusterMap(const std::vector<IReactant
     // Save the bounds to use.
     boundVector = bounds;
 
+    // Since we represent the super cluster lookup map using a dense
+    // data structure, we must initialize every entry with something
+    // that signifies 'Invalid.'
+    auto const& superClusters = clusterTypeMap[ReactantType::PSISuper];
+    auto bvSize = boundVector.size();
+    superClusterLookupMap.resize(bvSize);
+    std::for_each(superClusterLookupMap.begin(), superClusterLookupMap.end(),
+        [bvSize,&superClusters](HeVToSuperClusterMap::value_type& currVector) {
+
+            currVector.resize(bvSize, superClusters.end());
+        });
+
+
     // Build a map of super clusters, keyed by (baseHe, baseV) pairs
     // where base* indicates the lower bound of the super cluster's
     // interval for that species type.
-    auto const& superClusters = clusterTypeMap[ReactantType::PSISuper];
-    std::for_each(superClusters.begin(), superClusters.end(),
-        [this](const ReactantMap::value_type& currMapItem) {
+    for(auto iter = superClusters.begin(); iter != superClusters.end(); ++iter) {
+        // Add the super cluster to our lookup map based on
+        // its He and V intervals.
+        auto& currCluster = *(iter->second);
+        auto const& comp = currCluster.getComposition();
+        auto currHe = comp[toCompIdx(Species::He)];
+        auto currV = comp[toCompIdx(Species::V)];
+        auto heIntervalIdx = findBoundsIntervalBaseIdx(currHe);
+        auto vIntervalIdx = findBoundsIntervalBaseIdx(currV);
 
-            // Add the super cluster to our lookup map based on
-            // its He and V intervals.
-            auto& currCluster = *(currMapItem.second);
-            auto const& comp = currCluster.getComposition();
-            auto currHe = comp[toCompIdx(Species::He)];
-            auto currV = comp[toCompIdx(Species::V)];
-            auto heBoundsIntervalBase = findBoundsIntervalBase(currHe);
-            auto vBoundsIntervalBase = findBoundsIntervalBase(currV);
-
-            superClusterLookupMap.emplace(std::make_pair(heBoundsIntervalBase, vBoundsIntervalBase), currCluster);
-        });
+        superClusterLookupMap[heIntervalIdx][vIntervalIdx] = iter;
+    }
 }
 
 
@@ -1324,14 +1334,15 @@ IReactant * PSIClusterReactionNetwork::getSuperFromComp(IReactant::SizeType nHe,
     // We didn't find the last supercluster in our cache, so do a full lookup.
     IReactant* ret = nullptr;
 
-    auto heIntervalBase = findBoundsIntervalBase(nHe);
-    auto vIntervalBase = findBoundsIntervalBase(nV);
+    auto heBaseIdx = findBoundsIntervalBaseIdx(nHe);
+    auto vBaseIdx = findBoundsIntervalBaseIdx(nV);
 
-    if((heIntervalBase != 0) and (vIntervalBase != 0)) {
-        auto iter = superClusterLookupMap.find(std::make_pair(heIntervalBase, vIntervalBase));
-        if(iter != superClusterLookupMap.end()) {
-            IReactant& super = iter->second;    // Get ref from wrapper
-            ret = &super;                      // Return pointer referenced object
+    if ((heBaseIdx != std::numeric_limits<std::size_t>::max()) and
+        (vBaseIdx != std::numeric_limits<std::size_t>::max())) {
+
+        auto& superIter = superClusterLookupMap[heBaseIdx][vBaseIdx];
+        if (superIter != clusterTypeMap.at(ReactantType::PSISuper).end()) {
+            ret = superIter->second.get();
             assert(static_cast<PSISuperCluster*>(ret)->isIn(nHe, nV));
             lastRet = ret;
         }

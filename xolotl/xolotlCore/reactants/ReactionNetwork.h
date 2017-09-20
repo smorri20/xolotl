@@ -208,7 +208,7 @@ protected:
 
 
     /**
-     * Find lower bound of interval in boundVector that contains a value.
+     * Find index of interval in boundVector that contains a value.
      * Assumes that:
      *   boundVector is sorted
      *   boundVector indicates non-overlapping intervals
@@ -220,7 +220,8 @@ protected:
      * @return The lower bound of the interval in boundVector that contains
      *       'val.'  If there is no such interval, returns 0.
      */
-    IReactant::SizeType findBoundsIntervalBase(IReactant::SizeType val) const {
+    std::size_t findBoundsIntervalBaseIdx(IReactant::SizeType val) const {
+
         // Find the first item that is *greater than* the given count.
         auto iter = std::upper_bound(boundVector.begin(), boundVector.end(), val);
 
@@ -229,7 +230,7 @@ protected:
         // * std::upper_bound returned end() => val is larger than any interval.
         // * otherwise => iter points to *next* item after interval we want.
         return ((iter != boundVector.begin()) and (iter != boundVector.end())) ?
-            *(iter - 1) : 0;
+            (iter - boundVector.begin()) : std::numeric_limits<std::size_t>::max();
     }
 
 

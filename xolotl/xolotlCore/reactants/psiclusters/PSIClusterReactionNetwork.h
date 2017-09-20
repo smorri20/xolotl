@@ -50,11 +50,21 @@ class PSIClusterReactionNetwork: public ReactionNetwork {
 
 private:
     /**
-     * Nice name for map supporting quick lookup of supercluster containing 
+     * Concise name for map supporting quick lookup of supercluster containing 
      * specifc number of He and V.
+     *
+     * We could use a map, but because we expect it to be dense (i.e.,
+     * most pairs of He and V counts will have a valid super cluster),
+     * a 2D matrix indexed by nHe and nV gives better performance for
+     * lookups without costing too much more (if any) in terms of memory.
+     * We use a vector of vectors instead of array of arrays because
+     * we don't know the dimensions at compile time.  We use a vector of
+     * vectors instead of a single vector with more complex indexing 
+     * to simplify indexing.  It may be worthwhile to compare performance
+     * with a single vector implementation to see if the single
+     * memory allocation ends up giving better performance.
      */
-    using HeVToSuperClusterMap = std::unordered_map<ReactantSizePair, std::reference_wrapper<IReactant> >;
-
+    using HeVToSuperClusterMap = std::vector<std::vector<ReactantMap::const_iterator> >;
 
     /**
      * Map supporting quick identification of super cluster containing
