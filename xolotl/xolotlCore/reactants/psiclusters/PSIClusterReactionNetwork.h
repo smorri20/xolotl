@@ -50,6 +50,45 @@ class PSIClusterReactionNetwork: public ReactionNetwork {
 
 private:
     /**
+     * Information about a production reaction that needs to be created
+     * for an unspecified pair of reactants.
+     * Used to support batch creation of production and dissociation reactions
+     * for a reactant interacting with a super cluster.
+     */
+    struct PendingPRInfo {
+        
+        IReactant& product;
+        int numHe;
+        int numV;
+        int i;
+        int j;
+        
+        PendingPRInfo(IReactant& _product,
+                int _numHe,
+                int _numV,
+                int _i,
+                int _j)
+          : product(_product),
+            numHe(_numHe),
+            numV(_numV),
+            i(_i),
+            j(_j)
+        { }
+
+        /**
+         * Default and copy ctor, disallowed to detect potential use.
+         */
+        PendingPRInfo() = delete;
+        PendingPRInfo(const PendingPRInfo& other) = delete;
+
+        /**
+         * Move ctor, using default implementation.  Needed if 
+         * PendingPRInfos are stored in vectors.
+         */
+        PendingPRInfo(PendingPRInfo&& other) = default;
+    };
+
+    /**
      * Concise name for map supporting quick lookup of supercluster containing 
      * specifc number of He and V.
      *
@@ -152,6 +191,20 @@ private:
     }
 
 
+    /**
+     * Define a batch of production reactions for the given
+     * pair of reactants.
+     *
+     * @param r1 A reactant involved in a production reaction.
+     * @param r2 The super reactant involved in a production reaction.
+     * @param pris Information about reactants are involved with each reaction.
+     */
+    // TODO pris could be unordered_set, but need to define hash
+    // for PendingPRInfo
+    void defineProductionReactions(IReactant& r1, IReactant& super,
+                                    const std::vector<PendingPRInfo>& pris);
+
+
     // TODO should we default a, b, c, d to 0?
     void defineDissociationReaction(ProductionReaction& forwardReaction,
                                     IReactant& emitting,
@@ -160,12 +213,35 @@ private:
         std::unique_ptr<DissociationReaction> dissociationReaction(new DissociationReaction(emitting, forwardReaction.first, forwardReaction.second, &forwardReaction));
         auto& drref = add(std::move(dissociationReaction));
 
-        // Tell the reactants that their are in this reaction
+        // Tell the reactants that they are in this reaction
         forwardReaction.first.participateIn(drref, a, b, c, d);
         forwardReaction.second.participateIn(drref, a, b, c, d);
         emitting.emitFrom(drref, a, b, c, d);
     }
 
+    /**
+     * Define a batch of dissociation reactions for the given
+     * forward reaction.
+     *
+     * @param forwardReaction The forward reaction in question.
+     * @param dissMap Map of reaction parameters, keyed by the product
+     * of the reaction.
+     */
+    // TODO PendingDissociationReactionMap's mapped_type  could be 
+    // unordered_set, but need to define hash for PendingPRInfo
+    using PendingDissociationReactionMap = std::unordered_map<IReactant*,
+                                        std::vector<PendingPRInfo const*> >;
+    void defineDissociationReactions(ProductionReaction& forwardReaction,
+                                const PendingDissociationReactionMap& dissMap);
+
+    /**
+     * Check whether dissociation reaction is allowed for 
+     * given production reaction.
+     *
+     * @param reaction The reaction to test.
+     * @return true iff dissociation for the given reaction is allowed.
+     */
+    bool canDissociate(ProductionReaction& reaction) const;
 
 	/**
 	 * Add the dissociation connectivity for the reverse reaction if it is allowed.
