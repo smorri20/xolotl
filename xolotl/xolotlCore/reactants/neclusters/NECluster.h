@@ -4,6 +4,7 @@
 // Includes
 #include <memory>
 #include <sstream>
+#include <cassert>
 #include <Reactant.h>
 
 namespace xolotlPerf {
