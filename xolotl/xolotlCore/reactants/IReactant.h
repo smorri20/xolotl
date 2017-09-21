@@ -12,6 +12,7 @@
 #include "xolotlCore/reactants/reactantsConfig.h"
 #include "Species.h"
 #include "ReactantType.h"
+#include "PendingProductionReactionInfo.h"
 
 namespace xolotlCore {
 
@@ -85,6 +86,16 @@ public:
 	virtual void resultFrom(ProductionReaction& reaction,
 			int a = 0, int b = 0, int c = 0, int d = 0) = 0;
 
+    /**
+     * Note that we result from the given reaction involving a super cluster.
+     * Assumes the reaction is already in the network.
+     *
+     * @param reaction The reaction creating this cluster.
+     * @param prInfos Production reaction parameters used by derived classes.
+     */
+    virtual void resultFrom(ProductionReaction& reaction,
+                const std::vector<PendingProductionReactionInfo>& prInfos) = 0;
+
 	/**
 	 * Note that we combine with another cluster in a production reaction.
 	 * Assumes that the reaction is already in our network.
@@ -97,8 +108,19 @@ public:
 			int a = 0, int b = 0) = 0;
 
 	/**
-	 * Create a dissociation pair associated with the given reaction.
-	 * Create the connectivity.
+	 * Note that we combine with another cluster in a production reaction
+     * involving a super cluster.
+	 * Assumes that the reaction is already in our network.
+	 *
+	 * @param reaction The reaction where this cluster takes part.
+	 * @param prInfos Production reaction parameters.
+	 */
+	virtual void participateIn(ProductionReaction& reaction,
+                const std::vector<PendingProductionReactionInfo>& prInfos) = 0;
+
+	/**
+	 * Note that we combine with another cluster in a dissociation reaction.
+	 * Assumes the reaction is already inour network.
 	 *
 	 * @param reaction The reaction creating this cluster.
 	 * @param a Number that can be used by daughter classes.
@@ -110,8 +132,19 @@ public:
             int a = 0, int b = 0, int c = 0, int d = 0) = 0;
 
 	/**
-	 * Create an emission pair associated with the given reaction.
-	 * Create the connectivity.
+	 * Note that we combine with another cluster in a dissociation reaction
+     * involving a super cluster.
+	 * Assumes the reaction is already inour network.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 * @param prInfos Production reaction parameters.
+	 */
+    virtual void participateIn(DissociationReaction& reaction,
+                const std::vector<PendingProductionReactionInfo>& prInfos) = 0;
+
+	/**
+     * Note that we emit from the given reaction.
+	 * Assumes the reaction is already in our network.
 	 *
 	 * @param reaction The reaction where this cluster emits.
 	 * @param a Number that can be used by daughter classes.
@@ -121,6 +154,16 @@ public:
 	 */
 	virtual void emitFrom(DissociationReaction& reaction,
 			int a = 0, int b = 0, int c = 0, int d = 0) = 0;
+
+	/**
+     * Note that we emit from the given reaction involving a super cluster.
+	 * Assumes the reaction is already in our network.
+	 *
+	 * @param reaction The reaction where this cluster emits.
+     * @param prInfos Production reaction parameters.
+	 */
+    virtual void emitFrom(DissociationReaction& reaction,
+                const std::vector<PendingProductionReactionInfo>& prInfos) = 0;
 
 	/**
 	 * Add the reactions to the network lists.

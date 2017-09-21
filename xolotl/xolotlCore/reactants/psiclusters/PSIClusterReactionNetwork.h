@@ -50,45 +50,6 @@ class PSIClusterReactionNetwork: public ReactionNetwork {
 
 private:
     /**
-     * Information about a production reaction that needs to be created
-     * for an unspecified pair of reactants.
-     * Used to support batch creation of production and dissociation reactions
-     * for a reactant interacting with a super cluster.
-     */
-    struct PendingPRInfo {
-        
-        IReactant& product;
-        int numHe;
-        int numV;
-        int i;
-        int j;
-        
-        PendingPRInfo(IReactant& _product,
-                int _numHe,
-                int _numV,
-                int _i,
-                int _j)
-          : product(_product),
-            numHe(_numHe),
-            numV(_numV),
-            i(_i),
-            j(_j)
-        { }
-
-        /**
-         * Default and copy ctor, disallowed to detect potential use.
-         */
-        PendingPRInfo() = delete;
-        PendingPRInfo(const PendingPRInfo& other) = delete;
-
-        /**
-         * Move ctor, using default implementation.  Needed if 
-         * PendingPRInfos are stored in vectors.
-         */
-        PendingPRInfo(PendingPRInfo&& other) = default;
-    };
-
-    /**
      * Concise name for map supporting quick lookup of supercluster containing 
      * specifc number of He and V.
      *
@@ -200,7 +161,7 @@ private:
      * @param pris Information about reactants are involved with each reaction.
      */
     void defineProductionReactions(IReactant& r1, IReactant& super,
-                                    const std::vector<PendingPRInfo>& pris);
+                                    const std::vector<PendingProductionReactionInfo>& pris);
 
 
     // TODO should we default a, b, c, d to 0?
@@ -222,16 +183,15 @@ private:
      * forward reaction.
      *
      * @param forwardReaction The forward reaction in question.
-     * @param dissMap Map of reaction parameters, keyed by the product
+     * @param prodMap Map of reaction parameters, keyed by the product
      * of the reaction.
      */
     // TODO possible to use a ref for the key?
-    using PendingDissociationReactionMap = 
-        std::unordered_map<IReactant*,
-        std::vector<std::reference_wrapper<const PendingPRInfo> > >;
+    using ProductToProductionMap = 
+        std::unordered_map<IReactant*, std::vector<PendingProductionReactionInfo> >;
 
     void defineDissociationReactions(ProductionReaction& forwardReaction,
-                                const PendingDissociationReactionMap& dissMap);
+                                const ProductToProductionMap& prodMap);
 
     /**
      * Check whether dissociation reaction is allowed for 

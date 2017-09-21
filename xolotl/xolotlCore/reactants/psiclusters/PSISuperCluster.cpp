@@ -6,6 +6,32 @@
 
 using namespace xolotlCore;
 
+#if READY
+static std::shared_ptr<xolotlPerf::IEventCounter> resultFrom_addsCounter;
+static std::shared_ptr<xolotlPerf::IEventCounter> resultFrom_callsCounter;
+
+static std::shared_ptr<xolotlPerf::IEventCounter> resultFrom_baddsCounter;
+static std::shared_ptr<xolotlPerf::IEventCounter> resultFrom_bcallsCounter;
+
+static std::shared_ptr<xolotlPerf::IEventCounter> partInProd_addsCounter;
+static std::shared_ptr<xolotlPerf::IEventCounter> partInProd_callsCounter;
+
+static std::shared_ptr<xolotlPerf::IEventCounter> partInProd_baddsCounter;
+static std::shared_ptr<xolotlPerf::IEventCounter> partInProd_bcallsCounter;
+
+static std::shared_ptr<xolotlPerf::IEventCounter> partInDiss_addsCounter;
+static std::shared_ptr<xolotlPerf::IEventCounter> partInDiss_callsCounter;
+
+static std::shared_ptr<xolotlPerf::IEventCounter> partInDiss_baddsCounter;
+static std::shared_ptr<xolotlPerf::IEventCounter> partInDiss_bcallsCounter;
+
+static std::shared_ptr<xolotlPerf::IEventCounter> emitFrom_addsCounter;
+static std::shared_ptr<xolotlPerf::IEventCounter> emitFrom_callsCounter;
+
+static std::shared_ptr<xolotlPerf::IEventCounter> emitFrom_baddsCounter;
+static std::shared_ptr<xolotlPerf::IEventCounter> emitFrom_bcallsCounter;
+#endif // READY
+
 /**
  * The helium momentum partials.
  */
@@ -55,10 +81,24 @@ PSISuperCluster::PSISuperCluster(double _numHe, double _numV, int _nTot,
 void PSISuperCluster::resultFrom(ProductionReaction& reaction,
                         int a, int b, int c, int d) {
 
+#if READY
+    if (not resultFrom_callsCounter) {
+        resultFrom_callsCounter = handlerRegistry->getEventCounter("PSISuper_resultFrom_calls");
+    }
+    resultFrom_callsCounter->increment();
+#endif // READY
+
 	// Check if we already know about the reaction.
     auto rkey = std::make_pair(&(reaction.first), &(reaction.second));
     auto it = effReactingList.find(rkey);
 	if (it == effReactingList.end()) {
+
+#if READY
+        if (not resultFrom_addsCounter) {
+            resultFrom_addsCounter = handlerRegistry->getEventCounter("PSISuper_resultFrom_adds");
+        }
+        resultFrom_addsCounter->increment();
+#endif // READY
 
 		// We did not already know about this reaction.
         // Add info about production to our list.
@@ -127,7 +167,113 @@ void PSISuperCluster::resultFrom(ProductionReaction& reaction,
 	return;
 }
 
+void PSISuperCluster::resultFrom(ProductionReaction& reaction,
+        const std::vector<PendingProductionReactionInfo>& prInfos) {
+
+#if READY
+    if (not resultFrom_bcallsCounter) {
+        resultFrom_bcallsCounter = handlerRegistry->getEventCounter("PSISuper_resultFrom_bcalls");
+    }
+    resultFrom_bcallsCounter->increment();
+#endif // READY
+
+	// Check if we already know about the reaction.
+    auto rkey = std::make_pair(&(reaction.first), &(reaction.second));
+    auto it = effReactingList.find(rkey);
+	if (it == effReactingList.end()) {
+
+#if READY
+        if (not resultFrom_baddsCounter) {
+            resultFrom_baddsCounter = handlerRegistry->getEventCounter("PSISuper_resultFrom_badds");
+        }
+        resultFrom_baddsCounter->increment();
+#endif // READY
+
+		// We did not already know about this reaction.
+        // Add info about production to our list.
+        auto eret = effReactingList.emplace(std::piecewise_construct,
+                            std::forward_as_tuple(rkey),
+                            std::forward_as_tuple(
+                                reaction,
+                                static_cast<PSICluster&>(reaction.first),
+                                static_cast<PSICluster&>(reaction.second)));
+        // Since we already checked and didn't know about the reaction,
+        // we had better have added it with our emplace() call.
+        assert(eret.second);
+        it = eret.first;
+	}
+    assert(it != effReactingList.end());
+    auto& prodPair = it->second;    
+
+    // NB: prodPair's reactants are same as reaction.
+    // So use prodPair only from here on.
+    // TODO any way to enforce this?
+
+	// Update the coefficients
+    std::for_each(prInfos.begin(), prInfos.end(),
+        [this,&prodPair](const PendingProductionReactionInfo& currPRI) {
+
+        // Use names corresponding to those in single version.
+        int a = currPRI.numHe;
+        int b = currPRI.numV;
+        int c = currPRI.i;
+        int d = currPRI.j;
+
+        double firstHeDistance = 0.0, firstVDistance = 0.0, secondHeDistance = 0.0,
+                secondVDistance = 0.0;
+        if (prodPair.first.getType() == ReactantType::PSISuper) {
+            auto const& super = static_cast<PSICluster const&>(prodPair.first);
+            firstHeDistance = super.getHeDistance(c);
+            firstVDistance = super.getVDistance(d);
+        }
+        if (prodPair.second.getType() == ReactantType::PSISuper) {
+            auto const& super = static_cast<PSICluster const&>(prodPair.second);
+            secondHeDistance = super.getHeDistance(c);
+            secondVDistance = super.getVDistance(d);
+        }
+        double heFactor = (double) (a - numHe) / dispersionHe;
+        double vFactor = (double) (b - numV) / dispersionV;
+        // First is A, second is B, in A + B -> this
+        prodPair.a000 += 1.0;
+        prodPair.a001 += heFactor;
+        prodPair.a002 += vFactor;
+        prodPair.a100 += firstHeDistance;
+        prodPair.a101 += firstHeDistance * heFactor;
+        prodPair.a102 += firstHeDistance * vFactor;
+        prodPair.a200 += firstVDistance;
+        prodPair.a201 += firstVDistance * heFactor;
+        prodPair.a202 += firstVDistance * vFactor;
+        prodPair.a010 += secondHeDistance;
+        prodPair.a011 += secondHeDistance * heFactor;
+        prodPair.a012 += secondHeDistance * vFactor;
+        prodPair.a020 += secondVDistance;
+        prodPair.a021 += secondVDistance * heFactor;
+        prodPair.a022 += secondVDistance * vFactor;
+        prodPair.a110 += firstHeDistance * secondHeDistance;
+        prodPair.a111 += firstHeDistance * secondHeDistance * heFactor;
+        prodPair.a112 += firstHeDistance * secondHeDistance * vFactor;
+        prodPair.a120 += firstHeDistance * secondVDistance;
+        prodPair.a121 += firstHeDistance * secondVDistance * heFactor;
+        prodPair.a122 += firstHeDistance * secondVDistance * vFactor;
+        prodPair.a210 += firstVDistance * secondHeDistance;
+        prodPair.a211 += firstVDistance * secondHeDistance * heFactor;
+        prodPair.a212 += firstVDistance * secondHeDistance * vFactor;
+        prodPair.a220 += firstVDistance * secondVDistance;
+        prodPair.a221 += firstVDistance * secondVDistance * heFactor;
+        prodPair.a222 += firstVDistance * secondVDistance * vFactor;
+    });
+
+	return;
+}
+
 void PSISuperCluster::participateIn(ProductionReaction& reaction, int a, int b) {
+
+#if READY
+    if (not partInProd_callsCounter) {
+        partInProd_callsCounter = handlerRegistry->getEventCounter("PSISuper_partInProd_calls");
+    }
+    partInProd_callsCounter->increment();
+#endif // READY
 
 	setReactionConnectivity(id);
 	// Look for the other cluster
@@ -139,6 +285,13 @@ void PSISuperCluster::participateIn(ProductionReaction& reaction, int a, int b) 
     auto rkey = &otherCluster;
     auto it = effCombiningList.find(rkey);
 	if (it == effCombiningList.end()) {
+
+#if READY
+        if (not partInProd_addsCounter) {
+            partInProd_addsCounter = handlerRegistry->getEventCounter("PSISuper_partInProd_adds");
+        }
+        partInProd_addsCounter->increment();
+#endif // READY
 
 		// We did not already know about the reaction.
         // Note that we combine with the other cluster in this reaction.
@@ -174,8 +327,85 @@ void PSISuperCluster::participateIn(ProductionReaction& reaction, int a, int b) 
 	return;
 }
 
+void PSISuperCluster::participateIn(ProductionReaction& reaction,
+            const std::vector<PendingProductionReactionInfo>& pendingPRInfos) {
+
+#if READY
+    if (not partInProd_bcallsCounter) {
+        partInProd_bcallsCounter = handlerRegistry->getEventCounter("PSISuper_partInProd_bcalls");
+    }
+    partInProd_bcallsCounter->increment();
+#endif // READY
+
+	setReactionConnectivity(id);
+	// Look for the other cluster
+	auto& otherCluster = static_cast<PSICluster&>((reaction.first.getId() == id) ?
+                                reaction.second :
+                                reaction.first);
+
+	// Check if we already know about the reaction.
+    auto rkey = &otherCluster;
+    auto it = effCombiningList.find(rkey);
+	if (it == effCombiningList.end()) {
+
+#if READY
+        if (not partInProd_baddsCounter) {
+            partInProd_baddsCounter = handlerRegistry->getEventCounter("PSISuper_partInProd_badds");
+        }
+        partInProd_baddsCounter->increment();
+#endif // READY
+
+		// We did not already know about the reaction.
+        // Note that we combine with the other cluster in this reaction.
+        auto eret = effCombiningList.emplace(std::piecewise_construct,
+                                std::forward_as_tuple(rkey),
+                                std::forward_as_tuple(
+                                    reaction,
+                                    static_cast<PSICluster&>(otherCluster)));
+        // Since we already checked and didn't know about the reaction then,
+        // we had better have added it with our emplace call.
+        assert(eret.second);
+        it = eret.first;
+	}
+    assert(it != effCombiningList.end());
+    auto& combCluster = it->second;
+
+	// Update the coefficients
+    std::for_each(pendingPRInfos.begin(), pendingPRInfos.end(),
+        [this,&combCluster](const PendingProductionReactionInfo& currPRInfo) {
+
+            // Use names corresponding to the single-item version.
+            int a = currPRInfo.i;
+            int b = currPRInfo.j;
+
+            double heDistance = getHeDistance(a);
+            double heFactor = (double) (a - numHe) / dispersionHe;
+            double vDistance = getVDistance(b);
+            double vFactor = (double) (b - numV) / dispersionV;
+            // This is A, itBis is B, in A + B -> C
+            combCluster.a000 += 1.0;
+            combCluster.a001 += heFactor;
+            combCluster.a002 += vFactor;
+            combCluster.a100 += heDistance;
+            combCluster.a101 += heDistance * heFactor;
+            combCluster.a102 += heDistance * vFactor;
+            combCluster.a200 += vDistance;
+            combCluster.a201 += vDistance * heFactor;
+            combCluster.a202 += vDistance * vFactor;
+        });
+
+	return;
+}
+
 void PSISuperCluster::participateIn(DissociationReaction& reaction,
         int a, int b, int c, int d) {
+
+#if READY
+    if (not partInDiss_callsCounter) {
+        partInDiss_callsCounter = handlerRegistry->getEventCounter("PSISuper_partInDiss_calls");
+    }
+    partInDiss_callsCounter->increment();
+#endif // READY
 
 	// Determine which is the other cluster.
 	auto& emittedCluster = static_cast<PSICluster&>((reaction.first.getId() == id) ?
@@ -188,6 +418,12 @@ void PSISuperCluster::participateIn(DissociationReaction& reaction,
 	if (it == effDissociatingList.end()) {
 
 		// We did not already know about it.
+#if READY
+        if (not partInDiss_addsCounter) {
+            partInDiss_addsCounter = handlerRegistry->getEventCounter("PSISuper_partInDiss_adds");
+        }
+        partInDiss_addsCounter->increment();
+#endif // READY
 
 		// Add it to the network
         auto eret = effDissociatingList.emplace(std::piecewise_construct,
@@ -228,8 +464,92 @@ void PSISuperCluster::participateIn(DissociationReaction& reaction,
 	return;
 }
 
+void PSISuperCluster::participateIn(DissociationReaction& reaction,
+        const std::vector<PendingProductionReactionInfo>& prInfos) {
+
+#if READY
+    if (not partInDiss_bcallsCounter) {
+        partInDiss_bcallsCounter = handlerRegistry->getEventCounter("PSISuper_partInDiss_bcalls");
+    }
+    partInDiss_bcallsCounter->increment();
+#endif // READY
+
+	// Determine which is the other cluster.
+	auto& emittedCluster = static_cast<PSICluster&>((reaction.first.getId() == id) ?
+                            reaction.second :
+                            reaction.first);
+
+	// Check if we already know about the reaction.
+    auto rkey = std::make_pair(&(reaction.dissociating), &emittedCluster);
+    auto it = effDissociatingList.find(rkey);
+	if (it == effDissociatingList.end()) {
+
+		// We did not already know about it.
+#if READY
+        if (not partInDiss_baddsCounter) {
+            partInDiss_baddsCounter = handlerRegistry->getEventCounter("PSISuper_partInDiss_badds");
+        }
+        partInDiss_baddsCounter->increment();
+#endif // READY
+
+		// Add it to the network
+        auto eret = effDissociatingList.emplace(std::piecewise_construct,
+                        std::forward_as_tuple(rkey),
+                        std::forward_as_tuple(
+                            reaction,
+				            static_cast<PSICluster&>(reaction.dissociating),
+				            static_cast<PSICluster&>(emittedCluster)));
+        // Since we already checked and didn't know about the reaction then,
+        // we had better have added it with our emplace() call.
+        assert(eret.second);
+        it = eret.first;
+	}
+    assert(it != effDissociatingList.end());
+    auto& dissPair = it->second;
+
+	// Update the coefficients
+    std::for_each(prInfos.begin(), prInfos.end(),
+        [this,&dissPair,&reaction](const PendingProductionReactionInfo& currPRI) {
+
+            // Use names corresponding to the single-item version.
+            int a = currPRI.numHe;
+            int b = currPRI.numV;
+            int c = currPRI.i;
+            int d = currPRI.j;
+
+            double firstHeDistance = 0.0, firstVDistance = 0.0;
+            if (reaction.dissociating.getType() == ReactantType::PSISuper) {
+                auto const& super = static_cast<PSICluster const&>(reaction.dissociating);
+                firstHeDistance = super.getHeDistance(a);
+                firstVDistance = super.getVDistance(b);
+            }
+            double heFactor = (double) (c - numHe) / dispersionHe;
+            double vFactor = (double) (d - numV) / dispersionV;
+
+            // A is the dissociating cluster
+            dissPair.a00 += 1.0;
+            dissPair.a01 += heFactor;
+            dissPair.a02 += vFactor;
+            dissPair.a10 += firstHeDistance;
+            dissPair.a11 += firstHeDistance * heFactor;
+            dissPair.a12 += firstHeDistance * vFactor;
+            dissPair.a20 += firstVDistance;
+            dissPair.a21 += firstVDistance * heFactor;
+            dissPair.a22 += firstVDistance * vFactor;
+        });
+
+	return;
+}
+
 void PSISuperCluster::emitFrom(DissociationReaction& reaction,
         int a, int b, int c, int d) {
+
+#if READY
+    if (not emitFrom_callsCounter) {
+        emitFrom_callsCounter = handlerRegistry->getEventCounter("PSICluster_emitFrom_calls");
+    }
+    emitFrom_callsCounter->increment();
+#endif // READY
 
 	// Check if we already know about the reaction.
     auto rkey = std::make_pair(&(reaction.first), &(reaction.second));
@@ -237,6 +557,13 @@ void PSISuperCluster::emitFrom(DissociationReaction& reaction,
 	if (it == effEmissionList.end()) {
 
 		// We did not already know about it.
+#if READY
+        if (not emitFrom_addsCounter) {
+            emitFrom_addsCounter = handlerRegistry->getEventCounter("PSICluster_emitFrom_adds");
+        }
+        emitFrom_addsCounter->increment();
+#endif // READY
+
         // Note that we emit from the two rectants according to the given
         // reaction.
         auto eret = effEmissionList.emplace(std::piecewise_construct,
@@ -268,6 +595,72 @@ void PSISuperCluster::emitFrom(DissociationReaction& reaction,
 	dissPair.a20 += vDistance;
 	dissPair.a21 += vDistance * heFactor;
 	dissPair.a22 += vDistance * vFactor;
+
+	return;
+}
+
+void PSISuperCluster::emitFrom(DissociationReaction& reaction,
+        const std::vector<PendingProductionReactionInfo>& prInfos) {
+
+#if READY
+    if (not emitFrom_bcallsCounter) {
+        emitFrom_bcallsCounter = handlerRegistry->getEventCounter("PSICluster_emitFrom_bcalls");
+    }
+    emitFrom_bcallsCounter->increment();
+#endif // READY
+
+	// Check if we already know about the reaction.
+    auto rkey = std::make_pair(&(reaction.first), &(reaction.second));
+    auto it = effEmissionList.find(rkey);
+	if (it == effEmissionList.end()) {
+
+		// We did not already know about it.
+#if READY
+        if (not emitFrom_baddsCounter) {
+            emitFrom_baddsCounter = handlerRegistry->getEventCounter("PSICluster_emitFrom_badds");
+        }
+        emitFrom_baddsCounter->increment();
+#endif // READY
+
+        // Note that we emit from the two rectants according to the given
+        // reaction.
+        auto eret = effEmissionList.emplace(std::piecewise_construct,
+                        std::forward_as_tuple(rkey),
+                        std::forward_as_tuple(
+                            reaction,
+                            static_cast<PSICluster&>(reaction.first),
+                            static_cast<PSICluster&>(reaction.second)));
+        // Since we already checked and didn't know about the reaction then,
+        // we had better have added it with our emplace() call.
+        assert(eret.second);
+        it = eret.first;
+	}
+    assert(it != effEmissionList.end());
+    auto& dissPair = it->second;
+
+	// Update the coeeficients
+    std::for_each(prInfos.begin(), prInfos.end(),
+        [this,&dissPair](const PendingProductionReactionInfo& currPRI) {
+
+        // Use same names as used in single version.
+        int a = currPRI.numHe;
+        int b = currPRI.numV;
+
+        double heDistance = getHeDistance(a);
+        double heFactor = (double) (a - numHe) / dispersionHe;
+        double vDistance = getVDistance(b);
+        double vFactor = (double) (b - numV) / dispersionV;
+        // A is the dissociating cluster
+        dissPair.a00 += 1.0;
+        dissPair.a01 += heFactor;
+        dissPair.a02 += vFactor;
+        dissPair.a10 += heDistance;
+        dissPair.a11 += heDistance * heFactor;
+        dissPair.a12 += heDistance * vFactor;
+        dissPair.a20 += vDistance;
+        dissPair.a21 += vDistance * heFactor;
+        dissPair.a22 += vDistance * vFactor;
+    });
 
 	return;
 }

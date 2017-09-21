@@ -6,6 +6,7 @@
 
 namespace xolotlCore {
 
+
 #if defined(USE_ORIG_REACTANT_COMP_STRING)
 // The original implementation ordered reactants first/second based
 // on lexicographical ordering of their composition strings.

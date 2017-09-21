@@ -50,7 +50,7 @@ void NECluster::participateIn(ProductionReaction& reaction,
 	return;
 }
 
-void NECluster::participateIn(DissociationReaction& reaction, int a, int b) {
+void NECluster::participateIn(DissociationReaction& reaction, int a, int b, int c, int d) {
 	// Look for the other cluster
 	auto& emittedCluster = static_cast<NECluster&>((reaction.first.getId() == id) ?
                                 reaction.second :
@@ -70,7 +70,7 @@ void NECluster::participateIn(DissociationReaction& reaction, int a, int b) {
 }
 
 void NECluster::emitFrom(DissociationReaction& reaction,
-		int a, int b) {
+		int a, int b, int c, int d) {
 
 	// Add the pair of emitted clusters.
 	emissionPairs.emplace_back(
