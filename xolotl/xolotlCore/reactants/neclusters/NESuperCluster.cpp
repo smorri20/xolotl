@@ -841,3 +841,86 @@ void NESuperCluster::getMomentPartialDerivatives(
 
 	return;
 }
+
+void NESuperCluster::dumpCoefficients(std::ostream& os, NESuperCluster::SuperClusterProductionPair const& currPair) const {
+
+    os << "a[0-1][0-1][0-1]:"
+        << ' ' << currPair.a000
+        << ' ' << currPair.a001
+        << ' ' << currPair.a100
+        << ' ' << currPair.a101
+        << ' ' << currPair.a010
+        << ' ' << currPair.a011
+        << ' ' << currPair.a110
+        << ' ' << currPair.a111;
+}
+
+void NESuperCluster::dumpCoefficients(std::ostream& os, NESuperCluster::SuperClusterDissociationPair const& currPair) const {
+
+    os << "a[0-2][0-2]:"
+        << ' ' << currPair.a00
+        << ' ' << currPair.a01
+        << ' ' << currPair.a10
+        << ' ' << currPair.a11;
+}
+
+// Find size of a forward_list.
+// Unfortunately, forward_list does not keep track of its size,
+// and the only way to find it is to iterate over all items, counting
+// as we go.
+// TODO remove this once we are using something other than a
+// forward_list for keeping our collections of reaction coefficients.
+template<class T>
+size_t findSize(std::forward_list<T> const& l) {
+
+    return std::accumulate(l.begin(), l.end(), 0.0,
+            [](size_t running, T const& curr) {
+                return running + 1;
+            });
+}
+
+
+void NESuperCluster::outputCoefficientsTo(std::ostream& os) const {
+
+    os << "id: " << id << '\n';
+    os << "reacting: " << findSize(effReactingList) << '\n';
+    std::for_each(effReactingList.begin(), effReactingList.end(),
+    [this,&os](SuperClusterProductionPair const& currPair) {
+        os << "first: " << currPair.first->getId()
+            << "; second: " << currPair.second->getId()
+            << "; ";
+        dumpCoefficients(os, currPair);
+        os << '\n';
+    });
+
+    os << "combining: " << findSize(effCombiningList) << '\n';
+    std::for_each(effCombiningList.begin(), effCombiningList.end(),
+    [this,&os](SuperClusterProductionPair const& currComb) {
+        os << "other: " << currComb.first->getId()
+            << "; ";
+        dumpCoefficients(os, currComb);
+        os << '\n';
+    });
+
+    os << "dissociating: " << findSize(effDissociatingList) << '\n';
+    std::for_each(effDissociatingList.begin(), effDissociatingList.end(),
+    [this,&os](SuperClusterDissociationPair const& currPair) {
+        os << "first: " << currPair.first->getId()
+            << "; second: " << currPair.second->getId()
+            << "; ";
+        dumpCoefficients(os, currPair);
+        os << '\n';
+    });
+
+    os << "emitting: " << findSize(effEmissionList) << '\n';
+    std::for_each(effEmissionList.begin(), effEmissionList.end(),
+    [this,&os](SuperClusterDissociationPair const& currPair) {
+        os << "first: " << currPair.first->getId()
+            << "; second: " << currPair.second->getId()
+            << "; ";
+        dumpCoefficients(os, currPair);
+        os << '\n';
+    });
+
+}
+

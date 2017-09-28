@@ -520,8 +520,10 @@ public:
      * @param os Output stream on which to output coefficients.
      */
     virtual void outputCoefficientsTo(std::ostream& os) const override {
-        // NIY.
-        assert(false);
+
+        // Currently, NEClusters do not keep coefficients associated
+        // with their reactions, so nothing to do here.
+        // TODO Verify this is correct.
     }
 };
 

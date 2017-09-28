@@ -165,6 +165,16 @@ private:
 	 */
 	double momentumFlux;
 
+
+    /**
+     * Output coefficients for a given reaction to the given output stream.
+     *
+     * @param os The output stream on which to write the coefficients.
+     * @param curr Information about our participation in a reaction.
+     */
+	void dumpCoefficients(std::ostream& os, SuperClusterProductionPair const& currPair) const;
+	void dumpCoefficients(std::ostream& os, SuperClusterDissociationPair const& currPair) const;
+
 public:
 
 	//! The vector of Xe clusters it will replace
@@ -420,6 +430,14 @@ public:
 	int getSectionWidth() const {
 		return sectionWidth;
 	}
+
+    /**
+     * Tell reactant to output a representation of its reaction coefficients
+     * to the given output stream.
+     *
+     * @param os Output stream on which to output coefficients.
+     */
+    virtual void outputCoefficientsTo(std::ostream& os) const override;
 
 };
 //end class NESuperCluster
