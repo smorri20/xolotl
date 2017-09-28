@@ -82,7 +82,7 @@ void NEClusterReactionNetwork::createReactionConnectivity() {
 			// Tell the reactants that they are in this reaction
 			singleXeCluster->participateIn(*reaction);
 			xeReactant.participateIn(*reaction);
-			product->resultFrom(reaction);
+			product->resultFrom(*reaction);
 
 			// Check if the reverse reaction is allowed
 			checkForDissociation(product, reaction);
@@ -101,16 +101,17 @@ void NEClusterReactionNetwork::checkForDissociation(
 		return;
 	}
 
+
 	// The reaction can occur, create the dissociation
 	// Create a dissociation reaction
-	auto dissociationReaction = std::make_shared<DissociationReaction>(
-			*emittingReactant, reaction->first, reaction->second);
+    // TODO can this be on the stack?
+    std::unique_ptr<DissociationReaction> dissociationReaction(new DissociationReaction(*emittingReactant, reaction->first, reaction->second));
 	// Set the reverse reaction
 	dissociationReaction->reverseReaction = reaction.get();
 	// Tell the reactants that their are in this reaction
-	reaction->first.createDissociation(dissociationReaction);
-	reaction->second.createDissociation(dissociationReaction);
-	emittingReactant->createEmission(dissociationReaction);
+	reaction->first.participateIn(*dissociationReaction);
+	reaction->second.participateIn(*dissociationReaction);
+	emittingReactant->emitFrom(*dissociationReaction);
 
 	return;
 }

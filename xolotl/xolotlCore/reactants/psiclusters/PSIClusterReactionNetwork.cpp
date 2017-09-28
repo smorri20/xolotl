@@ -57,6 +57,76 @@ double PSIClusterReactionNetwork::calculateDissociationConstant(const Dissociati
 }
 
 
+void PSIClusterReactionNetwork::defineProductionReactions(
+            IReactant& r1, IReactant& r2,
+            const std::vector<PendingProductionReactionInfo>& pendingPRInfos) {
+    
+    // Define the production reaction to the network.
+    // Do this *once* for the given reactants, since it doesn't 
+    // depend on the product or the other parameters.
+    std::unique_ptr<ProductionReaction> reaction(new ProductionReaction(r1, r2));
+    auto& prref = add(std::move(reaction));
+
+    // Determine if reverse reaction is allowed.
+    auto dissociationAllowed = canDissociate(prref);
+
+    // Build the product-to-production map that we will 
+    // use for batched resultsFrom() and defineDissociationReactions() calls.
+    ProductToProductionMap prodMap;
+    std::for_each(pendingPRInfos.begin(), pendingPRInfos.end(),
+        [&prodMap](const PendingProductionReactionInfo& currPRI) {
+
+                prodMap[&(currPRI.product)].emplace_back(currPRI);
+        });
+
+    // Tell both reactants they are involved in this reaction
+    // with the given parameters.
+    prref.first.participateIn(prref, pendingPRInfos);
+    prref.second.participateIn(prref, pendingPRInfos);
+
+    // Tell all products they are involved in this reaction
+    // with their given parameters.
+    std::for_each(prodMap.begin(), prodMap.end(),
+        [&prref](const ProductToProductionMap::value_type& prodMapItem) {
+
+            IReactant& currProduct = *(prodMapItem.first);
+            ProductToProductionMap::mapped_type const& currPRIs = prodMapItem.second;
+
+            currProduct.resultFrom(prref, currPRIs);
+        });
+
+    // Determine if reverse reaction is allowed.
+    if (dissociationAllowed) {
+        // Forward reaction can dissociate.
+        // Define all dissociation reactions for this forward reaction
+        defineDissociationReactions(prref, prodMap);
+    }
+}
+
+
+void
+PSIClusterReactionNetwork::defineDissociationReactions(
+            ProductionReaction& forwardReaction,
+            const ProductToProductionMap& prodMap) {
+
+    // Consider each production of the given forward reaction.
+    std::for_each(prodMap.begin(), prodMap.end(),
+        [this,&forwardReaction](const ProductToProductionMap::value_type& currMapItem) {
+            // Add a dissociation reaction to our network.
+            // Do this once here for each forward reaction product.
+            IReactant& emitting = *(currMapItem.first);
+
+            std::unique_ptr<DissociationReaction> dissociationReaction(new DissociationReaction(emitting, forwardReaction.first, forwardReaction.second, &forwardReaction));
+            auto& drref = add(std::move(dissociationReaction));
+
+            // Tell all participants in this reaction of their involvement.
+            ProductToProductionMap::mapped_type const& currPRIs = currMapItem.second;
+            drref.first.participateIn(drref, currPRIs);
+            drref.second.participateIn(drref, currPRIs);
+            emitting.emitFrom(drref, currPRIs);
+        });
+}
+
 
 void PSIClusterReactionNetwork::createReactionConnectivity() {
 	// Initial declarations
@@ -154,8 +224,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
         for (auto const& superMapItem : getAll(ReactantType::PSISuper)) {
 
             auto& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
+            std::vector<PendingProductionReactionInfo> prInfos;
 
-			IReactant * product = nullptr;
 			// Get its boundaries
 			auto const& vBounds = superCluster.getVBounds();
 			// Loop on them
@@ -164,16 +234,24 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 					// Assume the product can only be a super cluster here
                     auto newNumHe = i + firstSize;
                     auto newNumV = j;
-					product = getSuperFromComp(newNumHe, newNumV);
+					IReactant* product = getSuperFromComp(newNumHe, newNumV);
 					// Check that the reaction can occur
 					if (product
 							&& (heReactant.getDiffusionFactor() > 0.0
 									|| superCluster.getDiffusionFactor() > 0.0)) {
 
-                        defineProductionReaction(heReactant, superCluster, *product, newNumHe, newNumV, i, j);
+                        // Note that current reactant reacts with
+                        // current superCluster to produce product,
+                        // according to current parameters.
+                        prInfos.emplace_back(*product, newNumHe, newNumV, i, j);
 					}
 				}
 			}
+
+            // Now that we know how current reactant reacts with
+            // current superCluster, create the production 
+            // reaction(s) for them.
+            defineProductionReactions(heReactant, superCluster, prInfos);
 		}
 	}
 
@@ -225,7 +303,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
         for (auto const& superMapItem : getAll(ReactantType::PSISuper)) {
 
             auto& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
-			IReactant * product = nullptr;
+            std::vector<PendingProductionReactionInfo> prInfos;
+
 			// Get its boundaries
 			auto const& heBounds = superCluster.getHeBounds();
             auto const& vBounds = superCluster.getVBounds();
@@ -236,17 +315,19 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 					// Assume the product can only be a super cluster here
                     auto newNumHe = i;
                     auto newNumV = j + firstSize;
-					product = getSuperFromComp(newNumHe, newNumV);
+					IReactant* product = getSuperFromComp(newNumHe, newNumV);
 					// Check that the reaction can occur
 					if (product
 							&& (vReactant.getDiffusionFactor() > 0.0
 									|| superCluster.getDiffusionFactor() > 0.0)) {
-                        defineProductionReaction(vReactant, superCluster,
-                                    *product,
-                                    newNumHe, newNumV, i, j);
+                        prInfos.emplace_back(*product, newNumHe, newNumV, i, j);
 					}
 				}
 			}
+
+            // Now that we know how current reactant interacts with 
+            // current supercluster, define the production reactions.
+            defineProductionReactions(vReactant, superCluster, prInfos);
 		}
 	}
 
@@ -334,7 +415,8 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
         // Consider product with all super clusters.
         for (auto const& superMapItem : getAll(ReactantType::PSISuper)) {            
             auto& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
-			IReactant * product = nullptr;
+            std::vector<PendingProductionReactionInfo> prInfos;
+
 			// Get its boundaries
 			auto const& heBounds = superCluster.getHeBounds();
             auto const& vBounds = superCluster.getVBounds();
@@ -346,6 +428,7 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
                     auto newNumV = j - firstSize;
 
 					// Get the product
+                    IReactant* product = nullptr;
 					if (newNumV == 0) {
 						// The product is He
 						product = get(Species::He, i);
@@ -367,12 +450,15 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 							&& (iReactant.getDiffusionFactor() > 0.0
 									|| superCluster.getDiffusionFactor() > 0.0)) {
 
-                        defineProductionReaction(iReactant, superCluster,
-                                *product,
-                                newNumHe, newNumV, i, j);
+                        prInfos.emplace_back(*product, newNumHe, newNumV, i, j);
 					}
 				}
 			}
+
+            // Now that we know how current reactant interacts with
+            // current supercluster, define its production reactions
+            // according to given parameters.
+            defineProductionReactions(iReactant, superCluster, prInfos);
 		}
 	}
 
@@ -677,32 +763,44 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 	return;
 }
 
-void PSIClusterReactionNetwork::checkForDissociation(
-		IReactant * emittingReactant,
-		std::shared_ptr<ProductionReaction> reaction, int a, int b, int c,
-		int d) {
+bool PSIClusterReactionNetwork::canDissociate(ProductionReaction& reaction) const {
+    // Assume reaction can dissociate by default.
+    bool ret = true;
+
 	// Check if at least one of the potentially emitted cluster is size one
-	if (reaction->first.getSize() != 1 && reaction->second.getSize() != 1) {
+	if (reaction.first.getSize() != 1 && reaction.second.getSize() != 1) {
 		// Don't add the reverse reaction
-		return;
+		ret = false;
 	}
 	// remove He+He
-	if (reaction->first.getSize() == 1 && reaction->second.getSize() == 1
-			&& reaction->first.getType() == ReactantType::He
-			&& reaction->second.getType() == ReactantType::He) {
+    else if (reaction.first.getSize() == 1 && reaction.second.getSize() == 1
+			&& reaction.first.getType() == ReactantType::He
+			&& reaction.second.getType() == ReactantType::He) {
 		// Don't add the reverse reaction
-		return;
+		ret = false;
 	}
 
 //	// Check for trap mutations (with XOR)
-//	if ((reaction->first.getType() == ReactantType::I)
+//	else if ((reaction->first.getType() == ReactantType::I)
 //			== !(reaction->second.getType() == ReactantType::I)) {
 //		// Don't add the reverse reaction
 //		return;
 //	}
 
-	// The reaction can occur, create the dissociation
-	defineDissociationReaction(reaction, *emittingReactant, a, b, c, d);
+    return ret;
+}
+                                        
+
+
+void PSIClusterReactionNetwork::checkForDissociation(
+		IReactant& emittingReactant, ProductionReaction& reaction,
+        int a, int b, int c, int d) {
+
+    // Check if reaction can dissociate.
+    if (canDissociate(reaction)) {
+	    // The dissociation can occur, so create a reaction for it.
+    	defineDissociationReaction(reaction, emittingReactant, a, b, c, d);
+    }
 
 	return;
 }
@@ -720,24 +818,34 @@ void PSIClusterReactionNetwork::buildSuperClusterMap(const std::vector<IReactant
     // Save the bounds to use.
     boundVector = bounds;
 
+    // Since we represent the super cluster lookup map using a dense
+    // data structure, we must initialize every entry with something
+    // that signifies 'Invalid.'
+    auto const& superClusters = clusterTypeMap[ReactantType::PSISuper];
+    auto bvSize = boundVector.size();
+    superClusterLookupMap.resize(bvSize);
+    std::for_each(superClusterLookupMap.begin(), superClusterLookupMap.end(),
+        [bvSize,&superClusters](HeVToSuperClusterMap::value_type& currVector) {
+
+            currVector.resize(bvSize, superClusters.end());
+        });
+
+
     // Build a map of super clusters, keyed by (baseHe, baseV) pairs
     // where base* indicates the lower bound of the super cluster's
     // interval for that species type.
-    auto const& superClusters = clusterTypeMap[ReactantType::PSISuper];
-    std::for_each(superClusters.begin(), superClusters.end(),
-        [this](const ReactantMap::value_type& currMapItem) {
+    for(auto iter = superClusters.begin(); iter != superClusters.end(); ++iter) {
+        // Add the super cluster to our lookup map based on
+        // its He and V intervals.
+        auto& currCluster = *(iter->second);
+        auto const& comp = currCluster.getComposition();
+        auto currHe = comp[toCompIdx(Species::He)];
+        auto currV = comp[toCompIdx(Species::V)];
+        auto heIntervalIdx = findBoundsIntervalBaseIdx(currHe);
+        auto vIntervalIdx = findBoundsIntervalBaseIdx(currV);
 
-            // Add the super cluster to our lookup map based on
-            // its He and V intervals.
-            auto& currCluster = *(currMapItem.second);
-            auto const& comp = currCluster.getComposition();
-            auto currHe = comp[toCompIdx(Species::He)];
-            auto currV = comp[toCompIdx(Species::V)];
-            auto heBoundsIntervalBase = findBoundsIntervalBase(currHe);
-            auto vBoundsIntervalBase = findBoundsIntervalBase(currV);
-
-            superClusterLookupMap.emplace(std::make_pair(heBoundsIntervalBase, vBoundsIntervalBase), currCluster);
-        });
+        superClusterLookupMap[heIntervalIdx][vIntervalIdx] = iter;
+    }
 }
 
 
@@ -1324,14 +1432,15 @@ IReactant * PSIClusterReactionNetwork::getSuperFromComp(IReactant::SizeType nHe,
     // We didn't find the last supercluster in our cache, so do a full lookup.
     IReactant* ret = nullptr;
 
-    auto heIntervalBase = findBoundsIntervalBase(nHe);
-    auto vIntervalBase = findBoundsIntervalBase(nV);
+    auto heBaseIdx = findBoundsIntervalBaseIdx(nHe);
+    auto vBaseIdx = findBoundsIntervalBaseIdx(nV);
 
-    if((heIntervalBase != 0) and (vIntervalBase != 0)) {
-        auto iter = superClusterLookupMap.find(std::make_pair(heIntervalBase, vIntervalBase));
-        if(iter != superClusterLookupMap.end()) {
-            IReactant& super = iter->second;    // Get ref from wrapper
-            ret = &super;                      // Return pointer referenced object
+    if ((heBaseIdx != std::numeric_limits<std::size_t>::max()) and
+        (vBaseIdx != std::numeric_limits<std::size_t>::max())) {
+
+        auto& superIter = superClusterLookupMap[heBaseIdx][vBaseIdx];
+        if (superIter != clusterTypeMap.at(ReactantType::PSISuper).end()) {
+            ret = superIter->second.get();
             assert(static_cast<PSISuperCluster*>(ret)->isIn(nHe, nV));
             lastRet = ret;
         }

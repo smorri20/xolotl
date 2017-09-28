@@ -50,11 +50,21 @@ class PSIClusterReactionNetwork: public ReactionNetwork {
 
 private:
     /**
-     * Nice name for map supporting quick lookup of supercluster containing 
+     * Concise name for map supporting quick lookup of supercluster containing 
      * specifc number of He and V.
+     *
+     * We could use a map, but because we expect it to be dense (i.e.,
+     * most pairs of He and V counts will have a valid super cluster),
+     * a 2D matrix indexed by nHe and nV gives better performance for
+     * lookups without costing too much more (if any) in terms of memory.
+     * We use a vector of vectors instead of array of arrays because
+     * we don't know the dimensions at compile time.  We use a vector of
+     * vectors instead of a single vector with more complex indexing 
+     * to simplify indexing.  It may be worthwhile to compare performance
+     * with a single vector implementation to see if the single
+     * memory allocation ends up giving better performance.
      */
-    using HeVToSuperClusterMap = std::unordered_map<ReactantSizePair, std::reference_wrapper<IReactant> >;
-
+    using HeVToSuperClusterMap = std::vector<std::vector<ReactantMap::const_iterator> >;
 
     /**
      * Map supporting quick identification of super cluster containing
@@ -93,18 +103,18 @@ private:
     IReactant * getSuperFromComp(IReactant::SizeType nHe, IReactant::SizeType nV);
 
 
-    std::shared_ptr<ProductionReaction> defineReactionBase(
-                            IReactant& r1, IReactant& r2,
-                            int a = 0, int b = 0) {
+    ProductionReaction& defineReactionBase(IReactant& r1, IReactant& r2,
+                            int a = 0, int b = 0) __attribute__((always_inline)) {
 
         // Add a production reaction to our network.
-        auto reaction = std::make_shared<ProductionReaction>(r1, r2);
+        std::unique_ptr<ProductionReaction> reaction(new ProductionReaction(r1, r2));
+        auto& prref = add(std::move(reaction));
 
         // Tell the reactants that they are involved in this reaction
-        r1.participateIn(*reaction, a, b);
-        r2.participateIn(*reaction, a, b);
+        r1.participateIn(prref, a, b);
+        r2.participateIn(prref, a, b);
 
-        return reaction;
+        return prref;
     }
 
 
@@ -112,7 +122,7 @@ private:
                                         IReactant& product) {
 
         // Define the basic reaction.
-        auto reaction = defineReactionBase(r1, r2);
+        auto& reaction = defineReactionBase(r1, r2);
 
         // Tell the product it results from the reaction.
         product.resultFrom(reaction);
@@ -132,33 +142,65 @@ private:
                                         int a = 0, int b = 0, int c = 0, int d = 0) {
 
         // Define the basic production reaction.
-        auto reaction = defineReactionBase(r1, super, c, d);
+        auto& reaction = defineReactionBase(r1, super, c, d);
 
         // Tell product it is a product of this reaction.
         product.resultFrom(reaction, a, b, c, d);
 
         // Check if reverse reaction is allowed.
-        checkForDissociation(&product, reaction, a, b, c, d);
+        checkForDissociation(product, reaction, a, b, c, d);
     }
+
+
+    /**
+     * Define a batch of production reactions for the given
+     * pair of reactants.
+     *
+     * @param r1 A reactant involved in a production reaction.
+     * @param r2 The super reactant involved in a production reaction.
+     * @param pris Information about reactants are involved with each reaction.
+     */
+    void defineProductionReactions(IReactant& r1, IReactant& super,
+                                    const std::vector<PendingProductionReactionInfo>& pris);
 
 
     // TODO should we default a, b, c, d to 0?
-    void defineDissociationReaction(std::shared_ptr<ProductionReaction> forwardReaction,
+    void defineDissociationReaction(ProductionReaction& forwardReaction,
                                     IReactant& emitting,
                                     int a, int b, int c, int d) {
 
-        auto dissociationReaction = std::make_shared<DissociationReaction>(
-                emitting, forwardReaction->first, forwardReaction->second);
+        std::unique_ptr<DissociationReaction> dissociationReaction(new DissociationReaction(emitting, forwardReaction.first, forwardReaction.second, &forwardReaction));
+        auto& drref = add(std::move(dissociationReaction));
 
-        // Set the reverse reaction
-        dissociationReaction->reverseReaction = forwardReaction.get();
-
-        // Tell the reactants that their are in this reaction
-        forwardReaction->first.createDissociation(dissociationReaction, a, b, c, d);
-        forwardReaction->second.createDissociation(dissociationReaction, a, b, c, d);
-        emitting.createEmission(dissociationReaction, a, b, c, d);
+        // Tell the reactants that they are in this reaction
+        forwardReaction.first.participateIn(drref, a, b, c, d);
+        forwardReaction.second.participateIn(drref, a, b, c, d);
+        emitting.emitFrom(drref, a, b, c, d);
     }
 
+    /**
+     * Define a batch of dissociation reactions for the given
+     * forward reaction.
+     *
+     * @param forwardReaction The forward reaction in question.
+     * @param prodMap Map of reaction parameters, keyed by the product
+     * of the reaction.
+     */
+    // TODO possible to use a ref for the key?
+    using ProductToProductionMap = 
+        std::unordered_map<IReactant*, std::vector<PendingProductionReactionInfo> >;
+
+    void defineDissociationReactions(ProductionReaction& forwardReaction,
+                                const ProductToProductionMap& prodMap);
+
+    /**
+     * Check whether dissociation reaction is allowed for 
+     * given production reaction.
+     *
+     * @param reaction The reaction to test.
+     * @return true iff dissociation for the given reaction is allowed.
+     */
+    bool canDissociate(ProductionReaction& reaction) const;
 
 	/**
 	 * Add the dissociation connectivity for the reverse reaction if it is allowed.
@@ -171,9 +213,9 @@ private:
 	 * @param d The vacancy number for the emitted superCluster
 	 *
 	 */
-	void checkForDissociation(IReactant * emittingReactant,
-			std::shared_ptr<ProductionReaction> reaction, int a = 0, int b = 0,
-			int c = 0, int d = 0);
+	void checkForDissociation(IReactant& emittingReactant,
+			ProductionReaction& reaction,
+            int a = 0, int b = 0, int c = 0, int d = 0);
 
 public:
 

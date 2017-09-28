@@ -22,6 +22,46 @@ namespace xolotlCore {
 class ProductionReaction: public KeyedReaction<std::array<IReactant::SizeType, 2*(static_cast<int>(Species::last) + 1)> > {
 public:
     /**
+     * Information about a production reaction that needs to be created
+     * for an unspecified pair of reactants.
+     * Used to support batch creation of production and dissociation reactions
+     * for a reactant interacting with a super cluster.
+     */
+    struct PendingInfo {
+        
+        IReactant& product;
+        int numHe;
+        int numV;
+        int i;
+        int j;
+        
+        PendingInfo(IReactant& _product,
+                int _numHe,
+                int _numV,
+                int _i,
+                int _j)
+          : product(_product),
+            numHe(_numHe),
+            numV(_numV),
+            i(_i),
+            j(_j)
+        { }
+
+        /**
+         * Default and copy ctor, disallowed to detect potential use.
+         */
+        PendingInfo() = delete;
+        PendingInfo(const PendingInfo& other) = delete;
+
+        /**
+         * Move ctor, using default implementation.  Needed if 
+         * PendingInfos are stored in vectors.
+         */
+        PendingInfo(PendingInfo&& other) = default;
+    };
+
+
+    /**
      * Default constructor, deleted to require construction from reactant pair.
      */
     ProductionReaction() = delete;
@@ -50,7 +90,6 @@ public:
         std::copy(secondComp.begin(), secondComp.end(), nextBegin);
     }
 };
-
 
 /**
  * Output a basic description of the reaction to the given output stream.

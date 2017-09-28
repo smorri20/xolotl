@@ -151,23 +151,52 @@ void ReactionNetwork::setTemperature(double temp) {
 	return;
 }
 
-ProductionReaction& ReactionNetwork::addProductionReaction(
-		std::shared_ptr<ProductionReaction> reaction) {
+#if READY
+static std::shared_ptr<xolotlPerf::IEventCounter> addPRCounter_calls;
+static std::shared_ptr<xolotlPerf::IEventCounter> addPRCounter_adds;
+static std::shared_ptr<xolotlPerf::IEventCounter> addDRCounter_calls;
+static std::shared_ptr<xolotlPerf::IEventCounter> addDRCounter_adds;
+#endif // READY
+
+ProductionReaction& ReactionNetwork::add(std::unique_ptr<ProductionReaction> reaction) {
+
+#if READY
+    if(not addPRCounter_calls) {
+        addPRCounter_calls = handlerRegistry->getEventCounter("addPR_calls");
+    }
+    addPRCounter_calls->increment();
+#endif // READY
 
     // Ensure we know about the reaction.
     // Map's emplace() returns a pair (iter, bool) where
     // iter points to the item in the map and the bool indicates
     // whether it was added by this emplace() call.
 	auto key = reaction->descriptiveKey();
-    auto eret = productionReactionMap.emplace(key, reaction);
+    auto eret = productionReactionMap.emplace(key, std::move(reaction));
+
+#if READY
+    if(eret.second == true) {
+        if(not addPRCounter_adds) {
+            addPRCounter_adds = handlerRegistry->getEventCounter("addPR_adds");
+        }
+        addPRCounter_adds->increment();
+    }
+#endif // READY
 
     // Regardless of whether we added it in this emplace() call or not,
     // the iter within eret refers to the desired reaction in the map.
     return *(eret.first->second);
 }
 
-DissociationReaction& ReactionNetwork::addDissociationReaction(
-		std::shared_ptr<DissociationReaction> reaction) {
+
+DissociationReaction& ReactionNetwork::add(std::unique_ptr<DissociationReaction> reaction) {
+
+#if READY
+    if(not addDRCounter_calls) {
+        addDRCounter_calls = handlerRegistry->getEventCounter("addDR_calls");
+    }
+    addDRCounter_calls->increment();
+#endif // READY
 
     // Unlike addProductionReaction, we use a check-add approach
     // instead of emplace() because if the item isn't already in
@@ -182,20 +211,17 @@ DissociationReaction& ReactionNetwork::addDissociationReaction(
 		return *(iter->second);
 	}
 
-	// We did not yet know about the given reaction.
-	// Add it, but also link it to its reverse reaction.
-	// First, create the reverse reaction to get a pointer to it.
-	auto reverseReaction = std::make_shared<ProductionReaction>(reaction->first,
-			reaction->second);
-	// Add this reverse reaction to our set of known reactions.
-    auto& prref = addProductionReaction(reverseReaction);
-
-	// Indicate that the reverse reaction is the reverse reaction
-	// to the newly-added dissociation reaction.
-	reaction->reverseReaction = &prref;
-
 	// Add the dissociation reaction to our set of known reactions.
-	auto eret = dissociationReactionMap.emplace(key, reaction);
+	auto eret = dissociationReactionMap.emplace(key, std::move(reaction));
+
+#if READY
+    if(eret.second == true) {
+        if(not addDRCounter_adds) {
+            addDRCounter_adds = handlerRegistry->getEventCounter("addDR_adds");
+        }
+        addDRCounter_adds->increment();
+    }
+#endif // READY
 
     // Since we checked earlier and the reaction wasn't in the map,
     // our emplace() call should have added it.
@@ -251,6 +277,7 @@ void ReactionNetwork::dumpTo(std::ostream& os) const {
         os << currReactant << '\n';
     }
 
+#if READY
     // Dump reactants of each type.
     // TODO what does this give us that the flat view doesn't?
     os << "per-type reactant map:\n";
@@ -262,6 +289,7 @@ void ReactionNetwork::dumpTo(std::ostream& os) const {
             os << *(currMapItem.second) << '\n';
         }
     }
+#endif // READY
 
     // Dump ProductionReactions.
     os << productionReactionMap.size() << " production reactions:\n";
@@ -273,6 +301,13 @@ void ReactionNetwork::dumpTo(std::ostream& os) const {
     os << dissociationReactionMap.size() << " dissociation reactions:\n";
     for (auto const& currMapItem : dissociationReactionMap) {
         os << *(currMapItem.second) << '\n';
+    }
+
+    // For each reactant, dump coefficients it uses for reactions it
+    // participates in.
+    os << size() << " reactant coefficients:\n";
+    for (IReactant const& currReactant : allReactants) {
+        currReactant.outputCoefficientsTo(os);
     }
 }
 

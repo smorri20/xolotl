@@ -7,24 +7,43 @@
 
 using namespace xolotlCore;
 
-void PSICluster::resultFrom(std::shared_ptr<ProductionReaction> reaction,
-		int a, int b, int c, int d) {
+#if READY
+static std::shared_ptr<xolotlPerf::IEventCounter> resultFrom_addsCounter;
+static std::shared_ptr<xolotlPerf::IEventCounter> resultFrom_callsCounter;
 
-	// Add the reaction to the network
-    // TODO do we need to check if we know about it before adding it,
-    // like we do with PSISuperClusters?
-	auto& prref = network.addProductionReaction(reaction);
+static std::shared_ptr<xolotlPerf::IEventCounter> resultFrom_baddsCounter;
+static std::shared_ptr<xolotlPerf::IEventCounter> resultFrom_bcallsCounter;
+
+static std::shared_ptr<xolotlPerf::IEventCounter> participateInProd_addsCounter;
+static std::shared_ptr<xolotlPerf::IEventCounter> participateInProd_callsCounter;
+
+static std::shared_ptr<xolotlPerf::IEventCounter> participateInProd_baddsCounter;
+static std::shared_ptr<xolotlPerf::IEventCounter> participateInProd_bcallsCounter;
+
+static std::shared_ptr<xolotlPerf::IEventCounter> participateInDiss_addsCounter;
+static std::shared_ptr<xolotlPerf::IEventCounter> participateInDiss_callsCounter;
+
+static std::shared_ptr<xolotlPerf::IEventCounter> participateInDiss_baddsCounter;
+static std::shared_ptr<xolotlPerf::IEventCounter> participateInDiss_bcallsCounter;
+
+static std::shared_ptr<xolotlPerf::IEventCounter> emitFrom_addsCounter;
+static std::shared_ptr<xolotlPerf::IEventCounter> emitFrom_callsCounter;
+#endif // READY
+
+
+void PSICluster::resultFrom(ProductionReaction& reaction,
+		int a, int b, int c, int d) {
 
 	// Add a cluster pair for the given reaction.
 	reactingPairs.emplace_back(
-            prref,
-            static_cast<PSICluster&>(reaction->first),
-            static_cast<PSICluster&>(reaction->second));
+            reaction,
+            static_cast<PSICluster&>(reaction.first),
+            static_cast<PSICluster&>(reaction.second));
     auto& newPair = reactingPairs.back();
 
-    // NB: newPair's reactants are same as reaction and newReaction's.
+    // NB: newPair's reactants are same as reaction's.
     // So use newPair only from here on.
-    // TODO Any way to enforce this?
+    // TODO Any way to enforce this beyond splitting it into two functions?
 
 	// Update the coefficients
 	double firstHeDistance = 0.0, firstVDistance = 0.0, secondHeDistance = 0.0,
@@ -52,8 +71,65 @@ void PSICluster::resultFrom(std::shared_ptr<ProductionReaction> reaction,
 	return;
 }
 
+void PSICluster::resultFrom(ProductionReaction& reaction,
+        const std::vector<PendingProductionReactionInfo>& prInfos) {
+
+	// Add a cluster pair for the given reaction.
+	reactingPairs.emplace_back(
+            reaction,
+            static_cast<PSICluster&>(reaction.first),
+            static_cast<PSICluster&>(reaction.second));
+    auto& newPair = reactingPairs.back();
+
+    // NB: newPair's reactants are same as reaction's.
+    // So use newPair only from here on.
+    // TODO Any way to enforce this beyond splitting it into two functions?
+
+	// Update the coefficients
+    std::for_each(prInfos.begin(), prInfos.end(),
+        [&newPair](const PendingProductionReactionInfo& currPRI) {
+
+        // Use names that correspond to single version.
+        int a = currPRI.numHe;
+        int b = currPRI.numV;
+        int c = currPRI.i;
+        int d = currPRI.j;
+
+        double firstHeDistance = 0.0, firstVDistance = 0.0, secondHeDistance = 0.0,
+                secondVDistance = 0.0;
+        if (newPair.first.getType() == ReactantType::PSISuper) {
+            auto const& super = static_cast<PSICluster const&>(newPair.first);
+            firstHeDistance = super.getHeDistance(c);
+            firstVDistance = super.getVDistance(d);
+        }
+        if (newPair.second.getType() == ReactantType::PSISuper) {
+            auto const& super = static_cast<PSICluster const&>(newPair.second);
+            secondHeDistance = super.getHeDistance(c);
+            secondVDistance = super.getVDistance(d);
+        }
+        newPair.a00 += 1.0;
+        newPair.a10 += firstHeDistance;
+        newPair.a20 += firstVDistance;
+        newPair.a01 += secondHeDistance;
+        newPair.a02 += secondVDistance;
+        newPair.a11 += firstHeDistance * secondHeDistance;
+        newPair.a12 += firstHeDistance * secondVDistance;
+        newPair.a21 += firstVDistance * secondHeDistance;
+        newPair.a22 += firstVDistance * secondVDistance;
+    });
+
+	return;
+}
+
 void PSICluster::participateIn(ProductionReaction& reaction,
 		int a, int b) {
+
+#if READY
+    if (not participateInProd_callsCounter) {
+        participateInProd_callsCounter = handlerRegistry->getEventCounter("PSICluster_partInProd_calls");
+    }
+    participateInProd_callsCounter->increment();
+#endif // READY
 
 	// Look for the other cluster
 	auto& otherCluster = static_cast<PSICluster&>((reaction.first.getId() == id) ?
@@ -76,16 +152,16 @@ void PSICluster::participateIn(ProductionReaction& reaction,
 #endif // READY
 	if (it == combiningReactants.rend()) {
 
+#if READY
+        if (not participateInProd_addsCounter) {
+            participateInProd_addsCounter = handlerRegistry->getEventCounter("PSICluster_partInProd_adds");
+        }
+        participateInProd_addsCounter->increment();
+#endif // READY
+
         // We did not already know about this combination.
-
-        // Create the corresponding production reaction.
-		auto newReaction = std::make_shared<ProductionReaction>(otherCluster,
-				*this);
-		// Add it to the network
-		auto& prref  = network.addProductionReaction(newReaction);
-
-		// Add the combination to our collection.
-		combiningReactants.emplace_back(prref, otherCluster);
+		// Note that we combine with the other cluster in this reaction.
+		combiningReactants.emplace_back(reaction, otherCluster);
 		it = combiningReactants.rbegin();
 	}
 
@@ -102,44 +178,118 @@ void PSICluster::participateIn(ProductionReaction& reaction,
 	return;
 }
 
-void PSICluster::createDissociation(
-		std::shared_ptr<DissociationReaction> reaction, int a, int b, int c,
-		int d) {
+void PSICluster::participateIn(ProductionReaction& reaction,
+            const std::vector<PendingProductionReactionInfo>& prInfos) {
+
+#if READY
+    if (not participateInProd_bcallsCounter) {
+        participateInProd_bcallsCounter = handlerRegistry->getEventCounter("PSICluster_partInProd_bcalls");
+    }
+    participateInProd_bcallsCounter->increment();
+#endif // READY
 
 	// Look for the other cluster
-	auto& emittedCluster = static_cast<PSICluster&>((reaction->first.getId() == id) ?
-                                reaction->second :
-                                reaction->first);
+	auto& otherCluster = static_cast<PSICluster&>((reaction.first.getId() == id) ?
+                                reaction.second :
+                                reaction.first);
+
+	// Check if the reaction was already added
+#if READY
+    auto it = std::find_if(combiningReactants.rbegin(), combiningReactants.rend(),
+                [&otherCluster](const CombiningCluster& cc) {
+                    return otherCluster == cc.combining;
+                });
+#else
+    std::vector<CombiningCluster>::reverse_iterator it;
+    for (it = combiningReactants.rbegin(); it != combiningReactants.rend(); ++it) {
+        if(&otherCluster == &(it->combining)) {
+            break;
+        }
+    }
+#endif // READY
+	if (it == combiningReactants.rend()) {
+
+#if READY
+        if (not participateInProd_baddsCounter) {
+            participateInProd_baddsCounter = handlerRegistry->getEventCounter("PSICluster_partInProd_badds");
+        }
+        participateInProd_baddsCounter->increment();
+#endif // READY
+
+        // We did not already know about this combination.
+		// Note that we combine with the other cluster in this reaction.
+		combiningReactants.emplace_back(reaction, otherCluster);
+		it = combiningReactants.rbegin();
+	}
+    assert(it != combiningReactants.rend());
+    auto& combCluster = *it;
+
+	// Update the coefficients
+    std::for_each(prInfos.begin(), prInfos.end(),
+        [&otherCluster,&combCluster](const PendingProductionReactionInfo& currPRInfo) {
+
+        // Use names corresponding to the single-item version.
+        int a = currPRInfo.i;
+        int b = currPRInfo.j;
+
+        double heDistance = 0.0, vDistance = 0.0;
+        if (otherCluster.getType() == ReactantType::PSISuper) {
+            heDistance = otherCluster.getHeDistance(a);
+            vDistance = otherCluster.getVDistance(b);
+        }
+        combCluster.a0 += 1.0;
+        combCluster.a1 += heDistance;
+        combCluster.a2 += vDistance;
+    });
+
+	return;
+}
+
+void PSICluster::participateIn(DissociationReaction& reaction,
+        int a, int b, int c, int d) {
+
+#if READY
+    if (not participateInDiss_callsCounter) {
+        participateInDiss_callsCounter = handlerRegistry->getEventCounter("PSICluster_partInDiss_calls");
+    }
+    participateInDiss_callsCounter->increment();
+#endif // READY
+
+	// Look for the other cluster
+	auto& emittedCluster = static_cast<PSICluster&>((reaction.first.getId() == id) ?
+                                reaction.second :
+                                reaction.first);
 
 	// Check if the reaction was already added
     auto it = std::find_if(dissociatingPairs.rbegin(), dissociatingPairs.rend(),
             [&reaction,&emittedCluster](const ClusterPair& currPair) {
-                return (&(reaction->dissociating) == &static_cast<PSICluster&>(currPair.first)) and
+                return (&(reaction.dissociating) == &static_cast<PSICluster&>(currPair.first)) and
                         (&emittedCluster == &static_cast<PSICluster&>(currPair.second));
 
             });
 	if (it == dissociatingPairs.rend()) {
-		// It was not already in so add it
-        //
-		// Add the corresponding dissociation reaction to the network.
-		auto newReaction = std::make_shared<DissociationReaction>(
-                reaction->dissociating,
-				emittedCluster, *this);
-		auto& drref = network.addDissociationReaction(newReaction);
+
+		// We did not already know about it.
+#if READY
+        if (not participateInDiss_addsCounter) {
+            participateInDiss_addsCounter = handlerRegistry->getEventCounter("PSICluster_partInDiss_adds");
+        }
+        participateInDiss_addsCounter->increment();
+#endif // READY
 
 		// Add the pair of them where it is important that the
 		// dissociating cluster is the first one
 		dissociatingPairs.emplace_back(
-                drref,
-                static_cast<PSICluster&>(reaction->dissociating),
+                reaction,
+                static_cast<PSICluster&>(reaction.dissociating),
 				static_cast<PSICluster&>(emittedCluster));
 		it = dissociatingPairs.rbegin();
 	}
 
 	// Update the coefficients
 	double firstHeDistance = 0.0, firstVDistance = 0.0;
-	if (reaction->dissociating.getType() == ReactantType::PSISuper) {
-		auto const& super = static_cast<PSICluster&>(reaction->dissociating);
+	if (reaction.dissociating.getType() == ReactantType::PSISuper) {
+		auto const& super = static_cast<PSICluster&>(reaction.dissociating);
 		firstHeDistance = super.getHeDistance(a);
 		firstVDistance = super.getVDistance(b);
 	}
@@ -150,19 +300,97 @@ void PSICluster::createDissociation(
 	return;
 }
 
-void PSICluster::createEmission(std::shared_ptr<DissociationReaction> reaction,
+void PSICluster::participateIn(DissociationReaction& reaction,
+        const std::vector<PendingProductionReactionInfo>& prInfos) {
+
+#if READY
+    if (not participateInDiss_bcallsCounter) {
+        participateInDiss_bcallsCounter = handlerRegistry->getEventCounter("PSICluster_partInDiss_bcalls");
+    }
+    participateInDiss_bcallsCounter->increment();
+#endif // READY
+
+	// Look for the other cluster
+	auto& emittedCluster = static_cast<PSICluster&>((reaction.first.getId() == id) ?
+                                reaction.second :
+                                reaction.first);
+
+	// Check if the reaction was already added
+    auto it = std::find_if(dissociatingPairs.rbegin(), dissociatingPairs.rend(),
+            [&reaction,&emittedCluster](const ClusterPair& currPair) {
+                return (&(reaction.dissociating) == &static_cast<PSICluster&>(currPair.first)) and
+                        (&emittedCluster == &static_cast<PSICluster&>(currPair.second));
+
+            });
+	if (it == dissociatingPairs.rend()) {
+
+		// We did not already know about it.
+#if READY
+        if (not participateInDiss_baddsCounter) {
+            participateInDiss_baddsCounter = handlerRegistry->getEventCounter("PSICluster_partInDiss_badds");
+        }
+        participateInDiss_baddsCounter->increment();
+#endif // READY
+
+		// Add the pair of them where it is important that the
+		// dissociating cluster is the first one
+		dissociatingPairs.emplace_back(
+                reaction,
+                static_cast<PSICluster&>(reaction.dissociating),
+				static_cast<PSICluster&>(emittedCluster));
+		it = dissociatingPairs.rbegin();
+	}
+    assert(it != dissociatingPairs.rend());
+    auto& currPair = *it;
+
+	// Update the coefficients
+    std::for_each(prInfos.begin(), prInfos.end(),
+        [&currPair,&reaction](const PendingProductionReactionInfo& currPRI) {
+
+            // Use names corresponding to the single-item version.
+            int a = currPRI.numHe;
+            int b = currPRI.numV;
+
+            double firstHeDistance = 0.0, firstVDistance = 0.0;
+            if (reaction.dissociating.getType() == ReactantType::PSISuper) {
+                auto const& super = static_cast<PSICluster&>(reaction.dissociating);
+                firstHeDistance = super.getHeDistance(a);
+                firstVDistance = super.getVDistance(b);
+            }
+            currPair.a00 += 1.0;
+            currPair.a10 += firstHeDistance;
+            currPair.a20 += firstVDistance;
+        });
+
+	return;
+}
+
+void PSICluster::emitFrom(DissociationReaction& reaction,
 		int a, int b, int c, int d) {
 
-	// Add the reaction to the network
+	// Note that we emit from the reaction's reactants according to
+    // the given reaction.
     // TODO do we need to check to see whether we already know about
     // this reaction?
-	auto& drref = network.addDissociationReaction(reaction);
-
-	// Add the pair of emitted clusters.
 	emissionPairs.emplace_back( 
-            drref,
-            static_cast<PSICluster&>(reaction->first),
-			static_cast<PSICluster&>(reaction->second));
+            reaction,
+            static_cast<PSICluster&>(reaction.first),
+			static_cast<PSICluster&>(reaction.second));
+
+	return;
+}
+
+void PSICluster::emitFrom(DissociationReaction& reaction,
+        const std::vector<PendingProductionReactionInfo>& prInfos) {
+
+	// Note that we emit from the reaction's reactants according to
+    // the given reaction.
+    // TODO do we need to check to see whether we already know about
+    // this reaction?
+	emissionPairs.emplace_back( 
+            reaction,
+            static_cast<PSICluster&>(reaction.first),
+			static_cast<PSICluster&>(reaction.second));
 
 	return;
 }
@@ -555,3 +783,72 @@ std::vector<int> PSICluster::getConnectivity() const {
 
 	return connectivity;
 }
+
+void PSICluster::dumpCoefficients(std::ostream& os, 
+					PSICluster::ClusterPair const& curr) const {
+
+	os << "a[0-2][0-2]: "
+		<< ' ' << curr.a00
+		<< ' ' << curr.a01
+		<< ' ' << curr.a02
+		<< ' ' << curr.a10
+		<< ' ' << curr.a11
+		<< ' ' << curr.a12
+		<< ' ' << curr.a20
+		<< ' ' << curr.a21
+		<< ' ' << curr.a22;
+}
+
+
+void PSICluster::dumpCoefficients(std::ostream& os,
+					PSICluster::CombiningCluster const& curr) const {
+
+    os << "a[0-2]: " << curr.a0
+        << ' ' << curr.a1
+        << ' ' << curr.a2;
+}
+
+void PSICluster::outputCoefficientsTo(std::ostream& os) const {
+
+    os << "id: " << id << '\n';
+    os << "reacting: " << reactingPairs.size() << '\n';
+    std::for_each(reactingPairs.begin(), reactingPairs.end(),
+    [this,&os](ClusterPair const& currPair) {
+        os << "first: " << currPair.first.getId()
+            << "; second: " << currPair.second.getId()
+            << "; ";
+        dumpCoefficients(os, currPair);
+        os << '\n';
+    });
+
+    os << "combining: " << combiningReactants.size() << '\n';
+    std::for_each(combiningReactants.begin(), combiningReactants.end(),
+    [this,&os](CombiningCluster const& currCluster) {
+        os << "other: " << currCluster.combining.getId()
+            << "; ";
+        dumpCoefficients(os, currCluster);
+        os << '\n';
+    });
+
+    os << "dissociating: " << dissociatingPairs.size() << '\n';
+    std::for_each(dissociatingPairs.begin(), dissociatingPairs.end(),
+    [this,&os](ClusterPair const& currPair) {
+        os << "first: " << currPair.first.getId()
+            << "; second: " << currPair.second.getId()
+            << "; ";
+        dumpCoefficients(os, currPair);
+        os << '\n';
+    });
+
+    os << "emitting: " << emissionPairs.size() << '\n';
+    std::for_each(emissionPairs.begin(), emissionPairs.end(),
+    [this,&os](ClusterPair const& currPair) {
+        os << "first: " << currPair.first.getId()
+            << "; second: " << currPair.second.getId()
+            << "; ";
+        dumpCoefficients(os, currPair);
+        os << '\n';
+    });
+}
+
+

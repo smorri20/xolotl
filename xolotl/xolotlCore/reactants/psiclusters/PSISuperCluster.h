@@ -361,6 +361,16 @@ private:
 	double vMomentumFlux;
 
 
+    /**
+     * Output coefficients for a given reaction to the given output stream.
+     *
+     * @param os The output stream on which to write the coefficients.
+     * @param curr Information about our participation in a reaction.
+     */
+    void dumpCoefficients(std::ostream& os, ProductionCoefficientBase const& curr) const;
+    void dumpCoefficients(std::ostream& os, SuperClusterDissociationPair const& curr) const;
+
+
 public:
 
 
@@ -407,8 +417,18 @@ public:
 	 * @param c Number that can be used by daughter classes.
 	 * @param d Number that can be used by daughter classes.
 	 */
-	void resultFrom(std::shared_ptr<ProductionReaction> reaction, 
+	void resultFrom(ProductionReaction& reaction, 
             int a = 0, int b = 0, int c = 0, int d = 0) override;
+
+    /**
+     * Note that we result from the given reaction involving a super cluster.
+     * Assumes the reaction is already in the network.
+     *
+     * @param reaction The reaction creating this cluster.
+     * @param prInfos Production reaction parameters.
+     */
+	void resultFrom(ProductionReaction& reaction,
+            const std::vector<PendingProductionReactionInfo>& prInfos) override;
 
 	/**
 	 * Note that we combine with another cluster in a production reaction.
@@ -422,30 +442,63 @@ public:
                             int a = 0, int b = 0) override;
 
 	/**
-	 * Create a dissociation pair associated with the given reaction.
-	 * Create the connectivity.
+	 * Note that we combine with another cluster in a production reaction
+     * involving a super cluster.
+	 * Assumes that the reaction is already in our network.
+	 *
+	 * @param reaction The reaction where this cluster takes part.
+	 * @param prInfos Production reaction parameters.
+	 */
+	void participateIn(ProductionReaction& reaction,
+                const std::vector<PendingProductionReactionInfo>& prInfos) override;
+
+
+	/**
+	 * Note that we combine with another cluster in a dissociation reaction.
+	 * Assumes the reaction is already inour network.
 	 *
 	 * @param reaction The reaction creating this cluster.
-	 * @param a Helium number.
-	 * @param b Vacancy number.
-	 * @param c Helium number.
-	 * @param d Vacancy number.
+	 * @param a Number that can be used by daughter classes.
+	 * @param b Number that can be used by daughter classes.
+	 * @param c Number that can be used by daughter classes.
+	 * @param d Number that can be used by daughter classes.
 	 */
-	void createDissociation(std::shared_ptr<DissociationReaction> reaction,
+	void participateIn(DissociationReaction& reaction,
 			int a = 0, int b = 0, int c = 0, int d = 0) override;
 
 	/**
-	 * Create an emission pair associated with the given reaction.
-	 * Create the connectivity.
+	 * Note that we combine with another cluster in a dissociation reaction
+     * involving a super cluster.
+	 * Assumes the reaction is already inour network.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 * @param prInfos Production reaction parameters.
+	 */
+	void participateIn(DissociationReaction& reaction,
+            const std::vector<PendingProductionReactionInfo>& prInfos) override;
+
+	/**
+     * Note that we emit from the given reaction.
+	 * Assumes the reaction is already in our network.
 	 *
 	 * @param reaction The reaction where this cluster emits.
-	 * @param a Helium number.
-	 * @param b Vacancy number.
-	 * @param c Helium number.
-	 * @param d Vacancy number.
+	 * @param a Number that can be used by daughter classes.
+	 * @param b Number that can be used by daughter classes.
+	 * @param c Number that can be used by daughter classes.
+	 * @param d Number that can be used by daughter classes.
 	 */
-	void createEmission(std::shared_ptr<DissociationReaction> reaction, int a =
-			0, int b = 0, int c = 0, int d = 0) override;
+	void emitFrom(DissociationReaction& reaction,
+            int a = 0, int b = 0, int c = 0, int d = 0) override;
+
+	/**
+     * Note that we emit from the given reaction involving a super cluster.
+	 * Assumes the reaction is already in our network.
+	 *
+	 * @param reaction The reaction where this cluster emits.
+     * @param prInfos Production reaction parameters.
+	 */
+	void emitFrom(DissociationReaction& reaction,
+            const std::vector<PendingProductionReactionInfo>& prInfos) override;
 
 	/**
 	 * This operation returns true to signify that this cluster is a mixture of
@@ -756,6 +809,13 @@ public:
         return heBounds.contains(_nHe) and vBounds.contains(_nV);
 	}
 
+    /**
+     * Tell reactant to output a representation of its reaction coefficients
+     * to the given output stream.
+     *
+     * @param os Output stream on which to output coefficients.
+     */
+    virtual void outputCoefficientsTo(std::ostream& os) const override;
 };
 //end class PSISuperCluster
 

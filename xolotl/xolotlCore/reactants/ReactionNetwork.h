@@ -112,14 +112,16 @@ protected:
      * All known ProductionReactions in the network, keyed by a
      * representation of the reaction.
      */
-	std::map<ProductionReaction::KeyType, std::shared_ptr<ProductionReaction> > productionReactionMap;
+    using ProductionReactionMap = std::unordered_map<ProductionReaction::KeyType, std::unique_ptr<ProductionReaction> >;
+    ProductionReactionMap productionReactionMap;
 
 	/**
 	 * All known dissociation reactions in the network, keyed by a
      * representation of the reaction.
 	 */
-	std::map<DissociationReaction::KeyType,
-			std::shared_ptr<DissociationReaction> > dissociationReactionMap;
+    using DissociationReactionMap = std::unordered_map<DissociationReaction::KeyType,
+			std::unique_ptr<DissociationReaction> >;
+    DissociationReactionMap dissociationReactionMap;
 
 	/**
 	 * A map for storing the dfill configuration and accelerating the formation of
@@ -206,7 +208,7 @@ protected:
 
 
     /**
-     * Find lower bound of interval in boundVector that contains a value.
+     * Find index of interval in boundVector that contains a value.
      * Assumes that:
      *   boundVector is sorted
      *   boundVector indicates non-overlapping intervals
@@ -218,7 +220,8 @@ protected:
      * @return The lower bound of the interval in boundVector that contains
      *       'val.'  If there is no such interval, returns 0.
      */
-    IReactant::SizeType findBoundsIntervalBase(IReactant::SizeType val) const {
+    std::size_t findBoundsIntervalBaseIdx(IReactant::SizeType val) const {
+
         // Find the first item that is *greater than* the given count.
         auto iter = std::upper_bound(boundVector.begin(), boundVector.end(), val);
 
@@ -227,7 +230,7 @@ protected:
         // * std::upper_bound returned end() => val is larger than any interval.
         // * otherwise => iter points to *next* item after interval we want.
         return ((iter != boundVector.begin()) and (iter != boundVector.end())) ?
-            *(iter - 1) : 0;
+            (iter - boundVector.begin()) : std::numeric_limits<std::size_t>::max();
     }
 
 
@@ -388,22 +391,21 @@ public:
 	}
 
 	/**
-	 * This operation adds a production reaction to the network.
+	 * Add a production reaction to the network.
 	 *
 	 * @param reaction The reaction that should be added to the network
-	 * @return The pointer to the reaction that is now in the network
+	 * @return The reaction that is now in the network
 	 */
-	virtual ProductionReaction& addProductionReaction(
-			std::shared_ptr<ProductionReaction> reaction) override;
+    ProductionReaction& add(std::unique_ptr<ProductionReaction> reaction) override;
+
 
 	/**
-	 * This operation adds a dissociation reaction to the network.
+	 * Add a dissociation reaction to the network.
 	 *
 	 * @param reaction The reaction that should be added to the network
-	 * @return The pointer to the reaction that is now in the network
+	 * @return The reaction that is now in the network
 	 */
-	virtual DissociationReaction& addDissociationReaction(
-			std::shared_ptr<DissociationReaction> reaction) override;
+	DissociationReaction& add(std::unique_ptr<DissociationReaction> reaction) override;
 
 	/**
 	 * This operation fills an array of doubles with the concentrations of all
