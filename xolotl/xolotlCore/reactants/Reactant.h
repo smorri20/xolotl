@@ -665,6 +665,19 @@ public:
 	virtual bool isMixed() const override {
 		return false;
 	}
+
+    /**
+     * Tell reactant to output a representation of its reaction coefficients
+     * to the given output stream.
+     *
+     * @param os Output stream on which to output coefficients.
+     */
+    // We must define this because the code may use a stock Reactant
+    // when using dummy reactions, and thus we have to define all
+    // pure virtual functions from our base class(es).
+    virtual void outputCoefficientsTo(std::ostream& os) const override {
+        // Nothing to do.
+    }
 };
 
 } // end namespace xolotlCore

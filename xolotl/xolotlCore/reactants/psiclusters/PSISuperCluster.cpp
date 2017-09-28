@@ -1218,3 +1218,100 @@ void PSISuperCluster::getVMomentPartialDerivatives(
 
 	return;
 }
+
+
+void PSISuperCluster::dumpCoefficients(std::ostream& os, PSISuperCluster::ProductionCoefficientBase const& curr) const {
+
+    os << "a[0-2][0-2][0-2]:"
+        << ' ' << curr.a000
+        << ' ' << curr.a001
+        << ' ' << curr.a002
+        << ' ' << curr.a100
+        << ' ' << curr.a101
+        << ' ' << curr.a102
+        << ' ' << curr.a200
+        << ' ' << curr.a201
+        << ' ' << curr.a202
+        << ' ' << curr.a010
+        << ' ' << curr.a011
+        << ' ' << curr.a012
+        << ' ' << curr.a020
+        << ' ' << curr.a021
+        << ' ' << curr.a022
+        << ' ' << curr.a110
+        << ' ' << curr.a111
+        << ' ' << curr.a112
+        << ' ' << curr.a120
+        << ' ' << curr.a121
+        << ' ' << curr.a122
+        << ' ' << curr.a210
+        << ' ' << curr.a211
+        << ' ' << curr.a212
+        << ' ' << curr.a220
+        << ' ' << curr.a221
+        << ' ' << curr.a222;
+}
+
+void PSISuperCluster::dumpCoefficients(std::ostream& os, PSISuperCluster::SuperClusterDissociationPair const& currPair) const {
+
+    os << "a[0-2][0-2]:"
+        << ' ' << currPair.a00
+        << ' ' << currPair.a01
+        << ' ' << currPair.a02
+        << ' ' << currPair.a10
+        << ' ' << currPair.a11
+        << ' ' << currPair.a12
+        << ' ' << currPair.a20
+        << ' ' << currPair.a21
+        << ' ' << currPair.a22;
+}
+
+
+void PSISuperCluster::outputCoefficientsTo(std::ostream& os) const {
+
+    os << "id: " << id << '\n';
+    os << "reacting: " << effReactingList.size() << '\n';
+    std::for_each(effReactingList.begin(), effReactingList.end(),
+    [this,&os](ProductionPairMap::value_type const& currMapItem) {
+        auto const& currPair = currMapItem.second;
+        os << "first: " << currPair.first.getId()
+            << "; second: " << currPair.second.getId()
+            << "; ";
+        dumpCoefficients(os, currPair);
+        os << '\n';
+    });
+
+    os << "combining: " << effCombiningList.size() << '\n';
+    std::for_each(effCombiningList.begin(), effCombiningList.end(),
+    [this,&os](CombiningClusterMap::value_type const& currMapItem) {
+        auto const& currComb = currMapItem.second;
+        os << "other: " << currComb.first.getId()
+            << "; ";
+        dumpCoefficients(os, currComb);
+        os << '\n';
+    });
+
+    os << "dissociating: " << effDissociatingList.size() << '\n';
+    std::for_each(effDissociatingList.begin(), effDissociatingList.end(),
+    [this,&os](DissociationPairMap::value_type const& currMapItem) {
+        auto const& currPair = currMapItem.second;
+        os << "first: " << currPair.first.getId()
+            << "; second: " << currPair.second.getId()
+            << "; ";
+        dumpCoefficients(os, currPair);
+        os << '\n';
+    });
+
+    os << "emitting: " << effEmissionList.size() << '\n';
+    std::for_each(effEmissionList.begin(), effEmissionList.end(),
+    [this,&os](DissociationPairMap::value_type const& currMapItem) {
+        auto const& currPair = currMapItem.second;
+        os << "first: " << currPair.first.getId()
+            << "; second: " << currPair.second.getId()
+            << "; ";
+        dumpCoefficients(os, currPair);
+        os << '\n';
+    });
+}
+
+

@@ -461,6 +461,13 @@ public:
 	 */
 	virtual bool isMixed() const = 0;
 
+    /**
+     * Tell reactant to output a representation of its reaction coefficients
+     * to the given output stream.
+     *
+     * @param os Output stream on which to output coefficients.
+     */
+    virtual void outputCoefficientsTo(std::ostream& os) const = 0;
 };
 
 

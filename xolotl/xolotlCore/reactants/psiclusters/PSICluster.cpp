@@ -783,3 +783,72 @@ std::vector<int> PSICluster::getConnectivity() const {
 
 	return connectivity;
 }
+
+void PSICluster::dumpCoefficients(std::ostream& os, 
+					PSICluster::ClusterPair const& curr) const {
+
+	os << "a[0-2][0-2]: "
+		<< ' ' << curr.a00
+		<< ' ' << curr.a01
+		<< ' ' << curr.a02
+		<< ' ' << curr.a10
+		<< ' ' << curr.a11
+		<< ' ' << curr.a12
+		<< ' ' << curr.a20
+		<< ' ' << curr.a21
+		<< ' ' << curr.a22;
+}
+
+
+void PSICluster::dumpCoefficients(std::ostream& os,
+					PSICluster::CombiningCluster const& curr) const {
+
+    os << "a[0-2]: " << curr.a0
+        << ' ' << curr.a1
+        << ' ' << curr.a2;
+}
+
+void PSICluster::outputCoefficientsTo(std::ostream& os) const {
+
+    os << "id: " << id << '\n';
+    os << "reacting: " << reactingPairs.size() << '\n';
+    std::for_each(reactingPairs.begin(), reactingPairs.end(),
+    [this,&os](ClusterPair const& currPair) {
+        os << "first: " << currPair.first.getId()
+            << "; second: " << currPair.second.getId()
+            << "; ";
+        dumpCoefficients(os, currPair);
+        os << '\n';
+    });
+
+    os << "combining: " << combiningReactants.size() << '\n';
+    std::for_each(combiningReactants.begin(), combiningReactants.end(),
+    [this,&os](CombiningCluster const& currCluster) {
+        os << "other: " << currCluster.combining.getId()
+            << "; ";
+        dumpCoefficients(os, currCluster);
+        os << '\n';
+    });
+
+    os << "dissociating: " << dissociatingPairs.size() << '\n';
+    std::for_each(dissociatingPairs.begin(), dissociatingPairs.end(),
+    [this,&os](ClusterPair const& currPair) {
+        os << "first: " << currPair.first.getId()
+            << "; second: " << currPair.second.getId()
+            << "; ";
+        dumpCoefficients(os, currPair);
+        os << '\n';
+    });
+
+    os << "emitting: " << emissionPairs.size() << '\n';
+    std::for_each(emissionPairs.begin(), emissionPairs.end(),
+    [this,&os](ClusterPair const& currPair) {
+        os << "first: " << currPair.first.getId()
+            << "; second: " << currPair.second.getId()
+            << "; ";
+        dumpCoefficients(os, currPair);
+        os << '\n';
+    });
+}
+
+

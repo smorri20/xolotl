@@ -361,6 +361,16 @@ private:
 	double vMomentumFlux;
 
 
+    /**
+     * Output coefficients for a given reaction to the given output stream.
+     *
+     * @param os The output stream on which to write the coefficients.
+     * @param curr Information about our participation in a reaction.
+     */
+    void dumpCoefficients(std::ostream& os, ProductionCoefficientBase const& curr) const;
+    void dumpCoefficients(std::ostream& os, SuperClusterDissociationPair const& curr) const;
+
+
 public:
 
 
@@ -799,6 +809,13 @@ public:
         return heBounds.contains(_nHe) and vBounds.contains(_nV);
 	}
 
+    /**
+     * Tell reactant to output a representation of its reaction coefficients
+     * to the given output stream.
+     *
+     * @param os Output stream on which to output coefficients.
+     */
+    virtual void outputCoefficientsTo(std::ostream& os) const override;
 };
 //end class PSISuperCluster
 

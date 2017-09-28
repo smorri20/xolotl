@@ -277,6 +277,7 @@ void ReactionNetwork::dumpTo(std::ostream& os) const {
         os << currReactant << '\n';
     }
 
+#if READY
     // Dump reactants of each type.
     // TODO what does this give us that the flat view doesn't?
     os << "per-type reactant map:\n";
@@ -288,6 +289,7 @@ void ReactionNetwork::dumpTo(std::ostream& os) const {
             os << *(currMapItem.second) << '\n';
         }
     }
+#endif // READY
 
     // Dump ProductionReactions.
     os << productionReactionMap.size() << " production reactions:\n";
@@ -299,6 +301,13 @@ void ReactionNetwork::dumpTo(std::ostream& os) const {
     os << dissociationReactionMap.size() << " dissociation reactions:\n";
     for (auto const& currMapItem : dissociationReactionMap) {
         os << *(currMapItem.second) << '\n';
+    }
+
+    // For each reactant, dump coefficients it uses for reactions it
+    // participates in.
+    os << size() << " reactant coefficients:\n";
+    for (IReactant const& currReactant : allReactants) {
+        currReactant.outputCoefficientsTo(os);
     }
 }
 

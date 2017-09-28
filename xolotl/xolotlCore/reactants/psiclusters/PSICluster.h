@@ -167,6 +167,16 @@ protected:
 	 */
 	const std::set<int> & getDissociationConnectivitySet() const;
 
+
+    /**
+     * Output coefficients for a given reaction to the given output stream.
+     *
+     * @param os The output stream on which to write the coefficients.
+     * @param curr Information about our participation in a reaction.
+     */
+    void dumpCoefficients(std::ostream& os, ClusterPair const& curr) const;
+    void dumpCoefficients(std::ostream& os, CombiningCluster const& curr) const;
+
 public:
 
 	/**
@@ -551,6 +561,14 @@ public:
 	 */
 	std::vector<int> getConnectivity() const override;
 
+
+    /**
+     * Tell reactant to output a representation of its reaction coefficients
+     * to the given output stream.
+     *
+     * @param os Output stream on which to output coefficients.
+     */
+    virtual void outputCoefficientsTo(std::ostream& os) const override;
 };
 
 } /* end namespace xolotlCore */

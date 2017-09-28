@@ -512,6 +512,17 @@ public:
 	 */
 	std::vector<int> getConnectivity() const override;
 
+
+    /**
+     * Tell reactant to output a representation of its reaction coefficients
+     * to the given output stream.
+     *
+     * @param os Output stream on which to output coefficients.
+     */
+    virtual void outputCoefficientsTo(std::ostream& os) const override {
+        // NIY.
+        assert(false);
+    }
 };
 
 } /* end namespace xolotlCore */
