@@ -157,19 +157,20 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
                 auto& secondReactant = *(secondIt->second);
 
-				// Get its size
-				secondSize = secondReactant.getSize();
-				productSize = firstSize + secondSize;
-				// Get the product
-				auto product = get(toSpecies(currType), productSize);
-				// Check that the reaction can occur
-				if (product
-						&& (firstReactant.getDiffusionFactor() > 0.0
-								|| secondReactant.getDiffusionFactor() > 0.0)) {
-                    
-                    defineProductionReaction(firstReactant, secondReactant,
-                                                *product);
-				}
+				if ((firstReactant.getDiffusionFactor() > 0.0) or
+                    (secondReactant.getDiffusionFactor() > 0.0)) {
+
+                    // Get its size
+                    secondSize = secondReactant.getSize();
+                    productSize = firstSize + secondSize;
+                    // Get the product
+                    auto product = get(toSpecies(currType), productSize);
+                    // Check that the reaction can occur
+                    if (product) {
+                        defineProductionReaction(firstReactant, secondReactant,
+                                                    *product);
+                    }
+                }
 			}
 		}
 	}
@@ -192,66 +193,74 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
             auto& heVReactant = *(heVMapItem.second);
 
-			// Get its composition
-			auto& comp = heVReactant.getComposition();
-			// Create the composition of the potential product
-            auto newNumHe = comp[toCompIdx(Species::He)] + firstSize;
-            auto newNumV = comp[toCompIdx(Species::V)];
+			if ((heReactant.getDiffusionFactor() > 0.0) or
+                (heVReactant.getDiffusionFactor() > 0.0)) {
 
-			// Check if product already exists.
-            IReactant::Composition newComp;
-            newComp[toCompIdx(Species::He)] = newNumHe;
-            newComp[toCompIdx(Species::V)] = newNumV;
-			auto product = get(ReactantType::HeV, newComp);
+                // Get its composition
+                auto& comp = heVReactant.getComposition();
+                // Create the composition of the potential product
+                auto newNumHe = comp[toCompIdx(Species::He)] + firstSize;
+                auto newNumV = comp[toCompIdx(Species::V)];
 
-			// Check if the product can be a super cluster
-			if (!product) {
-				// Check if it is a super cluster from the map
-				product = getSuperFromComp(newNumHe, newNumV);
-			}
-			// Check that the reaction can occur
-			if (product
-					&& (heReactant.getDiffusionFactor() > 0.0
-							|| heVReactant.getDiffusionFactor() > 0.0)) {
+                // Check if product already exists.
+                IReactant::Composition newComp;
+                newComp[toCompIdx(Species::He)] = newNumHe;
+                newComp[toCompIdx(Species::V)] = newNumV;
+                auto product = get(ReactantType::HeV, newComp);
 
-                defineProductionReaction(heReactant, heVReactant,
-                                            *product,
-                                            newNumHe, newNumV);
-			}
+                // Check if the product can be a super cluster
+                if (!product) {
+                    // Check if it is a super cluster from the map
+                    product = getSuperFromComp(newNumHe, newNumV);
+                }
+                // Check that the reaction can occur
+                if (product) {
+                    defineProductionReaction(heReactant, heVReactant,
+                                                *product,
+                                                newNumHe, newNumV);
+                }
+            }
 		}
 
 		// Consider product with each super cluster
         for (auto const& superMapItem : getAll(ReactantType::PSISuper)) {
 
             auto& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
-            std::vector<PendingProductionReactionInfo> prInfos;
 
-			// Get its boundaries
-			auto const& vBounds = superCluster.getVBounds();
-			// Loop on them
-            for (auto const& i : superCluster.getHeBounds()) {
-                for (auto const& j : superCluster.getVBounds()) {
-					// Assume the product can only be a super cluster here
-                    auto newNumHe = i + firstSize;
-                    auto newNumV = j;
-					IReactant* product = getSuperFromComp(newNumHe, newNumV);
-					// Check that the reaction can occur
-					if (product
-							&& (heReactant.getDiffusionFactor() > 0.0
-									|| superCluster.getDiffusionFactor() > 0.0)) {
+            if (((heReactant.getDiffusionFactor() > 0.0) or
+                 (superCluster.getDiffusionFactor() > 0.0))) {
 
-                        // Note that current reactant reacts with
-                        // current superCluster to produce product,
-                        // according to current parameters.
-                        prInfos.emplace_back(*product, newNumHe, newNumV, i, j);
-					}
-				}
-			}
+                std::vector<PendingProductionReactionInfo> prInfos;
 
-            // Now that we know how current reactant reacts with
-            // current superCluster, create the production 
-            // reaction(s) for them.
-            defineProductionReactions(heReactant, superCluster, prInfos);
+                // Get its boundaries
+                auto const& vBounds = superCluster.getVBounds();
+                // Loop on them
+                for (auto const& i : superCluster.getHeBounds()) {
+                    for (auto const& j : superCluster.getVBounds()) {
+                        // Assume the product can only be a super cluster here
+                        auto newNumHe = i + firstSize;
+                        auto newNumV = j;
+                        IReactant* product = getSuperFromComp(newNumHe, newNumV);
+                        // Check that the reaction can occur
+                        if (product) {
+
+                            // Note that current reactant reacts with
+                            // current superCluster to produce product,
+                            // according to current parameters.
+                            prInfos.emplace_back(*product, newNumHe, newNumV, i, j);
+                        }
+                    }
+                }
+
+                // Now that we know how current reactant reacts with
+                // current superCluster, create the production 
+                // reaction(s) for them.
+                // TODO can we short circuit this call if prInfos is empty?
+                // Gives different network (some reactions not defined) but
+                // is resulting network equivalent since coefficients would
+                // be zero for those reactions anyway?
+                defineProductionReactions(heReactant, superCluster, prInfos);
+            }
 		}
 	}
 
@@ -263,8 +272,10 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
         auto& vReactant = *(vMapItem.second);
 
 		// Skip if it can't diffuse
-		if (xolotlCore::equal(vReactant.getDiffusionFactor(), 0.0))
+		if (xolotlCore::equal(vReactant.getDiffusionFactor(), 0.0)) {
 			continue;
+        }
+
 		// Get the V size
 		firstSize = vReactant.getSize();
 		// Consider product with every HeV cluster.
@@ -272,62 +283,66 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
             auto& heVReactant = *(heVMapItem.second);
 
-			// Get its composition
-			auto& comp = heVReactant.getComposition();
-			// Create the composition of the potential product
-            auto newNumHe = comp[toCompIdx(Species::He)];
-            auto newNumV = comp[toCompIdx(Species::V)] + firstSize;
+			if ((vReactant.getDiffusionFactor() > 0.0) or
+                (heVReactant.getDiffusionFactor() > 0.0)) {
 
-			// Check if product already exists.
-            IReactant::Composition newComp;
-            newComp[toCompIdx(Species::He)] = newNumHe;
-            newComp[toCompIdx(Species::V)] = newNumV;
-			auto product = get(ReactantType::HeV, newComp);
+                // Get its composition
+                auto& comp = heVReactant.getComposition();
+                // Create the composition of the potential product
+                auto newNumHe = comp[toCompIdx(Species::He)];
+                auto newNumV = comp[toCompIdx(Species::V)] + firstSize;
 
-			// Check if the product can be a super cluster
-			if (!product) {
-				product = getSuperFromComp(newNumHe, newNumV);
-			}
-			// Check that the reaction can occur
-			if (product
-					&& (vReactant.getDiffusionFactor() > 0.0
-							|| heVReactant.getDiffusionFactor() > 0.0)) {
+                // Check if product already exists.
+                IReactant::Composition newComp;
+                newComp[toCompIdx(Species::He)] = newNumHe;
+                newComp[toCompIdx(Species::V)] = newNumV;
+                auto product = get(ReactantType::HeV, newComp);
 
-                defineProductionReaction(vReactant, heVReactant,
-                                            *product,
-                                            newNumHe, newNumV);
-			}
+                // Check if the product can be a super cluster
+                if (!product) {
+                    product = getSuperFromComp(newNumHe, newNumV);
+                }
+                // Check that the reaction can occur
+                if (product) {
+                    defineProductionReaction(vReactant, heVReactant,
+                                                *product,
+                                                newNumHe, newNumV);
+                }
+            }
 		}
 
 		// Consider product with super clusters.
         for (auto const& superMapItem : getAll(ReactantType::PSISuper)) {
 
             auto& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
-            std::vector<PendingProductionReactionInfo> prInfos;
 
-			// Get its boundaries
-			auto const& heBounds = superCluster.getHeBounds();
-            auto const& vBounds = superCluster.getVBounds();
-			// Loop on them
-            for (auto const& i : superCluster.getHeBounds()) {
-                for (auto const& j : superCluster.getVBounds()) {
+            if ((vReactant.getDiffusionFactor() > 0.0) or
+                (superCluster.getDiffusionFactor() > 0.0)) {
 
-					// Assume the product can only be a super cluster here
-                    auto newNumHe = i;
-                    auto newNumV = j + firstSize;
-					IReactant* product = getSuperFromComp(newNumHe, newNumV);
-					// Check that the reaction can occur
-					if (product
-							&& (vReactant.getDiffusionFactor() > 0.0
-									|| superCluster.getDiffusionFactor() > 0.0)) {
-                        prInfos.emplace_back(*product, newNumHe, newNumV, i, j);
-					}
-				}
-			}
+                std::vector<PendingProductionReactionInfo> prInfos;
 
-            // Now that we know how current reactant interacts with 
-            // current supercluster, define the production reactions.
-            defineProductionReactions(vReactant, superCluster, prInfos);
+                // Get its boundaries
+                auto const& heBounds = superCluster.getHeBounds();
+                auto const& vBounds = superCluster.getVBounds();
+                // Loop on them
+                for (auto const& i : superCluster.getHeBounds()) {
+                    for (auto const& j : superCluster.getVBounds()) {
+
+                        // Assume the product can only be a super cluster here
+                        auto newNumHe = i;
+                        auto newNumV = j + firstSize;
+                        IReactant* product = getSuperFromComp(newNumHe, newNumV);
+                        // Check that the reaction can occur
+                        if (product) {
+                            prInfos.emplace_back(*product, newNumHe, newNumV, i, j);
+                        }
+                    }
+                }
+
+                // Now that we know how current reactant interacts with 
+                // current supercluster, define the production reactions.
+                defineProductionReactions(vReactant, superCluster, prInfos);
+            }
 		}
 	}
 
@@ -345,31 +360,32 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
             auto& vReactant = *(vMapItem.second);
 
-			// Get its size
-			secondSize = vReactant.getSize();
-			// Create the composition of the potential product
-            auto newNumHe = firstSize;
-            auto newNumV = secondSize;
+			if ((heReactant.getDiffusionFactor() > 0.0) or
+                (vReactant.getDiffusionFactor() > 0.0)) {
 
-			// Get the product
-            IReactant::Composition newComp;
-            newComp[toCompIdx(Species::He)] = newNumHe;
-            newComp[toCompIdx(Species::V)] = newNumV;
-			auto product = get(ReactantType::HeV, newComp);
+                // Get its size
+                secondSize = vReactant.getSize();
+                // Create the composition of the potential product
+                auto newNumHe = firstSize;
+                auto newNumV = secondSize;
 
-			// Check if the product can be a super cluster
-			if (!product) {
-				product = getSuperFromComp(newNumHe, newNumV);
-			}
-			// Check that the reaction can occur
-			if (product
-					&& (heReactant.getDiffusionFactor() > 0.0
-							|| vReactant.getDiffusionFactor() > 0.0)) {
+                // Get the product
+                IReactant::Composition newComp;
+                newComp[toCompIdx(Species::He)] = newNumHe;
+                newComp[toCompIdx(Species::V)] = newNumV;
+                auto product = get(ReactantType::HeV, newComp);
 
-                defineProductionReaction(heReactant, vReactant,
-                                            *product,
-                                            newNumHe, newNumV);
-			}
+                // Check if the product can be a super cluster
+                if (!product) {
+                    product = getSuperFromComp(newNumHe, newNumV);
+                }
+                // Check that the reaction can occur
+                if (product) {
+                    defineProductionReaction(heReactant, vReactant,
+                                                *product,
+                                                newNumHe, newNumV);
+                }
+            }
 		}
 	}
 
@@ -387,78 +403,81 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
             auto& heVReactant = *(heVMapItem.second);
 
-			// Get its composition
-			auto& comp = heVReactant.getComposition();
-			// The product can be He or HeV
-			IReactant * product = nullptr;
-			if (comp[toCompIdx(Species::V)] == firstSize) {
-				// The product is He
-				product = get(Species::He, comp[toCompIdx(Species::He)] );
-			} else {
-				// The product is HeV
-				// Create the composition of the potential product
-                IReactant::Composition newComp;
-                newComp[toCompIdx(Species::He)] = comp[toCompIdx(Species::He)];
-                newComp[toCompIdx(Species::V)] = comp[toCompIdx(Species::V)] - firstSize;
-				// Get the product
-				product = get(ReactantType::HeV, newComp);
-			}
-			// Check that the reaction can occur
-			if (product
-					&& (iReactant.getDiffusionFactor() > 0.0
-							|| heVReactant.getDiffusionFactor() > 0.0)) {
+			if ((iReactant.getDiffusionFactor() > 0.0) or
+                (heVReactant.getDiffusionFactor() > 0.0)) {
 
-                defineProductionReaction(iReactant, heVReactant, *product);
-			}
+                // Get its composition
+                auto& comp = heVReactant.getComposition();
+                // The product can be He or HeV
+                IReactant * product = nullptr;
+                if (comp[toCompIdx(Species::V)] == firstSize) {
+                    // The product is He
+                    product = get(Species::He, comp[toCompIdx(Species::He)] );
+                } else {
+                    // The product is HeV
+                    // Create the composition of the potential product
+                    IReactant::Composition newComp;
+                    newComp[toCompIdx(Species::He)] = comp[toCompIdx(Species::He)];
+                    newComp[toCompIdx(Species::V)] = comp[toCompIdx(Species::V)] - firstSize;
+                    // Get the product
+                    product = get(ReactantType::HeV, newComp);
+                }
+                // Check that the reaction can occur
+                if (product) {
+                    defineProductionReaction(iReactant, heVReactant, *product);
+                }
+            }
 		}
 
         // Consider product with all super clusters.
         for (auto const& superMapItem : getAll(ReactantType::PSISuper)) {            
             auto& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
-            std::vector<PendingProductionReactionInfo> prInfos;
 
-			// Get its boundaries
-			auto const& heBounds = superCluster.getHeBounds();
-            auto const& vBounds = superCluster.getVBounds();
-			// Loop on them
-            for (auto const& i : superCluster.getHeBounds()) {
-                for (auto const& j : superCluster.getVBounds()) {
-					// The product might be HeV or He
-                    auto newNumHe = i;
-                    auto newNumV = j - firstSize;
+            if ((iReactant.getDiffusionFactor() > 0.0) or
+                (superCluster.getDiffusionFactor() > 0.0)) {
 
-					// Get the product
-                    IReactant* product = nullptr;
-					if (newNumV == 0) {
-						// The product is He
-						product = get(Species::He, i);
-					}
-					else {
-						// Create the composition of the potential product
-                        IReactant::Composition newComp;
-                        newComp[toCompIdx(Species::He)] = newNumHe;
-                        newComp[toCompIdx(Species::V)] = newNumV;
-						product = get(ReactantType::HeV, newComp);
+                std::vector<PendingProductionReactionInfo> prInfos;
 
-						// If the product doesn't exist check for super clusters
-						if (!product) {
-							product = getSuperFromComp(newNumHe, newNumV);
-						}
-					}
-					// Check that the reaction can occur
-					if (product
-							&& (iReactant.getDiffusionFactor() > 0.0
-									|| superCluster.getDiffusionFactor() > 0.0)) {
+                // Get its boundaries
+                auto const& heBounds = superCluster.getHeBounds();
+                auto const& vBounds = superCluster.getVBounds();
+                // Loop on them
+                for (auto const& i : superCluster.getHeBounds()) {
+                    for (auto const& j : superCluster.getVBounds()) {
+                        // The product might be HeV or He
+                        auto newNumHe = i;
+                        auto newNumV = j - firstSize;
 
-                        prInfos.emplace_back(*product, newNumHe, newNumV, i, j);
-					}
-				}
-			}
+                        // Get the product
+                        IReactant* product = nullptr;
+                        if (newNumV == 0) {
+                            // The product is He
+                            product = get(Species::He, i);
+                        }
+                        else {
+                            // Create the composition of the potential product
+                            IReactant::Composition newComp;
+                            newComp[toCompIdx(Species::He)] = newNumHe;
+                            newComp[toCompIdx(Species::V)] = newNumV;
+                            product = get(ReactantType::HeV, newComp);
 
-            // Now that we know how current reactant interacts with
-            // current supercluster, define its production reactions
-            // according to given parameters.
-            defineProductionReactions(iReactant, superCluster, prInfos);
+                            // If the product doesn't exist check for super clusters
+                            if (!product) {
+                                product = getSuperFromComp(newNumHe, newNumV);
+                            }
+                        }
+                        // Check that the reaction can occur
+                        if (product) {
+                            prInfos.emplace_back(*product, newNumHe, newNumV, i, j);
+                        }
+                    }
+                }
+
+                // Now that we know how current reactant interacts with
+                // current supercluster, define its production reactions
+                // according to given parameters.
+                defineProductionReactions(iReactant, superCluster, prInfos);
+            }
 		}
 	}
 
@@ -578,41 +597,34 @@ void PSIClusterReactionNetwork::createReactionConnectivity() {
 
             auto& vReactant = *(vMapItem.second);
 
-			// Get its size
-			secondSize = vReactant.getSize();
-			// Check the possibilities
-			if (firstSize > secondSize) {
-				// Get the product
-				productSize = firstSize - secondSize;
-				auto product = get(Species::I, productSize);
-				// Check that the reaction can occur
-				if (product
-						&& (iReactant.getDiffusionFactor() > 0.0
-								|| vReactant.getDiffusionFactor() > 0.0)) {
+            if ((iReactant.getDiffusionFactor() > 0.0) or
+                (vReactant.getDiffusionFactor() > 0.0)) {
 
-                    defineAnnihilationReaction(iReactant, vReactant, *product);
-				}
-			} else if (firstSize < secondSize) {
-				// Get the product
-				productSize = secondSize - firstSize;
-				auto product = get(Species::V, productSize);
-				// Check that the reaction can occur
-				if (product
-						&& (iReactant.getDiffusionFactor() > 0.0
-								|| vReactant.getDiffusionFactor() > 0.0)) {
+                // Get its size
+                secondSize = vReactant.getSize();
+                // Check the possibilities
+                if (firstSize > secondSize) {
+                    // Get the product
+                    productSize = firstSize - secondSize;
+                    auto product = get(Species::I, productSize);
+                    // Check that the reaction can occur
+                    if (product) {
+                        defineAnnihilationReaction(iReactant, vReactant, *product);
+                    }
+                } else if (firstSize < secondSize) {
+                    // Get the product
+                    productSize = secondSize - firstSize;
+                    auto product = get(Species::V, productSize);
+                    // Check that the reaction can occur
+                    if (product) {
+                        defineAnnihilationReaction(iReactant, vReactant, *product);
+                    }
 
-                    defineAnnihilationReaction(iReactant, vReactant, *product);
-				}
-
-			} else {
-				// Annihilation
-				// Check that the reaction can occur
-				if ((iReactant.getDiffusionFactor() > 0.0
-						|| vReactant.getDiffusionFactor() > 0.0)) {
-                    
+                } else {
+                    // Annihilation
                     defineCompleteAnnihilationReaction(iReactant, vReactant);
-				}
-			}
+                }
+            }
 		}
 	}
 
