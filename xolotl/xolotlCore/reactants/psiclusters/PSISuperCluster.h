@@ -122,45 +122,16 @@ protected:
 		 * 1 -> He
 		 * 2 -> V
 		 */
-		double a000;
-		double a001;
-		double a002;
-		double a100;
-		double a101;
-		double a102;
-		double a200;
-		double a201;
-		double a202;
-		double a010;
-		double a011;
-		double a012;
-		double a020;
-		double a021;
-		double a022;
-		double a110;
-		double a111;
-		double a112;
-		double a120;
-		double a121;
-		double a122;
-		double a210;
-		double a211;
-		double a212;
-		double a220;
-		double a221;
-		double a222;
-
+        Array3D<double, 3, 3, 3> a;
+   
 		//! The constructor
-		ProductionCoefficientBase() :
-                a000(0.0), a001(0.0), a002(0.0),
-                a100(0.0), a101(0.0), a102(0.0),
-                a200(0.0), a201(0.0), a202(0.0),
-                a010(0.0), a011(0.0), a012(0.0),
-                a020(0.0), a021(0.0), a022(0.0),
-                a110(0.0), a111(0.0), a112(0.0),
-                a120(0.0), a121(0.0), a122(0.0),
-                a210(0.0), a211(0.0), a212(0.0),
-                a220(0.0), a221(0.0), a222(0.0) {
+		ProductionCoefficientBase() {
+            
+            for(auto& curr2D : a) {
+                for(auto& curr1D : curr2D) {
+                    std::fill(curr1D.begin(), curr1D.end(), 0.0);
+                }
+            }
 		}
 
         /**
@@ -264,24 +235,16 @@ protected:
 		 * 1 -> He
 		 * 2 -> V
 		 */
-		double a00;
-		double a01;
-		double a02;
-		double a10;
-		double a11;
-		double a12;
-		double a20;
-		double a21;
-		double a22;
+        Array2D<double, 3, 3> a;
 
 		//! The constructor
 		SuperClusterDissociationPair(Reaction& _reaction,
                 PSICluster& _first, PSICluster& _second) :
-            ReactingPairBase(_reaction, _first, _second),
-                a00(0.0), a01(0.0), a02(0.0), 
-                a10(0.0), a11(0.0), a12(0.0),
-                a20(0.0), a21(0.0), a22(0.0) {
+            ReactingPairBase(_reaction, _first, _second) {
 
+            for(auto& curr1D : a) {
+                std::fill(curr1D.begin(), curr1D.end(), 0.0);
+            }
 		}
 
         /**
