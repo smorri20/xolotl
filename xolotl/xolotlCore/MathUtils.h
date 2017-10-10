@@ -89,6 +89,18 @@ inline double computeNthOrderLegendre(double x, const std::array<double, N+1>& c
     return valAtX;
 }
 
+// Concise names for multi-dimensional arrays.
+// For dimensions > 1, this gives C-style row-major ordering.
+// (I.e., last dimension varies fastest when indexing.)
+template<class T, uint32_t N>
+using Array1D = std::array<T, N>;
+
+template<class T, uint32_t N0, uint32_t N1>
+using Array2D = Array1D<Array1D<T, N1>, N0>;
+
+template<class T, uint32_t N0, uint32_t N1, uint32_t N2>
+using Array3D = Array1D<Array2D<T, N1, N2> , N0>;
+
 }
 
 #endif /* MATHUTILS_H_ */

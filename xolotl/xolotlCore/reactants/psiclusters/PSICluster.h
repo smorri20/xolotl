@@ -3,6 +3,7 @@
 
 // Includes
 #include <Reactant.h>
+#include <MathUtils.h>
 
 namespace xolotlPerf {
 class ITimer;
@@ -67,24 +68,17 @@ protected:
 		 * 1 -> He
 		 * 2 -> V
 		 */
-		double a00;
-		double a10;
-		double a20;
-		double a01;
-		double a02;
-		double a11;
-		double a12;
-		double a21;
-		double a22;
+        Array2D<double, 3, 3> a;
 
 		//! The constructor
 		ClusterPair(Reaction& _reaction,
                         PSICluster& _first, PSICluster& _second) :
 				first(_first), second(_second),
-                reaction(_reaction),
-                a00(0.0), a10(0.0), a20(0.0),
-                a01(0.0), a02(0.0), a11(0.0),
-                a12(0.0), a21(0.0), a22(0.0) {
+                reaction(_reaction) {
+
+            for(auto& curr1D : a) {
+                std::fill(curr1D.begin(), curr1D.end(), 0.0);
+            }
 		}
 
         /**
@@ -127,15 +121,14 @@ protected:
 		 * 1 -> He
 		 * 2 -> V
 		 */
-		double a0;
-		double a1;
-		double a2;
+        Array1D<double, 3> a;
 
 		//! The constructor
 		CombiningCluster(Reaction& _reaction, PSICluster& _comb) :
 				combining(_comb),
-                reaction(_reaction),
-                a0(0.0), a1(0.0), a2(0.0) {
+                reaction(_reaction) {
+
+            std::fill(a.begin(), a.end(), 0.0);                        
 		}
 
         /**
