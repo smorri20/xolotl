@@ -137,7 +137,12 @@ protected:
         /**
          * Copy constructor, disallowed.
          */
+#if READY
         ProductionCoefficientBase(const ProductionCoefficientBase& other) = delete;
+#else
+        // Temporarily allowed since it helps debugging.
+        ProductionCoefficientBase(const ProductionCoefficientBase& other) = default;
+#endif // READY
     };
 
 	/**

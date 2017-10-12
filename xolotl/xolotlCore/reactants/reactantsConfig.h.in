@@ -7,4 +7,9 @@
 // network representation?
 #cmakedefine USE_ORIG_REACTANT_COMP_STRING
 
+// Should we sort super cluster reaction coefficient terms before summing them?
+// Sorting yields less numerical error in the sum, but is more expensive
+// in time and (while the coefficients are being computed) in memory footprint.
+#cmakedefine USE_SORTED_COEFF_SUMS
+
 #endif // XCORE_REACTANTS_CONFIG_H

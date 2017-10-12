@@ -9,6 +9,12 @@ SET(LIBRARY_NAME "xolotlReactants")
 # during comparisons and for textual output?
 option(USE_ORIG_REACTANT_COMP_STRING OFF)
 
+
+# Should we sort super cluster reaction coefficient terms before summing them?
+# Sorting yields less numerical error in the sum, but is more expensive
+# in time and (while the coefficients are being computed) in memory footprint.
+option(USE_SORTED_COEFF_SUMS OFF)
+
 #Collect all header filenames in this project 
 #and glob them in HEADERS
 file(GLOB HEADERS *.h psiclusters/*.h neclusters/*.h)
