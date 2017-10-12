@@ -1,4 +1,5 @@
 // Includes
+#include "xolotlCore/reactants/reactantsConfig.h"
 #include "PSISuperCluster.h"
 #include "PSIClusterReactionNetwork.h"
 #include <MathUtils.h>
@@ -210,6 +211,124 @@ void PSISuperCluster::resultFrom(ProductionReaction& reaction,
     // TODO any way to enforce this?
 
 	// Update the coefficients
+#if defined(USE_SORTED_COEFF_SUMS)
+
+    // Update coefficients in a data-parallel way.
+    // This requires more memory than the original approach since we 
+    // store all of the values computed from the prInfos so that we can 
+    // sort them before summing them for each (i,j,k) index in prodPair.a.
+
+    // Allocate space for all terms.
+    // We do one large flat allocation, then drop "pointers" (iterators)
+    // into it at appropriate offsets for each (i,j,k) triple.
+    // This is more efficient than doing 27 memory allocations each
+    // time we are called, and lets us still use the iterator-based C++
+    // standard library functions like std::sort.
+    std::vector<double> coeffTermsFlat(prInfos.size()*27);
+    Array3D<std::pair<std::vector<double>::iterator, std::vector<double>::iterator>, 3, 3, 3> coeffTerms;
+    auto currIter = coeffTermsFlat.begin();
+    for(auto i = 0; i < 3; ++i)
+    {
+        for(auto j = 0; j < 3; ++j)
+        {
+            for(auto k = 0; k < 3; ++k)
+            {
+                auto nextIter = currIter + prInfos.size();
+                coeffTerms[i][j][k] = std::make_pair(currIter, nextIter);
+                currIter = nextIter;
+            }
+        }
+    }
+
+    // Compute the values associated with each PRI.
+    auto currIdx = 0;
+    std::for_each(prInfos.begin(), prInfos.end(),
+        [this,&prodPair,&coeffTerms,&currIdx](const PendingProductionReactionInfo& currPRI) {
+
+        // Use names corresponding to those in single version.
+        int a = currPRI.numHe;
+        int b = currPRI.numV;
+        int c = currPRI.i;
+        int d = currPRI.j;
+
+        double firstHeDistance = 0.0, firstVDistance = 0.0, secondHeDistance = 0.0,
+                secondVDistance = 0.0;
+        if (prodPair.first.getType() == ReactantType::PSISuper) {
+            auto const& super = static_cast<PSICluster const&>(prodPair.first);
+            firstHeDistance = super.getHeDistance(c);
+            firstVDistance = super.getVDistance(d);
+        }
+        if (prodPair.second.getType() == ReactantType::PSISuper) {
+            auto const& super = static_cast<PSICluster const&>(prodPair.second);
+            secondHeDistance = super.getHeDistance(c);
+            secondVDistance = super.getVDistance(d);
+        }
+        double heFactor = (double) (a - numHe) / dispersionHe;
+        double vFactor = (double) (b - numV) / dispersionV;
+        // First is A, second is B, in A + B -> this
+        *(coeffTerms[0][0][0].first + currIdx) = 1.0;
+        *(coeffTerms[0][0][1].first + currIdx) = heFactor;
+        *(coeffTerms[0][0][2].first + currIdx) = vFactor;
+        *(coeffTerms[1][0][0].first + currIdx) = firstHeDistance;
+        *(coeffTerms[1][0][1].first + currIdx) = firstHeDistance * heFactor;
+        *(coeffTerms[1][0][2].first + currIdx) = firstHeDistance * vFactor;
+        *(coeffTerms[2][0][0].first + currIdx) = firstVDistance;
+        *(coeffTerms[2][0][1].first + currIdx) = firstVDistance * heFactor;
+        *(coeffTerms[2][0][2].first + currIdx) = firstVDistance * vFactor;
+        *(coeffTerms[0][1][0].first + currIdx) = secondHeDistance;
+        *(coeffTerms[0][1][1].first + currIdx) = secondHeDistance * heFactor;
+        *(coeffTerms[0][1][2].first + currIdx) = secondHeDistance * vFactor;
+        *(coeffTerms[0][2][0].first + currIdx) = secondVDistance;
+        *(coeffTerms[0][2][1].first + currIdx) = secondVDistance * heFactor;
+        *(coeffTerms[0][2][2].first + currIdx) = secondVDistance * vFactor;
+        *(coeffTerms[1][1][0].first + currIdx) = firstHeDistance * secondHeDistance;
+        *(coeffTerms[1][1][1].first + currIdx) = firstHeDistance * secondHeDistance * heFactor;
+        *(coeffTerms[1][1][2].first + currIdx) = firstHeDistance * secondHeDistance * vFactor;
+        *(coeffTerms[1][2][0].first + currIdx) = firstHeDistance * secondVDistance;
+        *(coeffTerms[1][2][1].first + currIdx) = firstHeDistance * secondVDistance * heFactor;
+        *(coeffTerms[1][2][2].first + currIdx) = firstHeDistance * secondVDistance * vFactor;
+        *(coeffTerms[2][1][0].first + currIdx) = firstVDistance * secondHeDistance;
+        *(coeffTerms[2][1][1].first + currIdx) = firstVDistance * secondHeDistance * heFactor;
+        *(coeffTerms[2][1][2].first + currIdx) = firstVDistance * secondHeDistance * vFactor;
+        *(coeffTerms[2][2][0].first + currIdx) = firstVDistance * secondVDistance;
+        *(coeffTerms[2][2][1].first + currIdx) = firstVDistance * secondVDistance * heFactor;
+        *(coeffTerms[2][2][2].first + currIdx) = firstVDistance * secondVDistance * vFactor;
+
+        ++currIdx;
+    });
+
+    // Sum the terms to find deltas to the starting coefficient values,
+    // and apply them.
+    for(auto i = 0; i < 3; ++i)
+    {
+        for(auto j = 0; j < 3; ++j)
+        {
+            for(auto k = 0; k < 3; ++k)
+            {
+                auto currBeginIter = coeffTerms[i][j][k].first;
+                auto currEndIter = coeffTerms[i][j][k].second;
+
+                // Sort the values for the current coefficient.
+                std::sort(currBeginIter, currEndIter);
+
+                // Sum the values for the current coefficient.
+                double currDelta = std::accumulate(currBeginIter, currEndIter, 0.0);
+
+                // Update the corresponding coefficient in prodPair.
+                prodPair.a[i][j][k] += currDelta;
+            }
+        }
+    }
+
+#else // defined(USE_SORTED_COEFF_SUMS)
+
+    // Sum without sorting values.
+    // Since we don't need to sort the elements used to compute
+    // a given prodPair.a[i][j][k] value, we can compute them on the fly
+    // and just update prodPair.a[i][j][k] as we go.
+    // It is faster and more memory efficient, but has the potential
+    // to incur larger numerical error in the computed coefficients than 
+    // sorting and adding the values smallest to largest.
     std::for_each(prInfos.begin(), prInfos.end(),
         [this,&prodPair](const PendingProductionReactionInfo& currPRI) {
 
@@ -262,6 +381,7 @@ void PSISuperCluster::resultFrom(ProductionReaction& reaction,
         prodPair.a[2][2][1] += firstVDistance * secondVDistance * heFactor;
         prodPair.a[2][2][2] += firstVDistance * secondVDistance * vFactor;
     });
+#endif // defined(USE_SORTED_COEFF_SUMS)
 
 	return;
 }
@@ -328,7 +448,7 @@ void PSISuperCluster::participateIn(ProductionReaction& reaction, int a, int b) 
 }
 
 void PSISuperCluster::participateIn(ProductionReaction& reaction,
-            const std::vector<PendingProductionReactionInfo>& pendingPRInfos) {
+            const std::vector<PendingProductionReactionInfo>& prInfos) {
 
 #if READY
     if (not partInProd_bcallsCounter) {
@@ -371,6 +491,87 @@ void PSISuperCluster::participateIn(ProductionReaction& reaction,
     auto& combCluster = it->second;
 
 	// Update the coefficients
+#if defined(USE_SORTED_COEFF_SUMS)
+
+    // Update coefficients in a data-parallel way.
+    // This requires more memory than the original approach since we 
+    // store all of the values computed from the prInfos so that we can 
+    // sort them before summing them for each (i,0,k) index in combCluster.a
+
+    // Allocate space for all terms.
+    // We do one large flat allocation, then drop "pointers" (iterators)
+    // into it at appropriate offsets for each (i,0,k) triple.
+    // This is more efficient than doing 9 memory allocations each
+    // time we are called, and lets us still use the iterator-based C++
+    // standard library functions like std::sort.
+    std::vector<double> coeffTermsFlat(prInfos.size()*9);
+    Array2D<std::pair<std::vector<double>::iterator, std::vector<double>::iterator>, 3, 3> coeffTerms;
+    auto currIter = coeffTermsFlat.begin();
+    for(auto i = 0; i < 3; ++i)
+    {
+        for(auto k = 0; k < 3; ++k)
+        {
+            auto nextIter = currIter + prInfos.size();
+            coeffTerms[i][k] = std::make_pair(currIter, nextIter);
+            currIter = nextIter;
+        }
+    }
+
+    // Compute the values associated with each PRI.
+    auto currIdx = 0;
+    std::for_each(prInfos.begin(), prInfos.end(),
+        [this,&combCluster,&coeffTerms,&currIdx](const PendingProductionReactionInfo& currPRI) {
+
+            // Use names corresponding to the single-item version.
+            int a = currPRI.i;
+            int b = currPRI.j;
+
+            double heDistance = getHeDistance(a);
+            double heFactor = (double) (a - numHe) / dispersionHe;
+            double vDistance = getVDistance(b);
+            double vFactor = (double) (b - numV) / dispersionV;
+            // This is A, itBis is B, in A + B -> C
+            *(coeffTerms[0][0].first + currIdx) = 1.0;
+            *(coeffTerms[0][1].first + currIdx) = heFactor;
+            *(coeffTerms[0][2].first + currIdx) = vFactor;
+            *(coeffTerms[1][0].first + currIdx) = heDistance;
+            *(coeffTerms[1][1].first + currIdx) = heDistance * heFactor;
+            *(coeffTerms[1][2].first + currIdx) = heDistance * vFactor;
+            *(coeffTerms[2][0].first + currIdx) = vDistance;
+            *(coeffTerms[2][1].first + currIdx) = vDistance * heFactor;
+            *(coeffTerms[2][2].first + currIdx) = vDistance * vFactor;
+
+            ++currIdx;
+        });
+
+    // Sum the terms to find deltas to the starting coefficient values,
+    // and apply them.
+    for(auto i = 0; i < 3; ++i)
+    {
+        for(auto k = 0; k < 3; ++k)
+        {
+            auto currBeginIter = coeffTerms[i][k].first;
+            auto currEndIter = coeffTerms[i][k].second;
+
+            // Sort the values for the current coefficient.
+            std::sort(currBeginIter, currEndIter);
+
+            // Sum the values for the current coefficient.
+            double currDelta = std::accumulate(currBeginIter, currEndIter, 0.0);
+
+            // Update the corresponding coefficient in prodPair.
+            combCluster.a[i][0][k] += currDelta;
+        }
+    }
+#else // defined(USE_SORTED_COEFF_SUMS)
+
+    // Sum without sorting values.
+    // Since we don't need to sort the elements used to compute
+    // a given coefficient [i][j][k] value, we can compute them on the fly
+    // and just update coefficient [i][j][k] as we go.
+    // It is faster and more memory efficient, but has the potential
+    // to incur larger numerical error in the computed coefficients than 
+    // sorting and adding the values smallest to largest.
     std::for_each(pendingPRInfos.begin(), pendingPRInfos.end(),
         [this,&combCluster](const PendingProductionReactionInfo& currPRInfo) {
 
@@ -393,6 +594,7 @@ void PSISuperCluster::participateIn(ProductionReaction& reaction,
             combCluster.a[2][0][1] += vDistance * heFactor;
             combCluster.a[2][0][2] += vDistance * vFactor;
         });
+#endif // defined(USE_SORTED_COEFF_SUMS)
 
 	return;
 }
@@ -508,6 +710,91 @@ void PSISuperCluster::participateIn(DissociationReaction& reaction,
     auto& dissPair = it->second;
 
 	// Update the coefficients
+#if defined(USE_SORTED_COEFF_SUMS)
+    // Update coefficients in a data-parallel way.
+    // This requires more memory than the original approach since we 
+    // store all of the values computed from the prInfos so that we can 
+    // sort them before summing them for each (i,j) value.
+
+    // Allocate space for all terms.
+    // We do one large flat allocation, then drop "pointers" (iterators)
+    // into it at appropriate offsets for each (i,j) triple.
+    // This is more efficient than doing 9 memory allocations each
+    // time we are called, and lets us still use the iterator-based C++
+    // standard library functions like std::sort.
+    std::vector<double> coeffTermsFlat(prInfos.size()*9);
+    Array2D<std::pair<std::vector<double>::iterator, std::vector<double>::iterator>, 3, 3> coeffTerms;
+    auto currIter = coeffTermsFlat.begin();
+    for(auto i = 0; i < 3; ++i)
+    {
+        for(auto j = 0; j < 3; ++j)
+        {
+            auto nextIter = currIter + prInfos.size();
+            coeffTerms[i][j] = std::make_pair(currIter, nextIter);
+            currIter = nextIter;
+        }
+    }
+
+    auto currIdx = 0;
+    std::for_each(prInfos.begin(), prInfos.end(),
+        [this,&dissPair,&reaction,&coeffTerms,&currIdx](const PendingProductionReactionInfo& currPRI) {
+
+            // Use names corresponding to the single-item version.
+            int a = currPRI.numHe;
+            int b = currPRI.numV;
+            int c = currPRI.i;
+            int d = currPRI.j;
+
+            double firstHeDistance = 0.0, firstVDistance = 0.0;
+            if (reaction.dissociating.getType() == ReactantType::PSISuper) {
+                auto const& super = static_cast<PSICluster const&>(reaction.dissociating);
+                firstHeDistance = super.getHeDistance(a);
+                firstVDistance = super.getVDistance(b);
+            }
+            double heFactor = (double) (c - numHe) / dispersionHe;
+            double vFactor = (double) (d - numV) / dispersionV;
+
+            // A is the dissociating cluster
+            *(coeffTerms[0][0].first + currIdx) = 1.0;
+            *(coeffTerms[0][1].first + currIdx) = heFactor;
+            *(coeffTerms[0][2].first + currIdx) = vFactor;
+            *(coeffTerms[1][0].first + currIdx) = firstHeDistance;
+            *(coeffTerms[1][1].first + currIdx) = firstHeDistance * heFactor;
+            *(coeffTerms[1][2].first + currIdx) = firstHeDistance * vFactor;
+            *(coeffTerms[2][0].first + currIdx) = firstVDistance;
+            *(coeffTerms[2][1].first + currIdx) = firstVDistance * heFactor;
+            *(coeffTerms[2][2].first + currIdx) = firstVDistance * vFactor;
+
+            ++currIdx;
+        });
+
+    // Sum the terms to find deltas to the starting coefficient values,
+    // and apply them.
+    for(auto i = 0; i < 3; ++i)
+    {
+        for(auto j = 0; j < 3; ++j)
+        {
+            auto currBeginIter = coeffTerms[i][j].first;
+            auto currEndIter = coeffTerms[i][j].second;
+
+            // Sort the values for the current coefficient.
+            std::sort(currBeginIter, currEndIter);
+
+            // Sum the values for the current coefficient.
+            double currDelta = std::accumulate(currBeginIter, currEndIter, 0.0);
+
+            // Update the corresponding coefficient in prodPair.
+            dissPair.a[i][j] += currDelta;
+        }
+    }
+#else // defined(USE_SORTED_COEFF_SUMS)
+    // Sum without sorting values.
+    // Since we don't need to sort the elements used to compute
+    // a given coefficient [i][j][k] value, we can compute them on the fly
+    // and just update coefficient [i][j][k] as we go.
+    // It is faster and more memory efficient, but has the potential
+    // to incur larger numerical error in the computed coefficients than 
+    // sorting and adding the values smallest to largest.
     std::for_each(prInfos.begin(), prInfos.end(),
         [this,&dissPair,&reaction](const PendingProductionReactionInfo& currPRI) {
 
@@ -537,6 +824,7 @@ void PSISuperCluster::participateIn(DissociationReaction& reaction,
             dissPair.a[2][1] += firstVDistance * heFactor;
             dissPair.a[2][2] += firstVDistance * vFactor;
         });
+#endif // defined(USE_SORTED_COEFF_SUMS)
 
 	return;
 }
@@ -580,7 +868,7 @@ void PSISuperCluster::emitFrom(DissociationReaction& reaction,
     assert(it != effEmissionList.end());
     auto& dissPair = it->second;
 
-	// Update the coeeficients
+	// Update the coefficients
 	double heDistance = getHeDistance(a);
 	double heFactor = (double) (a - numHe) / dispersionHe;
 	double vDistance = getVDistance(b);
@@ -639,6 +927,84 @@ void PSISuperCluster::emitFrom(DissociationReaction& reaction,
     auto& dissPair = it->second;
 
 	// Update the coeeficients
+#if defined(USE_SORTED_COEFF_SUMS)
+    // Update coefficients in a data-parallel way.
+    // This requires more memory than the original approach since we 
+    // store all of the values computed from the prInfos so that we can 
+    // sort them before summing them for each (i,j) value.
+
+    // Allocate space for all terms.
+    // We do one large flat allocation, then drop "pointers" (iterators)
+    // into it at appropriate offsets for each (i,j) triple.
+    // This is more efficient than doing 9 memory allocations each
+    // time we are called, and lets us still use the iterator-based C++
+    // standard library functions like std::sort.
+    std::vector<double> coeffTermsFlat(prInfos.size()*9);
+    Array2D<std::pair<std::vector<double>::iterator, std::vector<double>::iterator>, 3, 3> coeffTerms;
+    auto currIter = coeffTermsFlat.begin();
+    for(auto i = 0; i < 3; ++i)
+    {
+        for(auto j = 0; j < 3; ++j)
+        {
+            auto nextIter = currIter + prInfos.size();
+            coeffTerms[i][j] = std::make_pair(currIter, nextIter);
+            currIter = nextIter;
+        }
+    }
+
+    auto currIdx = 0;
+    std::for_each(prInfos.begin(), prInfos.end(),
+        [this,&dissPair,&reaction,&coeffTerms,&currIdx](const PendingProductionReactionInfo& currPRI) {
+
+            // Use same names as used in single version.
+            int a = currPRI.numHe;
+            int b = currPRI.numV;
+
+            double heDistance = getHeDistance(a);
+            double heFactor = (double) (a - numHe) / dispersionHe;
+            double vDistance = getVDistance(b);
+            double vFactor = (double) (b - numV) / dispersionV;
+            // A is the dissociating cluster
+            *(coeffTerms[0][0].first + currIdx) = 1.0;
+            *(coeffTerms[0][1].first + currIdx) = heFactor;
+            *(coeffTerms[0][2].first + currIdx) = vFactor;
+            *(coeffTerms[1][0].first + currIdx) = heDistance;
+            *(coeffTerms[1][1].first + currIdx) = heDistance * heFactor;
+            *(coeffTerms[1][2].first + currIdx) = heDistance * vFactor;
+            *(coeffTerms[2][0].first + currIdx) = vDistance;
+            *(coeffTerms[2][1].first + currIdx) = vDistance * heFactor;
+            *(coeffTerms[2][2].first + currIdx) = vDistance * vFactor;
+
+            ++currIdx;
+        });
+
+    // Sum the terms to find deltas to the starting coefficient values,
+    // and apply them.
+    for(auto i = 0; i < 3; ++i)
+    {
+        for(auto j = 0; j < 3; ++j)
+        {
+            auto currBeginIter = coeffTerms[i][j].first;
+            auto currEndIter = coeffTerms[i][j].second;
+
+            // Sort the values for the current coefficient.
+            std::sort(currBeginIter, currEndIter);
+
+            // Sum the values for the current coefficient.
+            double currDelta = std::accumulate(currBeginIter, currEndIter, 0.0);
+
+            // Update the corresponding coefficient in prodPair.
+            dissPair.a[i][j] += currDelta;
+        }
+    }
+#else // defined(USE_SORTED_COEFF_SUMS)
+    // Sum without sorting values.
+    // Since we don't need to sort the elements used to compute
+    // a given coefficient [i][j] value, we can compute them on the fly
+    // and just update coefficient [i][j] as we go.
+    // It is faster and more memory efficient, but has the potential
+    // to incur larger numerical error in the computed coefficients than 
+    // sorting and adding the values smallest to largest.
     std::for_each(prInfos.begin(), prInfos.end(),
         [this,&dissPair](const PendingProductionReactionInfo& currPRI) {
 
@@ -661,6 +1027,7 @@ void PSISuperCluster::emitFrom(DissociationReaction& reaction,
         dissPair.a[2][1] += vDistance * heFactor;
         dissPair.a[2][2] += vDistance * vFactor;
     });
+#endif // defined(USE_SORTED_COEFF_SUMS)
 
 	return;
 }
