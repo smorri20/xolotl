@@ -572,7 +572,7 @@ void PSISuperCluster::participateIn(ProductionReaction& reaction,
     // It is faster and more memory efficient, but has the potential
     // to incur larger numerical error in the computed coefficients than 
     // sorting and adding the values smallest to largest.
-    std::for_each(pendingPRInfos.begin(), pendingPRInfos.end(),
+    std::for_each(prInfos.begin(), prInfos.end(),
         [this,&combCluster](const PendingProductionReactionInfo& currPRInfo) {
 
             // Use names corresponding to the single-item version.
