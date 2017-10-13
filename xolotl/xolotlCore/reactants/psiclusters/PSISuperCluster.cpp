@@ -1,4 +1,5 @@
 // Includes
+#include "Kokkos_Core.hpp"
 #include "xolotlCore/reactants/reactantsConfig.h"
 #include "PSISuperCluster.h"
 #include "PSIClusterReactionNetwork.h"
@@ -79,94 +80,335 @@ PSISuperCluster::PSISuperCluster(double _numHe, double _numV, int _nTot,
 }
 
 
-void PSISuperCluster::resultFrom(ProductionReaction& reaction,
-                        int a, int b, int c, int d) {
+template<class T>
+struct CoeffSum {
+	// Term values used to compute production reaction coefficients.
+	// We would prefer to use a C++ container type or Kokkos::View,
+    // but we have to pass instances of our type to the join() function
+    // of the Kokkos::parallel_reduce(), that function requires the parameters
+    // to be volatile-qualified objects, and neither C++ containers nor
+    // Kokkos::View provides support for volatile object instances.
+    // A C-style array works.
+    T vals;
 
-#if READY
-    if (not resultFrom_callsCounter) {
-        resultFrom_callsCounter = handlerRegistry->getEventCounter("PSISuper_resultFrom_calls");
-    }
-    resultFrom_callsCounter->increment();
-#endif // READY
+	// Default ctor.
+	// NB: we do *not* initialize values to 0, because the Kokkos reduce's
+	// functor's init() method does it for us.
+	CoeffSum() = default;
 
-	// Check if we already know about the reaction.
-    auto rkey = std::make_pair(&(reaction.first), &(reaction.second));
-    auto it = effReactingList.find(rkey);
-	if (it == effReactingList.end()) {
+    CoeffSum(CoeffSum const& other) = delete;
 
-#if READY
-        if (not resultFrom_addsCounter) {
-            resultFrom_addsCounter = handlerRegistry->getEventCounter("PSISuper_resultFrom_adds");
+    CoeffSum& operator=(CoeffSum const& other) = default;
+};
+
+
+struct ComputeCoeffDeltasFunctor {
+
+    double numHe;
+    double numV;
+    double dispersionHe;
+    double dispersionV;
+    const std::vector<PendingProductionReactionInfo>& prInfos;
+
+    ComputeCoeffDeltasFunctor() = delete;
+
+    ComputeCoeffDeltasFunctor(const ComputeCoeffDeltasFunctor& other) = default;
+
+    ComputeCoeffDeltasFunctor(double _numHe, double _numV,
+                                    double _dispersionHe, double _dispersionV,
+                                    const std::vector<PendingProductionReactionInfo>& _prInfos)
+      : numHe(_numHe),
+        numV(_numV),
+        dispersionHe(_dispersionHe),
+        dispersionV(_dispersionV),
+        prInfos(_prInfos)
+    { }
+};
+
+
+struct Compute2DCoeffDeltasFunctor : public ComputeCoeffDeltasFunctor {
+
+    using value_type = CoeffSum<double[3][3]>;
+
+
+    Compute2DCoeffDeltasFunctor() = delete;
+    Compute2DCoeffDeltasFunctor(const Compute2DCoeffDeltasFunctor& other) = default;
+    Compute2DCoeffDeltasFunctor(double _numHe, double _numV,
+                            double _dispersionHe, double _dispersionV,
+                            const std::vector<PendingProductionReactionInfo>& _prInfos) 
+      : ComputeCoeffDeltasFunctor(_numHe, _numV,
+                                    _dispersionHe, _dispersionV,
+                                    _prInfos)
+    { }
+
+    // Initialize our sums struct.
+    // Implemented here because doing it in a default ctor is insufficient.
+    KOKKOS_INLINE_FUNCTION void init(value_type& running) const {
+        for(auto i = 0; i < 3; ++i) {
+            for(auto j = 0; j < 3; ++j) {
+                running.vals[i][j] = 0.0;
+            }
         }
-        resultFrom_addsCounter->increment();
-#endif // READY
+    }
 
-		// We did not already know about this reaction.
-        // Add info about production to our list.
-        auto eret = effReactingList.emplace(std::piecewise_construct,
-                            std::forward_as_tuple(rkey),
-                            std::forward_as_tuple(
-                                reaction,
-                                static_cast<PSICluster&>(reaction.first),
-                                static_cast<PSICluster&>(reaction.second)));
-        // Since we already checked and didn't know about the reaction,
-        // we had better have added it with our emplace() call.
-        assert(eret.second);
-        it = eret.first;
-	}
-    assert(it != effReactingList.end());
-    auto& prodPair = it->second;    
+    // Combine two sums structs.
+    KOKKOS_INLINE_FUNCTION void join(value_type volatile& dest,
+                                        value_type const volatile& src) const {
+        for(auto i = 0; i < 3; ++i) {
+            for(auto j = 0; j < 3; ++j) {
+                dest.vals[i][j] += src.vals[i][j];
+            }
+        }
+    }
+};
 
-    // NB: prodPair's reactants are same as reaction.
-    // So use prodPair only from here on.
-    // TODO any way to enforce this?
 
-	// Update the coefficients
-	double firstHeDistance = 0.0, firstVDistance = 0.0, secondHeDistance = 0.0,
-			secondVDistance = 0.0;
-	if (prodPair.first.getType() == ReactantType::PSISuper) {
-		auto const& super = static_cast<PSICluster const&>(prodPair.first);
-		firstHeDistance = super.getHeDistance(c);
-		firstVDistance = super.getVDistance(d);
-	}
-	if (prodPair.second.getType() == ReactantType::PSISuper) {
-		auto const& super = static_cast<PSICluster const&>(prodPair.second);
-		secondHeDistance = super.getHeDistance(c);
-		secondVDistance = super.getVDistance(d);
-	}
-	double heFactor = (double) (a - numHe) / dispersionHe;
-	double vFactor = (double) (b - numV) / dispersionV;
-	// First is A, second is B, in A + B -> this
-	prodPair.a[0][0][0] += 1.0;
-	prodPair.a[0][0][1] += heFactor;
-	prodPair.a[0][0][2] += vFactor;
-	prodPair.a[1][0][0] += firstHeDistance;
-	prodPair.a[1][0][1] += firstHeDistance * heFactor;
-	prodPair.a[1][0][2] += firstHeDistance * vFactor;
-	prodPair.a[2][0][0] += firstVDistance;
-	prodPair.a[2][0][1] += firstVDistance * heFactor;
-	prodPair.a[2][0][2] += firstVDistance * vFactor;
-	prodPair.a[0][1][0] += secondHeDistance;
-	prodPair.a[0][1][1] += secondHeDistance * heFactor;
-	prodPair.a[0][1][2] += secondHeDistance * vFactor;
-	prodPair.a[0][2][0] += secondVDistance;
-	prodPair.a[0][2][1] += secondVDistance * heFactor;
-	prodPair.a[0][2][2] += secondVDistance * vFactor;
-	prodPair.a[1][1][0] += firstHeDistance * secondHeDistance;
-	prodPair.a[1][1][1] += firstHeDistance * secondHeDistance * heFactor;
-	prodPair.a[1][1][2] += firstHeDistance * secondHeDistance * vFactor;
-	prodPair.a[1][2][0] += firstHeDistance * secondVDistance;
-	prodPair.a[1][2][1] += firstHeDistance * secondVDistance * heFactor;
-	prodPair.a[1][2][2] += firstHeDistance * secondVDistance * vFactor;
-	prodPair.a[2][1][0] += firstVDistance * secondHeDistance;
-	prodPair.a[2][1][1] += firstVDistance * secondHeDistance * heFactor;
-	prodPair.a[2][1][2] += firstVDistance * secondHeDistance * vFactor;
-	prodPair.a[2][2][0] += firstVDistance * secondVDistance;
-	prodPair.a[2][2][1] += firstVDistance * secondVDistance * heFactor;
-	prodPair.a[2][2][2] += firstVDistance * secondVDistance * vFactor;
+struct Compute3DCoeffDeltasFunctor : public ComputeCoeffDeltasFunctor {
 
-	return;
-}
+    using value_type = CoeffSum<double[3][3][3]>;
+
+
+    Compute3DCoeffDeltasFunctor() = delete;
+    Compute3DCoeffDeltasFunctor(const Compute3DCoeffDeltasFunctor& other) = default;
+    Compute3DCoeffDeltasFunctor(double _numHe, double _numV,
+                            double _dispersionHe, double _dispersionV,
+                            const std::vector<PendingProductionReactionInfo>& _prInfos) 
+      : ComputeCoeffDeltasFunctor(_numHe, _numV,
+                                    _dispersionHe, _dispersionV,
+                                    _prInfos)
+    { }
+
+    // Initialize our sums struct.
+    // Implemented here because doing it in a default ctor is insufficient.
+    KOKKOS_INLINE_FUNCTION void init(value_type& running) const {
+        for(auto i = 0; i < 3; ++i) {
+            for(auto j = 0; j < 3; ++j) {
+                for(auto k = 0; k < 3; ++k) {
+                    running.vals[i][j][k] = 0.0;
+                }
+            }
+        }
+    }
+
+    // Combine two sums structs.
+    KOKKOS_INLINE_FUNCTION void join(value_type volatile& dest,
+                                        value_type const volatile& src) const {
+        for(auto i = 0; i < 3; ++i) {
+            for(auto j = 0; j < 3; ++j) {
+                for(auto k = 0; k < 3; ++k) {
+                    dest.vals[i][j][k] += src.vals[i][j][k];
+                }
+            }
+        }
+    }
+};
+
+
+
+
+struct ComputeProdCoeffDeltasFunctor : public Compute3DCoeffDeltasFunctor {
+
+    PSICluster& firstReactant;
+    PSICluster& secondReactant;
+
+    ComputeProdCoeffDeltasFunctor() = delete;
+    ComputeProdCoeffDeltasFunctor(const ComputeProdCoeffDeltasFunctor& other) = default;
+    ComputeProdCoeffDeltasFunctor(PSICluster& _r1, PSICluster& _r2,
+                            double _numHe, double _numV,
+                            double _dispersionHe, double _dispersionV,
+                            const std::vector<PendingProductionReactionInfo>& _prInfos) 
+      : Compute3DCoeffDeltasFunctor(_numHe, _numV,
+                                    _dispersionHe, _dispersionV,
+                                    _prInfos),
+        firstReactant(_r1),
+        secondReactant(_r2)
+    { }
+
+    // Incorporate info for current production reaction into our running value.
+    KOKKOS_INLINE_FUNCTION void operator()(size_t idx,
+                                            value_type& running) const
+    {
+        // Use names corresponding to those in single version.
+        auto const& currPRI = prInfos[idx];
+        int a = currPRI.numHe;
+        int b = currPRI.numV;
+        int c = currPRI.i;
+        int d = currPRI.j;
+
+        double firstHeDistance = 0.0;
+        double firstVDistance = 0.0;
+        double secondHeDistance = 0.0;
+        double secondVDistance = 0.0;
+        if (firstReactant.getType() == ReactantType::PSISuper) {
+            firstHeDistance = firstReactant.getHeDistance(c);
+            firstVDistance = firstReactant.getVDistance(d);
+        }
+        if (secondReactant.getType() == ReactantType::PSISuper) {
+            secondHeDistance = secondReactant.getHeDistance(c);
+            secondVDistance = secondReactant.getVDistance(d);
+        }
+        double heFactor = (double) (a - numHe) / dispersionHe;
+        double vFactor = (double) (b - numV) / dispersionV;
+        // First is A, second is B, in A + B -> this
+        running.vals[0][0][0] += 1.0;
+        running.vals[0][0][1] += heFactor;
+        running.vals[0][0][2] += vFactor;
+        running.vals[1][0][0] += firstHeDistance;
+        running.vals[1][0][1] += firstHeDistance * heFactor;
+        running.vals[1][0][2] += firstHeDistance * vFactor;
+        running.vals[2][0][0] += firstVDistance;
+        running.vals[2][0][1] += firstVDistance * heFactor;
+        running.vals[2][0][2] += firstVDistance * vFactor;
+        running.vals[0][1][0] += secondHeDistance;
+        running.vals[0][1][1] += secondHeDistance * heFactor;
+        running.vals[0][1][2] += secondHeDistance * vFactor;
+        running.vals[0][2][0] += secondVDistance;
+        running.vals[0][2][1] += secondVDistance * heFactor;
+        running.vals[0][2][2] += secondVDistance * vFactor;
+        running.vals[1][1][0] += firstHeDistance * secondHeDistance;
+        running.vals[1][1][1] += firstHeDistance * secondHeDistance * heFactor;
+        running.vals[1][1][2] += firstHeDistance * secondHeDistance * vFactor;
+        running.vals[1][2][0] += firstHeDistance * secondVDistance;
+        running.vals[1][2][1] += firstHeDistance * secondVDistance * heFactor;
+        running.vals[1][2][2] += firstHeDistance * secondVDistance * vFactor;
+        running.vals[2][1][0] += firstVDistance * secondHeDistance;
+        running.vals[2][1][1] += firstVDistance * secondHeDistance * heFactor;
+        running.vals[2][1][2] += firstVDistance * secondHeDistance * vFactor;
+        running.vals[2][2][0] += firstVDistance * secondVDistance;
+        running.vals[2][2][1] += firstVDistance * secondVDistance * heFactor;
+        running.vals[2][2][2] += firstVDistance * secondVDistance * vFactor;
+    }
+};
+
+struct ComputeCombCoeffDeltasFunctor : public Compute2DCoeffDeltasFunctor {
+
+    using value_type = CoeffSum<double[3][3]>;
+
+    PSICluster& reactant;
+
+    ComputeCombCoeffDeltasFunctor() = delete;
+    ComputeCombCoeffDeltasFunctor(const ComputeCombCoeffDeltasFunctor& other) = default;
+    ComputeCombCoeffDeltasFunctor(PSICluster& _reactant,
+                            double _numHe, double _numV,
+                            double _dispersionHe, double _dispersionV,
+                            const std::vector<PendingProductionReactionInfo>& _prInfos) 
+      : Compute2DCoeffDeltasFunctor(_numHe, _numV,
+                                        _dispersionHe, _dispersionV,
+                                        _prInfos),
+        reactant(_reactant)
+    { }
+
+
+    KOKKOS_INLINE_FUNCTION void operator()(size_t idx, value_type& running) const {
+        // Use names corresponding to the single-item version.
+        auto const& currPRI = prInfos[idx];
+        int a = currPRI.i;
+        int b = currPRI.j;
+
+        double heDistance = reactant.getHeDistance(a);
+        double heFactor = (double) (a - numHe) / dispersionHe;
+        double vDistance = reactant.getVDistance(b);
+        double vFactor = (double) (b - numV) / dispersionV;
+        // This is A, itBis is B, in A + B -> C
+        running.vals[0][0] += 1.0;
+        running.vals[0][1] += heFactor;
+        running.vals[0][2] += vFactor;
+        running.vals[1][0] += heDistance;
+        running.vals[1][1] += heDistance * heFactor;
+        running.vals[1][2] += heDistance * vFactor;
+        running.vals[2][0] += vDistance;
+        running.vals[2][1] += vDistance * heFactor;
+        running.vals[2][2] += vDistance * vFactor;
+    }
+
+};
+
+struct ComputeDissCoeffDeltasFunctor : public Compute2DCoeffDeltasFunctor {
+
+    IReactant& reactant;
+
+    ComputeDissCoeffDeltasFunctor() = delete;
+    ComputeDissCoeffDeltasFunctor(const ComputeDissCoeffDeltasFunctor& other) = default;
+    ComputeDissCoeffDeltasFunctor(IReactant& _reactant,
+                            double _numHe, double _numV,
+                            double _dispersionHe, double _dispersionV,
+                            const std::vector<PendingProductionReactionInfo>& _prInfos) 
+      : Compute2DCoeffDeltasFunctor(_numHe, _numV,
+                                    _dispersionHe, _dispersionV,
+                                    _prInfos),
+        reactant(_reactant)
+    { }
+
+    KOKKOS_INLINE_FUNCTION void operator()(size_t idx, value_type& running) const {
+        // Use names corresponding to the single-item version.
+        auto const& currPRI = prInfos[idx];
+        int a = currPRI.numHe;
+        int b = currPRI.numV;
+        int c = currPRI.i;
+        int d = currPRI.j;
+
+        double firstHeDistance = 0.0, firstVDistance = 0.0;
+        if (reactant.getType() == ReactantType::PSISuper) {
+            auto const& super = static_cast<PSICluster const&>(reactant);
+            firstHeDistance = super.getHeDistance(a);
+            firstVDistance = super.getVDistance(b);
+        }
+        double heFactor = (double) (c - numHe) / dispersionHe;
+        double vFactor = (double) (d - numV) / dispersionV;
+
+        // A is the dissociating cluster
+        running.vals[0][0] += 1.0;
+        running.vals[0][1] += heFactor;
+        running.vals[0][2] += vFactor;
+        running.vals[1][0] += firstHeDistance;
+        running.vals[1][1] += firstHeDistance * heFactor;
+        running.vals[1][2] += firstHeDistance * vFactor;
+        running.vals[2][0] += firstVDistance;
+        running.vals[2][1] += firstVDistance * heFactor;
+        running.vals[2][2] += firstVDistance * vFactor;
+    }
+};
+
+
+struct ComputeEmitCoeffDeltasFunctor : public Compute2DCoeffDeltasFunctor {
+
+    PSICluster& reactant;
+
+    ComputeEmitCoeffDeltasFunctor() = delete;
+    ComputeEmitCoeffDeltasFunctor(const ComputeEmitCoeffDeltasFunctor& other) = default;
+    ComputeEmitCoeffDeltasFunctor(PSICluster& _reactant,
+                            double _numHe, double _numV,
+                            double _dispersionHe, double _dispersionV,
+                            const std::vector<PendingProductionReactionInfo>& _prInfos) 
+      : Compute2DCoeffDeltasFunctor(_numHe, _numV,
+                                _dispersionHe, _dispersionV,
+                                _prInfos),
+        reactant(_reactant)
+    { }
+
+    KOKKOS_INLINE_FUNCTION void operator()(size_t idx, value_type& running) const {
+        // Use names corresponding to the single-item version.
+        auto const& currPRI = prInfos[idx];
+        int a = currPRI.numHe;
+        int b = currPRI.numV;
+
+        double heDistance = reactant.getHeDistance(a);
+        double heFactor = (double) (a - numHe) / dispersionHe;
+        double vDistance = reactant.getVDistance(b);
+        double vFactor = (double) (b - numV) / dispersionV;
+        // A is the dissociating cluster
+        running.vals[0][0] += 1.0;
+        running.vals[0][1] += heFactor;
+        running.vals[0][2] += vFactor;
+        running.vals[1][0] += heDistance;
+        running.vals[1][1] += heDistance * heFactor;
+        running.vals[1][2] += heDistance * vFactor;
+        running.vals[2][0] += vDistance;
+        running.vals[2][1] += vDistance * heFactor;
+        running.vals[2][2] += vDistance * vFactor;
+    }
+};
+
 
 void PSISuperCluster::resultFrom(ProductionReaction& reaction,
         const std::vector<PendingProductionReactionInfo>& prInfos) {
@@ -324,63 +566,27 @@ void PSISuperCluster::resultFrom(ProductionReaction& reaction,
 
     // Sum without sorting values.
     // Since we don't need to sort the elements used to compute
-    // a given prodPair.a[i][j][k] value, we can compute them on the fly
-    // and just update prodPair.a[i][j][k] as we go.
+    // a given coefficient [i][j][k] value, we can compute the terms
+    // and just update a running sum as we go.
     // It is faster and more memory efficient, but has the potential
     // to incur larger numerical error in the computed coefficients than 
     // sorting and adding the values smallest to largest.
-    std::for_each(prInfos.begin(), prInfos.end(),
-        [this,&prodPair](const PendingProductionReactionInfo& currPRI) {
+    ComputeProdCoeffDeltasFunctor::value_type sums;
+    Kokkos::parallel_reduce(prInfos.size(),
+                            ComputeProdCoeffDeltasFunctor(prodPair.first, prodPair.second,
+                                numHe, numV,
+                                dispersionHe, dispersionV,
+                                prInfos),
+                            sums);
 
-        // Use names corresponding to those in single version.
-        int a = currPRI.numHe;
-        int b = currPRI.numV;
-        int c = currPRI.i;
-        int d = currPRI.j;
-
-        double firstHeDistance = 0.0, firstVDistance = 0.0, secondHeDistance = 0.0,
-                secondVDistance = 0.0;
-        if (prodPair.first.getType() == ReactantType::PSISuper) {
-            auto const& super = static_cast<PSICluster const&>(prodPair.first);
-            firstHeDistance = super.getHeDistance(c);
-            firstVDistance = super.getVDistance(d);
+    // Apply the deltas to the initial coefficient values.
+    for(auto i = 0; i < 3; ++i) {
+        for(auto j = 0; j < 3; ++j) {
+            for(auto k = 0; k < 3; ++k) {
+                prodPair.a[i][j][k] += sums.vals[i][j][k];
+            }
         }
-        if (prodPair.second.getType() == ReactantType::PSISuper) {
-            auto const& super = static_cast<PSICluster const&>(prodPair.second);
-            secondHeDistance = super.getHeDistance(c);
-            secondVDistance = super.getVDistance(d);
-        }
-        double heFactor = (double) (a - numHe) / dispersionHe;
-        double vFactor = (double) (b - numV) / dispersionV;
-        // First is A, second is B, in A + B -> this
-        prodPair.a[0][0][0] += 1.0;
-        prodPair.a[0][0][1] += heFactor;
-        prodPair.a[0][0][2] += vFactor;
-        prodPair.a[1][0][0] += firstHeDistance;
-        prodPair.a[1][0][1] += firstHeDistance * heFactor;
-        prodPair.a[1][0][2] += firstHeDistance * vFactor;
-        prodPair.a[2][0][0] += firstVDistance;
-        prodPair.a[2][0][1] += firstVDistance * heFactor;
-        prodPair.a[2][0][2] += firstVDistance * vFactor;
-        prodPair.a[0][1][0] += secondHeDistance;
-        prodPair.a[0][1][1] += secondHeDistance * heFactor;
-        prodPair.a[0][1][2] += secondHeDistance * vFactor;
-        prodPair.a[0][2][0] += secondVDistance;
-        prodPair.a[0][2][1] += secondVDistance * heFactor;
-        prodPair.a[0][2][2] += secondVDistance * vFactor;
-        prodPair.a[1][1][0] += firstHeDistance * secondHeDistance;
-        prodPair.a[1][1][1] += firstHeDistance * secondHeDistance * heFactor;
-        prodPair.a[1][1][2] += firstHeDistance * secondHeDistance * vFactor;
-        prodPair.a[1][2][0] += firstHeDistance * secondVDistance;
-        prodPair.a[1][2][1] += firstHeDistance * secondVDistance * heFactor;
-        prodPair.a[1][2][2] += firstHeDistance * secondVDistance * vFactor;
-        prodPair.a[2][1][0] += firstVDistance * secondHeDistance;
-        prodPair.a[2][1][1] += firstVDistance * secondHeDistance * heFactor;
-        prodPair.a[2][1][2] += firstVDistance * secondHeDistance * vFactor;
-        prodPair.a[2][2][0] += firstVDistance * secondVDistance;
-        prodPair.a[2][2][1] += firstVDistance * secondVDistance * heFactor;
-        prodPair.a[2][2][2] += firstVDistance * secondVDistance * vFactor;
-    });
+    }
 #endif // defined(USE_SORTED_COEFF_SUMS)
 
 	return;
@@ -446,6 +652,7 @@ void PSISuperCluster::participateIn(ProductionReaction& reaction, int a, int b) 
 
 	return;
 }
+
 
 void PSISuperCluster::participateIn(ProductionReaction& reaction,
             const std::vector<PendingProductionReactionInfo>& prInfos) {
@@ -567,33 +774,25 @@ void PSISuperCluster::participateIn(ProductionReaction& reaction,
 
     // Sum without sorting values.
     // Since we don't need to sort the elements used to compute
-    // a given coefficient [i][j][k] value, we can compute them on the fly
-    // and just update coefficient [i][j][k] as we go.
+    // a given coefficient [i][j][k] value, we can compute the terms
+    // and just update a running sum as we go.
     // It is faster and more memory efficient, but has the potential
     // to incur larger numerical error in the computed coefficients than 
     // sorting and adding the values smallest to largest.
-    std::for_each(pendingPRInfos.begin(), pendingPRInfos.end(),
-        [this,&combCluster](const PendingProductionReactionInfo& currPRInfo) {
+    ComputeCombCoeffDeltasFunctor::value_type sums;
+    Kokkos::parallel_reduce(prInfos.size(),
+                            ComputeCombCoeffDeltasFunctor(*this,
+                                numHe, numV,
+                                dispersionHe, dispersionV,
+                                prInfos),
+                            sums);
 
-            // Use names corresponding to the single-item version.
-            int a = currPRInfo.i;
-            int b = currPRInfo.j;
-
-            double heDistance = getHeDistance(a);
-            double heFactor = (double) (a - numHe) / dispersionHe;
-            double vDistance = getVDistance(b);
-            double vFactor = (double) (b - numV) / dispersionV;
-            // This is A, itBis is B, in A + B -> C
-            combCluster.a[0][0][0] += 1.0;
-            combCluster.a[0][0][1] += heFactor;
-            combCluster.a[0][0][2] += vFactor;
-            combCluster.a[1][0][0] += heDistance;
-            combCluster.a[1][0][1] += heDistance * heFactor;
-            combCluster.a[1][0][2] += heDistance * vFactor;
-            combCluster.a[2][0][0] += vDistance;
-            combCluster.a[2][0][1] += vDistance * heFactor;
-            combCluster.a[2][0][2] += vDistance * vFactor;
-        });
+    // Apply the deltas to the initial coefficient values.
+    for(auto i = 0; i < 3; ++i) {
+        for(auto k = 0; k < 3; ++k) {
+            combCluster.a[i][0][k] += sums.vals[i][k];
+        }
+    }
 #endif // defined(USE_SORTED_COEFF_SUMS)
 
 	return;
@@ -791,39 +990,24 @@ void PSISuperCluster::participateIn(DissociationReaction& reaction,
     // Sum without sorting values.
     // Since we don't need to sort the elements used to compute
     // a given coefficient [i][j][k] value, we can compute them on the fly
-    // and just update coefficient [i][j][k] as we go.
+    // and just update running values as we go.
     // It is faster and more memory efficient, but has the potential
     // to incur larger numerical error in the computed coefficients than 
     // sorting and adding the values smallest to largest.
-    std::for_each(prInfos.begin(), prInfos.end(),
-        [this,&dissPair,&reaction](const PendingProductionReactionInfo& currPRI) {
+    ComputeDissCoeffDeltasFunctor::value_type sums;
+    Kokkos::parallel_reduce(prInfos.size(),
+            ComputeDissCoeffDeltasFunctor(reaction.dissociating,
+                                            numHe, numV,
+                                            dispersionHe, dispersionV,
+                                            prInfos),
+            sums);
 
-            // Use names corresponding to the single-item version.
-            int a = currPRI.numHe;
-            int b = currPRI.numV;
-            int c = currPRI.i;
-            int d = currPRI.j;
-
-            double firstHeDistance = 0.0, firstVDistance = 0.0;
-            if (reaction.dissociating.getType() == ReactantType::PSISuper) {
-                auto const& super = static_cast<PSICluster const&>(reaction.dissociating);
-                firstHeDistance = super.getHeDistance(a);
-                firstVDistance = super.getVDistance(b);
-            }
-            double heFactor = (double) (c - numHe) / dispersionHe;
-            double vFactor = (double) (d - numV) / dispersionV;
-
-            // A is the dissociating cluster
-            dissPair.a[0][0] += 1.0;
-            dissPair.a[0][1] += heFactor;
-            dissPair.a[0][2] += vFactor;
-            dissPair.a[1][0] += firstHeDistance;
-            dissPair.a[1][1] += firstHeDistance * heFactor;
-            dissPair.a[1][2] += firstHeDistance * vFactor;
-            dissPair.a[2][0] += firstVDistance;
-            dissPair.a[2][1] += firstVDistance * heFactor;
-            dissPair.a[2][2] += firstVDistance * vFactor;
-        });
+    // Apply the deltas to the initial coefficient values.
+    for(auto i = 0; i < 3; ++i) {
+        for(auto j = 0; j < 3; ++j) {
+            dissPair.a[i][j] += sums.vals[i][j];
+        }
+    }
 #endif // defined(USE_SORTED_COEFF_SUMS)
 
 	return;
@@ -1001,32 +1185,24 @@ void PSISuperCluster::emitFrom(DissociationReaction& reaction,
     // Sum without sorting values.
     // Since we don't need to sort the elements used to compute
     // a given coefficient [i][j] value, we can compute them on the fly
-    // and just update coefficient [i][j] as we go.
+    // and just update a running value as we go.
     // It is faster and more memory efficient, but has the potential
     // to incur larger numerical error in the computed coefficients than 
     // sorting and adding the values smallest to largest.
-    std::for_each(prInfos.begin(), prInfos.end(),
-        [this,&dissPair](const PendingProductionReactionInfo& currPRI) {
+    ComputeEmitCoeffDeltasFunctor::value_type sums;
+    Kokkos::parallel_reduce(prInfos.size(),
+            ComputeEmitCoeffDeltasFunctor(*this,
+                                            numHe, numV,
+                                            dispersionHe, dispersionV,
+                                            prInfos),
+            sums);
 
-        // Use same names as used in single version.
-        int a = currPRI.numHe;
-        int b = currPRI.numV;
-
-        double heDistance = getHeDistance(a);
-        double heFactor = (double) (a - numHe) / dispersionHe;
-        double vDistance = getVDistance(b);
-        double vFactor = (double) (b - numV) / dispersionV;
-        // A is the dissociating cluster
-        dissPair.a[0][0] += 1.0;
-        dissPair.a[0][1] += heFactor;
-        dissPair.a[0][2] += vFactor;
-        dissPair.a[1][0] += heDistance;
-        dissPair.a[1][1] += heDistance * heFactor;
-        dissPair.a[1][2] += heDistance * vFactor;
-        dissPair.a[2][0] += vDistance;
-        dissPair.a[2][1] += vDistance * heFactor;
-        dissPair.a[2][2] += vDistance * vFactor;
-    });
+    // Apply the deltas to the initial coefficient values.
+    for(auto i = 0; i < 3; ++i) {
+        for(auto j = 0; j < 3; ++j) {
+            dissPair.a[i][j] += sums.vals[i][j];
+        }
+    }
 #endif // defined(USE_SORTED_COEFF_SUMS)
 
 	return;

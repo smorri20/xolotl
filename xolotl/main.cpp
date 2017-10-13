@@ -5,10 +5,12 @@
 #include <iostream>
 #include <fstream>
 #include <cassert>
-#include <Reactant.h>
-#include <PetscSolver.h>
+#include <ctime>
 #include <mpi.h>
 #include <MPIUtils.h>
+#include <Kokkos_Core.hpp>
+#include <Reactant.h>
+#include <PetscSolver.h>
 #include <Options.h>
 #include <xolotlPerf.h>
 #include <IMaterialFactory.h>
@@ -19,7 +21,6 @@
 #include <SolverHandlerFactory.h>
 #include <ISolverHandler.h>
 #include <IReactionHandlerFactory.h>
-#include <ctime>
 
 using namespace std;
 using std::shared_ptr;
@@ -114,6 +115,9 @@ void launchPetscSolver(xolotlSolver::PetscSolver& solver,
 
 //! Main program
 int main(int argc, char **argv) {
+
+    // Let Kokkos handle its arguments.
+    Kokkos::initialize(argc, argv);
 
 	// Local Declarations
 	int rank;
@@ -237,6 +241,9 @@ int main(int argc, char **argv) {
 
 	// finalize our use of MPI
 	MPI_Finalize();
+
+    // Finalize our use of Kokkos
+    Kokkos::finalize();
 
 	return ret;
 }

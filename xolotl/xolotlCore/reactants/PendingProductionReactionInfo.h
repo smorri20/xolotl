@@ -1,10 +1,10 @@
 #ifndef XCORE_PENDING_PRODUCTION_REACTION_INFO_H
 #define XCORE_PENDING_PRODUCTION_REACTION_INFO_H
 
-
 namespace xolotlCore {
 
 class IReactant;
+class Reactant;
 
 /**
  * Information about a production reaction that needs to be created
@@ -13,7 +13,7 @@ class IReactant;
  * for a reactant interacting with a super cluster.
  */
 struct PendingProductionReactionInfo {
-    
+
     IReactant& product;
     int numHe;
     int numV;
@@ -21,16 +21,17 @@ struct PendingProductionReactionInfo {
     int j;
     
     PendingProductionReactionInfo(IReactant& _product,
-            int _numHe,
-            int _numV,
-            int _i,
-            int _j)
+            int _numHe = 0,
+            int _numV = 0,
+            int _i = 0,
+            int _j = 0)
       : product(_product),
         numHe(_numHe),
         numV(_numV),
         i(_i),
         j(_j)
     { }
+
 
     /**
      * Default and copy ctor, disallowed to detect potential use.

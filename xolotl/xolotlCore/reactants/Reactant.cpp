@@ -9,6 +9,7 @@
 
 namespace xolotlCore {
 
+
 // TODO modify signature to take type as argument.
 Reactant::Reactant(IReactionNetwork& _network,
                 std::shared_ptr<xolotlPerf::IHandlerRegistry> registry,

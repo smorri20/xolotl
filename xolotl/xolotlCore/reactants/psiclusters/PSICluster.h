@@ -243,18 +243,6 @@ public:
 	 */
 	virtual void updateFromNetwork() override;
 
-	/**
-	 * Note that we result from the given reaction.
-	 * Assumes the reaction is already in our network.
-	 *
-	 * @param reaction The reaction creating this cluster.
-	 * @param a Number that can be used by daughter classes.
-	 * @param b Number that can be used by daughter classes.
-	 * @param c Number that can be used by daughter classes.
-	 * @param d Number that can be used by daughter classes.
-	 */
-	void resultFrom(ProductionReaction& reaction,
-			int a = 0, int b = 0, int c = 0, int d = 0) override;
 
     /**
      * Note that we result from the given reaction involving a super cluster.

@@ -125,7 +125,9 @@ private:
         auto& reaction = defineReactionBase(r1, r2);
 
         // Tell the product it results from the reaction.
-        product.resultFrom(reaction);
+        std::vector<PendingProductionReactionInfo> prInfos;
+        prInfos.emplace_back(product);
+        product.resultFrom(reaction, prInfos);
     }
 
 
@@ -140,12 +142,13 @@ private:
     void defineProductionReaction(IReactant& r1, IReactant& super,
                                         IReactant& product,
                                         int a = 0, int b = 0, int c = 0, int d = 0) {
-
         // Define the basic production reaction.
         auto& reaction = defineReactionBase(r1, super, c, d);
 
         // Tell product it is a product of this reaction.
-        product.resultFrom(reaction, a, b, c, d);
+        std::vector<PendingProductionReactionInfo> prInfos;
+        prInfos.emplace_back(product, a, b, c, d);
+        product.resultFrom(reaction, prInfos);
 
         // Check if reverse reaction is allowed.
         checkForDissociation(product, reaction, a, b, c, d);

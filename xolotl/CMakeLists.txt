@@ -35,6 +35,15 @@ ENDIF()
 # Include the headers
 INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR})
 
+# We require Kokkos for multithreading/acceleration.
+find_package(Kokkos REQUIRED)
+if (Kokkos_FOUND)
+    include_directories(${Kokkos_INCLUDE_DIRS})
+endif()
+
+# Kokkos may use Hwloc.
+find_package(Hwloc)
+
 # Enable testing.
 enable_testing()
 
@@ -103,11 +112,22 @@ include_directories(${CMAKE_SOURCE_DIR}
                 configure_file ("${CMAKE_SOURCE_DIR}/XolotlConfig.h.in" "${CMAKE_BINARY_DIR}/XolotlConfig.h")
 
 # Setup the library list
-set(XOLOTL_LIBS xolotlReactants xolotlSolver xolotlIO xolotlPerf xolotlViz 
-xolotlFactory xolotlCL ${PETSC_LIBRARIES} ${HDF5_LIBRARIES})
+set(XOLOTL_LIBS
+    xolotlReactants
+    xolotlSolver
+    xolotlIO
+    xolotlPerf
+    xolotlViz
+    xolotlFactory
+    xolotlCL
+    ${PETSC_LIBRARIES}
+    ${HDF5_LIBRARIES}
+    ${Kokkos_LIBRARIES}
+    ${Hwloc_LIBRARIES})
 
 # Add an executable for the main program
 ADD_EXECUTABLE (xolotl main.cpp)
 
 # Link the reactants library
 target_link_libraries(xolotl ${XOLOTL_LIBS})
+

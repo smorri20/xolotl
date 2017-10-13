@@ -31,45 +31,6 @@ static std::shared_ptr<xolotlPerf::IEventCounter> emitFrom_callsCounter;
 #endif // READY
 
 
-void PSICluster::resultFrom(ProductionReaction& reaction,
-		int a, int b, int c, int d) {
-
-	// Add a cluster pair for the given reaction.
-	reactingPairs.emplace_back(
-            reaction,
-            static_cast<PSICluster&>(reaction.first),
-            static_cast<PSICluster&>(reaction.second));
-    auto& newPair = reactingPairs.back();
-
-    // NB: newPair's reactants are same as reaction's.
-    // So use newPair only from here on.
-    // TODO Any way to enforce this beyond splitting it into two functions?
-
-	// Update the coefficients
-	double firstHeDistance = 0.0, firstVDistance = 0.0, secondHeDistance = 0.0,
-			secondVDistance = 0.0;
-	if (newPair.first.getType() == ReactantType::PSISuper) {
-		auto const& super = static_cast<PSICluster const&>(newPair.first);
-		firstHeDistance = super.getHeDistance(c);
-		firstVDistance = super.getVDistance(d);
-	}
-	if (newPair.second.getType() == ReactantType::PSISuper) {
-		auto const& super = static_cast<PSICluster const&>(newPair.second);
-		secondHeDistance = super.getHeDistance(c);
-		secondVDistance = super.getVDistance(d);
-	}
-	newPair.a[0][0] += 1.0;
-	newPair.a[1][0] += firstHeDistance;
-	newPair.a[2][0] += firstVDistance;
-	newPair.a[0][1] += secondHeDistance;
-	newPair.a[0][2] += secondVDistance;
-	newPair.a[1][1] += firstHeDistance * secondHeDistance;
-	newPair.a[1][2] += firstHeDistance * secondVDistance;
-	newPair.a[2][1] += firstVDistance * secondHeDistance;
-	newPair.a[2][2] += firstVDistance * secondVDistance;
-
-	return;
-}
 
 void PSICluster::resultFrom(ProductionReaction& reaction,
         const std::vector<PendingProductionReactionInfo>& prInfos) {
@@ -177,6 +138,7 @@ void PSICluster::participateIn(ProductionReaction& reaction,
 
 	return;
 }
+
 
 void PSICluster::participateIn(ProductionReaction& reaction,
             const std::vector<PendingProductionReactionInfo>& prInfos) {

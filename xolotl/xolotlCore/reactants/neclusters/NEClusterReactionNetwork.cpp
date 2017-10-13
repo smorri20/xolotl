@@ -80,9 +80,11 @@ void NEClusterReactionNetwork::createReactionConnectivity() {
 			auto reaction = std::make_shared<ProductionReaction>(
 					*singleXeCluster, xeReactant);
 			// Tell the reactants that they are in this reaction
-			singleXeCluster->participateIn(*reaction);
-			xeReactant.participateIn(*reaction);
-			product->resultFrom(*reaction);
+            std::vector<PendingProductionReactionInfo> prInfos;
+            prInfos.emplace_back(*product);
+			singleXeCluster->participateIn(*reaction, prInfos);
+			xeReactant.participateIn(*reaction, prInfos);
+			product->resultFrom(*reaction, prInfos);
 
 			// Check if the reverse reaction is allowed
 			checkForDissociation(product, reaction);

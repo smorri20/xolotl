@@ -9,7 +9,7 @@ using namespace xolotlCore;
 
 
 void NECluster::resultFrom(ProductionReaction& reaction,
-		int, int, int, int) {
+        const std::vector<PendingProductionReactionInfo>& prInfos) {
 
 	// Add a cluster pair for given reaction 
 	reactingPairs.emplace_back(
@@ -20,11 +20,14 @@ void NECluster::resultFrom(ProductionReaction& reaction,
 	setReactionConnectivity(reaction.first.getId());
 	setReactionConnectivity(reaction.second.getId());
 
+    // TODO nothing to do with product or parameters in prInfos?
+
 	return;
 }
 
 void NECluster::participateIn(ProductionReaction& reaction,
-		int a, int b) {
+        const std::vector<PendingProductionReactionInfo>& prInfos) {
+
 	setReactionConnectivity(id);
 	// Look for the other cluster
 	auto& otherCluster = static_cast<NECluster&>((reaction.first.getId() == id) ?
@@ -46,6 +49,8 @@ void NECluster::participateIn(ProductionReaction& reaction,
 	// Setup the connectivity array
 	setReactionConnectivity(id);
 	setReactionConnectivity(otherCluster.getId());
+
+    // TODO nothing to do with product or parameters in prInfos?
 
 	return;
 }
