@@ -89,16 +89,16 @@ public:
 		/**
 		 * The reaction/dissociation pointer to the list
 		 */
-        // NB: we use a reference_wrapper because we assign
-        // this after constructing the object.
-        // TODO why can't we add this when we construct the object?
-        std::reference_wrapper<Reaction> reaction;
+		// NB: we use a reference_wrapper because we assign
+		// this after constructing the object.
+		// TODO why can't we add this when we construct the object?
+		std::reference_wrapper<Reaction> reaction;
 
 		//! The constructor
-		ClusterPair(Reaction& _reaction, NECluster * firstPtr, NECluster * secondPtr) :
-				reaction(_reaction),
-                first(firstPtr), second(secondPtr),
-                firstDistance(0.0), secondDistance(0.0) {
+		ClusterPair(Reaction& _reaction, NECluster * firstPtr,
+				NECluster * secondPtr) :
+				reaction(_reaction), first(firstPtr), second(secondPtr), firstDistance(
+						0.0), secondDistance(0.0) {
 		}
 	};
 
@@ -116,20 +116,20 @@ public:
 		/**
 		 * The combining cluster
 		 */
-        // We use a reference wrapper because we may need to reassign
-        // the original combining reactant to a super cluster after 
-        // construction.
-        std::reference_wrapper<NECluster> combining;
+		// We use a reference wrapper because we may need to reassign
+		// the original combining reactant to a super cluster after
+		// construction.
+		std::reference_wrapper<NECluster> combining;
 
 		/**
 		 * The reaction pointer to the list
 		 */
-        // We use a reference wrapper here because it allows NESuperCluster
-        // to edit vectors of CombiningClusters in place when grouping
-        // into superclusters.
-        // TODO can't this be done similar to what we're doing in PSI
-        // to avoid the need for the reference wrappers?
-        std::reference_wrapper<Reaction> reaction;
+		// We use a reference wrapper here because it allows NESuperCluster
+		// to edit vectors of CombiningClusters in place when grouping
+		// into superclusters.
+		// TODO can't this be done similar to what we're doing in PSI
+		// to avoid the need for the reference wrappers?
+		std::reference_wrapper<Reaction> reaction;
 
 		/**
 		 * The cluster distance in the group (0.0 for non-super clusters)
@@ -138,11 +138,9 @@ public:
 
 		//! The constructor
 		CombiningCluster(Reaction& _reaction, NECluster& _comb) :
-				combining(_comb),
-                reaction(_reaction), distance(0.0) {
+				combining(_comb), reaction(_reaction), distance(0.0) {
 		}
 	};
-
 
 	/**
 	 * A vector of ClusterPairs that represents reacting pairs of clusters
@@ -179,23 +177,23 @@ public:
 	 */
 	std::vector<ClusterPair> emissionPairs;
 
-    /**
-     * Default constructor, deleted because we require info to construct.
-     */
-    NECluster() = delete;
+	/**
+	 * Default constructor, deleted because we require info to construct.
+	 */
+	NECluster() = delete;
 
 	/**
 	 * The default constructor
 	 *
-     * @param _network The network to which we wil belong.
+	 * @param _network The network to which we wil belong.
 	 * @param _registry The performance handler registry.
-     * @param _name Our name.
+	 * @param _name Our name.
 	 */
 	NECluster(IReactionNetwork& _network,
-                std::shared_ptr<xolotlPerf::IHandlerRegistry> _registry,
-                const std::string& _name = "NECluster") :
-        Reactant(_network, _registry, _name) {
-    }
+			std::shared_ptr<xolotlPerf::IHandlerRegistry> _registry,
+			const std::string& _name = "NECluster") :
+			Reactant(_network, _registry, _name) {
+	}
 
 	/**
 	 * Copy constructor, deleted to prevent use.
@@ -209,7 +207,7 @@ public:
 	}
 
 	/**
-     * Update reactant using other reactants in its network.
+	 * Update reactant using other reactants in its network.
 	 */
 	virtual void updateFromNetwork() override;
 
@@ -217,109 +215,147 @@ public:
 	 * Note that we result from the given reaction.
 	 * Assumes the reaction is already in our network.
 	 *
-	 * @param reaction The reaction creating this cluster.
-	 * @param a Number that can be used by daughter classes.
-	 * @param b Number that can be used by daughter classes.
-	 * @param c Number that can be used by daughter classes.
-	 * @param d Number that can be used by daughter classes.
+	 * \see Reactant.h
 	 */
-	void resultFrom(ProductionReaction& reaction, int a =
-			0, int b = 0, int c = 0, int d = 0) override;
+	void resultFrom(ProductionReaction& reaction, int a = 0, int b = 0, int c =
+			0, int d = 0) override;
 
-    /**
-     * Note that we result from the given reaction involving a super cluster.
-     * Assumes the reaction is already in the network.
-     *
-     * @param reaction The reaction creating this cluster.
-     * @param prInfos Production reaction parameters.
-     */
-    void resultFrom(ProductionReaction& reaction,
-            const std::vector<PendingProductionReactionInfo>& prInfos) override {
-        // TODO Should not be called for NE reaction network yet,
-        // but required to be defined.
-        assert(false);
-    }
+	/**
+	 * Note that we result from the given reaction involving a super cluster.
+	 * Assumes the reaction is already in the network.
+	 *
+	 * \see Reactant.h
+	 */
+	void resultFrom(ProductionReaction& reaction,
+			const std::vector<PendingProductionReactionInfo>& prInfos)
+					override {
+		// TODO Should not be called for NE reaction network yet,
+		// but required to be defined.
+		assert(false);
+	}
+
+	/**
+	 * Note that we result from the given reaction involving a super cluster.
+	 * Assumes the reaction is already in the network.
+	 *
+	 * \see Reactant.h
+	 */
+	void resultFrom(ProductionReaction& reaction, IReactant& product) override {
+		// TODO Should not be called for NE reaction network yet,
+		// but required to be defined.
+		assert(false);
+	}
 
 	/**
 	 * Note that we combine with another cluster in a production reaction.
 	 * Assumes that the reaction is already in our network.
 	 *
-	 * @param reaction The reaction where this cluster takes part.
-	 * @param a Number that can be used by daughter classes.
-	 * @param b Number that can be used by daughter classes.
+	 * \see Reactant.h
 	 */
-	void participateIn(ProductionReaction& reaction, int a =
-			0, int b = 0) override;
+	void participateIn(ProductionReaction& reaction, int a = 0, int b = 0)
+			override;
 
 	/**
 	 * Note that we combine with another cluster in a production reaction
-     * involving a super cluster.
+	 * involving a super cluster.
 	 * Assumes that the reaction is already in our network.
 	 *
-	 * @param reaction The reaction where this cluster takes part.
-	 * @param prInfos Production reaction parameters.
+	 * \see Reactant.h
 	 */
-    void participateIn(ProductionReaction& reaction,
-            const std::vector<PendingProductionReactionInfo>& prInfos) override {
-        // TODO Should not be called for NE reaction network yet,
-        // but required to be defined.
-        assert(false);
-    }
+	void participateIn(ProductionReaction& reaction,
+			const std::vector<PendingProductionReactionInfo>& prInfos)
+					override {
+		// TODO Should not be called for NE reaction network yet,
+		// but required to be defined.
+		assert(false);
+	}
+
+	/**
+	 * Note that we combine with another cluster in a production reaction
+	 * involving a super cluster.
+	 * Assumes that the reaction is already in our network.
+	 *
+	 * \see Reactant.h
+	 */
+	void participateIn(ProductionReaction& reaction, IReactant& product)
+			override {
+		// TODO Should not be called for NE reaction network yet,
+		// but required to be defined.
+		assert(false);
+	}
 
 	/**
 	 * Note that we combine with another cluster in a dissociation reaction.
-	 * Assumes the reaction is already inour network.
+	 * Assumes the reaction is already in our network.
 	 *
-	 * @param reaction The reaction creating this cluster.
-	 * @param a Number that can be used by daughter classes.
-	 * @param b Number that can be used by daughter classes.
-	 * @param c Number that can be used by daughter classes.
-	 * @param d Number that can be used by daughter classes.
+	 * \see Reactant.h
 	 */
-	void participateIn(DissociationReaction& reaction,
-			int a = 0, int b = 0, int c = 0, int d = 0) override;
+	void participateIn(DissociationReaction& reaction, int a = 0, int b = 0,
+			int c = 0, int d = 0) override;
 
 	/**
 	 * Note that we combine with another cluster in a dissociation reaction
-     * involving a super cluster.
-	 * Assumes the reaction is already inour network.
+	 * involving a super cluster.
+	 * Assumes the reaction is already in our network.
 	 *
-	 * @param reaction The reaction creating this cluster.
-	 * @param prInfos Production reaction parameters.
+	 * \see Reactant.h
 	 */
 	void participateIn(DissociationReaction& reaction,
-            const std::vector<PendingProductionReactionInfo>& prInfos) override {
-        // TODO Should not be called for NE reaction network yet,
-        // but required to be defined.
-        assert(false);
-    }
+			const std::vector<PendingProductionReactionInfo>& prInfos)
+					override {
+		// TODO Should not be called for NE reaction network yet,
+		// but required to be defined.
+		assert(false);
+	}
 
 	/**
-     * Note that we emit from the given reaction.
+	 * Note that we combine with another cluster in a dissociation reaction
+	 * involving a super cluster.
 	 * Assumes the reaction is already in our network.
 	 *
-	 * @param reaction The reaction where this cluster emits.
-	 * @param a Number that can be used by daughter classes.
-	 * @param b Number that can be used by daughter classes.
-	 * @param c Number that can be used by daughter classes.
-	 * @param d Number that can be used by daughter classes.
+	 * \see Reactant.h
 	 */
-	void emitFrom(DissociationReaction& reaction,
-            int a = 0, int b = 0, int c = 0, int d = 0) override;
+	void participateIn(DissociationReaction& reaction, IReactant& disso)
+			override {
+		// TODO Should not be called for NE reaction network yet,
+		// but required to be defined.
+		assert(false);
+	}
 
 	/**
-     * Note that we emit from the given reaction involving a super cluster.
+	 * Note that we emit from the given reaction.
 	 * Assumes the reaction is already in our network.
 	 *
-	 * @param reaction The reaction where this cluster emits.
-     * @param prInfos Production reaction parameters.
+	 * \see Reactant.h
+	 */
+	void emitFrom(DissociationReaction& reaction, int a = 0, int b = 0, int c =
+			0, int d = 0) override;
+
+	/**
+	 * Note that we emit from the given reaction involving a super cluster.
+	 * Assumes the reaction is already in our network.
+	 *
+	 * \see Reactant.h
 	 */
 	void emitFrom(DissociationReaction& reaction,
-            const std::vector<PendingProductionReactionInfo>& prInfos) override {
-        // TODO Should not be called for NE reaction network yet,
-        // but required to be defined.
-        assert(false);
-    }
+			const std::vector<PendingProductionReactionInfo>& prInfos)
+					override {
+		// TODO Should not be called for NE reaction network yet,
+		// but required to be defined.
+		assert(false);
+	}
+
+	/**
+	 * Note that we emit from the given reaction involving a super cluster.
+	 * Assumes the reaction is already in our network.
+	 *
+	 * \see Reactant.h
+	 */
+	void emitFrom(DissociationReaction& reaction, IReactant& disso) override {
+		// TODO Should not be called for NE reaction network yet,
+		// but required to be defined.
+		assert(false);
+	}
 
 	/**
 	 * Add the reactions to the network lists.
@@ -419,7 +455,8 @@ public:
 	 * the vector should be equal to ReactionNetwork::size().
 	 *
 	 */
-	virtual void getPartialDerivatives(std::vector<double> & partials) const override;
+	virtual void getPartialDerivatives(std::vector<double> & partials) const
+			override;
 
 	/**
 	 * This operation computes the partial derivatives due to production
@@ -512,17 +549,16 @@ public:
 	 */
 	std::vector<int> getConnectivity() const override;
 
-
-    /**
-     * Tell reactant to output a representation of its reaction coefficients
-     * to the given output stream.
-     *
-     * @param os Output stream on which to output coefficients.
-     */
-    virtual void outputCoefficientsTo(std::ostream& os) const override {
-        // NIY.
-        assert(false);
-    }
+	/**
+	 * Tell reactant to output a representation of its reaction coefficients
+	 * to the given output stream.
+	 *
+	 * @param os Output stream on which to output coefficients.
+	 */
+	virtual void outputCoefficientsTo(std::ostream& os) const override {
+		// NIY.
+		assert(false);
+	}
 };
 
 } /* end namespace xolotlCore */

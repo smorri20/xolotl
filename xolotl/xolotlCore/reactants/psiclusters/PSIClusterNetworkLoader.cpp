@@ -34,12 +34,11 @@ static inline double convertStrToDouble(const std::string& inString) {
 			strtod(inString.c_str(), NULL);
 }
 
-std::unique_ptr<PSICluster> PSIClusterNetworkLoader::createPSICluster(
-        int numHe, int numV, int numI,
-        IReactionNetwork& network) const {
+std::unique_ptr<PSICluster> PSIClusterNetworkLoader::createPSICluster(int numHe,
+		int numV, int numI, IReactionNetwork& network) const {
 
 	// Local Declarations
-    PSICluster* cluster = nullptr;
+	PSICluster* cluster = nullptr;
 
 	// Determine the type of the cluster given the number of each species.
 	// Create a new cluster by that type and specify the names of the
@@ -60,11 +59,11 @@ std::unique_ptr<PSICluster> PSIClusterNetworkLoader::createPSICluster(
 		// Create a new ICluster
 		cluster = new InterstitialCluster(numI, network, handlerRegistry);
 	}
-    assert(cluster != nullptr);
+	assert(cluster != nullptr);
 
-    // TODO Once we have widespread C++14 support, use std::make_unique
-    // instead of two steps (and two memory allocations).
-    return std::unique_ptr<PSICluster>(cluster);
+	// TODO Once we have widespread C++14 support, use std::make_unique
+	// instead of two steps (and two memory allocations).
+	return std::unique_ptr<PSICluster>(cluster);
 }
 
 PSIClusterNetworkLoader::PSIClusterNetworkLoader(
@@ -94,14 +93,15 @@ PSIClusterNetworkLoader::PSIClusterNetworkLoader(
 	return;
 }
 
-std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::load(const IOptions& options) const {
+std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::load(
+		const IOptions& options) const {
 	// Local Declarations
 	TokenizedLineReader<std::string> reader;
 	std::vector<std::string> loadedLine;
 
-    // TODO Once we have C++14, use std::make_unique.
-    std::unique_ptr<PSIClusterReactionNetwork> network (
-            new PSIClusterReactionNetwork(handlerRegistry));
+	// TODO Once we have C++14, use std::make_unique.
+	std::unique_ptr<PSIClusterReactionNetwork> network(
+			new PSIClusterReactionNetwork(handlerRegistry));
 
 	std::string error(
 			"PSIClusterNetworkLoader Exception: Insufficient or erroneous data.");
@@ -128,7 +128,8 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::load(const IOptions& 
 				numV = std::stoi(loadedLine[1]);
 				numI = std::stoi(loadedLine[2]);
 				// Create the cluster
-				auto nextCluster = createPSICluster(numHe, numV, numI, *network);
+				auto nextCluster = createPSICluster(numHe, numV, numI,
+						*network);
 				// Load the energies
 				formationEnergy = convertStrToDouble(loadedLine[3]);
 				migrationEnergy = convertStrToDouble(loadedLine[4]);
@@ -140,7 +141,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::load(const IOptions& 
 				nextCluster->setDiffusionFactor(diffusionFactor);
 
 				// Save access to it so we can trigger updates after
-                // we add all to the network.
+				// we add all to the network.
 				reactants.emplace_back(*nextCluster);
 
 				// Give the cluster to the network
@@ -169,22 +170,22 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::load(const IOptions& 
 	// Recompute Ids and network size and redefine the connectivities
 	network->reinitializeNetwork();
 
-    // Dump the network we've created, if desired.
-    auto netDebugOpts = options.getNetworkDebugOptions();
-    if(netDebugOpts.first) {
-        int rank;
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-        if(rank == 0) {
-            // Dump the network we've created for comparison with baseline.
-            std::ofstream networkStream(netDebugOpts.second);
-            network->dumpTo(networkStream);
-        }
-    }
+	// Dump the network we've created, if desired.
+	auto netDebugOpts = options.getNetworkDebugOptions();
+	if (netDebugOpts.first) {
+		int rank;
+		MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+		if (rank == 0) {
+			// Dump the network we've created for comparison with baseline.
+			std::ofstream networkStream(netDebugOpts.second);
+			network->dumpTo(networkStream);
+		}
+	}
 
-    // Need to use move() because return type uses smart pointer to base class,
-    // not derived class that we created.
-    // Some C++11 compilers accept it without the move, but apparently
-    // that is not correct behavior until C++14.
+	// Need to use move() because return type uses smart pointer to base class,
+	// not derived class that we created.
+	// Some C++11 compilers accept it without the move, but apparently
+	// that is not correct behavior until C++14.
 	return std::move(network);
 }
 
@@ -198,8 +199,8 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 	double formationEnergy = 0.0, migrationEnergy = 0.0;
 	double diffusionFactor = 0.0;
 
-    // Once we have C++14, use std::make_unique.
-	std::unique_ptr<PSIClusterReactionNetwork> network (
+	// Once we have C++14, use std::make_unique.
+	std::unique_ptr<PSIClusterReactionNetwork> network(
 			new PSIClusterReactionNetwork(handlerRegistry));
 	std::vector<std::reference_wrapper<Reactant> > reactants;
 
@@ -246,7 +247,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 		}
 
 		// Svae access to it so we can trigger updates once all are
-        // added to the network.
+		// added to the network.
 		reactants.emplace_back(*nextCluster);
 
 		// Give the cluster to the network
@@ -275,7 +276,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 		}
 
 		// Save access to it so we can trigger updates once
-        // added to the network.
+		// added to the network.
 		reactants.emplace_back(*nextCluster);
 
 		// Give the cluster to the network
@@ -309,7 +310,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 			}
 
 			// Save access to it so we can trigger updates once
-            // all are added to the network.
+			// all are added to the network.
 			reactants.emplace_back(*nextCluster);
 
 			// Give the cluster to the network
@@ -321,15 +322,16 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 			numHe = j;
 			// Create the cluster only if it is not going to be grouped
 			if (numHe < vMin && numV < vMin) {
-				auto nextCluster = createPSICluster(numHe, numV, numI, *network);
+				auto nextCluster = createPSICluster(numHe, numV, numI,
+						*network);
 				// Set its attributes
 				nextCluster->setFormationEnergy(0.0);
 				nextCluster->setDiffusionFactor(0.0);
 				nextCluster->setMigrationEnergy(
 						std::numeric_limits<double>::infinity());
 
-			    // Save access to it so we can trigger updates once
-                // all are added to the network.
+				// Save access to it so we can trigger updates once
+				// all are added to the network.
 				reactants.emplace_back(*nextCluster);
 
 				// Give the cluster to the network
@@ -358,22 +360,22 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 	// Recompute Ids and network size and redefine the connectivities
 	network->reinitializeNetwork();
 
-    // Dump the network we've created, if desired.
-    auto netDebugOpts = options.getNetworkDebugOptions();
-    if(netDebugOpts.first) {
-        int rank;
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-        if(rank == 0) {
-            // Dump the network we've created for comparison with baseline.
-            std::ofstream networkStream(netDebugOpts.second);
-            network->dumpTo(networkStream);
-        }
-    }
+	// Dump the network we've created, if desired.
+	auto netDebugOpts = options.getNetworkDebugOptions();
+	if (netDebugOpts.first) {
+		int rank;
+		MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+		if (rank == 0) {
+			// Dump the network we've created for comparison with baseline.
+			std::ofstream networkStream(netDebugOpts.second);
+			network->dumpTo(networkStream);
+		}
+	}
 
-    // Need to use move() because return type uses smart pointer to base class,
-    // not derived class that we created.
-    // Some C++11 compilers accept it without the move, but apparently
-    // that is not correct behavior until C++14.
+	// Need to use move() because return type uses smart pointer to base class,
+	// not derived class that we created.
+	// Some C++11 compilers accept it without the move, but apparently
+	// that is not correct behavior until C++14.
 	return std::move(network);
 }
 
@@ -473,7 +475,8 @@ double PSIClusterNetworkLoader::getHeVFormationEnergy(int numHe, int numV) {
 	return energy;
 }
 
-void PSIClusterNetworkLoader::applySectionalGrouping(PSIClusterReactionNetwork& network) const {
+void PSIClusterNetworkLoader::applySectionalGrouping(
+		PSIClusterReactionNetwork& network) const {
 
 	// Create a temporary vector for the loop
 	std::vector<std::pair<int, int> > tempVector;
@@ -488,11 +491,10 @@ void PSIClusterNetworkLoader::applySectionalGrouping(PSIClusterReactionNetwork& 
 	int nHeGroup = maxHe / heSectionWidth + 1;
 
 	// Loop on the vacancy groups
-    std::vector<IReactant::SizeType> superClusterBounds;
+	std::vector<IReactant::SizeType> superClusterBounds;
 	for (int k = 0; k < nVGroup; k++) {
 		// Add the bound the the network vector
-        superClusterBounds.emplace_back(vIndex);
-
+		superClusterBounds.emplace_back(vIndex);
 
 		// Loop on the helium groups
 		for (int j = 0; j < nHeGroup; j++) {
@@ -546,36 +548,36 @@ void PSIClusterNetworkLoader::applySectionalGrouping(PSIClusterReactionNetwork& 
 			heSize = heSize / (double) count;
 			vSize = vSize / (double) count;
 			// Create the super cluster
-            PSISuperCluster* rawSuperCluster = nullptr;
+			PSISuperCluster* rawSuperCluster = nullptr;
 			if (count == heWidth * vWidth) {
 				// Everything is fine, the cluster is full
-				rawSuperCluster = new PSISuperCluster(heSize, vSize,
-						count, heWidth, vWidth, network, handlerRegistry);
+				rawSuperCluster = new PSISuperCluster(heSize, vSize, count,
+						heWidth, vWidth, network, handlerRegistry);
 
-				std::cout << "normal: " << rawSuperCluster->getName() << " "
-						<< heWidth << " " << vWidth << std::endl;
+//				std::cout << "normal: " << rawSuperCluster->getName() << " "
+//						<< heWidth << " " << vWidth << std::endl;
 			} else {
 				// The cluster is smaller than we thought because we are at the edge
-				rawSuperCluster = new PSISuperCluster(heSize, vSize,
-						count, heHigh - heLow + 1, vHigh - vLow + 1,
-                        network,
+				rawSuperCluster = new PSISuperCluster(heSize, vSize, count,
+						heHigh - heLow + 1, vHigh - vLow + 1, network,
 						handlerRegistry);
 
-				std::cout << "irregular: " << rawSuperCluster->getName() << " "
-						<< heHigh - heLow + 1 << " " << vHigh - vLow + 1
-						<< std::endl;
+//				std::cout << "irregular: " << rawSuperCluster->getName() << " "
+//						<< heHigh - heLow + 1 << " " << vHigh - vLow + 1
+//						<< std::endl;
 			}
-            assert(rawSuperCluster != nullptr);
-            auto superCluster = std::unique_ptr<PSISuperCluster>(rawSuperCluster);
+			assert(rawSuperCluster != nullptr);
+			auto superCluster = std::unique_ptr<PSISuperCluster>(
+					rawSuperCluster);
 
-            // Save access to the cluster so we can trigger updates
-            // after we give it to the network.
-            auto& scref = *superCluster;
+			// Save access to the cluster so we can trigger updates
+			// after we give it to the network.
+			auto& scref = *superCluster;
 
-            // Give the cluster to the network.
-            network.add(std::move(superCluster));
+			// Give the cluster to the network.
+			network.add(std::move(superCluster));
 
-            // Trigger cluster updates now it is in the network.
+			// Trigger cluster updates now it is in the network.
 			scref.updateFromNetwork();
 
 			// Set the HeV vector
@@ -592,7 +594,8 @@ void PSIClusterNetworkLoader::applySectionalGrouping(PSIClusterReactionNetwork& 
 					heSectionWidth);
 			heWidth -= heWidth % heSectionWidth;
 
-			if (heIndex > maxHe) break;
+			if (heIndex > maxHe)
+				break;
 		}
 
 		// Reinitialize the group indices for the vacancy direction
@@ -604,15 +607,16 @@ void PSIClusterNetworkLoader::applySectionalGrouping(PSIClusterReactionNetwork& 
 		heWidth = heSectionWidth;
 		heIndex = 1;
 
-		if (vIndex > maxV) break;
+		if (vIndex > maxV)
+			break;
 	}
 
 	// Add the bound the the network vector
-    superClusterBounds.emplace_back(maxV+1);
+	superClusterBounds.emplace_back(maxV + 1);
 
-    // Now that we have the bound vector defined, tell the network to 
-    // build its lookup map for super clusters
-    network.buildSuperClusterMap(superClusterBounds);
+	// Now that we have the bound vector defined, tell the network to
+	// build its lookup map for super clusters
+	network.buildSuperClusterMap(superClusterBounds);
 
 	return;
 }

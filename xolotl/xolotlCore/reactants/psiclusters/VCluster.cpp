@@ -24,6 +24,14 @@ VCluster::VCluster(int nV,
 	reactionRadius = xolotlCore::tungstenLatticeConstant
 			* pow((3.0 * size) / xolotlCore::pi, (1.0 / 3.0)) * 0.5;
 
+	// Bounds on He and V
+	heBounds = IntegerRange<IReactant::SizeType>(
+			static_cast<IReactant::SizeType>(0),
+			static_cast<IReactant::SizeType>(1));
+	vBounds = IntegerRange<IReactant::SizeType>(
+			static_cast<IReactant::SizeType>(size),
+			static_cast<IReactant::SizeType>(size+1));
+
 	return;
 }
 

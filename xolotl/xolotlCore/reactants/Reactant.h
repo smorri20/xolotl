@@ -48,7 +48,7 @@ protected:
 	/**
 	 * The type name of the reactant.
 	 */
-    ReactantType type;
+	ReactantType type;
 
 	/**
 	 * An integer identification number for this reactant.
@@ -79,12 +79,12 @@ protected:
 	/**
 	 * The reaction network that includes this reactant.
 	 */
-    IReactionNetwork& network;
+	IReactionNetwork& network;
 
 	/**
 	 * The map that contains the composition of this cluster.
 	 */
-    IReactant::Composition composition;
+	IReactant::Composition composition;
 
 	/**
 	 * The performance handler registry that will be used with
@@ -96,7 +96,7 @@ protected:
 	 * The total size of this cluster including the contributions from all
 	 * species.
 	 */
-    IReactant::SizeType size;
+	IReactant::SizeType size;
 
 	/**
 	 * The diffusion factor, D_0, that is used to calculate the diffusion
@@ -155,29 +155,29 @@ protected:
 
 public:
 
-    /**
-     * Default constructor, deleted because we require info to construct.
-     */
-    Reactant() = delete;
+	/**
+	 * Default constructor, deleted because we require info to construct.
+	 */
+	Reactant() = delete;
 
 	/**
 	 * The constructor.
 	 *
-     * @param _network The network we will belong to.
-     * @param _name Our human-readable name.
+	 * @param _network The network we will belong to.
+	 * @param _name Our human-readable name.
 	 * @param _registry The performance handler registry to use
 	 */
 	Reactant(IReactionNetwork& _network,
-                std::shared_ptr<xolotlPerf::IHandlerRegistry> _registry,
-                const std::string& _name = "Reactant");
+			std::shared_ptr<xolotlPerf::IHandlerRegistry> _registry,
+			const std::string& _name = "Reactant");
 
 	/**
 	 * Copy constructor.
-     * Only used to construct dummy cluster objects of Reactant type
-     * as a copy of the Reactant part of objects of a more derived type.
-     * The more derived types initialize their base class' data, and
-     * we don't have a ctor that lets them specify all of our data,
-     * so we use this ctor to copy the Reactant data.
+	 * Only used to construct dummy cluster objects of Reactant type
+	 * as a copy of the Reactant part of objects of a more derived type.
+	 * The more derived types initialize their base class' data, and
+	 * we don't have a ctor that lets them specify all of our data,
+	 * so we use this ctor to copy the Reactant data.
 	 *
 	 * @param other The reactant to copy
 	 */
@@ -199,22 +199,37 @@ public:
 	 * @param c Number that can be used by daughter classes.
 	 * @param d Number that can be used by daughter classes.
 	 */
-	virtual void resultFrom(ProductionReaction& reaction,
-			int a = 0, int b = 0, int c = 0, int d = 0) override {
+	virtual void resultFrom(ProductionReaction& reaction, int a = 0, int b = 0,
+			int c = 0, int d = 0) override {
 		return;
 	}
 
-    /**
-     * Note that we result from the given reaction involving a super cluster.
-     * Assumes the reaction is already in the network.
-     *
-     * @param reaction The reaction creating this cluster.
-     * @param prInfos Production reaction parameters used by derived classes.
-     */
+	/**
+	 * Note that we result from the given reaction involving a super cluster.
+	 * Assumes the reaction is already in the network.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 * @param prInfos Production reaction parameters used by derived classes.
+	 */
 	virtual void resultFrom(ProductionReaction& reaction,
-            const std::vector<PendingProductionReactionInfo>& prInfos) override {
-        // Must be defined because we use stock Reactants with dummy
-        // Reactions, so we need to be able to create Reactant objects.
+			const std::vector<PendingProductionReactionInfo>& prInfos)
+					override {
+		// Must be defined because we use stock Reactants with dummy
+		// Reactions, so we need to be able to create Reactant objects.
+		return;
+	}
+
+	/**
+	 * Note that we result from the given reaction involving a super cluster.
+	 * Assumes the reaction is already in the network.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 * @param product The cluster created by the reaction.
+	 */
+	virtual void resultFrom(ProductionReaction& reaction, IReactant& product)
+			override {
+		// Must be defined because we use stock Reactants with dummy
+		// Reactions, so we need to be able to create Reactant objects.
 		return;
 	}
 
@@ -226,23 +241,39 @@ public:
 	 * @param a Number that can be used by daughter classes.
 	 * @param b Number that can be used by daughter classes.
 	 */
-	virtual void participateIn(ProductionReaction& reaction,
-			int a = 0, int b = 0) override {
+	virtual void participateIn(ProductionReaction& reaction, int a = 0, int b =
+			0) override {
 		return;
 	}
 
 	/**
 	 * Note that we combine with another cluster in a production reaction
-     * involving a super cluster.
+	 * involving a super cluster.
 	 * Assumes that the reaction is already in our network.
 	 *
 	 * @param reaction The reaction where this cluster takes part.
 	 * @param prInfos Production reaction parameters.
 	 */
 	virtual void participateIn(ProductionReaction& reaction,
-            const std::vector<PendingProductionReactionInfo>& prInfos) override {
-        // Must be defined because we use stock Reactants with dummy
-        // Reactions, so we need to be able to create Reactant objects.
+			const std::vector<PendingProductionReactionInfo>& prInfos)
+					override {
+		// Must be defined because we use stock Reactants with dummy
+		// Reactions, so we need to be able to create Reactant objects.
+		return;
+	}
+
+	/**
+	 * Note that we combine with another cluster in a production reaction
+	 * involving a super cluster.
+	 * Assumes that the reaction is already in our network.
+	 *
+	 * @param reaction The reaction where this cluster takes part.
+	 * @param product The cluster created by the reaction.
+	 */
+	virtual void participateIn(ProductionReaction& reaction, IReactant& product)
+			override {
+		// Must be defined because we use stock Reactants with dummy
+		// Reactions, so we need to be able to create Reactant objects.
 		return;
 	}
 
@@ -256,28 +287,44 @@ public:
 	 * @param c Number that can be used by daughter classes.
 	 * @param d Number that can be used by daughter classes.
 	 */
-	virtual void participateIn(DissociationReaction& reaction,
-            int a = 0, int b = 0, int c = 0, int d = 0) override {
+	virtual void participateIn(DissociationReaction& reaction, int a = 0,
+			int b = 0, int c = 0, int d = 0) override {
 		return;
 	}
 
 	/**
 	 * Note that we combine with another cluster in a dissociation reaction
-     * involving a super cluster.
+	 * involving a super cluster.
 	 * Assumes the reaction is already inour network.
 	 *
 	 * @param reaction The reaction creating this cluster.
 	 * @param prInfos Production reaction parameters.
 	 */
 	virtual void participateIn(DissociationReaction& reaction,
-            const std::vector<PendingProductionReactionInfo>& prInfos) override {
-        // Must be defined because we use stock Reactants with dummy
-        // Reactions, so we need to be able to create Reactant objects.
+			const std::vector<PendingProductionReactionInfo>& prInfos)
+					override {
+		// Must be defined because we use stock Reactants with dummy
+		// Reactions, so we need to be able to create Reactant objects.
 		return;
 	}
 
 	/**
-     * Note that we emit from the given reaction.
+	 * Note that we combine with another cluster in a dissociation reaction
+	 * involving a super cluster.
+	 * Assumes the reaction is already inour network.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 * @param disso The dissociating cluster.
+	 */
+	virtual void participateIn(DissociationReaction& reaction, IReactant& disso)
+			override {
+		// Must be defined because we use stock Reactants with dummy
+		// Reactions, so we need to be able to create Reactant objects.
+		return;
+	}
+
+	/**
+	 * Note that we emit from the given reaction.
 	 * Assumes the reaction is already in our network.
 	 *
 	 * @param reaction The reaction where this cluster emits.
@@ -286,25 +333,39 @@ public:
 	 * @param c Number that can be used by daughter classes.
 	 * @param d Number that can be used by daughter classes.
 	 */
-	virtual void emitFrom(DissociationReaction& reaction,
-			int a = 0, int b = 0, int c = 0, int d = 0) override {
+	virtual void emitFrom(DissociationReaction& reaction, int a = 0, int b = 0,
+			int c = 0, int d = 0) override {
 		return;
 	}
 
 	/**
-     * Note that we emit from the given reaction involving a super cluster.
+	 * Note that we emit from the given reaction involving a super cluster.
 	 * Assumes the reaction is already in our network.
 	 *
 	 * @param reaction The reaction where this cluster emits.
-     * @param prInfos Production reaction parameters.
+	 * @param prInfos Production reaction parameters.
 	 */
 	virtual void emitFrom(DissociationReaction& reaction,
-            const std::vector<PendingProductionReactionInfo>& prInfos) override {
-        // Must be defined because we use stock Reactants with dummy
-        // Reactions, so we need to be able to create Reactant objects.
+			const std::vector<PendingProductionReactionInfo>& prInfos)
+					override {
+		// Must be defined because we use stock Reactants with dummy
+		// Reactions, so we need to be able to create Reactant objects.
 		return;
 	}
 
+	/**
+	 * Note that we emit from the given reaction involving a super cluster.
+	 * Assumes the reaction is already in our network.
+	 *
+	 * @param reaction The reaction where this cluster emits.
+	 * @param disso The dissociating cluster.
+	 */
+	virtual void emitFrom(DissociationReaction& reaction, IReactant& disso)
+			override {
+		// Must be defined because we use stock Reactants with dummy
+		// Reactions, so we need to be able to create Reactant objects.
+		return;
+	}
 
 	/**
 	 * Add the reactions to the network lists.
@@ -348,13 +409,13 @@ public:
 	}
 
 	/**
-     * Update reactant using other reactants in its network.
+	 * Update reactant using other reactants in its network.
 	 */
-    virtual void updateFromNetwork() override {
-        // Nothing to do - derived classes do any meaningful work.
-        // Required to be defined because we create explicit Reactant objects,
-        // e.g. as dummy objects.
-    }
+	virtual void updateFromNetwork() override {
+		// Nothing to do - derived classes do any meaningful work.
+		// Required to be defined because we create explicit Reactant objects,
+		// e.g. as dummy objects.
+	}
 
 	/**
 	 * This operation signifies that the reactant with reactant Id should be
@@ -429,7 +490,8 @@ public:
 	 * the list returned by the ReactionNetwork::getAll() operation. The size of
 	 * the vector should be equal to ReactionNetwork::size().
 	 */
-	virtual void getPartialDerivatives(std::vector<double> & partials) const override {
+	virtual void getPartialDerivatives(std::vector<double> & partials) const
+			override {
 		// nothing to do.
 	}
 
@@ -448,7 +510,7 @@ public:
 	 *
 	 * @return The type of this reactant.
 	 */
-    ReactantType getType() const override {
+	ReactantType getType() const override {
 		return type;
 	}
 
@@ -459,10 +521,9 @@ public:
 	 * @return The composition returned as a map with keys naming distinct
 	 * elements and values indicating the amount of the element present.
 	 */
-    virtual const IReactant::Composition & getComposition() const override {
-        return composition;
+	virtual const IReactant::Composition & getComposition() const override {
+		return composition;
 	}
-
 
 	/**
 	 * This operation sets the id of the reactant, The id is zero by default
@@ -569,7 +630,7 @@ public:
 	 * @return The total size of this reactant including the contributions
 	 * from all species types
 	 */
-    IReactant::SizeType getSize() const override {
+	IReactant::SizeType getSize() const override {
 		return size;
 	}
 
@@ -666,18 +727,18 @@ public:
 		return false;
 	}
 
-    /**
-     * Tell reactant to output a representation of its reaction coefficients
-     * to the given output stream.
-     *
-     * @param os Output stream on which to output coefficients.
-     */
-    // We must define this because the code may use a stock Reactant
-    // when using dummy reactions, and thus we have to define all
-    // pure virtual functions from our base class(es).
-    virtual void outputCoefficientsTo(std::ostream& os) const override {
-        // Nothing to do.
-    }
+	/**
+	 * Tell reactant to output a representation of its reaction coefficients
+	 * to the given output stream.
+	 *
+	 * @param os Output stream on which to output coefficients.
+	 */
+	// We must define this because the code may use a stock Reactant
+	// when using dummy reactions, and thus we have to define all
+	// pure virtual functions from our base class(es).
+	virtual void outputCoefficientsTo(std::ostream& os) const override {
+		// Nothing to do.
+	}
 };
 
 } // end namespace xolotlCore

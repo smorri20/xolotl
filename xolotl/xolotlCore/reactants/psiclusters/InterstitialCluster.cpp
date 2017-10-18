@@ -22,6 +22,14 @@ InterstitialCluster::InterstitialCluster(int nI,
 	reactionRadius = xolotlCore::tungstenLatticeConstant
 			* pow((3.0 / EightPi) * size, (1.0 / 3.0));
 
+	// Bounds on He and V
+	heBounds = IntegerRange<IReactant::SizeType>(
+			static_cast<IReactant::SizeType>(0),
+			static_cast<IReactant::SizeType>(1));
+	vBounds = IntegerRange<IReactant::SizeType>(
+			static_cast<IReactant::SizeType>(0),
+			static_cast<IReactant::SizeType>(1));
+
 	return;
 }
 

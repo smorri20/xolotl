@@ -3,6 +3,7 @@
 
 // Includes
 #include <Reactant.h>
+#include "IntegerRange.h"
 
 namespace xolotlPerf {
 class ITimer;
@@ -56,7 +57,7 @@ protected:
 		/**
 		 * The reaction/dissociation pointer to the list
 		 */
-        Reaction& reaction;
+		Reaction& reaction;
 
 		/**
 		 * All the coefficient needed to compute each element
@@ -78,24 +79,22 @@ protected:
 		double a22;
 
 		//! The constructor
-		ClusterPair(Reaction& _reaction,
-                        PSICluster& _first, PSICluster& _second) :
-				first(_first), second(_second),
-                reaction(_reaction),
-                a00(0.0), a10(0.0), a20(0.0),
-                a01(0.0), a02(0.0), a11(0.0),
-                a12(0.0), a21(0.0), a22(0.0) {
+		ClusterPair(Reaction& _reaction, PSICluster& _first,
+				PSICluster& _second) :
+				first(_first), second(_second), reaction(_reaction), a00(0.0), a10(
+						0.0), a20(0.0), a01(0.0), a02(0.0), a11(0.0), a12(0.0), a21(
+						0.0), a22(0.0) {
 		}
 
-        /**
-         * Default and copy constructors, disallowed.
-         */
-        ClusterPair() = delete;
+		/**
+		 * Default and copy constructors, disallowed.
+		 */
+		ClusterPair() = delete;
 
-        // NB: if PSICluster keeps these in a std::vector,
-        // copy ctor is needed.  Implicit definition is fine.
-        // CombiningCluster(const CombiningCluster& other) = delete;
-        // ClusterPair(const ClusterPair& other) = delete;
+		// NB: if PSICluster keeps these in a std::vector,
+		// copy ctor is needed.  Implicit definition is fine.
+		// CombiningCluster(const CombiningCluster& other) = delete;
+		// ClusterPair(const ClusterPair& other) = delete;
 	};
 
 	/**
@@ -133,20 +132,28 @@ protected:
 
 		//! The constructor
 		CombiningCluster(Reaction& _reaction, PSICluster& _comb) :
-				combining(_comb),
-                reaction(_reaction),
-                a0(0.0), a1(0.0), a2(0.0) {
+				combining(_comb), reaction(_reaction), a0(0.0), a1(0.0), a2(0.0) {
 		}
 
-        /**
-         * Default constructor, disallowed to prohibit building without args.
-         */
-        CombiningCluster() = delete;
+		/**
+		 * Default constructor, disallowed to prohibit building without args.
+		 */
+		CombiningCluster() = delete;
 
-        // NB: if PSICluster keeps these in a std::vector,
-        // copy ctor is needed.  Implicit definition is fine.
-        // CombiningCluster(const CombiningCluster& other) = delete;
+		// NB: if PSICluster keeps these in a std::vector,
+		// copy ctor is needed.  Implicit definition is fine.
+		// CombiningCluster(const CombiningCluster& other) = delete;
 	};
+
+	/**
+	 * Bounds on number of He atoms represented by this cluster.
+	 */
+	IntegerRange<IReactant::SizeType> heBounds;
+
+	/**
+	 * Bounds on number of vacancies represented by this cluster.
+	 */
+	IntegerRange<IReactant::SizeType> vBounds;
 
 	/**
 
@@ -167,15 +174,14 @@ protected:
 	 */
 	const std::set<int> & getDissociationConnectivitySet() const;
 
-
-    /**
-     * Output coefficients for a given reaction to the given output stream.
-     *
-     * @param os The output stream on which to write the coefficients.
-     * @param curr Information about our participation in a reaction.
-     */
-    void dumpCoefficients(std::ostream& os, ClusterPair const& curr) const;
-    void dumpCoefficients(std::ostream& os, CombiningCluster const& curr) const;
+	/**
+	 * Output coefficients for a given reaction to the given output stream.
+	 *
+	 * @param os The output stream on which to write the coefficients.
+	 * @param curr Information about our participation in a reaction.
+	 */
+	void dumpCoefficients(std::ostream& os, ClusterPair const& curr) const;
+	void dumpCoefficients(std::ostream& os, CombiningCluster const& curr) const;
 
 public:
 
@@ -214,10 +220,10 @@ public:
 	 */
 	std::vector<ClusterPair> emissionPairs;
 
-    /**
-     * Default constructor, deleted because we require info to construct.
-     */
-    PSICluster() = delete;
+	/**
+	 * Default constructor, deleted because we require info to construct.
+	 */
+	PSICluster() = delete;
 
 	/**
 	 * Construct a PSICluster.
@@ -225,14 +231,11 @@ public:
 	 * @param registry The performance handler registry
 	 */
 	PSICluster(IReactionNetwork& _network,
-        std::shared_ptr<xolotlPerf::IHandlerRegistry> registry,
-        const std::string& _name = "PSICluster") 
-      : Reactant(_network, registry, _name) {
+			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry,
+			const std::string& _name = "PSICluster") :
+			Reactant(_network, registry, _name), heBounds(0, 0), vBounds(0, 0) {
 
-    }
-
-
-
+	}
 
 	/**
 	 * Copy constructor, deleted to prevent use.
@@ -246,7 +249,7 @@ public:
 	}
 
 	/**
-     * Update reactant using other reactants in its network.
+	 * Update reactant using other reactants in its network.
 	 */
 	virtual void updateFromNetwork() override;
 
@@ -260,18 +263,27 @@ public:
 	 * @param c Number that can be used by daughter classes.
 	 * @param d Number that can be used by daughter classes.
 	 */
-	void resultFrom(ProductionReaction& reaction,
-			int a = 0, int b = 0, int c = 0, int d = 0) override;
+	void resultFrom(ProductionReaction& reaction, int a = 0, int b = 0, int c =
+			0, int d = 0) override;
 
-    /**
-     * Note that we result from the given reaction involving a super cluster.
-     * Assumes the reaction is already in the network.
-     *
-     * @param reaction The reaction creating this cluster.
-     * @param prInfos Production reaction parameters.
-     */
+	/**
+	 * Note that we result from the given reaction involving a super cluster.
+	 * Assumes the reaction is already in the network.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 * @param prInfos Production reaction parameters.
+	 */
 	void resultFrom(ProductionReaction& reaction,
-            const std::vector<PendingProductionReactionInfo>& prInfos) override;
+			const std::vector<PendingProductionReactionInfo>& prInfos) override;
+
+	/**
+	 * Note that we result from the given reaction involving a super cluster.
+	 * Assumes the reaction is already in the network.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 * @param product The product cluster.
+	 */
+	void resultFrom(ProductionReaction& reaction, IReactant& product) override;
 
 	/**
 	 * Note that we combine with another cluster in a production reaction.
@@ -281,19 +293,30 @@ public:
 	 * @param a Number that can be used by daughter classes.
 	 * @param b Number that can be used by daughter classes.
 	 */
-	void participateIn(ProductionReaction& reaction,
-			    int a = 0, int b = 0) override;
+	void participateIn(ProductionReaction& reaction, int a = 0, int b = 0)
+			override;
 
 	/**
 	 * Note that we combine with another cluster in a production reaction
-     * involving a super cluster.
+	 * involving a super cluster.
 	 * Assumes that the reaction is already in our network.
 	 *
 	 * @param reaction The reaction where this cluster takes part.
 	 * @param prInfos Production reaction parameters.
 	 */
 	void participateIn(ProductionReaction& reaction,
-                const std::vector<PendingProductionReactionInfo>& prInfos) override;
+			const std::vector<PendingProductionReactionInfo>& prInfos) override;
+
+	/**
+	 * Note that we combine with another cluster in a production reaction
+	 * involving a super cluster.
+	 * Assumes that the reaction is already in our network.
+	 *
+	 * @param reaction The reaction where this cluster takes part.
+	 * @param product The product cluster.
+	 */
+	void participateIn(ProductionReaction& reaction, IReactant& product)
+			override;
 
 	/**
 	 * Note that we combine with another cluster in a dissociation reaction.
@@ -305,22 +328,33 @@ public:
 	 * @param c Number that can be used by daughter classes.
 	 * @param d Number that can be used by daughter classes.
 	 */
-	void participateIn(DissociationReaction& reaction,
-            int a = 0, int b = 0, int c = 0, int d = 0) override;
+	void participateIn(DissociationReaction& reaction, int a = 0, int b = 0,
+			int c = 0, int d = 0) override;
 
 	/**
 	 * Note that we combine with another cluster in a dissociation reaction
-     * involving a super cluster.
+	 * involving a super cluster.
 	 * Assumes the reaction is already inour network.
 	 *
 	 * @param reaction The reaction creating this cluster.
 	 * @param prInfos Production reaction parameters.
 	 */
 	void participateIn(DissociationReaction& reaction,
-                const std::vector<PendingProductionReactionInfo>& prInfos) override;
+			const std::vector<PendingProductionReactionInfo>& prInfos) override;
 
 	/**
-     * Note that we emit from the given reaction.
+	 * Note that we combine with another cluster in a dissociation reaction
+	 * involving a super cluster.
+	 * Assumes the reaction is already inour network.
+	 *
+	 * @param reaction The reaction creating this cluster.
+	 * @param disso The dissociating cluster.
+	 */
+	void participateIn(DissociationReaction& reaction, IReactant& disso)
+			override;
+
+	/**
+	 * Note that we emit from the given reaction.
 	 * Assumes the reaction is already in our network.
 	 *
 	 * @param reaction The reaction where this cluster emits.
@@ -329,18 +363,27 @@ public:
 	 * @param c Number that can be used by daughter classes.
 	 * @param d Number that can be used by daughter classes.
 	 */
-	void emitFrom(DissociationReaction& reaction,
-			int a = 0, int b = 0, int c = 0, int d = 0) override;
+	void emitFrom(DissociationReaction& reaction, int a = 0, int b = 0, int c =
+			0, int d = 0) override;
 
 	/**
-     * Note that we emit from the given reaction involving a super cluster.
+	 * Note that we emit from the given reaction involving a super cluster.
 	 * Assumes the reaction is already in our network.
 	 *
 	 * @param reaction The reaction where this cluster emits.
-     * @param prInfos Production reaction parameters.
+	 * @param prInfos Production reaction parameters.
 	 */
 	void emitFrom(DissociationReaction& reaction,
-            const std::vector<PendingProductionReactionInfo>& prInfos) override;
+			const std::vector<PendingProductionReactionInfo>& prInfos) override;
+
+	/**
+	 * Note that we emit from the given reaction involving a super cluster.
+	 * Assumes the reaction is already in our network.
+	 *
+	 * @param reaction The reaction where this cluster emits.
+	 * @param disso The dissociating cluster.
+	 */
+	void emitFrom(DissociationReaction& reaction, IReactant& disso) override;
 
 	/**
 	 * This operation returns the connectivity array for this cluster for
@@ -468,7 +511,8 @@ public:
 	 * the vector should be equal to ReactionNetwork::size().
 	 *
 	 */
-	virtual void getPartialDerivatives(std::vector<double> & partials) const override;
+	virtual void getPartialDerivatives(std::vector<double> & partials) const
+			override;
 
 	/**
 	 * This operation computes the partial derivatives due to production
@@ -561,14 +605,28 @@ public:
 	 */
 	std::vector<int> getConnectivity() const override;
 
+	/**
+	 * Tell reactant to output a representation of its reaction coefficients
+	 * to the given output stream.
+	 *
+	 * @param os Output stream on which to output coefficients.
+	 */
+	virtual void outputCoefficientsTo(std::ostream& os) const override;
 
-    /**
-     * Tell reactant to output a representation of its reaction coefficients
-     * to the given output stream.
-     *
-     * @param os Output stream on which to output coefficients.
-     */
-    virtual void outputCoefficientsTo(std::ostream& os) const override;
+	/**
+	 * Access bounds on number of He atoms represented by this cluster.
+	 */
+	// TODO do we want to make this generic by taking a type parameter?
+	const IntegerRange<IReactant::SizeType>& getHeBounds() const {
+		return heBounds;
+	}
+
+	/**
+	 * Access bounds on number of vacancies represented by this cluster.
+	 */
+	const IntegerRange<IReactant::SizeType>& getVBounds() const {
+		return vBounds;
+	}
 };
 
 } /* end namespace xolotlCore */

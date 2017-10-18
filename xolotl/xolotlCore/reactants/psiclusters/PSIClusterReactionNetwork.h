@@ -14,8 +14,6 @@
 #include "PSISuperCluster.h"
 #include "ReactantType.h"
 
-
-
 // Using std::unordered_map often gives better performance than std::map,
 // but requires us to define our own hash function for more complex types.
 using ReactantSizePair = std::pair<xolotlCore::IReactant::SizeType, xolotlCore::IReactant::SizeType>;
@@ -24,13 +22,12 @@ namespace std {
 
 template<>
 struct hash<ReactantSizePair> {
-    size_t operator()(const ReactantSizePair& pr) const {
-        return (pr.first << 16) + (pr.second);
-    }
+	size_t operator()(const ReactantSizePair& pr) const {
+		return (pr.first << 16) + (pr.second);
+	}
 };
 
 } // namespace std
-
 
 namespace xolotlCore {
 
@@ -49,28 +46,28 @@ namespace xolotlCore {
 class PSIClusterReactionNetwork: public ReactionNetwork {
 
 private:
-    /**
-     * Concise name for map supporting quick lookup of supercluster containing 
-     * specifc number of He and V.
-     *
-     * We could use a map, but because we expect it to be dense (i.e.,
-     * most pairs of He and V counts will have a valid super cluster),
-     * a 2D matrix indexed by nHe and nV gives better performance for
-     * lookups without costing too much more (if any) in terms of memory.
-     * We use a vector of vectors instead of array of arrays because
-     * we don't know the dimensions at compile time.  We use a vector of
-     * vectors instead of a single vector with more complex indexing 
-     * to simplify indexing.  It may be worthwhile to compare performance
-     * with a single vector implementation to see if the single
-     * memory allocation ends up giving better performance.
-     */
-    using HeVToSuperClusterMap = std::vector<std::vector<ReactantMap::const_iterator> >;
+	/**
+	 * Concise name for map supporting quick lookup of supercluster containing
+	 * specifc number of He and V.
+	 *
+	 * We could use a map, but because we expect it to be dense (i.e.,
+	 * most pairs of He and V counts will have a valid super cluster),
+	 * a 2D matrix indexed by nHe and nV gives better performance for
+	 * lookups without costing too much more (if any) in terms of memory.
+	 * We use a vector of vectors instead of array of arrays because
+	 * we don't know the dimensions at compile time.  We use a vector of
+	 * vectors instead of a single vector with more complex indexing
+	 * to simplify indexing.  It may be worthwhile to compare performance
+	 * with a single vector implementation to see if the single
+	 * memory allocation ends up giving better performance.
+	 */
+	using HeVToSuperClusterMap = std::vector<std::vector<ReactantMap::const_iterator> >;
 
-    /**
-     * Map supporting quick identification of super cluster containing
-     * given number of He and V.
-     */
-    HeVToSuperClusterMap superClusterLookupMap;
+	/**
+	 * Map supporting quick identification of super cluster containing
+	 * given number of He and V.
+	 */
+	HeVToSuperClusterMap superClusterLookupMap;
 
 	/**
 	 * Calculate the dissociation constant of the first cluster with respect to
@@ -80,7 +77,8 @@ private:
 	 * @param reaction The reaction
 	 * @return The dissociation constant
 	 */
-	double calculateDissociationConstant(const DissociationReaction& reaction) const override;
+	double calculateDissociationConstant(
+			const DissociationReaction& reaction) const override;
 
 	/**
 	 * Calculate the binding energy for the dissociation cluster to emit the single
@@ -89,118 +87,115 @@ private:
 	 * @param reaction The reaction
 	 * @return The binding energy corresponding to this dissociation
 	 */
-	double computeBindingEnergy(const DissociationReaction& reaction) const override;
+	double computeBindingEnergy(const DissociationReaction& reaction) const
+			override;
 
 	/**
-     * Find the super cluster that contains the original cluster with nHe
-     * helium atoms and nV vacancies.
+	 * Find the super cluster that contains the original cluster with nHe
+	 * helium atoms and nV vacancies.
 	 *
 	 * @param nHe the type of the compound reactant
 	 * @param nV an array containing the sizes of each piece of the reactant.
 	 * @return The super cluster representing the cluster with nHe helium
-     * and nV vacancies, or nullptr if no such cluster exists.
+	 * and nV vacancies, or nullptr if no such cluster exists.
 	 */
-    IReactant * getSuperFromComp(IReactant::SizeType nHe, IReactant::SizeType nV);
+	IReactant * getSuperFromComp(IReactant::SizeType nHe,
+			IReactant::SizeType nV);
 
+	ProductionReaction& defineReactionBase(IReactant& r1, IReactant& r2, int a =
+			0, int b = 0) __attribute__((always_inline)) {
 
-    ProductionReaction& defineReactionBase(IReactant& r1, IReactant& r2,
-                            int a = 0, int b = 0) __attribute__((always_inline)) {
+		// Add a production reaction to our network.
+		std::unique_ptr<ProductionReaction> reaction(
+				new ProductionReaction(r1, r2));
+		auto& prref = add(std::move(reaction));
 
-        // Add a production reaction to our network.
-        std::unique_ptr<ProductionReaction> reaction(new ProductionReaction(r1, r2));
-        auto& prref = add(std::move(reaction));
+		// Tell the reactants that they are involved in this reaction
+		r1.participateIn(prref, a, b);
+		r2.participateIn(prref, a, b);
 
-        // Tell the reactants that they are involved in this reaction
-        r1.participateIn(prref, a, b);
-        r2.participateIn(prref, a, b);
+		return prref;
+	}
 
-        return prref;
-    }
+	void defineAnnihilationReaction(IReactant& r1, IReactant& r2,
+			IReactant& product) {
 
+		// Define the basic reaction.
+		auto& reaction = defineReactionBase(r1, r2);
 
-    void defineAnnihilationReaction(IReactant& r1, IReactant& r2,
-                                        IReactant& product) {
+		// Tell the product it results from the reaction.
+		product.resultFrom(reaction);
+	}
 
-        // Define the basic reaction.
-        auto& reaction = defineReactionBase(r1, r2);
+	void defineCompleteAnnihilationReaction(IReactant& r1, IReactant& r2) {
 
-        // Tell the product it results from the reaction.
-        product.resultFrom(reaction);
-    }
+		// Define the basic reaction
+		defineReactionBase(r1, r2);
 
+		// Nothing else to do since there is no product.
+	}
 
-    void defineCompleteAnnihilationReaction(IReactant& r1, IReactant& r2) {
+	void defineProductionReaction(IReactant& r1, IReactant& super,
+			IReactant& product, int a = 0, int b = 0, int c = 0, int d = 0) {
 
-        // Define the basic reaction
-        defineReactionBase(r1, r2);
+		// Define the basic production reaction.
+		auto& reaction = defineReactionBase(r1, super, c, d);
 
-        // Nothing else to do since there is no product.
-    }
+		// Tell product it is a product of this reaction.
+		product.resultFrom(reaction, a, b, c, d);
 
-    void defineProductionReaction(IReactant& r1, IReactant& super,
-                                        IReactant& product,
-                                        int a = 0, int b = 0, int c = 0, int d = 0) {
+		// Check if reverse reaction is allowed.
+		checkForDissociation(product, reaction, a, b, c, d);
+	}
 
-        // Define the basic production reaction.
-        auto& reaction = defineReactionBase(r1, super, c, d);
+	/**
+	 * Define a batch of production reactions for the given
+	 * pair of reactants.
+	 *
+	 * @param r1 A reactant involved in a production reaction.
+	 * @param r2 The super reactant involved in a production reaction.
+	 * @param product The cluster created by the reaction.
+	 */
+	void defineProductionReactions(IReactant& r1, IReactant& super,
+			IReactant& product);
 
-        // Tell product it is a product of this reaction.
-        product.resultFrom(reaction, a, b, c, d);
+	// TODO should we default a, b, c, d to 0?
+	void defineDissociationReaction(ProductionReaction& forwardReaction,
+			IReactant& emitting, int a, int b, int c, int d) {
 
-        // Check if reverse reaction is allowed.
-        checkForDissociation(product, reaction, a, b, c, d);
-    }
+		std::unique_ptr<DissociationReaction> dissociationReaction(
+				new DissociationReaction(emitting, forwardReaction.first,
+						forwardReaction.second, &forwardReaction));
+		auto& drref = add(std::move(dissociationReaction));
 
+		// Tell the reactants that they are in this reaction
+		forwardReaction.first.participateIn(drref, a, b, c, d);
+		forwardReaction.second.participateIn(drref, a, b, c, d);
+		emitting.emitFrom(drref, a, b, c, d);
+	}
 
-    /**
-     * Define a batch of production reactions for the given
-     * pair of reactants.
-     *
-     * @param r1 A reactant involved in a production reaction.
-     * @param r2 The super reactant involved in a production reaction.
-     * @param pris Information about reactants are involved with each reaction.
-     */
-    void defineProductionReactions(IReactant& r1, IReactant& super,
-                                    const std::vector<PendingProductionReactionInfo>& pris);
+	/**
+	 * Define a batch of dissociation reactions for the given
+	 * forward reaction.
+	 *
+	 * @param forwardReaction The forward reaction in question.
+	 * @param disso The dissociating cluster.
+	 */
+	// TODO possible to use a ref for the key?
+	using ProductToProductionMap =
+	std::unordered_map<IReactant*, std::vector<PendingProductionReactionInfo> >;
 
+	void defineDissociationReactions(ProductionReaction& forwardReaction,
+			IReactant& disso);
 
-    // TODO should we default a, b, c, d to 0?
-    void defineDissociationReaction(ProductionReaction& forwardReaction,
-                                    IReactant& emitting,
-                                    int a, int b, int c, int d) {
-
-        std::unique_ptr<DissociationReaction> dissociationReaction(new DissociationReaction(emitting, forwardReaction.first, forwardReaction.second, &forwardReaction));
-        auto& drref = add(std::move(dissociationReaction));
-
-        // Tell the reactants that they are in this reaction
-        forwardReaction.first.participateIn(drref, a, b, c, d);
-        forwardReaction.second.participateIn(drref, a, b, c, d);
-        emitting.emitFrom(drref, a, b, c, d);
-    }
-
-    /**
-     * Define a batch of dissociation reactions for the given
-     * forward reaction.
-     *
-     * @param forwardReaction The forward reaction in question.
-     * @param prodMap Map of reaction parameters, keyed by the product
-     * of the reaction.
-     */
-    // TODO possible to use a ref for the key?
-    using ProductToProductionMap = 
-        std::unordered_map<IReactant*, std::vector<PendingProductionReactionInfo> >;
-
-    void defineDissociationReactions(ProductionReaction& forwardReaction,
-                                const ProductToProductionMap& prodMap);
-
-    /**
-     * Check whether dissociation reaction is allowed for 
-     * given production reaction.
-     *
-     * @param reaction The reaction to test.
-     * @return true iff dissociation for the given reaction is allowed.
-     */
-    bool canDissociate(ProductionReaction& reaction) const;
+	/**
+	 * Check whether dissociation reaction is allowed for
+	 * given production reaction.
+	 *
+	 * @param reaction The reaction to test.
+	 * @return true iff dissociation for the given reaction is allowed.
+	 */
+	bool canDissociate(ProductionReaction& reaction) const;
 
 	/**
 	 * Add the dissociation connectivity for the reverse reaction if it is allowed.
@@ -214,15 +209,15 @@ private:
 	 *
 	 */
 	void checkForDissociation(IReactant& emittingReactant,
-			ProductionReaction& reaction,
-            int a = 0, int b = 0, int c = 0, int d = 0);
+			ProductionReaction& reaction, int a = 0, int b = 0, int c = 0,
+			int d = 0);
 
 public:
 
-    /**
-     * Default constructor, deleted to force construction using parameters.
-     */
-    PSIClusterReactionNetwork() = delete;
+	/**
+	 * Default constructor, deleted to force construction using parameters.
+	 */
+	PSIClusterReactionNetwork() = delete;
 
 	/**
 	 * The Constructor
@@ -232,10 +227,10 @@ public:
 	PSIClusterReactionNetwork(
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
-    /**
-     * Copy constructor, deleted to prevent use.
-     */
-    PSIClusterReactionNetwork(const PSIClusterReactionNetwork& other) = delete;
+	/**
+	 * Copy constructor, deleted to prevent use.
+	 */
+	PSIClusterReactionNetwork(const PSIClusterReactionNetwork& other) = delete;
 
 	/**
 	 * Computes the full reaction connectivity matrix for this network.
@@ -351,19 +346,20 @@ public:
 	 * @param size The pointer to the array that will contain the number of reactions for
 	 * this cluster
 	 */
-	virtual void computeAllPartials(double *vals, int *indices, int *size) override;
+	virtual void computeAllPartials(double *vals, int *indices, int *size)
+			override;
 
-    /**
-     * Construct the super cluster lookup map, keyed by number of He atoms
-     * and vacancies.
-     *
-     * @param bounds Vector indicating boundaries of intervals to use 
-     *               for num Helium and num Vacancies in super clusters.
-     *               Assumed to be sorted smallest to largest, and that
-     *               last element is one past the last interval's largest 
-     *               allowed value.
-     */
-    void buildSuperClusterMap(const std::vector<IReactant::SizeType>& bounds);
+	/**
+	 * Construct the super cluster lookup map, keyed by number of He atoms
+	 * and vacancies.
+	 *
+	 * @param bounds Vector indicating boundaries of intervals to use
+	 *               for num Helium and num Vacancies in super clusters.
+	 *               Assumed to be sorted smallest to largest, and that
+	 *               last element is one past the last interval's largest
+	 *               allowed value.
+	 */
+	void buildSuperClusterMap(const std::vector<IReactant::SizeType>& bounds);
 };
 
 } // namespace xolotlCore

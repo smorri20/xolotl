@@ -31,6 +31,14 @@ HeInterstitialCluster::HeInterstitialCluster(int numHelium, int numInterstitial,
 					(3.0 * pow(xolotlCore::tungstenLatticeConstant, 3.0))
 							/ (8.0 * xolotlCore::pi), (1.0 / 3.0));
 
+	// Bounds on He and V
+	heBounds = IntegerRange<IReactant::SizeType>(
+			static_cast<IReactant::SizeType>(numHe),
+			static_cast<IReactant::SizeType>(numHe+1));
+	vBounds = IntegerRange<IReactant::SizeType>(
+			static_cast<IReactant::SizeType>(0),
+			static_cast<IReactant::SizeType>(1));
+
 	return;
 }
 

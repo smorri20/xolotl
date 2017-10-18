@@ -27,6 +27,14 @@ HeVCluster::HeVCluster(int _numHe, int _numV,
 	reactionRadius = xolotlCore::tungstenLatticeConstant
 			* pow((3.0 * numV) / xolotlCore::pi, (1.0 / 3.0)) * 0.5;
 
+	// Bounds on He and V
+	heBounds = IntegerRange<IReactant::SizeType>(
+			static_cast<IReactant::SizeType>(numHe),
+			static_cast<IReactant::SizeType>(numHe+1));
+	vBounds = IntegerRange<IReactant::SizeType>(
+			static_cast<IReactant::SizeType>(numV),
+			static_cast<IReactant::SizeType>(numV+1));
+
 	return;
 }
 

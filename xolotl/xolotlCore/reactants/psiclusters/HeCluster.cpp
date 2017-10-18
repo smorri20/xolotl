@@ -6,15 +6,14 @@
 
 using namespace xolotlCore;
 
-HeCluster::HeCluster(int nHe,
-        IReactionNetwork& _network,
+HeCluster::HeCluster(int nHe, IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		PSICluster(_network, registry, buildName(nHe)) {
 
 	// Set the size
 	size = nHe;
 	// Update the composition map
-    composition[toCompIdx(Species::He)] = size;
+	composition[toCompIdx(Species::He)] = size;
 
 	// Set the typename appropriately
 	type = ReactantType::He;
@@ -26,6 +25,14 @@ HeCluster::HeCluster(int nHe,
 			(1.0 / 3.0));
 	double termTwo = pow((3.0 / FourPi) * (1.0 / 10.0) * aCubed, (1.0 / 3.0));
 	reactionRadius = 0.3 + termOne - termTwo;
+
+	// Bounds on He and V
+	heBounds = IntegerRange<IReactant::SizeType>(
+			static_cast<IReactant::SizeType>(size),
+			static_cast<IReactant::SizeType>(size+1));
+	vBounds = IntegerRange<IReactant::SizeType>(
+			static_cast<IReactant::SizeType>(0),
+			static_cast<IReactant::SizeType>(1));
 
 	return;
 }
