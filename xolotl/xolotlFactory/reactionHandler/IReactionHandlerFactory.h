@@ -17,16 +17,21 @@ public:
 	/**
 	 * The destructor
 	 */
-	~IReactionHandlerFactory() {}
+	~IReactionHandlerFactory() {
+	}
 
 	/**
 	 * Initialize the reaction network.
 	 *
 	 * @param options The options.
 	 * @param registry The performance registry.
+	 * @param bounds1 The bounds for the grouping.
+	 * @param bounds2 The bounds for the grouping.
 	 */
 	virtual void initializeReactionNetwork(xolotlCore::Options &options,
-			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) = 0;
+			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry,
+			const std::vector<xolotlCore::IReactant::SizeType> & bounds1,
+			const std::vector<xolotlCore::IReactant::SizeType> & bounds2) = 0;
 
 	/**
 	 * Return the network loader.
@@ -40,7 +45,7 @@ public:
 	 *
 	 * @return The network.
 	 */
-    virtual xolotlCore::IReactionNetwork& getNetworkHandler() const = 0;
+	virtual xolotlCore::IReactionNetwork& getNetworkHandler() const = 0;
 
 	/**
 	 * Function that create the wanted reaction handler factory depending on the given type.
@@ -48,7 +53,8 @@ public:
 	 * @param problemType The type of wanted problem (PSI or NE).
 	 * @return The reaction factory.
 	 */
-	static std::shared_ptr<IReactionHandlerFactory> createNetworkFactory(const std::string& problemType);
+	static std::shared_ptr<IReactionHandlerFactory> createNetworkFactory(
+			const std::string& problemType);
 
 };
 

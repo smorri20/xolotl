@@ -7,7 +7,6 @@
 #include <memory>
 #include "IReactant.h"
 
-
 namespace xolotlCore {
 
 class IReactant;
@@ -22,17 +21,15 @@ class DissociationReaction;
 class IReactionNetwork {
 
 public:
-    /**
-     * Nice name for vector of Reactants.
-     */
-    using ReactantVector = std::vector<std::reference_wrapper<IReactant> >;
+	/**
+	 * Nice name for vector of Reactants.
+	 */
+	using ReactantVector = std::vector<std::reference_wrapper<IReactant> >;
 
-
-    /**
-     * Nice name for map of reactants, keyed by their composition.
-     */
-    using ReactantMap = std::unordered_map<IReactant::Composition, std::unique_ptr<IReactant> >;
-
+	/**
+	 * Nice name for map of reactants, keyed by their composition.
+	 */
+	using ReactantMap = std::unordered_map<IReactant::Composition, std::unique_ptr<IReactant> >;
 
 	/**
 	 * The destructor.
@@ -60,15 +57,16 @@ public:
 	/**
 	 * Retrieve the single-species reactant with the given type and size if it
 	 * exists in the network or null if not.
-     * Convenience function for get() that takes a 
-     * reactant type and composition.
+	 * Convenience function for get() that takes a
+	 * reactant type and composition.
 	 *
 	 * @param species The reactant's single species.
 	 * @param size The size of the reactant.
 	 * @return A pointer to the reactant, or nullptr if it does not 
-     * exist in the network.
+	 * exist in the network.
 	 */
-	virtual IReactant * get(Species species, IReactant::SizeType size) const = 0;
+	virtual IReactant * get(Species species,
+			IReactant::SizeType size) const = 0;
 
 	/**
 	 * Retrieve the reactant with the given type and composition if
@@ -77,10 +75,10 @@ public:
 	 * @param type The type of the reactant
 	 * @param comp The composition of the reactant
 	 * @return A pointer to the reactant of type 'type' and with composition
-     * 'comp.' nullptr if no such reactant exists.
+	 * 'comp.' nullptr if no such reactant exists.
 	 */
 	virtual IReactant * get(ReactantType type,
-            const IReactant::Composition& comp) const = 0;
+			const IReactant::Composition& comp) const = 0;
 
 	/**
 	 * This operation returns all reactants in the network without regard for
@@ -89,7 +87,7 @@ public:
 	 *
 	 * @return The list of all of the reactants in the network
 	 */
-    virtual const IReactant::RefVector& getAll() const = 0;
+	virtual const IReactant::RefVector& getAll() const = 0;
 
 	/**
 	 * This operation returns all reactants in the network with the given type.
@@ -99,10 +97,10 @@ public:
 	 * @param type The reactant or compound reactant type
 	 * @return The list of all of the reactants in the network.
 	 */
-    virtual const ReactantMap& getAll(ReactantType type) const = 0;
+	virtual const ReactantMap& getAll(ReactantType type) const = 0;
 
 	/**
-     * Give the reactant to the network.
+	 * Give the reactant to the network.
 	 *
 	 * @param reactant The reactant that should be added to the network
 	 */
@@ -113,7 +111,7 @@ public:
 	 *
 	 * @param reactants The reactants that should be removed.
 	 */
-    virtual void removeReactants(const ReactantVector& reactants) = 0;
+	virtual void removeReactants(const ReactantVector& reactants) = 0;
 
 	/**
 	 * This operation reinitializes the network.
@@ -148,7 +146,8 @@ public:
 	 * @param reaction The reaction that should be added to the network
 	 * @return The reaction that is now in the network
 	 */
-    virtual ProductionReaction& add(std::unique_ptr<ProductionReaction> reaction) = 0;
+	virtual ProductionReaction& add(
+			std::unique_ptr<ProductionReaction> reaction) = 0;
 
 	/**
 	 * Add a dissociation reaction to the network.
@@ -156,7 +155,8 @@ public:
 	 * @param reaction The reaction that should be added to the network
 	 * @return The reaction that is now in the network
 	 */
-	virtual DissociationReaction& add(std::unique_ptr<DissociationReaction> reaction) = 0;
+	virtual DissociationReaction& add(
+			std::unique_ptr<DissociationReaction> reaction) = 0;
 
 	/**
 	 * This operation fills an array of doubles with the concentrations of all
@@ -216,6 +216,20 @@ public:
 	virtual double getTotalIConcentration() = 0;
 
 	/**
+	 * Get the total concentration of all the clusters in the network.
+	 *
+	 * @return The total concentration
+	 */
+	virtual double getTotalConcentration() = 0;
+
+	/**
+	 * Get the total concentration of all the biggest clusters in the network.
+	 *
+	 * @return The total concentration
+	 */
+	virtual double getBigConcentration() = 0;
+
+	/**
 	 * Calculate all the rate constants for the reactions and dissociations of the network.
 	 * Need to be called only when the temperature changes.
 	 */
@@ -256,12 +270,48 @@ public:
 	 */
 	virtual bool getDissociationsEnabled() const = 0;
 
-    /**
-     * Dump a representation of the network to the given output stream.
-     *
-     * @param os Output stream on which to write network description.
-     */
-    virtual void dumpTo(std::ostream& os) const = 0;
+	/**
+	 * Dump a representation of the network to the given output stream.
+	 *
+	 * @param os Output stream on which to write network description.
+	 */
+	virtual void dumpTo(std::ostream& os) const = 0;
+
+	/**
+	 * Get the map that gives the ID of a cluster as a function of its name.
+	 *
+	 * @return The ID map.
+	 */
+	virtual std::map<std::string, int> getIDMap() const = 0;
+
+	/**
+	 * Get the coordinates of the cluster with the highest concentration.
+	 *
+	 * @return The pair of coordinates.
+	 */
+	virtual std::pair<int, int> getHighestClusterCoordinates() const = 0;
+
+	/**
+	 * Find the super cluster that contains the original cluster with nHe
+	 * helium atoms and nV vacancies.
+	 *
+	 * @param nHe the type of the compound reactant
+	 * @param nV an array containing the sizes of each piece of the reactant.
+	 * @return The super cluster representing the cluster with nHe helium
+	 * and nV vacancies, or nullptr if no such cluster exists.
+	 */
+	virtual IReactant * getSuperFromComp(IReactant::SizeType nHe,
+			IReactant::SizeType nV) = 0;
+
+	/**
+	 * Find the super cluster that contains the original cluster with nHe
+	 * helium atoms and nV vacancies.
+	 *
+	 * @param axis The axis on which the bounds are computed (for instance He or V)
+	 * @param max The bound maximum
+	 * @return The vector of bounds
+	 */
+	virtual std::vector<IReactant::SizeType> generateBounds(int axis, int max) = 0;
 };
 
 }

@@ -100,7 +100,7 @@ private:
 	 * and nV vacancies, or nullptr if no such cluster exists.
 	 */
 	IReactant * getSuperFromComp(IReactant::SizeType nHe,
-			IReactant::SizeType nV);
+			IReactant::SizeType nV) override;
 
 	ProductionReaction& defineReactionBase(IReactant& r1, IReactant& r2, int a =
 			0, int b = 0) __attribute__((always_inline)) {
@@ -321,6 +321,20 @@ public:
 	double getTotalIConcentration() override;
 
 	/**
+	 * Get the total concentration of all clusters in the network.
+	 *
+	 * @return The total concentration
+	 */
+	double getTotalConcentration() override;
+
+	/**
+	 * Get the total concentration of the biggest clusters in the network.
+	 *
+	 * @return The total concentration
+	 */
+	double getBigConcentration() override;
+
+	/**
 	 * Calculate all the rate constants for the reactions and dissociations of the network.
 	 * Need to be called only when the temperature changes.
 	 */
@@ -359,7 +373,32 @@ public:
 	 *               last element is one past the last interval's largest
 	 *               allowed value.
 	 */
-	void buildSuperClusterMap(const std::vector<IReactant::SizeType>& bounds);
+	void buildSuperClusterMap(const std::vector<IReactant::SizeType>& bounds1,
+			const std::vector<IReactant::SizeType>& bounds2);
+
+	/**
+	 * Get the map that gives the ID of a cluster as a function of its name.
+	 *
+	 * @return The ID map.
+	 */
+	std::map<std::string, int> getIDMap() const override;
+
+	/**
+	 * Get the coordinates of the cluster with the highest concentration.
+	 *
+	 * @return The pair of coordinates.
+	 */
+	std::pair<int, int> getHighestClusterCoordinates() const override;
+
+	/**
+	 * Find the super cluster that contains the original cluster with nHe
+	 * helium atoms and nV vacancies.
+	 *
+	 * @param axis The axis on which the bounds are computed (for instance He or V)
+	 * @param max The bound maximum
+	 * @return The vector of bounds
+	 */
+	std::vector<IReactant::SizeType> generateBounds(int axis, int max) override;
 };
 
 } // namespace xolotlCore

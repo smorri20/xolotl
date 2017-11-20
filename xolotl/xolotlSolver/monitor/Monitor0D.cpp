@@ -54,6 +54,60 @@ std::vector<int> weights0D;
 std::vector<double> radii0D;
 
 #undef __FUNCT__
+#define __FUNCT__ Actual__FUNCT__("xolotlSolver", "extend0D")
+/**
+ * This is a method that decides when to extend the network
+ */
+PetscErrorCode extend0D(TS ts) {
+	// Initial declarations
+	PetscErrorCode ierr;
+	double **solutionArray, *gridPointSolution;
+
+	PetscFunctionBeginUser;
+
+	// Gets the process ID
+	int procId;
+	MPI_Comm_rank(PETSC_COMM_WORLD, &procId);
+
+	// Get the da from ts
+	DM da;
+	ierr = TSGetDM(ts, &da);
+	CHKERRQ(ierr);
+
+	// Get the solutionArray
+	Vec solution;
+	ierr = TSGetSolution(ts, &solution);
+	ierr = DMDAVecGetArrayDOF(da, solution, &solutionArray);
+	CHKERRQ(ierr);
+
+	// Get the solver handler
+	auto& solverHandler = PetscSolver::getSolverHandler();
+	// Get the network
+	auto& network = solverHandler.getNetwork();
+
+	// Get the pointer to the beginning of the solution data for this grid point
+	gridPointSolution = solutionArray[0];
+
+	// Update the concentration in the network
+	network.updateConcentrationsFromArray(gridPointSolution);
+	// Get the concentrations
+	double relativeConc = network.getBigConcentration()
+			/ network.getTotalConcentration();
+
+	// Stop when this concentration gets too high
+	if (relativeConc > 1.0e-8) {
+		ierr = TSSetConvergedReason(ts, TS_CONVERGED_USER);
+		CHKERRQ(ierr);
+	}
+
+	// Restore the solutionArray
+	ierr = DMDAVecRestoreArrayDOF(da, solution, &solutionArray);
+	CHKERRQ(ierr);
+
+	PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ Actual__FUNCT__("xolotlSolver", "startStop0D")
 /**
  * This is a monitoring method that update an hdf5 file at each time step.
@@ -200,10 +254,11 @@ PetscErrorCode monitorScatter0D(TS ts, PetscInt timestep, PetscReal time,
 	}
 	int nXe = networkSize - superClusters.size() + 1;
 
-    for (auto const& superMapItem : superClusters) {
+	for (auto const& superMapItem : superClusters) {
 
 		// Get the cluster
-        auto const& cluster = static_cast<NESuperCluster&>(*(superMapItem.second));
+		auto const& cluster =
+				static_cast<NESuperCluster&>(*(superMapItem.second));
 		// Get the width
 		int width = cluster.getSectionWidth();
 		// Loop on the width
@@ -290,12 +345,9 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the network
 	auto& network = solverHandler.getNetwork();
 
-
-	// Get the physical grid
-	auto grid = solverHandler.getXGrid();
-
 	// Get the maximum size of HeV clusters
-	auto const& psiNetwork = dynamic_cast<PSIClusterReactionNetwork const&>(network);
+	auto const& psiNetwork =
+			dynamic_cast<PSIClusterReactionNetwork const&>(network);
 	auto maxHeVClusterSize = psiNetwork.getMaxClusterSize(ReactantType::HeV);
 
 	// Create a Point vector to store the data to give to the data provider
@@ -336,9 +388,9 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 			}
 			// HeV clusters
 			else {
-                IReactant::Composition testComp;
-                testComp[toCompIdx(Species::He)] = j;
-                testComp[toCompIdx(Species::V)] = i;
+				IReactant::Composition testComp;
+				testComp[toCompIdx(Species::He)] = j;
+				testComp[toCompIdx(Species::V)] = i;
 				cluster = network.get(ReactantType::HeV, testComp);
 				if (cluster) {
 					// Get the ID of the cluster
@@ -348,15 +400,17 @@ PetscErrorCode monitorSurface0D(TS ts, PetscInt timestep, PetscReal time,
 
 				else {
 					// Look for superClusters !
-                    for (auto const& superMapItem : network.getAll(ReactantType::PSISuper)) {
+					for (auto const& superMapItem : network.getAll(
+							ReactantType::PSISuper)) {
 
 						// Get the super cluster
-						auto const& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
+						auto const& superCluster =
+								static_cast<PSISuperCluster&>(*(superMapItem.second));
 						// Get its boundaries
 						auto const& heBounds = superCluster.getHeBounds();
 						auto const& vBounds = superCluster.getVBounds();
 						// Is it the right one?
-                        if (heBounds.contains(j) and vBounds.contains(i)) {
+						if (heBounds.contains(j) and vBounds.contains(i)) {
 							conc = superCluster.getConcentration(
 									superCluster.getHeDistance(j),
 									superCluster.getVDistance(i));
@@ -456,39 +510,44 @@ PetscErrorCode monitorMeanSize0D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the pointer to the beginning of the solution data for this grid point
 	gridPointSolution = solutionArray[0];
 
-//			for (int i = 0; i < dof; i++) {
-//				std::cout << i << " " << gridPointSolution[i] << std::endl;
-//			}
-
 	// Update the concentration in the network
 	network.updateConcentrationsFromArray(gridPointSolution);
 
 	// Initialize the total helium and concentration before looping
 	double concTot = 0.0, heliumTot = 0.0;
 
-//	// Loop on all the indices to compute the mean
-//	for (int i = 0; i < indices0D.size(); i++) {
-//		outputFile << i << " "
-//				<< gridPointSolution[indices0D[i]] << std::endl;
+//	// Consider each HeV cluster.
+//	for (auto const& mapItem : network.getAll(ReactantType::HeV)) {
+//		// Get the super cluster
+//		auto const& cluster = static_cast<PSICluster&>(*(mapItem.second));
+//		// Get its boundaries
+//		auto const& heBounds = cluster.getHeBounds();
+//		auto const& vBounds = cluster.getVBounds();
+//		// Get its concentration
+//		double conc = cluster.getConcentration(0.0, 0.0);
+//
+//		// For compatibility with previous versions, we output
+//		// the value of a closed upper bound of the He and V intervals.
+//		outputFile << *(heBounds.begin()) << " " << *(vBounds.begin()) << " "
+//				<< conc << std::endl;
 //	}
 
 	// Consider each super cluster.
-    for (auto const& superMapItem : network.getAll(ReactantType::PSISuper)) {
+	for (auto const& superMapItem : network.getAll(ReactantType::PSISuper)) {
 		// Get the super cluster
-		auto const& superCluster = static_cast<PSISuperCluster&>(*(superMapItem.second));
+		auto const& superCluster =
+				static_cast<PSISuperCluster&>(*(superMapItem.second));
 		// Get its boundaries
 		auto const& heBounds = superCluster.getHeBounds();
 		auto const& vBounds = superCluster.getVBounds();
-		// Get its diameter
-		double diam = 2.0 * superCluster.getReactionRadius();
 		// Get its concentration
 		double conc = superCluster.getConcentration(0.0, 0.0);
 
-        // For compatibility with previous versions, we output
-        // the value of a closed upper bound of the He and V intervals.
+		// For compatibility with previous versions, we output
+		// the value of a closed upper bound of the He and V intervals.
 		outputFile << *(heBounds.begin()) << " " << *(heBounds.end()) - 1 << " "
-				<< *(vBounds.begin()) << " " << *(vBounds.end()) - 1 << " " << conc
-				<< std::endl;
+				<< *(vBounds.begin()) << " " << *(vBounds.end()) - 1 << " "
+				<< conc << std::endl;
 	}
 
 	// Close the file
@@ -689,7 +748,7 @@ PetscErrorCode setupPetsc0DMonitor(TS ts) {
 	if (flagMeanSize) {
 
 		// Consider each vacancy cluster.
-        for (auto const& vMapItem : network.getAll(ReactantType::V)) {
+		for (auto const& vMapItem : network.getAll(ReactantType::V)) {
 			auto const& cluster = *(vMapItem.second);
 
 			int id = cluster.getId() - 1;
@@ -708,6 +767,11 @@ PetscErrorCode setupPetsc0DMonitor(TS ts) {
 		checkPetscError(ierr,
 				"setupPetsc0DMonitor: TSMonitorSet (monitorMeanSize0D) failed.");
 	}
+
+	// Set the post step process that tells the solver when to extend the network
+	ierr = TSSetPostStep(ts, extend0D);
+	checkPetscError(ierr,
+			"setupPetsc1DMonitor: TSSetPostStep (extend0D) failed.");
 
 	// Set the monitor to simply change the previous time to the new time
 	// monitorTime will be called at each timestep

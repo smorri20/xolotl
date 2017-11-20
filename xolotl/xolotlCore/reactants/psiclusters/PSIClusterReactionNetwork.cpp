@@ -759,21 +759,23 @@ void PSIClusterReactionNetwork::setTemperature(double temp) {
 }
 
 void PSIClusterReactionNetwork::buildSuperClusterMap(
-		const std::vector<IReactant::SizeType>& bounds) {
+		const std::vector<IReactant::SizeType>& bounds1,
+		const std::vector<IReactant::SizeType>& bounds2) {
 
 	// Save the bounds to use.
-	boundVector = bounds;
+	boundVector1 = bounds1;
+	boundVector2 = bounds2;
 
 	// Since we represent the super cluster lookup map using a dense
 	// data structure, we must initialize every entry with something
 	// that signifies 'Invalid.'
 	auto const& superClusters = clusterTypeMap[ReactantType::PSISuper];
-	auto bvSize = boundVector.size();
-	superClusterLookupMap.resize(bvSize);
+	auto bvSize2 = boundVector2.size();
+	superClusterLookupMap.resize(boundVector1.size());
 	std::for_each(superClusterLookupMap.begin(), superClusterLookupMap.end(),
-			[bvSize,&superClusters](HeVToSuperClusterMap::value_type& currVector) {
+			[bvSize2,&superClusters](HeVToSuperClusterMap::value_type& currVector) {
 
-				currVector.resize(bvSize, superClusters.end());
+				currVector.resize(bvSize2, superClusters.end());
 			});
 
 	// Build a map of super clusters, keyed by (baseHe, baseV) pairs
@@ -787,8 +789,8 @@ void PSIClusterReactionNetwork::buildSuperClusterMap(
 		auto const& comp = currCluster.getComposition();
 		auto currHe = comp[toCompIdx(Species::He)];
 		auto currV = comp[toCompIdx(Species::V)];
-		auto heIntervalIdx = findBoundsIntervalBaseIdx(currHe);
-		auto vIntervalIdx = findBoundsIntervalBaseIdx(currV);
+		auto heIntervalIdx = findBoundsIntervalBaseIdx1(currHe);
+		auto vIntervalIdx = findBoundsIntervalBaseIdx2(currV);
 
 		superClusterLookupMap[heIntervalIdx][vIntervalIdx] = iter;
 	}
@@ -1065,6 +1067,75 @@ double PSIClusterReactionNetwork::getTotalIConcentration() {
 	return iConc;
 }
 
+double PSIClusterReactionNetwork::getTotalConcentration() {
+	// Initial declarations
+	double conc = 0.0;
+
+	// Make a vector of types for the non super clusters
+	std::vector<ReactantType> typeVec { ReactantType::He, ReactantType::V,
+			ReactantType::I, ReactantType::HeV };
+	// Loop on it
+	for (auto tvIter = typeVec.begin(); tvIter != typeVec.end(); ++tvIter) {
+		// Consider all reactants of the current type.
+		auto const& currTypeReactantMap = getAll(*tvIter);
+
+		// Update the column in the Jacobian that represents each normal reactant
+		for (auto const& currMapItem : currTypeReactantMap) {
+			// Get the cluster
+			auto const& cluster = *(currMapItem.second);
+			// Add its concentration
+			conc += cluster.getConcentration();
+		}
+	}
+
+	// Sum over all super clusters
+	for (auto const& currMapItem : getAll(ReactantType::PSISuper)) {
+		// Get the cluster
+		auto const& cluster =
+				static_cast<PSISuperCluster&>(*(currMapItem.second));
+
+		// Add its total vacancy concentration
+		conc += cluster.getTotalConcentration();
+	}
+
+	return conc;
+}
+
+double PSIClusterReactionNetwork::getBigConcentration() {
+	// Initial declarations
+	double conc = 0.0;
+	auto maxSize = maxClusterSizeMap[ReactantType::HeV] / 2;
+
+	// Check the biggest HeV clusters
+	for (auto const& currMapItem : getAll(ReactantType::HeV)) {
+		// Get the cluster and its composition
+		auto const& cluster = *(currMapItem.second);
+		auto& comp = cluster.getComposition();
+
+		// Compare the size of the cluster to the max size
+		if (comp[toCompIdx(Species::He)] == maxSize
+				|| comp[toCompIdx(Species::V)] == maxSize)
+			conc += fabs(cluster.getConcentration());
+	}
+
+	// Check the biggest super clusters
+	for (auto const& currMapItem : getAll(ReactantType::PSISuper)) {
+		// Get the cluster
+		auto const& cluster =
+				static_cast<PSISuperCluster&>(*(currMapItem.second));
+		// Get its bounds
+		auto const& heBounds = cluster.getHeBounds();
+		auto const& vBounds = cluster.getVBounds();
+
+		// Compare the size of the cluster to the max size
+		if ((*(heBounds.end()) - 1) == maxSize
+				|| (*(vBounds.end()) - 1) == maxSize)
+			conc += fabs(cluster.getTotalConcentration());
+	}
+
+	return conc;
+}
+
 void PSIClusterReactionNetwork::computeRateConstants() {
 	// Local declarations
 	double rate = 0.0;
@@ -1153,18 +1224,14 @@ void PSIClusterReactionNetwork::computeAllPartials(double *vals, int *indices,
 			ReactantType::I, ReactantType::HeV };
 	// Loop on it
 	for (auto tvIter = typeVec.begin(); tvIter != typeVec.end(); ++tvIter) {
-
-		auto currType = *tvIter;
-
 		// Consider all reactants of the current type.
-		auto const& currTypeReactantMap = getAll(currType);
+		auto const& currTypeReactantMap = getAll(*tvIter);
 
 		// Update the column in the Jacobian that represents each normal reactant
 		for (auto const& currMapItem : currTypeReactantMap) {
-
+			// Get the current cluster
 			auto const& reactant =
 					static_cast<PSICluster&>(*(currMapItem.second));
-
 			// Get the reactant index
 			auto reactantIndex = reactant.getId() - 1;
 
@@ -1194,7 +1261,7 @@ void PSIClusterReactionNetwork::computeAllPartials(double *vals, int *indices,
 
 	// Update the column in the Jacobian that represents the moment for the super clusters
 	for (auto const& currMapItem : superClusters) {
-
+		// Get the current cluster
 		auto const& reactant =
 				static_cast<PSISuperCluster&>(*(currMapItem.second));
 
@@ -1402,15 +1469,15 @@ IReactant * PSIClusterReactionNetwork::getSuperFromComp(IReactant::SizeType nHe,
 	// See if the last supercluster we were asked to find is the right
 	// one for this request.
 	static IReactant* lastRet = nullptr;
-	if (lastRet and static_cast<PSISuperCluster*>(lastRet)->isIn(nHe, nV)) {
-		return lastRet;
-	}
+//	if (lastRet and static_cast<PSISuperCluster*>(lastRet)->isIn(nHe, nV)) {
+//		return lastRet;
+//	}
 
 	// We didn't find the last supercluster in our cache, so do a full lookup.
 	IReactant* ret = nullptr;
 
-	auto heBaseIdx = findBoundsIntervalBaseIdx(nHe);
-	auto vBaseIdx = findBoundsIntervalBaseIdx(nV);
+	auto heBaseIdx = findBoundsIntervalBaseIdx1(nHe);
+	auto vBaseIdx = findBoundsIntervalBaseIdx2(nV);
 
 	if ((heBaseIdx != std::numeric_limits<std::size_t>::max())
 			and (vBaseIdx != std::numeric_limits<std::size_t>::max())) {
@@ -1424,6 +1491,143 @@ IReactant * PSIClusterReactionNetwork::getSuperFromComp(IReactant::SizeType nHe,
 	}
 
 	return ret;
+}
+
+std::map<std::string, int> PSIClusterReactionNetwork::getIDMap() const {
+	// Create the map
+	std::map<std::string, int> idMap;
+
+	// Fill it
+	for (IReactant const& currReactant : allReactants) {
+		idMap[currReactant.getName()] = currReactant.getId() - 1;
+
+		if (currReactant.getType() == ReactantType::PSISuper) {
+			std::string name = currReactant.getName() + "He";
+			idMap[name] = currReactant.getHeMomentumId() - 1;
+			name = currReactant.getName() + "V";
+			idMap[name] = currReactant.getVMomentumId() - 1;
+		}
+	}
+
+	return idMap;
+}
+
+std::pair<int, int> PSIClusterReactionNetwork::getHighestClusterCoordinates() const {
+	// Create the pair
+	std::pair<int, int> coor = std::make_pair(0, 0);
+	// Initialize the highest concentration
+	double highestConc = 0.0;
+
+	// Loop on the reactants
+	for (IReactant const& currReactant : allReactants) {
+		// Get its composition and concentration
+		auto comp = currReactant.getComposition();
+		double conc = currReactant.getConcentration();
+		// Weight the concentration
+		conc = conc * (double) comp[toCompIdx(Species::He)]
+				* (double) comp[toCompIdx(Species::V)];
+		// Compare it to the highest conc
+		if (conc > highestConc) {
+			highestConc = conc;
+			coor.first = comp[toCompIdx(Species::He)];
+			coor.second = comp[toCompIdx(Species::V)];
+		}
+	}
+
+	return coor;
+}
+
+std::vector<IReactant::SizeType> PSIClusterReactionNetwork::generateBounds(
+		int axis, int max) {
+	// Initial declaration
+	std::vector<IReactant::SizeType> bounds;
+	std::map<std::pair<int, int>, double> projection;
+
+	// Loop on the super clusters
+	auto const& superClusters = getAll(ReactantType::PSISuper);
+	for (auto const& currMapItem : superClusters) {
+		// Get the current cluster
+		auto const& reactant = static_cast<PSICluster&>(*(currMapItem.second));
+		// Make its pair
+		auto heBounds = reactant.getHeBounds();
+		auto vBounds = reactant.getVBounds();
+		if (axis == 0) {
+			std::pair<int, int> pair = make_pair(*(heBounds.begin()),
+					*(heBounds.end()) - 1);
+			projection[pair] += fabs(reactant.getHeMomentum())
+					* (double) (*(vBounds.end()) - *(vBounds.begin()));
+		} else if (axis == 1) {
+			std::pair<int, int> pair = make_pair(*(vBounds.begin()),
+					*(vBounds.end()) - 1);
+			projection[pair] += fabs(reactant.getVMomentum())
+					* (double) (*(heBounds.end()) - *(heBounds.begin()));
+		}
+	}
+
+	// Find the biggest absolute value in the projection
+	// Loop on the projection map
+	double biggest = 0.0;
+	for (auto const& currProj : projection) {
+		if (currProj.second > biggest)
+			biggest = currProj.second;
+	}
+
+//	for (auto const& currProj : projection) {
+//		std::cout << currProj.first.first << " " << currProj.first.second << " "
+//				<< currProj.second / biggest << std::endl;
+//	}
+
+	// Create the new bounds from the projection values
+	bool merge = false;
+	for (auto const& currProj : projection) {
+		// The fist one has to be added as is
+		if (currProj.first.first == 1) {
+			bounds.push_back(currProj.first.first);
+			continue;
+		}
+
+		// Compute the value of this moment as a function of the biggest
+		double portion = currProj.second / biggest;
+		// Large moment case
+		if (portion > 0.5 && currProj.first.second - currProj.first.first > 2) {
+			// Divide the bound in 2
+			bounds.push_back(currProj.first.first);
+			bounds.push_back(
+					(currProj.first.first + currProj.first.second + 1) / 2);
+			merge = false;
+		}
+		// Small moment case
+		else if (portion < 0.3) {
+			if (!merge) {
+				bounds.push_back(currProj.first.first);
+				merge = true;
+			} else
+				merge = false;
+		}
+		// Average
+		else {
+			bounds.push_back(currProj.first.first);
+			merge = false;
+		}
+	}
+
+	// Add the values to reach the max
+	int boundSize = bounds.size();
+	auto range = max / 50;
+	auto value = bounds[boundSize - 1] + range;
+	while (value < max) {
+		bounds.push_back(value);
+		value += range;
+	}
+
+	// Add the last value
+	bounds.push_back(max + 1);
+
+	for (int i = 0; i < bounds.size(); i++) {
+		std::cout << bounds[i] << std::endl;
+	}
+
+	return bounds;
 }
 
 } // namespace xolotlCore

@@ -62,7 +62,7 @@ void PetscSolver2DHandler::createSolverContext(DM &da) {
 	bool hasConcentrations = false;
 	if (!networkName.empty())
 		hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
-			networkName, tempTimeStep);
+				networkName, tempTimeStep);
 
 	// Get the actual surface position if concentrations were stored
 	if (hasConcentrations) {
@@ -146,7 +146,8 @@ void PetscSolver2DHandler::createSolverContext(DM &da) {
 	return;
 }
 
-void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) {
+void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C,
+		std::vector<double> &oldC, std::map<std::string, int> idMap) {
 	PetscErrorCode ierr;
 
 	// Pointer for the concentration vector
@@ -166,7 +167,7 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) {
 	bool hasConcentrations = false;
 	if (!networkName.empty())
 		hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
-			networkName, tempTimeStep);
+				networkName, tempTimeStep);
 
 	// Get the total size of the grid for the boundary conditions
 	PetscInt Mx, My;
@@ -210,7 +211,8 @@ void PetscSolver2DHandler::initializeConcentration(DM &da, Vec &C) {
 			}
 
 			// Initialize the vacancy concentration
-			if (i > surfacePosition[j] && i < Mx - 1 && vacancyIndex > 0 && !hasConcentrations) {
+			if (i > surfacePosition[j] && i < Mx - 1 && vacancyIndex > 0
+					&& !hasConcentrations) {
 				concOffset[vacancyIndex] = initialVConc;
 			}
 		}
@@ -297,8 +299,8 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 	// Declarations for variables used in the loop
 	double **concVector = new double*[5];
-    xolotlCore::Point3D gridPosition { 0.0, 0.0, 0.0 };
-    std::vector<double> incidentFluxVector;
+	xolotlCore::Point3D gridPosition { 0.0, 0.0, 0.0 };
+	std::vector<double> incidentFluxVector;
 	double atomConc = 0.0, totalAtomConc = 0.0;
 
 	// Degrees of freedom is the total number of clusters in the network
@@ -395,7 +397,8 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 			network.updateConcentrationsFromArray(concOffset);
 
 			// ----- Account for flux of incoming particles -----
-			fluxHandler->computeIncidentFlux(ftime, updatedConcOffset, xi, surfacePosition[yj]);
+			fluxHandler->computeIncidentFlux(ftime, updatedConcOffset, xi,
+					surfacePosition[yj]);
 
 			// ---- Compute diffusion over the locally owned part of the grid -----
 			diffusionHandler->computeDiffusion(network, concVector,
@@ -476,7 +479,7 @@ void PetscSolver2DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC,
 	PetscInt diffIndices[nDiff];
 	PetscScalar advecVals[2 * nAdvec];
 	PetscInt advecIndices[nAdvec];
-    xolotlCore::Point3D gridPosition { 0.0, 0.0, 0.0 };
+	xolotlCore::Point3D gridPosition { 0.0, 0.0, 0.0 };
 
 	/*
 	 Loop over grid points computing Jacobian terms for diffusion and advection
@@ -657,7 +660,7 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
 
 	// Declarations for variables used in the loop
 	double atomConc = 0.0, totalAtomConc = 0.0;
-    xolotlCore::Point3D gridPosition { 0.0, 0.0, 0.0 };
+	xolotlCore::Point3D gridPosition { 0.0, 0.0, 0.0 };
 
 	// Loop over the grid points
 	for (PetscInt yj = 0; yj < My; yj++) {
@@ -666,7 +669,7 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
 		atomConc = 0.0;
 
 		// Loop over grid points
-		for (int xi = surfacePosition[yj]; xi < Mx -1; xi++) {
+		for (int xi = surfacePosition[yj]; xi < Mx - 1; xi++) {
 			// We are only interested in the helium near the surface
 			if (grid[xi] - grid[surfacePosition[yj]] > 2.0)
 				continue;

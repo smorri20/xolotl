@@ -7,11 +7,8 @@ namespace xolotlSolver {
 
 ISolverHandler* Solver::solverHandler = nullptr;
 
-Solver::Solver(ISolverHandler& _solverHandler,
-                std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
-    numCLIArgs(0), CLIArgs(NULL), handlerRegistry(registry) {
-
-    solverHandler = &_solverHandler;
+Solver::Solver(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
+		numCLIArgs(0), CLIArgs(NULL), handlerRegistry(registry) {
 }
 
 void Solver::setCommandLineOptions(int argc, char **argv) {

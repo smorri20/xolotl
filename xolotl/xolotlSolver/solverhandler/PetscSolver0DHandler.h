@@ -11,25 +11,22 @@ namespace xolotlSolver {
  * to solve the ADR equations in 0D using PETSc from Argonne National Laboratory.
  */
 class PetscSolver0DHandler: public PetscSolverHandler {
-private:
-	//! The position of the surface
-	int surfacePosition;
 
 public:
 
 	/**
-     * Default constructor, deleted because we need to construct with objects.
-     */
+	 * Default constructor, deleted because we need to construct with objects.
+	 */
 	PetscSolver0DHandler() = delete;
 
-    /**
-     * Construct a PetscSolver0DHandler.
-     *
-     * @param _network The reaction network to use.
-     */
-    PetscSolver0DHandler(xolotlCore::IReactionNetwork& _network)
-      : PetscSolverHandler(_network) {
-    }
+	/**
+	 * Construct a PetscSolver0DHandler.
+	 *
+	 * @param _network The reaction network to use.
+	 */
+	PetscSolver0DHandler(xolotlCore::IReactionNetwork& _network) :
+			PetscSolverHandler(_network) {
+	}
 
 	//! The Destructor
 	~PetscSolver0DHandler() {
@@ -45,7 +42,8 @@ public:
 	 * Initialize the concentration solution vector.
 	 * \see ISolverHandler.h
 	 */
-	void initializeConcentration(DM &da, Vec &C);
+	void initializeConcentration(DM &da, Vec &C, std::vector<double> &oldC,
+			std::map<std::string, int> idMap);
 
 	/**
 	 * Compute the new concentrations for the RHS function given an initial
@@ -58,7 +56,8 @@ public:
 	 * Compute the off-diagonal part of the Jacobian which is related to cluster's motion.
 	 * \see ISolverHandler.h
 	 */
-	void computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J, PetscReal ftime);
+	void computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
+			PetscReal ftime);
 
 	/**
 	 * Compute the diagonal part of the Jacobian which is related to cluster reactions.
@@ -71,7 +70,7 @@ public:
 	 * \see ISolverHandler.h
 	 */
 	int getSurfacePosition(int j = -1, int k = -1) const {
-		return surfacePosition;
+		return 0;
 	}
 
 	/**
@@ -79,7 +78,7 @@ public:
 	 * \see ISolverHandler.h
 	 */
 	void setSurfacePosition(int pos, int j = -1, int k = -1) {
-		surfacePosition = pos;
+		return;
 	}
 
 };

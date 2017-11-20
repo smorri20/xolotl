@@ -73,8 +73,6 @@ PSIClusterNetworkLoader::PSIClusterNetworkLoader(
 	fileName = "";
 	dummyReactions = false;
 	vMin = 1000000;
-	heSectionWidth = 1;
-	vSectionWidth = 1;
 
 	return;
 }
@@ -87,8 +85,6 @@ PSIClusterNetworkLoader::PSIClusterNetworkLoader(
 	fileName = "";
 	dummyReactions = false;
 	vMin = 1000000;
-	heSectionWidth = 1;
-	vSectionWidth = 1;
 
 	return;
 }
@@ -233,10 +229,10 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 		auto nextCluster = createPSICluster(numHe, numV, numI, *network);
 
 		// Set the other attributes
-		if (i <= iFormationEnergies.size())
-			nextCluster->setFormationEnergy(0.0);
-		else
-			nextCluster->setFormationEnergy(0.0);
+//		if (i <= iFormationEnergies.size())
+//			nextCluster->setFormationEnergy(0.0);
+//		else
+//			nextCluster->setFormationEnergy(0.0);
 		if (i <= iDiffusion.size()) {
 			nextCluster->setDiffusionFactor(iDiffusion[i - 1]);
 			nextCluster->setMigrationEnergy(iMigration[i - 1]);
@@ -265,7 +261,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 		auto nextCluster = createPSICluster(numHe, numV, numI, *network);
 
 		// Set the other attributes
-		nextCluster->setFormationEnergy(0.0);
+//		nextCluster->setFormationEnergy(0.0);
 		if (i <= heDiffusion.size()) {
 			nextCluster->setDiffusionFactor(heDiffusion[i - 1]);
 			nextCluster->setMigrationEnergy(heMigration[i - 1]);
@@ -296,10 +292,10 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 			auto nextCluster = createPSICluster(numHe, numV, numI, *network);
 
 			// Set its other attributes
-			if (i <= vFormationEnergies.size())
-				nextCluster->setFormationEnergy(vFormationEnergies[i - 1]);
-			else
-				nextCluster->setFormationEnergy(getHeVFormationEnergy(0, i));
+//			if (i <= vFormationEnergies.size())
+//				nextCluster->setFormationEnergy(vFormationEnergies[i - 1]);
+//			else
+//				nextCluster->setFormationEnergy(getHeVFormationEnergy(0, i));
 			if (i <= vDiffusion.size()) {
 				nextCluster->setDiffusionFactor(vDiffusion[i - 1]);
 				nextCluster->setMigrationEnergy(vMigration[i - 1]);
@@ -325,7 +321,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 				auto nextCluster = createPSICluster(numHe, numV, numI,
 						*network);
 				// Set its attributes
-				nextCluster->setFormationEnergy(0.0);
+//				nextCluster->setFormationEnergy(0.0);
 				nextCluster->setDiffusionFactor(0.0);
 				nextCluster->setMigrationEnergy(
 						std::numeric_limits<double>::infinity());
@@ -482,34 +478,26 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 	std::vector<std::pair<int, int> > tempVector;
 
 	// Initialize variables for the loop
-	int count = 0, heIndex = 1, vIndex = 1, heWidth = heSectionWidth, vWidth =
-			vSectionWidth;
+	int count = 0;
 	double heSize = 0.0, vSize = 0.0;
 
-	// Get the number of groups in the helium and vacancy directions
-	int nVGroup = maxV / vSectionWidth + 1;
-	int nHeGroup = maxHe / heSectionWidth + 1;
-
 	// Loop on the vacancy groups
-	std::vector<IReactant::SizeType> superClusterBounds;
-	for (int k = 0; k < nVGroup; k++) {
-		// Add the bound the the network vector
-		superClusterBounds.emplace_back(vIndex);
+	for (int k = 0; k < vSectionBounds.size() - 1; k++) {
 
 		// Loop on the helium groups
-		for (int j = 0; j < nHeGroup; j++) {
+		for (int j = 0; j < heSectionBounds.size() - 1; j++) {
 			// To check if the group is full
 			int heLow = maxHe, heHigh = -1, vLow = maxV, vHigh = -1;
 
 			// Loop within the group
-			for (int n = vIndex; n < vIndex + vWidth; n++) {
+			for (int n = vSectionBounds[k]; n < vSectionBounds[k+1]; n++) {
 				if (n > maxV)
 					continue;
-				for (int m = heIndex; m < heIndex + heWidth; m++) {
-					if (m > maxHe)
-						continue;
-					if (m < vMin && n < vMin)
-						continue;
+				for (int m = heSectionBounds[j]; m < heSectionBounds[j+1]; m++) {
+
+					// Skip the ungrouped
+					if (m < vMin && n < vMin) continue;
+
 					// Get the corresponding cluster
 					auto pair = std::make_pair(m, n);
 
@@ -533,39 +521,21 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 				}
 			}
 
-			// Check if there were clusters in this group
-			if (count == 0) {
-				// Reinitialize the group indices for the helium direction
-				heIndex += heWidth;
-				heWidth = std::max(
-						(int) std::pow((double) (j * heSectionWidth), 3.0)
-								/ 4000, heSectionWidth);
-				heWidth -= heWidth % heSectionWidth;
-				continue;
-			}
+			if (count == 0) continue;
 
 			// Average all values
 			heSize = heSize / (double) count;
 			vSize = vSize / (double) count;
+
 			// Create the super cluster
 			PSISuperCluster* rawSuperCluster = nullptr;
-			if (count == heWidth * vWidth) {
-				// Everything is fine, the cluster is full
-				rawSuperCluster = new PSISuperCluster(heSize, vSize, count,
-						heWidth, vWidth, network, handlerRegistry);
-
-//				std::cout << "normal: " << rawSuperCluster->getName() << " "
-//						<< heWidth << " " << vWidth << std::endl;
-			} else {
-				// The cluster is smaller than we thought because we are at the edge
 				rawSuperCluster = new PSISuperCluster(heSize, vSize, count,
 						heHigh - heLow + 1, vHigh - vLow + 1, network,
 						handlerRegistry);
 
-//				std::cout << "irregular: " << rawSuperCluster->getName() << " "
-//						<< heHigh - heLow + 1 << " " << vHigh - vLow + 1
-//						<< std::endl;
-			}
+//			std::cout << rawSuperCluster->getName() << " " << heHigh - heLow + 1
+//					<< " " << vHigh - vLow + 1 << std::endl;
+
 			assert(rawSuperCluster != nullptr);
 			auto superCluster = std::unique_ptr<PSISuperCluster>(
 					rawSuperCluster);
@@ -587,36 +557,12 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 			heSize = 0.0, vSize = 0.0;
 			count = 0;
 			tempVector.clear();
-			// Reinitialize the group indices for the helium direction
-			heIndex += heWidth;
-			heWidth = std::max(
-					(int) std::pow((double) (j * heSectionWidth), 3.0) / 4000,
-					heSectionWidth);
-			heWidth -= heWidth % heSectionWidth;
-
-			if (heIndex > maxHe)
-				break;
 		}
-
-		// Reinitialize the group indices for the vacancy direction
-		vIndex += vWidth;
-		vWidth = std::max(
-				(int) std::pow((double) (k * vSectionWidth), 3.0) / 4000,
-				vSectionWidth);
-		vWidth -= vWidth % vSectionWidth;
-		heWidth = heSectionWidth;
-		heIndex = 1;
-
-		if (vIndex > maxV)
-			break;
 	}
-
-	// Add the bound the the network vector
-	superClusterBounds.emplace_back(maxV + 1);
 
 	// Now that we have the bound vector defined, tell the network to
 	// build its lookup map for super clusters
-	network.buildSuperClusterMap(superClusterBounds);
+	network.buildSuperClusterMap(heSectionBounds, vSectionBounds);
 
 	return;
 }

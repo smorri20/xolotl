@@ -39,17 +39,6 @@ public:
 	virtual void setCommandLineOptions(int argc, char **argv) = 0;
 
 	/**
-	 * This operation sets the run-time options of the solver. The map is a set
-	 * of key-value std::string pairs that are interpreted by the solver. These
-	 * options may change during execution, but it is up to Solvers to monitor
-	 * the map for changes and they may do so at their discretion.
-	 * @param options The set of options as key-value pairs with option names
-	 * for keys and associated values mapped to those keys. A relevant example
-	 * is "startTime" and "0.01" where both are of type std::string.
-	 */
-	virtual void setOptions(const std::map<std::string, std::string>& options) = 0;
-
-	/**
 	 * This operation sets up the mesh that will be used by the solver and
 	 * initializes the data on that mesh. This operation will throw an exception
 	 * of type std::string if the mesh can not be setup.
@@ -68,7 +57,7 @@ public:
 	 * This operation directs the Solver to perform the solve. If the solve
 	 * fails, it will throw an exception of type std::string.
 	 */
-	virtual void solve() = 0;
+	virtual void solve(Options &options) = 0;
 
 	/**
 	 * This operation performs all necessary finalization for the solver

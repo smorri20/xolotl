@@ -30,36 +30,54 @@ private:
 
 	/**
 	 * This operation configures the initial conditions of the grid in Xolotl.
+	 *
 	 * @param data The DM (data manager) created by PETSc
 	 * @param solutionVector The solution vector that contains the PDE
 	 * solution and which needs to be initialized.
+	 * @param oldC The solution from the previous loop
+	 * @param idMap The map of ids from the previous loop
 	 */
-	void setupInitialConditions(DM data, Vec solutionVector);
+	void setupInitialConditions(DM &data, Vec &solutionVector, std::vector<double> &oldC,
+			std::map<std::string, int> &idMap);
+
+	/**
+	 * This operation configures the bounds to use for the grouping scheme
+	 *
+	 * @param peak The peak position
+	 * @param min The minimum value
+	 * @param max The maximum value
+	 * @return The vector of bounds
+	 */
+	std::vector<IReactant::SizeType> generateBounds(int peak, int min, int max);
+
+	/**
+	 * This operation creates concentration vector for the next loop
+	 * from the current network state.
+	 *
+	 * @param network The current network
+	 * @param bounds1 The bounds on the next loop's network
+	 * @param bounds2 The bounds on the next loop's network
+	 * @param idMap The map of ids for the concentrations
+	 * @param concVec The new vector of concentrations
+	 */
+	void transformConcentrationVector(IReactionNetwork & network,
+			const std::vector<IReactant::SizeType> & bounds1,
+			const std::vector<IReactant::SizeType> & bounds2,
+			std::map<std::string, int> &idMap,
+			std::vector<double> & concVec);
 
 public:
 
-    /**
-     * Default constructor, deleted because we must construct using arguments.
-     */
-    PetscSolver() = delete;
+	/**
+	 * Default constructor, deleted because we must construct using arguments.
+	 */
+	PetscSolver() = delete;
 
 	//! The Constructor
-	PetscSolver(ISolverHandler& _solverHandler, 
-                std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+	PetscSolver(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	//! The Destructor
 	~PetscSolver();
-
-	/**
-	 * This operation sets the run-time options of the solver. The map is a set
-	 * of key-value std::string pairs that are interpreted by the solver. These
-	 * options may change during execution, but it is up to Solvers to monitor
-	 * the map for changes and they may do so at their discretion.
-	 * @param options The set of options as key-value pairs with option names
-	 * for keys and associated values mapped to those keys. A relevant example
-	 * is "startTime" and "0.01" where both are of type std::string.
-	 */
-	void setOptions(const std::map<std::string, std::string>& options) override;
 
 	/**
 	 * This operation sets up the mesh that will be used by the solver and
@@ -80,7 +98,7 @@ public:
 	 * This operation directs the Solver to perform the solve. If the solve
 	 * fails, it will throw an exception of type std::string.
 	 */
-	void solve() override;
+	void solve(Options &options) override;
 
 	/**
 	 * This operation performs all necessary finalization for the solver
@@ -89,8 +107,9 @@ public:
 	 * this operation will throw an exception of type std::string.
 	 */
 	void finalize() override;
-	
-}; //end class PetscSolver
+
+};
+//end class PetscSolver
 
 } /* end namespace xolotlSolver */
 

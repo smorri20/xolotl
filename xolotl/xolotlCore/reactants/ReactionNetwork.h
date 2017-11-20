@@ -26,10 +26,10 @@ namespace xolotlCore {
 class ReactionNetwork: public IReactionNetwork {
 
 private:
-    /**
-     * Types of reactants that we support.
-     */
-    std::set<ReactantType> knownReactantTypes;
+	/**
+	 * Types of reactants that we support.
+	 */
+	std::set<ReactantType> knownReactantTypes;
 
 protected:
 
@@ -79,7 +79,6 @@ protected:
 			return (iter != comps.end());
 		}
 
-
 		/**
 		 * Determine if the given reactant is in our set.
 		 * @param testReactant The reactant to check.
@@ -90,14 +89,14 @@ protected:
 			return this->operator()(testReactant.get());
 		}
 
-        /**
-         * Determine if the given reactant is in our set.
-         * @param testMapItem ReactantMap item for reactant to check.
-         * @return true iff the reactant composition's representation
-         * is in our set of doomed reactants.
-         */
+		/**
+		 * Determine if the given reactant is in our set.
+		 * @param testMapItem ReactantMap item for reactant to check.
+		 * @return true iff the reactant composition's representation
+		 * is in our set of doomed reactants.
+		 */
 		bool operator()(const ReactantMap::value_type& testMapItem) const {
-            auto const& testReactant = testMapItem.second;
+			auto const& testReactant = testMapItem.second;
 			return this->operator()(*testReactant);
 		}
 	};
@@ -108,20 +107,20 @@ protected:
 	 */
 	std::shared_ptr<xolotlPerf::IHandlerRegistry> handlerRegistry;
 
-    /**
-     * All known ProductionReactions in the network, keyed by a
-     * representation of the reaction.
-     */
-    using ProductionReactionMap = std::unordered_map<ProductionReaction::KeyType, std::unique_ptr<ProductionReaction> >;
-    ProductionReactionMap productionReactionMap;
+	/**
+	 * All known ProductionReactions in the network, keyed by a
+	 * representation of the reaction.
+	 */
+	using ProductionReactionMap = std::unordered_map<ProductionReaction::KeyType, std::unique_ptr<ProductionReaction> >;
+	ProductionReactionMap productionReactionMap;
 
 	/**
 	 * All known dissociation reactions in the network, keyed by a
-     * representation of the reaction.
+	 * representation of the reaction.
 	 */
-    using DissociationReactionMap = std::unordered_map<DissociationReaction::KeyType,
-			std::unique_ptr<DissociationReaction> >;
-    DissociationReactionMap dissociationReactionMap;
+	using DissociationReactionMap = std::unordered_map<DissociationReaction::KeyType,
+	std::unique_ptr<DissociationReaction> >;
+	DissociationReactionMap dissociationReactionMap;
 
 	/**
 	 * A map for storing the dfill configuration and accelerating the formation of
@@ -146,33 +145,36 @@ protected:
 	 */
 	bool dissociationsEnabled;
 
-    /**
-     * Maximum cluster sizes currently in the network for each 
-     * of the reactant types we support.
-     */
-    std::map<ReactantType, IReactant::SizeType> maxClusterSizeMap;
+	/**
+	 * Maximum cluster sizes currently in the network for each
+	 * of the reactant types we support.
+	 */
+	std::map<ReactantType, IReactant::SizeType> maxClusterSizeMap;
 
 	/**
-	 * This vector contains the information on the group bounds in both directions.
+	 * This vector contains the information on the group bounds in the first direction.
 	 */
-	std::vector<IReactant::SizeType> boundVector;
-
+	std::vector<IReactant::SizeType> boundVector1;
 
 	/**
-     * All reactants known to the network.
+	 * This vector contains the information on the group bounds in the second direction.
 	 */
-    IReactant::RefVector allReactants;
+	std::vector<IReactant::SizeType> boundVector2;
 
+	/**
+	 * All reactants known to the network.
+	 */
+	IReactant::RefVector allReactants;
 
 	/**
 	 * This map stores all of the clusters in the network by type.
 	 */
 	std::unordered_map<ReactantType, ReactantMap> clusterTypeMap;
 
-    /**
-     * Type of super cluster known by our network.
-     */
-    ReactantType superClusterType;
+	/**
+	 * Type of super cluster known by our network.
+	 */
+	ReactantType superClusterType;
 
 	/**
 	 * Calculate the reaction constant dependent on the
@@ -183,7 +185,8 @@ protected:
 	 * @param reaction The reaction
 	 * @return The rate
 	 */
-	double calculateReactionRateConstant(const ProductionReaction& reaction) const;
+	double calculateReactionRateConstant(
+			const ProductionReaction& reaction) const;
 
 	/**
 	 * Calculate the dissociation constant of the first cluster with respect to
@@ -195,7 +198,8 @@ protected:
 	 * @param reaction The reaction
 	 * @return The dissociation constant
 	 */
-	virtual double calculateDissociationConstant(const DissociationReaction& reaction) const = 0;
+	virtual double calculateDissociationConstant(
+			const DissociationReaction& reaction) const = 0;
 
 	/**
 	 * Calculate the binding energy for the dissociation cluster to emit the single
@@ -204,71 +208,86 @@ protected:
 	 * @param reaction The reaction
 	 * @return The binding energy corresponding to this dissociation
 	 */
-	virtual double computeBindingEnergy(const DissociationReaction& reaction) const = 0;
+	virtual double computeBindingEnergy(
+			const DissociationReaction& reaction) const = 0;
 
+	/**
+	 * Find index of interval in boundVector that contains a value.
+	 * Assumes that:
+	 *   boundVector is sorted
+	 *   boundVector indicates non-overlapping intervals
+	 *   boundVector last element indicates the upper bound of the last
+	 interval (one past, following usual C++ standard library convention.)
+	 *   0 is not included in the first boundVector interval.
+	 *
+	 * @param val  The value of interest.
+	 * @return The lower bound of the interval in boundVector that contains
+	 *       'val.'  If there is no such interval, returns 0.
+	 */
+	std::size_t findBoundsIntervalBaseIdx1(IReactant::SizeType val) const {
 
-    /**
-     * Find index of interval in boundVector that contains a value.
-     * Assumes that:
-     *   boundVector is sorted
-     *   boundVector indicates non-overlapping intervals
-     *   boundVector last element indicates the upper bound of the last 
-           interval (one past, following usual C++ standard library convention.)
-     *   0 is not included in the first boundVector interval.
-     *
-     * @param val  The value of interest.
-     * @return The lower bound of the interval in boundVector that contains
-     *       'val.'  If there is no such interval, returns 0.
-     */
-    std::size_t findBoundsIntervalBaseIdx(IReactant::SizeType val) const {
+		// Find the first item that is *greater than* the given count.
+		auto iter = std::upper_bound(boundVector1.begin(), boundVector1.end(),
+				val);
 
-        // Find the first item that is *greater than* the given count.
-        auto iter = std::upper_bound(boundVector.begin(), boundVector.end(), val);
+		// There are three cases for iter:
+		// * std::upper_bound returned begin() => val is smaller than any interval.
+		// * std::upper_bound returned end() => val is larger than any interval.
+		// * otherwise => iter points to *next* item after interval we want.
+		return ((iter != boundVector1.begin()) and (iter != boundVector1.end())) ?
+				(iter - boundVector1.begin()) :
+				std::numeric_limits<std::size_t>::max();
+	}
 
-        // There are three cases for iter:
-        // * std::upper_bound returned begin() => val is smaller than any interval.
-        // * std::upper_bound returned end() => val is larger than any interval.
-        // * otherwise => iter points to *next* item after interval we want.
-        return ((iter != boundVector.begin()) and (iter != boundVector.end())) ?
-            (iter - boundVector.begin()) : std::numeric_limits<std::size_t>::max();
-    }
+	std::size_t findBoundsIntervalBaseIdx2(IReactant::SizeType val) const {
 
+		// Find the first item that is *greater than* the given count.
+		auto iter = std::upper_bound(boundVector2.begin(), boundVector2.end(),
+				val);
 
-    /**
-     * Obtain reactant types supported by our network.
-     * A reactant type might be returned even though no reactant
-     * of that type currently exists in the network.
-     *
-     * @return Collection of reactant types supported by our network.
-     */
-    const std::set<ReactantType>& getKnownReactantTypes() const {
-        return knownReactantTypes;
-    }
+		// There are three cases for iter:
+		// * std::upper_bound returned begin() => val is smaller than any interval.
+		// * std::upper_bound returned end() => val is larger than any interval.
+		// * otherwise => iter points to *next* item after interval we want.
+		return ((iter != boundVector2.begin()) and (iter != boundVector2.end())) ?
+				(iter - boundVector2.begin()) :
+				std::numeric_limits<std::size_t>::max();
+	}
+
+	/**
+	 * Obtain reactant types supported by our network.
+	 * A reactant type might be returned even though no reactant
+	 * of that type currently exists in the network.
+	 *
+	 * @return Collection of reactant types supported by our network.
+	 */
+	const std::set<ReactantType>& getKnownReactantTypes() const {
+		return knownReactantTypes;
+	}
 
 public:
 
-    /**
-     * Default constructor, deleted because we need params to construct.
-     */
-    ReactionNetwork() = delete;
-
+	/**
+	 * Default constructor, deleted because we need params to construct.
+	 */
+	ReactionNetwork() = delete;
 
 	/**
 	 * The constructor that takes the performance handler registry.
 	 * It initializes the properties and reactants vector.
 	 *
-     * @param _knownReactantTypes Reactant types that we support.
-     * @param _superClusterType Type of super cluster we should use.
+	 * @param _knownReactantTypes Reactant types that we support.
+	 * @param _superClusterType Type of super cluster we should use.
 	 * @param _registry The performance handler registry
 	 */
 	ReactionNetwork(const std::set<ReactantType>& _knownReactantTypes,
-                    ReactantType _superClusterType,
-                    std::shared_ptr<xolotlPerf::IHandlerRegistry> _registry);
+			ReactantType _superClusterType,
+			std::shared_ptr<xolotlPerf::IHandlerRegistry> _registry);
 
-    /**
-     * Copy constructor, deleted to prevent use.
-     */
-    ReactionNetwork(const ReactionNetwork& other) = delete;
+	/**
+	 * Copy constructor, deleted to prevent use.
+	 */
+	ReactionNetwork(const ReactionNetwork& other) = delete;
 
 	/**
 	 * The destructor.
@@ -292,25 +311,25 @@ public:
 	 * @return The temperature
 	 */
 	virtual double getTemperature() const override {
-        return temperature;
-    }
+		return temperature;
+	}
 
 	/**
 	 * Retrieve the single-species reactant with the given type and size if it
 	 * exists in the network or null if not.
-     * Convenience function for get() that takes a 
-     * reactant type and composition.
+	 * Convenience function for get() that takes a
+	 * reactant type and composition.
 	 *
 	 * @param species The reactant's single species.
 	 * @param size The size of the reactant.
 	 * @return A pointer to the reactant, or nullptr if it does not 
-     * exist in the network.
+	 * exist in the network.
 	 */
 	IReactant * get(Species species, IReactant::SizeType size) const override {
-        IReactant::Composition comp;
-        comp[toCompIdx(species)] = size;
-        return get(toReactantType(species), comp);
-    }
+		IReactant::Composition comp;
+		comp[toCompIdx(species)] = size;
+		return get(toReactantType(species), comp);
+	}
 
 	/**
 	 * Retrieve the reactant with the given type and composition if
@@ -319,10 +338,10 @@ public:
 	 * @param type The type of the reactant
 	 * @param comp The composition of the reactant
 	 * @return A pointer to the reactant of type 'type' and with composition
-     * 'comp.' nullptr if no such reactant exists.
+	 * 'comp.' nullptr if no such reactant exists.
 	 */
-	IReactant * get(ReactantType type,
-                            const IReactant::Composition& comp) const override;
+	IReactant * get(ReactantType type, const IReactant::Composition& comp) const
+			override;
 
 	/**
 	 * This operation returns all reactants in the network without regard for
@@ -331,10 +350,10 @@ public:
 	 *
 	 * @return The list of all of the reactants in the network
 	 */
-    virtual const IReactant::RefVector& getAll() const override {
+	virtual const IReactant::RefVector& getAll() const override {
 
-        return allReactants;
-    }
+		return allReactants;
+	}
 
 	/**
 	 * This operation returns all reactants in the network with the given type.
@@ -345,13 +364,13 @@ public:
 	 * @return The list of all of the reactants in the network or null if the
 	 * type is invalid
 	 */
-    virtual const ReactantMap& getAll(ReactantType type) const override {
+	virtual const ReactantMap& getAll(ReactantType type) const override {
 
-        return clusterTypeMap.at(type);
-    }
+		return clusterTypeMap.at(type);
+	}
 
 	/**
-     * Give the reactant to the network.
+	 * Give the reactant to the network.
 	 *
 	 * This operation sets the id of the reactant to one that is specific
 	 * to this network. Do not share reactants across networks! This id is
@@ -361,7 +380,6 @@ public:
 	 * @param reactant The reactant that should be added to the network.
 	 */
 	void add(std::unique_ptr<IReactant> reactant) override;
-
 
 	/**
 	 * This operation reinitializes the network.
@@ -396,8 +414,8 @@ public:
 	 * @param reaction The reaction that should be added to the network
 	 * @return The reaction that is now in the network
 	 */
-    ProductionReaction& add(std::unique_ptr<ProductionReaction> reaction) override;
-
+	ProductionReaction& add(std::unique_ptr<ProductionReaction> reaction)
+			override;
 
 	/**
 	 * Add a dissociation reaction to the network.
@@ -405,7 +423,8 @@ public:
 	 * @param reaction The reaction that should be added to the network
 	 * @return The reaction that is now in the network
 	 */
-	DissociationReaction& add(std::unique_ptr<DissociationReaction> reaction) override;
+	DissociationReaction& add(std::unique_ptr<DissociationReaction> reaction)
+			override;
 
 	/**
 	 * This operation fills an array of doubles with the concentrations of all
@@ -427,7 +446,8 @@ public:
 	 * array. Properly aligning the array in memory so that this operation
 	 * does not overrun is up to the caller.
 	 */
-	virtual void updateConcentrationsFromArray(double * concentrations) override;
+	virtual void updateConcentrationsFromArray(double * concentrations)
+			override;
 
 	/**
 	 * Get the diagonal fill for the Jacobian, corresponding to the reactions.
@@ -486,6 +506,24 @@ public:
 	}
 
 	/**
+	 * Get the total concentration of all the clusters in the network.
+	 *
+	 * @return The total concentration
+	 */
+	virtual double getTotalConcentration() override {
+		return 0.0;
+	}
+
+	/**
+	 * Get the total concentration of all the biggest clusters in the network.
+	 *
+	 * @return The total concentration
+	 */
+	virtual double getBigConcentration() override {
+		return 0.0;
+	}
+
+	/**
 	 * Calculate all the rate constants for the reactions and dissociations of the network.
 	 * Need to be called only when the temperature changes.
 	 *
@@ -523,7 +561,8 @@ public:
 	 * @param size The pointer to the array that will contain the number of reactions for
 	 * this cluster
 	 */
-	virtual void computeAllPartials(double *vals, int *indices, int *size) override {
+	virtual void computeAllPartials(double *vals, int *indices, int *size)
+			override {
 		return;
 	}
 
@@ -558,16 +597,16 @@ public:
 		dissociationsEnabled = false;
 	}
 
-    /**
-     * Find maximum cluster size currently in the network 
-     * for the given reactant type.
-     *
-     * @param rtype Reactant type of interest.
-     * @return Maximum size of cluster of type rtype currently in network.
-     */
-    IReactant::SizeType getMaxClusterSize(ReactantType rtype) const {
-        return maxClusterSizeMap.at(rtype);
-    }
+	/**
+	 * Find maximum cluster size currently in the network
+	 * for the given reactant type.
+	 *
+	 * @param rtype Reactant type of interest.
+	 * @return Maximum size of cluster of type rtype currently in network.
+	 */
+	IReactant::SizeType getMaxClusterSize(ReactantType rtype) const {
+		return maxClusterSizeMap.at(rtype);
+	}
 
 	/**
 	 * Remove the given reactants from the network.
@@ -576,12 +615,54 @@ public:
 	 */
 	void removeReactants(const ReactantVector& reactants) override;
 
-    /**
-     * Dump a representation of the network to the given output stream.
-     *
-     * @param os Output stream on which to write network description.
-     */
-    void dumpTo(std::ostream& os) const override;
+	/**
+	 * Dump a representation of the network to the given output stream.
+	 *
+	 * @param os Output stream on which to write network description.
+	 */
+	void dumpTo(std::ostream& os) const override;
+
+	/**
+	 * Get the map that gives the ID of a cluster as a function of its name.
+	 *
+	 * @return The ID map.
+	 */
+	virtual std::map<std::string, int> getIDMap() const override;
+
+	/**
+	 * Get the coordinates of the cluster with the highest concentration.
+	 *
+	 * @return The pair of coordinates.
+	 */
+	virtual std::pair<int, int> getHighestClusterCoordinates() const override;
+
+	/**
+	 * Find the super cluster that contains the original cluster with nHe
+	 * helium atoms and nV vacancies.
+	 *
+	 * @param nHe the type of the compound reactant
+	 * @param nV an array containing the sizes of each piece of the reactant.
+	 * @return The super cluster representing the cluster with nHe helium
+	 * and nV vacancies, or nullptr if no such cluster exists.
+	 */
+	virtual IReactant * getSuperFromComp(IReactant::SizeType nHe,
+			IReactant::SizeType nV) override {
+		return nullptr;
+	}
+
+	/**
+	 * Find the super cluster that contains the original cluster with nHe
+	 * helium atoms and nV vacancies.
+	 *
+	 * @param axis The axis on which the bounds are computed (for instance He or V)
+	 * @param max The bound maximum
+	 * @return The vector of bounds
+	 */
+	virtual std::vector<IReactant::SizeType> generateBounds(int axis, int max)
+			override {
+		std::vector<IReactant::SizeType> bounds;
+		return bounds;
+	}
 };
 
 }
