@@ -139,8 +139,8 @@ void PetscSolver::transformConcentrationVector(IReactionNetwork & network,
 									heDistance, vDistance);
 							// Add it to the running quantities
 							conc += concentration;
-							mom1 += concentration * ((double) numHe - mean1);
-							mom2 += concentration * ((double) numV - mean2);
+							mom1 += concentration / ((double) numHe - mean1);
+							mom2 += concentration / ((double) numV - mean2);
 						}
 					}
 				}
@@ -149,13 +149,11 @@ void PetscSolver::transformConcentrationVector(IReactionNetwork & network,
 				conc = conc
 						/ (double) ((bounds1[j + 1] - bounds1[j])
 								* (bounds2[k + 1] - bounds2[k]));
-				mom1 = 2.0 * mom1
-						/ (double) ((bounds1[j + 1] - bounds1[j])
-								* (bounds1[j + 1] - bounds1[j] - 1)
+				mom1 = (double) (bounds1[j + 1] - bounds1[j] - 1) * mom1
+						/ (double) ((bounds1[j + 1] - bounds1[j]) * 2
 								* (bounds2[k + 1] - bounds2[k]));
-				mom2 = 2.0 * mom2
-						/ (double) ((bounds1[j + 1] - bounds1[j])
-								* (bounds2[j + 1] - bounds2[k] - 1)
+				mom2 = (double) (bounds2[k + 1] - bounds2[k] - 1) * mom2
+						/ (double) ((bounds1[j + 1] - bounds1[j]) * 2
 								* (bounds2[k + 1] - bounds2[k]));
 
 				// Save them
