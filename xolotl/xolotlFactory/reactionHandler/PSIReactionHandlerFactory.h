@@ -43,7 +43,9 @@ public:
 	void initializeReactionNetwork(xolotlCore::Options &options,
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry,
 			const std::vector<xolotlCore::IReactant::SizeType> & bounds1,
-			const std::vector<xolotlCore::IReactant::SizeType> & bounds2) override {
+			const std::vector<xolotlCore::IReactant::SizeType> & bounds2,
+			std::vector<std::vector<double> > & padeVector,
+			std::map<std::string, int> & idMap) override {
 		// Get the current process ID
 		int procId;
 		MPI_Comm_rank(MPI_COMM_WORLD, &procId);
@@ -67,7 +69,8 @@ public:
 		if (options.useHDF5())
 			theNetworkHandler = theNetworkLoaderHandler->load(options);
 		else
-			theNetworkHandler = theNetworkLoaderHandler->generate(options);
+			theNetworkHandler = theNetworkLoaderHandler->generate(options,
+					padeVector, idMap);
 
 		if (procId == 0) {
 			std::cout << "\nFactory Message: "

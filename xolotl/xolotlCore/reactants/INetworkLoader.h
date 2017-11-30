@@ -44,10 +44,13 @@ public:
 	 * The network will be empty if it can not be loaded.
 	 *
 	 * @param options The command line options
+	 * @param padeVector The vector containing the Pade approximation for each cluster
+	 * @param idMap The idea map from the previously built network
 	 * @return network The reaction network
 	 */
-	virtual std::unique_ptr<IReactionNetwork> generate(
-			const IOptions &options) = 0;
+	virtual std::unique_ptr<IReactionNetwork> generate(const IOptions &options,
+			std::vector<std::vector<double> > & padeVector,
+			std::map<std::string, int> & idMap) = 0;
 
 	/**
 	 * This operation will set the name of the file where to take the network from.

@@ -28,7 +28,7 @@ namespace xolotlCore {
  * maximum size for that cluster. Instances of the appropriate cluster type are
  * instantiated during the loading process, but returned as NEClusters.
  */
-class NEClusterNetworkLoader : public NetworkLoader {
+class NEClusterNetworkLoader: public NetworkLoader {
 
 protected:
 
@@ -45,7 +45,8 @@ protected:
 	/**
 	 * Private nullary constructor.
 	 */
-	NEClusterNetworkLoader() {}
+	NEClusterNetworkLoader() {
+	}
 
 	/**
 	 * This operation creates a singles-species cluster of helium, vacancies or
@@ -58,7 +59,7 @@ protected:
 	 * @return The new cluster
 	 */
 	std::unique_ptr<NECluster> createNECluster(int numXe, int numV, int numI,
-        IReactionNetwork& network) const;
+			IReactionNetwork& network) const;
 
 public:
 
@@ -68,7 +69,8 @@ public:
 	 *
 	 * @param registry The performance handler registry
 	 */
-	NEClusterNetworkLoader(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+	NEClusterNetworkLoader(
+			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**
 	 * An alternative constructor provided for convenience.
@@ -83,26 +85,32 @@ public:
 	/**
 	 * Destructor
 	 */
-	virtual ~NEClusterNetworkLoader() {}
+	virtual ~NEClusterNetworkLoader() {
+	}
 
 	/**
 	 * This operation will load the reaction network from the inputstream in
 	 * the format specified previously. The network will be empty if it can not
 	 * be loaded.
 	 *
-     * @param options The command line options.
+	 * @param options The command line options.
 	 * @return network The reaction network
 	 */
-	virtual std::unique_ptr<IReactionNetwork> load(const IOptions& options) const override;
+	virtual std::unique_ptr<IReactionNetwork> load(
+			const IOptions& options) const override;
 
 	/**
 	 * This operation will generate the reaction network from options.
 	 * The network will be empty if it can not be loaded.
 	 *
 	 * @param options The command line options
+	 * @param padeVector The vector containing the Pade approximation for each cluster
+	 * @param idMap The idea map from the previously built network
 	 * @return network The reaction network
 	 */
-	virtual std::unique_ptr<IReactionNetwork> generate(const IOptions &options) override;
+	virtual std::unique_ptr<IReactionNetwork> generate(const IOptions &options,
+			std::vector<std::vector<double> > & padeVector,
+			std::map<std::string, int> & idMap) override;
 
 	/**
 	 * This operation will apply a grouping method to the network.
@@ -116,14 +124,18 @@ public:
 	 *
 	 * @param min The value for the size
 	 */
-	void setXeMin (int min) {xeMin = min;}
+	void setXeMin(int min) {
+		xeMin = min;
+	}
 
 	/**
 	 * This operation will set the xenon width for the grouping scheme.
 	 *
 	 * @param w The value of the width
 	 */
-	void setWidth (int w) {sectionWidth = w;}
+	void setWidth(int w) {
+		sectionWidth = w;
+	}
 };
 
 } /* namespace xolotlCore */

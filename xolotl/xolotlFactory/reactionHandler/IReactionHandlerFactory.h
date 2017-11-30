@@ -27,11 +27,15 @@ public:
 	 * @param registry The performance registry.
 	 * @param bounds1 The bounds for the grouping.
 	 * @param bounds2 The bounds for the grouping.
+	 * @param padeVector The vector containing the Pade approximation for each cluster
+	 * @param idMap The idea map from the previously built network
 	 */
 	virtual void initializeReactionNetwork(xolotlCore::Options &options,
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry,
 			const std::vector<xolotlCore::IReactant::SizeType> & bounds1,
-			const std::vector<xolotlCore::IReactant::SizeType> & bounds2) = 0;
+			const std::vector<xolotlCore::IReactant::SizeType> & bounds2,
+			std::vector<std::vector<double> > & padeVector,
+			std::map<std::string, int> & idMap) = 0;
 
 	/**
 	 * Return the network loader.

@@ -154,10 +154,10 @@ private:
 	 *
 	 * @param r1 A reactant involved in a production reaction.
 	 * @param r2 The super reactant involved in a production reaction.
-	 * @param product The cluster created by the reaction.
+	 * @param pris Information about reactants are involved with each reaction.
 	 */
 	void defineProductionReactions(IReactant& r1, IReactant& super,
-			IReactant& product);
+			const std::vector<PendingProductionReactionInfo>& pris);
 
 	// TODO should we default a, b, c, d to 0?
 	void defineDissociationReaction(ProductionReaction& forwardReaction,
@@ -186,7 +186,7 @@ private:
 	std::unordered_map<IReactant*, std::vector<PendingProductionReactionInfo> >;
 
 	void defineDissociationReactions(ProductionReaction& forwardReaction,
-			IReactant& disso);
+			const ProductToProductionMap& prodMap);
 
 	/**
 	 * Check whether dissociation reaction is allowed for
@@ -399,6 +399,15 @@ public:
 	 * @return The vector of bounds
 	 */
 	std::vector<IReactant::SizeType> generateBounds(int axis, int max) override;
+
+	/**
+	 * Set the Pade approximation in each cluster.
+	 *
+	 * @param padeVector The vector containing the Pade approximation for each cluster
+	 * @param idMap The idea map from the previously built network
+	 */
+	void setPade(std::vector<std::vector<double> > & padeVector,
+			std::map<std::string, int> & idMap) override;
 };
 
 } // namespace xolotlCore
