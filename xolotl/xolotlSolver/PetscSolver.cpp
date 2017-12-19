@@ -64,7 +64,6 @@ std::vector<IReactant::SizeType> PetscSolver::generateBounds(int peak, int min,
 
 	// Generate the bounds
 	while (value < max) {
-		std::cout << value << std::endl;
 
 		bounds.push_back(value);
 
