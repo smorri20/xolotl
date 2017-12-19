@@ -10,8 +10,11 @@ namespace xolotlPerf {
 PAPIHardwareCounter::CounterSpecMap PAPIHardwareCounter::csMap;
 
 PAPIHardwareCounter::PAPIHardwareCounter(const std::string& name,
-		const IHardwareCounter::SpecType& cset) :
-		xolotlCore::Identifiable(name), spec(cset), eventSet(PAPI_NULL) {
+		const IHardwareCounter::SpecType& cset,
+        bool skipMissing) :
+		xolotlCore::Identifiable(name),
+        eventSet(PAPI_NULL) {
+
 	assert(PAPI_is_initialized());
 
 	// Ensure our counter spec map has been initialized.
@@ -24,7 +27,8 @@ PAPIHardwareCounter::PAPIHardwareCounter(const std::string& name,
 	if (err != PAPI_OK) {
 		throw xolotlPerf::runtime_error("Failed to create PAPI eventset", err);
 	}
-	for (SpecType::const_iterator iter = spec.begin(); iter != spec.end();
+
+	for (SpecType::const_iterator iter = cset.begin(); iter != cset.end();
 			++iter) {
 		CounterSpecMap::const_iterator miter = csMap.find(*iter);
 
@@ -33,7 +37,10 @@ PAPIHardwareCounter::PAPIHardwareCounter(const std::string& name,
 
 		CounterSpecInfo* currCounterSpecInfo = miter->second;
 		err = PAPI_add_event(eventSet, currCounterSpecInfo->papiEventID);
-		if (err != PAPI_OK) {
+        if (err == PAPI_OK) {
+            spec.emplace_back(*iter);
+        }
+        else if ((err != PAPI_ENOEVNT) or not skipMissing) {
 			throw xolotlPerf::runtime_error(
 					"Failed to add event to PAPI eventset", err);
 		}

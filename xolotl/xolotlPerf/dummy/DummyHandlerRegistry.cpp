@@ -23,11 +23,13 @@ std::shared_ptr<IEventCounter> DummyHandlerRegistry::getEventCounter(
 // Obtain a HardwareCounter object by name and by the
 // counter data it collects.
 std::shared_ptr<IHardwareCounter> DummyHandlerRegistry::getHardwareCounter(
-		const std::string& name, const IHardwareCounter::SpecType& ctrSpec) {
+		const std::string& name,
+        const IHardwareCounter::SpecType& ctrSpec,
+        bool skipMissing) {
 	// TODO is there a need for us to retain access to this Timer?
 	// TODO do we need to check whether client has already created
 	// an object with this name and return that object?
-	return std::make_shared < DummyHardwareCounter > (name, ctrSpec);
+	return std::make_shared < DummyHardwareCounter > (name, ctrSpec, skipMissing);
 }
 
 void DummyHandlerRegistry::collectStatistics(

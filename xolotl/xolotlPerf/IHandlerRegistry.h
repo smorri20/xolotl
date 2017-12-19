@@ -50,7 +50,8 @@ public:
 	 */
 	virtual std::shared_ptr<IHardwareCounter> getHardwareCounter(
 			const std::string& name,
-			const IHardwareCounter::SpecType& ctrSpec) = 0;
+			const IHardwareCounter::SpecType& ctrSpec,
+            bool skipMissing = true) = 0;
 
 	/**
 	 * Collect statistics about any performance data collected by
