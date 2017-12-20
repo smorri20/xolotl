@@ -600,26 +600,6 @@ public:
 	}
 
 	/**
-	 * This operation returns the distance to the mean.
-	 *
-	 * @param he The number of helium
-	 * @return The distance to the mean number of helium in the group
-	 */
-	virtual double getHeDistance(int he) const override {
-		return 0.0;
-	}
-
-	/**
-	 * This operation returns the distance to the mean.
-	 *
-	 * @param he The number of vacancy
-	 * @return The distance to the mean number of vacancy in the group
-	 */
-	virtual double getVDistance(int v) const override {
-		return 0.0;
-	}
-
-	/**
 	 * This operation sets the temperature at which the reactant currently
 	 * exists. Temperature-dependent quantities are recomputed when this
 	 * operation is called, so the temperature should always be set first.

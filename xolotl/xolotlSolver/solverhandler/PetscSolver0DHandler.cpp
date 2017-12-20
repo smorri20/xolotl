@@ -95,8 +95,7 @@ void PetscSolver0DHandler::createSolverContext(DM &da) {
 	return;
 }
 
-void PetscSolver0DHandler::initializeConcentration(DM &da, Vec &C,
-		std::vector<double> &oldC, std::map<std::string, int> idMap) {
+void PetscSolver0DHandler::initializeConcentration(DM &da, Vec &C) {
 	PetscErrorCode ierr;
 
 	// Pointer for the concentration vector
@@ -110,7 +109,7 @@ void PetscSolver0DHandler::initializeConcentration(DM &da, Vec &C,
 	bool hasConcentrations = false;
 	if (!networkName.empty())
 		hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
-				networkName, tempTimeStep);
+			networkName, tempTimeStep);
 
 	// Initialize the flux handler
 	fluxHandler->initializeFluxHandler(network, 0, grid);
@@ -131,45 +130,26 @@ void PetscSolver0DHandler::initializeConcentration(DM &da, Vec &C,
 	// Get the concentration of the only grid point
 	concOffset = concentrations[0];
 
-	// Check if we have previous information
-	// Get the size of oldC
-	int oldSize = oldC.size();
-	if (oldSize <= 0) {
-		// Loop on all the clusters to initialize at 0.0
-		for (int n = 0; n < dof; n++) {
-			concOffset[n] = 0.0;
-		}
+	// Loop on all the clusters to initialize at 0.0
+	for (int n = 0; n < dof; n++) {
+		concOffset[n] = 0.0;
+	}
 
-		// Initialize the vacancy concentration
-		if (singleVacancyCluster && !hasConcentrations) {
-			concOffset[vacancyIndex] = initialVConc;
-		}
+	// Initialize the vacancy concentration
+	if (singleVacancyCluster && !hasConcentrations) {
+		concOffset[vacancyIndex] = initialVConc;
+	}
 
-		// If the concentration must be set from the HDF5 file
-		if (hasConcentrations) {
-			// Read the concentrations from the HDF5 file
-			auto concVector = xolotlCore::HDF5Utils::readGridPoint(networkName,
-					tempTimeStep, 0);
+	// If the concentration must be set from the HDF5 file
+	if (hasConcentrations) {
+		// Read the concentrations from the HDF5 file
+		auto concVector = xolotlCore::HDF5Utils::readGridPoint(networkName,
+				tempTimeStep, 0);
 
-			concOffset = concentrations[0];
-			// Loop on the concVector size
-			for (unsigned int l = 0; l < concVector.size(); l++) {
-				concOffset[(int) concVector.at(l).at(0)] = concVector.at(l).at(
-						1);
-			}
-		}
-	} else {
-		// Get the current ID map
-		auto currIDMap = network.getIDMap();
-		// Loop on it
-		for (auto const& currMapItem : currIDMap) {
-			int newId = (currMapItem.second);
-			// Check if the corresponding old Id exists
-			if (idMap.count(currMapItem.first) == 0)
-				concOffset[newId] = 0.0;
-			else {
-				concOffset[newId] = oldC[idMap[(currMapItem.first)]];
-			}
+		concOffset = concentrations[0];
+		// Loop on the concVector size
+		for (unsigned int l = 0; l < concVector.size(); l++) {
+			concOffset[(int) concVector.at(l).at(0)] = concVector.at(l).at(1);
 		}
 	}
 
@@ -213,7 +193,7 @@ void PetscSolver0DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	const int dof = network.getDOF();
 
 	// Set the grid position
-	xolotlCore::Point3D gridPosition { 0.0, 0.0, 0.0 };
+    xolotlCore::Point3D gridPosition { 0.0, 0.0, 0.0 };
 
 	// Get the old and new array offsets
 	concOffset = concs[0];
@@ -293,7 +273,7 @@ void PetscSolver0DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
 	PetscInt reactionSize[dof];
 
 	// Set the grid position
-	xolotlCore::Point3D gridPosition { 0.0, 0.0, 0.0 };
+    xolotlCore::Point3D gridPosition { 0.0, 0.0, 0.0 };
 
 	// Get the temperature from the temperature handler
 	auto temperature = temperatureHandler->getTemperature(gridPosition, ftime);

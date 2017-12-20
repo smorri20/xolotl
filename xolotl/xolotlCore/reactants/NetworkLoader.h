@@ -93,18 +93,6 @@ public:
 	 */
 	void setDummyReactions ();
 
-	/**
-	 * This operation will set the section bounds.
-	 *
-	 * @param bounds1 The vector of bounds in one direction
-	 * @param bounds2 The vector of bounds in another direction
-	 */
-	virtual void setSectionBounds(
-			const std::vector<IReactant::SizeType> & bounds1,
-			const std::vector<IReactant::SizeType> & bounds2) {
-		return;
-	}
-
 };
 
 }

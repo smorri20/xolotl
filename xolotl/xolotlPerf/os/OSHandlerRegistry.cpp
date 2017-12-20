@@ -25,9 +25,7 @@ std::shared_ptr<ITimer> OSHandlerRegistry::getTimer(const std::string& name) {
 }
 
 std::shared_ptr<IHardwareCounter> OSHandlerRegistry::getHardwareCounter(
-		const std::string& name,
-        const IHardwareCounter::SpecType& ctrSpec,
-        bool skipMissing) {
+		const std::string& name, const IHardwareCounter::SpecType& ctrSpec) {
 	// TODO - associate the object we create with the current region
 	std::shared_ptr<IHardwareCounter> ret;
 
@@ -41,7 +39,7 @@ std::shared_ptr<IHardwareCounter> OSHandlerRegistry::getHardwareCounter(
 		// We have not yet created a hw counter set with this name.
 		// Build one and keep track of it.
 		// Note with the OSHandlerRegistry it is always a dummy.
-		ret = std::make_shared<DummyHardwareCounter>(name, ctrSpec, skipMissing);
+		ret = std::make_shared<DummyHardwareCounter>(name, ctrSpec);
 		allHWCounterSets[name] = ret;
 	}
 	return ret;

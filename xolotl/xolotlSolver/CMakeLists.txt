@@ -34,9 +34,6 @@ include_directories(${CMAKE_SOURCE_DIR}
                     ${CMAKE_SOURCE_DIR}/xolotlPerf
                     ${CMAKE_SOURCE_DIR}/xolotlFactory/material
                     ${CMAKE_SOURCE_DIR}/xolotlFactory/vizHandler
-                    ${CMAKE_SOURCE_DIR}/xolotlFactory/solverHandler
-                    ${CMAKE_SOURCE_DIR}/xolotlFactory/reactionHandler
-                    ${CMAKE_SOURCE_DIR}/xolotlFactory/temperatureHandler
                     ${CMAKE_BINARY_DIR}
                     ${PETSC_INCLUDES})
 

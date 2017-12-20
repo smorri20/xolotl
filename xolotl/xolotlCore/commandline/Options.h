@@ -209,16 +209,16 @@ protected:
 	 */
 	double zStepSize;
 
-	/**
-	 * Whether to write reaction network to debug output file.
-	 */
-	bool shouldWriteDebugNetwork;
+    /**
+     * Whether to write reaction network to debug output file.
+     */
+    bool shouldWriteDebugNetwork;
 
-	/**
-	 * Name of output file for debug reaction network.
-	 * Ignored unless shouldWriteDebugNetwork is true.
-	 */
-	std::string debugNetworkFilename;
+    /**
+     * Name of output file for debug reaction network.
+     * Ignored unless shouldWriteDebugNetwork is true.
+     */
+    std::string debugNetworkFilename;
 
 public:
 
@@ -475,8 +475,7 @@ public:
 	 * Which type of performance handlers should we use?
 	 * \see IOptions.h
 	 */
-	xolotlPerf::IHandlerRegistry::RegistryType getPerfHandlerType(void) const
-			override {
+	xolotlPerf::IHandlerRegistry::RegistryType getPerfHandlerType(void) const override {
 		return perfRegistryType;
 	}
 
@@ -484,8 +483,7 @@ public:
 	 * Set the type of performance handlers to use.
 	 * \see IOptions.h
 	 */
-	void setPerfHandlerType(xolotlPerf::IHandlerRegistry::RegistryType rtype)
-			override {
+	void setPerfHandlerType(xolotlPerf::IHandlerRegistry::RegistryType rtype) override {
 		perfRegistryType = rtype;
 	}
 
@@ -862,30 +860,30 @@ public:
 
 	/**
 	 * Indicate whether to output the reaction network to a file
-	 * (e.g., to support debugging the network).
+     * (e.g., to support debugging the network).
 	 *
-	 * @param shouldWriteNetwork Whether to write reaction network
-	 *        to file once created.
+     * @param shouldWriteNetwork Whether to write reaction network 
+     *        to file once created.
 	 * @param fileName Name of the file to which the network should be written.
-	 *        If fileName = "-", network is written to standard output.
-	 *        Ignored unless shouldWriteNetwork is true.
+     *        If fileName = "-", network is written to standard output.
+     *        Ignored unless shouldWriteNetwork is true.
 	 */
 	virtual void setNetworkDebugOptions(bool _shouldWriteNetwork = false,
-			std::string fileName = "network.txt") override {
-		shouldWriteDebugNetwork = _shouldWriteNetwork;
-		debugNetworkFilename = fileName;
-	}
+                                        std::string fileName = "network.txt") override {
+        shouldWriteDebugNetwork = _shouldWriteNetwork;
+        debugNetworkFilename = fileName;
+    }
+
 
 	/**
 	 * Retrieve user's settings for network debugging.
 	 *
-	 * @return Pair (b, f) where b indicates whether to write the
-	 *          reaction network to a file, and f indicates the filename to use.
+     * @return Pair (b, f) where b indicates whether to write the 
+     *          reaction network to a file, and f indicates the filename to use.
 	 */
-	virtual std::pair<bool, std::string> getNetworkDebugOptions() const
-			override {
-		return std::make_pair(shouldWriteDebugNetwork, debugNetworkFilename);
-	}
+    virtual std::pair<bool, std::string> getNetworkDebugOptions() const override {
+        return std::make_pair(shouldWriteDebugNetwork, debugNetworkFilename);
+    }
 };
 //end class Options
 

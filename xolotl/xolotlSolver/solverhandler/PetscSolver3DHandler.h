@@ -18,18 +18,18 @@ private:
 public:
 
 	/**
-	 * Default constructor, deleted because we need to construct with objects.
-	 */
+     * Default constructor, deleted because we need to construct with objects.
+     */
 	PetscSolver3DHandler() = delete;
 
-	/**
-	 * Construct a PetscSolver3DHandler.
-	 *
-	 * @param _network The reaction network to use.
-	 */
-	PetscSolver3DHandler(xolotlCore::IReactionNetwork& _network) :
-			PetscSolverHandler(_network) {
-	}
+    /**
+     * Construct a PetscSolver3DHandler.
+     *
+     * @param _network The reaction network to use.
+     */
+    PetscSolver3DHandler(xolotlCore::IReactionNetwork& _network)
+      : PetscSolverHandler(_network) {
+    }
 
 	//! The Destructor
 	~PetscSolver3DHandler() {
@@ -45,8 +45,7 @@ public:
 	 * Initialize the concentration solution vector.
 	 * \see ISolverHandler.h
 	 */
-	void initializeConcentration(DM &da, Vec &C, std::vector<double> &oldC,
-			std::map<std::string, int> idMap);
+	void initializeConcentration(DM &da, Vec &C);
 
 	/**
 	 * Compute the new concentrations for the RHS function given an initial
@@ -59,8 +58,7 @@ public:
 	 * Compute the off-diagonal part of the Jacobian which is related to cluster's motion.
 	 * \see ISolverHandler.h
 	 */
-	void computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
-			PetscReal ftime);
+	void computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J, PetscReal ftime);
 
 	/**
 	 * Compute the diagonal part of the Jacobian which is related to cluster reactions.

@@ -66,10 +66,8 @@ public:
 	/// @param name The name to associate with the collected counts.
 	/// @param cset The collection of hardware counter spec values indicating
 	///             The set of hardware counters we should monitor.
-    /// @param skipMissing Whether to tolerate missing hardware counters.
 	PAPIHardwareCounter(const std::string& name,
-			const IHardwareCounter::SpecType& cset,
-            bool skipMissing);
+			const IHardwareCounter::SpecType& cset);
 
 	/// Destroy the counter set.
 	virtual ~PAPIHardwareCounter(void);

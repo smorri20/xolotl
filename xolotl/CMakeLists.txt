@@ -1,34 +1,38 @@
-# Fix cmake beahvior for CMAKE_CXX_STANDARD with clang on Mac OS X.
-# See cmake documentation on CMP0025 policy for details.
-# Must be done before doing project() command.
-if(POLICY CMP0025)
-    cmake_policy(SET CMP0025 NEW)
-endif()
-
 # Set a name for this project.
 PROJECT ( xolotl C CXX Java )
 # Set the minimum required version of cmake for this project.
-cmake_minimum_required(VERSION 3.4)
-
-# Build static libraries by default.
-SET(BUILD_SHARED_LIBS OFF)
+cmake_minimum_required(VERSION 2.8)
 
 # Include the modules to find PETSC, ITAPS, etc. from Jed Brown
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake-modules")
 
-# Xolotl requires some C++11 features.
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+# Xolotl requires C++11 to use shared pointers
+INCLUDE (CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++11" CXX_SUPPORTS_CXX11_FLAG)
+CHECK_CXX_COMPILER_FLAG("-std=c++0x" CXX_SUPPORTS_CXX0X_FLAG)
+IF (CXX_SUPPORTS_CXX11_FLAG)
+    SET( CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+ELSEIF (CXX_SUPPORTS_CXX0X_FLAG)
+    SET( CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}")
+ELSE()
+    MESSAGE(FATAL_ERROR "XOLOTL requires C++11 support from C++ compiler")
+ENDIF()
 
-# Figure out how to use HDF5.
+# Tell CMake to look for static libraries
+SET(BUILD_SHARED_LIBS OFF)
+
+# Find PETSc
+FIND_PACKAGE(PETSc REQUIRED)
+
+# Make sure that we only pull the static HDF5
 #set(HDF5_USE_STATIC_LIBRARIES yes)
+# Find HDF5 - Optional for now until we actually require it
 FIND_PACKAGE(HDF5 REQUIRED)
 # Check for parallel I/O support in the HDF5 installation.
 IF (NOT HDF5_IS_PARALLEL)
    message(STATUS "WARNING! Detected HDF5 installation does not support parallel I/O!")
 ENDIF()
-# Ensure that we can find the HDF5 headers.
+# Include the headers
 INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR})
 
 # Enable testing.
@@ -43,22 +47,9 @@ add_subdirectory(xolotlPerf)
 add_subdirectory(xolotlViz)
 # Add the I/O, data structures and reactor directories
 add_subdirectory(xolotlCore)
-
-# Factory and solver need to be able to find PETSc.
-# NB: Look for PETSc after configuring other libraries because the FindPETSc
-# cmake script ends up adding *some* things (but not enough) to our 
-# compiler and linker flags, which makes it difficult to have the
-# right command lines when looking for other packages.
-FIND_PACKAGE(PETSc REQUIRED)
-if(PETSc_FOUND)
-    include_directories(${PETSC_INCLUDES})
-endif()
-
 # Add the factory directory
 add_subdirectory(xolotlFactory)
-
-# Configure the solver.
-# Do this last since it uses nearly everything else.
+# Keep the solver for the end (it uses everything else)
 add_subdirectory(xolotlSolver)
 
 # Add the tests is Boost is available
@@ -83,6 +74,7 @@ if(NOT EXISTS ${DOC_DIR})
 endif(NOT EXISTS ${DOC_DIR})
 set(DOXYFILE_OUTPUT_DIR "${DOC_DIR}")
 set(DOXYFILE_LATEX "ON")
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}")
 include(UseDoxygen OPTIONAL)
 
 # Include directories for the main program
@@ -105,9 +97,10 @@ include_directories(${CMAKE_SOURCE_DIR}
                     ${CMAKE_SOURCE_DIR}/xolotlSolver
                     ${CMAKE_SOURCE_DIR}/xolotlPerf
                     ${CMAKE_SOURCE_DIR}/xolotlViz
-                    ${CMAKE_BINARY_DIR})
+                    ${CMAKE_BINARY_DIR}
+                    ${PETSC_INCLUDES})
 
-configure_file ("${CMAKE_SOURCE_DIR}/XolotlConfig.h.in" "${CMAKE_BINARY_DIR}/XolotlConfig.h")
+                configure_file ("${CMAKE_SOURCE_DIR}/XolotlConfig.h.in" "${CMAKE_BINARY_DIR}/XolotlConfig.h")
 
 # Setup the library list
 set(XOLOTL_LIBS xolotlReactants xolotlSolver xolotlIO xolotlPerf xolotlViz 

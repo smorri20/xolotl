@@ -36,10 +36,7 @@ std::shared_ptr<ITimer> PAPIHandlerRegistry::getTimer(const std::string& name) {
 }
 
 std::shared_ptr<IHardwareCounter> PAPIHandlerRegistry::getHardwareCounter(
-		const std::string& name,
-        const IHardwareCounter::SpecType& ctrSpec,
-        bool skipMissing) {
-
+		const std::string& name, const IHardwareCounter::SpecType& ctrSpec) {
 	// TODO - associate the object we create with the current region
 	std::shared_ptr<IHardwareCounter> ret;
 
@@ -52,7 +49,7 @@ std::shared_ptr<IHardwareCounter> PAPIHandlerRegistry::getHardwareCounter(
 	} else {
 		// We have not yet created a hw counter set with this name.
 		// Build one and keep track of it.
-		ret = std::make_shared<PAPIHardwareCounter>(name, ctrSpec, skipMissing);
+		ret = std::make_shared<PAPIHardwareCounter>(name, ctrSpec);
 		allHWCounterSets[name] = ret;
 	}
 	return ret;

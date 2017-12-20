@@ -61,20 +61,26 @@ protected:
 	int maxV;
 
 	/**
-	 * The bounds of the groups in the helium direction.
+	 * The width of the group in the helium direction.
 	 */
-	std::vector<IReactant::SizeType> heSectionBounds;
+	int heSectionWidth;
 
 	/**
-	 * The bounds of the groups in the vacancy direction.
+	 * The width of the group in the vacancy direction.
 	 */
-	std::vector<IReactant::SizeType> vSectionBounds;
+	int vSectionWidth;
+
+	/**
+	 * The list of clusters that will be grouped.
+	 */
+	std::vector<std::pair<int, int> > heVList;
 
 	/**
 	 * Private nullary constructor.
 	 */
 	PSIClusterNetworkLoader() :
-			NetworkLoader(), vMin(1000000), maxHe(0), maxI(0), maxV(0) {
+			NetworkLoader(), vMin(1000000), maxHe(0), maxI(0), maxV(0), heSectionWidth(
+					1), vSectionWidth(1) {
 	}
 
 	/**
@@ -88,7 +94,7 @@ protected:
 	 * @return The new cluster
 	 */
 	std::unique_ptr<PSICluster> createPSICluster(int numHe, int numV, int numI,
-			IReactionNetwork& network) const;
+                                    IReactionNetwork& network) const;
 
 	/**
 	 * This operation computes the formation energy associated to the
@@ -134,8 +140,7 @@ public:
 	 *
 	 * @return network The reaction network
 	 */
-	virtual std::unique_ptr<IReactionNetwork> load(
-			const IOptions& options) const override;
+	virtual std::unique_ptr<IReactionNetwork> load(const IOptions& options) const override;
 
 	/**
 	 * This operation will generate the reaction network from options.
@@ -144,15 +149,14 @@ public:
 	 * @param options The command line options
 	 * @return network The reaction network
 	 */
-	virtual std::unique_ptr<IReactionNetwork> generate(const IOptions &options)
-			override;
+	virtual std::unique_ptr<IReactionNetwork> generate(const IOptions &options) override;
 
 	/**
 	 * This operation will apply a sectional grouping method to the network.
 	 *
 	 * @param The network to be modified.
 	 */
-	void applySectionalGrouping(PSIClusterReactionNetwork& network) const;
+    void applySectionalGrouping(PSIClusterReactionNetwork& network) const;
 
 	/**
 	 * This operation will set the helium size at which the grouping scheme starts.
@@ -164,17 +168,21 @@ public:
 	}
 
 	/**
-	 * This operation will set the section bounds.
+	 * This operation will set the helium width for the grouping scheme.
 	 *
-	 * @param bounds1 The vector of bounds in one direction
-	 * @param bounds2 The vector of bounds in another direction
+	 * @param w The value of the width
 	 */
-	void setSectionBounds(
-			const std::vector<IReactant::SizeType> & bounds1,
-			const std::vector<IReactant::SizeType> & bounds2) override {
-		heSectionBounds = bounds1;
-		vSectionBounds = bounds2;
-		return;
+	void setHeWidth(int w) {
+		heSectionWidth = w;
+	}
+
+	/**
+	 * This operation will set the vacancy width for the grouping scheme.
+	 *
+	 * @param w The value of the width
+	 */
+	void setVWidth(int w) {
+		vSectionWidth = w;
 	}
 };
 

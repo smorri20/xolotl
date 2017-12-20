@@ -59,7 +59,7 @@ void PetscSolver1DHandler::createSolverContext(DM &da) {
 	bool hasConcentrations = false;
 	if (!networkName.empty())
 		hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
-				networkName, tempTimeStep);
+			networkName, tempTimeStep);
 	if (hasConcentrations) {
 		surfacePosition = xolotlCore::HDF5Utils::readSurface1D(networkName,
 				tempTimeStep);
@@ -137,8 +137,7 @@ void PetscSolver1DHandler::createSolverContext(DM &da) {
 	return;
 }
 
-void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C,
-		std::vector<double> &oldC, std::map<std::string, int> idMap) {
+void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C) {
 	PetscErrorCode ierr;
 
 	// Pointer for the concentration vector
@@ -158,7 +157,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C,
 	bool hasConcentrations = false;
 	if (!networkName.empty())
 		hasConcentrations = xolotlCore::HDF5Utils::hasConcentrationGroup(
-				networkName, tempTimeStep);
+			networkName, tempTimeStep);
 
 	// Get the total size of the grid for the boundary conditions
 	int xSize = grid.size();
@@ -195,8 +194,7 @@ void PetscSolver1DHandler::initializeConcentration(DM &da, Vec &C,
 		}
 
 		// Initialize the vacancy concentration
-		if (i > surfacePosition && i < xSize - 1 && singleVacancyCluster
-				&& !hasConcentrations) {
+		if (i > surfacePosition && i < xSize - 1 && singleVacancyCluster && !hasConcentrations) {
 			concOffset[vacancyIndex] = initialVConc;
 		}
 	}
@@ -276,12 +274,10 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	// near the surface
 	for (int xi = xs; xi < xs + xm; xi++) {
 		// Boundary conditions
-		if (xi <= surfacePosition || xi == xSize - 1)
-			continue;
+		if (xi <= surfacePosition || xi == xSize - 1) continue;
 
 		// We are only interested in the helium near the surface
-		if (grid[xi] - grid[surfacePosition] > 2.0)
-			continue;
+		if (grid[xi] - grid[surfacePosition] > 2.0) continue;
 
 		// Get the concentrations at this grid point
 		concOffset = concs[xi];
@@ -290,7 +286,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 		// Sum the total atom concentration
 		atomConc += network.getTotalTrappedAtomConcentration()
-				* (grid[xi] - grid[xi - 1]);
+					* (grid[xi] - grid[xi - 1]);
 	}
 
 	// Share the concentration with all the processes
@@ -303,7 +299,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 	// Declarations for variables used in the loop
 	double **concVector = new double*[3];
-	xolotlCore::Point3D gridPosition { 0.0, 0.0, 0.0 };
+    xolotlCore::Point3D gridPosition { 0.0, 0.0, 0.0 };
 
 	// Loop over grid points computing ODE terms for each grid point
 	for (PetscInt xi = xs; xi < xs + xm; xi++) {
@@ -350,8 +346,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		network.updateConcentrationsFromArray(concOffset);
 
 		// ----- Account for flux of incoming particles -----
-		fluxHandler->computeIncidentFlux(ftime, updatedConcOffset, xi,
-				surfacePosition);
+		fluxHandler->computeIncidentFlux(ftime, updatedConcOffset, xi, surfacePosition);
 
 		// ---- Compute diffusion over the locally owned part of the grid -----
 		diffusionHandler->computeDiffusion(network, concVector,
@@ -428,7 +423,7 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC,
 	PetscInt diffIndices[nDiff];
 	PetscScalar advecVals[2 * nAdvec];
 	PetscInt advecIndices[nAdvec];
-	xolotlCore::Point3D gridPosition { 0.0, 0.0, 0.0 };
+    xolotlCore::Point3D gridPosition { 0.0, 0.0, 0.0 };
 
 	/*
 	 Loop over grid points computing Jacobian terms for diffusion and advection
@@ -531,8 +526,8 @@ void PetscSolver1DHandler::computeOffDiagonalJacobian(TS &ts, Vec &localC,
 	return;
 }
 
-void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
-		PetscReal ftime) {
+void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC,
+		Mat &J, PetscReal ftime) {
 	PetscErrorCode ierr;
 
 	// Get the distributed array
@@ -572,12 +567,10 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
 	// near the surface
 	for (int xi = xs; xi < xs + xm; xi++) {
 		// Boundary conditions
-		if (xi <= surfacePosition || xi == xSize - 1)
-			continue;
+		if (xi <= surfacePosition || xi == xSize - 1) continue;
 
 		// We are only interested in the helium near the surface
-		if (grid[xi] - grid[surfacePosition] > 2.0)
-			continue;
+		if (grid[xi] - grid[surfacePosition] > 2.0) continue;
 
 		// Get the concentrations at this grid point
 		concOffset = concs[xi];
@@ -586,7 +579,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
 
 		// Sum the total atom concentration
 		atomConc += network.getTotalTrappedAtomConcentration()
-				* (grid[xi] - grid[xi - 1]);
+					* (grid[xi] - grid[xi - 1]);
 	}
 
 	// Share the concentration with all the processes
@@ -608,7 +601,7 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
 	int nHelium = heliums.size();
 
 	// Declarations for variables used in the loop
-	xolotlCore::Point3D gridPosition { 0.0, 0.0, 0.0 };
+    xolotlCore::Point3D gridPosition { 0.0, 0.0, 0.0 };
 
 	// Loop over the grid points
 	for (PetscInt xi = xs; xi < xs + xm; xi++) {
@@ -641,7 +634,8 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
 		// ----- Take care of the reactions for all the reactants -----
 
 		// Compute all the partial derivatives for the reactions
-		network.computeAllPartials(reactionVals, reactionIndices, reactionSize);
+		network.computeAllPartials(reactionVals, reactionIndices,
+				reactionSize);
 
 		// Update the column in the Jacobian that represents each DOF
 		for (int i = 0; i < dof; i++) {

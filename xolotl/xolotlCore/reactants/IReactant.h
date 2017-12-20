@@ -389,21 +389,6 @@ public:
 	 * @return The id
 	 */
 	virtual int getVMomentumId() const = 0;
-	/**
-	 * This operation returns the distance to the mean.
-	 *
-	 * @param he The number of helium
-	 * @return The distance to the mean number of helium in the group
-	 */
-	virtual double getHeDistance(int he) const = 0;
-
-	/**
-	 * This operation returns the distance to the mean.
-	 *
-	 * @param he The number of vacancy
-	 * @return The distance to the mean number of vacancy in the group
-	 */
-	virtual double getVDistance(int v) const = 0;
 
 	/**
 	 * This operation sets the temperature at which the reactant currently

@@ -422,6 +422,25 @@ public:
 	virtual double getVMomentum() const {
 		return 0.0;
 	}
+	/**
+	 * This operation returns the distance to the mean.
+	 *
+	 * @param he The number of helium
+	 * @return The distance to the mean number of helium in the group
+	 */
+	virtual double getHeDistance(int he) const {
+		return 0.0;
+	}
+
+	/**
+	 * This operation returns the distance to the mean.
+	 *
+	 * @param he The number of vacancy
+	 * @return The distance to the mean number of vacancy in the group
+	 */
+	virtual double getVDistance(int v) const {
+		return 0.0;
+	}
 
 	/**
 	 * This operation returns the total flux of this cluster in the

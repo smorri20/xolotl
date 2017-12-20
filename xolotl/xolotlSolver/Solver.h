@@ -24,23 +24,23 @@ protected:
 
 public:
 
-	/**
-	 * Default constructor, deleted because we must have arguments to construct.
-	 */
-	Solver() = delete;
+    /**
+     * Default constructor, deleted because we must have arguments to construct.
+     */
+    Solver() = delete;
 
 	//! Constuct a solver.
-	Solver(std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
+	Solver(ISolverHandler& _solverHandler,
+            std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	//! The Destructor
-	virtual ~Solver() {
-	}
-	;
+	virtual ~Solver() {};
 
 	/**
 	 * This operation transfers the input arguments passed to the program on
 	 * startup to the solver. These options are static options specified at
-	 * the start of the program.
+	 * the start of the program whereas the options passed to setOptions() may
+	 * change.
 	 * @param argc The number of command line arguments
 	 * @param argv The array of command line arguments
 	 */

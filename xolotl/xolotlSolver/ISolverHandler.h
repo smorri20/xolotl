@@ -28,18 +28,17 @@ public:
 	/**
 	 * The destructor.
 	 */
-	virtual ~ISolverHandler() {
-	}
+	virtual ~ISolverHandler(){}
 
 	/**
 	 * Initialize all the physics handlers that are needed to solve the ADR equations.
 	 *
 	 * @param material The material factory
 	 * @param tempHandler The temperature handler
+	 * @param networkHandler The network handler
 	 * @param options The Xolotl options
 	 */
-	virtual void initializeHandlers(
-			std::shared_ptr<xolotlFactory::IMaterialFactory> material,
+	virtual void initializeHandlers(std::shared_ptr<xolotlFactory::IMaterialFactory> material,
 			std::shared_ptr<xolotlCore::ITemperatureHandler> tempHandler,
 			xolotlCore::Options &options) = 0;
 
@@ -55,11 +54,8 @@ public:
 	 *
 	 * @param da The PETSc distributed array
 	 * @param C The PETSc solution vector
-	 * @param oldC The solution from the previous solver loop
-	 * @param idMap The map linking the name and ids from the previous network
 	 */
-	virtual void initializeConcentration(DM &da, Vec &C, std::vector<double> &oldC,
-			std::map<std::string, int> idMap) = 0;
+	virtual void initializeConcentration(DM &da, Vec &C) = 0;
 
 	/**
 	 * Compute the new concentrations for the RHS function given an initial
@@ -70,8 +66,7 @@ public:
 	 * @param F The updated PETSc solution vector
 	 * @param ftime The real time
 	 */
-	virtual void updateConcentration(TS &ts, Vec &localC, Vec &F,
-			PetscReal ftime) = 0;
+	virtual void updateConcentration(TS &ts, Vec &localC, Vec &F, PetscReal ftime) = 0;
 
 	/**
 	 * Compute the off-diagonal part of the Jacobian which is related to cluster's motion.
@@ -81,8 +76,7 @@ public:
 	 * @param J The Jacobian
 	 * @param ftime The real time
 	 */
-	virtual void computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
-			PetscReal ftime) = 0;
+	virtual void computeOffDiagonalJacobian(TS &ts, Vec &localC, Mat &J, PetscReal ftime) = 0;
 
 	/**
 	 * Compute the diagonal part of the Jacobian which is related to cluster reactions.
@@ -92,8 +86,7 @@ public:
 	 * @param J The Jacobian
 	 * @param ftime The real time
 	 */
-	virtual void computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
-			PetscReal ftime) = 0;
+	virtual void computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J, PetscReal ftime) = 0;
 
 	/**
 	 * Get the grid in the x direction.
@@ -211,8 +204,7 @@ public:
 	 */
 	virtual std::string getNetworkName() const = 0;
 
-};
-//end class ISolverHandler
+}; //end class ISolverHandler
 
 } /* namespace xolotlSolver */
 #endif
