@@ -37,7 +37,9 @@ public:
 	 * @return The object with the given name.
 	 */
 	virtual std::shared_ptr<IHardwareCounter> getHardwareCounter(
-			const std::string& name, const IHardwareCounter::SpecType& ctrSpec);
+			const std::string& name,
+            const IHardwareCounter::SpecType& ctrSpec,
+            bool skipMissing = true);
 };
 
 } // namespace xolotlPerf

@@ -49,7 +49,8 @@ public:
 	 * @param counterQuantities The vector of quantities the DummyHardwareCounter will monitor
 	 */
 	DummyHardwareCounter(const std::string& counterName,
-			const IHardwareCounter::SpecType& ctrSpec) :
+			const IHardwareCounter::SpecType& ctrSpec,
+            bool /* skipMissing */) :
 			xolotlCore::Identifiable("unused") {
 	}
 
