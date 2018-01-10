@@ -1,0 +1,88 @@
+#ifndef INETWORKLOADER_H
+#define INETWORKLOADER_H
+
+#include "IReactionNetwork.h"
+#include <IOptions.h>
+
+namespace xolotlCore {
+
+/**
+ *  This class is the interface for the netowrk loader.
+ */
+class INetworkLoader {
+
+public:
+
+	/**
+	 * The destructor.
+	 */
+	virtual ~INetworkLoader() {
+	}
+
+	/**
+	 * This operation specifies the inputstream from which cluster data should
+	 * be loaded.
+	 *
+	 * @param stream The inputstream from which the cluster data should be
+	 * loaded
+	 */
+	virtual void setInputstream(const std::shared_ptr<std::istream> stream) = 0;
+
+	/**
+	 * This operation will load the reaction network from the input file in
+	 * the format specified previously. The network will be empty if it can not
+	 * be loaded.
+	 *
+	 * @param options The command line options.
+	 * @return network The reaction network
+	 */
+	virtual std::unique_ptr<IReactionNetwork> load(
+			const IOptions& options) const = 0;
+
+	/**
+	 * This operation will generate the reaction network from options.
+	 * The network will be empty if it can not be loaded.
+	 *
+	 * @param options The command line options
+	 * @param padeVector The vector containing the Pade approximation for each cluster
+	 * @param idMap The idea map from the previously built network
+	 * @return network The reaction network
+	 */
+	virtual std::unique_ptr<IReactionNetwork> generate(const IOptions &options,
+			std::vector<std::vector<double> > & padeVector,
+			std::map<std::string, int> & idMap) = 0;
+
+	/**
+	 * This operation will set the name of the file where to take the network from.
+	 *
+	 * @param name The name of the file
+	 */
+	virtual void setFilename(const std::string& name) = 0;
+
+	/**
+	 * This operation will get the name of the file where to take the network from.
+	 *
+	 * @return The name of the file
+	 */
+	virtual std::string getFilename() const = 0;
+
+	/**
+	 * This operation will set the reactions to dummy reactions.
+	 */
+	virtual void setDummyReactions() = 0;
+
+	/**
+	 * This operation will set the section bounds.
+	 *
+	 * @param bounds1 The vector of bounds in one direction
+	 * @param bounds2 The vector of bounds in another direction
+	 */
+	virtual void setSectionBounds(
+			const std::vector<IReactant::SizeType> & bounds1,
+			const std::vector<IReactant::SizeType> & bounds2) = 0;
+
+};
+
+}
+
+#endif
