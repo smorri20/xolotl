@@ -68,27 +68,22 @@ protected:
 		 * 1 -> He
 		 * 2 -> V
 		 */
-		double a00 = 0.0;
-		double a01 = 0.0;
-		double a02 = 0.0;
-		double a10 = 0.0;
-		double a11 = 0.0;
-		double a12 = 0.0;
-		double a20 = 0.0;
-		double a21 = 0.0;
-		double a22 = 0.0;
-		double b0 = 0.0;
-		double b1 = 0.0;
-		double b2 = 0.0;
-		double b3 = 0.0;
-		double b4 = 0.0;
-		double b5 = 0.0;
-		double b6 = 0.0;
+		double a00;
+		double a10;
+		double a20;
+		double a01;
+		double a02;
+		double a11;
+		double a12;
+		double a21;
+		double a22;
 
 		//! The constructor
 		ClusterPair(Reaction& _reaction, PSICluster& _first,
 				PSICluster& _second) :
-				first(_first), second(_second), reaction(_reaction) {
+				first(_first), second(_second), reaction(_reaction), a00(0.0), a10(
+						0.0), a20(0.0), a01(0.0), a02(0.0), a11(0.0), a12(0.0), a21(
+						0.0), a22(0.0) {
 		}
 
 		/**
@@ -131,14 +126,13 @@ protected:
 		 * 1 -> He
 		 * 2 -> V
 		 */
-		double a0 = 0.0;
-		double a1 = 0.0;
-		double a2 = 0.0;
-		double b0 = 0.0;
+		double a0;
+		double a1;
+		double a2;
 
 		//! The constructor
 		CombiningCluster(Reaction& _reaction, PSICluster& _comb) :
-				combining(_comb), reaction(_reaction) {
+				combining(_comb), reaction(_reaction), a0(0.0), a1(0.0), a2(0.0) {
 		}
 
 		/**

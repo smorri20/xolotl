@@ -142,13 +142,10 @@ public:
 	 * The network will be empty if it can not be loaded.
 	 *
 	 * @param options The command line options
-	 * @param padeVector The vector containing the Pade approximation for each cluster
-	 * @param idMap The idea map from the previously built network
 	 * @return network The reaction network
 	 */
-	virtual std::unique_ptr<IReactionNetwork> generate(const IOptions &options,
-			std::vector<std::vector<double> > & padeVector,
-			std::map<std::string, int> & idMap) override;
+	virtual std::unique_ptr<IReactionNetwork> generate(const IOptions &options)
+			override;
 
 	/**
 	 * This operation will apply a sectional grouping method to the network.
@@ -172,7 +169,8 @@ public:
 	 * @param bounds1 The vector of bounds in one direction
 	 * @param bounds2 The vector of bounds in another direction
 	 */
-	void setSectionBounds(const std::vector<IReactant::SizeType> & bounds1,
+	void setSectionBounds(
+			const std::vector<IReactant::SizeType> & bounds1,
 			const std::vector<IReactant::SizeType> & bounds2) override {
 		heSectionBounds = bounds1;
 		vSectionBounds = bounds2;

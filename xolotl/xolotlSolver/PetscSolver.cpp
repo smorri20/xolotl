@@ -58,13 +58,13 @@ std::vector<IReactant::SizeType> PetscSolver::generateBounds(int peak, int min,
 		int max) {
 	// Initial declaration
 	int value = min;
-	double scale = max / 25.0, tau = (double) (max - peak) / 7.0;
+	double scale = max / 25.0, tau = (double)(max - peak) / 7.0;
 	std::vector<IReactant::SizeType> bounds;
 	bounds.push_back(1);
 
 	// Generate the bounds
 	while (value < max) {
-//		std::cout << value << std::endl;
+		std::cout << value << std::endl;
 
 		bounds.push_back(value);
 
@@ -84,14 +84,11 @@ std::vector<IReactant::SizeType> PetscSolver::generateBounds(int peak, int min,
 void PetscSolver::transformConcentrationVector(IReactionNetwork & network,
 		const std::vector<IReactant::SizeType> & bounds1,
 		const std::vector<IReactant::SizeType> & bounds2,
-		std::map<std::string, int> &idMap, std::vector<double> & concVec,
-		std::vector<std::vector<double> > & padeVec) {
+		std::map<std::string, int> &idMap, std::vector<double> & concVec) {
 	// Initial declarations
 	int i = 0;
-	std::vector<double> coordinates = { -0.95, -0.35, 0.35, 0.95 };
 	// Reset the concentration vector and id map
 	concVec.clear();
-	padeVec.clear();
 	idMap.clear();
 
 	// Take care of the normal clusters
@@ -107,8 +104,6 @@ void PetscSolver::transformConcentrationVector(IReactionNetwork & network,
 		for (auto const& currMapItem : currTypeReactantMap) {
 			// Save the current cluster concentration
 			concVec.push_back(currMapItem.second->getConcentration());
-			// Save an empty vector for pade
-			padeVec.push_back(std::vector<double>());
 			// Save it in the map
 			idMap[currMapItem.second->getName()] = i;
 			i++;
@@ -177,199 +172,6 @@ void PetscSolver::transformConcentrationVector(IReactionNetwork & network,
 				name = clusterName + "V";
 				idMap[name] = i;
 				i++;
-
-				// Check if we need the pade approximation
-				if ((bounds1[j + 1] - bounds1[j]) > 3
-						&& (bounds2[k + 1] - bounds2[k]) > 3) {
-
-//					std::cout << bounds1[j] << " " << bounds2[k] << std::endl;
-
-					// Compute the approximation for 15 data points
-					PetscInt dataSize = 15, col[15];
-					PetscScalar value[15], rhs[15];
-					for (int n = 0; n < dataSize; n++) {
-						col[n] = n;
-					}
-
-					// Create a PETSc vector for the solution and other side
-					// Ax = b
-					Vec x, b;
-					VecCreate(PETSC_COMM_WORLD, &x);
-					PetscObjectSetName((PetscObject) x, "Solution");
-					VecSetSizes(x, PETSC_DECIDE, dataSize);
-					VecSetFromOptions(x);
-					VecSet(x, 0.0);
-					VecDuplicate(x, &b);
-					VecSet(b, 0.0);
-
-					// Create a matrix for the equations to solve
-					Mat A;
-					MatCreate(PETSC_COMM_WORLD, &A);
-					MatSetSizes(A, PETSC_DECIDE, PETSC_DECIDE, dataSize,
-							dataSize);
-					MatSetFromOptions(A);
-					MatSetUp(A);
-
-					// Generate a random number to skip one of the grid points
-					int toSkip = (int) (((double) rand() / (double) RAND_MAX)
-							* 16.0);
-					bool alreadySkipped = false, dontPade = false;
-					// Loop on the coordinates
-					int count = 0;
-					for (int b = 0; b < coordinates.size(); b++) {
-						// Compute the associated V number
-						int numV = (int) (mean2
-								+ coordinates[b]
-										* (double) (bounds2[k + 1] - bounds2[k])
-										/ 2.0);
-
-						for (int a = 0; a < coordinates.size(); a++) {
-							// Compute the associated V number
-							int numHe = (int) (mean1
-									+ coordinates[a]
-											* (double) (bounds1[j + 1]
-													- bounds1[j]) / 2.0);
-
-							// Check if we should skip this point
-							if (count == toSkip && !alreadySkipped) {
-								alreadySkipped = true;
-								continue;
-							}
-
-							// Get the concentration at this point
-							// Get the corresponding super cluster
-							auto cluster = network.getSuperFromComp(numHe,
-									numV);
-							// If it exists
-							if (cluster) {
-								// Compute the distances in the old cluster
-								double heDistance = cluster->getHeDistance(
-										numHe);
-								double vDistance = cluster->getVDistance(numV);
-								// Get its concentration
-								double concentration =
-										cluster->getConcentration(heDistance,
-												vDistance);
-
-								// Compute the distances in the new cluster
-								heDistance = 2.0 * ((double) numHe - mean1)
-										/ (double) (bounds1[j + 1] - bounds1[j]
-												- 1);
-								vDistance = 2.0 * ((double) numV - mean2)
-										/ (double) (bounds2[k + 1] - bounds2[k]
-												- 1);
-
-								// Get the difference between the concentration and the moment approximation
-								double model = conc + (heDistance * mom1)
-										+ (vDistance * mom2);
-								concentration = concentration - model;
-
-								// Set all this in the solver
-								value[0] = 1.0;
-								value[1] = heDistance;
-								value[2] = vDistance;
-								value[3] = heDistance * heDistance;
-								value[4] = vDistance * vDistance;
-								value[5] = heDistance * vDistance;
-								value[6] = heDistance * heDistance * heDistance;
-								value[7] = vDistance * vDistance * vDistance;
-								value[8] = heDistance * heDistance * vDistance;
-								value[9] = heDistance * vDistance * vDistance;
-								value[10] = -concentration * heDistance;
-								value[11] = -concentration * vDistance;
-								value[12] = -concentration * heDistance
-										* heDistance;
-								value[13] = -concentration * vDistance
-										* vDistance;
-								value[14] = -concentration * heDistance
-										* vDistance;
-								rhs[count] = concentration;
-								MatSetValues(A, 1, &count, dataSize, col, value,
-										INSERT_VALUES);
-
-//								std::cout << mean1 << " " << mean2 << " "
-//										<< heDistance << " " << vDistance << " "
-//										<< concentration << std::endl;
-
-								count++;
-							}
-
-							else {
-								dontPade = true;
-								break;
-							}
-						}
-					}
-
-					if (dontPade) {
-						// Save an empty vector for pade 3 times to keep up with the indices
-						padeVec.push_back(std::vector<double>());
-						padeVec.push_back(std::vector<double>());
-						padeVec.push_back(std::vector<double>());
-
-						continue;
-					}
-
-					// Do PETSc stuff
-					MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY);
-					MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY);
-					VecSetValues(b, dataSize, col, rhs, INSERT_VALUES);
-					VecAssemblyBegin(b);
-					VecAssemblyEnd(b);
-
-//					MatView(A, PETSC_VIEWER_STDOUT_SELF);
-//					VecView(b, PETSC_VIEWER_STDOUT_SELF);
-
-					// Compute the norm of the vector
-					double val = 0.0;
-					VecNorm(b, NORM_1, &val);
-
-					// Check if the norm is large enough
-					if (val < 1.0e-20) {
-						// Save an empty vector for pade 3 times to keep up with the indices
-						padeVec.push_back(std::vector<double>());
-						padeVec.push_back(std::vector<double>());
-						padeVec.push_back(std::vector<double>());
-
-						continue;
-					}
-
-//					std::cout << mean1 << " " << mean2 << " " << val
-//							<< std::endl;
-
-					// Solve the equation
-					KSP ksp;
-					PC pc;
-					KSPCreate(PETSC_COMM_WORLD, &ksp);
-					KSPSetOperators(ksp, A, A);
-					KSPGetPC(ksp, &pc);
-					PCSetType(pc, PCJACOBI);
-					KSPSetTolerances(ksp, PETSC_DEFAULT, PETSC_DEFAULT,
-					PETSC_DEFAULT,
-					PETSC_DEFAULT);
-					KSPSetUp(ksp);
-					KSPSolve(ksp, b, x);
-
-					// Put the results in a vector
-					std::vector<double> result;
-					double *r = nullptr;
-					VecGetArray(x, &r);
-					for (int n = 0; n < dataSize; n++) {
-						result.push_back(r[n]);
-					}
-					VecRestoreArray(x, &r);
-					// Save the results to give to the clusters
-					padeVec.push_back(result);
-
-					// Save an empty vector for pade 2 times to keep up with the indices for moments
-					padeVec.push_back(std::vector<double>());
-					padeVec.push_back(std::vector<double>());
-				} else {
-					// Save an empty vector for pade 3 times to keep up with the indices
-					padeVec.push_back(std::vector<double>());
-					padeVec.push_back(std::vector<double>());
-					padeVec.push_back(std::vector<double>());
-				}
 			}
 		}
 	}
@@ -522,7 +324,6 @@ void PetscSolver::solve(Options &options) {
 	int maxV = options.getMaxV(), maxHe = options.getMaxImpurity();
 	std::map<std::string, int> idMap;
 	std::vector<double> concVec;
-	std::vector<std::vector<double> > padeVec;
 	double maxAdaptTime = 0.0;
 	auto heBounds = generateBounds(options.getGroupingMin(),
 			options.getGroupingMin(), maxHe);
@@ -530,9 +331,6 @@ void PetscSolver::solve(Options &options) {
 			options.getGroupingMin(), maxV);
 	// Loop counter
 	int loop = 0;
-
-	// Initialize the random number generator
-	std::srand(time(NULL));
 
 	// Read the times if the information is in the HDF5 file
 	auto fileName = options.getNetworkFilename();
@@ -553,46 +351,6 @@ void PetscSolver::solve(Options &options) {
 		// Set the size of the network in the options
 		options.setMaxV(maxV);
 		options.setMaxImpurity(maxHe);
-
-//		if (loop > 0) {
-//			auto oldArgc = options.getPetscArgc();
-//			auto oldArgv = options.getPetscArgv();
-//
-//			options.setPetscArgc(oldArgc + 3);
-//
-//			// The PETSc argv is an array of pointers to C strings.
-//			auto argv = new char*[oldArgc + 4];
-//			// Create the fake application name
-//			std::string appName = "fakeXolotlApplicationNameForPETSc";
-//			argv[0] = new char[appName.length() + 1];
-//			strcpy(argv[0], appName.c_str());
-//
-//			// Now loop on the actual PETSc options
-//			int idx = 0;
-//			for (idx = 0; idx < oldArgc; idx++) {
-//				argv[idx] = oldArgv[idx];
-//			}
-//			idx = oldArgc;
-//			std::string addOp = "-snes_type";
-//			argv[idx] = new char[addOp.length() + 1];
-//			strcpy(argv[idx], addOp.c_str());
-//			idx++;
-//			addOp = "test";
-//			argv[idx] = new char[addOp.length() + 1];
-//			strcpy(argv[idx], addOp.c_str());
-//			idx++;
-//			addOp = "-snes_test_display";
-//			argv[idx] = new char[addOp.length() + 1];
-//			strcpy(argv[idx], addOp.c_str());
-//			idx++;
-//			argv[idx] = 0; // null-terminate the array
-//
-//			options.setPetscArgv(argv);
-//			finalize();
-//			setCommandLineOptions(options.getPetscArgc(),
-//					options.getPetscArgv());
-//			initialize();
-//		}
 
 		/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 		 Create timestepping solver context
@@ -657,7 +415,7 @@ void PetscSolver::solve(Options &options) {
 		auto networkLoadTimer = handlerRegistry->getTimer("loadNetwork");
 		networkLoadTimer->start();
 		networkFactory->initializeReactionNetwork(options, handlerRegistry,
-				heBounds, vBounds, padeVec, idMap);
+				heBounds, vBounds);
 		networkLoadTimer->stop();
 		auto& network = networkFactory->getNetworkHandler();
 
@@ -766,7 +524,7 @@ void PetscSolver::solve(Options &options) {
 
 			// Create the new concentrations
 			transformConcentrationVector(network, heBounds, vBounds, idMap,
-					concVec, padeVec);
+					concVec);
 
 			// Restore the solutionArray
 			ierr = DMDAVecRestoreArrayDOF(da, C, &solutionArray);

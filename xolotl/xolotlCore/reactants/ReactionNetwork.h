@@ -663,18 +663,6 @@ public:
 		std::vector<IReactant::SizeType> bounds;
 		return bounds;
 	}
-
-	/**
-	 * Set the Pade approximation in each cluster.
-	 * Here it does nothing.
-	 *
-	 * @param padeVector The vector containing the Pade approximation for each cluster
-	 * @param idMap The idea map from the previously built network
-	 */
-	virtual void setPade(std::vector<std::vector<double> > & padeVector,
-			std::map<std::string, int> & idMap) override {
-		return;
-	}
 };
 
 }

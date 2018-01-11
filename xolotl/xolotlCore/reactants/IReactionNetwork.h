@@ -311,17 +311,7 @@ public:
 	 * @param max The bound maximum
 	 * @return The vector of bounds
 	 */
-	virtual std::vector<IReactant::SizeType> generateBounds(int axis,
-			int max) = 0;
-
-	/**
-	 * Set the Pade approximation in each cluster.
-	 *
-	 * @param padeVector The vector containing the Pade approximation for each cluster
-	 * @param idMap The idea map from the previously built network
-	 */
-	virtual void setPade(std::vector<std::vector<double> > & padeVector,
-			std::map<std::string, int> & idMap) = 0;
+	virtual std::vector<IReactant::SizeType> generateBounds(int axis, int max) = 0;
 };
 
 }

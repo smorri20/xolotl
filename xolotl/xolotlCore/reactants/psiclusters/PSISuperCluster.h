@@ -113,57 +113,42 @@ protected:
 		 * 1 -> He
 		 * 2 -> V
 		 */
-		double a000 = 0.0;
-		double a001 = 0.0;
-		double a002 = 0.0;
-		double a100 = 0.0;
-		double a101 = 0.0;
-		double a102 = 0.0;
-		double a200 = 0.0;
-		double a201 = 0.0;
-		double a202 = 0.0;
-		double a010 = 0.0;
-		double a011 = 0.0;
-		double a012 = 0.0;
-		double a020 = 0.0;
-		double a021 = 0.0;
-		double a022 = 0.0;
-		double a110 = 0.0;
-		double a111 = 0.0;
-		double a112 = 0.0;
-		double a120 = 0.0;
-		double a121 = 0.0;
-		double a122 = 0.0;
-		double a210 = 0.0;
-		double a211 = 0.0;
-		double a212 = 0.0;
-		double a220 = 0.0;
-		double a221 = 0.0;
-		double a222 = 0.0;
-		double b0 = 0.0;
-		double b1 = 0.0;
-		double b2 = 0.0;
-		double b3 = 0.0;
-		double b4 = 0.0;
-		double b5 = 0.0;
-		double b6 = 0.0;
-		double c0 = 0.0;
-		double c1 = 0.0;
-		double c2 = 0.0;
-		double c3 = 0.0;
-		double c4 = 0.0;
-		double c5 = 0.0;
-		double c6 = 0.0;
-		double d0 = 0.0;
-		double d1 = 0.0;
-		double d2 = 0.0;
-		double d3 = 0.0;
-		double d4 = 0.0;
-		double d5 = 0.0;
-		double d6 = 0.0;
+		double a000;
+		double a001;
+		double a002;
+		double a100;
+		double a101;
+		double a102;
+		double a200;
+		double a201;
+		double a202;
+		double a010;
+		double a011;
+		double a012;
+		double a020;
+		double a021;
+		double a022;
+		double a110;
+		double a111;
+		double a112;
+		double a120;
+		double a121;
+		double a122;
+		double a210;
+		double a211;
+		double a212;
+		double a220;
+		double a221;
+		double a222;
 
 		//! The constructor
-		ProductionCoefficientBase() {
+		ProductionCoefficientBase() :
+				a000(0.0), a001(0.0), a002(0.0), a100(0.0), a101(0.0), a102(
+						0.0), a200(0.0), a201(0.0), a202(0.0), a010(0.0), a011(
+						0.0), a012(0.0), a020(0.0), a021(0.0), a022(0.0), a110(
+						0.0), a111(0.0), a112(0.0), a120(0.0), a121(0.0), a122(
+						0.0), a210(0.0), a211(0.0), a212(0.0), a220(0.0), a221(
+						0.0), a222(0.0) {
 		}
 
 		/**
@@ -265,23 +250,22 @@ protected:
 		 * 1 -> He
 		 * 2 -> V
 		 */
-		double a00 = 0.0;
-		double a01 = 0.0;
-		double a02 = 0.0;
-		double a10 = 0.0;
-		double a11 = 0.0;
-		double a12 = 0.0;
-		double a20 = 0.0;
-		double a21 = 0.0;
-		double a22 = 0.0;
-		double b0 = 0.0;
-		double c0 = 0.0;
-		double d0 = 0.0;
+		double a00;
+		double a01;
+		double a02;
+		double a10;
+		double a11;
+		double a12;
+		double a20;
+		double a21;
+		double a22;
 
 		//! The constructor
 		SuperClusterDissociationPair(Reaction& _reaction, PSICluster& _first,
 				PSICluster& _second) :
-				ReactingPairBase(_reaction, _first, _second) {
+				ReactingPairBase(_reaction, _first, _second), a00(0.0), a01(
+						0.0), a02(0.0), a10(0.0), a11(0.0), a12(0.0), a20(0.0), a21(
+						0.0), a22(0.0) {
 
 		}
 
@@ -352,11 +336,6 @@ private:
 	double vMomentumFlux;
 
 	/**
-	 * The Pade coeficients.
-	 */
-	std::vector<double> padeCoef;
-
-	/**
 	 * Output coefficients for a given reaction to the given output stream.
 	 *
 	 * @param os The output stream on which to write the coefficients.
@@ -401,15 +380,6 @@ public:
 	}
 
 	/**
-	 * This operation returns the Pade approximation.
-	 *
-	 * @param distHe The helium distance in the group
-	 * @param distV The vacancy distance in the group
-	 * @return The concentration from the Pade approximation
-	 */
-	double getPade(double distHe, double distV) const;
-
-	/**
 	 * Note that we result from the given reaction.
 	 * Assumes the reaction is already in our network.
 	 *
@@ -439,7 +409,8 @@ public:
 	 * @param reaction The reaction creating this cluster.
 	 * @param product The cluster created by the reaction.
 	 */
-	void resultFrom(ProductionReaction& reaction, IReactant& product) override;
+	void resultFrom(ProductionReaction& reaction,
+			IReactant& product) override;
 
 	/**
 	 * Note that we combine with another cluster in a production reaction.
@@ -471,8 +442,8 @@ public:
 	 * @param reaction The reaction where this cluster takes part.
 	 * @param product The cluster created by the reaction.
 	 */
-	void participateIn(ProductionReaction& reaction, IReactant& product)
-			override;
+	void participateIn(ProductionReaction& reaction,
+			IReactant& product) override;
 
 	/**
 	 * Note that we combine with another cluster in a dissociation reaction.
@@ -506,8 +477,8 @@ public:
 	 * @param reaction The reaction creating this cluster.
 	 * @param disso The dissociating cluster.
 	 */
-	void participateIn(DissociationReaction& reaction, IReactant& disso)
-			override;
+	void participateIn(DissociationReaction& reaction,
+			IReactant& disso) override;
 
 	/**
 	 * Note that we emit from the given reaction.
@@ -539,7 +510,8 @@ public:
 	 * @param reaction The reaction where this cluster emits.
 	 * @param disso The dissociating cluster.
 	 */
-	void emitFrom(DissociationReaction& reaction, IReactant& disso) override;
+	void emitFrom(DissociationReaction& reaction,
+			IReactant& disso) override;
 
 	/**
 	 * This operation returns true to signify that this cluster is a mixture of
@@ -553,19 +525,8 @@ public:
 
 	/**
 	 * Set the HeV vector and compute different parameters
-	 *
-	 * @param vec The vector of coordinates
 	 */
 	void setHeVVector(std::vector<std::pair<int, int> > vec);
-
-	/**
-	 * Set the Pade coefficients
-	 *
-	 * @param vec The vector of coeficients
-	 */
-	void setPadeCoef(std::vector<double> vec) {
-		padeCoef = vec;
-	}
 
 	/**
 	 * This operation returns the current concentration.
@@ -575,7 +536,7 @@ public:
 	 * @return The concentration of this reactant
 	 */
 	double getConcentration(double distHe, double distV) const override {
-		return (l0 + (distHe * l1He) + (distV * l1V)) + getPade(distHe, distV);
+		return l0 + (distHe * l1He) + (distV * l1V);
 	}
 
 	/**

@@ -186,8 +186,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::load(
 }
 
 std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
-		const IOptions &options, std::vector<std::vector<double> > & padeVector,
-		std::map<std::string, int> & idMap) {
+		const IOptions &options) {
 	// Initial declarations
 	maxI = options.getMaxI(), maxHe = options.getMaxImpurity(), maxV =
 			options.getMaxV();
@@ -243,7 +242,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 					std::numeric_limits<double>::infinity());
 		}
 
-		// Save access to it so we can trigger updates once all are
+		// Svae access to it so we can trigger updates once all are
 		// added to the network.
 		reactants.emplace_back(*nextCluster);
 
@@ -350,9 +349,6 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 		// Apply sectional grouping
 		applySectionalGrouping(*network);
 	}
-
-	// Set the pade coefficients
-//	network->setPade(padeVector, idMap);
 
 	// Create the reactions
 	network->createReactionConnectivity();
@@ -494,15 +490,13 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 			int heLow = maxHe, heHigh = -1, vLow = maxV, vHigh = -1;
 
 			// Loop within the group
-			for (int n = vSectionBounds[k]; n < vSectionBounds[k + 1]; n++) {
+			for (int n = vSectionBounds[k]; n < vSectionBounds[k+1]; n++) {
 				if (n > maxV)
 					continue;
-				for (int m = heSectionBounds[j]; m < heSectionBounds[j + 1];
-						m++) {
+				for (int m = heSectionBounds[j]; m < heSectionBounds[j+1]; m++) {
 
 					// Skip the ungrouped
-					if (m < vMin && n < vMin)
-						continue;
+					if (m < vMin && n < vMin) continue;
 
 					// Get the corresponding cluster
 					auto pair = std::make_pair(m, n);
@@ -527,8 +521,7 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 				}
 			}
 
-			if (count == 0)
-				continue;
+			if (count == 0) continue;
 
 			// Average all values
 			heSize = heSize / (double) count;
@@ -536,9 +529,9 @@ void PSIClusterNetworkLoader::applySectionalGrouping(
 
 			// Create the super cluster
 			PSISuperCluster* rawSuperCluster = nullptr;
-			rawSuperCluster = new PSISuperCluster(heSize, vSize, count,
-					heHigh - heLow + 1, vHigh - vLow + 1, network,
-					handlerRegistry);
+				rawSuperCluster = new PSISuperCluster(heSize, vSize, count,
+						heHigh - heLow + 1, vHigh - vLow + 1, network,
+						handlerRegistry);
 
 //			std::cout << rawSuperCluster->getName() << " " << heHigh - heLow + 1
 //					<< " " << vHigh - vLow + 1 << std::endl;

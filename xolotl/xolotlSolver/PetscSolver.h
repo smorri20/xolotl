@@ -37,8 +37,8 @@ private:
 	 * @param oldC The solution from the previous loop
 	 * @param idMap The map of ids from the previous loop
 	 */
-	void setupInitialConditions(DM &data, Vec &solutionVector,
-			std::vector<double> &oldC, std::map<std::string, int> &idMap);
+	void setupInitialConditions(DM &data, Vec &solutionVector, std::vector<double> &oldC,
+			std::map<std::string, int> &idMap);
 
 	/**
 	 * This operation configures the bounds to use for the grouping scheme
@@ -59,13 +59,12 @@ private:
 	 * @param bounds2 The bounds on the next loop's network
 	 * @param idMap The map of ids for the concentrations
 	 * @param concVec The new vector of concentrations
-	 * @param padeVec The vector of Pade coeficients
 	 */
 	void transformConcentrationVector(IReactionNetwork & network,
 			const std::vector<IReactant::SizeType> & bounds1,
 			const std::vector<IReactant::SizeType> & bounds2,
-			std::map<std::string, int> &idMap, std::vector<double> & concVec,
-			std::vector<std::vector<double> > & padeVec);
+			std::map<std::string, int> &idMap,
+			std::vector<double> & concVec);
 
 public:
 

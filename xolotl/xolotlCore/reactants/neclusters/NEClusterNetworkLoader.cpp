@@ -24,10 +24,11 @@ using namespace xolotlCore;
 //}
 
 std::unique_ptr<NECluster> NEClusterNetworkLoader::createNECluster(int numXe,
-		int numV, int numI, IReactionNetwork& network) const {
+		int numV, int numI,
+        IReactionNetwork& network) const {
 
 	// Local Declarations
-	NECluster* cluster = nullptr;
+    NECluster* cluster = nullptr;
 
 	// Determine the type of the cluster given the number of each species.
 	// Create a new cluster by that type and specify the names of the
@@ -36,10 +37,10 @@ std::unique_ptr<NECluster> NEClusterNetworkLoader::createNECluster(int numXe,
 		// Create a new XeVCluster
 		cluster = new XeCluster(numXe, network, handlerRegistry);
 	}
-	assert(cluster != nullptr);
+    assert(cluster != nullptr);
 
-	// TODO when we have widespread C++14 support, use std::make_unique
-	// and construct unique ptr and object pointed to in one memory operation.
+    // TODO when we have widespread C++14 support, use std::make_unique
+    // and construct unique ptr and object pointed to in one memory operation.
 	return std::unique_ptr<NECluster>(cluster);
 }
 
@@ -68,8 +69,7 @@ NEClusterNetworkLoader::NEClusterNetworkLoader(
 	return;
 }
 
-std::unique_ptr<IReactionNetwork> NEClusterNetworkLoader::load(
-		const IOptions& options) const {
+std::unique_ptr<IReactionNetwork> NEClusterNetworkLoader::load(const IOptions& options) const {
 	// Get the dataset from the HDF5 files
 	auto networkVector = xolotlCore::HDF5Utils::readNetwork(fileName);
 
@@ -80,8 +80,8 @@ std::unique_ptr<IReactionNetwork> NEClusterNetworkLoader::load(
 	std::vector<std::reference_wrapper<Reactant> > reactants;
 
 	// Prepare the network
-	// Once we have C++14 support, use std::make_unique.
-	std::unique_ptr<NEClusterReactionNetwork> network(
+    // Once we have C++14 support, use std::make_unique.
+	std::unique_ptr<NEClusterReactionNetwork> network (
 			new NEClusterReactionNetwork(handlerRegistry));
 
 	// Loop on the networkVector
@@ -109,19 +109,19 @@ std::unique_ptr<IReactionNetwork> NEClusterNetworkLoader::load(
 		// Check if we want dummy reactions
 		if (dummyReactions) {
 			// Create a dummy cluster (just a stock Reactant) 
-			// from the existing cluster
-			// TODO once we have C++14 support, use std::make_unique.
-			std::unique_ptr<Reactant> dummyCluster(new Reactant(*nextCluster));
+            // from the existing cluster
+            // TODO once we have C++14 support, use std::make_unique.
+            std::unique_ptr<Reactant> dummyCluster(new Reactant(*nextCluster));
 
 			// Save access to it so we can trigger updates after
-			// all are added to the network.
+            // all are added to the network.
 			reactants.emplace_back(*dummyCluster);
 
 			// Give the cluster to the network
 			network->add(std::move(dummyCluster));
 		} else {
 			// Save access to it so we can trigger updates after
-			// all are added to the network.
+            // all are added to the network.
 			reactants.emplace_back(*nextCluster);
 
 			// Give the cluster to the network
@@ -143,35 +143,34 @@ std::unique_ptr<IReactionNetwork> NEClusterNetworkLoader::load(
 		applyGrouping(*network);
 	}
 
-	// Dump the network we've created, if desired.
-	auto netDebugOpts = options.getNetworkDebugOptions();
-	if (netDebugOpts.first) {
-		int rank;
-		MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-		if (rank == 0) {
-			// Dump the network we've created for comparison with baseline.
-			std::ofstream networkStream(netDebugOpts.second);
-			network->dumpTo(networkStream);
-		}
-	}
+    // Dump the network we've created, if desired.
+    auto netDebugOpts = options.getNetworkDebugOptions();
+    if(netDebugOpts.first) {
+        int rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        if(rank == 0) {
+            // Dump the network we've created for comparison with baseline.
+            std::ofstream networkStream(netDebugOpts.second);
+            network->dumpTo(networkStream);
+        }
+    }
 
-	// Need to use move() because return type uses smart pointer to base class,
-	// not derived class that we created.
-	// Some C++11 compilers accept it without the move, but apparently
-	// that is not correct behavior until C++14.
+    // Need to use move() because return type uses smart pointer to base class,
+    // not derived class that we created.
+    // Some C++11 compilers accept it without the move, but apparently
+    // that is not correct behavior until C++14.
 	return std::move(network);
 }
 
 std::unique_ptr<IReactionNetwork> NEClusterNetworkLoader::generate(
-		const IOptions &options, std::vector<std::vector<double> > & padeVector,
-		std::map<std::string, int> & idMap) {
+		const IOptions &options) {
 	// Initial declarations
 	int maxXe = options.getMaxImpurity();
 	int numXe = 0;
 	double formationEnergy = 0.0, migrationEnergy = 0.0;
 	double diffusionFactor = 0.0;
-	// Once we have C++14 support, use std::make_unique.
-	std::unique_ptr<NEClusterReactionNetwork> network(
+    // Once we have C++14 support, use std::make_unique.
+	std::unique_ptr<NEClusterReactionNetwork> network (
 			new NEClusterReactionNetwork(handlerRegistry));
 	std::vector<std::reference_wrapper<Reactant> > reactants;
 
@@ -212,8 +211,8 @@ std::unique_ptr<IReactionNetwork> NEClusterNetworkLoader::generate(
 					std::numeric_limits<double>::infinity());
 		}
 
-		// Save access to it so we can trigger updates once all
-		// are added to the network.
+        // Save access to it so we can trigger updates once all
+        // are added to the network.
 		reactants.emplace_back(*nextCluster);
 
 		// Give the cluster to the network
@@ -234,22 +233,22 @@ std::unique_ptr<IReactionNetwork> NEClusterNetworkLoader::generate(
 		applyGrouping(*network);
 	}
 
-	// Dump the network we've created, if desired.
-	auto netDebugOpts = options.getNetworkDebugOptions();
-	if (netDebugOpts.first) {
-		int rank;
-		MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-		if (rank == 0) {
-			// Dump the network we've created for comparison with baseline.
-			std::ofstream networkStream(netDebugOpts.second);
-			network->dumpTo(networkStream);
-		}
-	}
+    // Dump the network we've created, if desired.
+    auto netDebugOpts = options.getNetworkDebugOptions();
+    if(netDebugOpts.first) {
+        int rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        if(rank == 0) {
+            // Dump the network we've created for comparison with baseline.
+            std::ofstream networkStream(netDebugOpts.second);
+            network->dumpTo(networkStream);
+        }
+    }
 
-	// Need to use move() because return type uses smart pointer to base class,
-	// not derived class that we created.
-	// Some C++11 compilers accept it without the move, but apparently
-	// that is not correct behavior until C++14.
+    // Need to use move() because return type uses smart pointer to base class,
+    // not derived class that we created.
+    // Some C++11 compilers accept it without the move, but apparently
+    // that is not correct behavior until C++14.
 	return std::move(network);
 }
 
@@ -268,8 +267,8 @@ void NEClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 	// Map to know which cluster is in which group
 	std::map<int, int> clusterGroupMap;
 	// Map to know which super cluster gathers which group
-	// TODO replace use of naked ptr with ref.  Requires fix to use
-	// refs in reactions instead of naked ptrs.
+    // TODO replace use of naked ptr with ref.  Requires fix to use
+    // refs in reactions instead of naked ptrs.
 	std::map<int, NESuperCluster *> superGroupMap;
 
 	// Loop on the xenon groups
@@ -302,9 +301,8 @@ void NEClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 		radius = radius / (double) count;
 		energy = energy / (double) count;
 		// Create the cluster
-		std::unique_ptr<NESuperCluster> superCluster(
-				new NESuperCluster(size, count, count, radius, energy, network,
-						handlerRegistry));
+        std::unique_ptr<NESuperCluster> superCluster(new NESuperCluster(size, count, count,
+				radius, energy, network, handlerRegistry));
 
 		// Set the HeV vector
 		superCluster->setXeVector(tempVector);
@@ -326,13 +324,13 @@ void NEClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 		width = max(sectionWidth * (int) (superCount / 10), sectionWidth);
 	}
 
-	// Tell each reactant to update the pairs vector with super clusters
-	for (IReactant& currReactant : network.getAll()) {
+    // Tell each reactant to update the pairs vector with super clusters
+    for (IReactant& currReactant : network.getAll()) {
 
-		auto& cluster = static_cast<NECluster&>(currReactant);
+        auto& cluster = static_cast<NECluster&>(currReactant);
 
 		// Get their production and dissociation vectors
-		// TODO can these be updated in place?
+        // TODO can these be updated in place?
 		auto react = cluster.reactingPairs;
 		auto& combi = cluster.combiningReactants;
 		auto disso = cluster.dissociatingPairs;
@@ -368,22 +366,22 @@ void NEClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 		}
 
 		// Visit each combining reactant.
-		std::for_each(combi.begin(), combi.end(),
-				[this,&superGroupMap,&clusterGroupMap](NECluster::CombiningCluster& cc) {
-					// Test the combining reactant
-					NECluster& currCombining = cc.combining;
-					if (currCombining.getType() == ReactantType::Xe) {
-						// Get its size
-						auto nXe = currCombining.getSize();
-						// Test its size
-						if (nXe >= xeMin) {
-							// It has to be replaced by a super cluster
-							auto newCluster = superGroupMap[clusterGroupMap[nXe]];
-							cc.combining = *newCluster;
-							cc.distance = newCluster->getDistance(nXe);
-						}
-					}
-				});
+        std::for_each(combi.begin(), combi.end(),
+            [this,&superGroupMap,&clusterGroupMap](NECluster::CombiningCluster& cc) {
+                // Test the combining reactant
+                NECluster& currCombining = cc.combining;
+                if (currCombining.getType() == ReactantType::Xe) {
+                    // Get its size
+                    auto nXe = currCombining.getSize();
+                    // Test its size
+                    if (nXe >= xeMin) {
+                        // It has to be replaced by a super cluster
+                        auto newCluster = superGroupMap[clusterGroupMap[nXe]];
+                        cc.combining = *newCluster;
+                        cc.distance = newCluster->getDistance(nXe);
+                    }
+                }
+            });
 
 		// Loop on its dissociating pairs
 		for (int l = 0; l < disso.size(); l++) {
@@ -450,17 +448,17 @@ void NEClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 	}
 
 	// Set the reaction network for each super reactant
-	for (auto const& superMapItem : network.getAll(ReactantType::NESuper)) {
-		auto& currCluster = static_cast<NESuperCluster&>(*(superMapItem.second));
+    for (auto const& superMapItem : network.getAll(ReactantType::NESuper)) {
+        auto& currCluster = static_cast<NESuperCluster&>(*(superMapItem.second));
 		currCluster.updateFromNetwork();
 	}
 
 	// Remove Xe clusters bigger than xeMin from the network
 	// Loop on the Xe clusters
-	std::vector<std::reference_wrapper<IReactant> > doomedReactants;
+    std::vector<std::reference_wrapper<IReactant> > doomedReactants;
 	for (auto const& currMapItem : xeMap) {
 
-		auto& currCluster = currMapItem.second;
+        auto& currCluster = currMapItem.second;
 
 		// Get the cluster's size.
 		auto nXe = currCluster->getSize();
