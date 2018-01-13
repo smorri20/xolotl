@@ -212,6 +212,15 @@ public:
 	 */
 	virtual std::string getNetworkName() const = 0;
 
+    /**
+     * Obtain the seed to use for initializing the random number generator.
+     * Uses user-specified seed if given, otherwise generates a run-specific
+     * value dynamically.
+     *
+     * @return A value to use to seed the random number generator.
+     */
+    virtual unsigned int getRNGSeed(void) const = 0;
+
 }; //end class ISolverHandler
 
 } /* namespace xolotlSolver */
