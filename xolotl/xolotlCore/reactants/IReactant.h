@@ -226,7 +226,7 @@ public:
 	 * @return A string containing the canonical representation of our
 	 * composition.
 	 */
-	virtual std::string getCompositionString() const = 0;
+	virtual const std::string& getCompositionString() const = 0;
 
 	/**
 	 * This operation sets the id of the reactant, The id is zero by default

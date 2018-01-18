@@ -417,7 +417,7 @@ public:
 	 * @return A string containing the canonical representation of our
 	 * composition.
 	 */
-	virtual std::string getCompositionString() const {
+	virtual const std::string& getCompositionString() const {
 		if (compString.empty()) {
 			compString = toCanonicalString(getType(), compositionMap);
 		}

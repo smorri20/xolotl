@@ -505,29 +505,29 @@ double PSIClusterNetworkLoader::getHeVFormationEnergy(int numHe, int numV) {
 	// Coefficients for the Legendre polynomial fit
 	// Low means V <= 27
 	// Coefficients for c_0 in the 2D E_f,HeV fit
-	std::vector<double> c0CoefficientsLow = { 253.35, 435.36, 336.50, 198.92,
+	static const std::array<double, 6> c0CoefficientsLow { 253.35, 435.36, 336.50, 198.92,
 			95.154, 21.544 };
 	// Coefficients for c_1 in the 2D E_f,HeV fit
-	std::vector<double> c1CoefficientsLow = { 493.29, 1061.3, 1023.9, 662.92,
+	static const std::array<double, 6> c1CoefficientsLow { 493.29, 1061.3, 1023.9, 662.92,
 			294.24, 66.962 };
 	// Coefficients for c_2 in the 2D E_f,HeV fit
-	std::vector<double> c2CoefficientsLow = { 410.40, 994.89, 1044.6, 689.41,
+	static const std::array<double, 6> c2CoefficientsLow { 410.40, 994.89, 1044.6, 689.41,
 			286.52, 60.712 };
 	// Coefficients for c_3 in the 2D E_f,HeV fit
-	std::vector<double> c3CoefficientsLow = { 152.99, 353.16, 356.10, 225.75,
+	static const std::array<double, 6> c3CoefficientsLow { 152.99, 353.16, 356.10, 225.75,
 			87.077, 15.640 };
 	// High means V > 27
 	// Coefficients for c_0 in the 2D E_f,HeV fit
-	std::vector<double> c0CoefficientsHigh = { -847.90, -3346.9, -4510.3,
+	static const std::array<double, 6> c0CoefficientsHigh { -847.90, -3346.9, -4510.3,
 			-3094.7, -971.18, -83.770 };
 	// Coefficients for c_1 in the 2D E_f,HeV fit
-	std::vector<double> c1CoefficientsHigh = { -1589.3, -4894.6, -6001.8,
+	static const std::array<double, 6> c1CoefficientsHigh { -1589.3, -4894.6, -6001.8,
 			-4057.5, -1376.4, -161.91 };
 	// Coefficients for c_2 in the 2D E_f,HeV fit
-	std::vector<double> c2CoefficientsHigh = { 834.91, 1981.8, 1885.7, 1027.1,
+	static const std::array<double, 6> c2CoefficientsHigh { 834.91, 1981.8, 1885.7, 1027.1,
 			296.69, 29.902 };
 	// Coefficients for c_3 in the 2D E_f,HeV fit
-	std::vector<double> c3CoefficientsHigh = { 1547.2, 3532.3, 3383.6, 1969.2,
+	static const std::array<double, 6> c3CoefficientsHigh { 1547.2, 3532.3, 3383.6, 1969.2,
 			695.17, 119.23 };
 
 	/**
@@ -535,7 +535,7 @@ double PSIClusterNetworkLoader::getHeVFormationEnergy(int numHe, int numV) {
 	 * vacancy (He_0V_1) and is there as a buffer. Like the formation energies,
 	 * i = heSize.
 	 */
-	std::vector<double> heV1FormationEnergies = { 5.14166, 8.20919, 11.5304,
+	static const std::array<double, 14> heV1FormationEnergies { 5.14166, 8.20919, 11.5304,
 			14.8829, 18.6971, 22.2847, 26.3631, 30.1049, 34.0081, 38.2069,
 			42.4217, 46.7378, 51.1551, 55.6738 };
 
@@ -544,8 +544,8 @@ double PSIClusterNetworkLoader::getHeVFormationEnergy(int numHe, int numV) {
 	 * di-vacancy (He_0V_2) and is there as a buffer. Like the formation
 	 * energies, i = heSize.
 	 */
-	std::vector<double> heV2FormationEnergies =
-			{ 7.10098, 8.39913, 9.41133, 11.8748, 14.8296, 17.7259, 20.7747,
+	static const std::array<double, 18> heV2FormationEnergies {
+            7.10098, 8.39913, 9.41133, 11.8748, 14.8296, 17.7259, 20.7747,
 					23.7993, 26.7984, 30.0626, 33.0385, 36.5173, 39.9406, 43.48,
 					46.8537, 50.4484, 54.0879, 57.7939 };
 
@@ -553,7 +553,7 @@ double PSIClusterNetworkLoader::getHeVFormationEnergy(int numHe, int numV) {
 	double energy = -std::numeric_limits<double>::infinity();
 	// The following coefficients are computed using the above and are used
 	// to evaluate the full function f(x,y).
-	std::vector<double> coefficients = { 0.0, 0.0, 0.0, 0.0 };
+	std::array<double, 4> coefficients { 0.0, 0.0, 0.0, 0.0 };
 
 	// Check to see if the vacancy size is large enough that the energy can
 	// be computed from the fit or if it is so small that the exact values

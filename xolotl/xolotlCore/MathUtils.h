@@ -75,7 +75,7 @@ inline double legendrePolynomial(double x, int degree) {
  * @param coeffs
  *            The coefficients array.
  */
-inline double compute3rdOrderLegendre(double x, std::vector<double> coeffs) {
+inline double compute3rdOrderLegendre(double x, const std::array<double, 4>& coeffs) {
 	// Initialize the value
 	double value = 0.0;
 
@@ -100,7 +100,7 @@ inline double compute3rdOrderLegendre(double x, std::vector<double> coeffs) {
  * @param coeffs
  *            The coefficients array.
  */
-inline double compute5thOrderLegendre(double x, std::vector<double> coeffs) {
+inline double compute5thOrderLegendre(double x, const std::array<double, 6>& coeffs) {
 	// Initialize the value
 	double value = 0.0;
 
