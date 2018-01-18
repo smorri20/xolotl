@@ -24,10 +24,22 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Tell CMake to look for static libraries
-SET(BUILD_SHARED_LIBS OFF)
+# SET(BUILD_SHARED_LIBS OFF)
 
 # Find PETSc
+# We need to save and restore CMAKE_REQUIRED_{INCLUDES,LIBRARIES}
+# because the FindPETSc.cmake module sets during its operation
+# but does not reset them, and the leftover state then messes with 
+# our subsequent configuration checks.
+set(SAVED_CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES})
+set(SAVED_CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
 FIND_PACKAGE(PETSc REQUIRED)
+if (PETSC_FOUND)
+    include_directories(${PETSC_INCLUDES})
+    set(CMAKE_REQUIRED_INCLUDES ${SAVED_CMAKE_REQUIRED_INCLUDES})
+    set(CMAKE_REQUIRED_LIBRARIES ${SAVED_CMAKE_REQUIRED_LIBRARIES})
+endif()
+
 
 # Make sure that we only pull the static HDF5
 #set(HDF5_USE_STATIC_LIBRARIES yes)
@@ -107,7 +119,6 @@ include_directories(${CMAKE_SOURCE_DIR}/xolotlFactory/reactionHandler)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlSolver)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlPerf)
 include_directories(${CMAKE_SOURCE_DIR}/xolotlViz)
-include_directories(${PETSC_INCLUDES})
 
 configure_file ("${CMAKE_SOURCE_DIR}/XolotlConfig.h.in" "${CMAKE_SOURCE_DIR}/XolotlConfig.h")
 
