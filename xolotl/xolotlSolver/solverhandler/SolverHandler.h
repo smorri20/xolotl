@@ -4,6 +4,7 @@
 // Includes
 #include "ISolverHandler.h"
 #include <HDF5Utils.h>
+#include "RandomNumberGenerator.h"
 
 namespace xolotlSolver {
 
@@ -85,6 +86,9 @@ protected:
 
     //! The value to use to seed the random number generator.
     unsigned int rngSeed;
+
+    //! The random number generator to use.
+    std::unique_ptr<RandomNumberGenerator<int, unsigned int> > rng;
 
 	//! Method generating the grid in the x direction
 	void generateGrid(int nx, double hx, int surfacePos) {
@@ -170,6 +174,7 @@ public:
                 << " using RNG seed value " << rngSeed 
                 << std::endl;
         }
+        rng = std::unique_ptr<RandomNumberGenerator<int, unsigned int> >(new RandomNumberGenerator<int, unsigned int>(rngSeed));
 
 		// Set the network loader
 		networkName = options.getNetworkFilename();
@@ -386,14 +391,13 @@ public:
 	}
 
     /**
-     * Obtain the seed to use for initializing the random number generator.
-     * Uses user-specified seed if given, otherwise generates a run-specific
-     * value dynamically.
+     * Access the random number generator.
+     * The generator will have already been seeded.
      *
-     * @return A value to use to seed the random number generator.
+     * @return The RandomNumberGenerator object to use.
      */
-    unsigned int getRNGSeed(void) const override {
-        return rngSeed;
+    RandomNumberGenerator<int, unsigned int>& getRNG(void) const override {
+        return *rng;
     }
 }
 ;

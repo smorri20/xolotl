@@ -21,6 +21,7 @@
 #include <NEClusterReactionNetwork.h>
 #include <PSIClusterReactionNetwork.h>
 #include <MathUtils.h>
+#include "RandomNumberGenerator.h"
 
 namespace xolotlSolver {
 
@@ -68,6 +69,11 @@ std::vector<double> radii1D;
 // Becomes false once it is printed.
 bool printMaxClusterConc1D = true;
 
+#if READY
+#else
+static auto hdfUpdateStride = 100;
+#endif // READY
+
 #undef __FUNCT__
 #define __FUNCT__ Actual__FUNCT__("xolotlSolver", "startStop1D")
 /**
@@ -82,12 +88,21 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time,
 
 	PetscFunctionBeginUser;
 
+#if READY
 	// Don't do anything if it is not on the stride
 	if ((int) ((time + time / 1000.0) / hdf5Stride1D) == hdf5Previous1D)
 		PetscFunctionReturn(0);
 
 	// Update the previous time
 	hdf5Previous1D++;
+#else
+    // Update every nth time step, regardless of delta between
+    // time steps.
+    if((timestep % hdfUpdateStride) != 0) {
+        PetscFunctionReturn(0);
+    }
+    std::cerr << "Updating HDF5 file." << std::endl;
+#endif // READY
 
 	// Get the number of processes
 	int worldSize;
@@ -364,6 +379,15 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 				<< totalHeConcentration << " "
 				<< totalHeConcentration / totalBubbleConcentration << std::endl;
 		outputFile.close();
+
+        // For debugging, dump the most recent random number generator values.
+        const auto& rng = solverHandler->getRNG();
+        std::cout << "Recent rng values: ";
+        for(auto currValue : rng.GetRecentValues())
+        {
+            std::cout << currValue << " ";
+        }
+        std::cout << std::endl;
 	}
 
 	// Restore the solutionArray
@@ -2038,7 +2062,7 @@ PetscErrorCode monitorBursting1D(TS ts, PetscInt, PetscReal time, Vec solution,
 			burst = true;
 		// Add randomness
 		double prob = prefactor * (1.0 - (distance - radius) / distance);
-		double test = (double) rand() / (double) RAND_MAX;
+        double test = solverHandler->getRNG().GetRandomDouble();
 		if (prob > test)
 			burst = true;
 
@@ -2049,7 +2073,7 @@ PetscErrorCode monitorBursting1D(TS ts, PetscInt, PetscReal time, Vec solution,
 					<< test << std::endl;
 
 			// Two outcomes: crater or pinhole
-			test = (double) rand() / (double) RAND_MAX;
+            test = solverHandler->getRNG().GetRandomDouble();
 			// Might want to replace distance by ligament = distance - radius
 			double threshold = exp(-distance) * std::log10(fluxAmplitude)
 					/ 20.0;
@@ -2423,7 +2447,8 @@ PetscErrorCode setupPetsc1DMonitor(TS ts) {
 		ierr = TSMonitorSet(ts, monitorBursting1D, NULL, NULL);
 		checkPetscError(ierr,
 				"setupPetsc1DMonitor: TSMonitorSet (monitorBursting1D) failed.");
-		std::srand(solverHandler->getRNGSeed());
+        // No need to seed the random number generator here.
+        // The solver handler has already done it.
 	}
 
 	// Set the monitor to save 1D plot of xenon distribution

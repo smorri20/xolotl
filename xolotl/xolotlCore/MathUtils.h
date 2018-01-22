@@ -11,6 +11,7 @@
 #define MATHUTILS_H_
 
 #include <limits>
+#include <array>
 #include <cmath>
 
 namespace xolotlCore {

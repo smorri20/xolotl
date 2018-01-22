@@ -18,6 +18,7 @@
 #include <HDF5Utils.h>
 #include <PSISuperCluster.h>
 #include <NESuperCluster.h>
+#include "RandomNumberGenerator.h"
 
 namespace xolotlSolver {
 
@@ -1012,7 +1013,7 @@ PetscErrorCode monitorBursting3D(TS ts, PetscInt, PetscReal time, Vec solution,
 				// Add randomness
 				double prob = prefactor
 						* (1.0 - (distance - radius) / distance);
-				double test = (double) rand() / (double) RAND_MAX;
+                double test = solverHandler->getRNG().GetRandomDouble();
 				if (prob > test)
 					burst = true;
 
@@ -1269,7 +1270,8 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 		ierr = TSMonitorSet(ts, monitorBursting3D, NULL, NULL);
 		checkPetscError(ierr,
 				"setupPetsc3DMonitor: TSMonitorSet (monitorBursting3D) failed.");
-		std::srand(solverHandler->getRNGSeed());
+        // No need to seed the random number generator here.
+        // The solver handler has already done it.
 	}
 
 	// Set the monitor to save performance plots (has to be in parallel)
