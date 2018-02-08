@@ -1,24 +1,24 @@
+# Fix cmake behavior for CMAKE_CXX_STANDARD with clang on Mac OSX.
+# See cmake documentation on CMP0025 for details.
+# Must be done before issuing the project() command.
+if(POLICY CMP0025)
+    cmake_policy(SET CMP0025 NEW)
+endif()
+
 # Set a name for this project.
 PROJECT ( xolotl C CXX Java )
 # Set the minimum required version of cmake for this project.
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.4)
 
-# Include the modules to find PETSC, ITAPS, etc. from Jed Brown
+# Let CMake find our config/build support modules.
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake-modules")
 
-# Xolotl requires C++11 to use shared pointers
-INCLUDE (CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" CXX_SUPPORTS_CXX11_FLAG)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" CXX_SUPPORTS_CXX0X_FLAG)
-IF (CXX_SUPPORTS_CXX11_FLAG)
-    SET( CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
-ELSEIF (CXX_SUPPORTS_CXX0X_FLAG)
-    SET( CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}")
-ELSE()
-    MESSAGE(FATAL_ERROR "XOLOTL requires C++11 support from C++ compiler")
-ENDIF()
+# We use some C++11 features.
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Tell CMake to look for static libraries
+# Tell CMake to build static libraries.
 SET(BUILD_SHARED_LIBS OFF)
 
 # Find PETSc
@@ -35,14 +35,27 @@ ENDIF()
 # Include the headers
 INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR})
 
-# We require Kokkos for multithreading/acceleration.
+# We use Kokkos for multithreading/acceleration.
 find_package(Kokkos REQUIRED)
-if (Kokkos_FOUND)
+if(Kokkos_FOUND)
     include_directories(${Kokkos_INCLUDE_DIRS})
+
+    # It is easiest for us to use Kokkos' C++ flags if it is
+    # built to target CUDA.
+    if("${KOKKOS_DEVICES}" MATCHES "Cuda")
+
+        # Use the C++ flags that were used to build Kokkos.
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${KOKKOS_CXXFLAGS}")
+    elseif(OpenMP_CXX_FOUND)
+
+        # Kokkos is using OpenMP as a backend but not CUDA.
+        # We add the OpenMP flags but not everything that was used
+        # to build Kokkos.
+        message(STATUS "Kokkos adding ${OpenMP_CXX_FLAGS} to CMAKE_CXX_FLAGS")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    endif()
 endif()
 
-# Kokkos may use Hwloc.
-find_package(Hwloc)
 
 # Enable testing.
 enable_testing()
