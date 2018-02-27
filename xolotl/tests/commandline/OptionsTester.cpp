@@ -109,7 +109,8 @@ BOOST_AUTO_TEST_CASE(goodParamFile) {
 			<< std::endl << "initialV=0.05" << std::endl << "dimensions=1"
 			<< std::endl << "voidPortion=60.0" << std::endl << "regularGrid=no"
 			<< std::endl << "process=diff" << std::endl << "grouping=11 2 4"
-			<< std::endl << "sputtering=0.5" << std::endl;
+			<< std::endl << "sputtering=0.5" << std::endl << "boundary=1 1"
+			<< std::endl << "burstingDepth=5.0" << std::endl;
 	goodParamFile.close();
 
 	string pathToFile("param_good.txt");
@@ -173,6 +174,13 @@ BOOST_AUTO_TEST_CASE(goodParamFile) {
 	// Check the sputtering option
 	BOOST_REQUIRE_EQUAL(opts.getSputteringYield(), 0.5);
 
+	// Check the bursting depth option
+	BOOST_REQUIRE_EQUAL(opts.getBurstingDepth(), 5.0);
+
+	// Check the boundary conditions
+	BOOST_REQUIRE_EQUAL(opts.getLeftBoundary(), 1);
+	BOOST_REQUIRE_EQUAL(opts.getRightBoundary(), 1);
+
 	// Check the physical processes option
 	auto map = opts.getProcesses();
 	BOOST_REQUIRE_EQUAL(map["diff"], true);
@@ -204,6 +212,56 @@ BOOST_AUTO_TEST_CASE(goodParamFile) {
 	BOOST_REQUIRE_EQUAL(strcmp(petscArgv[13], "1000"), 0);
 	BOOST_REQUIRE_EQUAL(strcmp(petscArgv[14], "-ts_max_steps"), 0);
 	BOOST_REQUIRE_EQUAL(strcmp(petscArgv[15], "3"), 0);
+
+	// Remove the created file
+	std::string tempFile = "param_good.txt";
+	std::remove(tempFile.c_str());
+}
+
+BOOST_AUTO_TEST_CASE(goodParamFileNoHDF5) {
+	xolotlCore::Options opts;
+
+	// Create a good parameter file
+	std::ofstream goodParamFile("param_good.txt");
+	goodParamFile << "netParam=8 1 0 5 3" << std::endl << "grid=100 0.5"
+			<< std::endl;
+	goodParamFile.close();
+
+	string pathToFile("param_good.txt");
+	string filename = pathToFile;
+	const char* fname = filename.c_str();
+
+	// Build a command line with a parameter file containing good options
+	char* args[3];
+	args[0] = const_cast<char*>("./xolotl");
+	args[1] = const_cast<char*>(fname);
+	args[2] = NULL;
+	char** fargv = args;
+
+	// Attempt to read the parameter file
+	fargv += 1;
+	opts.readParams(fargv);
+
+	// Xolotl should run with good parameters
+	BOOST_REQUIRE_EQUAL(opts.shouldRun(), true);
+	BOOST_REQUIRE_EQUAL(opts.getExitCode(), EXIT_SUCCESS);
+
+	// Check if we use the HDF5 file
+	BOOST_REQUIRE_EQUAL(opts.useHDF5(), false);
+
+	// Check the network parameters
+	BOOST_REQUIRE_EQUAL(opts.getMaxImpurity(), 8);
+	BOOST_REQUIRE_EQUAL(opts.getMaxD(), 1);
+	BOOST_REQUIRE_EQUAL(opts.getMaxT(), 0);
+	BOOST_REQUIRE_EQUAL(opts.getMaxV(), 5);
+	BOOST_REQUIRE_EQUAL(opts.getMaxI(), 3);
+	BOOST_REQUIRE_EQUAL(opts.usePhaseCut(), false);
+
+	// Check the grid parameters
+	BOOST_REQUIRE_EQUAL(opts.getNX(), 100);
+	BOOST_REQUIRE_EQUAL(opts.getXStepSize(), 0.5);
+	BOOST_REQUIRE_EQUAL(opts.getNY(), 0);
+	BOOST_REQUIRE_EQUAL(opts.getYStepSize(), 0.0);
 
 	// Remove the created file
 	std::string tempFile = "param_good.txt";

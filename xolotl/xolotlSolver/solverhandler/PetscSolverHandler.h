@@ -38,12 +38,6 @@ protected:
 	double lastTemperature;
 
 	/**
-	 * A pointer to all of the reactants in the network. It is retrieved from the
-	 * network after it is set.
-	 */
-	std::shared_ptr<std::vector<xolotlCore::IReactant *>> allReactants;
-
-	/**
 	 * A vector for holding the partial derivatives of one cluster. It is sized in
 	 * the createSolverContext() operation.
 	 *
@@ -83,9 +77,19 @@ protected:
 
 public:
 
-	//! The Constructor
-	PetscSolverHandler() :
-			lastTemperature(0.0) {
+	/**
+	 * Default constructor, deleted because we need to construct with objects.
+	 */
+	PetscSolverHandler() = delete;
+
+	/**
+	 * Construct a PetscSolverHandler.
+	 *
+	 * @param _network The reaction network to use.
+	 */
+	PetscSolverHandler(xolotlCore::IReactionNetwork& _network) :
+			SolverHandler(_network), lastTemperature(0.0), reactionVals(
+					nullptr), reactionIndices(nullptr) {
 	}
 
 	//! The Destructor

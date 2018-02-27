@@ -70,6 +70,16 @@ protected:
 	std::string tempProfileFilename;
 
 	/**
+	 * Use the heat equation set of handlers?
+	 */
+	bool heatFlag;
+
+	/**
+	 * Value for the bulk temperature.
+	 */
+	double bulkTemperature;
+
+	/**
 	 * Use the flux amplitude option?
 	 */
 	bool fluxFlag;
@@ -153,6 +163,86 @@ protected:
 	 * Value of the sputtering yield.
 	 */
 	double sputteringYield;
+
+	/**
+	 * Use a HDF5 file?
+	 */
+	bool useHDF5Flag;
+
+	/**
+	 * Use the phase cut for the network?
+	 */
+	bool usePhaseCutFlag;
+
+	/**
+	 * Maximum number of He or Xe
+	 */
+	int maxImpurity;
+
+	/**
+	 * Maximum number of D
+	 */
+	int maxD;
+
+	/**
+	 * Maximum number of T
+	 */
+	int maxT;
+
+	/**
+	 * Maximum number of V
+	 */
+	int maxV;
+
+	/**
+	 * Maximum number of I
+	 */
+	int maxI;
+
+	/**
+	 * Number of grid point in the depth direction
+	 */
+	int nX;
+
+	/**
+	 * Step size in the depth direction
+	 */
+	double xStepSize;
+
+	/**
+	 * Number of grid point in the Y direction
+	 */
+	int nY;
+
+	/**
+	 * Step size in the Y direction
+	 */
+	double yStepSize;
+
+	/**
+	 * Number of grid point in the Z direction
+	 */
+	int nZ;
+
+	/**
+	 * Step size in the Z direction
+	 */
+	double zStepSize;
+
+	/**
+	 * The boundary condition on the left side of the X direction.
+	 */
+	int leftBoundary;
+
+	/**
+	 * The boundary condition on the right side of the X direction.
+	 */
+	int rightBoundary;
+
+	/**
+	 * Depth for the bubble bursting in nm.
+	 */
+	double burstingDepth;
 
 public:
 
@@ -337,6 +427,38 @@ public:
 	 */
 	void setTempProfileFilename(const std::string& name) {
 		tempProfileFilename = name;
+	}
+
+	/**
+	 * Should we use heat equation handlers?
+	 * \see IOptions.h
+	 */
+	bool useHeatEquationHandlers() const {
+		return heatFlag;
+	}
+
+	/**
+	 * Set the heatFlag.
+	 * \see IOptions.h
+	 */
+	void setHeatFlag(bool flag) {
+		heatFlag = flag;
+	}
+
+	/**
+	 * Obtain the value of the temperature to be used in the bulk.
+	 * \see IOptions.h
+	 */
+	double getBulkTemperature() const {
+		return bulkTemperature;
+	}
+
+	/**
+	 * Set the bulk temperature.
+	 * \see IOptions.h
+	 */
+	void setBulkTemperature(double temp) {
+		bulkTemperature = temp;
 	}
 
 	/**
@@ -612,8 +734,264 @@ public:
 	 * Set the value for the sputtering yield to use.
 	 * \see IOptions.h
 	 */
-	virtual void setSputteringYield(double yield) {
+	void setSputteringYield(double yield) {
 		sputteringYield = yield;
+	}
+
+	/**
+	 * To know if we should use the HDF5 file.
+	 * \see IOptions.h
+	 */
+	bool useHDF5() const {
+		return useHDF5Flag;
+	}
+
+	/**
+	 * Set the useHDF5Flag.
+	 * \see IOptions.h
+	 */
+	void setHDF5Flag(bool flag) {
+		useHDF5Flag = flag;
+	}
+
+	/**
+	 * To know if we should use the phase cut.
+	 * \see IOptions.h
+	 */
+	bool usePhaseCut() const {
+		return usePhaseCutFlag;
+	}
+
+	/**
+	 * Set the usePhaseCutFlag.
+	 * \see IOptions.h
+	 */
+	void setPhaseCutFlag(bool flag) {
+		usePhaseCutFlag = flag;
+	}
+
+	/**
+	 * Obtain the maximum value of impurities (He or Xe) to be used.
+	 * \see IOptions.h
+	 */
+	int getMaxImpurity() const {
+		return maxImpurity;
+	}
+
+	/**
+	 * Set the maximum value of impurities to use.
+	 * \see IOptions.h
+	 */
+	void setMaxImpurity(int max) {
+		maxImpurity = max;
+	}
+
+	/**
+	 * Obtain the maximum value of deuterium to be used.
+	 * \see IOptions.h
+	 */
+	int getMaxD() const {
+		return maxD;
+	}
+
+	/**
+	 * Set the maximum value of deuterium to use.
+	 * \see IOptions.h
+	 */
+	void setMaxD(int max) {
+		maxD = max;
+	}
+
+	/**
+	 * Obtain the maximum value of tritium to be used.
+	 * \see IOptions.h
+	 */
+	int getMaxT() const {
+		return maxT;
+	}
+
+	/**
+	 * Set the maximum value of tritium to use.
+	 * \see IOptions.h
+	 */
+	void setMaxT(int max) {
+		maxT = max;
+	}
+
+	/**
+	 * Obtain the maximum value of vacancies to be used.
+	 * \see IOptions.h
+	 */
+	int getMaxV() const {
+		return maxV;
+	}
+
+	/**
+	 * Set the maximum value of vacancies to use.
+	 * \see IOptions.h
+	 */
+	void setMaxV(int max) {
+		maxV = max;
+	}
+
+	/**
+	 * Obtain the maximum value of interstitials to be used.
+	 * \see IOptions.h
+	 */
+	int getMaxI() const {
+		return maxI;
+	}
+
+	/**
+	 * Set the maximum value of interstitials to use.
+	 * \see IOptions.h
+	 */
+	void setMaxI(int max) {
+		maxI = max;
+	}
+
+	/**
+	 * Obtain the number of grid points in the depth direction to be used.
+	 * \see IOptions.h
+	 */
+	int getNX() const {
+		return nX;
+	}
+
+	/**
+	 * Set the number of grid points in the depth direction to use.
+	 * \see IOptions.h
+	 */
+	void setNX(int n) {
+		nX = n;
+	}
+
+	/**
+	 * Obtain the value of the step size in the depth direction to be used.
+	 * \see IOptions.h
+	 */
+	double getXStepSize() const {
+		return xStepSize;
+	}
+
+	/**
+	 * Set the value for the step size in the depth direction to use.
+	 * \see IOptions.h
+	 */
+	void setXStepSize(double stepSize) {
+		xStepSize = stepSize;
+	}
+
+	/**
+	 * Obtain the number of grid points in the Y direction to be used.
+	 * \see IOptions.h
+	 */
+	int getNY() const {
+		return nY;
+	}
+
+	/**
+	 * Set the number of grid points in the Y direction to use.
+	 * \see IOptions.h
+	 */
+	void setNY(int n) {
+		nY = n;
+	}
+
+	/**
+	 * Obtain the value of the step size in the Y direction to be used.
+	 * \see IOptions.h
+	 */
+	double getYStepSize() const {
+		return yStepSize;
+	}
+
+	/**
+	 * Set the value for the step size in the Y direction to use.
+	 * \see IOptions.h
+	 */
+	void setYStepSize(double stepSize) {
+		yStepSize = stepSize;
+	}
+
+	/**
+	 * Obtain the number of grid points in the Z direction to be used.
+	 * \see IOptions.h
+	 */
+	int getNZ() const {
+		return nZ;
+	}
+
+	/**
+	 * Set the number of grid points in the Z direction to use.
+	 * \see IOptions.h
+	 */
+	void setNZ(int n) {
+		nZ = n;
+	}
+
+	/**
+	 * Obtain the value of the step size in the Z direction to be used.
+	 * \see IOptions.h
+	 */
+	double getZStepSize() const {
+		return zStepSize;
+	}
+
+	/**
+	 * Set the value for the step size in the Z direction to use.
+	 * \see IOptions.h
+	 */
+	void setZStepSize(double stepSize) {
+		zStepSize = stepSize;
+	}
+
+	/**
+	 * Obtain the boundary condition on the left side of the grid.
+	 * \see IOptions.h
+	 */
+	int getLeftBoundary() const {
+		return leftBoundary;
+	}
+
+	/**
+	 * Set the boundary condition on the left side of the grid.
+	 * \see IOptions.h
+	 */
+	void setLeftBoundary(int n) {
+		leftBoundary = n;
+	}
+
+	/**
+	 * Obtain the boundary condition on the right side of the grid.
+	 * \see IOptions.h
+	 */
+	int getRightBoundary() const {
+		return rightBoundary;
+	}
+
+	/**
+	 * Set the boundary condition on the right side of the grid.
+	 * \see IOptions.h
+	 */
+	void setRightBoundary(int n) {
+		rightBoundary = n;
+	}
+
+	/**
+	 * Obtain the value of the depth above which the bursting is happening.
+	 * \see IOptions.h
+	 */
+	double getBurstingDepth() const {
+		return burstingDepth;
+	}
+
+	/**
+	 * Set the value for the depth above which the bursting is happening.
+	 * \see IOptions.h
+	 */
+	void setBurstingDepth(double depth) {
+		burstingDepth = depth;
 	}
 
 };
