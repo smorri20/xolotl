@@ -41,12 +41,10 @@ public:
 		type = ReactantType::T;
 
 		// Compute the reaction radius
-		double FourPi = 4.0 * xolotlCore::pi;
-		double aCubed = pow(xolotlCore::tungstenLatticeConstant, 3);
-		double termOne = pow((3.0 / FourPi) * (1.0 / 10.0) * aCubed * size,
-				(1.0 / 3.0));
-		double termTwo = pow((3.0 / FourPi) * (1.0 / 10.0) * aCubed,
-				(1.0 / 3.0));
+		constexpr auto FourPi = 4 * xolotlCore::pi;
+		constexpr auto aCubed = ipow<3>(xolotlCore::tungstenLatticeConstant);
+		double termOne = std::cbrt((3 / FourPi) * (1.0 / 10) * aCubed * size);
+		double termTwo = std::cbrt((3 / FourPi) * (1.0 / 10) * aCubed);
 		reactionRadius = (0.3 + termOne - termTwo) * 0.25;
 
 		// Bounds on He and V

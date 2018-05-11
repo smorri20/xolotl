@@ -509,26 +509,22 @@ void PSISuperCluster::emitFrom(DissociationReaction& reaction,
 	return;
 }
 
-void PSISuperCluster::setHeVVector(std::set<std::pair<int, int> > vec) {
+void PSISuperCluster::setHeVVector(const std::set<std::pair<int, int>>& vec) {
 	// Copy the list of coordinates
 	heVList = vec;
 
 	// Initialize the dispersion sum
 	double nHeSquare = 0.0, nVSquare = 0.0;
 	// Update the network map, compute the radius and dispersions
-	for (auto it = heVList.begin(); it != heVList.end(); it++) {
+    for (const auto& currPair : heVList) {
 		double rad = (sqrt(3.0) / 4.0) * xolotlCore::tungstenLatticeConstant
-				+ pow(
-						(3.0 * pow(xolotlCore::tungstenLatticeConstant, 3.0)
-								* (*it).second) / (8.0 * xolotlCore::pi), (1.0 / 3.0))
-				- pow(
-						(3.0 * pow(xolotlCore::tungstenLatticeConstant, 3.0))
-								/ (8.0 * xolotlCore::pi), (1.0 / 3.0));
+				+ std::cbrt((3 * ipow<3>(xolotlCore::tungstenLatticeConstant) * currPair.second) / (8 * xolotlCore::pi))
+				- std::cbrt((3 * ipow<3>(xolotlCore::tungstenLatticeConstant)) / (8 * xolotlCore::pi));
 		reactionRadius += rad / (double) nTot;
 
 		// Compute nSquare for the dispersion
-		nHeSquare += (double) (*it).first * (*it).first;
-		nVSquare += (double) (*it).second * (*it).second;
+		nHeSquare += (double) currPair.first * currPair.first;
+		nVSquare += (double) currPair.second * currPair.second;
 	}
 
 	// Compute the dispersions

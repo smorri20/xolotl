@@ -405,8 +405,7 @@ void FeClusterNetworkLoader::applySectionalGrouping(
 				// Reinitialize the group indices for the helium direction
 				heIndex += heWidth;
 				heWidth = std::max(
-						(int) std::pow((double) (j * heSectionWidth), 3.0)
-								/ 4000, heSectionWidth);
+						(int) ipow<3>(j * heSectionWidth) / 4000, heSectionWidth);
 				heWidth -= heWidth % heSectionWidth;
 				continue;
 			}
@@ -457,8 +456,7 @@ void FeClusterNetworkLoader::applySectionalGrouping(
 			// Reinitialize the group indices for the helium direction
 			heIndex += heWidth;
 			heWidth = std::max(
-					(int) std::pow((double) (j * heSectionWidth), 3.0) / 4000,
-					heSectionWidth);
+					(int) ipow<3>(j * heSectionWidth) / 4000, heSectionWidth);
 			heWidth -= heWidth % heSectionWidth;
 
 			if (heIndex > maxHe)
@@ -468,8 +466,7 @@ void FeClusterNetworkLoader::applySectionalGrouping(
 		// Reinitialize the group indices for the vacancy direction
 		vIndex += vWidth;
 		vWidth = std::max(
-				(int) std::pow((double) (k * vSectionWidth), 3.0) / 4000,
-				vSectionWidth);
+				(int) ipow<3>(k * vSectionWidth) / 4000, vSectionWidth);
 		vWidth -= vWidth % vSectionWidth;
 		heWidth = heSectionWidth;
 		heIndex = 1;

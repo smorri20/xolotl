@@ -69,15 +69,7 @@ private:
 			return 0.0;
 
 		// Compute the polynomial fit
-		auto params = fitParams[i];
-		double value = params[0] + params[1] * x + params[2] * pow(x, 2.0)
-				+ params[3] * pow(x, 3.0) + params[4] * pow(x, 4.0)
-				+ params[5] * pow(x, 5.0) + params[6] * pow(x, 6.0)
-				+ params[7] * pow(x, 7.0) + params[8] * pow(x, 8.0)
-				+ params[9] * pow(x, 9.0) + params[10] * pow(x, 10.0)
-				+ params[11] * pow(x, 11.0) + params[12] * pow(x, 12.0)
-				+ params[13] * pow(x, 13.0) + params[14] * pow(x, 14.0)
-				+ params[15] * pow(x, 15.0);
+        double value = computePolynomial<double>(fitParams[i], x);
 
 		return std::max(value, 0.0);
 	}

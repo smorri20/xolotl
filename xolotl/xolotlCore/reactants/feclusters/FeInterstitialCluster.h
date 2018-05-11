@@ -47,9 +47,9 @@ public:
 		type = ReactantType::I;
 
 		// Compute the reaction radius
-		double EightPi = 8.0 * xolotlCore::pi;
+		constexpr auto EightPi = 8 * xolotlCore::pi;
 		reactionRadius = xolotlCore::ironLatticeConstant
-				* pow((3.0 / EightPi) * size, (1.0 / 3.0));
+				* std::cbrt((3 / EightPi) * size);
 
 		// Bounds on He and V
 		heBounds = IntegerRange<IReactant::SizeType>(

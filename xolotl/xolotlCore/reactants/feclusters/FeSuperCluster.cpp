@@ -963,18 +963,17 @@ void FeSuperCluster::emitFrom(DissociationReaction& reaction,
 	return;
 }
 
-void FeSuperCluster::setHeVVector(std::vector<std::pair<int, int> > vec) {
+void FeSuperCluster::setHeVVector(const std::vector<std::pair<int, int>>& vec) {
 	// Initialize the dispersion sum
 	double nHeSquare = 0.0, nVSquare = 0.0;
 	// Update the network map, compute the radius and dispersions
-	for (auto it = vec.begin(); it != vec.end(); it++) {
+    for (auto const& currPair : vec) {
 		reactionRadius += xolotlCore::ironLatticeConstant
-				* pow((3.0 * (double) ((*it).second)) / xolotlCore::pi,
-						(1.0 / 3.0)) * 0.5 / (double) nTot;
+			* std::cbrt((3.0 * currPair.second) / xolotlCore::pi) * 0.5 / nTot;
 
 		// Compute nSquare for the dispersion
-		nHeSquare += (double) (*it).first * (*it).first;
-		nVSquare += (double) (*it).second * (*it).second;
+		nHeSquare += (double) currPair.first * currPair.first;
+		nVSquare += (double) currPair.second * currPair.second;
 	}
 
 	// Compute the dispersions

@@ -102,7 +102,7 @@ void ZGBAdvectionHandler::computeAdvection(const IReactionNetwork& network,
 
 			double conc = (3.0 * sinkStrengthVector[advClusterIdx]
 					* cluster.getDiffusionCoefficient())
-					* ((oldFrontConc + oldBackConc) / pow(hz, 5))
+					* ((oldFrontConc + oldBackConc) / ipow<5>(hz))
 					/ (xolotlCore::kBoltzmann * cluster.getTemperature());
 
 			// Update the concentration of the cluster
@@ -122,7 +122,7 @@ void ZGBAdvectionHandler::computeAdvection(const IReactionNetwork& network,
 			// Compute the concentration as explained in the description of the method
 			double conc = (3.0 * sinkStrengthVector[advClusterIdx]
 					* cluster.getDiffusionCoefficient())
-					* ((oldRightConc / pow(b, 4)) - (oldConc / pow(a, 4)))
+					* ((oldRightConc / ipow<4>(b)) - (oldConc / ipow<4>(a)))
 					/ (xolotlCore::kBoltzmann * cluster.getTemperature() * hz);
 
 			// Update the concentration of the cluster
@@ -167,7 +167,7 @@ void ZGBAdvectionHandler::computePartialsForAdvection(
 		if (isPointOnSink(pos)) {
 			val[advClusterIdx * 2] = (3.0 * sinkStrength * diffCoeff)
 					/ (xolotlCore::kBoltzmann * cluster.getTemperature()
-							* pow(hz, 5)); // back or front
+							* ipow<5>(hz)); // back or front
 			val[(advClusterIdx * 2) + 1] = val[advClusterIdx * 2]; // back or front
 		}
 		// Here we are NOT on the GB sink
@@ -180,10 +180,10 @@ void ZGBAdvectionHandler::computePartialsForAdvection(
 			// explained in the description of this method
 			val[advClusterIdx * 2] = -(3.0 * sinkStrength * diffCoeff)
 					/ (xolotlCore::kBoltzmann * cluster.getTemperature() * hz
-							* pow(a, 4)); // middle
+							* ipow<4>(a)); // middle
 			val[(advClusterIdx * 2) + 1] = (3.0 * sinkStrength * diffCoeff)
 					/ (xolotlCore::kBoltzmann * cluster.getTemperature() * hz
-							* pow(b, 4)); // back or front
+							* ipow<4>(b)); // back or front
 		}
 
 		++advClusterIdx;

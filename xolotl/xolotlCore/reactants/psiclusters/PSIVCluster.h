@@ -45,13 +45,9 @@ public:
 
 		// Compute the reaction radius
 		// It is the same formula for HeV clusters
-		reactionRadius = (sqrt(3.0) / 4.0) * xolotlCore::tungstenLatticeConstant
-				+ pow(
-						(3.0 * pow(xolotlCore::tungstenLatticeConstant, 3.0)
-								* size) / (8.0 * xolotlCore::pi), (1.0 / 3.0))
-				- pow(
-						(3.0 * pow(xolotlCore::tungstenLatticeConstant, 3.0))
-								/ (8.0 * xolotlCore::pi), (1.0 / 3.0));
+		reactionRadius = (sqrt(3.0) / 4) * xolotlCore::tungstenLatticeConstant
+				+ std::cbrt((3 * ipow<3>(xolotlCore::tungstenLatticeConstant) * size) / (8 * xolotlCore::pi))
+				- std::cbrt((3 * ipow<3>(xolotlCore::tungstenLatticeConstant)) / (8 * xolotlCore::pi));
 
 		// Bounds on He and V
 		heBounds = IntegerRange<IReactant::SizeType>(

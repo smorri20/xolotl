@@ -67,12 +67,8 @@ public:
 
 		// Compute the reaction radius
 		reactionRadius = (sqrt(3.0) / 4.0) * xolotlCore::tungstenLatticeConstant
-				+ pow(
-						(3.0 * pow(xolotlCore::tungstenLatticeConstant, 3.0)
-								* numI) / (8.0 * xolotlCore::pi), (1.0 / 3.0))
-				- pow(
-						(3.0 * pow(xolotlCore::tungstenLatticeConstant, 3.0))
-								/ (8.0 * xolotlCore::pi), (1.0 / 3.0));
+				+ std::cbrt((3 * ipow<3>(xolotlCore::tungstenLatticeConstant) * numI) / (8 * xolotlCore::pi))
+				- std::cbrt((3 * ipow<3>(xolotlCore::tungstenLatticeConstant)) / (8 * xolotlCore::pi));
 
 		// Bounds on He and V
 		heBounds = IntegerRange<IReactant::SizeType>(

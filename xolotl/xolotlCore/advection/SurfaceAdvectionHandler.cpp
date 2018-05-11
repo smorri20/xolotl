@@ -111,8 +111,8 @@ void SurfaceAdvectionHandler::computeAdvection(const IReactionNetwork& network,
 		// Compute the concentration as explained in the description of the method
 		double conc = (3.0 * sinkStrengthVector[advClusterIdx]
 				* cluster.getDiffusionCoefficient())
-				* ((oldRightConc / pow(pos[0] - location + hxRight, 4))
-						- (oldConc / pow(pos[0] - location, 4)))
+				* ((oldRightConc / ipow<4>(pos[0] - location + hxRight))
+						- (oldConc / ipow<4>(pos[0] - location)))
 				/ (xolotlCore::kBoltzmann * cluster.getTemperature() * hxRight);
 
 		// Update the concentration of the cluster
@@ -157,11 +157,11 @@ void SurfaceAdvectionHandler::computePartialsForAdvection(
 		// explained in the description of this method
 		val[advClusterIdx * 2] = -(3.0 * sinkStrength * diffCoeff)
 				/ (xolotlCore::kBoltzmann * cluster.getTemperature() * hxRight
-						* pow(pos[0] - location, 4))
+						* ipow<4>(pos[0] - location))
 				* advectionGrid[iz + 1][iy + 1][ix + 1][advClusterIdx]; // middle
 		val[(advClusterIdx * 2) + 1] = (3.0 * sinkStrength * diffCoeff)
 				/ (xolotlCore::kBoltzmann * cluster.getTemperature() * hxRight
-						* pow(pos[0] - location + hxRight, 4))
+						* ipow<4>(pos[0] - location + hxRight))
 				* advectionGrid[iz + 1][iy + 1][ix + 2][advClusterIdx]; // right
 
 		++advClusterIdx;

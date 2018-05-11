@@ -493,7 +493,7 @@ public:
 	/**
 	 * Set the HeV vector and compute different parameters
 	 */
-	void setHeVVector(std::vector<std::pair<int, int> > vec);
+	void setHeVVector(const std::vector<std::pair<int, int>>& vec);
 
 	/**
 	 * This operation returns the current concentration.

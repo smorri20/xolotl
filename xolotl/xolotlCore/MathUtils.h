@@ -11,6 +11,8 @@
 #define MATHUTILS_H_
 
 #include <limits>
+#include <array>
+#include <vector>
 #include <cmath>
 
 namespace xolotlCore {
@@ -138,6 +140,48 @@ inline double secondOrderOffsetSum(double alpha, double beta, double mean1,
 	toReturn += mean1 * (mean2 - offset) * (beta - alpha + 1.0);
 
 	return toReturn;
+}
+
+/**
+ * Raise the given double to an integral power.  If the given double
+ * is a constexpr, the compiler can compute the result at compile time
+ * instead of incurring a runtime cost.
+ */
+template<uint32_t N>
+constexpr double ipow(double x) {
+    return x * ipow<N-1>(x);
+}
+
+template<>
+constexpr double ipow<0>(double x) {
+    return 1;
+}
+
+/**
+ * Evaluate a polynomial at a given point.
+ */
+template<typename T>
+typename T::value_type
+computePolynomialHelper(const T& coeffs, typename T::value_type x) {
+
+    typename T::value_type value = coeffs[coeffs.size() - 1];
+    for(auto i = coeffs.size() - 1; i > 0; --i)
+    {
+        value = (value*x + coeffs[i-1]);
+    }
+    return value;
+}
+
+template<typename T, uint32_t N>
+T computePolynomial(const std::array<T, N>& coeffs, T x) {
+
+    return computePolynomialHelper<std::array<T, N>>(coeffs, x);
+}
+
+template<typename T>
+T computePolynomial(const std::vector<T>& coeffs, T x) {
+
+    return computePolynomialHelper<std::vector<T>>(coeffs, x);
 }
 
 }

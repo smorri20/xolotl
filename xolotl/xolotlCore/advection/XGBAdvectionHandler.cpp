@@ -104,8 +104,8 @@ void XGBAdvectionHandler::computeAdvection(const IReactionNetwork& network,
 
 			double conc = (3.0 * sinkStrengthVector[advClusterIdx]
 					* cluster.getDiffusionCoefficient())
-					* ((oldLeftConc / pow(hxLeft, 5))
-							+ (oldRightConc / pow(hxRight, 5)))
+					* ((oldLeftConc / ipow<5>(hxLeft))
+							+ (oldRightConc / ipow<5>(hxRight)))
 					/ (xolotlCore::kBoltzmann * cluster.getTemperature());
 
 			// Update the concentration of the cluster
@@ -126,7 +126,7 @@ void XGBAdvectionHandler::computeAdvection(const IReactionNetwork& network,
 			// Compute the concentration as explained in the description of the method
 			double conc = (3.0 * sinkStrengthVector[advClusterIdx]
 					* cluster.getDiffusionCoefficient())
-					* ((oldRightConc / pow(b, 4)) - (oldConc / pow(a, 4)))
+					* ((oldRightConc / ipow<4>(b)) - (oldConc / ipow<4>(a)))
 					/ (xolotlCore::kBoltzmann * cluster.getTemperature()
 							* (hxRight * (pos[0] > location)
 									+ hxLeft * (pos[0] < location)));
@@ -175,10 +175,10 @@ void XGBAdvectionHandler::computePartialsForAdvection(
 			if (dimension == 1) {
 				val[advClusterIdx * 2] = (3.0 * sinkStrength * diffCoeff)
 						/ (xolotlCore::kBoltzmann * cluster.getTemperature()
-								* pow(hxLeft, 5)); // left
+								* ipow<5>(hxLeft)); // left
 				val[(advClusterIdx * 2) + 1] = (3.0 * sinkStrength * diffCoeff)
 						/ (xolotlCore::kBoltzmann * cluster.getTemperature()
-								* pow(hxRight, 5)); // right
+								* ipow<5>(hxRight)); // right
 			}
 		}
 		// Here we are NOT on the GB sink
@@ -192,12 +192,12 @@ void XGBAdvectionHandler::computePartialsForAdvection(
 			// explained in the description of this method
 			val[advClusterIdx * 2] = -(3.0 * sinkStrength * diffCoeff)
 					/ (xolotlCore::kBoltzmann * cluster.getTemperature()
-							* pow(a, 4)
+							* ipow<4>(a)
 							* (hxRight * (pos[0] > location)
 									+ hxLeft * (pos[0] < location))); // middle
 			val[(advClusterIdx * 2) + 1] = (3.0 * sinkStrength * diffCoeff)
 					/ (xolotlCore::kBoltzmann * cluster.getTemperature()
-							* pow(b, 4)
+							* ipow<4>(b)
 							* (hxRight * (pos[0] > location)
 									+ hxLeft * (pos[0] < location))); // left or right
 		}

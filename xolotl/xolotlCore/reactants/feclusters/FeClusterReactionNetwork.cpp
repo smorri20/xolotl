@@ -1046,8 +1046,8 @@ double FeClusterReactionNetwork::computeBindingEnergy(
 		int size = reaction.dissociating.getSize();
 		bindingEnergy = 1.73
 				- 2.59
-						* (pow((double) size, 2.0 / 3.0)
-								- pow((double) size - 1.0, 2.0 / 3.0));
+						* (ipow<2>(std::cbrt(size))
+								- ipow<2>(std::cbrt(size - 1.0)));
 	}
 	if ((reaction.dissociating.getType() == ReactantType::HeV)
 			&& (reaction.first.getType() == ReactantType::V
@@ -1055,10 +1055,8 @@ double FeClusterReactionNetwork::computeBindingEnergy(
 		auto& comp = reaction.dissociating.getComposition();
 		bindingEnergy = 1.73
 				- 2.59
-						* (pow((double) comp[toCompIdx(Species::V)], 2.0 / 3.0)
-								- pow(
-										(double) comp[toCompIdx(Species::V)]
-												- 1.0, 2.0 / 3.0))
+						* (ipow<2>(std::cbrt(comp[toCompIdx(Species::V)]))
+								- ipow<2>(std::cbrt(comp[toCompIdx(Species::V)] - 1.0)))
 				+ 2.5
 						* log(
 								1.0
@@ -1073,7 +1071,8 @@ double FeClusterReactionNetwork::computeBindingEnergy(
 		double numV = (double) comp[toCompIdx(Species::V)];
 		double numHe = (double) comp[toCompIdx(Species::He)];
 		bindingEnergy = 1.73
-				- 2.59 * (pow(numV, 2.0 / 3.0) - pow(numV - 1.0, 2.0 / 3.0))
+				- 2.59 * (ipow<2>(std::cbrt(numV)) - 
+                            ipow<2>(std::cbrt(numV - 1.0)))
 				+ 2.5 * log(1.0 + (numHe / numV));
 	}
 	if (reaction.first.getType() == ReactantType::I
@@ -1082,11 +1081,8 @@ double FeClusterReactionNetwork::computeBindingEnergy(
 			auto& comp = reaction.dissociating.getComposition();
 			bindingEnergy = 4.88
 					+ 2.59
-							* (pow((double) comp[toCompIdx(Species::V)],
-									2.0 / 3.0)
-									- pow(
-											(double) comp[toCompIdx(Species::V)]
-													- 1.0, 2.0 / 3.0))
+							* (ipow<2>(std::cbrt(comp[toCompIdx(Species::V)]))
+									- ipow<2>(std::cbrt(comp[toCompIdx(Species::V)] - 1.0)))
 					- 2.5
 							* log(
 									1.0
@@ -1099,7 +1095,8 @@ double FeClusterReactionNetwork::computeBindingEnergy(
 			double numV = (double) comp[toCompIdx(Species::V)];
 			double numHe = (double) comp[toCompIdx(Species::He)];
 			bindingEnergy = 4.88
-					+ 2.59 * (pow(numV, 2.0 / 3.0) - pow(numV - 1.0, 2.0 / 3.0))
+					+ 2.59 * (ipow<2>(std::cbrt(numV)) - 
+                                ipow<2>(std::cbrt(numV - 1.0)))
 					- 2.5 * log(1.0 + (numHe / numV));
 		} else if (reaction.dissociating.getType() == ReactantType::He) {
 			int size = reaction.dissociating.getSize();

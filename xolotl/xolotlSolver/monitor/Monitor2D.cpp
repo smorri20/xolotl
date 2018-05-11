@@ -817,23 +817,11 @@ PetscErrorCode eventFunction2D(TS ts, PetscReal time, Vec solution,
 					double nV = heDensity * (grid[xi + 1] - grid[xi]) * hy
 							/ 4.0;
 					//				double nV = pow(heDensity / 5.0, 1.163) * (grid[xi + 1] - grid[xi]) * hy;
+					constexpr auto tlcCubed = ipow<3>(xolotlCore::tungstenLatticeConstant);
 					double radius =
-							(sqrt(3.0) / 4.0)
-									* xolotlCore::tungstenLatticeConstant
-									+ pow(
-											(3.0
-													* pow(
-															xolotlCore::tungstenLatticeConstant,
-															3.0) * nV)
-													/ (8.0 * xolotlCore::pi),
-											(1.0 / 3.0))
-									- pow(
-											(3.0
-													* pow(
-															xolotlCore::tungstenLatticeConstant,
-															3.0))
-													/ (8.0 * xolotlCore::pi),
-											(1.0 / 3.0));
+							(sqrt(3) / 4) * xolotlCore::tungstenLatticeConstant
+									+ std::cbrt((3 * tlcCubed * nV) / (8 * xolotlCore::pi))
+									- std::cbrt((3 * tlcCubed) / (8 * xolotlCore::pi));
 
 					// If the radius is larger than the distance to the surface, burst
 					if (radius > distance) {

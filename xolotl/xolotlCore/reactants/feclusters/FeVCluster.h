@@ -48,7 +48,7 @@ public:
 		// Compute the reaction radius
 		// It is the same formula for HeV clusters
 		reactionRadius = xolotlCore::ironLatticeConstant
-				* pow((3.0 * size) / xolotlCore::pi, (1.0 / 3.0)) * 0.5;
+				* std::cbrt((3.0 * size) / xolotlCore::pi) * 0.5;
 
 		// Bounds on He and V
 		heBounds = IntegerRange<IReactant::SizeType>(

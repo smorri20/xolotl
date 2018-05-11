@@ -2,7 +2,7 @@
 #define W100FITFLUXHANDLER_H
 
 #include "PSIFluxHandler.h"
-#include <cmath>
+#include <array>
 
 namespace xolotlCore {
 
@@ -28,12 +28,18 @@ private:
 			return 0.0;
 
 		// Compute the fit
-		double value = 7.00876507 + 0.6052078 * x - 3.01711048 * pow(x, 2)
-				+ 1.36595786 * pow(x, 3) - 0.295595 * pow(x, 4)
-				+ 0.03597462 * pow(x, 5) - 0.0025142 * pow(x, 6)
-				+ 0.0000942235 * pow(x, 7) - 0.0000014679 * pow(x, 8);
-
-		return value;
+		std::array<double, 9> coeffs {
+            7.00876507,
+            0.6052078,
+            -3.01711048,
+			1.36595786,
+            -0.295595,
+			0.03597462,
+            -0.0025142,
+			0.0000942235,
+            -0.0000014679
+        };
+		return computePolynomial<double, 9>(coeffs, x);
 	}
 
 public:
