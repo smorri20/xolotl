@@ -63,6 +63,27 @@ IF (Java_FOUND)
     add_subdirectory(gov.ornl.xolotl.preprocessor)
 ENDIF()
 
+# We use Kokkos for multithreading/acceleration.
+find_package(Kokkos REQUIRED)
+if(Kokkos_FOUND)
+    include_directories(${Kokkos_INCLUDE_DIRS})
+
+    # It is easiest for us to use Kokkos' C++ flags if it is
+    # built to target CUDA.
+    if("${KOKKOS_DEVICES}" MATCHES "Cuda")
+
+        # Use the C++ flags that were used to build Kokkos.
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${KOKKOS_CXXFLAGS}")
+
+    elseif(OpenMP_CXX_FOUND)
+
+        # Kokkos is using OpenMP as a backend but not CUDA.
+        # We add the OpenMP flags from our find_package() call for OpenMP
+        # instead of what was used to build Kokkos.
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    endif()
+endif()
+
 # Build the performance library first, so it can be used by other libraries.
 add_subdirectory(xolotlPerf)
 # Add the visualization directory
@@ -123,12 +144,18 @@ include_directories(${CMAKE_SOURCE_DIR}
 
 configure_file ("${CMAKE_SOURCE_DIR}/XolotlConfig.h.in" "${CMAKE_BINARY_DIR}/XolotlConfig.h")
 
-# Setup the library list
-set(XOLOTL_LIBS xolotlReactants xolotlSolver xolotlIO xolotlPerf xolotlViz 
-xolotlFactory xolotlCL ${PETSC_LIBRARIES} ${HDF5_LIBRARIES})
-
-# Add an executable for the main program
+# Specify how to build the executable program.
 ADD_EXECUTABLE (xolotl main.cpp)
 
-# Link the reactants library
-target_link_libraries(xolotl ${XOLOTL_LIBS})
+# Specify which libraries are needed to link against.
+target_link_libraries(xolotl xolotlReactants 
+                        xolotlSolver 
+                        xolotlIO 
+                        xolotlPerf 
+                        xolotlViz
+                        xolotlFactory
+                        xolotlCL
+                        ${PETSC_LIBRARIES}
+                        ${HDF5_LIBRARIES}
+                        ${Kokkos_LIBRARIES})
+

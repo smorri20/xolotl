@@ -20,6 +20,7 @@
 #include <ISolverHandler.h>
 #include <IReactionHandlerFactory.h>
 #include <ctime>
+#include "Kokkos_Core.hpp"
 
 using namespace std;
 using std::shared_ptr;
@@ -217,6 +218,11 @@ int main(int argc, char **argv) {
     // because it may change the command line.
     MPI_Init(&argc, &argv);
 
+    // Initialize Kokkos.
+    // We do this before our own parsing of the command line,
+    // because it may change the command line.
+    Kokkos::initialize(argc, argv);
+
 	try {
         // Check the command line arguments.
         // Skip the executable name before parsing
@@ -248,6 +254,7 @@ int main(int argc, char **argv) {
 	}
 
 	// Clean up.
+    Kokkos::finalize();
 	MPI_Finalize();
 
 	return ret;
