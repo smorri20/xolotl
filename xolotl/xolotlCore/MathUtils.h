@@ -13,6 +13,7 @@
 #include <limits>
 #include <array>
 #include <vector>
+#include <numeric>
 #include <cmath>
 
 namespace xolotlCore {
