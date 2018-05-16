@@ -100,7 +100,7 @@ protected:
 		//! The constructor
 		ProductionCoefficientBase() {
 
-            a.Init(0.0);
+            a.fill(0.0);
 		}
 
 		/**
@@ -209,7 +209,7 @@ protected:
 				PSICluster& _second) :
 				ReactingPairBase(_reaction, _first, _second) {
 
-            a.Init(0.0);
+            a.fill(0.0);
 		}
 
 		/**

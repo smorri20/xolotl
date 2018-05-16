@@ -1505,14 +1505,23 @@ void PSIClusterReactionNetwork::computeRateConstants() {
 void PSIClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset) {
 
 	// ----- Compute all of the new fluxes -----
-	std::for_each(allReactants.begin(), allReactants.end(),
-			[&updatedConcOffset](IReactant& cluster) {
-				// Compute the flux
-				auto flux = cluster.getTotalFlux();
-				// Update the concentration of the cluster
-				auto reactantIndex = cluster.getId() - 1;
-				updatedConcOffset[reactantIndex] += flux;
-			});
+    // NOTE: we would like to use Kokkos for this, but doing so
+    // will reimplementation of things that are called directly/indirectly
+    // from this loop to ensure they are GPU safe and are marked accordingly.
+    //
+    // NOTE2: OpenMP requires a traditional for loop, and requires
+    // that the end condition involve a relational operator.
+#pragma omp parallel for
+    for (auto ridx = 0; ridx < allReactants.size(); ++ridx) {
+
+        IReactant& cluster = allReactants[ridx];
+
+        // Compute the flux
+        auto flux = cluster.getTotalFlux();
+        // Update the concentration of the cluster
+        auto reactantIndex = cluster.getId() - 1;
+        updatedConcOffset[reactantIndex] += flux;
+    }
 
 	// ---- Moments ----
 	for (auto const& currMapItem : getAll(ReactantType::PSISuper)) {
@@ -1588,11 +1597,30 @@ void PSIClusterReactionNetwork::computeAllPartials(
 	}
 
 	// Update the column in the Jacobian that represents the moment for the super clusters
+    //
+    // NOTE: We would like to do this with Kokkos, but is going to require 
+    // a fair bit of data structure reimplementation so that everything
+    // called directly and indirectly in this loop is GPU safe and is
+    // marked appropriately.
+    // 
+    // OpenMP (at least as of 4.0) doesn't support C++11 range-based for loops.
+    // Nor does it seem to support for loops where the end condition is not a
+    // relational comparision.  So we have to extract the reactants from
+    // the map into a data structure that we can then iterate over with
+    // a traditional for loop.
 	auto const& superClusters = getAll(ReactantType::PSISuper);
-	for (auto const& currMapItem : superClusters) {
+    std::vector<std::reference_wrapper<PSISuperCluster>> tmpReactants;
+    tmpReactants.reserve(superClusters.size());
+    for (auto const& mapItem : superClusters) {
 
-		auto const& reactant =
-				static_cast<PSISuperCluster&>(*(currMapItem.second));
+        tmpReactants.emplace_back(
+				static_cast<PSISuperCluster&>(*(mapItem.second)));
+    }
+
+#pragma omp parallel for
+    for (auto ridx = 0; ridx < tmpReactants.size(); ++ridx) {
+
+        auto const& reactant = tmpReactants[ridx].get();
 
 		// Determine cluster's index into the size/indices/vals arrays.
 		auto reactantIndex = reactant.getId() - 1;

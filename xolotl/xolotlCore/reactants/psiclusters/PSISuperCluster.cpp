@@ -4,6 +4,7 @@
 #include "PSIClusterReactionNetwork.h"
 #include <MathUtils.h>
 #include <xolotlPerf.h>
+#include "PSISuperCoeffsFinder.h"
 
 using namespace xolotlCore;
 
@@ -142,58 +143,16 @@ void PSISuperCluster::resultFrom(ProductionReaction& reaction,
 	// TODO any way to enforce this?
 
 	// Update the coefficients
-	std::for_each(prInfos.begin(), prInfos.end(),
-			[this,&prodPair](const PendingProductionReactionInfo& currPRI) {
-
-				// Use names corresponding to those in single version.
-				int a = currPRI.numHe;
-				int b = currPRI.numV;
-				int c = currPRI.i;
-				int d = currPRI.j;
-
-				double firstHeDistance = 0.0, firstVDistance = 0.0, secondHeDistance = 0.0,
-				secondVDistance = 0.0;
-				if (prodPair.first.getType() == ReactantType::PSISuper) {
-					auto const& super = static_cast<PSICluster const&>(prodPair.first);
-					firstHeDistance = super.getHeDistance(c);
-					firstVDistance = super.getVDistance(d);
-				}
-				if (prodPair.second.getType() == ReactantType::PSISuper) {
-					auto const& super = static_cast<PSICluster const&>(prodPair.second);
-					secondHeDistance = super.getHeDistance(c);
-					secondVDistance = super.getVDistance(d);
-				}
-				double heFactor = (double) (a - numHe) / dispersionHe;
-				double vFactor = (double) (b - numV) / dispersionV;
-				// First is A, second is B, in A + B -> this
-				prodPair.a[0][0][0] += 1.0;
-				prodPair.a[0][0][1] += heFactor;
-				prodPair.a[0][0][2] += vFactor;
-				prodPair.a[1][0][0] += firstHeDistance;
-				prodPair.a[1][0][1] += firstHeDistance * heFactor;
-				prodPair.a[1][0][2] += firstHeDistance * vFactor;
-				prodPair.a[2][0][0] += firstVDistance;
-				prodPair.a[2][0][1] += firstVDistance * heFactor;
-				prodPair.a[2][0][2] += firstVDistance * vFactor;
-				prodPair.a[0][1][0] += secondHeDistance;
-				prodPair.a[0][1][1] += secondHeDistance * heFactor;
-				prodPair.a[0][1][2] += secondHeDistance * vFactor;
-				prodPair.a[0][2][0] += secondVDistance;
-				prodPair.a[0][2][1] += secondVDistance * heFactor;
-				prodPair.a[0][2][2] += secondVDistance * vFactor;
-				prodPair.a[1][1][0] += firstHeDistance * secondHeDistance;
-				prodPair.a[1][1][1] += firstHeDistance * secondHeDistance * heFactor;
-				prodPair.a[1][1][2] += firstHeDistance * secondHeDistance * vFactor;
-				prodPair.a[1][2][0] += firstHeDistance * secondVDistance;
-				prodPair.a[1][2][1] += firstHeDistance * secondVDistance * heFactor;
-				prodPair.a[1][2][2] += firstHeDistance * secondVDistance * vFactor;
-				prodPair.a[2][1][0] += firstVDistance * secondHeDistance;
-				prodPair.a[2][1][1] += firstVDistance * secondHeDistance * heFactor;
-				prodPair.a[2][1][2] += firstVDistance * secondHeDistance * vFactor;
-				prodPair.a[2][2][0] += firstVDistance * secondVDistance;
-				prodPair.a[2][2][1] += firstVDistance * secondVDistance * heFactor;
-				prodPair.a[2][2][2] += firstVDistance * secondVDistance * vFactor;
-			});
+    // We compute the coefficient deltas in parallel, then apply them to the
+    // prodPair's coefficients.
+    SuperProductCoeffsFinder::ValueType deltas;
+    Kokkos::parallel_reduce(prInfos.size(),
+                SuperProductCoeffsFinder(prodPair.first, prodPair.second,
+                                    numHe, numV,
+                                    dispersionHe, dispersionV,
+                                    prInfos),
+                deltas);
+    prodPair.a += deltas;
 
 	return;
 }
@@ -245,7 +204,7 @@ void PSISuperCluster::participateIn(ProductionReaction& reaction, int a,
 }
 
 void PSISuperCluster::participateIn(ProductionReaction& reaction,
-		const std::vector<PendingProductionReactionInfo>& pendingPRInfos) {
+		const std::vector<PendingProductionReactionInfo>& prInfos) {
 
 	setReactionConnectivity(id);
 	// Look for the other cluster
@@ -272,28 +231,14 @@ void PSISuperCluster::participateIn(ProductionReaction& reaction,
 	auto& combCluster = it->second;
 
 	// Update the coefficients
-	std::for_each(pendingPRInfos.begin(), pendingPRInfos.end(),
-			[this,&combCluster](const PendingProductionReactionInfo& currPRInfo) {
-
-				// Use names corresponding to the single-item version.
-				int a = currPRInfo.i;
-				int b = currPRInfo.j;
-
-				double heDistance = getHeDistance(a);
-				double heFactor = (double) (a - numHe) / dispersionHe;
-				double vDistance = getVDistance(b);
-				double vFactor = (double) (b - numV) / dispersionV;
-				// This is A, itBis is B, in A + B -> C
-				combCluster.a[0][0][0] += 1.0;
-				combCluster.a[0][0][1] += heFactor;
-				combCluster.a[0][0][2] += vFactor;
-				combCluster.a[1][0][0] += heDistance;
-				combCluster.a[1][0][1] += heDistance * heFactor;
-				combCluster.a[1][0][2] += heDistance * vFactor;
-				combCluster.a[2][0][0] += vDistance;
-				combCluster.a[2][0][1] += vDistance * heFactor;
-				combCluster.a[2][0][2] += vDistance * vFactor;
-			});
+    SuperCombiningCoeffsFinder::ValueType deltas;
+    Kokkos::parallel_reduce(prInfos.size(),
+                SuperCombiningCoeffsFinder(*this,
+                    numHe, numV,
+                    dispersionHe, dispersionV,
+                    prInfos),
+                deltas);
+    combCluster.a += deltas;
 
 	return;
 }
@@ -380,35 +325,14 @@ void PSISuperCluster::participateIn(DissociationReaction& reaction,
 	auto& dissPair = it->second;
 
 	// Update the coefficients
-	std::for_each(prInfos.begin(), prInfos.end(),
-			[this,&dissPair,&reaction](const PendingProductionReactionInfo& currPRI) {
-
-				// Use names corresponding to the single-item version.
-				int a = currPRI.numHe;
-				int b = currPRI.numV;
-				int c = currPRI.i;
-				int d = currPRI.j;
-
-				double firstHeDistance = 0.0, firstVDistance = 0.0;
-				if (reaction.dissociating.getType() == ReactantType::PSISuper) {
-					auto const& super = static_cast<PSICluster const&>(reaction.dissociating);
-					firstHeDistance = super.getHeDistance(a);
-					firstVDistance = super.getVDistance(b);
-				}
-				double heFactor = (double) (c - numHe) / dispersionHe;
-				double vFactor = (double) (d - numV) / dispersionV;
-
-				// A is the dissociating cluster
-				dissPair.a[0][0] += 1.0;
-				dissPair.a[0][1] += heFactor;
-				dissPair.a[0][2] += vFactor;
-				dissPair.a[1][0] += firstHeDistance;
-				dissPair.a[1][1] += firstHeDistance * heFactor;
-				dissPair.a[1][2] += firstHeDistance * vFactor;
-				dissPair.a[2][0] += firstVDistance;
-				dissPair.a[2][1] += firstVDistance * heFactor;
-				dissPair.a[2][2] += firstVDistance * vFactor;
-			});
+    SuperDissociatingCoeffsFinder::ValueType deltas;
+    Kokkos::parallel_reduce(prInfos.size(),
+                SuperDissociatingCoeffsFinder(reaction.dissociating,
+                                            numHe, numV,
+                                            dispersionHe, dispersionV,
+                                            prInfos),
+                deltas);
+    dissPair.a += deltas;
 
 	return;
 }
@@ -483,28 +407,14 @@ void PSISuperCluster::emitFrom(DissociationReaction& reaction,
 	auto& dissPair = it->second;
 
 	// Update the coeeficients
-	std::for_each(prInfos.begin(), prInfos.end(),
-			[this,&dissPair](const PendingProductionReactionInfo& currPRI) {
-
-				// Use same names as used in single version.
-				int a = currPRI.numHe;
-				int b = currPRI.numV;
-
-				double heDistance = getHeDistance(a);
-				double heFactor = (double) (a - numHe) / dispersionHe;
-				double vDistance = getVDistance(b);
-				double vFactor = (double) (b - numV) / dispersionV;
-				// A is the dissociating cluster
-				dissPair.a[0][0] += 1.0;
-				dissPair.a[0][1] += heFactor;
-				dissPair.a[0][2] += vFactor;
-				dissPair.a[1][0] += heDistance;
-				dissPair.a[1][1] += heDistance * heFactor;
-				dissPair.a[1][2] += heDistance * vFactor;
-				dissPair.a[2][0] += vDistance;
-				dissPair.a[2][1] += vDistance * heFactor;
-				dissPair.a[2][2] += vDistance * vFactor;
-			});
+    SuperEmittingCoeffsFinder::ValueType deltas;
+    Kokkos::parallel_reduce(prInfos.size(),
+            SuperEmittingCoeffsFinder(*this,
+                                    numHe, numV,
+                                    dispersionHe, dispersionV,
+                                    prInfos),
+            deltas);
+    dissPair.a += deltas;
 
 	return;
 }

@@ -76,7 +76,7 @@ protected:
 				PSICluster& _second) :
 				first(_first), second(_second), reaction(_reaction) {
 
-            a.Init(0.0);
+            a.fill(0.0);
 		}
 
 		/**
@@ -125,7 +125,7 @@ protected:
 		CombiningCluster(Reaction& _reaction, PSICluster& _comb) :
 				combining(_comb), reaction(_reaction) {
 
-            a.Init(0.0);
+            a.fill(0.0);
 		}
 
 		/**
