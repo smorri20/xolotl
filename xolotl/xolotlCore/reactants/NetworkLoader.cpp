@@ -4,10 +4,6 @@
 // Namespaces
 using namespace xolotlCore;
 
-NetworkLoader::NetworkLoader() :
-		networkStream(nullptr), handlerRegistry(nullptr), fileName(""), dummyReactions(
-				false) {
-}
 
 NetworkLoader::NetworkLoader(
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :

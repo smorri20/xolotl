@@ -75,10 +75,7 @@ protected:
 	/**
 	 * Private nullary constructor.
 	 */
-	FeClusterNetworkLoader() :
-			NetworkLoader(), vMin(1000000), maxHe(0), maxI(0), maxV(0), heSectionWidth(
-					1), vSectionWidth(1) {
-	}
+	FeClusterNetworkLoader() = delete;
 
 	/**
 	 * This operation creates a singles-species cluster of helium, vacancies or

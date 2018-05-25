@@ -73,7 +73,7 @@ std::unique_ptr<PSICluster> PSIClusterNetworkLoader::createPSICluster(int numHe,
 }
 
 void PSIClusterNetworkLoader::pushPSICluster(
-		std::unique_ptr<PSIClusterReactionNetwork> & network,
+        PSIClusterReactionNetwork& network,
 		std::vector<std::reference_wrapper<Reactant> > & reactants,
 		std::unique_ptr<PSICluster> & cluster) {
 	// Check if we want dummy reactions
@@ -85,52 +85,46 @@ void PSIClusterNetworkLoader::pushPSICluster(
 		reactants.emplace_back(*dummyCluster);
 
 		// Give the cluster to the network
-		network->add(std::move(dummyCluster));
+		network.add(std::move(dummyCluster));
 	} else {
 		// Save access to it so we can trigger updates after
 		// we add all to the network.
 		reactants.emplace_back(*cluster);
 
 		// Give the cluster to the network
-		network->add(std::move(cluster));
+		network.add(std::move(cluster));
 	}
 
 	return;
 }
 
 PSIClusterNetworkLoader::PSIClusterNetworkLoader(
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
-	networkStream = nullptr;
-	handlerRegistry = registry;
-	fileName = "";
-	dummyReactions = false;
-	vMin = 1000000;
-	heSectionWidth = 1;
-	vSectionWidth = 1;
-	maxHe = -1;
-	maxI = -1;
-	maxV = -1;
-	maxD = -1;
-	maxT = -1;
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry)
+  : NetworkLoader(registry),
+	vMin(1000000),
+	heSectionWidth(1),
+	vSectionWidth(1),
+	maxHe(-1),
+	maxI(-1),
+	maxV(-1),
+	maxD(-1),
+	maxT(-1) {
 
 	return;
 }
 
 PSIClusterNetworkLoader::PSIClusterNetworkLoader(
 		const std::shared_ptr<std::istream> stream,
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
-	networkStream = nullptr;
-	handlerRegistry = registry;
-	fileName = "";
-	dummyReactions = false;
-	vMin = 1000000;
-	heSectionWidth = 1;
-	vSectionWidth = 1;
-	maxHe = -1;
-	maxI = -1;
-	maxV = -1;
-	maxD = -1;
-	maxT = -1;
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry)
+  : NetworkLoader(stream, registry),
+	vMin(1000000),
+	heSectionWidth(1),
+	vSectionWidth(1),
+	maxHe(-1),
+	maxI(-1),
+	maxV(-1),
+	maxD(-1),
+	maxT(-1) {
 
 	return;
 }
@@ -192,7 +186,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::load(
 					nextCluster->setDiffusionFactor(diffusionFactor);
 
 					// Save it in the network
-					pushPSICluster(network, reactants, nextCluster);
+					pushPSICluster(*network, reactants, nextCluster);
 				}
 			}
 
@@ -315,7 +309,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 		}
 
 		// Save it in the network
-		pushPSICluster(network, reactants, nextCluster);
+		pushPSICluster(*network, reactants, nextCluster);
 	}
 
 	// Reset the I composition
@@ -345,7 +339,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 		}
 
 		// Save it in the network
-		pushPSICluster(network, reactants, nextCluster);
+		pushPSICluster(*network, reactants, nextCluster);
 	}
 
 	// Reset the He composition
@@ -372,7 +366,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 		}
 
 		// Save it in the network
-		pushPSICluster(network, reactants, nextCluster);
+		pushPSICluster(*network, reactants, nextCluster);
 	}
 
 	// Reset the D composition
@@ -399,7 +393,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 		}
 
 		// Save it in the network
-		pushPSICluster(network, reactants, nextCluster);
+		pushPSICluster(*network, reactants, nextCluster);
 	}
 
 	// Reset the T composition
@@ -427,7 +421,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 			}
 
 			// Save it in the network
-			pushPSICluster(network, reactants, nextCluster);
+			pushPSICluster(*network, reactants, nextCluster);
 
 			// For V < 12 loop on all the possible helium numbers up to
 			// the maximum size in the maxHePerV array
@@ -445,7 +439,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 							std::numeric_limits<double>::infinity());
 
 					// Save it in the network
-					pushPSICluster(network, reactants, nextCluster);
+					pushPSICluster(*network, reactants, nextCluster);
 				}
 			}
 			// For bigger V only add the needed helium sizes
@@ -463,7 +457,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 							std::numeric_limits<double>::infinity());
 
 					// Save it in the network
-					pushPSICluster(network, reactants, nextCluster);
+					pushPSICluster(*network, reactants, nextCluster);
 				}
 			}
 
@@ -492,7 +486,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 			}
 
 			// Save it in the network
-			pushPSICluster(network, reactants, nextCluster);
+			pushPSICluster(*network, reactants, nextCluster);
 
 			// Loop on the helium number
 			for (int j = (i * 4) - 3; j <= i * 4; j++) {
@@ -508,7 +502,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 						std::numeric_limits<double>::infinity());
 
 				// Save it in the network
-				pushPSICluster(network, reactants, nextCluster);
+				pushPSICluster(*network, reactants, nextCluster);
 			}
 
 			// Reset the helium composition
@@ -538,7 +532,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 			}
 
 			// Save it in the network
-			pushPSICluster(network, reactants, nextCluster);
+			pushPSICluster(*network, reactants, nextCluster);
 
 			// Loop on the helium number
 			int upperHe = maxHePerV[i - 1];
@@ -579,7 +573,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 									std::numeric_limits<double>::infinity());
 
 							// Save it in the network
-							pushPSICluster(network, reactants, nextCluster);
+							pushPSICluster(*network, reactants, nextCluster);
 						}
 					}
 					// Reset the tritium composition
@@ -613,7 +607,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 			}
 
 			// Save it in the network
-			pushPSICluster(network, reactants, nextCluster);
+			pushPSICluster(*network, reactants, nextCluster);
 
 			// Loop on the helium number
 			int upperHe = i * 4;
@@ -654,7 +648,7 @@ std::unique_ptr<IReactionNetwork> PSIClusterNetworkLoader::generate(
 									std::numeric_limits<double>::infinity());
 
 							// Save it in the network
-							pushPSICluster(network, reactants, nextCluster);
+							pushPSICluster(*network, reactants, nextCluster);
 						}
 					}
 					// Reset the tritium composition

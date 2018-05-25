@@ -46,9 +46,7 @@ protected:
 	/**
 	 * Private nullary constructor.
 	 */
-	NEClusterNetworkLoader() :
-			xeMin(-1), sectionWidth(-1) {
-	}
+	NEClusterNetworkLoader() = delete;
 
 	/**
 	 * This operation creates a singles-species cluster of helium, vacancies or

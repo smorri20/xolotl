@@ -88,10 +88,7 @@ protected:
 	/**
 	 * Private nullary constructor.
 	 */
-	PSIClusterNetworkLoader() :
-			NetworkLoader(), vMin(1000000), maxHe(0), maxI(0), maxV(0), heSectionWidth(
-					1), vSectionWidth(1) {
-	}
+	PSIClusterNetworkLoader() = delete;
 
 	/**
 	 * This operation creates a singles-species cluster of helium, vacancies or
@@ -117,7 +114,7 @@ protected:
 	 * @param cluster The cluster to add to them
 	 */
 	virtual void pushPSICluster(
-			std::unique_ptr<PSIClusterReactionNetwork> & network,
+            PSIClusterReactionNetwork& network,
 			std::vector<std::reference_wrapper<Reactant> > & reactants,
 			std::unique_ptr<PSICluster> & cluster);
 

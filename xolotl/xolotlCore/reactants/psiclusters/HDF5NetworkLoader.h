@@ -16,8 +16,7 @@ private:
 	/**
 	 * Private nullary constructor.
 	 */
-	HDF5NetworkLoader() {
-	}
+	HDF5NetworkLoader() = delete;
 
 public:
 

@@ -70,26 +70,20 @@ void NEClusterNetworkLoader::pushNECluster(
 }
 
 NEClusterNetworkLoader::NEClusterNetworkLoader(
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
-	networkStream = nullptr;
-	handlerRegistry = registry;
-	fileName = "";
-	dummyReactions = false;
-	xeMin = 1000000;
-	sectionWidth = 1;
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) 
+  : NetworkLoader(registry),
+	xeMin(1000000),
+	sectionWidth(1) {
 
 	return;
 }
 
 NEClusterNetworkLoader::NEClusterNetworkLoader(
 		const std::shared_ptr<std::istream> stream,
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
-	networkStream = stream;
-	handlerRegistry = registry;
-	fileName = "";
-	dummyReactions = false;
-	xeMin = 1000000;
-	sectionWidth = 1;
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry)
+  : NetworkLoader(stream, registry),
+	xeMin(1000000),
+	sectionWidth(1) {
 
 	return;
 }

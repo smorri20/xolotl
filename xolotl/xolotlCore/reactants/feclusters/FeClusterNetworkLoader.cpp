@@ -46,34 +46,28 @@ std::unique_ptr<FeCluster> FeClusterNetworkLoader::createFeCluster(int numHe,
 }
 
 FeClusterNetworkLoader::FeClusterNetworkLoader(
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
-	networkStream = nullptr;
-	handlerRegistry = registry;
-	fileName = "";
-	dummyReactions = false;
-	vMin = 1000000;
-	heSectionWidth = 1;
-	vSectionWidth = 1;
-	maxHe = -1;
-	maxI = -1;
-	maxV = -1;
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) 
+  : NetworkLoader(registry),
+	vMin(1000000),
+	heSectionWidth(1),
+	vSectionWidth(1),
+	maxHe(-1),
+	maxI(-1),
+	maxV(-1) {
 
 	return;
 }
 
 FeClusterNetworkLoader::FeClusterNetworkLoader(
 		const std::shared_ptr<std::istream> stream,
-		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) {
-	networkStream = nullptr;
-	handlerRegistry = registry;
-	fileName = "";
-	dummyReactions = false;
-	vMin = 1000000;
-	heSectionWidth = 1;
-	vSectionWidth = 1;
-	maxHe = -1;
-	maxI = -1;
-	maxV = -1;
+		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry)
+  : NetworkLoader(stream, registry),
+	vMin(1000000),
+	heSectionWidth(1),
+	vSectionWidth(1),
+	maxHe(-1),
+	maxI(-1),
+	maxV(-1) {
 
 	return;
 }

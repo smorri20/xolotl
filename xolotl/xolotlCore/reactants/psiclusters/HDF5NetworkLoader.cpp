@@ -56,7 +56,7 @@ std::unique_ptr<IReactionNetwork> HDF5NetworkLoader::load(
 			nextCluster->setDiffusionFactor(diffusionFactor);
 
 			// Save it in the network
-			pushPSICluster(network, reactants, nextCluster);
+			pushPSICluster(*network, reactants, nextCluster);
 		}
 	}
 

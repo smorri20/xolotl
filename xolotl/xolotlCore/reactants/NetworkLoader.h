@@ -37,7 +37,7 @@ protected:
 	/**
 	 * Private nullary constructor.
 	 */
-	NetworkLoader();
+	NetworkLoader() = delete;
 
 public:
 
