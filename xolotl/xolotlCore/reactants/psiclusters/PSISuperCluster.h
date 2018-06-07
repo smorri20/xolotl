@@ -10,6 +10,7 @@
 #include "ReactionNetwork.h"
 #include "IntegerRange.h"
 #include "NDArray.h"
+#include "PSISuperFlux.h"
 
 
 // We use std::unordered_map for quick lookup of info about 
@@ -306,6 +307,11 @@ private:
 
 public:
 
+    /**
+     * Type of flux we compute.
+     */
+    using FluxType = PSISuperFlux;
+
 	/**
 	 * Default constructor, deleted because we require info to construct.
 	 */
@@ -565,13 +571,15 @@ public:
 	 * reactions
 	 */
 	double getTotalFlux() override {
-		// Initialize the fluxes
-		heMomentumFlux = 0.0;
-		vMomentumFlux = 0.0;
 
 		// Compute the fluxes.
-		return getProductionFlux() - getCombinationFlux()
-				+ getDissociationFlux() - getEmissionFlux();
+        auto flux = computeProductionFlux() - computeCombinationFlux() +
+                    computeDissociationFlux() - computeEmissionFlux();
+        
+        heMomentumFlux = flux.heMoment;
+        vMomentumFlux = flux.vMoment;
+
+        return flux.total;
 	}
 
 	/**
@@ -609,6 +617,42 @@ public:
 	 * @return The flux due to this cluster combining with other clusters
 	 */
 	double getCombinationFlux();
+
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * other clusters dissociating into it. Compute the contributions to
+	 * the momentum fluxes at the same time.
+	 *
+	 * @return The flux due to dissociation of other clusters
+	 */
+	FluxType computeDissociationFlux() const;
+
+	/**
+	 * This operation returns the total change in this cluster due its
+	 * own dissociation. Compute the contributions to
+	 * the momentum fluxes at the same time.
+	 *
+	 * @return The flux due to its dissociation
+	 */
+	FluxType computeEmissionFlux() const;
+
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * the production of this cluster by other clusters. Compute the contributions to
+	 * the momentum fluxes at the same time.
+	 *
+	 * @return The flux due to this cluster being produced
+	 */
+	FluxType computeProductionFlux() const;
+
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * the combination of this cluster with others. Compute the contributions to
+	 * the momentum fluxes at the same time.
+	 *
+	 * @return The flux due to this cluster combining with other clusters
+	 */
+	FluxType computeCombinationFlux() const;
 
 	/**
 	 * This operation returns the total change for its helium momentum.
@@ -794,6 +838,15 @@ public:
 	 * @param os Output stream on which to output coefficients.
 	 */
 	virtual void outputCoefficientsTo(std::ostream& os) const override;
+
+#if READY
+    /**
+     * Compute our flux and use it to update concentrations.
+     *
+     * @param concs Concentrations we should update.
+     */
+    void updateConcs(double* concs) const override;
+#endif // READY
 };
 //end class PSISuperCluster
 

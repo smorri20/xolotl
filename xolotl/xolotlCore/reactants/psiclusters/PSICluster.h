@@ -5,6 +5,7 @@
 #include <Reactant.h>
 #include "IntegerRange.h"
 #include "NDArray.h"
+#include "Flux.h"
 
 namespace xolotlPerf {
 class ITimer;
@@ -176,6 +177,11 @@ protected:
 	void dumpCoefficients(std::ostream& os, CombiningCluster const& curr) const;
 
 public:
+
+    /**
+     * Type of flux we compute.
+     */
+    using FluxType = Flux;
 
 	/**
 	 * A vector of ClusterPairs that represents reacting pairs of clusters
@@ -405,8 +411,28 @@ public:
 	 * reactions
 	 */
 	virtual double getTotalFlux() override {
+
+#if READY
 		return getProductionFlux() - getCombinationFlux()
 				+ getDissociationFlux() - getEmissionFlux();
+#else
+        auto pFlux = computeProductionFlux();
+        auto cFlux = computeCombinationFlux();
+        auto dFlux = computeDissociationFlux();
+        auto eFlux = computeEmissionFlux();
+
+        auto prodFlux = getProductionFlux();
+        auto combFlux = getCombinationFlux();
+        auto dissFlux = getDissociationFlux();
+        auto emitFlux = getEmissionFlux();
+
+        assert(pFlux.total == prodFlux);
+        assert(cFlux.total == combFlux);
+        assert(dFlux.total == dissFlux);
+        assert(eFlux.total == emitFlux);
+
+        return prodFlux - combFlux + dissFlux - emitFlux;
+#endif // READY
 	}
 
 	/**
@@ -416,6 +442,7 @@ public:
 	 * @return The flux due to dissociation of other clusters
 	 */
 	virtual double getDissociationFlux() const;
+    FluxType computeDissociationFlux() const;
 
 	/**
 	 * This operation returns the total change in this cluster due its
@@ -424,6 +451,7 @@ public:
 	 * @return The flux due to its dissociation
 	 */
 	virtual double getEmissionFlux() const;
+	FluxType computeEmissionFlux() const;
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -432,6 +460,7 @@ public:
 	 * @return The flux due to this cluster being produced
 	 */
 	virtual double getProductionFlux() const;
+	FluxType computeProductionFlux() const;
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -440,6 +469,7 @@ public:
 	 * @return The flux due to this cluster combining with other clusters
 	 */
 	virtual double getCombinationFlux() const;
+	FluxType computeCombinationFlux() const;
 
 	/**
 	 * This operation returns the list of partial derivatives of this cluster
@@ -567,6 +597,15 @@ public:
 	 * @param os Output stream on which to output coefficients.
 	 */
 	virtual void outputCoefficientsTo(std::ostream& os) const override;
+
+#if READY
+    /**
+     * Compute our flux and use it to update concentrations.
+     *
+     * @param concs Concentrations we should update.
+     */
+    void updateConcs(double* concs) const override;
+#endif // READY
 };
 
 } /* end namespace xolotlCore */

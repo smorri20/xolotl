@@ -1533,6 +1533,16 @@ void PSIClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset) {
 		updatedConcOffset[reactantIndex] += flux;
 	}
 
+#if READY
+    // TODO if this works - move it to base class.
+    std::for_each(allReactants.begin(), allReactants.end(),
+        [&updatedConcOffset](IReactant& cluster) {
+            
+            cluster.updateConcs(updatedConcOffset);
+        });
+
+#endif // READY
+
 	return;
 }
 

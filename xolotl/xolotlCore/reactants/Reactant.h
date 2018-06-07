@@ -5,6 +5,7 @@
 #include <math.h>
 #include <sstream>
 #include <set>
+#include <cassert>
 #include "IReactant.h"
 #include "IReactionNetwork.h"
 #include "ProductionReaction.h"
@@ -453,6 +454,24 @@ public:
 	}
 
 	/**
+	 * This operation returns the total flux of this reactant in the
+	 * current network.
+	 *
+	 * @return The total change in flux for this reactant due to all
+	 * reactions
+	 */
+    // NOTE: this is a static member function instead of a
+    // virtual non-static member function so that we can use
+    // the same implementation for all derived classes, but still
+    // extend the flux type for derived classes.
+    template<typename T>
+    static typename T::FluxType computeFlux(const T& obj) {
+    
+        return obj.computeProductionFlux() - obj.computeCombinationFlux() +
+                obj.computeDissociationFlux() - obj.computeEmissionFlux();
+    }
+
+	/**
 	 * Update reactant using other reactants in its network.
 	 */
 	virtual void updateFromNetwork() override {
@@ -783,6 +802,20 @@ public:
 	virtual void outputCoefficientsTo(std::ostream& os) const override {
 		// Nothing to do.
 	}
+
+
+#if READY
+    /**
+     * Compute our flux and use it to update concentrations.
+     *
+     * @param concs Concentrations we should update.
+     */
+    void updateConcs(double* concs) const override {
+
+        // should not be called, but must be defined.
+        assert(false);
+    }
+#endif // READY
 };
 
 } // end namespace xolotlCore

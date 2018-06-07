@@ -503,6 +503,15 @@ public:
 	 * @param os Output stream on which to output coefficients.
 	 */
 	virtual void outputCoefficientsTo(std::ostream& os) const = 0;
+
+#if READY
+    /**
+     * Compute our flux and use it to update concentrations.
+     *
+     * @param concs Concentrations we should update.
+     */
+    virtual void updateConcs(double* concs) const = 0;
+#endif // READY
 };
 
 /**

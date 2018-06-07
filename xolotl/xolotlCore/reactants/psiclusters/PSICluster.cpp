@@ -6,7 +6,7 @@
 #include <Constants.h>
 #include <MathUtils.h>
 
-using namespace xolotlCore;
+namespace xolotlCore {
 
 void PSICluster::resultFrom(ProductionReaction& reaction, int a, int b, int c,
 		int d) {
@@ -464,6 +464,109 @@ double PSICluster::getCombinationFlux() const {
 	return flux * concentration;
 }
 
+
+Flux PSICluster::computeDissociationFlux() const {
+
+	// Sum dissociation flux over all our dissociating clusters.
+	Flux flux = std::accumulate(dissociatingPairs.begin(),
+			dissociatingPairs.end(), Flux(),
+			[](const Flux& running, const ClusterPair& currPair) {
+				auto const& dissCluster = currPair.first;
+				double l0A = dissCluster.getConcentration(0.0, 0.0);
+				double lHeA = dissCluster.getHeMomentum();
+				double lVA = dissCluster.getVMomentum();
+
+				// Calculate the Dissociation flux
+				return running +
+				(currPair.reaction.kConstant *
+						(currPair.a[0][0] * l0A +
+								currPair.a[1][0] * lHeA +
+								currPair.a[2][0] * lVA));
+			});
+
+	// Return the flux
+	return flux;
+}
+
+Flux PSICluster::computeEmissionFlux() const {
+
+	// Sum rate constants from all emission pair reactions.
+	Flux flux = std::accumulate(emissionPairs.begin(), emissionPairs.end(),
+			Flux(), [](const Flux& running, const ClusterPair& currPair) {
+				return running + currPair.reaction.kConstant;
+			});
+
+	return flux * concentration;
+}
+
+Flux PSICluster::computeProductionFlux() const {
+
+	// Sum production flux over all reacting pairs.
+	Flux flux = std::accumulate(reactingPairs.begin(), reactingPairs.end(),
+			Flux(), [](const Flux& running, const ClusterPair& currPair) {
+
+				// Get the two reacting clusters
+			auto const& firstReactant = currPair.first;
+			auto const& secondReactant = currPair.second;
+			double l0A = firstReactant.getConcentration(0.0, 0.0);
+			double l0B = secondReactant.getConcentration(0.0, 0.0);
+			double lHeA = firstReactant.getHeMomentum();
+			double lHeB = secondReactant.getHeMomentum();
+			double lVA = firstReactant.getVMomentum();
+			double lVB = secondReactant.getVMomentum();
+			// Update the flux
+			return running + currPair.reaction.kConstant *
+			(currPair.a[0][0] * l0A * l0B + currPair.a[0][1] * l0A * lHeB +
+					currPair.a[0][2] * l0A * lVB + currPair.a[1][0] * lHeA * l0B +
+					currPair.a[1][1] * lHeA * lHeB + currPair.a[1][2] * lHeA * lVB +
+					currPair.a[2][0] * lVA * l0B + currPair.a[2][1] * lVA * lHeB +
+					currPair.a[2][2] * lVA * lVB);
+		});
+
+	// Return the production flux
+	return flux;
+}
+
+Flux PSICluster::computeCombinationFlux() const {
+
+	// Sum combination flux over all clusters that combine with us.
+	Flux flux = std::accumulate(combiningReactants.begin(),
+			combiningReactants.end(), Flux(),
+			[](const Flux& running, const CombiningCluster& cc) {
+
+				// Get the cluster that combines with this one
+				auto const& combiningCluster = cc.combining;
+				double l0B = combiningCluster.getConcentration(0.0, 0.0);
+				double lHeB = combiningCluster.getHeMomentum();
+				double lVB = combiningCluster.getVMomentum();
+				// Calculate the combination flux
+				return running + (cc.reaction.kConstant *
+						(cc.a[0] * l0B + cc.a[1] * lHeB + cc.a[2] * lVB));
+
+			});
+
+	return flux * concentration;
+}
+
+#if READY
+void PSICluster::updateConcs(double* concs) const {
+
+    // Compute our flux.
+    auto flux = Reactant::computeFlux<PSICluster>(*this);
+
+    // Apply flux to current concentrations.
+    updateConcsFromFlux(concs, flux);
+}
+
+
+void PSICluster::updateConcsFromFlux(double* concs, const Flux& flux) const {
+
+    auto idx = getId() - 1;
+    concs[idx] += flux.total;
+}
+#endif // READY
+
+
 std::vector<double> PSICluster::getPartialDerivatives() const {
 	// Local Declarations
 	std::vector<double> partials(network.getDOF(), 0.0);
@@ -734,3 +837,4 @@ void PSICluster::outputCoefficientsTo(std::ostream& os) const {
 			});
 }
 
+} // namespace xolotlCore

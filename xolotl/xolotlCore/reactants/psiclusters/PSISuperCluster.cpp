@@ -682,12 +682,15 @@ double PSISuperCluster::getDissociationFlux() {
 	// Initial declarations
 	double flux = 0.0;
 
+    double pcrHeFlux = 0.0;
+    double pcrVFlux = 0.0;
+
 	// Sum over all the dissociating pairs
 	// TODO consider using std::accumulate.  May also want to change side
 	// effect of updating member variables heMomentumFlux and
 	// vMomentumFlux here.
 	std::for_each(effDissociatingList.begin(), effDissociatingList.end(),
-			[this,&flux](DissociationPairMap::value_type const& currMapItem) {
+			[this,&flux,&pcrHeFlux,&pcrVFlux](DissociationPairMap::value_type const& currMapItem) {
 				auto const& currPair = currMapItem.second;
 
 				// Get the dissociating clusters
@@ -699,11 +702,14 @@ double PSISuperCluster::getDissociationFlux() {
 				auto value = currPair.kConstant / (double) nTot;
 				flux += value * (currPair.a[0][0] * l0A + currPair.a[1][0] * lHeA + currPair.a[2][0] * lVA);
 				// Compute the momentum fluxes
-				heMomentumFlux += value
+				pcrHeFlux += value
 				* (currPair.a[0][1] * l0A + currPair.a[1][1] * lHeA + currPair.a[2][1] * lVA);
-				vMomentumFlux += value
+				pcrVFlux += value
 				* (currPair.a[0][2] * l0A + currPair.a[1][2] * lHeA + currPair.a[2][2] * lVA);
 			});
+    
+    heMomentumFlux += pcrHeFlux;
+    vMomentumFlux += pcrVFlux;
 
 	// Return the flux
 	return flux;
@@ -713,23 +719,29 @@ double PSISuperCluster::getEmissionFlux() {
 	// Initial declarations
 	double flux = 0.0;
 
+    double pcrHeFlux = 0.0;
+    double pcrVFlux = 0.0;
+
 	// Loop over all the emission pairs
 	// TODO consider using std::accumulate.  May also want to change side
 	// effect of updating member variables heMomentumFlux and
 	// vMomentumFlux here.
 	std::for_each(effEmissionList.begin(), effEmissionList.end(),
-			[this,&flux](DissociationPairMap::value_type const& currMapItem) {
+			[this,&flux,&pcrHeFlux,&pcrVFlux](DissociationPairMap::value_type const& currMapItem) {
 				auto const& currPair = currMapItem.second;
 
 				// Update the flux
 				auto value = currPair.kConstant / (double) nTot;
 				flux += value * (currPair.a[0][0] * l0 + currPair.a[1][0] * l1He + currPair.a[2][0] * l1V);
 				// Compute the momentum fluxes
-				heMomentumFlux -= value
+				pcrHeFlux += value
 				* (currPair.a[0][1] * l0 + currPair.a[1][1] * l1He + currPair.a[2][1] * l1V);
-				vMomentumFlux -= value
+				pcrVFlux += value
 				* (currPair.a[0][2] * l0 + currPair.a[1][2] * l1He + currPair.a[2][2] * l1V);
 			});
+
+    heMomentumFlux -= pcrHeFlux;
+    vMomentumFlux -= pcrVFlux;
 
 	return flux;
 }
@@ -738,12 +750,15 @@ double PSISuperCluster::getProductionFlux() {
 	// Local declarations
 	double flux = 0.0;
 
+    double pcrHeFlux = 0.0;
+    double pcrVFlux = 0.0;
+
 	// Sum over all the reacting pairs
 	// TODO consider using std::accumulate.  May also want to change side
 	// effect of updating member variables heMomentumFlux and
 	// vMomentumFlux here.
 	std::for_each(effReactingList.begin(), effReactingList.end(),
-			[this,&flux](ProductionPairMap::value_type const& currMapItem) {
+			[this,&flux,&pcrHeFlux,&pcrVFlux](ProductionPairMap::value_type const& currMapItem) {
 
 				auto const& currPair = currMapItem.second;
 
@@ -765,20 +780,23 @@ double PSISuperCluster::getProductionFlux() {
 						+ currPair.a[2][0][0] * lVA * l0B + currPair.a[2][1][0] * lVA * lHeB
 						+ currPair.a[2][2][0] * lVA * lVB);
 				// Compute the momentum fluxes
-				heMomentumFlux += value
+				pcrHeFlux += value
 				* (currPair.a[0][0][1] * l0A * l0B + currPair.a[0][1][1] * l0A * lHeB
 						+ currPair.a[0][2][1] * l0A * lVB + currPair.a[1][0][1] * lHeA * l0B
 						+ currPair.a[1][1][1] * lHeA * lHeB + currPair.a[1][2][1] * lHeA * lVB
 						+ currPair.a[2][0][1] * lVA * l0B + currPair.a[2][1][1] * lVA * lHeB
 						+ currPair.a[2][2][1] * lVA * lVB);
-				vMomentumFlux += value
+				pcrVFlux += value
 				* (currPair.a[0][0][2] * l0A * l0B + currPair.a[0][1][2] * l0A * lHeB
 						+ currPair.a[0][2][2] * l0A * lVB + currPair.a[1][0][2] * lHeA * l0B
 						+ currPair.a[1][1][2] * lHeA * lHeB + currPair.a[1][2][2] * lHeA * lVB
 						+ currPair.a[2][0][2] * lVA * l0B + currPair.a[2][1][2] * lVA * lHeB
 						+ currPair.a[2][2][2] * lVA * lVB);
 			});
-
+    
+    heMomentumFlux += pcrHeFlux;
+    vMomentumFlux += pcrVFlux;
+    
 	// Return the production flux
 	return flux;
 }
@@ -787,12 +805,15 @@ double PSISuperCluster::getCombinationFlux() {
 	// Local declarations
 	double flux = 0.0;
 
+    double pcrHeFlux = 0.0;
+    double pcrVFlux = 0.0;
+
 	// Sum over all the combining clusters
 	// TODO consider using std::accumulate.  May also want to change side
 	// effect of updating member variables heMomentumFlux and
 	// vMomentumFlux here.
 	std::for_each(effCombiningList.begin(), effCombiningList.end(),
-			[this,&flux](CombiningClusterMap::value_type const& currMapItem) {
+			[this,&flux,&pcrHeFlux,&pcrVFlux](CombiningClusterMap::value_type const& currMapItem) {
 				// Get the combining cluster
 				auto const& currComb = currMapItem.second;
 				auto const& combiningCluster = currComb.first;
@@ -808,13 +829,158 @@ double PSISuperCluster::getCombinationFlux() {
 						+ currComb.a[0][2][0] * lVB * l0 + currComb.a[1][2][0] * lVB * l1He
 						+ currComb.a[2][2][0] * lVB * l1V);
 				// Compute the momentum fluxes
-				heMomentumFlux -= value
+				pcrHeFlux += value
 				* (currComb.a[0][0][1] * l0B * l0 + currComb.a[1][0][1] * l0B * l1He
 						+ currComb.a[2][0][1] * l0B * l1V + currComb.a[0][1][1] * lHeB * l0
 						+ currComb.a[1][1][1] * lHeB * l1He + currComb.a[2][1][1] * lHeB * l1V
 						+ currComb.a[0][2][1] * lVB * l0 + currComb.a[1][2][1] * lVB * l1He
 						+ currComb.a[2][2][1] * lVB * l1V);
-				vMomentumFlux -= value
+				pcrVFlux += value
+				* (currComb.a[0][0][2] * l0B * l0 + currComb.a[1][0][2] * l0B * l1He
+						+ currComb.a[2][0][2] * l0B * l1V + currComb.a[0][1][2] * lHeB * l0
+						+ currComb.a[1][1][2] * lHeB * l1He + currComb.a[2][1][2] * lHeB * l1V
+						+ currComb.a[0][2][2] * lVB * l0 + currComb.a[1][2][2] * lVB * l1He
+						+ currComb.a[2][2][2] * lVB * l1V);
+			});
+
+    heMomentumFlux -= pcrHeFlux;
+    vMomentumFlux -= pcrVFlux;
+
+	return flux;
+}
+
+
+PSISuperFlux PSISuperCluster::computeDissociationFlux() const {
+
+	// Initial declarations
+	PSISuperFlux flux;
+
+	// Sum over all the dissociating pairs
+	// TODO consider using std::accumulate.
+	std::for_each(effDissociatingList.begin(), effDissociatingList.end(),
+			[this,&flux](DissociationPairMap::value_type const& currMapItem) {
+				auto const& currPair = currMapItem.second;
+
+				// Get the dissociating clusters
+				auto const& dissociatingCluster = currPair.first;
+				double l0A = dissociatingCluster.getConcentration(0.0, 0.0);
+				double lHeA = dissociatingCluster.getHeMomentum();
+				double lVA = dissociatingCluster.getVMomentum();
+				// Update the flux
+				auto value = currPair.kConstant / (double) nTot;
+				flux.total += value * (currPair.a[0][0] * l0A + currPair.a[1][0] * lHeA + currPair.a[2][0] * lVA);
+				// Compute the momentum fluxes
+				flux.heMoment += value
+				* (currPair.a[0][1] * l0A + currPair.a[1][1] * lHeA + currPair.a[2][1] * lVA);
+				flux.vMoment += value
+				* (currPair.a[0][2] * l0A + currPair.a[1][2] * lHeA + currPair.a[2][2] * lVA);
+			});
+
+	// Return the flux
+	return flux;
+}
+
+PSISuperFlux PSISuperCluster::computeEmissionFlux() const {
+
+	// Initial declarations
+	PSISuperFlux flux;
+
+	// Loop over all the emission pairs
+	// TODO consider using std::accumulate.
+	std::for_each(effEmissionList.begin(), effEmissionList.end(),
+			[this,&flux](DissociationPairMap::value_type const& currMapItem) {
+				auto const& currPair = currMapItem.second;
+
+				// Update the flux
+				auto value = currPair.kConstant / (double) nTot;
+				flux.total += value * (currPair.a[0][0] * l0 + currPair.a[1][0] * l1He + currPair.a[2][0] * l1V);
+				// Compute the momentum fluxes
+				flux.heMoment += value
+				* (currPair.a[0][1] * l0 + currPair.a[1][1] * l1He + currPair.a[2][1] * l1V);
+				flux.vMoment += value
+				* (currPair.a[0][2] * l0 + currPair.a[1][2] * l1He + currPair.a[2][2] * l1V);
+			});
+
+	return flux;
+}
+
+PSISuperFlux PSISuperCluster::computeProductionFlux() const {
+	// Local declarations
+	PSISuperFlux flux;
+
+	// Sum over all the reacting pairs
+	// TODO consider using std::accumulate.
+	std::for_each(effReactingList.begin(), effReactingList.end(),
+			[this,&flux](ProductionPairMap::value_type const& currMapItem) {
+
+				auto const& currPair = currMapItem.second;
+
+				// Get the two reacting clusters
+				auto const& firstReactant = currPair.first;
+				auto const& secondReactant = currPair.second;
+				double l0A = firstReactant.getConcentration(0.0, 0.0);
+				double l0B = secondReactant.getConcentration(0.0, 0.0);
+				double lHeA = firstReactant.getHeMomentum();
+				double lHeB = secondReactant.getHeMomentum();
+				double lVA = firstReactant.getVMomentum();
+				double lVB = secondReactant.getVMomentum();
+				// Update the flux
+				auto value = currPair.kConstant / (double) nTot;
+				flux.total += value
+				* (currPair.a[0][0][0] * l0A * l0B + currPair.a[0][1][0] * l0A * lHeB
+						+ currPair.a[0][2][0] * l0A * lVB + currPair.a[1][0][0] * lHeA * l0B
+						+ currPair.a[1][1][0] * lHeA * lHeB + currPair.a[1][2][0] * lHeA * lVB
+						+ currPair.a[2][0][0] * lVA * l0B + currPair.a[2][1][0] * lVA * lHeB
+						+ currPair.a[2][2][0] * lVA * lVB);
+				// Compute the momentum fluxes
+				flux.heMoment += value
+				* (currPair.a[0][0][1] * l0A * l0B + currPair.a[0][1][1] * l0A * lHeB
+						+ currPair.a[0][2][1] * l0A * lVB + currPair.a[1][0][1] * lHeA * l0B
+						+ currPair.a[1][1][1] * lHeA * lHeB + currPair.a[1][2][1] * lHeA * lVB
+						+ currPair.a[2][0][1] * lVA * l0B + currPair.a[2][1][1] * lVA * lHeB
+						+ currPair.a[2][2][1] * lVA * lVB);
+				flux.vMoment += value
+				* (currPair.a[0][0][2] * l0A * l0B + currPair.a[0][1][2] * l0A * lHeB
+						+ currPair.a[0][2][2] * l0A * lVB + currPair.a[1][0][2] * lHeA * l0B
+						+ currPair.a[1][1][2] * lHeA * lHeB + currPair.a[1][2][2] * lHeA * lVB
+						+ currPair.a[2][0][2] * lVA * l0B + currPair.a[2][1][2] * lVA * lHeB
+						+ currPair.a[2][2][2] * lVA * lVB);
+			});
+
+	// Return the production flux
+	return flux;
+}
+
+PSISuperFlux PSISuperCluster::computeCombinationFlux() const {
+	// Local declarations
+	PSISuperFlux flux;
+
+	// Sum over all the combining clusters
+	// TODO consider using std::accumulate.
+	std::for_each(effCombiningList.begin(), effCombiningList.end(),
+			[this,&flux](CombiningClusterMap::value_type const& currMapItem) {
+				// Get the combining cluster
+				auto const& currComb = currMapItem.second;
+				auto const& combiningCluster = currComb.first;
+				double l0B = combiningCluster.getConcentration(0.0, 0.0);
+				double lHeB = combiningCluster.getHeMomentum();
+				double lVB = combiningCluster.getVMomentum();
+				// Update the flux
+				auto value = currComb.kConstant / (double) nTot;
+				flux.total += value
+				* (currComb.a[0][0][0] * l0B * l0 + currComb.a[1][0][0] * l0B * l1He
+						+ currComb.a[2][0][0] * l0B * l1V + currComb.a[0][1][0] * lHeB * l0
+						+ currComb.a[1][1][0] * lHeB * l1He + currComb.a[2][1][0] * lHeB * l1V
+						+ currComb.a[0][2][0] * lVB * l0 + currComb.a[1][2][0] * lVB * l1He
+						+ currComb.a[2][2][0] * lVB * l1V);
+				// Compute the momentum fluxes
+				flux.heMoment += value
+				* (currComb.a[0][0][1] * l0B * l0 + currComb.a[1][0][1] * l0B * l1He
+						+ currComb.a[2][0][1] * l0B * l1V + currComb.a[0][1][1] * lHeB * l0
+						+ currComb.a[1][1][1] * lHeB * l1He + currComb.a[2][1][1] * lHeB * l1V
+						+ currComb.a[0][2][1] * lVB * l0 + currComb.a[1][2][1] * lVB * l1He
+						+ currComb.a[2][2][1] * lVB * l1V);
+				flux.vMoment += value
 				* (currComb.a[0][0][2] * l0B * l0 + currComb.a[1][0][2] * l0B * l1He
 						+ currComb.a[2][0][2] * l0B * l1V + currComb.a[0][1][2] * lHeB * l0
 						+ currComb.a[1][1][2] * lHeB * l1He + currComb.a[2][1][2] * lHeB * l1V
@@ -824,6 +990,32 @@ double PSISuperCluster::getCombinationFlux() {
 
 	return flux;
 }
+
+
+#if READY
+void PSISuperCluster::updateConcs(double* concs) const {
+
+    // Compute our flux.
+    auto flux = Reactant::computeFlux<PSISuperCluster>(*this);
+
+    // Apply flux to current concentrations.
+    updateConcsFromFlux(concs, flux);
+}
+
+
+void PSISuperCluster::updateConcsFromFlux(double* concs, const Flux& flux) const {
+    // Have base class update concentrations from its part of flux.
+    PSICluster::updateConcsFromFlux(concs, flux);
+
+    // Update concentrations using our parts of the flux.
+    auto& superFlux = dynamic_cast<PSISuperFlux&>(flux);
+    auto heIdx = getHeMomentumId() - 1;
+    concs[heIdx] += flux.heMoment;
+    auto vIdx = getVMomentumId() - 1;
+    concs[vIdx] += flux.vMoment;
+}
+#endif // READY
+
 
 void PSISuperCluster::computePartialDerivatives(
         double* partials,
