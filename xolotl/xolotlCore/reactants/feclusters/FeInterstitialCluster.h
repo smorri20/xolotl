@@ -79,14 +79,14 @@ public:
 	 *
 	 * @return The flux due to its dissociation
 	 */
-	double getEmissionFlux() const {
+	Flux getEmissionFlux() const {
 		// Initial declarations
-		double flux = FeCluster::getEmissionFlux();
+		Flux flux = FeCluster::computeEmissionFlux();
 
 		// Compute the loss to dislocation sinks
 		if (size < 2) {
 			// bias * k^2 * D * C
-			flux += sinkBias * sinkStrength * diffusionCoefficient
+			flux.total += sinkBias * sinkStrength * diffusionCoefficient
 					* concentration;
 		}
 
@@ -101,7 +101,7 @@ public:
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
 	 */
-	void getEmissionPartialDerivatives(std::vector<double> & partials) const {
+	void getEmissionPartialDerivatives(std::vector<double> & partials) const override {
 		// Initial declarations
 		FeCluster::getEmissionPartialDerivatives(partials);
 
@@ -114,6 +114,19 @@ public:
 		return;
 	}
 
+    /**
+     * Compute our flux and use it to update concentrations.
+     *
+     * @param concs Concentrations we should update.
+     */
+    void updateConcs(double* concs) const override {
+
+		// Compute our flux.
+		auto flux = Reactant::computeFlux<FeInterstitialCluster>(*this);
+
+		// Apply flux to current concentrations.
+		updateConcsFromFlux(concs, flux);
+	}
 };
 //end class FeInterstitialCluster
 

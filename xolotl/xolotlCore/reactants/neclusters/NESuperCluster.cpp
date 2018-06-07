@@ -15,7 +15,7 @@ NESuperCluster::NESuperCluster(double num, int nTot, int width, double radius,
 		double energy, IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		NECluster(_network, registry, buildName(num)), numXe(num), nTot(nTot), l0(
-				0.0), l1(0.0), dispersion(0.0), momentumFlux(0.0) {
+				0.0), l1(0.0), dispersion(0.0) {
 	// Set the cluster size
 	size = (int) numXe;
 
@@ -553,109 +553,139 @@ void NESuperCluster::resetConnectivities() {
 	return;
 }
 
-double NESuperCluster::getTotalFlux() {
-	// Initialize the momentum flux
-	momentumFlux = 0.0;
+void NESuperCluster::updateConcs(double* concs) const {
 
-	// Get the fluxes
-	double prodFlux = getProductionFlux();
-	double dissFlux = getDissociationFlux();
-	double combFlux = getCombinationFlux();
-	double emissFlux = getEmissionFlux();
+    // Compute our flux.
+    auto flux = Reactant::computeFlux<NESuperCluster>(*this);
 
-	return prodFlux - combFlux + dissFlux - emissFlux;
+    // Apply flux to current concentrations.
+    updateConcsFromFlux(concs, flux);
 }
 
-double NESuperCluster::getDissociationFlux() {
-	// Initial declarations
-	double flux = 0.0, value = 0.0;
-	NECluster *dissociatingCluster = nullptr;
+void NESuperCluster::updateConcsFromFlux(double* concs, const Flux& flux) const {
+    // Have base class update concentrations from its part of flux.
+    NECluster::updateConcsFromFlux(concs, flux);
+
+    // Update concentrations using our parts of the flux.
+    auto const& superFlux = static_cast<NESuperFlux const&>(flux);
+    auto xeIdx = getXeMomentumId() - 1;
+    concs[xeIdx] += superFlux.xeMoment;
+}
+
+
+NESuperFlux NESuperCluster::computeDissociationFlux() const {
 
 	// Loop over all the dissociating pairs
-	for (auto it = effDissociatingList.begin(); it != effDissociatingList.end();
-			++it) {
-		// Get the dissociating clusters
-		dissociatingCluster = (*it).first;
-		double l0A = dissociatingCluster->getConcentration(0.0);
-		double l1A = dissociatingCluster->getMomentum();
-		// Update the flux
-		value = *((*it).kConstant) / (double) nTot;
-		flux += value * ((*it).a00 * l0A + (*it).a10 * l1A);
-		// Compute the momentum fluxes
-		momentumFlux += value * ((*it).a01 * l0A + (*it).a11 * l1A);
-	}
+	NESuperFlux flux =
+        std::accumulate(effDissociatingList.begin(), effDissociatingList.end(),
+            NESuperFlux(),
+            [this](const NESuperFlux& running,
+                        DissociationPairList::value_type const& currItem) {
+
+                auto const& currPair = currItem;
+
+                // Get the dissociating clusters
+                auto const& dissociatingCluster = currPair.first;
+                double l0A = dissociatingCluster->getConcentration(0.0);
+                double l1A = dissociatingCluster->getMomentum();
+                // Update the flux
+                auto value = (*(currPair.kConstant)) / (double) nTot;
+
+                NESuperFlux currFlux(
+                    value * (currPair.a00 * l0A + currPair.a10 * l1A),
+                    value * (currPair.a01 * l0A + currPair.a11 * l1A));
+
+                return running + currFlux;
+        });
 
 	// Return the flux
 	return flux;
 }
 
-double NESuperCluster::getEmissionFlux() {
-	// Initial declarations
-	double flux = 0.0, value = 0.0;
+NESuperFlux NESuperCluster::computeEmissionFlux() const {
 
 	// Loop over all the emission pairs
-	for (auto it = effEmissionList.begin(); it != effEmissionList.end(); ++it) {
-		// Update the flux
-		value = *((*it).kConstant) / (double) nTot;
-		flux += value * ((*it).a00 * l0 + (*it).a10 * l1);
-		// Compute the momentum fluxes
-		momentumFlux -= value * ((*it).a01 * l0 + (*it).a11 * l1);
-	}
+	NESuperFlux flux =
+        std::accumulate(effEmissionList.begin(), effEmissionList.end(),
+            NESuperFlux(),
+            [this](const NESuperFlux& running,
+                    DissociationPairList::value_type const& currItem) {
+
+                auto const& currPair = currItem;
+
+                // Update the flux
+                auto value = *(currPair.kConstant) / (double) nTot;
+
+                NESuperFlux currFlux(
+                    value * (currPair.a00 * l0 + currPair.a10 * l1),
+                    value * (currPair.a01 * l0 + currPair.a11 * l1));
+
+                return running + currFlux;
+            });
 
 	return flux;
 }
 
-double NESuperCluster::getProductionFlux() {
-	// Local declarations
-	double flux = 0.0, value = 0.0;
-	NECluster *firstReactant = nullptr, *secondReactant = nullptr;
+NESuperFlux NESuperCluster::computeProductionFlux() const {
 
 	// Loop over all the reacting pairs
-	for (auto it = effReactingList.begin(); it != effReactingList.end(); ++it) {
-		// Get the two reacting clusters
-		firstReactant = (*it).first;
-		secondReactant = (*it).second;
-		double l0A = firstReactant->getConcentration();
-		double l0B = secondReactant->getConcentration();
-		double l1A = firstReactant->getMomentum();
-		double l1B = secondReactant->getMomentum();
-		// Update the flux
-		value = *((*it).kConstant) / (double) nTot;
-		flux += value
-				* ((*it).a000 * l0A * l0B + (*it).a010 * l0A * l1B
-						+ (*it).a100 * l1A * l0B + (*it).a110 * l1A);
-		// Compute the momentum flux
-		momentumFlux += value
-				* ((*it).a001 * l0A * l0B + (*it).a011 * l0A * l1B
-						+ (*it).a101 * l1A * l0B + (*it).a111 * l1A);
-	}
+	NESuperFlux flux =
+        std::accumulate(effReactingList.begin(), effReactingList.end(),
+            NESuperFlux(),
+            [this](const NESuperFlux& running,
+                    ProductionPairList::value_type const& currItem) {
+
+                auto const& currPair = currItem;
+
+                // Get the two reacting clusters
+                auto firstReactant = currPair.first;
+                auto secondReactant = currPair.second;
+                double l0A = firstReactant->getConcentration();
+                double l0B = secondReactant->getConcentration();
+                double l1A = firstReactant->getMomentum();
+                double l1B = secondReactant->getMomentum();
+                // Update the flux
+                auto value = *(currPair.kConstant) / (double) nTot;
+
+                NESuperFlux currFlux(
+                    value * (currPair.a000 * l0A * l0B + currPair.a010 * l0A * l1B
+                                + currPair.a100 * l1A * l0B + currPair.a110 * l1A),
+                    value * (currPair.a001 * l0A * l0B + currPair.a011 * l0A * l1B
+                                + currPair.a101 * l1A * l0B + currPair.a111 * l1A));
+
+                return running + currFlux;
+            });
 
 	// Return the production flux
 	return flux;
 }
 
-double NESuperCluster::getCombinationFlux() {
-	// Local declarations
-	double flux = 0.0, value = 0.0;
-	NECluster *combiningCluster = nullptr;
+NESuperFlux NESuperCluster::computeCombinationFlux() const {
 
 	// Loop over all the combining clusters
-	for (auto it = effCombiningList.begin(); it != effCombiningList.end();
-			++it) {
-		// Get the two reacting clusters
-		combiningCluster = (*it).first;
-		double l0A = combiningCluster->getConcentration();
-		double l1A = combiningCluster->getMomentum();
-		// Update the flux
-		value = *((*it).kConstant) / (double) nTot;
-		flux += value
-				* ((*it).a000 * l0A * l0 + (*it).a100 * l0A * l1
-						+ (*it).a010 * l1A * l0 + (*it).a110 * l1A * l1);
-		// Compute the momentum flux
-		momentumFlux -= value
-				* ((*it).a001 * l0A * l0 + (*it).a101 * l0A * l1
-						+ (*it).a011 * l1A * l0 + (*it).a111 * l1A * l1);
-	}
+	NESuperFlux flux =
+        std::accumulate(effCombiningList.begin(), effCombiningList.end(),
+            NESuperFlux(),
+            [this](const NESuperFlux& running,
+                    ProductionPairList::value_type const& currItem) {
+                
+                auto const& currPair = currItem;
+
+                // Get the two reacting clusters
+                auto combiningCluster = currPair.first;
+                double l0A = combiningCluster->getConcentration();
+                double l1A = combiningCluster->getMomentum();
+                // Update the flux
+                auto value = *(currPair.kConstant) / (double) nTot;
+
+                NESuperFlux currFlux(
+                    value * (currPair.a000 * l0A * l0 + currPair.a100 * l0A * l1
+                                + currPair.a010 * l1A * l0 + currPair.a110 * l1A * l1),
+                    value * (currPair.a001 * l0A * l0 + currPair.a101 * l0A * l1
+                                + currPair.a011 * l1A * l0 + currPair.a111 * l1A * l1));
+
+                return running + currFlux;
+            });
 
 	return flux;
 }

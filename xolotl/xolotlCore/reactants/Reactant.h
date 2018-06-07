@@ -10,6 +10,7 @@
 #include "IReactionNetwork.h"
 #include "ProductionReaction.h"
 #include "DissociationReaction.h"
+#include "Flux.h"
 
 namespace xolotlPerf {
 class IHandlerRegistry;
@@ -184,6 +185,20 @@ protected:
 	 * @param temp the temperature
 	 */
 	void recomputeDiffusionCoefficient(double temp);
+
+
+    /**
+     * Update our entries in given concentrations array using given flux.
+     * 
+     * @param concs Concentrations array to update.
+     * @param flux Flux values to use when updating concentrations.
+     */
+    virtual void updateConcsFromFlux(double* concs, const Flux& flux) const {
+
+        auto idx = getId() - 1;
+        concs[idx] += flux.total;
+    }
+
 
 public:
 
@@ -440,18 +455,6 @@ public:
 	 */
 	void setConcentration(double conc) override {
 		concentration = conc;
-	}
-
-	/**
-	 * This operation returns the total flux of this reactant in the
-	 * current network.
-	 *
-	 * @return The total change in flux for this reactant due to all
-	 * reactions
-	 */
-	virtual double getTotalFlux() override {
-        assert(false);
-		return 0.0;
 	}
 
 	/**
@@ -805,7 +808,7 @@ public:
 	}
 
 
-#if READY
+
     /**
      * Compute our flux and use it to update concentrations.
      *
@@ -813,10 +816,11 @@ public:
      */
     void updateConcs(double* concs) const override {
 
-        // should not be called, but must be defined.
+        // should not be called, but must be defined since we may
+        // create dummy Rectant objects.
         assert(false);
     }
-#endif // READY
+
 };
 
 } // end namespace xolotlCore

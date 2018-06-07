@@ -225,6 +225,16 @@ protected:
 	 */
 	using DissociationPairMap = std::unordered_map<SuperClusterDissociationPair::KeyType, SuperClusterDissociationPair>;
 
+
+    /**
+     * Update our entries in given concentrations array using given flux.
+     *
+     * @param concs Concentrations array to update.
+     * @param flux Flux values to use when updating concentrations.
+     */
+    void updateConcsFromFlux(double* concs, const Flux& flux) const override;
+
+
 private:
 
 	//! The mean number of helium atoms in this cluster.
@@ -756,14 +766,12 @@ public:
 	 */
 	virtual void outputCoefficientsTo(std::ostream& os) const override;
 
-#if READY
     /**
      * Compute our flux and use it to update concentrations.
      *
      * @param concs Concentrations we should update.
      */
     void updateConcs(double* concs) const override;
-#endif // READY
 };
 //end class PSISuperCluster
 

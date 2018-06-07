@@ -225,15 +225,6 @@ public:
 	virtual void setConcentration(double conc) = 0;
 
 	/**
-	 * This operation returns the total flux of this reactant in the
-	 * current network.
-	 *
-	 * @return The total change in flux for this reactant due to all
-	 * reactions
-	 */
-	virtual double getTotalFlux() = 0;
-
-	/**
 	 * Update reactant using other reactants in its network.
 	 */
 	virtual void updateFromNetwork() = 0;
@@ -504,14 +495,12 @@ public:
 	 */
 	virtual void outputCoefficientsTo(std::ostream& os) const = 0;
 
-#if READY
     /**
      * Compute our flux and use it to update concentrations.
      *
      * @param concs Concentrations we should update.
      */
     virtual void updateConcs(double* concs) const = 0;
-#endif // READY
 };
 
 /**

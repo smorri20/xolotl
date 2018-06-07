@@ -224,39 +224,29 @@ double NECluster::getMomentum() const {
 	return 0.0;
 }
 
-double NECluster::getTotalFlux() {
-	// Get the fluxes
-	double prodFlux = getProductionFlux();
-	double dissFlux = getDissociationFlux();
-	double combFlux = getCombinationFlux();
-	double emissFlux = getEmissionFlux();
-
-	return prodFlux - combFlux + dissFlux - emissFlux;
-}
-
-double NECluster::getDissociationFlux() const {
+Flux NECluster::computeDissociationFlux() const {
 
 	// Sum dissociation flux over all pairs that dissociate to form this one.
-	double flux =
-			std::accumulate(dissociatingPairs.begin(), dissociatingPairs.end(),
-					0.0, [](double running, const ClusterPair& currPair) {
-						// Get the dissociating cluster
-					auto& dissociatingCluster = currPair.first;
-					// Calculate the Dissociation flux
-					Reaction const& currReaction = currPair.reaction;
-					return running + (currReaction.kConstant *
-							dissociatingCluster->getConcentration(currPair.firstDistance));
-				});
+	Flux flux =
+        std::accumulate(dissociatingPairs.begin(), dissociatingPairs.end(),
+                Flux(), [](const Flux& running, const ClusterPair& currPair) {
+                    // Get the dissociating cluster
+                auto& dissociatingCluster = currPair.first;
+                // Calculate the Dissociation flux
+                Reaction const& currReaction = currPair.reaction;
+                return running + (currReaction.kConstant *
+                        dissociatingCluster->getConcentration(currPair.firstDistance));
+            });
 
 	// Return the flux
 	return flux;
 }
 
-double NECluster::getEmissionFlux() const {
+Flux NECluster::computeEmissionFlux() const {
 
 	// Sum reaction rate constants over all emission pair reactions.
-	double flux = std::accumulate(emissionPairs.begin(), emissionPairs.end(),
-			0.0, [](double running, const ClusterPair& currPair) {
+	Flux flux = std::accumulate(emissionPairs.begin(), emissionPairs.end(),
+			Flux(), [](const Flux& running, const ClusterPair& currPair) {
 				Reaction const& currReaction = currPair.reaction;
 				return running + currReaction.kConstant;
 			});
@@ -264,19 +254,16 @@ double NECluster::getEmissionFlux() const {
 	return flux * concentration;
 }
 
-double NECluster::getProductionFlux() const {
-	// Local declarations
-	double flux = 0.0;
-
+Flux NECluster::computeProductionFlux() const {
 	// Sum over all the reacting pairs
-	std::for_each(reactingPairs.begin(), reactingPairs.end(),
-			[&flux](ClusterPair const& currPair) {
+    Flux flux = std::accumulate(reactingPairs.begin(), reactingPairs.end(),
+            Flux(), [](const Flux& running, ClusterPair const& currPair) {
 				// Get the two reacting clusters
 				NECluster* firstReactant = currPair.first;
 				NECluster* secondReactant = currPair.second;
 				// Update the flux
 				Reaction const& currReaction = currPair.reaction;
-				flux += currReaction.kConstant
+				return running + currReaction.kConstant
 				* firstReactant->getConcentration(
 						currPair.firstDistance)
 				* secondReactant->getConcentration(
@@ -287,11 +274,11 @@ double NECluster::getProductionFlux() const {
 	return flux;
 }
 
-double NECluster::getCombinationFlux() const {
+Flux NECluster::computeCombinationFlux() const {
 
-	double flux = std::accumulate(combiningReactants.begin(),
-			combiningReactants.end(), 0.0,
-			[](double running, const CombiningCluster& currPair) {
+	Flux flux = std::accumulate(combiningReactants.begin(),
+			combiningReactants.end(), Flux(),
+			[](const Flux& running, const CombiningCluster& currPair) {
 				// Get the cluster that combines with this one
 				NECluster const& combiningCluster = currPair.combining;
 				Reaction const& currReaction = currPair.reaction;
@@ -305,6 +292,16 @@ double NECluster::getCombinationFlux() const {
 
 	return flux * concentration;
 }
+
+void NECluster::updateConcs(double* concs) const {
+
+    // Compute our flux.
+    auto flux = Reactant::computeFlux<NECluster>(*this);
+
+    // Apply flux to current concentrations.
+    updateConcsFromFlux(concs, flux);
+}
+
 
 std::vector<double> NECluster::getPartialDerivatives() const {
 	// Local Declarations

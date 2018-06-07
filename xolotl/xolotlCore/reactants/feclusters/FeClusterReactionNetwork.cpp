@@ -874,40 +874,6 @@ void FeClusterReactionNetwork::computeRateConstants() {
 	return;
 }
 
-void FeClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset) {
-
-	// ----- Compute all of the new fluxes -----
-	std::for_each(allReactants.begin(), allReactants.end(),
-			[&updatedConcOffset](IReactant& cluster) {
-				// Compute the flux
-				auto flux = cluster.getTotalFlux();
-				// Update the concentration of the cluster
-				auto reactantIndex = cluster.getId() - 1;
-				updatedConcOffset[reactantIndex] += flux;
-			});
-
-	// ---- Moments ----
-	for (auto const& currMapItem : getAll(ReactantType::FeSuper)) {
-
-		auto const& superCluster =
-				static_cast<FeSuperCluster&>(*(currMapItem.second));
-
-		// Compute the helium momentum flux
-		auto flux = superCluster.getHeMomentumFlux();
-		// Update the concentration of the cluster
-		auto reactantIndex = superCluster.getHeMomentumId() - 1;
-		updatedConcOffset[reactantIndex] += flux;
-
-		// Compute the vacancy momentum flux
-		flux = superCluster.getVMomentumFlux();
-		// Update the concentration of the cluster
-		reactantIndex = superCluster.getVMomentumId() - 1;
-		updatedConcOffset[reactantIndex] += flux;
-	}
-
-	return;
-}
-
 void FeClusterReactionNetwork::computeAllPartials(
 		const std::vector<size_t>& startingIdx, const std::vector<int>& indices,
 		std::vector<double>& vals) const {

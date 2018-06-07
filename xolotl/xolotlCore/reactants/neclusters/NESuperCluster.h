@@ -5,6 +5,7 @@
 #include "NECluster.h"
 #include <string>
 #include <forward_list>
+#include "NESuperFlux.h"
 
 namespace xolotlCore {
 
@@ -115,6 +116,14 @@ protected:
 		}
 	};
 
+    /**
+     * Update our entries in given concentrations array using given flux.
+     *
+     * @param concs Concentrations array to update.
+     * @param flux Flux values to use when updating concentrations.
+     */
+    void updateConcsFromFlux(double* concs, const Flux& flux) const override;
+
 private:
 
 	//! The mean number of xenon atoms in this cluster.
@@ -148,23 +157,25 @@ private:
 	std::map<int, std::vector<ClusterPair> > emissionMap;
 
 	//! The list of optimized effective reacting pairs.
-	std::forward_list<SuperClusterProductionPair> effReactingList;
+    using ProductionPairList = std::forward_list<SuperClusterProductionPair>;
+    ProductionPairList effReactingList;
 
 	//! The list of optimized effective combining pairs.
-	std::forward_list<SuperClusterProductionPair> effCombiningList;
+    ProductionPairList effCombiningList;
 
 	//! The list of optimized effective dissociating pairs.
-	std::forward_list<SuperClusterDissociationPair> effDissociatingList;
+    using DissociationPairList = std::forward_list<SuperClusterDissociationPair>;
+    DissociationPairList effDissociatingList;
 
 	//! The list of optimized effective emission pairs.
-	std::forward_list<SuperClusterDissociationPair> effEmissionList;
-
-	/**
-	 * The xenon momentum flux.
-	 */
-	double momentumFlux;
+    DissociationPairList effEmissionList;
 
 public:
+
+	/**
+	 * Type of the flux we compute.
+	 */
+	using FluxType = NESuperFlux;
 
 	//! The vector of Xe clusters it will replace
 	std::vector<NECluster *> xeVector;
@@ -292,14 +303,6 @@ public:
 	 */
 	void resetConnectivities() override;
 
-	/**
-	 * This operation returns the total flux of this cluster in the
-	 * current network.
-	 *
-	 * @return The total change in flux for this cluster due to all
-	 * reactions
-	 */
-	double getTotalFlux() override;
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -308,7 +311,7 @@ public:
 	 *
 	 * @return The flux due to dissociation of other clusters
 	 */
-	double getDissociationFlux();
+	FluxType computeDissociationFlux() const;
 
 	/**
 	 * This operation returns the total change in this cluster due its
@@ -317,7 +320,7 @@ public:
 	 *
 	 * @return The flux due to its dissociation
 	 */
-	double getEmissionFlux();
+	FluxType computeEmissionFlux() const;
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -326,7 +329,7 @@ public:
 	 *
 	 * @return The flux due to this cluster being produced
 	 */
-	double getProductionFlux();
+	FluxType computeProductionFlux() const;
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -335,16 +338,7 @@ public:
 	 *
 	 * @return The flux due to this cluster combining with other clusters
 	 */
-	double getCombinationFlux();
-
-	/**
-	 * This operation returns the total change for its momentum.
-	 *
-	 * @return The momentum flux
-	 */
-	double getMomentumFlux() {
-		return momentumFlux;
-	}
+	FluxType computeCombinationFlux() const;
 
 	/**
 	 * This operation works as getPartialDerivatives above, but instead of
@@ -422,6 +416,12 @@ public:
 		return sectionWidth;
 	}
 
+    /**
+     * Compute our flux and use it to update concentrations.
+     *
+     * @param concs Concentrations we should update.
+     */
+    void updateConcs(double* concs) const override;
 };
 //end class NESuperCluster
 

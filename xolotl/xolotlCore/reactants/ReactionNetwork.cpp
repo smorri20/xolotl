@@ -131,6 +131,19 @@ void ReactionNetwork::updateConcentrationsFromArray(double * concentrations) {
 	return;
 }
 
+
+void ReactionNetwork::computeAllFluxes(double *updatedConcOffset) {
+
+    std::for_each(allReactants.begin(), allReactants.end(),
+        [&updatedConcOffset](IReactant& cluster) {
+            
+            cluster.updateConcs(updatedConcOffset);
+        });
+
+	return;
+}
+
+
 void ReactionNetwork::setTemperature(double temp) {
 	// Set the temperature
 	temperature = temp;

@@ -176,6 +176,7 @@ protected:
 	void dumpCoefficients(std::ostream& os, ClusterPair const& curr) const;
 	void dumpCoefficients(std::ostream& os, CombiningCluster const& curr) const;
 
+
 public:
 
     /**
@@ -562,14 +563,12 @@ public:
 	 */
 	virtual void outputCoefficientsTo(std::ostream& os) const override;
 
-#if READY
     /**
      * Compute our flux and use it to update concentrations.
      *
      * @param concs Concentrations we should update.
      */
     void updateConcs(double* concs) const override;
-#endif // READY
 };
 
 } /* end namespace xolotlCore */

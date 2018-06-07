@@ -55,6 +55,11 @@ protected:
 
 public:
 
+    /**
+     * The type of flux we compute.
+     */
+    using FluxType = Flux;
+
 	/**
 	 * This is a protected class that is used to implement the flux calculations
 	 * for two body reactions or dissociation.
@@ -390,21 +395,12 @@ public:
 	virtual double getMomentum() const;
 
 	/**
-	 * This operation returns the total flux of this cluster in the
-	 * current network.
-	 *
-	 * @return The total change in flux for this cluster due to all
-	 * reactions
-	 */
-	virtual double getTotalFlux() override;
-
-	/**
 	 * This operation returns the total change in this cluster due to
 	 * other clusters dissociating into it.
 	 *
 	 * @return The flux due to dissociation of other clusters
 	 */
-	virtual double getDissociationFlux() const;
+	FluxType computeDissociationFlux() const;
 
 	/**
 	 * This operation returns the total change in this cluster due its
@@ -412,7 +408,7 @@ public:
 	 *
 	 * @return The flux due to its dissociation
 	 */
-	virtual double getEmissionFlux() const;
+	FluxType computeEmissionFlux() const;
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -420,7 +416,7 @@ public:
 	 *
 	 * @return The flux due to this cluster being produced
 	 */
-	virtual double getProductionFlux() const;
+	FluxType computeProductionFlux() const;
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -428,7 +424,7 @@ public:
 	 *
 	 * @return The flux due to this cluster combining with other clusters
 	 */
-	virtual double getCombinationFlux() const;
+	FluxType computeCombinationFlux() const;
 
 	/**
 	 * This operation returns the list of partial derivatives of this cluster
@@ -559,6 +555,13 @@ public:
 		// NIY.
 		assert(false);
 	}
+
+    /**
+     * Compute our flux and use it to update concentrations.
+     *
+     * @param concs Concentrations we should update.
+     */
+    void updateConcs(double* concs) const override;
 };
 
 } /* end namespace xolotlCore */

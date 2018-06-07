@@ -464,7 +464,6 @@ Flux PSICluster::computeCombinationFlux() const {
 	return flux * concentration;
 }
 
-#if READY
 void PSICluster::updateConcs(double* concs) const {
 
     // Compute our flux.
@@ -473,14 +472,6 @@ void PSICluster::updateConcs(double* concs) const {
     // Apply flux to current concentrations.
     updateConcsFromFlux(concs, flux);
 }
-
-
-void PSICluster::updateConcsFromFlux(double* concs, const Flux& flux) const {
-
-    auto idx = getId() - 1;
-    concs[idx] += flux.total;
-}
-#endif // READY
 
 
 std::vector<double> PSICluster::getPartialDerivatives() const {

@@ -291,34 +291,6 @@ void NEClusterReactionNetwork::computeRateConstants() {
 	return;
 }
 
-void NEClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset) {
-
-	// ----- Compute all of the new fluxes -----
-	std::for_each(allReactants.begin(), allReactants.end(),
-			[&updatedConcOffset](IReactant& cluster) {
-
-				// Compute the flux
-				auto flux = cluster.getTotalFlux();
-				// Update the concentration of the cluster
-				auto reactantIndex = cluster.getId() - 1;
-				updatedConcOffset[reactantIndex] += flux;
-			});
-
-	// ---- Moments ----
-	for (auto const& currMapItem : getAll(ReactantType::NESuper)) {
-
-		auto& superCluster = static_cast<NESuperCluster&>(*(currMapItem.second));
-
-		// Compute the xenon momentum flux
-		auto flux = superCluster.getMomentumFlux();
-		// Update the concentration of the cluster
-		auto reactantIndex = superCluster.getXeMomentumId() - 1;
-		updatedConcOffset[reactantIndex] += flux;
-	}
-
-	return;
-}
-
 void NEClusterReactionNetwork::computeAllPartials(
 		const std::vector<size_t>& startingIdx, const std::vector<int>& indices,
 		std::vector<double>& vals) const {

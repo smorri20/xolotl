@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <Constants.h>
 #include "FeCluster.h"
+#include "FeSuperFlux.h"
 
 namespace xolotlCore {
 /**
@@ -250,6 +251,14 @@ protected:
 	 */
 	using DissociationPairMap = std::unordered_map<SuperClusterDissociationPair::KeyType, SuperClusterDissociationPair>;
 
+    /**
+     * Update our entries in given concentrations array using given flux.
+     *
+     * @param concs Concentrations array to update.
+     * @param flux Flux values to use when updating concentrations.
+     */
+    void updateConcsFromFlux(double* concs, const Flux& flux) const override;
+
 private:
 
 	//! The mean number of helium atoms in this cluster.
@@ -295,16 +304,6 @@ private:
 	DissociationPairMap effEmissionList;
 
 	/**
-	 * The helium momentum flux.
-	 */
-	double heMomentumFlux;
-
-	/**
-	 * The vacancy momentum flux.
-	 */
-	double vMomentumFlux;
-
-	/**
 	 * Output coefficients for a given reaction to the given output stream.
 	 *
 	 * @param os The output stream on which to write the coefficients.
@@ -316,6 +315,11 @@ private:
 			SuperClusterDissociationPair const& curr) const;
 
 public:
+
+    /**
+     * Type of flux we compute.
+     */
+    using FluxType = FeSuperFlux;
 
 	/**
 	 * Default constructor, deleted because we require info to construct.
@@ -601,31 +605,13 @@ public:
 	void resetConnectivities() override;
 
 	/**
-	 * This operation returns the total flux of this cluster in the
-	 * current network.
-	 *
-	 * @return The total change in flux for this cluster due to all
-	 * reactions
-	 */
-	double getTotalFlux() override {
-
-		// Initialize the fluxes
-		heMomentumFlux = 0.0;
-		vMomentumFlux = 0.0;
-
-		// Compute the fluxes.
-		return getProductionFlux() - getCombinationFlux()
-				+ getDissociationFlux() - getEmissionFlux();
-	}
-
-	/**
 	 * This operation returns the total change in this cluster due to
 	 * other clusters dissociating into it. Compute the contributions to
 	 * the momentum fluxes at the same time.
 	 *
 	 * @return The flux due to dissociation of other clusters
 	 */
-	double getDissociationFlux();
+	FluxType computeDissociationFlux() const;
 
 	/**
 	 * This operation returns the total change in this cluster due its
@@ -634,7 +620,7 @@ public:
 	 *
 	 * @return The flux due to its dissociation
 	 */
-	double getEmissionFlux();
+	FluxType computeEmissionFlux() const;
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -643,7 +629,7 @@ public:
 	 *
 	 * @return The flux due to this cluster being produced
 	 */
-	double getProductionFlux();
+	FluxType computeProductionFlux() const;
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -652,25 +638,8 @@ public:
 	 *
 	 * @return The flux due to this cluster combining with other clusters
 	 */
-	double getCombinationFlux();
+	FluxType computeCombinationFlux() const;
 
-	/**
-	 * This operation returns the total change for its helium momentum.
-	 *
-	 * @return The momentum flux
-	 */
-	double getHeMomentumFlux() const {
-		return heMomentumFlux;
-	}
-
-	/**
-	 * This operation returns the total change for its vacancy momentum.
-	 *
-	 * @return The momentum flux
-	 */
-	double getVMomentumFlux() const {
-		return vMomentumFlux;
-	}
 
 	/**
 	 * This operation works as getPartialDerivatives above, but instead of
@@ -784,6 +753,13 @@ public:
 	 * @param os Output stream on which to output coefficients.
 	 */
 	virtual void outputCoefficientsTo(std::ostream& os) const override;
+
+    /**
+     * Compute our flux and use it to update concentrations.
+     *
+     * @param concs Concentrations we should update.
+     */
+    void updateConcs(double* concs) const override;
 };
 //end class FeSuperCluster
 

@@ -599,12 +599,12 @@ void FeCluster::updateFromNetwork() {
 	return;
 }
 
-double FeCluster::getDissociationFlux() const {
+Flux FeCluster::computeDissociationFlux() const {
 
 	// Sum dissociation flux over all our dissociating clusters.
-	double flux = std::accumulate(dissociatingPairs.begin(),
-			dissociatingPairs.end(), 0.0,
-			[](double running, const ClusterPair& currPair) {
+	Flux flux = std::accumulate(dissociatingPairs.begin(),
+			dissociatingPairs.end(), Flux(),
+			[](const Flux& running, const ClusterPair& currPair) {
 				auto const& dissCluster = currPair.first;
 				double l0A = dissCluster.getConcentration(0.0, 0.0);
 				double lHeA = dissCluster.getHeMomentum();
@@ -622,22 +622,22 @@ double FeCluster::getDissociationFlux() const {
 	return flux;
 }
 
-double FeCluster::getEmissionFlux() const {
+Flux FeCluster::computeEmissionFlux() const {
 
 	// Sum rate constants from all emission pair reactions.
-	double flux = std::accumulate(emissionPairs.begin(), emissionPairs.end(),
-			0.0, [](double running, const ClusterPair& currPair) {
+	Flux flux = std::accumulate(emissionPairs.begin(), emissionPairs.end(),
+			Flux(), [](const Flux& running, const ClusterPair& currPair) {
 				return running + currPair.reaction.kConstant;
 			});
 
 	return flux * concentration;
 }
 
-double FeCluster::getProductionFlux() const {
+Flux FeCluster::computeProductionFlux() const {
 
 	// Sum production flux over all reacting pairs.
-	double flux = std::accumulate(reactingPairs.begin(), reactingPairs.end(),
-			0.0, [](double running, const ClusterPair& currPair) {
+	Flux flux = std::accumulate(reactingPairs.begin(), reactingPairs.end(),
+			Flux(), [](const Flux& running, const ClusterPair& currPair) {
 
 				// Get the two reacting clusters
 			auto const& firstReactant = currPair.first;
@@ -661,12 +661,12 @@ double FeCluster::getProductionFlux() const {
 	return flux;
 }
 
-double FeCluster::getCombinationFlux() const {
+Flux FeCluster::computeCombinationFlux() const {
 
 	// Sum combination flux over all clusters that combine with us.
-	double flux = std::accumulate(combiningReactants.begin(),
-			combiningReactants.end(), 0.0,
-			[](double running, const CombiningCluster& cc) {
+	Flux flux = std::accumulate(combiningReactants.begin(),
+			combiningReactants.end(), Flux(),
+			[](const Flux& running, const CombiningCluster& cc) {
 
 				// Get the cluster that combines with this one
 				auto const& combiningCluster = cc.combining;
@@ -681,6 +681,16 @@ double FeCluster::getCombinationFlux() const {
 
 	return flux * concentration;
 }
+
+void FeCluster::updateConcs(double* concs) const {
+
+    // Compute our flux.
+    auto flux = Reactant::computeFlux<FeCluster>(*this);
+
+    // Apply flux to current concentrations.
+    updateConcsFromFlux(concs, flux);
+}
+
 
 std::vector<double> FeCluster::getPartialDerivatives() const {
 	// Local Declarations
