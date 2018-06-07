@@ -450,6 +450,7 @@ public:
 	 * reactions
 	 */
 	virtual double getTotalFlux() override {
+        assert(false);
 		return 0.0;
 	}
 

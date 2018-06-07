@@ -285,16 +285,6 @@ private:
 	DissociationPairMap effEmissionList;
 
 	/**
-	 * The helium momentum flux.
-	 */
-	double heMomentumFlux;
-
-	/**
-	 * The vacancy momentum flux.
-	 */
-	double vMomentumFlux;
-
-	/**
 	 * Output coefficients for a given reaction to the given output stream.
 	 *
 	 * @param os The output stream on which to write the coefficients.
@@ -564,61 +554,6 @@ public:
 	void resetConnectivities() override;
 
 	/**
-	 * This operation returns the total flux of this cluster in the
-	 * current network.
-	 *
-	 * @return The total change in flux for this cluster due to all
-	 * reactions
-	 */
-	double getTotalFlux() override {
-
-		// Compute the fluxes.
-        auto flux = computeProductionFlux() - computeCombinationFlux() +
-                    computeDissociationFlux() - computeEmissionFlux();
-        
-        heMomentumFlux = flux.heMoment;
-        vMomentumFlux = flux.vMoment;
-
-        return flux.total;
-	}
-
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * other clusters dissociating into it. Compute the contributions to
-	 * the momentum fluxes at the same time.
-	 *
-	 * @return The flux due to dissociation of other clusters
-	 */
-	double getDissociationFlux();
-
-	/**
-	 * This operation returns the total change in this cluster due its
-	 * own dissociation. Compute the contributions to
-	 * the momentum fluxes at the same time.
-	 *
-	 * @return The flux due to its dissociation
-	 */
-	double getEmissionFlux();
-
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * the production of this cluster by other clusters. Compute the contributions to
-	 * the momentum fluxes at the same time.
-	 *
-	 * @return The flux due to this cluster being produced
-	 */
-	double getProductionFlux();
-
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * the combination of this cluster with others. Compute the contributions to
-	 * the momentum fluxes at the same time.
-	 *
-	 * @return The flux due to this cluster combining with other clusters
-	 */
-	double getCombinationFlux();
-
-	/**
 	 * This operation returns the total change in this cluster due to
 	 * other clusters dissociating into it. Compute the contributions to
 	 * the momentum fluxes at the same time.
@@ -653,24 +588,6 @@ public:
 	 * @return The flux due to this cluster combining with other clusters
 	 */
 	FluxType computeCombinationFlux() const;
-
-	/**
-	 * This operation returns the total change for its helium momentum.
-	 *
-	 * @return The momentum flux
-	 */
-	double getHeMomentumFlux() const {
-		return heMomentumFlux;
-	}
-
-	/**
-	 * This operation returns the total change for its vacancy momentum.
-	 *
-	 * @return The momentum flux
-	 */
-	double getVMomentumFlux() const {
-		return vMomentumFlux;
-	}
 
 	/**
 	 * This operation works as getPartialDerivatives above, but instead of

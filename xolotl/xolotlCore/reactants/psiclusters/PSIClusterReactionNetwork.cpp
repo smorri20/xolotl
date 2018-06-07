@@ -1504,6 +1504,7 @@ void PSIClusterReactionNetwork::computeRateConstants() {
 
 void PSIClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset) {
 
+#if READY
 	// ----- Compute all of the new fluxes -----
 	std::for_each(allReactants.begin(), allReactants.end(),
 			[&updatedConcOffset](IReactant& cluster) {
@@ -1532,6 +1533,43 @@ void PSIClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset) {
 		reactantIndex = superCluster.getVMomentumId() - 1;
 		updatedConcOffset[reactantIndex] += flux;
 	}
+#else
+
+    std::for_each(allReactants.begin(), allReactants.end(),
+        [&updatedConcOffset](IReactant& baseCluster) {
+
+            try {
+                // Assume that reactant is a supercluster.
+                auto const& superCluster = 
+                    dynamic_cast<PSISuperCluster&>(baseCluster);
+
+                // Compute a supercluster's flux.
+                auto flux = Reactant::computeFlux(superCluster);
+
+                // Update concentrations for cluster.
+                auto ridx = superCluster.getId() - 1;
+                updatedConcOffset[ridx] += flux.total;
+                auto heIdx = superCluster.getHeMomentumId() - 1;
+                updatedConcOffset[heIdx] += flux.heMoment;
+                auto vIdx = superCluster.getVMomentumId() - 1;
+                updatedConcOffset[vIdx] += flux.vMoment;
+            }
+            catch(std::bad_cast _) {
+                // Reactant must not have been a supercluster.
+                auto const& cluster =
+                    dynamic_cast<PSICluster&>(baseCluster);
+
+                // Compute a non-supercluster's flux.
+                auto flux = Reactant::computeFlux(cluster);
+
+                // Update concentration of the cluster.
+                auto ridx = cluster.getId() - 1;
+                updatedConcOffset[ridx] += flux.total;
+            }
+        });
+
+#endif // READY
+
 
 #if READY
     // TODO if this works - move it to base class.

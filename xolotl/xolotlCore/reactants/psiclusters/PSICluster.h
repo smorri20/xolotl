@@ -404,44 +404,11 @@ public:
 	}
 
 	/**
-	 * This operation returns the total flux of this cluster in the
-	 * current network.
-	 *
-	 * @return The total change in flux for this cluster due to all
-	 * reactions
-	 */
-	virtual double getTotalFlux() override {
-
-#if READY
-		return getProductionFlux() - getCombinationFlux()
-				+ getDissociationFlux() - getEmissionFlux();
-#else
-        auto pFlux = computeProductionFlux();
-        auto cFlux = computeCombinationFlux();
-        auto dFlux = computeDissociationFlux();
-        auto eFlux = computeEmissionFlux();
-
-        auto prodFlux = getProductionFlux();
-        auto combFlux = getCombinationFlux();
-        auto dissFlux = getDissociationFlux();
-        auto emitFlux = getEmissionFlux();
-
-        assert(pFlux.total == prodFlux);
-        assert(cFlux.total == combFlux);
-        assert(dFlux.total == dissFlux);
-        assert(eFlux.total == emitFlux);
-
-        return prodFlux - combFlux + dissFlux - emitFlux;
-#endif // READY
-	}
-
-	/**
 	 * This operation returns the total change in this cluster due to
 	 * other clusters dissociating into it.
 	 *
 	 * @return The flux due to dissociation of other clusters
 	 */
-	virtual double getDissociationFlux() const;
     FluxType computeDissociationFlux() const;
 
 	/**
@@ -450,7 +417,6 @@ public:
 	 *
 	 * @return The flux due to its dissociation
 	 */
-	virtual double getEmissionFlux() const;
 	FluxType computeEmissionFlux() const;
 
 	/**
@@ -459,7 +425,6 @@ public:
 	 *
 	 * @return The flux due to this cluster being produced
 	 */
-	virtual double getProductionFlux() const;
 	FluxType computeProductionFlux() const;
 
 	/**
@@ -468,7 +433,6 @@ public:
 	 *
 	 * @return The flux due to this cluster combining with other clusters
 	 */
-	virtual double getCombinationFlux() const;
 	FluxType computeCombinationFlux() const;
 
 	/**
