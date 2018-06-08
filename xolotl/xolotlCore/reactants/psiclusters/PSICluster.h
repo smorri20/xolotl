@@ -461,6 +461,9 @@ public:
 	 * the vector should be equal to ReactionNetwork::size().
 	 *
 	 */
+    virtual void computePartialDerivatives(const std::vector<size_t>& startingIdx,
+									const std::vector<int>& indices,
+									std::vector<double>& vals) const;
 	virtual void getPartialDerivatives(std::vector<double> & partials) const
 			override;
 

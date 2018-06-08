@@ -846,12 +846,26 @@ void PSISuperCluster::updateConcsFromFlux(double* concs, const Flux& flux) const
 
 
 void PSISuperCluster::computePartialDerivatives(
-        double* partials,
-        const ReactionNetwork::PartialsIdxMap& partialsIdxMap,
-        double* hePartials,
-        const ReactionNetwork::PartialsIdxMap& hePartialsIdxMap,
-        double* vPartials,
-        const ReactionNetwork::PartialsIdxMap& vPartialsIdxMap) const {
+		const std::vector<size_t>& startingIdx,
+		const std::vector<int>& indices,
+		std::vector<double>& vals) const {
+
+    // Determine cluster's index into the size/indices/vals arrays.
+    auto reactantIndex = getId() - 1;
+    auto heReactantIndex = getHeMomentumId() - 1;
+    auto vReactantIndex = getVMomentumId() - 1;
+
+    // Get the inverse mappings from dense DOF space to
+    // the indices/vals arrays.
+	auto const& psiNetwork = static_cast<PSIClusterReactionNetwork const&>(network);
+    auto const& partialsIdxMap = psiNetwork.getDFillInvMap(reactantIndex);
+    auto const& hePartialsIdxMap = psiNetwork.getDFillInvMap(heReactantIndex);
+    auto const& vPartialsIdxMap = psiNetwork.getDFillInvMap(vReactantIndex);
+
+    // TODO do we want to wrap a vector around these?
+    double* partials = &(vals[startingIdx[reactantIndex]]);
+    double* hePartials = &(vals[startingIdx[heReactantIndex]]);
+    double* vPartials = &(vals[startingIdx[vReactantIndex]]);
 
 	// Get the partial derivatives for each reaction type
 	computeProductionPartialDerivatives(partials, partialsIdxMap,

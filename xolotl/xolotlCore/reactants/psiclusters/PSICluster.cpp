@@ -5,6 +5,7 @@
 #include <xolotlPerf.h>
 #include <Constants.h>
 #include <MathUtils.h>
+#include "PSIClusterReactionNetwork.h"
 
 namespace xolotlCore {
 
@@ -475,6 +476,9 @@ void PSICluster::updateConcs(double* concs) const {
 
 
 std::vector<double> PSICluster::getPartialDerivatives() const {
+
+    assert(false);
+
 	// Local Declarations
 	std::vector<double> partials(network.getDOF(), 0.0);
 
@@ -488,6 +492,9 @@ std::vector<double> PSICluster::getPartialDerivatives() const {
 }
 
 void PSICluster::getPartialDerivatives(std::vector<double> & partials) const {
+
+    assert(false);
+
 	// Get the partial derivatives for each reaction type
 	getProductionPartialDerivatives(partials);
 	getCombinationPartialDerivatives(partials);
@@ -496,6 +503,40 @@ void PSICluster::getPartialDerivatives(std::vector<double> & partials) const {
 
 	return;
 }
+
+
+void PSICluster::computePartialDerivatives(
+        const std::vector<size_t>& startingIdx,
+        const std::vector<int>& indices,
+        std::vector<double>& vals) const {
+
+    // Allocate space for our computed values.
+    // TODO this may be *very* inefficient if we only compute a few.
+    // TODO is there a way to do this similar to what we do for 
+    // the superclusters?  compute directly into vals?
+    const auto& psiNetwork = static_cast<PSIClusterReactionNetwork const&>(network);
+	std::vector<double> clusterPartials(psiNetwork.getDOF(), 0.0);
+
+    // Get the reactant index
+    auto reactantIndex = getId() - 1;
+
+    // Get the partial derivatives
+	getProductionPartialDerivatives(clusterPartials);
+	getCombinationPartialDerivatives(clusterPartials);
+	getDissociationPartialDerivatives(clusterPartials);
+	getEmissionPartialDerivatives(clusterPartials);
+
+    // Get the list of column ids from the map
+    auto const& pdColIdsVector = psiNetwork.getDFillMap(reactantIndex);
+
+    // Loop over the list of column ids
+    auto myStartingIdx = startingIdx[reactantIndex];
+    for (int j = 0; j < pdColIdsVector.size(); j++) {
+        // Get the partial derivative from the array of all of the partials
+        vals[myStartingIdx + j] = clusterPartials[pdColIdsVector[j]];
+    }
+}
+
 
 void PSICluster::getProductionPartialDerivatives(
 		std::vector<double> & partials) const {

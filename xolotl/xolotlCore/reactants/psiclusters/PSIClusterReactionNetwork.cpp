@@ -1502,6 +1502,8 @@ void PSIClusterReactionNetwork::computeRateConstants() {
 	return;
 }
 
+
+
 void PSIClusterReactionNetwork::computeAllPartials(
 		const std::vector<size_t>& startingIdx, const std::vector<int>& indices,
 		std::vector<double>& vals) const {
@@ -1511,79 +1513,20 @@ void PSIClusterReactionNetwork::computeAllPartials(
 	// all partials values at zero.
 	std::fill(vals.begin(), vals.end(), 0.0);
 
-	// Initial declarations
-	std::vector<double> clusterPartials(getDOF(), 0.0);
+    // Have each reactant compute its own partials into their own
+    // location in the valus array.
+    std::for_each(allReactants.begin(), allReactants.end(),
+        [&startingIdx,&indices,&vals](const IReactant& currReactant) {
 
-	// Make a vector of types for the non super clusters
-	std::vector<ReactantType> typeVec { ReactantType::He, ReactantType::D,
-			ReactantType::T, ReactantType::V, ReactantType::I,
-			ReactantType::PSIMixed };
-	// Loop on it
-	for (auto tvIter = typeVec.begin(); tvIter != typeVec.end(); ++tvIter) {
+            auto const& cluster = static_cast<PSICluster const&>(currReactant);
+            cluster.computePartialDerivatives(startingIdx, indices, vals);
+        });
 
-		auto currType = *tvIter;
-
-		// Consider all reactants of the current type.
-		auto const& currTypeReactantMap = getAll(currType);
-
-		// Update the column in the Jacobian that represents each normal reactant
-		for (auto const& currMapItem : currTypeReactantMap) {
-
-			auto const& reactant =
-					static_cast<PSICluster&>(*(currMapItem.second));
-
-			// Get the reactant index
-			auto reactantIndex = reactant.getId() - 1;
-
-			// Get the partial derivatives
-			reactant.getPartialDerivatives(clusterPartials);
-			// Get the list of column ids from the map
-			auto const& pdColIdsVector = dFillMap.at(reactantIndex);
-
-			// Loop over the list of column ids
-			auto myStartingIdx = startingIdx[reactantIndex];
-			for (int j = 0; j < pdColIdsVector.size(); j++) {
-				// Get the partial derivative from the array of all of the partials
-				vals[myStartingIdx + j] = clusterPartials[pdColIdsVector[j]];
-
-				// Reset the cluster partial value to zero. This is much faster
-				// than using memset.
-				clusterPartials[pdColIdsVector[j]] = 0.0;
-			}
-		}
-	}
-
-	// Update the column in the Jacobian that represents the moment for the super clusters
-	auto const& superClusters = getAll(ReactantType::PSISuper);
-	for (auto const& currMapItem : superClusters) {
-
-		auto const& reactant =
-				static_cast<PSISuperCluster&>(*(currMapItem.second));
-
-		// Determine cluster's index into the size/indices/vals arrays.
-		auto reactantIndex = reactant.getId() - 1;
-		auto heReactantIndex = reactant.getHeMomentumId() - 1;
-		auto vReactantIndex = reactant.getVMomentumId() - 1;
-
-		// Get the inverse mappings from dense DOF space to
-		// the indices/vals arrays.
-		auto const& partialsIdxMap = dFillInvMap.at(reactantIndex);
-		auto const& hePartialsIdxMap = dFillInvMap.at(heReactantIndex);
-		auto const& vPartialsIdxMap = dFillInvMap.at(vReactantIndex);
-
-		// TODO do we want to wrap a vector around these?
-		double* partials = &(vals[startingIdx[reactantIndex]]);
-		double* hePartials = &(vals[startingIdx[heReactantIndex]]);
-		double* vPartials = &(vals[startingIdx[vReactantIndex]]);
-
-		// Have reactant compute its partial derivatives
-		// to its correct locations within the vals array.
-		reactant.computePartialDerivatives(partials, partialsIdxMap, hePartials,
-				hePartialsIdxMap, vPartials, vPartialsIdxMap);
-	}
 
 	return;
 }
+
+
 
 double PSIClusterReactionNetwork::computeBindingEnergy(
 		const DissociationReaction& reaction) const {

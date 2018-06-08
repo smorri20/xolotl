@@ -622,6 +622,30 @@ public:
 			const std::vector<size_t>& startingIdx,
 			std::vector<int>& indices) const override;
 
+
+    /**
+     * For a reactant identified by its id, access the forward map of
+     * column ids that are connected for the given reactant.
+     *
+     * @param id Reactant id.
+     * @return Ids of columns connected to the reactant with id 'id.'
+     */
+    const std::vector<int>& getDFillMap(int id) const {
+        return dFillMap.at(id);
+    }
+
+
+    /**
+     * For a reactant identified by its id, access the reverse map of ids 
+     * in the DOF space to location in sparse partials arrays.
+     *
+     * @param id Reactant id whose map we are to retrieve.
+     * @return Map of column IDs in DOF space to location in sparse 
+     * partials arrays.
+     */
+    const PartialsIdxMap& getDFillInvMap(int id) const {
+        return dFillInvMap.at(id);
+    }
 };
 
 }
