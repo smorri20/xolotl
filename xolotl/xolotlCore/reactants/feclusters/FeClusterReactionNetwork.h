@@ -197,6 +197,16 @@ private:
 			ProductionReaction& reaction, int a = 0, int b = 0, int c = 0,
 			int d = 0);
 
+protected:
+
+	/**
+	 * Get the diagonal fill for the Jacobian, corresponding to the moments
+     * of the reactions.
+	 *
+	 * @param sfm Connectivity map.
+	 */
+	void getDiagonalFillMoments(SparseFillMap& sfm) override;
+
 public:
 
 	/**
@@ -272,13 +282,6 @@ public:
 	 * @return The list of compositions
 	 */
 	virtual std::vector<std::vector<int> > getCompositionList() const override;
-
-	/**
-	 * Get the diagonal fill for the Jacobian, corresponding to the reactions.
-	 *
-	 * @param sfm Connectivity map.
-	 */
-	void getDiagonalFill(SparseFillMap& sfm) override;
 
 	/**
 	 * Get the total concentration of atoms contained in the network.

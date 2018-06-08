@@ -68,6 +68,17 @@ private:
 	void checkForDissociation(IReactant * emittingReactant,
 			std::shared_ptr<ProductionReaction> reaction);
 
+protected:
+
+    /**
+     * Get the diagonal fill for the Jacobian, corresponding to the moments
+     * of the reactions.
+     *
+     * @param sfm Connectivity map.
+     */
+    void getDiagonalFillMoments(SparseFillMap& sfm) override;
+
+
 public:
 
 	/**
@@ -143,13 +154,6 @@ public:
 	 * @return The list of compositions
 	 */
 	virtual std::vector<std::vector<int> > getCompositionList() const override;
-
-	/**
-	 * Get the diagonal fill for the Jacobian, corresponding to the reactions.
-	 *
-	 * @param diagFill Connectivity map.
-	 */
-	void getDiagonalFill(SparseFillMap& sfm) override;
 
 	/**
 	 * Calculate all the rate constants for the reactions and dissociations of the network.

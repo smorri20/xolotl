@@ -224,6 +224,17 @@ private:
 	void FindPartialsColumnIndices(size_t reactantIndex, std::vector<int>& size,
 			int* indices) const;
 
+protected:
+
+	/**
+	 * Get the diagonal fill for the Jacobian, corresponding to the moments
+     * of the reactions.
+	 *
+	 * @param sfm Connectivity map.
+	 */
+	void getDiagonalFillMoments(SparseFillMap& sfm) override;
+
+
 public:
 
 	/**
@@ -299,13 +310,6 @@ public:
 	 * @return The list of compositions
 	 */
 	virtual std::vector<std::vector<int> > getCompositionList() const override;
-
-	/**
-	 * Get the diagonal fill for the Jacobian, corresponding to the reactions.
-	 *
-	 * @param sfm Connectivity map.
-	 */
-	void getDiagonalFill(SparseFillMap& sfm) override;
 
 	/**
 	 * Get the total concentration of atoms contained in the network.

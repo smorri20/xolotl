@@ -195,33 +195,7 @@ std::vector<std::vector<int> > NEClusterReactionNetwork::getCompositionList() co
 	return compList;
 }
 
-void NEClusterReactionNetwork::getDiagonalFill(SparseFillMap& fillMap) {
-
-	// Degrees of freedom is the total number of clusters in the network
-	const int dof = getDOF();
-
-	// Get the connectivity for each reactant
-	std::for_each(allReactants.begin(), allReactants.end(),
-			[&fillMap, &dof, this](const IReactant& reactant) {
-				// Get the reactant and its connectivity
-				auto const& connectivity = reactant.getConnectivity();
-				auto connectivityLength = connectivity.size();
-				// Get the reactant id so that the connectivity can be lined up in
-				// the proper column
-				auto id = reactant.getId() - 1;
-				// Create the vector that will be inserted into the dFill map
-				std::vector<int> columnIds;
-				// Add it to the diagonal fill block
-				for (int j = 0; j < connectivityLength; j++) {
-					// Add a column id if the connectivity is equal to 1.
-					if (connectivity[j] == 1) {
-						fillMap[id].emplace_back(j);
-						columnIds.push_back(j);
-					}
-				}
-				// Update the map
-				dFillMap[id] = columnIds;
-			});
+void NEClusterReactionNetwork::getDiagonalFillMoments(SparseFillMap& fillMap) {
 
 	// Get the connectivity for each moment
 	for (auto const& currMapItem : getAll(ReactantType::NESuper)) {

@@ -258,6 +258,14 @@ protected:
 				std::numeric_limits<std::size_t>::max();
 	}
 
+    /**
+     * Get the diagonal fill for the Jacobian, corresponding to the moments
+     * of the reactions.
+     *
+     * @param sfm Connectivity map.
+     */
+    virtual void getDiagonalFillMoments(SparseFillMap& sfm) = 0;
+
 public:
 
 	/**
@@ -460,9 +468,7 @@ public:
 	 *
 	 * @param sfm Connectivity map.
 	 */
-	virtual void getDiagonalFill(SparseFillMap& sfm) override {
-		return;
-	}
+	virtual void getDiagonalFill(SparseFillMap& sfm) override;
 
 	/**
 	 * Get the total concentration of atoms contained in the network.

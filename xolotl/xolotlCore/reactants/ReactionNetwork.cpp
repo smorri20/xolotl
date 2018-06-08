@@ -295,6 +295,55 @@ void ReactionNetwork::initPartialsIndices(const std::vector<int>& size,
 	}
 }
 
+
+void ReactionNetwork::getDiagonalFill(SparseFillMap& fillMap) {
+
+	// Degrees of freedom is the total number of clusters in the network
+	const int dof = getDOF();
+
+	// Get the connectivity for each reactant
+	std::for_each(allReactants.begin(), allReactants.end(),
+			[&fillMap,&dof,this](const IReactant& reactant) {
+
+				// Get the reactant's connectivity
+				auto const& connectivity = reactant.getConnectivity();
+				auto connectivityLength = connectivity.size();
+				// Get the reactant id so that the connectivity can be lined up in
+				// the proper column
+				auto id = reactant.getId() - 1;
+				// Create the vector that will be inserted into the dFill map
+				std::vector<int> columnIds;
+				// Add it to the diagonal fill block
+				for (int j = 0; j < connectivityLength; j++) {
+
+					// Add a column id if the connectivity is equal to 1.
+					if(connectivity[j] == 1) {
+						// TODO are fillMap and dFillmap the same?
+						fillMap[id].emplace_back(j);
+						columnIds.emplace_back(j);
+					}
+				}
+				// Update the map
+				dFillMap[id] = columnIds;
+			});
+
+	// Get the connectivity for each moment
+    getDiagonalFillMoments(fillMap);
+
+	// Now that the dFillMap has been built, build inverse maps for each item.
+	for (const auto& dFillMapItem : dFillMap) {
+		auto rid = dFillMapItem.first;
+		dFillInvMap[rid] = PartialsIdxMap();
+
+		auto const& colIds = dFillMapItem.second;
+		for (auto j = 0; j < colIds.size(); ++j) {
+			dFillInvMap[rid][colIds[j]] = j;
+		}
+	}
+
+	return;
+}
+
 void ReactionNetwork::dumpTo(std::ostream& os) const {
 	// Dump flat view of reactants.
 	os << size() << " reactants:\n";

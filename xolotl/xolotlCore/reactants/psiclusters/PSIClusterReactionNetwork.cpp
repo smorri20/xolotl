@@ -1208,38 +1208,8 @@ std::vector<std::vector<int> > PSIClusterReactionNetwork::getCompositionList() c
 	return compList;
 }
 
-void PSIClusterReactionNetwork::getDiagonalFill(SparseFillMap& fillMap) {
+void PSIClusterReactionNetwork::getDiagonalFillMoments(SparseFillMap& fillMap) {
 
-	// Degrees of freedom is the total number of clusters in the network
-	const int dof = getDOF();
-
-	// Get the connectivity for each reactant
-	std::for_each(allReactants.begin(), allReactants.end(),
-			[&fillMap,&dof,this](const IReactant& reactant) {
-
-				// Get the reactant's connectivity
-				auto const& connectivity = reactant.getConnectivity();
-				auto connectivityLength = connectivity.size();
-				// Get the reactant id so that the connectivity can be lined up in
-				// the proper column
-				auto id = reactant.getId() - 1;
-				// Create the vector that will be inserted into the dFill map
-				std::vector<int> columnIds;
-				// Add it to the diagonal fill block
-				for (int j = 0; j < connectivityLength; j++) {
-
-					// Add a column id if the connectivity is equal to 1.
-					if(connectivity[j] == 1) {
-						// TODO are fillMap and dFillmap the same?
-						fillMap[id].emplace_back(j);
-						columnIds.emplace_back(j);
-					}
-				}
-				// Update the map
-				dFillMap[id] = columnIds;
-			});
-
-	// Get the connectivity for each moment
 	for (auto const& superMapItem : getAll(ReactantType::PSISuper)) {
 
 		auto const& reactant =
@@ -1282,19 +1252,9 @@ void PSIClusterReactionNetwork::getDiagonalFill(SparseFillMap& fillMap) {
 		dFillMap[id] = columnIds;
 	}
 
-	// Now that the dFillMap has been built, build inverse maps for each item.
-	for (const auto& dFillMapItem : dFillMap) {
-		auto rid = dFillMapItem.first;
-		dFillInvMap[rid] = PartialsIdxMap();
-
-		auto const& colIds = dFillMapItem.second;
-		for (auto j = 0; j < colIds.size(); ++j) {
-			dFillInvMap[rid][colIds[j]] = j;
-		}
-	}
-
-	return;
+    return;
 }
+
 
 double PSIClusterReactionNetwork::getTotalAtomConcentration(int i) {
 	// Initial declarations
