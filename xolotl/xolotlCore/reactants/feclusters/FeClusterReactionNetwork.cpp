@@ -875,8 +875,10 @@ void FeClusterReactionNetwork::computeRateConstants() {
 }
 
 void FeClusterReactionNetwork::computeAllPartials(
-		const std::vector<size_t>& startingIdx, const std::vector<int>& indices,
+        const std::vector<int>& indices,
+		const std::vector<size_t>& startingIdx,
 		std::vector<double>& vals) const {
+
 	// Initial declarations
 	const int dof = getDOF();
 	std::vector<double> clusterPartials(dof, 0.0);

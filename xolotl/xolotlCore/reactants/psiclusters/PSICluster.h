@@ -6,6 +6,7 @@
 #include "IntegerRange.h"
 #include "NDArray.h"
 #include "Flux.h"
+#include "ReactionNetwork.h"
 
 namespace xolotlPerf {
 class ITimer;
@@ -32,6 +33,61 @@ namespace xolotlCore {
  * order to change these values the "set" functions must still be used.
  */
 class PSICluster: public Reactant {
+
+private:
+
+	/**
+	 * This operation computes the partial derivatives due to production
+	 * reactions.
+	 *
+	 * @param partials The vector into which the partial derivatives should be
+	 * inserted. This vector should have a length equal to the size of the
+	 * network.
+	 * @param partialsIdxMap Map of cluster id to the location in the partials
+	 * array where the computed partials should be stored.
+	 */
+    void computeProductionPartialDerivatives(double* partials,
+            const ReactionNetwork::PartialsIdxMap& partialsIdxMap) const;
+
+	/**
+	 * This operation computes the partial derivatives due to combination
+	 * reactions.
+	 *
+	 * @param partials The vector into which the partial derivatives should be
+	 * inserted. This vector should have a length equal to the size of the
+	 * network.
+	 * @param partialsIdxMap Map of cluster id to the location in the partials
+	 * array where the computed partials should be stored.
+	 */
+    void computeCombinationPartialDerivatives(double* partials,
+            const ReactionNetwork::PartialsIdxMap& partialsIdxMap) const;
+
+	/**
+	 * This operation computes the partial derivatives due to dissociation of
+	 * other clusters into this one.
+	 *
+	 * @param partials The vector into which the partial derivatives should be
+	 * inserted. This vector should have a length equal to the size of the
+	 * network.
+	 * @param partialsIdxMap Map of cluster id to the location in the partials
+	 * array where the computed partials should be stored.
+	 */
+    void computeDissociationPartialDerivatives(double* partials,
+            const ReactionNetwork::PartialsIdxMap& partialsIdxMap) const;
+
+	/**
+	 * This operation computes the partial derivatives due to emission
+	 * reactions.
+	 *
+	 * @param partials The vector into which the partial derivatives should be
+	 * inserted. This vector should have a length equal to the size of the
+	 * network.
+	 * @param partialsIdxMap Map of cluster id to the location in the partials
+	 * array where the computed partials should be stored.
+	 */
+    void computeEmissionPartialDerivatives(double* partials,
+            const ReactionNetwork::PartialsIdxMap& partialsIdxMap) const;
+
 
 protected:
 
@@ -436,80 +492,16 @@ public:
 	 */
 	FluxType computeCombinationFlux() const;
 
-	/**
-	 * This operation returns the list of partial derivatives of this cluster
-	 * with respect to all other clusters in the network. The combined lists
-	 * of partial derivatives from all of the clusters in the network can be
-	 * used to form, for example, a Jacobian.
-	 *
-	 * @return The partial derivatives for this cluster where index zero
-	 * corresponds to the first cluster in the list returned by the
-	 * ReactionNetwork::getAll() operation.
-	 */
-	virtual std::vector<double> getPartialDerivatives() const override;
-
-	/**
-	 * This operation works as getPartialDerivatives above, but instead of
-	 * returning a vector that it creates it fills a vector that is passed to
-	 * it by the caller. This allows the caller to optimize the amount of
-	 * memory allocations to just one if they are accessing the partial
-	 * derivatives many times.
-	 *
-	 * @param the vector that should be filled with the partial derivatives
-	 * for this reactant where index zero corresponds to the first reactant in
-	 * the list returned by the ReactionNetwork::getAll() operation. The size of
-	 * the vector should be equal to ReactionNetwork::size().
-	 *
-	 */
-    virtual void computePartialDerivatives(const std::vector<size_t>& startingIdx,
-									const std::vector<int>& indices,
+    /**
+     * Compute partial derivatives into our locations in the vals array.
+     *
+     * @param indices Array of indices to our location(s) in vals.
+     * @param startIdx Index within indices array where our indices start.
+     * @vals Partial derivatives we (and our siblings) compute.
+     */
+    virtual void computePartialDerivatives(const std::vector<int>& indices,
+                                    const std::vector<size_t>& startingIdx,
 									std::vector<double>& vals) const;
-	virtual void getPartialDerivatives(std::vector<double> & partials) const
-			override;
-
-	/**
-	 * This operation computes the partial derivatives due to production
-	 * reactions.
-	 *
-	 * @param partials The vector into which the partial derivatives should be
-	 * inserted. This vector should have a length equal to the size of the
-	 * network.
-	 */
-	virtual void getProductionPartialDerivatives(
-			std::vector<double> & partials) const;
-
-	/**
-	 * This operation computes the partial derivatives due to combination
-	 * reactions.
-	 *
-	 * @param partials The vector into which the partial derivatives should be
-	 * inserted. This vector should have a length equal to the size of the
-	 * network.
-	 */
-	virtual void getCombinationPartialDerivatives(
-			std::vector<double> & partials) const;
-
-	/**
-	 * This operation computes the partial derivatives due to dissociation of
-	 * other clusters into this one.
-	 *
-	 * @param partials The vector into which the partial derivatives should be
-	 * inserted. This vector should have a length equal to the size of the
-	 * network.
-	 */
-	virtual void getDissociationPartialDerivatives(
-			std::vector<double> & partials) const;
-
-	/**
-	 * This operation computes the partial derivatives due to emission
-	 * reactions.
-	 *
-	 * @param partials The vector into which the partial derivatives should be
-	 * inserted. This vector should have a length equal to the size of the
-	 * network.
-	 */
-	virtual void getEmissionPartialDerivatives(
-			std::vector<double> & partials) const;
 
 	/**
 	 * This operation reset the connectivity sets based on the information

@@ -1505,7 +1505,8 @@ void PSIClusterReactionNetwork::computeRateConstants() {
 
 
 void PSIClusterReactionNetwork::computeAllPartials(
-		const std::vector<size_t>& startingIdx, const std::vector<int>& indices,
+        const std::vector<int>& indices,
+		const std::vector<size_t>& startingIdx,
 		std::vector<double>& vals) const {
 
 	// Because we accumulate partials and we don't know which
@@ -1519,7 +1520,7 @@ void PSIClusterReactionNetwork::computeAllPartials(
         [&startingIdx,&indices,&vals](const IReactant& currReactant) {
 
             auto const& cluster = static_cast<PSICluster const&>(currReactant);
-            cluster.computePartialDerivatives(startingIdx, indices, vals);
+            cluster.computePartialDerivatives(indices, startingIdx, vals);
         });
 
 

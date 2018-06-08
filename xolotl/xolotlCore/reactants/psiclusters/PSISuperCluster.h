@@ -34,6 +34,70 @@ private:
 		return nameStream.str();
 	}
 
+	/**
+	 * This operation computes the partial derivatives due to production
+	 * reactions.
+	 *
+	 * @param partials The vector into which the partial derivatives should be
+	 * inserted. This vector should have a length equal to the size of the
+	 * network.
+	 */
+	void computeProductionPartialDerivatives(
+            double* partials,
+            const ReactionNetwork::PartialsIdxMap& partialsIdxMap,
+            double* hePartials,
+            const ReactionNetwork::PartialsIdxMap& hePartialsIdxMap,
+            double* vPartials,
+            const ReactionNetwork::PartialsIdxMap& vPartialsIdxMap) const;
+
+	/**
+	 * This operation computes the partial derivatives due to combination
+	 * reactions.
+	 *
+	 * @param partials The vector into which the partial derivatives should be
+	 * inserted. This vector should have a length equal to the size of the
+	 * network.
+	 */
+	void computeCombinationPartialDerivatives(
+            double* partials,
+            const ReactionNetwork::PartialsIdxMap& partialsIdxMap,
+            double* hePartials,
+            const ReactionNetwork::PartialsIdxMap& hePartialsIdxMap,
+            double* vPartials,
+            const ReactionNetwork::PartialsIdxMap& vPartialsIdxMap) const;
+
+	/**
+	 * This operation computes the partial derivatives due to dissociation of
+	 * other clusters into this one.
+	 *
+	 * @param partials The vector into which the partial derivatives should be
+	 * inserted. This vector should have a length equal to the size of the
+	 * network.
+	 */
+	void computeDissociationPartialDerivatives(
+            double* partials,
+            const ReactionNetwork::PartialsIdxMap& partialsIdxMap,
+            double* hePartials,
+            const ReactionNetwork::PartialsIdxMap& hePartialsIdxMap,
+            double* vPartials,
+            const ReactionNetwork::PartialsIdxMap& vPartialsIdxMap) const;
+
+	/**
+	 * This operation computes the partial derivatives due to emission
+	 * reactions.
+	 *
+	 * @param partials The vector into which the partial derivatives should be
+	 * inserted. This vector should have a length equal to the size of the
+	 * network.
+	 */
+	void computeEmissionPartialDerivatives(
+            double* partials,
+            const ReactionNetwork::PartialsIdxMap& partialsIdxMap,
+            double* hePartials,
+            const ReactionNetwork::PartialsIdxMap& hePartialsIdxMap,
+            double* vPartials,
+            const ReactionNetwork::PartialsIdxMap& vPartialsIdxMap) const;
+
 protected:
 
 	struct ReactingInfoBase {
@@ -600,110 +664,16 @@ public:
 	FluxType computeCombinationFlux() const;
 
 	/**
-	 * This operation works as getPartialDerivatives above, but instead of
-	 * returning a vector that it creates it fills a vector that is passed to
-	 * it by the caller. This allows the caller to optimize the amount of
-	 * memory allocations to just one if they are accessing the partial
-	 * derivatives many times.
+	 * Compute partial derivatives into our locations in the vals array.
 	 *
-	 * @param the vector that should be filled with the partial derivatives
-	 * for this reactant where index zero corresponds to the first reactant in
-	 * the list returned by the ReactionNetwork::getAll() operation. The size of
-	 * the vector should be equal to ReactionNetwork::size().
-	 *
+     * @param indices Array of indices to our location(s) in vals.
+     * @param startIdx Index within indices array where our indices start.
+     * @vals Partial derivatives we (and our siblings) compute.
 	 */
-    void computePartialDerivatives(const std::vector<size_t>& startingIdx,
-									const std::vector<int>& indices,
+    void computePartialDerivatives(const std::vector<int>& indices,
+                                    const std::vector<size_t>& startingIdx,
 									std::vector<double>& vals) const override;
 
-	void getPartialDerivatives(std::vector<double> & partials) const override
-    {
-        assert(false);
-    }
-
-	/**
-	 * This operation computes the partial derivatives due to production
-	 * reactions.
-	 *
-	 * @param partials The vector into which the partial derivatives should be
-	 * inserted. This vector should have a length equal to the size of the
-	 * network.
-	 */
-	void computeProductionPartialDerivatives(
-            double* partials,
-            const ReactionNetwork::PartialsIdxMap& partialsIdxMap,
-            double* hePartials,
-            const ReactionNetwork::PartialsIdxMap& hePartialsIdxMap,
-            double* vPartials,
-            const ReactionNetwork::PartialsIdxMap& vPartialsIdxMap) const;
-	void getProductionPartialDerivatives(std::vector<double> & partials) const
-			override
-    {
-        assert(false);
-    }
-
-	/**
-	 * This operation computes the partial derivatives due to combination
-	 * reactions.
-	 *
-	 * @param partials The vector into which the partial derivatives should be
-	 * inserted. This vector should have a length equal to the size of the
-	 * network.
-	 */
-	void computeCombinationPartialDerivatives(
-            double* partials,
-            const ReactionNetwork::PartialsIdxMap& partialsIdxMap,
-            double* hePartials,
-            const ReactionNetwork::PartialsIdxMap& hePartialsIdxMap,
-            double* vPartials,
-            const ReactionNetwork::PartialsIdxMap& vPartialsIdxMap) const;
-	void getCombinationPartialDerivatives(std::vector<double> & partials) const
-			override
-    {
-        assert(false);
-    }
-
-	/**
-	 * This operation computes the partial derivatives due to dissociation of
-	 * other clusters into this one.
-	 *
-	 * @param partials The vector into which the partial derivatives should be
-	 * inserted. This vector should have a length equal to the size of the
-	 * network.
-	 */
-	void computeDissociationPartialDerivatives(
-            double* partials,
-            const ReactionNetwork::PartialsIdxMap& partialsIdxMap,
-            double* hePartials,
-            const ReactionNetwork::PartialsIdxMap& hePartialsIdxMap,
-            double* vPartials,
-            const ReactionNetwork::PartialsIdxMap& vPartialsIdxMap) const;
-	void getDissociationPartialDerivatives(std::vector<double> & partials) const
-			override
-    {
-        assert(false);
-    }
-
-	/**
-	 * This operation computes the partial derivatives due to emission
-	 * reactions.
-	 *
-	 * @param partials The vector into which the partial derivatives should be
-	 * inserted. This vector should have a length equal to the size of the
-	 * network.
-	 */
-	void computeEmissionPartialDerivatives(
-            double* partials,
-            const ReactionNetwork::PartialsIdxMap& partialsIdxMap,
-            double* hePartials,
-            const ReactionNetwork::PartialsIdxMap& hePartialsIdxMap,
-            double* vPartials,
-            const ReactionNetwork::PartialsIdxMap& vPartialsIdxMap) const;
-	void getEmissionPartialDerivatives(std::vector<double> & partials) const
-			override
-    {
-        assert(false);
-    }
 
 	/**
 	 * Returns the average number of vacancies.

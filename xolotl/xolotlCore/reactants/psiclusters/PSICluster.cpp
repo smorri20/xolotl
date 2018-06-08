@@ -475,71 +475,36 @@ void PSICluster::updateConcs(double* concs) const {
 }
 
 
-std::vector<double> PSICluster::getPartialDerivatives() const {
 
-    assert(false);
+void PSICluster::computePartialDerivatives(const std::vector<int>& indices,
+                                    const std::vector<size_t>& startingIdx,
+                                    std::vector<double>& vals) const {
 
-	// Local Declarations
-	std::vector<double> partials(network.getDOF(), 0.0);
-
-	// Get the partial derivatives for each reaction type
-	getProductionPartialDerivatives(partials);
-	getCombinationPartialDerivatives(partials);
-	getDissociationPartialDerivatives(partials);
-	getEmissionPartialDerivatives(partials);
-
-	return partials;
-}
-
-void PSICluster::getPartialDerivatives(std::vector<double> & partials) const {
-
-    assert(false);
-
-	// Get the partial derivatives for each reaction type
-	getProductionPartialDerivatives(partials);
-	getCombinationPartialDerivatives(partials);
-	getDissociationPartialDerivatives(partials);
-	getEmissionPartialDerivatives(partials);
-
-	return;
-}
-
-
-void PSICluster::computePartialDerivatives(
-        const std::vector<size_t>& startingIdx,
-        const std::vector<int>& indices,
-        std::vector<double>& vals) const {
-
-    // Allocate space for our computed values.
-    // TODO this may be *very* inefficient if we only compute a few.
-    // TODO is there a way to do this similar to what we do for 
-    // the superclusters?  compute directly into vals?
-    const auto& psiNetwork = static_cast<PSIClusterReactionNetwork const&>(network);
-	std::vector<double> clusterPartials(psiNetwork.getDOF(), 0.0);
-
-    // Get the reactant index
+    // Compute partial derivatives into their correct location in vals array.
+    //
+    // First, get the inverse mappings from dense DOF space to the 
+    // indices/vals arrays...
     auto reactantIndex = getId() - 1;
+    const auto& psiNetwork = static_cast<PSIClusterReactionNetwork const&>(network);
+    auto const& partialsIdxMap = psiNetwork.getDFillInvMap(reactantIndex);
 
-    // Get the partial derivatives
-	getProductionPartialDerivatives(clusterPartials);
-	getCombinationPartialDerivatives(clusterPartials);
-	getDissociationPartialDerivatives(clusterPartials);
-	getEmissionPartialDerivatives(clusterPartials);
+    // ...then, determine where our values are to go within vals array...
+    // TODO do we want to wrap a vector around these?
+    double* partials = &(vals[startingIdx[reactantIndex]]);
 
-    // Get the list of column ids from the map
-    auto const& pdColIdsVector = psiNetwork.getDFillMap(reactantIndex);
+    // ...and finally, compute the partials.
+    computeProductionPartialDerivatives(partials, partialsIdxMap);
+	computeCombinationPartialDerivatives(partials, partialsIdxMap);
+	computeDissociationPartialDerivatives(partials, partialsIdxMap);
+	computeEmissionPartialDerivatives(partials, partialsIdxMap);
 
-    // Loop over the list of column ids
-    auto myStartingIdx = startingIdx[reactantIndex];
-    for (int j = 0; j < pdColIdsVector.size(); j++) {
-        // Get the partial derivative from the array of all of the partials
-        vals[myStartingIdx + j] = clusterPartials[pdColIdsVector[j]];
-    }
+    return;
 }
 
 
-void PSICluster::getProductionPartialDerivatives(
-		std::vector<double> & partials) const {
+
+void PSICluster::computeProductionPartialDerivatives(double* partials,
+            const ReactionNetwork::PartialsIdxMap& partialsIdxMap) const {
 
 	// Production
 	// A + B --> D, D being this cluster
@@ -549,7 +514,8 @@ void PSICluster::getProductionPartialDerivatives(
 	// dF(C_D)/dC_A = k+_(A,B)*C_B
 	// dF(C_D)/dC_B = k+_(A,B)*C_A
 	std::for_each(reactingPairs.begin(), reactingPairs.end(),
-			[&partials](const ClusterPair& currPair) {
+			[&partials,&partialsIdxMap](const ClusterPair& currPair) {
+
 				// Get the two reacting clusters
 				auto const& firstReactant = currPair.first;
 				auto const& secondReactant = currPair.second;
@@ -563,31 +529,42 @@ void PSICluster::getProductionPartialDerivatives(
 				// Compute contribution from the first part of the reacting pair
 				double value = currPair.reaction.kConstant;
 
-				partials[firstReactant.id - 1] += value *
-				(currPair.a[0][0] * l0B + currPair.a[0][1] * lHeB + currPair.a[0][2] * lVB);
+                {
+                    auto partialsIdx = partialsIdxMap.at(firstReactant.id - 1);
+                    partials[partialsIdx] += value *
+                    (currPair.a[0][0] * l0B + currPair.a[0][1] * lHeB + currPair.a[0][2] * lVB);
 
-				partials[firstReactant.heMomId - 1] += value *
-				(currPair.a[1][0] * l0B + currPair.a[1][1] * lHeB + currPair.a[1][2] * lVB);
+                    auto hePartialsIdx = partialsIdxMap.at(firstReactant.heMomId - 1);
+                    partials[hePartialsIdx] += value *
+                    (currPair.a[1][0] * l0B + currPair.a[1][1] * lHeB + currPair.a[1][2] * lVB);
 
-				partials[firstReactant.vMomId - 1] += value *
-				(currPair.a[2][0] * l0B + currPair.a[2][1] * lHeB + currPair.a[2][2] * lVB);
+                    auto vPartialsIdx = partialsIdxMap.at(firstReactant.vMomId - 1);
+                    partials[vPartialsIdx] += value *
+                    (currPair.a[2][0] * l0B + currPair.a[2][1] * lHeB + currPair.a[2][2] * lVB);
+                }
 
 				// Compute contribution from the second part of the reacting pair
-				partials[secondReactant.id - 1] += value *
-				(currPair.a[0][0] * l0A + currPair.a[1][0] * lHeA + currPair.a[2][0] * lVA);
+                {
+                    auto partialsIdx = partialsIdxMap.at(secondReactant.id - 1);
+                    partials[partialsIdx] += value *
+                    (currPair.a[0][0] * l0A + currPair.a[1][0] * lHeA + currPair.a[2][0] * lVA);
 
-				partials[secondReactant.heMomId - 1] += value *
-				(currPair.a[0][1] * l0A + currPair.a[1][1] * lHeA + currPair.a[2][1] * lVA);
+                    auto hePartialsIdx = partialsIdxMap.at(secondReactant.heMomId - 1);
+                    partials[hePartialsIdx] += value *
+                    (currPair.a[0][1] * l0A + currPair.a[1][1] * lHeA + currPair.a[2][1] * lVA);
 
-				partials[secondReactant.vMomId - 1] += value *
-				(currPair.a[0][2] * l0A + currPair.a[1][2] * lHeA + currPair.a[2][2] * lVA);
+                    auto vPartialsIdx = partialsIdxMap.at(secondReactant.vMomId - 1);
+                    partials[vPartialsIdx] += value *
+                    (currPair.a[0][2] * l0A + currPair.a[1][2] * lHeA + currPair.a[2][2] * lVA);
+                }
 			});
 
 	return;
 }
 
-void PSICluster::getCombinationPartialDerivatives(
-		std::vector<double> & partials) const {
+
+void PSICluster::computeCombinationPartialDerivatives(double* partials,
+        const ReactionNetwork::PartialsIdxMap& partialsIdxMap) const {
 
 	// Combination
 	// A + B --> D, A being this cluster
@@ -597,7 +574,8 @@ void PSICluster::getCombinationPartialDerivatives(
 	// dF(C_A)/dC_A = - k+_(A,B)*C_B
 	// dF(C_A)/dC_B = - k+_(A,B)*C_A
 	std::for_each(combiningReactants.begin(), combiningReactants.end(),
-			[this,&partials](const CombiningCluster& cc) {
+			[this,&partials,&partialsIdxMap](const CombiningCluster& cc) {
+
 				auto const& cluster = cc.combining;
 				double l0B = cluster.getConcentration(0.0, 0.0);
 				double lHeB = cluster.getHeMomentum();
@@ -605,20 +583,31 @@ void PSICluster::getCombinationPartialDerivatives(
 
 				// Remember that the flux due to combinations is OUTGOING (-=)!
 				// Compute the contribution from this cluster
-				partials[id - 1] -= cc.reaction.kConstant
-				* (cc.a[0] * l0B + cc.a[1] * lHeB + cc.a[2] * lVB);
+                {
+                    auto partialsIdx = partialsIdxMap.at(id - 1);
+                    partials[partialsIdx] -= cc.reaction.kConstant
+                    * (cc.a[0] * l0B + cc.a[1] * lHeB + cc.a[2] * lVB);
+                }
+
 				// Compute the contribution from the combining cluster
-				double value = cc.reaction.kConstant * concentration;
-				partials[cluster.id - 1] -= value * cc.a[0];
-				partials[cluster.heMomId - 1] -= value * cc.a[1];
-				partials[cluster.vMomId - 1] -= value * cc.a[2];
+                {
+                    double value = cc.reaction.kConstant * concentration;
+                    auto partialsIdx = partialsIdxMap.at(cluster.id - 1);
+                    partials[partialsIdx] -= value * cc.a[0];
+
+                    auto hePartialsIdx = partialsIdxMap.at(cluster.heMomId - 1);
+                    partials[hePartialsIdx] -= value * cc.a[1];
+
+                    auto vPartialsIdx = partialsIdxMap.at(cluster.vMomId - 1);
+                    partials[vPartialsIdx] -= value * cc.a[2];
+                }
 			});
 
 	return;
 }
 
-void PSICluster::getDissociationPartialDerivatives(
-		std::vector<double> & partials) const {
+void PSICluster::computeDissociationPartialDerivatives(double* partials,
+		const ReactionNetwork::PartialsIdxMap& partialsIdxMap) const {
 
 	// Dissociation
 	// A --> B + D, B being this cluster
@@ -627,20 +616,26 @@ void PSICluster::getDissociationPartialDerivatives(
 	// Thus, the partial derivatives
 	// dF(C_B)/dC_A = k-_(B,D)
 	std::for_each(dissociatingPairs.begin(), dissociatingPairs.end(),
-			[&partials](const ClusterPair& currPair) {
+			[&partials,&partialsIdxMap](const ClusterPair& currPair) {
 				// Get the dissociating cluster
 				auto const& cluster = currPair.first;
 				double value = currPair.reaction.kConstant;
-				partials[cluster.id - 1] += value * currPair.a[0][0];
-				partials[cluster.heMomId - 1] += value * currPair.a[1][0];
-				partials[cluster.vMomId - 1] += value * currPair.a[2][0];
+
+                auto partialsIdx = partialsIdxMap.at(cluster.id - 1);
+				partials[partialsIdx] += value * currPair.a[0][0];
+
+                auto hePartialsIdx = partialsIdxMap.at(cluster.heMomId - 1);
+				partials[hePartialsIdx] += value * currPair.a[1][0];
+
+                auto vPartialsIdx = partialsIdxMap.at(cluster.vMomId - 1);
+				partials[vPartialsIdx] += value * currPair.a[2][0];
 			});
 
 	return;
 }
 
-void PSICluster::getEmissionPartialDerivatives(
-		std::vector<double> & partials) const {
+void PSICluster::computeEmissionPartialDerivatives(double* partials,
+            const ReactionNetwork::PartialsIdxMap& partialsIdxMap) const {
 
 	// Emission
 	// A --> B + D, A being this cluster
@@ -653,10 +648,14 @@ void PSICluster::getEmissionPartialDerivatives(
 			[](double running, const ClusterPair& currPair) {
 				return running + currPair.reaction.kConstant;
 			});
-	partials[id - 1] -= outgoingFlux;
+
+    auto partialsIdx = partialsIdxMap.at(id - 1);
+	partials[partialsIdx] -= outgoingFlux;
 
 	return;
 }
+
+
 
 void PSICluster::setDiffusionFactor(const double factor) {
 	// Set the diffusion factor

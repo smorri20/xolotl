@@ -845,10 +845,9 @@ void PSISuperCluster::updateConcsFromFlux(double* concs, const Flux& flux) const
 }
 
 
-void PSISuperCluster::computePartialDerivatives(
-		const std::vector<size_t>& startingIdx,
-		const std::vector<int>& indices,
-		std::vector<double>& vals) const {
+void PSISuperCluster::computePartialDerivatives(const std::vector<int>& indices,
+                                    const std::vector<size_t>& startingIdx,
+                                    std::vector<double>& vals) const {
 
     // Determine cluster's index into the size/indices/vals arrays.
     auto reactantIndex = getId() - 1;

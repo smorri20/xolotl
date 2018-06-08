@@ -292,7 +292,8 @@ void NEClusterReactionNetwork::computeRateConstants() {
 }
 
 void NEClusterReactionNetwork::computeAllPartials(
-		const std::vector<size_t>& startingIdx, const std::vector<int>& indices,
+        const std::vector<int>& indices,
+		const std::vector<size_t>& startingIdx,
 		std::vector<double>& vals) const {
 
 	// Initial declarations
