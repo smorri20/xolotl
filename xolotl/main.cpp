@@ -229,7 +229,6 @@ int main(int argc, char **argv) {
 
             // Run the simulation.
             ret = runXolotl(opts);
-            std::cerr << "Done with runXolotl" << std::endl;
         }
         else {
             ret = opts.getExitCode();
@@ -249,9 +248,7 @@ int main(int argc, char **argv) {
     }
 
 	// Clean up.
-    std::cerr << "Doing MPI_Finalize()" << std::endl;
 	MPI_Finalize();
-    std::cerr << "Done with MPI_Finalize()" << std::endl;
 
 	return ret;
 }

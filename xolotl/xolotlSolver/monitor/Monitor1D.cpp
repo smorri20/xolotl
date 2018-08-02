@@ -172,10 +172,8 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the position of the surface
 	int surfacePos = solverHandler.getSurfacePosition();
 
-	// Open the existing HDF5 file
-    xolotlCore::XFile checkpointFile(hdf5OutputName1D,
-            PETSC_COMM_WORLD,
-            xolotlCore::XFile::AccessMode::OpenReadWrite);
+	// Access the open checkpoint file.
+    auto& checkpointFile = solverHandler.getCheckpointFile();
 
 	// Get the current time step
 	double currentTimeStep;
@@ -218,6 +216,9 @@ PetscErrorCode startStop1D(TS ts, PetscInt timestep, PetscReal time,
     // in the HDF5 file.
     // We only write the data for the grid points we own.
     tsGroup->writeConcentrations(checkpointFile, xs, concs);
+
+    // Flush changes to the checkpoint file to disk.
+    checkpointFile.flush();
 
 	// Restore the solutionArray
 	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);
@@ -2477,20 +2478,9 @@ PetscErrorCode setupPetsc1DMonitor(TS ts,
 			PETSC_IGNORE, PETSC_IGNORE);
 			checkPetscError(ierr, "setupPetsc1DMonitor: DMDAGetInfo failed.");
 
-			// Get the solver handler
-			auto& solverHandler = PetscSolver::getSolverHandler();
-
-			// Get the physical grid
-			auto grid = solverHandler.getXGrid();
-
-			// Get the compostion list and save it
-			auto compList = network.getCompositionList();
-
 			// Create and initialize a checkpoint file.
-            xolotlCore::XFile checkpointFile(hdf5OutputName1D,
-                                                grid,
-                                                compList,
-						                        solverHandler.getNetworkName(),
+			auto& solverHandler = PetscSolver::getSolverHandler();
+            solverHandler.initCheckpointFile(hdf5OutputName1D,
                                                 PETSC_COMM_WORLD);
 		}
 

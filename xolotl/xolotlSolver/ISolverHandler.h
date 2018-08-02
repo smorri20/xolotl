@@ -12,9 +12,11 @@
 #include <ITrapMutationHandler.h>
 #include <IMaterialFactory.h>
 #include <IReactionNetwork.h>
+#include "xolotlCore/io/Filesystem.h"
 
 namespace xolotlCore {
 class TridynFile;
+class XFile;
 } // namespace xolotlCore
 
 namespace xolotlSolver {
@@ -101,12 +103,26 @@ public:
 	 */
 	virtual std::vector<double> getXGrid() const = 0;
 
+    /**
+     * Get the number of grid points in the y direction.
+     *
+     * @return The number of grid points in the y direction.
+     */
+    virtual int getNumY() const = 0;
+
 	/**
 	 * Get the step size in the y direction.
 	 *
 	 * @return The step size in the y direction
 	 */
 	virtual double getStepSizeY() const = 0;
+
+    /**
+     * Get the number of grid points in the z direction.
+     *
+     * @return The number of grid points in the z direction.
+     */
+    virtual int getNumZ() const = 0;
 
 	/**
 	 * Get the step size in the z direction.
@@ -241,12 +257,28 @@ public:
 
 
     /**
-     * Open and initialize the TRIDYN checkpoint file.
+     * Open and initialize our checkpoint file.
      *
-     * @param fname The name to use for the TRIDYN checkpoint file.
+     * @param path Path to the checkpoint file.
      * @param comm The MPI communicator to use for parallel access to the file.
      */
-    virtual void initTridynFile(const std::string& fname, MPI_Comm comm) = 0;
+    virtual void initCheckpointFile(const fs::path& path, MPI_Comm comm) = 0;
+
+    /**
+     * Access the checkpoint file.
+     * Safe to call only if the checkpoint file has been initialized.
+     *
+     * @return Access to the checkpoint file object.
+     */
+    virtual xolotlCore::XFile& getCheckpointFile() const = 0;
+
+    /**
+     * Open and initialize the TRIDYN checkpoint file.
+     *
+     * @param path The path to the TRIDYN checkpoint file.
+     * @param comm The MPI communicator to use for parallel access to the file.
+     */
+    virtual void initTridynFile(const fs::path& path, MPI_Comm comm) = 0;
 
     /**
      * Access the TRIDYN checkpoint file.

@@ -91,10 +91,8 @@ PetscErrorCode startStop0D(TS ts, PetscInt timestep, PetscReal time,
 	// Create an array for the concentration
 	double concArray[dof][2];
 
-	// Open the existing HDF5 file
-    xolotlCore::XFile checkpointFile(hdf5OutputName0D,
-            PETSC_COMM_WORLD,
-            xolotlCore::XFile::AccessMode::OpenReadWrite);
+	// Access the open checkpoint file.
+    auto& checkpointFile = solverHandler.getCheckpointFile();
 
 	// Get the current time step
 	double currentTimeStep;
@@ -132,6 +130,9 @@ PetscErrorCode startStop0D(TS ts, PetscInt timestep, PetscReal time,
 		// All processes must create the dataset
         tsGroup->writeConcentrationDataset(concSize, concArray, 0);
 	}
+
+    // Flush changes to the checkpoint file to disk.
+    checkpointFile.flush();
 
 	// Restore the solutionArray
 	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);
@@ -450,21 +451,10 @@ PetscErrorCode setupPetsc0DMonitor(TS ts) {
 					PETSC_IGNORE);
 			checkPetscError(ierr, "setupPetsc0DMonitor: DMDAGetInfo failed.");
 
-			// Get the solver handler
-			auto& solverHandler = PetscSolver::getSolverHandler();
-
-			// Get the physical grid (which is empty)
-			auto grid = solverHandler.getXGrid();
-
-			// Get the compostion list and save it
-			auto compList = network.getCompositionList();
-
 			// Create and initialize a checkpoint file.
-            xolotlCore::XFile checkpointFile(hdf5OutputName0D,
-                                    grid,
-                                    compList,
-                                    solverHandler.getNetworkName(),
-                                    PETSC_COMM_WORLD);
+			auto& solverHandler = PetscSolver::getSolverHandler();
+            solverHandler.initCheckpointFile(hdf5OutputName0D,
+                                                PETSC_COMM_WORLD);
 		}
 
 		// startStop0D will be called at each timestep

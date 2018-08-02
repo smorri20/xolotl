@@ -95,6 +95,9 @@ protected:
 	//! The random number generator to use.
 	std::unique_ptr<RandomNumberGenerator<int, unsigned int>> rng;
 
+    //! The checkpoint file to use.
+    std::unique_ptr<xolotlCore::XFile> checkpointFile;
+
     //! The Tridyn checkpoint file to use.
     std::unique_ptr<xolotlCore::TridynFile> tridynFile;
 
@@ -373,11 +376,27 @@ public:
 	}
 
 	/**
+	 * Get the number of grid points in the y direction.
+	 * \see ISolverHandler.h
+	 */
+	int getNumY() const override {
+		return nY;
+	}
+
+	/**
 	 * Get the step size in the y direction.
 	 * \see ISolverHandler.h
 	 */
 	double getStepSizeY() const override {
 		return hY;
+	}
+
+	/**
+	 * Get the number of grid points in the z direction.
+	 * \see ISolverHandler.h
+	 */
+	int getNumZ() const override {
+		return nZ;
 	}
 
 	/**
@@ -513,15 +532,46 @@ public:
 
 
     /**
-     * Open and initialize the TRIDYN checkpoint file.
+     * Open and initialize our checkpoint file.
      *
-     * @param fname The name to use for the TRIDYN checkpoint file.
+     * @param path Path to the checkpoint file.
      * @param comm The MPI communicator to use for parallel access to the file.
      */
-    void initTridynFile(const std::string& fname, MPI_Comm comm) override {
+    void initCheckpointFile(const fs::path& path, MPI_Comm comm) override {
 
         // Create the file.
-        tridynFile.reset(new xolotlCore::TridynFile(fname,
+        checkpointFile.reset(new xolotlCore::XFile(path,
+                grid,
+                network.getCompositionList(),
+                networkName,
+                comm,
+                nY,
+                hY,
+                nZ,
+                hZ,
+                xolotlCore::HDF5File::AccessMode::CreateOrTruncateIfExists));
+    }
+
+    /**
+     * Access the checkpoint file.
+     * Safe to call only if the checkpoint file has been initialized.
+     *
+     * @return Access to the checkpoint file object.
+     */
+    xolotlCore::XFile& getCheckpointFile() const override {
+        return *checkpointFile;
+    }
+
+    /**
+     * Open and initialize the TRIDYN checkpoint file.
+     *
+     * @param path The path to the TRIDYN checkpoint file.
+     * @param comm The MPI communicator to use for parallel access to the file.
+     */
+    void initTridynFile(const fs::path& path, MPI_Comm comm) override {
+
+        // Create the file.
+        tridynFile.reset(new xolotlCore::TridynFile(path,
                     xolotlCore::HDF5File::AccessMode::CreateOrTruncateIfExists,
                     comm));
     }

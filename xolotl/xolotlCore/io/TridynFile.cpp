@@ -12,8 +12,6 @@ TridynFile::TridynFile(fs::path path, AccessMode mode, MPI_Comm comm)
     Attribute<int> lastTimestepAttr(*this,
                                     lastTimestepAttrName,
                                     lastTimestepAttrDSpace);
-
-    std::cout << "created TridynFile, id: " << getId() << std::endl;
 }
 
 

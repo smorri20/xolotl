@@ -135,10 +135,8 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time,
 		surfaceIndices.push_back(solverHandler.getSurfacePosition(i));
 	}
 
-	// Open the existing checkpoint file.
-    xolotlCore::XFile checkpointFile(hdf5OutputName2D,
-            PETSC_COMM_WORLD,
-            xolotlCore::XFile::AccessMode::OpenReadWrite);
+	// Access the open checkpoint file.
+    auto& checkpointFile = solverHandler.getCheckpointFile();
 
 	// Get the current time step
 	double currentTimeStep;
@@ -212,6 +210,9 @@ PetscErrorCode startStop2D(TS ts, PetscInt timestep, PetscReal time,
             tsGroup->writeConcentrationDataset(concSize, concArray, i, j);
 		}
 	}
+
+    // Flush changes to checkpoint file to disk.
+    checkpointFile.flush();
 
 	// Restore the solutionArray
 	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);
@@ -1492,25 +1493,11 @@ PetscErrorCode setupPetsc2DMonitor(TS ts) {
 		// Don't do anything if both files have the same name
 		if (hdf5OutputName2D != solverHandler.getNetworkName()) {
 
-			// Get the solver handler
+			// Create and initialize a checkpoint file.
 			auto& solverHandler = PetscSolver::getSolverHandler();
-
-			// Get the physical grid in the x direction
-			auto grid = solverHandler.getXGrid();
-
-			// Setup step size variables
-			double hy = solverHandler.getStepSizeY();
-
-			// Get the compostion list and save it
-			auto compList = network.getCompositionList();
-
-			// Create a checkpoint file.
-            xolotlCore::XFile checkpointFile(hdf5OutputName2D,
-                                                grid,
-                                                compList,
-                                                solverHandler.getNetworkName(),
-                                                PETSC_COMM_WORLD,
-                                                My, hy);
+            assert(My == solverHandler.getNumY());
+            solverHandler.initCheckpointFile(hdf5OutputName2D,
+                                                PETSC_COMM_WORLD);
 		}
 
 		// startStop2D will be called at each timestep

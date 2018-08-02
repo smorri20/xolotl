@@ -131,10 +131,8 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time,
 		surfaceIndices.push_back(temp);
 	}
 
-	// Open the existing HDF5 file.
-    xolotlCore::XFile checkpointFile(hdf5OutputName3D,
-            PETSC_COMM_WORLD,
-            xolotlCore::XFile::AccessMode::OpenReadWrite);
+	// Access the open checkpoint file.
+    auto& checkpointFile = solverHandler.getCheckpointFile();
 
 	// Get the current time step
 	double currentTimeStep;
@@ -205,6 +203,9 @@ PetscErrorCode startStop3D(TS ts, PetscInt timestep, PetscReal time,
 			}
 		}
 	}
+
+    // Flush changes to checkpoint file to disk.
+    checkpointFile.flush();
 
 	// Restore the solutionArray
 	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);
@@ -1346,27 +1347,12 @@ PetscErrorCode setupPetsc3DMonitor(TS ts) {
 		// Don't do anything if both files have the same name
 		if (hdf5OutputName3D != solverHandler.getNetworkName()) {
 
-			// Get the solver handler
+			// Create and initialize a checkpoint file.
 			auto& solverHandler = PetscSolver::getSolverHandler();
-
-			// Get the physical grid in the x direction
-			auto grid = solverHandler.getXGrid();
-
-			// Setup step size variables
-			double hy = solverHandler.getStepSizeY();
-			double hz = solverHandler.getStepSizeZ();
-
-			// Get the compostion list and save it
-			auto compList = network.getCompositionList();
-
-			// Create a checkpoint file.
-            xolotlCore::XFile checkpointFile(hdf5OutputName3D,
-                                                grid,
-                                                compList,
-						                        solverHandler.getNetworkName(),
-                                                PETSC_COMM_WORLD,
-                                                My, hy,
-                                                Mz, hz);
+            assert(My == solverHandler.getNumY());
+            assert(Mz == solverHandler.getNumZ());
+            solverHandler.initCheckpointFile(hdf5OutputName3D, 
+                                                PETSC_COMM_WORLD);
 		}
 
 		// startStop3D will be called at each timestep
