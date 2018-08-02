@@ -720,6 +720,14 @@ public:
      * Close the file if open and destroy the in-memory object.
      */
     virtual ~HDF5File(void);
+
+    /**
+     * Flush the file to disk.
+     * (Rather, flushes buffers and asks the OS to flush to disk.)
+     */
+    virtual void flush(void) const {
+        H5Fflush(getId(), H5F_SCOPE_GLOBAL);
+    }
 };
 
 } /* namespace xolotlCore */

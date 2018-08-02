@@ -38,6 +38,9 @@ void TridynFile::writeTimestep(int timestep,
     // Update our idea of the last timestep written.
     Attribute<int> lastTimestepAttr(*this, lastTimestepAttrName);
     lastTimestepAttr.setTo(timestep);
+
+    // Do what we can to ensure that the changes are written to storage.
+    flush();
 }
 
 } // namespace xolotlCore
