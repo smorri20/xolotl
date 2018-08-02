@@ -5,6 +5,7 @@
 #include "ISolverHandler.h"
 #include "RandomNumberGenerator.h"
 #include "xolotlCore/io/XFile.h"
+#include "xolotlCore/io/TridynFile.h"
 
 
 namespace xolotlSolver {
@@ -93,6 +94,9 @@ protected:
 
 	//! The random number generator to use.
 	std::unique_ptr<RandomNumberGenerator<int, unsigned int>> rng;
+
+    //! The Tridyn checkpoint file to use.
+    std::unique_ptr<xolotlCore::TridynFile> tridynFile;
 
 	//! Method generating the grid in the x direction
 	void generateGrid(int nx, double hx, int surfacePos) {
@@ -506,6 +510,31 @@ public:
 	RandomNumberGenerator<int, unsigned int>& getRNG(void) const override {
 		return *rng;
 	}
+
+
+    /**
+     * Open and initialize the TRIDYN checkpoint file.
+     *
+     * @param fname The name to use for the TRIDYN checkpoint file.
+     * @param comm The MPI communicator to use for parallel access to the file.
+     */
+    void initTridynFile(const std::string& fname, MPI_Comm comm) override {
+
+        // Create the file.
+        tridynFile.reset(new xolotlCore::TridynFile(fname,
+                    xolotlCore::HDF5File::AccessMode::CreateOrTruncateIfExists,
+                    comm));
+    }
+
+    /**
+     * Access the TRIDYN checkpoint file.
+     * Safe to call only if TRIDYN file has been created.
+     *
+     * @return Access to the TRIDYN checkpoint file object.
+     */
+    xolotlCore::TridynFile& getTridynFile() const override {
+        return *tridynFile;
+    }
 }
 ;
 //end class SolverHandler

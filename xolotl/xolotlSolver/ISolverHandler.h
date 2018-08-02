@@ -13,6 +13,10 @@
 #include <IMaterialFactory.h>
 #include <IReactionNetwork.h>
 
+namespace xolotlCore {
+class TridynFile;
+} // namespace xolotlCore
+
 namespace xolotlSolver {
 
 template<typename ValueType, typename SeedType>
@@ -234,6 +238,23 @@ public:
      * @return The RandomNumberGenerator object to use.
      */
     virtual RandomNumberGenerator<int, unsigned int>& getRNG(void) const = 0;
+
+
+    /**
+     * Open and initialize the TRIDYN checkpoint file.
+     *
+     * @param fname The name to use for the TRIDYN checkpoint file.
+     * @param comm The MPI communicator to use for parallel access to the file.
+     */
+    virtual void initTridynFile(const std::string& fname, MPI_Comm comm) = 0;
+
+    /**
+     * Access the TRIDYN checkpoint file.
+     * Safe to call only if TRIDYN checkpoint file has been initialized.
+     *
+     * @return Access to the TRIDYN checkpoint file object.
+     */
+    virtual xolotlCore::TridynFile& getTridynFile() const = 0;
 
 }; //end class ISolverHandler
 

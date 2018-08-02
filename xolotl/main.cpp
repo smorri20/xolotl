@@ -165,13 +165,9 @@ int runXolotl(const Options& opts) {
     }
     auto& network = networkFactory->getNetworkHandler();
 
-    // Initialize and get the solver handler
-    bool dimOK = xolotlFactory::initializeDimension(opts, network);
-    if (!dimOK) {
-        throw std::runtime_error(
-                "Unable to initialize dimension from inputs.");
-    }
-    auto& solvHandler = xolotlFactory::getSolverHandler();
+    // Build a solver handler.
+    xolotlFactory::SolverHandlerFactory solverHandlerFactory(opts, network);
+    auto& solvHandler = solverHandlerFactory.getSolverHandler();
 
     // Setup the solver
     auto solver = setUpSolver(handlerRegistry, material, tempHandler,
@@ -233,6 +229,7 @@ int main(int argc, char **argv) {
 
             // Run the simulation.
             ret = runXolotl(opts);
+            std::cerr << "Done with runXolotl" << std::endl;
         }
         else {
             ret = opts.getExitCode();
@@ -252,7 +249,9 @@ int main(int argc, char **argv) {
     }
 
 	// Clean up.
+    std::cerr << "Doing MPI_Finalize()" << std::endl;
 	MPI_Finalize();
+    std::cerr << "Done with MPI_Finalize()" << std::endl;
 
 	return ret;
 }

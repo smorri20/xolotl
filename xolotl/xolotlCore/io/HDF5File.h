@@ -1,6 +1,7 @@
 #ifndef XCORE_HDF5FILE_H
 #define XCORE_HDF5FILE_H
 
+#include <iostream>
 #include <string>
 #include <vector>
 #include <array>

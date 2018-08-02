@@ -14,6 +14,7 @@ add_library(${LIBRARY_NAME} STATIC
             HDF5FileDataSpace.cpp
             HDF5FileDataSet.cpp
             XFile.cpp
+            TridynFile.cpp
             MPIUtils.cpp)
 
 # We need a filesystem library.

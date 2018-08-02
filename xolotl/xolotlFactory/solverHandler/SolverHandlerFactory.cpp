@@ -1,22 +1,16 @@
+#include <iostream>
 #include <cassert>
 #include <SolverHandlerFactory.h>
 #include <PetscSolver0DHandler.h>
 #include <PetscSolver1DHandler.h>
 #include <PetscSolver2DHandler.h>
 #include <PetscSolver3DHandler.h>
-#include <fstream>
-#include <iostream>
-#include <mpi.h>
 
 namespace xolotlFactory {
 
-static std::unique_ptr<xolotlSolver::ISolverHandler> theSolverHandler;
-
 // Create the desired type of handler registry.
-bool initializeDimension(const xolotlCore::Options &options,
-		xolotlCore::IReactionNetwork& network) {
-
-	bool ret = true;
+SolverHandlerFactory::SolverHandlerFactory(const xolotlCore::Options &options,
+		                                xolotlCore::IReactionNetwork& network) {
 
 	// Get the wanted dimension
 	int dim = options.getDimensionNumber();
@@ -39,26 +33,13 @@ bool initializeDimension(const xolotlCore::Options &options,
 		rawSolverHandler = new xolotlSolver::PetscSolver3DHandler(network);
 		break;
 	default:
-		// The asked dimension is not good (e.g. -1, 4)
-		throw std::string(
-				"\nxolotlFactory: Bad dimension for the solver handler.");
+		// The requested dimension is not supported.
+        std::ostringstream estr;
+        estr << "Invalid dimension " << dim << " requested when creating solver handler";
+        throw std::runtime_error(estr.str());
 	}
 	assert(rawSolverHandler != nullptr);
-	theSolverHandler = std::unique_ptr<xolotlSolver::ISolverHandler>(
-			rawSolverHandler);
-
-	return ret;
-}
-
-// Provide access to our handler registry.
-xolotlSolver::ISolverHandler& getSolverHandler() {
-	if (!theSolverHandler) {
-		// We have not yet been initialized.
-		throw std::string("\nxolotlFactory: solver requested but "
-				"it has not been initialized.");
-	}
-
-	return *theSolverHandler;
+	handler = std::unique_ptr<xolotlSolver::ISolverHandler>(rawSolverHandler);
 }
 
 } // end namespace xolotlFactory

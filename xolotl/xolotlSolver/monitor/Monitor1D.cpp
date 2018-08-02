@@ -24,6 +24,7 @@
 #include <MathUtils.h>
 #include "RandomNumberGenerator.h"
 #include "xolotlCore/io/XFile.h"
+#include "xolotlCore/io/TridynFile.h"
 
 
 namespace xolotlSolver {
@@ -100,6 +101,8 @@ std::shared_ptr<xolotlPerf::ITimer> meanSizeTimer;
 std::shared_ptr<xolotlPerf::ITimer> maxClusterConcTimer;
 std::shared_ptr<xolotlPerf::ITimer> eventTimer;
 std::shared_ptr<xolotlPerf::ITimer> postEventTimer;
+
+static const std::string tridynFileName1D = "TRIDYN.h5";
 
 
 #undef __FUNCT__
@@ -910,39 +913,21 @@ PetscErrorCode computeTRIDYN1D(TS ts, PetscInt timestep, PetscReal time,
 	ierr = DMDAVecGetArrayDOFRead(da, solution, &solutionArray);
 	CHKERRQ(ierr);
 
-    // Save current concentrations as an HDF5 file.
-    //
-    // First create the file for parallel file access.
-    std::ostringstream tdFileStr;
-    tdFileStr << "TRIDYN_" << timestep << ".h5";
-    xolotlCore::HDF5File tdFile(tdFileStr.str(),
-                        xolotlCore::HDF5File::AccessMode::CreateOrTruncateIfExists,
-                        PETSC_COMM_WORLD,
-                        true);
+    // Save current concentrations to our TRIDYN checkpoint file.
+    auto& tdFile = solverHandler.getTridynFile();
 
-    // Define a dataset for concentrations.
-    // Everyone must create the dataset with the same shape.
-    constexpr auto numConcSpecies = 5;
-    constexpr auto numValsPerGridpoint = numConcSpecies + 1;
-    const auto firstIdxToWrite = (surfacePos + 1);
-    const auto numGridpointsWithConcs = (Mx - firstIdxToWrite);
-    xolotlCore::HDF5File::SimpleDataSpace<2>::Dimensions concsDsetDims = 
-        { (hsize_t)numGridpointsWithConcs, numValsPerGridpoint };
-    xolotlCore::HDF5File::SimpleDataSpace<2> concsDsetSpace(concsDsetDims);
 
-    const std::string concsDsetName = "concs";
-    xolotlCore::HDF5File::DataSet<double> concsDset(tdFile,
-                                                    concsDsetName,
-                                                    concsDsetSpace);
 
     // Specify the concentrations we will write.
     // We only consider our own grid points.
+    const auto firstIdxToWrite = (surfacePos + 1);
+    const auto numGridpointsToWrite = (Mx - firstIdxToWrite);
     const auto myFirstIdxToWrite = std::max(xs, firstIdxToWrite);
     auto myEndIdx = (xs + xm);  // "end" in the C++ sense; i.e., one-past-last
     auto myNumPointsToWrite = (myEndIdx > myFirstIdxToWrite) ? 
                         (myEndIdx - myFirstIdxToWrite) : 0;
-    xolotlCore::HDF5File::DataSet<double>::DataType2D<numValsPerGridpoint> myConcs(myNumPointsToWrite);
 
+    xolotlCore::TridynFile::ConcsType1D myConcs(myNumPointsToWrite);
     for(auto xi = myFirstIdxToWrite; xi < myEndIdx; ++xi) {
 
         if(xi >= firstIdxToWrite) {
@@ -967,11 +952,12 @@ PetscErrorCode computeTRIDYN1D(TS ts, PetscInt timestep, PetscReal time,
 		}
     }
 
-    // Write the concs dataset in parallel.
-    // (We write only our part.)
-    concsDset.parWrite2D<numValsPerGridpoint>(PETSC_COMM_WORLD,
-                                        myFirstIdxToWrite - firstIdxToWrite,
-                                        myConcs);
+    // Write our concs in parallel.
+    // Note that we write only our part.
+    tdFile.writeTimestep(timestep,
+                            numGridpointsToWrite,
+                            myFirstIdxToWrite - firstIdxToWrite,
+                            myConcs);
 
 	// Restore the solutionArray
 	ierr = DMDAVecRestoreArrayDOFRead(da, solution, &solutionArray);
@@ -2866,6 +2852,9 @@ PetscErrorCode setupPetsc1DMonitor(TS ts,
 		ierr = TSMonitorSet(ts, computeTRIDYN1D, NULL, NULL);
 		checkPetscError(ierr,
 				"setupPetsc1DMonitor: TSMonitorSet (computeTRIDYN1D) failed.");
+
+        // Ensure that we will have an open TRIDYN checkpoint file to write to.
+        solverHandler.initTridynFile(tridynFileName1D, PETSC_COMM_WORLD);
 	}
 
 	// Set the monitor to simply change the previous time to the new time

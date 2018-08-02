@@ -123,7 +123,10 @@ HDF5File::HDF5File(fs::path path,
 }
 
 HDF5File::~HDF5File(void) {
+    auto myId = getId();
+    std::cerr << "closing HDF5File, id: " << myId << std::endl;
     H5Fclose(getId());
+    std::cerr << "done closing HDF5File, id: " << myId << std::endl;
 }
 
 
