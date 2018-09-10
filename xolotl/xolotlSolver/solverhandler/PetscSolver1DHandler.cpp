@@ -298,11 +298,9 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 	// Share the concentration with all the processes
 	double totalAtomConc = 0.0;
-	MPI_Allreduce(&atomConc, &totalAtomConc, 1, MPI_DOUBLE, MPI_SUM,
-			MPI_COMM_WORLD);
-
-	// Set the disappearing rate in the modified TM handler
-	mutationHandler->updateDisappearingRate(totalAtomConc);
+    MPI_Request totalConcReq;
+	MPI_Iallreduce(&atomConc, &totalAtomConc, 1, MPI_DOUBLE, MPI_SUM,
+			MPI_COMM_WORLD, &totalConcReq);
 
 	// Declarations for variables used in the loop
 	double **concVector = new double*[3];
@@ -375,6 +373,29 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 					concVector, updatedConcOffset, grid[xi + 1] - grid[xi],
 					grid[xi + 2] - grid[xi + 1], xi, xs);
 		}
+    }
+
+	// Set the disappearing rate in the modified TM handler
+    MPI_Wait(&totalConcReq, MPI_STATUS_IGNORE);
+	mutationHandler->updateDisappearingRate(totalAtomConc);
+
+	for (PetscInt xi = xs; xi < xs + xm; xi++) {
+		// Compute the old and new array offsets
+		concOffset = concs[xi];
+		updatedConcOffset = updatedConcs[xi];
+
+		// Boundary conditions
+		// Everything to the left of the surface is empty
+		if (xi < surfacePosition + leftOffset || xi > nX - 1 - rightOffset) {
+			continue;
+		}
+
+		// Copy data into the ReactionNetwork so that it can
+		// compute the fluxes properly. The network is only used to compute the
+		// fluxes and hold the state data from the last time step. I'm reusing
+		// it because it cuts down on memory significantly (about 400MB per
+		// grid point) at the expense of being a little tricky to comprehend.
+		network.updateConcentrationsFromArray(concOffset);
 
 		// ----- Compute the modified trap-mutation over the locally owned part of the grid -----
 		mutationHandler->computeTrapMutation(network, concOffset,
@@ -663,11 +684,9 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
 
 	// Share the concentration with all the processes
 	double totalAtomConc = 0.0;
-	MPI_Allreduce(&atomConc, &totalAtomConc, 1, MPI_DOUBLE, MPI_SUM,
-			MPI_COMM_WORLD);
-
-	// Set the disappearing rate in the modified TM handler
-	mutationHandler->updateDisappearingRate(totalAtomConc);
+    MPI_Request totalConcReq;
+	MPI_Iallreduce(&atomConc, &totalAtomConc, 1, MPI_DOUBLE, MPI_SUM,
+			MPI_COMM_WORLD, &totalConcReq);
 
 	// Arguments for MatSetValuesStencil called below
 	MatStencil rowId;
@@ -737,7 +756,21 @@ void PetscSolver1DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
 					"PetscSolver1DHandler::computeDiagonalJacobian: "
 							"MatSetValuesStencil (reactions) failed.");
 		}
+    }
 
+	// Set the disappearing rate in the modified TM handler
+    MPI_Wait(&totalConcReq, MPI_STATUS_IGNORE);
+	mutationHandler->updateDisappearingRate(totalAtomConc);
+
+	for (PetscInt xi = xs; xi < xs + xm; xi++) {
+		// Boundary conditions
+		// Everything to the left of the surface is empty
+		if (xi < surfacePosition + leftOffset || xi > nX - 1 - rightOffset)
+			continue;
+
+		// Copy data into the ReactionNetwork so that it can
+		// compute the new concentrations.
+		network.updateConcentrationsFromArray(concOffset);
 		// ----- Take care of the modified trap-mutation for all the reactants -----
 
 		// Store the total number of He clusters in the network for the
