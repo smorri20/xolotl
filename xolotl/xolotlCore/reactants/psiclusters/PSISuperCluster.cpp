@@ -991,7 +991,7 @@ void PSISuperCluster::setHeVVector(const HeVListType& vec) {
 	return;
 }
 
-double PSISuperCluster::getTotalConcentration() const {
+double PSISuperCluster::getTotalConcentration(const double* concs) const {
 	// Initial declarations
 	double heDistance = 0.0, dDistance = 0.0, tDistance = 0.0, vDistance = 0.0,
 			conc = 0.0;
@@ -1005,28 +1005,11 @@ double PSISuperCluster::getTotalConcentration() const {
 		vDistance = getDistance(std::get<3>(pair), 3);
 
 		// Add the concentration of each cluster in the group times its number of helium
-		conc += getConcentration(heDistance, dDistance, tDistance, vDistance);
+		conc += getConcentration(concs,
+                    heDistance, dDistance, tDistance, vDistance);
 	}
 
 	return conc;
-}
-
-template<uint32_t Axis>
-double PSISuperCluster::getTotalAtomConcHelper() const {
-
-    double conc = 0;
-    for (auto const& pair : heVList) {
-        // Compute the distances
-        auto heDistance = getDistance(std::get<0>(pair), 0);
-        auto dDistance = getDistance(std::get<1>(pair), 1);
-        auto tDistance = getDistance(std::get<2>(pair), 2);
-        auto vDistance = getDistance(std::get<3>(pair), 3);
-
-        // Add the concentration of each cluster in the group times its number of helium
-        conc += getConcentration(heDistance, dDistance, tDistance,
-                vDistance) * (double) std::get<Axis>(pair);
-    }
-    return conc;
 }
 
 
@@ -1073,31 +1056,9 @@ double PSISuperCluster::getTotalAtomConcentration(const double* concs,
 }
 
 
-double PSISuperCluster::getTotalAtomConcentration(int axis) const {
+double PSISuperCluster::getTotalVacancyConcentration(const double* concs) const {
 
-    assert(axis <= 2);
-
-    // TODO remove implicit mapping of species type to integers
-    // TODO do mapping in some base class (?)
-    double conc = 0;
-    switch(axis) {
-    case 0:
-        conc = getTotalAtomConcHelper<0>();
-        break;
-    case 1:
-        conc = getTotalAtomConcHelper<1>();
-        break;
-    case 2:
-        conc = getTotalAtomConcHelper<2>();
-        break;
-    }
-    return conc;
-}
-
-
-double PSISuperCluster::getTotalVacancyConcentration() const {
-
-    return getTotalAtomConcHelper<3>();
+    return getTotalAtomConcHelper<3>(concs);
 }
 
 

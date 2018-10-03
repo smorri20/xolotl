@@ -291,11 +291,11 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt, PetscReal time,
 				network.updateConcentrationsFromArray(gridPointSolution);
 
 				// Get the total helium concentration at this grid point
-				heConcentration += network.getTotalAtomConcentration(0)
+				heConcentration += network.getTotalAtomConcentration(gridPointSolution, 0)
 						* (grid[xi + 1] - grid[xi]) * hy * hz;
-				dConcentration += network.getTotalAtomConcentration(1)
+				dConcentration += network.getTotalAtomConcentration(gridPointSolution, 1)
 						* (grid[xi + 1] - grid[xi]) * hy * hz;
-				tConcentration += network.getTotalAtomConcentration(2)
+				tConcentration += network.getTotalAtomConcentration(gridPointSolution, 2)
 						* (grid[xi + 1] - grid[xi]) * hy * hz;
 			}
 		}
@@ -449,9 +449,9 @@ PetscErrorCode computeTRIDYN3D(TS ts, PetscInt timestep, PetscReal time,
 					// Get the total helium concentration at this grid point
 					heLocalConc += gridPointSolution[0];
 					dLocalConc += gridPointSolution[1];
-					tLocalConc += network.getTotalAtomConcentration(2);
-					vLocalConc += network.getTotalVConcentration();
-					iLocalConc += network.getTotalIConcentration();
+					tLocalConc += network.getTotalAtomConcentration(gridPointSolution, 2);
+					vLocalConc += network.getTotalVConcentration(gridPointSolution);
+					iLocalConc += network.getTotalIConcentration(gridPointSolution);
 				}
 			}
 		}
@@ -969,7 +969,7 @@ PetscErrorCode eventFunction3D(TS ts, PetscReal time, Vec solution,
 						double distance = grid[xi + 1] - grid[surfacePos + 1];
 
 						// Compute the helium density at this grid point
-						double heDensity = network.getTotalAtomConcentration();
+						double heDensity = network.getTotalAtomConcentration(gridPointSolution, 0);
 
 						// Compute the radius of the bubble from the number of helium
 						double nV = heDensity * (grid[xi + 1] - grid[xi]) / 4.0;

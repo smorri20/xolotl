@@ -431,15 +431,6 @@ private:
 
 
     /**
-     * Obtain total concentration for desired species type.
-     *
-     * @return Total concentration of species indicated by Axis 
-     * template parameter.
-     */
-    template<uint32_t Axis>
-    double getTotalAtomConcHelper() const;
-
-    /**
      * Obtain total concentration for desired species type using
      * given grid point's concentrations.
      *
@@ -710,7 +701,7 @@ public:
 
 	 * @return The concentration
 	 */
-	double getTotalConcentration() const;
+	double getTotalConcentration(const double* concs) const;
 
 	/**
 	 * This operation returns the current total concentration of given atom in the group.
@@ -718,7 +709,6 @@ public:
 	 * @param axis The given atom
 	 * @return The concentration
 	 */
-	double getTotalAtomConcentration(int axis = 0) const;
 	double getTotalAtomConcentration(const double* concs, int axis) const;
 
 	/**
@@ -726,7 +716,7 @@ public:
 
 	 * @return The concentration
 	 */
-	double getTotalVacancyConcentration() const;
+	double getTotalVacancyConcentration(const double* concs) const;
 
 	/**
 	 * This operation returns the current concentration for a vacancy number.

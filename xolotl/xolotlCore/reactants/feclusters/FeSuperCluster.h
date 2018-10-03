@@ -532,6 +532,18 @@ public:
 		return l0 + (distHe * l1He) + (distV * l1V);
 	}
 
+    double getConcentration(const double* concs,
+                            double distHe, double distV) const override {
+
+        assert(l0 == concs[id - 1]);
+        assert(l1He == concs[getMomentId(0) - 1]);
+        assert(l1V == concs[getMomentId(1) - 1]);
+
+        return concs[id - 1] + 
+                (distHe * concs[getMomentId(0) - 1]) + 
+                 (distV * concs[getMomentId(1) - 1]);
+    }
+
 	/**
 	 * This operation returns the first helium moment.
 	 *
@@ -569,7 +581,7 @@ public:
 
 	 * @return The concentration
 	 */
-	double getTotalVacancyConcentration() const;
+	double getTotalVacancyConcentration(const double* concs) const;
 
 	/**
 	 * This operation returns the distance to the mean.

@@ -718,7 +718,9 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 			return;
 		}
 
-		double FeClusterReactionNetwork::getTotalAtomConcentration(int i) {
+        // TODO make getConcentration use concs array.
+		double FeClusterReactionNetwork::getTotalAtomConcentration(
+                                        const double* concs, const int i) {
 			// Initial declarations
 			double heliumConc = 0.0;
 
@@ -759,8 +761,10 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 			return heliumConc;
 		}
 
+        // TODO make getConcentration use concs array.
 		double FeClusterReactionNetwork::getTotalTrappedAtomConcentration(
-				int i) const {
+                const double* concs, int i) const {
+
 			// Initial declarations
 			double heliumConc = 0.0;
 
@@ -788,7 +792,8 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 			return heliumConc;
 		}
 
-		double FeClusterReactionNetwork::getTotalVConcentration() {
+		double FeClusterReactionNetwork::getTotalVConcentration(
+                                        const double* concs) {
 			// Initial declarations
 			double vConc = 0.0;
 
@@ -799,7 +804,7 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 				double size = cluster.getSize();
 
 				// Add the concentration times the V content to the total vacancy concentration
-				vConc += cluster.getConcentration() * size;
+				vConc += cluster.getConcentration(concs) * size;
 			}
 
 			// Sum over all HeV clusters
@@ -809,7 +814,7 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 				auto& comp = cluster.getComposition();
 
 				// Add the concentration times the V content to the total vacancy concentration
-				vConc += cluster.getConcentration()
+				vConc += cluster.getConcentration(concs)
 						* comp[toCompIdx(Species::V)];
 			}
 
@@ -820,13 +825,14 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 						static_cast<FeSuperCluster&>(*(currMapItem.second));
 
 				// Add its total vacancy concentration
-				vConc += cluster.getTotalVacancyConcentration();
+				vConc += cluster.getTotalVacancyConcentration(concs);
 			}
 
 			return vConc;
 		}
 
-		double FeClusterReactionNetwork::getTotalIConcentration() {
+		double FeClusterReactionNetwork::getTotalIConcentration(
+                                        const double* concs) {
 			// Initial declarations
 			double iConc = 0.0;
 
@@ -837,7 +843,7 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 				double size = cluster.getSize();
 
 				// Add the concentration times the I content to the total interstitial concentration
-				iConc += cluster.getConcentration() * size;
+				iConc += cluster.getConcentration(concs) * size;
 			}
 
 			return iConc;

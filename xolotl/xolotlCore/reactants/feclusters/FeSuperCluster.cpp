@@ -1221,7 +1221,7 @@ double FeSuperCluster::getTotalHeliumConcentration() const {
 	return conc;
 }
 
-double FeSuperCluster::getTotalVacancyConcentration() const {
+double FeSuperCluster::getTotalVacancyConcentration(const double* concs) const {
 	// Initial declarations
 	double heDistance = 0.0, vDistance = 0.0, conc = 0.0;
 
@@ -1233,7 +1233,7 @@ double FeSuperCluster::getTotalVacancyConcentration() const {
 			vDistance = getVDistance(j);
 
 			// Add the concentration of each cluster in the group times its number of helium
-			conc += getConcentration(heDistance, vDistance) * (double) j;
+			conc += getConcentration(concs, heDistance, vDistance) * (double) j;
 		}
 	}
 

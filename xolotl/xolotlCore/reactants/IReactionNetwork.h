@@ -228,7 +228,7 @@ public:
 	 * @param i Index to switch between the different types of atoms
 	 * @return The total concentration
 	 */
-	virtual double getTotalAtomConcentration(int i = 0) = 0;
+	virtual double getTotalAtomConcentration(const double* concs, int i) = 0;
 
 	/**
 	 * Get the total concentration of atoms contained in bubbles in the network.
@@ -236,7 +236,6 @@ public:
 	 * @param i Index to switch between the different types of atoms
 	 * @return The total concentration
 	 */
-	virtual double getTotalTrappedAtomConcentration(int i = 0) const = 0;
 	virtual double getTotalTrappedAtomConcentration(const double* concs, int i) const = 0;
 
 	/**
@@ -244,14 +243,14 @@ public:
 	 *
 	 * @return The total concentration
 	 */
-	virtual double getTotalVConcentration() = 0;
+	virtual double getTotalVConcentration(const double* concs) = 0;
 
 	/**
 	 * Get the total concentration of material interstitials in the network.
 	 *
 	 * @return The total concentration
 	 */
-	virtual double getTotalIConcentration() = 0;
+	virtual double getTotalIConcentration(const double* concs) = 0;
 
 	/**
 	 * Calculate all the rate constants for the reactions and dissociations of the network.

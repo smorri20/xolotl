@@ -443,6 +443,13 @@ public:
 		return concentration;
 	}
 
+	virtual double getConcentration(const double* concs,
+                                    double distHe, double distV) const {
+        // TODO should this version ever be called?  It ignores
+        // its arguments.
+        return concs[id - 1];
+	}
+
     /**
      * Obtain current concentration.
      *

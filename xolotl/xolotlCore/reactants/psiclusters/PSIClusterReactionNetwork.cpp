@@ -1559,7 +1559,8 @@ void PSIClusterReactionNetwork::getDiagonalFill(SparseFillMap& fillMap) {
 	return;
 }
 
-double PSIClusterReactionNetwork::getTotalAtomConcentration(int i) {
+double PSIClusterReactionNetwork::getTotalAtomConcentration(
+                                    const double* concs, int i) {
 	// Initial declarations
 	double atomConc = 0.0;
 	ReactantType type;
@@ -1588,7 +1589,7 @@ double PSIClusterReactionNetwork::getTotalAtomConcentration(int i) {
 		double size = cluster.getSize();
 
 		// Add the concentration times the He content to the total helium concentration
-		atomConc += cluster.getConcentration() * size;
+		atomConc += cluster.getConcentration(concs) * size;
 	}
 
 	// Sum over all Mixed clusters.
@@ -1599,7 +1600,7 @@ double PSIClusterReactionNetwork::getTotalAtomConcentration(int i) {
 		auto& comp = cluster.getComposition();
 
 		// Add the concentration times the He content to the total helium concentration
-		atomConc += cluster.getConcentration()
+		atomConc += cluster.getConcentration(concs)
 				* comp[toCompIdx(toSpecies(type))];
 	}
 
@@ -1611,11 +1612,12 @@ double PSIClusterReactionNetwork::getTotalAtomConcentration(int i) {
 				static_cast<PSISuperCluster&>(*(currMapItem.second));
 
 		// Add its total atom concentration
-		atomConc += cluster.getTotalAtomConcentration(i);
+		atomConc += cluster.getTotalAtomConcentration(concs, i);
 	}
 
 	return atomConc;
 }
+
 
 double PSIClusterReactionNetwork::getTotalTrappedAtomConcentration(const double* concs, int i) const {
 
@@ -1665,54 +1667,9 @@ double PSIClusterReactionNetwork::getTotalTrappedAtomConcentration(const double*
 	return atomConc;
 }
 
-double PSIClusterReactionNetwork::getTotalTrappedAtomConcentration(int i) const {
-	// Initial declarations
-	double atomConc = 0.0;
-	ReactantType type;
 
-	// Switch on the index
-	switch (i) {
-	case 0:
-		type = ReactantType::He;
-		break;
-	case 1:
-		type = ReactantType::D;
-		break;
-	case 2:
-		type = ReactantType::T;
-		break;
-	default:
-		throw std::string("\nType not defined for getTotalAtomConcentration()");
-		break;
-	}
-
-	// Sum over all Mixed clusters.
-	for (auto const& currMapItem : getAll(ReactantType::PSIMixed)) {
-
-		// Get the cluster and its composition
-		auto const& cluster = *(currMapItem.second);
-		auto& comp = cluster.getComposition();
-
-		// Add the concentration times the He content to the total helium concentration
-		atomConc += cluster.getConcentration()
-				* comp[toCompIdx(toSpecies(type))];
-	}
-
-	// Sum over all super clusters.
-	for (auto const& currMapItem : getAll(ReactantType::PSISuper)) {
-
-		// Get the cluster
-		auto const& cluster =
-				static_cast<PSISuperCluster&>(*(currMapItem.second));
-
-		// Add its total helium concentration helium concentration
-		atomConc += cluster.getTotalAtomConcentration(i);
-	}
-
-	return atomConc;
-}
-
-double PSIClusterReactionNetwork::getTotalVConcentration() {
+double PSIClusterReactionNetwork::getTotalVConcentration(
+                                    const double* concs) {
 	// Initial declarations
 	double vConc = 0.0;
 
@@ -1723,7 +1680,7 @@ double PSIClusterReactionNetwork::getTotalVConcentration() {
 		double size = cluster.getSize();
 
 		// Add the concentration times the V content to the total vacancy concentration
-		vConc += cluster.getConcentration() * size;
+		vConc += cluster.getConcentration(concs) * size;
 	}
 
 	// Sum over all HeV clusters
@@ -1733,7 +1690,7 @@ double PSIClusterReactionNetwork::getTotalVConcentration() {
 		auto& comp = cluster.getComposition();
 
 		// Add the concentration times the V content to the total vacancy concentration
-		vConc += cluster.getConcentration() * comp[toCompIdx(Species::V)];
+		vConc += cluster.getConcentration(concs) * comp[toCompIdx(Species::V)];
 	}
 
 	// Sum over all super clusters
@@ -1743,13 +1700,14 @@ double PSIClusterReactionNetwork::getTotalVConcentration() {
 				static_cast<PSISuperCluster&>(*(currMapItem.second));
 
 		// Add its total vacancy concentration
-		vConc += cluster.getTotalVacancyConcentration();
+		vConc += cluster.getTotalVacancyConcentration(concs);
 	}
 
 	return vConc;
 }
 
-double PSIClusterReactionNetwork::getTotalIConcentration() {
+double PSIClusterReactionNetwork::getTotalIConcentration(
+                                    const double* concs) {
 	// Initial declarations
 	double iConc = 0.0;
 
@@ -1760,7 +1718,7 @@ double PSIClusterReactionNetwork::getTotalIConcentration() {
 		double size = cluster.getSize();
 
 		// Add the concentration times the I content to the total interstitial concentration
-		iConc += cluster.getConcentration() * size;
+		iConc += cluster.getConcentration(concs) * size;
 	}
 
 	return iConc;
