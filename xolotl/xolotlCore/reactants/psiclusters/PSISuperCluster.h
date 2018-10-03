@@ -731,10 +731,11 @@ public:
 	/**
 	 * This operation returns the current concentration for a vacancy number.
 	 *
+     * @param Concentrations for desired grid point.
 	 * @param v The vacancy number
 	 * @return The concentration
 	 */
-	double getIntegratedVConcentration(int v) const;
+	double getIntegratedVConcentration(const double* concs, int v) const;
 
 	/**
 	 * This operation returns the vector of production reactions in which

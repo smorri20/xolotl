@@ -1186,7 +1186,7 @@ PetscErrorCode postEventFunction2D(TS ts, PetscInt nevents,
 			// Loop on the V boundaries
 			for (auto const& j : cluster.getBounds(3)) {
 				// Get the total concentration at this v
-				double conc = cluster.getIntegratedVConcentration(j);
+				double conc = cluster.getIntegratedVConcentration(gridPointSolution, j);
 				// Get the corresponding V cluster and its Id
 				auto vCluster = network.get(Species::V, j);
 				int vId = vCluster->getId() - 1;

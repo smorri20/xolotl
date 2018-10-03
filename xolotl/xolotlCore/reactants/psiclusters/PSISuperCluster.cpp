@@ -1011,7 +1011,6 @@ double PSISuperCluster::getTotalConcentration() const {
 	return conc;
 }
 
-
 template<uint32_t Axis>
 double PSISuperCluster::getTotalAtomConcHelper() const {
 
@@ -1102,7 +1101,8 @@ double PSISuperCluster::getTotalVacancyConcentration() const {
 }
 
 
-double PSISuperCluster::getIntegratedVConcentration(int v) const {
+double PSISuperCluster::getIntegratedVConcentration(const double* concs,
+                                                    int v) const {
 	// Initial declarations
 	double heDistance = 0.0, dDistance = 0.0, tDistance = 0.0, vDistance = 0.0,
 			conc = 0.0;
@@ -1120,7 +1120,8 @@ double PSISuperCluster::getIntegratedVConcentration(int v) const {
 		vDistance = getDistance(std::get<3>(pair), 3);
 
 		// Add the concentration of each cluster in the group
-		conc += getConcentration(heDistance, dDistance, tDistance, vDistance);
+		conc += getConcentration(concs,
+                    heDistance, dDistance, tDistance, vDistance);
 	}
 
 	return conc;
