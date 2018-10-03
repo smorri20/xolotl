@@ -939,6 +939,7 @@ PetscErrorCode computeHeliumConc1D(TS ts, PetscInt timestep, PetscReal time,
 						if (!superCluster.isIn(i, 0, 0, j))
 							continue;
 						heConcLocal[i] += superCluster.getConcentration(
+                                gridPointSolution,
 								superCluster.getDistance(i, 0), 0, 0,
 								superCluster.getDistance(j, 3))
 								* (grid[xi + 1] - grid[xi]);
@@ -1608,6 +1609,7 @@ PetscErrorCode monitorSurface1D(TS ts, PetscInt timestep, PetscReal time,
 							// Is it the right one?
 							if (heBounds.contains(j) and vBounds.contains(i)) {
 								conc = superCluster.getConcentration(
+                                        gridPointSolution,
 										superCluster.getDistance(j, 0), 0, 0,
 										superCluster.getDistance(i, 3));
 								break;

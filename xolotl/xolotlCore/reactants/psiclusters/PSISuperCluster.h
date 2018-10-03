@@ -652,18 +652,13 @@ public:
 	/**
 	 * This operation returns the current concentration.
 	 *
+     * @param concs Concentrations for desired grid point.
 	 * @param distHe The helium distance in the group
 	 * @param distD The deuterium distance in the group
 	 * @param distT The tritium distance in the group
 	 * @param distV The vacancy distance in the group
 	 * @return The concentration of this reactant
 	 */
-	virtual double getConcentration(double distHe, double distD, double distT,
-			double distV) const {
-		return l0 + (distHe * l1[0]) + (distD * l1[1]) + (distT * l1[2])
-				+ (distV * l1[3]);
-	}
-
 	virtual double getConcentration(const double* concs,
                                     double distHe,
                                     double distD,
