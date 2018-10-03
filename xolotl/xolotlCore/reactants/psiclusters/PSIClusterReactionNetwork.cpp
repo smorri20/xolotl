@@ -1621,7 +1621,55 @@ double PSIClusterReactionNetwork::getTotalAtomConcentration(int i) {
 	return atomConc;
 }
 
-double PSIClusterReactionNetwork::getTotalTrappedAtomConcentration(int i) {
+double PSIClusterReactionNetwork::getTotalTrappedAtomConcentration(const double* concs, int i) const {
+
+	// Initial declarations
+	double atomConc = 0.0;
+	ReactantType type;
+
+	// Switch on the index
+	switch (i) {
+	case 0:
+		type = ReactantType::He;
+		break;
+	case 1:
+		type = ReactantType::D;
+		break;
+	case 2:
+		type = ReactantType::T;
+		break;
+	default:
+		throw std::string("\nType not defined for getTotalAtomConcentration()");
+		break;
+	}
+
+	// Sum over all Mixed clusters.
+	for (auto const& currMapItem : getAll(ReactantType::PSIMixed)) {
+
+		// Get the cluster and its composition
+		auto const& cluster = *(currMapItem.second);
+		auto& comp = cluster.getComposition();
+
+		// Add the concentration times the He content to the total helium concentration
+		atomConc += cluster.getConcentration(concs)
+				* comp[toCompIdx(toSpecies(type))];
+	}
+
+	// Sum over all super clusters.
+	for (auto const& currMapItem : getAll(ReactantType::PSISuper)) {
+
+		// Get the cluster
+		auto const& cluster =
+				static_cast<PSISuperCluster&>(*(currMapItem.second));
+
+		// Add its total helium concentration helium concentration
+		atomConc += cluster.getTotalAtomConcentration(concs, i);
+	}
+
+	return atomConc;
+}
+
+double PSIClusterReactionNetwork::getTotalTrappedAtomConcentration(int i) const {
 	// Initial declarations
 	double atomConc = 0.0;
 	ReactantType type;

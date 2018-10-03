@@ -760,7 +760,7 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 		}
 
 		double FeClusterReactionNetwork::getTotalTrappedAtomConcentration(
-				int i) {
+				int i) const {
 			// Initial declarations
 			double heliumConc = 0.0;
 

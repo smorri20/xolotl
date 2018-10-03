@@ -308,7 +308,7 @@ public:
 	 * @param i Index to switch between the different types of atoms
 	 * @return The total concentration
 	 */
-	double getTotalTrappedAtomConcentration(int i = 0) override;
+	double getTotalTrappedAtomConcentration(int i = 0) const override;
 
 	/**
 	 * Get the total concentration of vacancies contained in the network.

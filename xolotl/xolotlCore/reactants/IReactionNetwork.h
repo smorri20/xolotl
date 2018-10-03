@@ -236,7 +236,8 @@ public:
 	 * @param i Index to switch between the different types of atoms
 	 * @return The total concentration
 	 */
-	virtual double getTotalTrappedAtomConcentration(int i = 0) = 0;
+	virtual double getTotalTrappedAtomConcentration(int i = 0) const = 0;
+	virtual double getTotalTrappedAtomConcentration(const double* concs, int i) const = 0;
 
 	/**
 	 * Get the total concentration of vacancies in the network.

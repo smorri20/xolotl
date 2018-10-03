@@ -1031,6 +1031,48 @@ double PSISuperCluster::getTotalAtomConcHelper() const {
 }
 
 
+template<uint32_t Axis>
+double PSISuperCluster::getTotalAtomConcHelper(const double* concs) const {
+
+    double conc = 0;
+    for (auto const& pair : heVList) {
+        // Compute the distances
+        auto heDistance = getDistance(std::get<0>(pair), 0);
+        auto dDistance = getDistance(std::get<1>(pair), 1);
+        auto tDistance = getDistance(std::get<2>(pair), 2);
+        auto vDistance = getDistance(std::get<3>(pair), 3);
+
+        // Add the concentration of each cluster in the group times its number of helium
+        conc += getConcentration(concs, heDistance, dDistance, tDistance,
+                vDistance) * (double) std::get<Axis>(pair);
+    }
+    return conc;
+}
+
+
+
+double PSISuperCluster::getTotalAtomConcentration(const double* concs,
+                                                    int axis) const {
+
+    assert(axis <= 2);
+
+    // TODO remove implicit mapping of species type to integers
+    // TODO do mapping in some base class (?)
+    double conc = 0;
+    switch(axis) {
+    case 0:
+        conc = getTotalAtomConcHelper<0>(concs);
+        break;
+    case 1:
+        conc = getTotalAtomConcHelper<1>(concs);
+        break;
+    case 2:
+        conc = getTotalAtomConcHelper<2>(concs);
+        break;
+    }
+    return conc;
+}
+
 
 double PSISuperCluster::getTotalAtomConcentration(int axis) const {
 

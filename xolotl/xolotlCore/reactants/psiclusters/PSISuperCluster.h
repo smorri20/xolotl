@@ -439,6 +439,17 @@ private:
     template<uint32_t Axis>
     double getTotalAtomConcHelper() const;
 
+    /**
+     * Obtain total concentration for desired species type using
+     * given grid point's concentrations.
+     *
+     * @param concs The concentrations for the desired grid point.
+     * @return Total concentration of species indicated by Axis 
+     * template parameter.
+     */
+    template<uint32_t Axis>
+    double getTotalAtomConcHelper(const double* concs) const;
+
 public:
 
 	/**
@@ -662,6 +673,28 @@ public:
 				+ (distV * l1[3]);
 	}
 
+	virtual double getConcentration(const double* concs,
+                                    double distHe,
+                                    double distD,
+                                    double distT,
+			                        double distV) const {
+
+        assert(concs[id - 1] == l0);
+        for(auto i = 1; i < psDim; ++i) {
+            auto currAxis = indexList[i] - 1;
+            assert(concs[getMomentId(currAxis) - 1] == l1[currAxis]);
+        }
+
+        std::array<double, 5> dists { 0, distHe, distD, distT, distV };
+
+        double ret = concs[id - 1];
+        for(auto i = 1; i < psDim; ++i) {
+            auto currAxis = indexList[i] - 1;
+            ret += (dists[i] * concs[getMomentId(currAxis) - 1]);
+        }
+        return ret;
+	}
+
 	/**
 	 * This operation returns the first moment of the given axis.
 	 *
@@ -686,6 +719,7 @@ public:
 	 * @return The concentration
 	 */
 	double getTotalAtomConcentration(int axis = 0) const;
+	double getTotalAtomConcentration(const double* concs, int axis) const;
 
 	/**
 	 * This operation returns the current total concentration of vacancies in the group.

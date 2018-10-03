@@ -242,6 +242,7 @@ public:
 	 * @return The concentration of this reactant
 	 */
 	virtual double getConcentration(void) const = 0;
+	virtual double getConcentration(const double* concs) const = 0;
 
 	/**
 	 * This operation sets the concentration of the reactant to the

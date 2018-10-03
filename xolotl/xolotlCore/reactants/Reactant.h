@@ -458,6 +458,11 @@ public:
 		return concentration;
 	}
 
+    double getConcentration(const double* concs) const override {
+        assert(concs[id-1] == concentration);
+        return concs[id-1];
+    }
+
 	/**
 	 * This operation sets the concentration of the reactant to the
 	 * specified amount.

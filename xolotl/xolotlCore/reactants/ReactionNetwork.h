@@ -513,7 +513,11 @@ public:
 	 * @param i Index to switch between the different types of atoms
 	 * @return The total concentration
 	 */
-	virtual double getTotalTrappedAtomConcentration(int i = 0) override {
+	virtual double getTotalTrappedAtomConcentration(int i = 0) const override {
+		return 0.0;
+	}
+	double getTotalTrappedAtomConcentration(const double* concs, int i) const override {
+        assert(false);  // should never be called.
 		return 0.0;
 	}
 
