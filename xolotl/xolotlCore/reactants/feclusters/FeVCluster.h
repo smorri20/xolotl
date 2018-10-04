@@ -74,21 +74,21 @@ public:
 	 * This operation returns the total change in this cluster due its
 	 * own dissociation.
 	 *
+     * @param concs Current solution array for desired grid point.
 	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to its dissociation
+	 * @param[out] flux The flux due to its dissociation
 	 */
-	double getEmissionFlux(int i) const {
-		// Initial declarations
-		double flux = FeCluster::getEmissionFlux(i);
+	void getEmissionFlux(const double* concs, int i,
+                            Reactant::Flux& flux) const override {
+
+        FeCluster::getEmissionFlux(concs, i, flux);
 
 		// Compute the loss to dislocation sinks
 		if (size < 5) {
 			// k^2 * D * C
-			flux += xolotlCore::sinkStrength * diffusionCoefficient[i]
-					* concentration;
+			flux.flux += xolotlCore::sinkStrength * diffusionCoefficient[i]
+					* getConcentration(concs);
 		}
-
-		return flux;
 	}
 
 	/**
@@ -101,7 +101,7 @@ public:
 	 * @param i The location on the grid in the depth direction
 	 */
 	void getEmissionPartialDerivatives(std::vector<double> & partials,
-			int i) const {
+			int i) const override {
 		// Initial declarations
 		FeCluster::getEmissionPartialDerivatives(partials, i);
 

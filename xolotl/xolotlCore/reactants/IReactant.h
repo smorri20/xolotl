@@ -256,11 +256,12 @@ public:
 	 * This operation returns the total flux of this reactant in the
 	 * current network.
 	 *
+     * @param concs Solution array for desired grid point.
 	 * @param i The location on the grid in the depth direction
 	 * @return The total change in flux for this reactant due to all
 	 * reactions
 	 */
-	virtual double getTotalFlux(int i) = 0;
+	virtual double getTotalFlux(const double* concs, int i) = 0;
 
 	/**
 	 * Update reactant using other reactants in its network.

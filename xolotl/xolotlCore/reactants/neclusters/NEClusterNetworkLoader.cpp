@@ -6,6 +6,7 @@
 #include <NEXeCluster.h>
 #include <NESuperCluster.h>
 #include <xolotlPerf.h>
+#include "DummyReactant.h"
 #include "xolotlCore/io/XFile.h"
 
 namespace xolotlCore {
@@ -49,7 +50,7 @@ void NEClusterNetworkLoader::pushNECluster(
 	// Check if we want dummy reactions
 	if (dummyReactions) {
 		// Create a dummy cluster (Reactant) from the existing cluster
-		auto dummyCluster = std::unique_ptr<Reactant>(new Reactant(*cluster));
+		auto dummyCluster = std::unique_ptr<Reactant>(new DummyReactant(*cluster));
 		// Save access to it so we can trigger updates after
 		// we add all to the network.
 		reactants.emplace_back(*dummyCluster);

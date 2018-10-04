@@ -303,74 +303,59 @@ double NECluster::getMoment() const {
 	return 0.0;
 }
 
-double NECluster::getTotalFlux(int i) {
-	// Get the fluxes
-	double prodFlux = getProductionFlux(i);
-	double dissFlux = getDissociationFlux(i);
-	double combFlux = getCombinationFlux(i);
-	double emissFlux = getEmissionFlux(i);
-
-	return prodFlux - combFlux + dissFlux - emissFlux;
-}
-
-double NECluster::getDissociationFlux(int xi) const {
+void NECluster::getDissociationFlux(const double* concs, int xi,
+                                        Reactant::Flux& flux) const {
 
 	// Sum dissociation flux over all pairs that dissociate to form this one.
-	double flux =
+	flux.flux =
 			std::accumulate(dissociatingPairs.begin(), dissociatingPairs.end(),
-					0.0, [&xi](double running, const ClusterPair& currPair) {
+                0.0,
+                [&concs,xi](double running, const ClusterPair& currPair) {
 						// Get the dissociating cluster
 					auto& dissociatingCluster = currPair.first;
 					// Calculate the Dissociation flux
 					Reaction const& currReaction = currPair.reaction;
 					return running + (currReaction.kConstant[xi] *
-							dissociatingCluster->getConcentration(currPair.firstDistance));
+							dissociatingCluster->getConcentration(concs, currPair.firstDistance));
 				});
-
-	// Return the flux
-	return flux;
 }
 
-double NECluster::getEmissionFlux(int xi) const {
+void NECluster::getEmissionFlux(const double* concs, int xi,
+                                        Reactant::Flux& flux) const { 
 
 	// Sum reaction rate constants over all emission pair reactions.
-	double flux = std::accumulate(emissionPairs.begin(), emissionPairs.end(),
-			0.0, [&xi](double running, const ClusterPair& currPair) {
+	flux.flux = std::accumulate(emissionPairs.begin(), emissionPairs.end(),
+			0.0,
+            [xi](double running, const ClusterPair& currPair) {
 				Reaction const& currReaction = currPair.reaction;
 				return running + currReaction.kConstant[xi];
-			});
-
-	return flux * concentration;
+			}) * getConcentration(concs);
 }
 
-double NECluster::getProductionFlux(int xi) const {
-	// Local declarations
-	double flux = 0.0;
+void NECluster::getProductionFlux(const double* concs, int xi,
+                                        Reactant::Flux& flux) const {
 
 	// Sum over all the reacting pairs
 	std::for_each(reactingPairs.begin(), reactingPairs.end(),
-			[&flux,&xi](ClusterPair const& currPair) {
+			[&concs,xi,&flux](ClusterPair const& currPair) {
 				// Get the two reacting clusters
 				NECluster* firstReactant = currPair.first;
 				NECluster* secondReactant = currPair.second;
 				// Update the flux
 				Reaction const& currReaction = currPair.reaction;
-				flux += currReaction.kConstant[xi]
-				* firstReactant->getConcentration(
-						currPair.firstDistance)
-				* secondReactant->getConcentration(
-						currPair.secondDistance);
+				flux.flux += currReaction.kConstant[xi]
+				* firstReactant->getConcentration(concs, currPair.firstDistance)
+				* secondReactant->getConcentration(concs, currPair.secondDistance);
 			});
-
-	// Return the production flux
-	return flux;
 }
 
-double NECluster::getCombinationFlux(int xi) const {
+void NECluster::getCombinationFlux(const double* concs, int xi,
+                                        Reactant::Flux& flux) const {
 
-	double flux = std::accumulate(combiningReactants.begin(),
-			combiningReactants.end(), 0.0,
-			[xi](double running, const CombiningCluster& currPair) {
+	flux.flux = std::accumulate(combiningReactants.begin(),
+			combiningReactants.end(),
+            0.0,
+			[&concs,xi](double running, const CombiningCluster& currPair) {
 				// Get the cluster that combines with this one
 				NECluster const& combiningCluster = *currPair.combining;
 				Reaction const& currReaction = currPair.reaction;
@@ -378,11 +363,9 @@ double NECluster::getCombinationFlux(int xi) const {
 				// Calculate Second term of production flux
 				return running +
 				(currReaction.kConstant[xi] *
-						combiningCluster.getConcentration(currPair.distance));
+						combiningCluster.getConcentration(concs, currPair.distance));
 
-			});
-
-	return flux * concentration;
+			}) * getConcentration(concs);
 }
 
 std::vector<double> NECluster::getPartialDerivatives(int i) const {

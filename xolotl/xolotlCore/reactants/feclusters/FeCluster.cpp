@@ -751,14 +751,15 @@ void FeCluster::updateFromNetwork() {
 	return;
 }
 
-double FeCluster::getDissociationFlux(int xi) const {
+void FeCluster::getDissociationFlux(const double* concs, int xi,
+                                    Reactant::Flux& flux) const {
 
 	// Sum dissociation flux over all our dissociating clusters.
-	double flux = std::accumulate(dissociatingPairs.begin(),
+	flux.flux = std::accumulate(dissociatingPairs.begin(),
 			dissociatingPairs.end(), 0.0,
-			[&xi](double running, const ClusterPair& currPair) {
+			[&concs,&xi](double running, const ClusterPair& currPair) {
 				auto const& dissCluster = currPair.first;
-				double l0A = dissCluster.getConcentration(0.0, 0.0);
+				double l0A = dissCluster.getConcentration(concs, 0.0, 0.0);
 				double lHeA = dissCluster.getHeMoment();
 				double lVA = dissCluster.getVMoment();
 
@@ -769,33 +770,30 @@ double FeCluster::getDissociationFlux(int xi) const {
 								currPair.a10 * lHeA +
 								currPair.a20 * lVA));
 			});
-
-	// Return the flux
-	return flux;
 }
 
-double FeCluster::getEmissionFlux(int xi) const {
+void FeCluster::getEmissionFlux(const double* concs, int xi,
+                                Reactant::Flux& flux) const {
 
 	// Sum rate constants from all emission pair reactions.
-	double flux = std::accumulate(emissionPairs.begin(), emissionPairs.end(),
+	flux.flux = std::accumulate(emissionPairs.begin(), emissionPairs.end(),
 			0.0, [&xi](double running, const ClusterPair& currPair) {
 				return running + currPair.reaction.kConstant[xi] * currPair.a00;
-			});
-
-	return flux * concentration;
+			}) * getConcentration(concs);
 }
 
-double FeCluster::getProductionFlux(int xi) const {
+void FeCluster::getProductionFlux(const double* concs, int xi,
+                                Reactant::Flux& flux) const {
 
 	// Sum production flux over all reacting pairs.
-	double flux = std::accumulate(reactingPairs.begin(), reactingPairs.end(),
-			0.0, [&xi](double running, const ClusterPair& currPair) {
+	flux.flux = std::accumulate(reactingPairs.begin(), reactingPairs.end(),
+			0.0, [&concs, &xi](double running, const ClusterPair& currPair) {
 
 				// Get the two reacting clusters
 			auto const& firstReactant = currPair.first;
 			auto const& secondReactant = currPair.second;
-			double l0A = firstReactant.getConcentration(0.0, 0.0);
-			double l0B = secondReactant.getConcentration(0.0, 0.0);
+			double l0A = firstReactant.getConcentration(concs, 0.0, 0.0);
+			double l0B = secondReactant.getConcentration(concs, 0.0, 0.0);
 			double lHeA = firstReactant.getHeMoment();
 			double lHeB = secondReactant.getHeMoment();
 			double lVA = firstReactant.getVMoment();
@@ -808,30 +806,26 @@ double FeCluster::getProductionFlux(int xi) const {
 					currPair.a20 * lVA * l0B + currPair.a21 * lVA * lHeB +
 					currPair.a22 * lVA * lVB);
 		});
-
-	// Return the production flux
-	return flux;
 }
 
-double FeCluster::getCombinationFlux(int xi) const {
+void FeCluster::getCombinationFlux(const double* concs, int xi,
+                                Reactant::Flux& flux) const {
 
 	// Sum combination flux over all clusters that combine with us.
-	double flux = std::accumulate(combiningReactants.begin(),
+	flux.flux = std::accumulate(combiningReactants.begin(),
 			combiningReactants.end(), 0.0,
-			[&xi](double running, const CombiningCluster& cc) {
+			[&concs,&xi](double running, const CombiningCluster& cc) {
 
 				// Get the cluster that combines with this one
 				auto const& combiningCluster = cc.combining;
-				double l0B = combiningCluster.getConcentration(0.0, 0.0);
+				double l0B = combiningCluster.getConcentration(concs, 0.0, 0.0);
 				double lHeB = combiningCluster.getHeMoment();
 				double lVB = combiningCluster.getVMoment();
 				// Calculate the combination flux
 				return running + (cc.reaction.kConstant[xi] *
 						(cc.a0 * l0B + cc.a1 * lHeB + cc.a2 * lVB));
 
-			});
-
-	return flux * concentration;
+			}) * getConcentration(concs);
 }
 
 std::vector<double> FeCluster::getPartialDerivatives(int i) const {

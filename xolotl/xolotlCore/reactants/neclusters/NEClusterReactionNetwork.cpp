@@ -286,15 +286,15 @@ void NEClusterReactionNetwork::getDiagonalFill(SparseFillMap& fillMap) {
 	return;
 }
 
-void NEClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset,
-		int i) {
+void NEClusterReactionNetwork::computeAllFluxes(const double* concs,
+                                            double *updatedConcOffset, int i) {
 
 	// ----- Compute all of the new fluxes -----
 	std::for_each(allReactants.begin(), allReactants.end(),
-			[&updatedConcOffset,&i](IReactant& cluster) {
+			[&concs,&updatedConcOffset,i](IReactant& cluster) {
 
 				// Compute the flux
-				auto flux = cluster.getTotalFlux(i);
+				auto flux = cluster.getTotalFlux(concs, i);
 				// Update the concentration of the cluster
 				auto reactantIndex = cluster.getId() - 1;
 				updatedConcOffset[reactantIndex] += flux;

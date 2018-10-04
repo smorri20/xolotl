@@ -13,6 +13,43 @@ namespace xolotlCore {
  */
 class NESuperCluster: public NECluster {
 
+public:
+    // Our notion of the flux.
+    // Must be public so we can define operator+/operator-. (?)
+    struct Flux : public Reactant::Flux {
+
+        double momentFlux;
+
+        Flux(void)
+          : momentFlux(0)
+        { }
+
+        Flux(const Flux& other)
+          : Reactant::Flux(other) {
+            momentFlux = other.momentFlux;
+        }
+
+        Flux& operator+=(const Flux& other) {
+            // Let base class update its members.
+            Reactant::Flux::operator+=(other);
+
+            // Update our members.
+            momentFlux += other.momentFlux;
+
+            return *this;
+        }
+
+        Flux& operator-=(const Flux& other) { 
+            // Let base class update its members.
+            Reactant::Flux::operator-=(other);
+
+            // Update our members.
+            momentFlux -= other.momentFlux;
+
+            return *this;
+        }
+    };
+
 private:
 	static std::string buildName(IReactant::SizeType nXe) {
 		std::stringstream nameStream;
@@ -68,6 +105,7 @@ protected:
 						0.0), a110(0.0), a111(0.0) {
 		}
 	};
+    using ProductionPairList = std::vector<SuperClusterProductionPair>;
 
 	/**
 	 * This is a protected class that is used to implement the flux calculations
@@ -110,6 +148,7 @@ protected:
 						0.0), a01(0.0), a10(0.0), a11(0.0) {
 		}
 	};
+    using DissociationPairList = std::vector<SuperClusterDissociationPair>;
 
 private:
 
@@ -144,21 +183,70 @@ private:
 	std::map<int, std::vector<ClusterPair> > emissionMap;
 
 	//! The list of optimized effective reacting pairs.
-	std::forward_list<SuperClusterProductionPair> effReactingList;
+    ProductionPairList effReactingList;
 
 	//! The list of optimized effective combining pairs.
-	std::forward_list<SuperClusterProductionPair> effCombiningList;
+    ProductionPairList effCombiningList;
 
 	//! The list of optimized effective dissociating pairs.
-	std::forward_list<SuperClusterDissociationPair> effDissociatingList;
+    DissociationPairList effDissociatingList;
 
 	//! The list of optimized effective emission pairs.
-	std::forward_list<SuperClusterDissociationPair> effEmissionList;
+    DissociationPairList effEmissionList;
 
 	/**
 	 * The xenon moment flux.
 	 */
 	double momentFlux;
+
+
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * other clusters dissociating into it. Compute the contributions to
+	 * the moment fluxes at the same time.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to dissociation of other clusters
+	 */
+	void getDissociationFlux(const double* concs, int i,
+                                Reactant::Flux& flux) const override;
+
+	/**
+	 * This operation param[out] fluxs the total change in this cluster due its
+	 * own dissociation. Compute the contributions to
+	 * the moment fluxes at the same time.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to its dissociation
+	 */
+	void getEmissionFlux(const double* concs, int i,
+                                Reactant::Flux& flux) const override;
+
+	/**
+	 * This operation param[out] fluxs the total change in this cluster due to
+	 * the production of this cluster by other clusters. Compute the contributions to
+	 * the moment fluxes at the same time.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to this cluster being produced
+	 */
+	void getProductionFlux(const double* concs, int i,
+                                Reactant::Flux& flux) const override;
+
+	/**
+	 * This operation param[out] fluxs the total change in this cluster due to
+	 * the combination of this cluster with others. Compute the contributions to
+	 * the moment fluxes at the same time.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to this cluster combining with other clusters
+	 */
+	void getCombinationFlux(const double* concs, int i,
+                                Reactant::Flux& flux) const override;
 
 public:
 
@@ -354,47 +442,16 @@ public:
 	 * @return The total change in flux for this cluster due to all
 	 * reactions
 	 */
-	double getTotalFlux(int i) override;
+	double getTotalFlux(const double* concs, int i) override {
 
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * other clusters dissociating into it. Compute the contributions to
-	 * the moment fluxes at the same time.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to dissociation of other clusters
-	 */
-	double getDissociationFlux(int i);
+        // Compute the total flux.
+        auto flux = getTotalFluxHelper<NESuperCluster::Flux>(concs, i);
 
-	/**
-	 * This operation returns the total change in this cluster due its
-	 * own dissociation. Compute the contributions to
-	 * the moment fluxes at the same time.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to its dissociation
-	 */
-	double getEmissionFlux(int i);
+        // update our moment flux.
+        momentFlux = flux.momentFlux;
 
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * the production of this cluster by other clusters. Compute the contributions to
-	 * the moment fluxes at the same time.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to this cluster being produced
-	 */
-	double getProductionFlux(int i);
-
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * the combination of this cluster with others. Compute the contributions to
-	 * the moment fluxes at the same time.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to this cluster combining with other clusters
-	 */
-	double getCombinationFlux(int i);
+        return flux.flux;
+    }
 
 	/**
 	 * This operation returns the total change for its moment.
@@ -535,6 +592,22 @@ public:
 
 };
 //end class NESuperCluster
+
+inline
+const NESuperCluster::Flux operator+(const NESuperCluster::Flux& a,
+                                    const NESuperCluster::Flux& b) {
+    NESuperCluster::Flux ret(a);
+    ret += b;
+    return ret;
+}
+
+inline
+const NESuperCluster::Flux operator-(const NESuperCluster::Flux& a,
+                                    const NESuperCluster::Flux& b) {
+    NESuperCluster::Flux ret(a);
+    ret -= b;
+    return ret;
+}
 
 } /* end namespace xolotlCore */
 #endif

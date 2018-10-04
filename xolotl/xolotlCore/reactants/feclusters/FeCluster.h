@@ -182,6 +182,50 @@ protected:
 	void dumpCoefficients(std::ostream& os, ClusterPair const& curr) const;
 	void dumpCoefficients(std::ostream& os, CombiningCluster const& curr) const;
 
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * other clusters dissociating into it.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to dissociation of other clusters
+	 */
+    void getDissociationFlux(const double* concs, int i,
+                                        Reactant::Flux& flux) const override;
+
+	/**
+	 * This operation returns the total change in this cluster due its
+	 * own dissociation.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to its dissociation
+	 */
+    void getEmissionFlux(const double* concs, int i,
+                                        Reactant::Flux& flux) const override;
+
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * the production of this cluster by other clusters.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to this cluster being produced
+	 */
+    void getProductionFlux(const double* concs, int i,
+                                        Reactant::Flux& flux) const override;
+
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * the combination of this cluster with others.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to this cluster combining with other clusters
+	 */
+    void getCombinationFlux(const double* concs, int i,
+                                        Reactant::Flux& flux) const override;
+
 public:
 
 	/**
@@ -503,50 +547,18 @@ public:
 	 * This operation returns the total flux of this cluster in the
 	 * current network.
 	 *
+     * @param concs Current solution for desired grid point.
 	 * @param i The location on the grid in the depth direction
 	 * @return The total change in flux for this cluster due to all
 	 * reactions
 	 */
-	virtual double getTotalFlux(int i) override {
-		return getProductionFlux(i) - getCombinationFlux(i)
-				+ getDissociationFlux(i) - getEmissionFlux(i);
-	}
+	double getTotalFlux(const double* concs, int i) override {
 
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * other clusters dissociating into it.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to dissociation of other clusters
-	 */
-	virtual double getDissociationFlux(int i) const;
+        // Compute total flux.
+        auto flux = getTotalFluxHelper<Reactant::Flux>(concs, i);
 
-	/**
-	 * This operation returns the total change in this cluster due its
-	 * own dissociation.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to its dissociation
-	 */
-	virtual double getEmissionFlux(int i) const;
-
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * the production of this cluster by other clusters.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to this cluster being produced
-	 */
-	virtual double getProductionFlux(int i) const;
-
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * the combination of this cluster with others.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to this cluster combining with other clusters
-	 */
-	virtual double getCombinationFlux(int i) const;
+        return flux.flux;
+    }
 
 	/**
 	 * This operation returns the list of partial derivatives of this cluster

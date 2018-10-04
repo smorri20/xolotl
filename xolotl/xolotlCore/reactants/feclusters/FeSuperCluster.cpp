@@ -1297,151 +1297,136 @@ void FeSuperCluster::resetConnectivities() {
 	return;
 }
 
-double FeSuperCluster::getDissociationFlux(int xi) {
-	// Initial declarations
-	double flux = 0.0;
+void FeSuperCluster::getDissociationFlux(const double* concs, int xi,
+                                        Reactant::Flux& flux) const {
+    auto& superFlux = static_cast<FeSuperCluster::Flux&>(flux);
 
 	// Sum over all the dissociating pairs
-	// TODO consider using std::accumulate.  May also want to change side
-	// effect of updating member variables heMomentFlux and
-	// vMomentFlux here.
+	// TODO consider using std::accumulate.
 	std::for_each(effDissociatingList.begin(), effDissociatingList.end(),
-			[this,&flux,&xi](DissociationPairMap::value_type const& currMapItem) {
+			[this,&concs,&superFlux,&xi](DissociationPairMap::value_type const& currMapItem) {
 				auto const& currPair = currMapItem.second;
 
 				// Get the dissociating clusters
 				auto const& dissociatingCluster = currPair.first;
-				double l0A = dissociatingCluster.getConcentration();
+				double l0A = dissociatingCluster.getConcentration(concs);
 				double lHeA = dissociatingCluster.getHeMoment();
 				double lVA = dissociatingCluster.getVMoment();
 				// Update the flux
 				auto value = currPair.reaction.kConstant[xi] / (double) nTot;
-				flux += value * (currPair.a00 * l0A + currPair.a10 * lHeA + currPair.a20 * lVA);
+				superFlux.flux += value * (currPair.a00 * l0A + currPair.a10 * lHeA + currPair.a20 * lVA);
 				// Compute the moment fluxes
-				heMomentFlux += value
+				superFlux.heMomentFlux += value
 				* (currPair.a01 * l0A + currPair.a11 * lHeA + currPair.a21 * lVA);
-				vMomentFlux += value
+				superFlux.vMomentFlux += value
 				* (currPair.a02 * l0A + currPair.a12 * lHeA + currPair.a22 * lVA);
 			});
-
-	// Return the flux
-	return flux;
 }
 
-double FeSuperCluster::getEmissionFlux(int xi) {
-	// Initial declarations
-	double flux = 0.0;
+void FeSuperCluster::getEmissionFlux(const double* concs, int xi,
+                                        Reactant::Flux& flux) const {
+
+	auto& superFlux = static_cast<FeSuperCluster::Flux&>(flux);
 
 	// Loop over all the emission pairs
-	// TODO consider using std::accumulate.  May also want to change side
-	// effect of updating member variables heMomentFlux and
-	// vMomentFlux here.
+	// TODO consider using std::accumulate.
 	std::for_each(effEmissionList.begin(), effEmissionList.end(),
-			[this,&flux,&xi](DissociationPairMap::value_type const& currMapItem) {
+			[this,&superFlux,&xi](DissociationPairMap::value_type const& currMapItem) {
 				auto const& currPair = currMapItem.second;
 
 				// Update the flux
 				auto value = currPair.reaction.kConstant[xi] / (double) nTot;
-				flux += value * (currPair.a00 * l0 + currPair.a10 * l1He + currPair.a20 * l1V);
+				superFlux.flux += value * (currPair.a00 * l0 + currPair.a10 * l1He + currPair.a20 * l1V);
 				// Compute the moment fluxes
-				heMomentFlux -= value
+				superFlux.heMomentFlux -= value
 				* (currPair.a01 * l0 + currPair.a11 * l1He + currPair.a21 * l1V);
-				vMomentFlux -= value
+				superFlux.vMomentFlux -= value
 				* (currPair.a02 * l0 + currPair.a12 * l1He + currPair.a22 * l1V);
 			});
-
-	return flux;
 }
 
-double FeSuperCluster::getProductionFlux(int xi) {
-	// Local declarations
-	double flux = 0.0;
+void FeSuperCluster::getProductionFlux(const double* concs, int xi,
+                                        Reactant::Flux& flux) const {
+
+    auto& superFlux = static_cast<FeSuperCluster::Flux&>(flux);
 
 	// Sum over all the reacting pairs
-	// TODO consider using std::accumulate.  May also want to change side
-	// effect of updating member variables heMomentFlux and
-	// vMomentFlux here.
+	// TODO consider using std::accumulate.
 	std::for_each(effReactingList.begin(), effReactingList.end(),
-			[this,&flux,&xi](ProductionPairMap::value_type const& currMapItem) {
+			[this,&concs,&superFlux,&xi](ProductionPairMap::value_type const& currMapItem) {
 
 				auto const& currPair = currMapItem.second;
 
 				// Get the two reacting clusters
 				auto const& firstReactant = currPair.first;
 				auto const& secondReactant = currPair.second;
-				double l0A = firstReactant.getConcentration();
-				double l0B = secondReactant.getConcentration();
+				double l0A = firstReactant.getConcentration(concs);
+				double l0B = secondReactant.getConcentration(concs);
 				double lHeA = firstReactant.getHeMoment();
 				double lHeB = secondReactant.getHeMoment();
 				double lVA = firstReactant.getVMoment();
 				double lVB = secondReactant.getVMoment();
 				// Update the flux
 				auto value = currPair.reaction.kConstant[xi] / (double) nTot;
-				flux += value
+				superFlux.flux += value
 				* (currPair.a000 * l0A * l0B + currPair.a010 * l0A * lHeB
 						+ currPair.a020 * l0A * lVB + currPair.a100 * lHeA * l0B
 						+ currPair.a110 * lHeA * lHeB + currPair.a120 * lHeA * lVB
 						+ currPair.a200 * lVA * l0B + currPair.a210 * lVA * lHeB
 						+ currPair.a220 * lVA * lVB);
 				// Compute the moment fluxes
-				heMomentFlux += value
+				superFlux.heMomentFlux += value
 				* (currPair.a001 * l0A * l0B + currPair.a011 * l0A * lHeB
 						+ currPair.a021 * l0A * lVB + currPair.a101 * lHeA * l0B
 						+ currPair.a111 * lHeA * lHeB + currPair.a121 * lHeA * lVB
 						+ currPair.a201 * lVA * l0B + currPair.a211 * lVA * lHeB
 						+ currPair.a221 * lVA * lVB);
-				vMomentFlux += value
+				superFlux.vMomentFlux += value
 				* (currPair.a002 * l0A * l0B + currPair.a012 * l0A * lHeB
 						+ currPair.a022 * l0A * lVB + currPair.a102 * lHeA * l0B
 						+ currPair.a112 * lHeA * lHeB + currPair.a122 * lHeA * lVB
 						+ currPair.a202 * lVA * l0B + currPair.a212 * lVA * lHeB
 						+ currPair.a222 * lVA * lVB);
 			});
-
-	// Return the production flux
-	return flux;
 }
 
-double FeSuperCluster::getCombinationFlux(int xi) {
-	// Local declarations
-	double flux = 0.0;
+void FeSuperCluster::getCombinationFlux(const double* concs, int xi,
+                                        Reactant::Flux& flux) const {
+
+    auto& superFlux = static_cast<FeSuperCluster::Flux&>(flux);
 
 	// Sum over all the combining clusters
-	// TODO consider using std::accumulate.  May also want to change side
-	// effect of updating member variables heMomentFlux and
-	// vMomentFlux here.
+	// TODO consider using std::accumulate.
 	std::for_each(effCombiningList.begin(), effCombiningList.end(),
-			[this,&flux,&xi](CombiningClusterMap::value_type const& currMapItem) {
+			[this,&concs,&superFlux,&xi](CombiningClusterMap::value_type const& currMapItem) {
 				// Get the combining cluster
 				auto const& currComb = currMapItem.second;
 				auto const& combiningCluster = currComb.first;
-				double l0B = combiningCluster.getConcentration();
+				double l0B = combiningCluster.getConcentration(concs);
 				double lHeB = combiningCluster.getHeMoment();
 				double lVB = combiningCluster.getVMoment();
 				// Update the flux
 				auto value = currComb.reaction.kConstant[xi] / (double) nTot;
-				flux += value
+				superFlux.flux += value
 				* (currComb.a000 * l0B * l0 + currComb.a100 * l0B * l1He
 						+ currComb.a200 * l0B * l1V + currComb.a010 * lHeB * l0
 						+ currComb.a110 * lHeB * l1He + currComb.a210 * lHeB * l1V
 						+ currComb.a020 * lVB * l0 + currComb.a120 * lVB * l1He
 						+ currComb.a220 * lVB * l1V);
 				// Compute the moment fluxes
-				heMomentFlux -= value
+				superFlux.heMomentFlux -= value
 				* (currComb.a001 * l0B * l0 + currComb.a101 * l0B * l1He
 						+ currComb.a201 * l0B * l1V + currComb.a011 * lHeB * l0
 						+ currComb.a111 * lHeB * l1He + currComb.a211 * lHeB * l1V
 						+ currComb.a021 * lVB * l0 + currComb.a121 * lVB * l1He
 						+ currComb.a221 * lVB * l1V);
-				vMomentFlux -= value
+				superFlux.vMomentFlux -= value
 				* (currComb.a002 * l0B * l0 + currComb.a102 * l0B * l1He
 						+ currComb.a202 * l0B * l1V + currComb.a012 * lHeB * l0
 						+ currComb.a112 * lHeB * l1He + currComb.a212 * lHeB * l1V
 						+ currComb.a022 * lVB * l0 + currComb.a122 * lVB * l1He
 						+ currComb.a222 * lVB * l1V);
 			});
-
-	return flux;
 }
 
 void FeSuperCluster::getPartialDerivatives(std::vector<double> & partials,

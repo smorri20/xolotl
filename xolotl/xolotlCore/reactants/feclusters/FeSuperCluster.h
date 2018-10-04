@@ -14,12 +14,103 @@ namespace xolotlCore {
  */
 class FeSuperCluster: public FeCluster {
 
+public:
+
+    // Our notion of the flux.
+    // Must be public so we can define operator+/operator-. (?)
+    struct Flux : public Reactant::Flux {
+        double heMomentFlux;
+        double vMomentFlux;
+
+        Flux(void)
+          : heMomentFlux(0),
+            vMomentFlux(0)
+        { }
+
+        Flux(const Flux& other)
+          : Reactant::Flux(other),
+            heMomentFlux(other.heMomentFlux),
+            vMomentFlux(other.vMomentFlux)
+        { }
+
+        Flux& operator+=(const Flux& other) {
+            // Let base class update its members.
+            Reactant::Flux::operator+=(other);
+
+            // Update our members.
+            heMomentFlux += other.heMomentFlux;
+            vMomentFlux += other.vMomentFlux;
+
+            return *this;
+        }
+
+        Flux& operator-=(const Flux& other) { 
+            // Let base class update its members.
+            Reactant::Flux::operator-=(other);
+
+            // Update our members.
+            heMomentFlux -= other.heMomentFlux;
+            vMomentFlux -= other.vMomentFlux;
+
+            return *this;
+        }
+    };
+
 private:
 	static std::string buildName(double nHe, double nV) {
 		std::stringstream nameStream;
 		nameStream << "He_" << nHe << "V_" << nV;
 		return nameStream.str();
 	}
+
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * other clusters dissociating into it. Compute the contributions to
+	 * the moment fluxes at the same time.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to dissociation of other clusters
+	 */
+    void getDissociationFlux(const double* concs, int i,
+                            Reactant::Flux& flux) const override;
+
+	/**
+	 * This operation returns the total change in this cluster due its
+	 * own dissociation. Compute the contributions to
+	 * the moment fluxes at the same time.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to its dissociation
+	 */
+    void getEmissionFlux(const double* concs, int i,
+                            Reactant::Flux& flux) const override;
+
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * the production of this cluster by other clusters. Compute the contributions to
+	 * the moment fluxes at the same time.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to this cluster being produced
+	 */
+    void getProductionFlux(const double* concs, int i,
+                            Reactant::Flux& flux) const override;
+
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * the combination of this cluster with others. Compute the contributions to
+	 * the moment fluxes at the same time.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to this cluster combining with 
+     *      other clusters
+	 */
+    void getCombinationFlux(const double* concs, int i,
+                            Reactant::Flux& flux) const override;
 
 protected:
 
@@ -642,60 +733,23 @@ public:
 	 * This operation returns the total flux of this cluster in the
 	 * current network.
 	 *
+     * @param concs Current grid point solution for desired grid point.
 	 * @param i The location on the grid in the depth direction
 	 * @return The total change in flux for this cluster due to all
 	 * reactions
 	 */
-	double getTotalFlux(int i) override {
+	double getTotalFlux(const double* concs, int i) override {
 
-		// Initialize the fluxes
-		heMomentFlux = 0.0;
-		vMomentFlux = 0.0;
+        // Compute the total flux.
+        auto flux = getTotalFluxHelper<FeSuperCluster::Flux>(concs, i);
 
-		// Compute the fluxes.
-		return getProductionFlux(i) - getCombinationFlux(i)
-				+ getDissociationFlux(i) - getEmissionFlux(i);
-	}
+        // Update our moment fluxes.
+        heMomentFlux = flux.heMomentFlux;
+        vMomentFlux = flux.vMomentFlux;
 
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * other clusters dissociating into it. Compute the contributions to
-	 * the moment fluxes at the same time.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to dissociation of other clusters
-	 */
-	double getDissociationFlux(int i);
+        return flux.flux;
+    }
 
-	/**
-	 * This operation returns the total change in this cluster due its
-	 * own dissociation. Compute the contributions to
-	 * the moment fluxes at the same time.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to its dissociation
-	 */
-	double getEmissionFlux(int i);
-
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * the production of this cluster by other clusters. Compute the contributions to
-	 * the moment fluxes at the same time.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to this cluster being produced
-	 */
-	double getProductionFlux(int i);
-
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * the combination of this cluster with others. Compute the contributions to
-	 * the moment fluxes at the same time.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to this cluster combining with other clusters
-	 */
-	double getCombinationFlux(int i);
 
 	/**
 	 * This operation returns the total change for its helium moment.
@@ -885,6 +939,28 @@ public:
 	virtual void outputCoefficientsTo(std::ostream& os) const override;
 };
 //end class FeSuperCluster
+
+/**
+ * Add two supercluster fluxes.
+ */
+inline
+const FeSuperCluster::Flux operator+(const FeSuperCluster::Flux& a,
+                                    const FeSuperCluster::Flux& b) {
+    FeSuperCluster::Flux ret(a);
+    ret += b;
+    return ret;
+}
+
+/**
+ * Subtract two supercluster fluxes.
+ */
+inline
+const FeSuperCluster::Flux operator-(const FeSuperCluster::Flux& a,
+                                    const FeSuperCluster::Flux& b) {
+    FeSuperCluster::Flux ret(a);
+    ret -= b;
+    return ret;
+}
 
 } /* end namespace xolotlCore */
 #endif

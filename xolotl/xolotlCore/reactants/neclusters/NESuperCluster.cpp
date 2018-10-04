@@ -42,10 +42,12 @@ NESuperCluster::NESuperCluster(double num, int nTot, int width, double radius,
 void NESuperCluster::resultFrom(ProductionReaction& reaction, double *coef) {
 
 	// Create a new SuperClusterProductionPair
-	SuperClusterProductionPair superPair(
+    effReactingList.emplace_back(
 			&static_cast<NECluster&>(reaction.first),
 			&static_cast<NECluster&>(reaction.second), &reaction);
+    
 	// Update the coeficients
+    auto& superPair = effReactingList.back();
 	superPair.a000 = coef[0];
 	superPair.a001 = coef[1];
 	superPair.a100 = coef[2];
@@ -54,9 +56,6 @@ void NESuperCluster::resultFrom(ProductionReaction& reaction, double *coef) {
 	superPair.a011 = coef[5];
 	superPair.a110 = coef[6];
 	superPair.a111 = coef[7];
-
-	// Add it to the list
-	effReactingList.push_front(superPair);
 
 	return;
 }
@@ -68,8 +67,10 @@ void NESuperCluster::participateIn(ProductionReaction& reaction, double *coef) {
 
 	// Create a new SuperClusterProductionPair with NULL as the second cluster because
 	// we do not need it
-	SuperClusterProductionPair superPair(&otherCluster, nullptr, &reaction);
+    effCombiningList.emplace_back(&otherCluster, nullptr, &reaction);
+
 	// Update the coeficients
+    auto& superPair = effCombiningList.back();
 	superPair.a000 = coef[0];
 	superPair.a001 = coef[1];
 	superPair.a100 = coef[2];
@@ -78,9 +79,6 @@ void NESuperCluster::participateIn(ProductionReaction& reaction, double *coef) {
 	superPair.a011 = coef[5];
 	superPair.a110 = coef[6];
 	superPair.a111 = coef[7];
-
-	// Add it to the list
-	effCombiningList.push_front(superPair);
 
 	return;
 }
@@ -92,17 +90,16 @@ void NESuperCluster::participateIn(DissociationReaction& reaction,
 			(reaction.first.getId() == id) ? reaction.second : reaction.first);
 
 	// Create a new SuperClusterDissociationPair
-	SuperClusterDissociationPair superPair(
+	effDissociatingList.emplace_back(
 			&static_cast<NECluster&>(reaction.dissociating), &emittedCluster,
 			&reaction);
+
 	// Update the coeficients
+    auto& superPair = effDissociatingList.back();
 	superPair.a00 = coef[0];
 	superPair.a01 = coef[1];
 	superPair.a10 = coef[2];
 	superPair.a11 = coef[3];
-
-	// Add it to the list
-	effDissociatingList.push_front(superPair);
 
 	return;
 }
@@ -110,17 +107,16 @@ void NESuperCluster::participateIn(DissociationReaction& reaction,
 void NESuperCluster::emitFrom(DissociationReaction& reaction, double *coef) {
 
 	// Create a new SuperClusterDissociationPair
-	SuperClusterDissociationPair superPair(
+	effEmissionList.emplace_back(
 			&static_cast<NECluster&>(reaction.first),
 			&static_cast<NECluster&>(reaction.second), &reaction);
+
 	// Update the coeficients
+    auto& superPair = effEmissionList.back();
 	superPair.a00 = coef[0];
 	superPair.a01 = coef[1];
 	superPair.a10 = coef[2];
 	superPair.a11 = coef[3];
-
-	// Add it to the list
-	effEmissionList.push_front(superPair);
 
 	return;
 }
@@ -321,7 +317,7 @@ void NESuperCluster::optimizeReactions() {
 			}
 
 			// Add the super pair
-			effReactingList.push_front(superPair);
+			effReactingList.emplace_back(superPair);
 
 			// Remove the reaction from the vector
 			it = pairs.erase(it);
@@ -419,7 +415,7 @@ void NESuperCluster::optimizeReactions() {
 			}
 
 			// Add the super pair
-			effCombiningList.push_front(superPair);
+			effCombiningList.emplace_back(superPair);
 
 			// Remove the reaction from the vector
 			it = clusters.erase(it);
@@ -491,7 +487,7 @@ void NESuperCluster::optimizeReactions() {
 			}
 
 			// Add the super pair
-			effDissociatingList.push_front(superPair);
+			effDissociatingList.emplace_back(superPair);
 
 			// Remove the reaction from the vector
 			it = pairs.erase(it);
@@ -564,7 +560,7 @@ void NESuperCluster::optimizeReactions() {
 			}
 
 			// Add the super pair
-			effEmissionList.push_front(superPair);
+			effEmissionList.emplace_back(superPair);
 
 			// Remove the reaction from the vector
 			it = pairs.erase(it);
@@ -629,111 +625,93 @@ void NESuperCluster::resetConnectivities() {
 	return;
 }
 
-double NESuperCluster::getTotalFlux(int i) {
-	// Initialize the moment flux
-	momentFlux = 0.0;
+void NESuperCluster::getDissociationFlux(const double* concs, int xi,
+                                            Reactant::Flux& flux) const {
 
-	// Get the fluxes
-	double prodFlux = getProductionFlux(i);
-	double dissFlux = getDissociationFlux(i);
-	double combFlux = getCombinationFlux(i);
-	double emissFlux = getEmissionFlux(i);
-
-	return prodFlux - combFlux + dissFlux - emissFlux;
-}
-
-double NESuperCluster::getDissociationFlux(int xi) {
-	// Initial declarations
-	double flux = 0.0, value = 0.0;
-	NECluster *dissociatingCluster = nullptr;
+    auto& superFlux = static_cast<NESuperCluster::Flux&>(flux);
 
 	// Loop over all the dissociating pairs
-	for (auto it = effDissociatingList.begin(); it != effDissociatingList.end();
-			++it) {
-		// Get the dissociating clusters
-		dissociatingCluster = (*it).first;
-		double l0A = dissociatingCluster->getConcentration(0.0);
-		double l1A = dissociatingCluster->getMoment();
-		// Update the flux
-		value = (*it).reaction.kConstant[xi] / (double) nTot;
-		flux += value * ((*it).a00 * l0A + (*it).a10 * l1A);
-		// Compute the moment fluxes
-		momentFlux += value * ((*it).a01 * l0A + (*it).a11 * l1A);
-	}
-
-	// Return the flux
-	return flux;
+    std::for_each(effDissociatingList.begin(), effDissociatingList.end(),
+        [this,&concs,&superFlux,xi](DissociationPairList::value_type const& currPair) {
+            // Get the dissociating clusters
+            auto const& dissociatingCluster = currPair.first;
+            double l0A = dissociatingCluster->getConcentration(concs, 0.0);
+            double l1A = dissociatingCluster->getMoment();
+            // Update the flux
+            auto value = currPair.reaction.kConstant[xi] / (double) nTot;
+            superFlux.flux += value * (currPair.a00 * l0A + currPair.a10 * l1A);
+            // Compute the moment fluxes
+            superFlux.momentFlux += value * (currPair.a01 * l0A + currPair.a11 * l1A);
+        });
 }
 
-double NESuperCluster::getEmissionFlux(int xi) {
-	// Initial declarations
-	double flux = 0.0, value = 0.0;
+void NESuperCluster::getEmissionFlux(const double* concs, int xi,
+                                        Reactant::Flux& flux) const {
+
+    auto& superFlux = static_cast<NESuperCluster::Flux&>(flux);
 
 	// Loop over all the emission pairs
-	for (auto it = effEmissionList.begin(); it != effEmissionList.end(); ++it) {
-		// Update the flux
-		value = (*it).reaction.kConstant[xi] / (double) nTot;
-		flux += value * ((*it).a00 * l0 + (*it).a10 * l1);
-		// Compute the moment fluxes
-		momentFlux -= value * ((*it).a01 * l0 + (*it).a11 * l1);
-	}
-
-	return flux;
+    std::for_each(effEmissionList.begin(), effEmissionList.end(),
+        [this,&concs,&superFlux,xi](DissociationPairList::value_type const& currPair) {
+            // Update the flux
+            auto value = currPair.reaction.kConstant[xi] / (double) nTot;
+            superFlux.flux += value * (currPair.a00 * l0 + currPair.a10 * l1);
+            // Compute the moment fluxes
+            superFlux.momentFlux -= value * (currPair.a01 * l0 + currPair.a11 * l1);
+        });
 }
 
-double NESuperCluster::getProductionFlux(int xi) {
-	// Local declarations
-	double flux = 0.0, value = 0.0;
-	NECluster *firstReactant = nullptr, *secondReactant = nullptr;
+void NESuperCluster::getProductionFlux(const double* concs, int xi,
+                                        Reactant::Flux& flux) const {
+
+    auto& superFlux = static_cast<NESuperCluster::Flux&>(flux);
 
 	// Loop over all the reacting pairs
-	for (auto it = effReactingList.begin(); it != effReactingList.end(); ++it) {
-		// Get the two reacting clusters
-		firstReactant = (*it).first;
-		secondReactant = (*it).second;
-		double l0A = firstReactant->getConcentration();
-		double l0B = secondReactant->getConcentration();
-		double l1A = firstReactant->getMoment();
-		double l1B = secondReactant->getMoment();
-		// Update the flux
-		value = (*it).reaction.kConstant[xi] / (double) nTot;
-		flux += value
-				* ((*it).a000 * l0A * l0B + (*it).a010 * l0A * l1B
-						+ (*it).a100 * l1A * l0B + (*it).a110 * l1A);
-		// Compute the moment flux
-		momentFlux += value
-				* ((*it).a001 * l0A * l0B + (*it).a011 * l0A * l1B
-						+ (*it).a101 * l1A * l0B + (*it).a111 * l1A);
-	}
+    std::for_each(effReactingList.begin(), effReactingList.end(),
+        [this,&concs,&superFlux,xi](ProductionPairList::value_type const& currPair) {
 
-	// Return the production flux
-	return flux;
+            // Get the two reacting clusters
+            auto const& firstReactant = currPair.first;
+            auto const& secondReactant = currPair.second;
+            double l0A = firstReactant->getConcentration(concs);
+            double l0B = secondReactant->getConcentration(concs);
+            double l1A = firstReactant->getMoment();
+            double l1B = secondReactant->getMoment();
+            // Update the flux
+            auto value = currPair.reaction.kConstant[xi] / (double) nTot;
+            superFlux.flux += value
+                    * (currPair.a000 * l0A * l0B + currPair.a010 * l0A * l1B
+                            + currPair.a100 * l1A * l0B + currPair.a110 * l1A);
+            // Compute the moment flux
+            superFlux.momentFlux += value
+                    * (currPair.a001 * l0A * l0B + currPair.a011 * l0A * l1B
+                            + currPair.a101 * l1A * l0B + currPair.a111 * l1A);
+        });
 }
 
-double NESuperCluster::getCombinationFlux(int xi) {
-	// Local declarations
-	double flux = 0.0, value = 0.0;
-	NECluster *combiningCluster = nullptr;
+void NESuperCluster::getCombinationFlux(const double* concs, int xi,
+                                        Reactant::Flux& flux) const {
+
+    auto& superFlux = static_cast<NESuperCluster::Flux&>(flux);
 
 	// Loop over all the combining clusters
-	for (auto it = effCombiningList.begin(); it != effCombiningList.end();
-			++it) {
-		// Get the two reacting clusters
-		combiningCluster = (*it).first;
-		double l0A = combiningCluster->getConcentration();
-		double l1A = combiningCluster->getMoment();
-		// Update the flux
-		value = (*it).reaction.kConstant[xi] / (double) nTot;
-		flux += value
-				* ((*it).a000 * l0A * l0 + (*it).a100 * l0A * l1
-						+ (*it).a010 * l1A * l0 + (*it).a110 * l1A * l1);
-		// Compute the moment flux
-		momentFlux -= value
-				* ((*it).a001 * l0A * l0 + (*it).a101 * l0A * l1
-						+ (*it).a011 * l1A * l0 + (*it).a111 * l1A * l1);
-	}
+    std::for_each(effCombiningList.begin(), effCombiningList.end(),
+        [this,&concs,&superFlux,xi](ProductionPairList::value_type const& currPair) {
 
-	return flux;
+            // Get the two reacting clusters
+            auto const& combiningCluster = currPair.first;
+            double l0A = combiningCluster->getConcentration(concs);
+            double l1A = combiningCluster->getMoment();
+            // Update the flux
+            auto value = currPair.reaction.kConstant[xi] / (double) nTot;
+            superFlux.flux += value
+                    * (currPair.a000 * l0A * l0 + currPair.a100 * l0A * l1
+                            + currPair.a010 * l1A * l0 + currPair.a110 * l1A * l1);
+            // Compute the moment flux
+            superFlux.momentFlux -= value
+                    * (currPair.a001 * l0A * l0 + currPair.a101 * l0A * l1
+                            + currPair.a011 * l1A * l0 + currPair.a111 * l1A * l1);
+        });
 }
 
 void NESuperCluster::getPartialDerivatives(std::vector<double> & partials,

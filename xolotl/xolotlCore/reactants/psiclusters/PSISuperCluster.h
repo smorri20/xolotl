@@ -4,6 +4,8 @@
 // Includes
 #include <string>
 #include <unordered_map>
+#include <algorithm>
+#include <functional>
 #include <cassert>
 #include <Constants.h>
 #include "PSICluster.h"
@@ -28,6 +30,46 @@ class PSISuperCluster: public PSICluster {
 public:
 	// Concise name for type of our HeVList.
 	using HeVListType = std::set<std::tuple<int, int, int, int>>;
+
+    // Our notion of the flux.
+    // Must be public so we can define operator+/operator-. (?)
+    struct Flux : public Reactant::Flux {
+        std::array<double, 4> momentFlux;
+
+        Flux(void) { 
+            momentFlux = {};
+        }
+
+        Flux(const Flux& other)
+          : Reactant::Flux(other) {
+            momentFlux = other.momentFlux;
+        }
+
+        Flux& operator+=(const Flux& other) {
+            // Let base class update its members.
+            Reactant::Flux::operator+=(other);
+
+            // Update our members.
+            std::transform(momentFlux.begin(), momentFlux.end(),    // src1
+                            other.momentFlux.begin(),               // src2
+                            momentFlux.begin(),                     // dest
+                            std::plus<double>());                   // op
+            return *this;
+        }
+
+        Flux& operator-=(const Flux& other) { 
+            // Let base class update its members.
+            Reactant::Flux::operator-=(other);
+
+            // Update our members.
+            std::transform(momentFlux.begin(), momentFlux.end(),    // src1
+                            other.momentFlux.begin(),               // src2
+                            momentFlux.begin(),                     // dest
+                            std::minus<double>());                  // op
+
+            return *this;
+        }
+    };
 
 private:
 	static std::string buildName(double nHe, double nD, double nT, double nV) {
@@ -363,7 +405,7 @@ private:
 	/**
 	 * The first moment flux.
 	 */
-	double momentFlux[4] = { };
+    std::array<double, 4> momentFlux;
 
 	/**
 	 * Output coefficients for a given reaction to the given output stream.
@@ -440,6 +482,54 @@ private:
      */
     template<uint32_t Axis>
     double getTotalAtomConcHelper(const double* concs) const;
+
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * other clusters dissociating into it. Compute the contributions to
+	 * the moment fluxes at the same time.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to dissociation of other clusters
+	 */
+	void getDissociationFlux(const double* concs, int i,
+                                Reactant::Flux& flux) const override;
+
+	/**
+	 * This operation returns the total change in this cluster due its
+	 * own dissociation. Compute the contributions to
+	 * the moment fluxes at the same time.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to its dissociation
+	 */
+	void getEmissionFlux(const double* concs, int i,
+                                Reactant::Flux& flux) const override;
+
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * the production of this cluster by other clusters. Compute the contributions to
+	 * the moment fluxes at the same time.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to this cluster being produced
+	 */
+	void getProductionFlux(const double* concs, int i,
+                                Reactant::Flux& flux) const override;
+
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * the combination of this cluster with others. Compute the contributions to
+	 * the moment fluxes at the same time.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to this cluster combining with other clusters
+	 */
+	void getCombinationFlux(const double* concs, int i,
+                                Reactant::Flux& flux) const override;
 
 public:
 
@@ -819,55 +909,18 @@ public:
 	 * @return The total change in flux for this cluster due to all
 	 * reactions
 	 */
-	double getTotalFlux(int i) override {
-		// Initialize the fluxes
-		momentFlux[0] = 0.0, momentFlux[1] = 0.0, momentFlux[2] = 0.0, momentFlux[3] =
-				0.0;
+	double getTotalFlux(const double* concs, int i) override {
 
-		// Compute the fluxes.
-		return getProductionFlux(i) - getCombinationFlux(i)
-				+ getDissociationFlux(i) - getEmissionFlux(i);
-	}
+        // Compute the total flux.
+        auto flux = getTotalFluxHelper<PSISuperCluster::Flux>(concs, i);
 
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * other clusters dissociating into it. Compute the contributions to
-	 * the moment fluxes at the same time.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to dissociation of other clusters
-	 */
-	double getDissociationFlux(int i);
+        // Update our moment fluxes.
+        // TODO remove this side effect.
+        std::copy(flux.momentFlux.begin(), flux.momentFlux.end(),   // src begin/end
+                    momentFlux.begin());                            // dest begin
 
-	/**
-	 * This operation returns the total change in this cluster due its
-	 * own dissociation. Compute the contributions to
-	 * the moment fluxes at the same time.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to its dissociation
-	 */
-	double getEmissionFlux(int i);
-
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * the production of this cluster by other clusters. Compute the contributions to
-	 * the moment fluxes at the same time.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to this cluster being produced
-	 */
-	double getProductionFlux(int i);
-
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * the combination of this cluster with others. Compute the contributions to
-	 * the moment fluxes at the same time.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to this cluster combining with other clusters
-	 */
-	double getCombinationFlux(int i);
+        return flux.flux;
+    }
 
 	/**
 	 * This operation returns the total change for its first moment.
@@ -1056,6 +1109,22 @@ public:
 	virtual void outputCoefficientsTo(std::ostream& os) const override;
 };
 //end class PSISuperCluster
+
+inline
+const PSISuperCluster::Flux operator+(const PSISuperCluster::Flux& a,
+                                    const PSISuperCluster::Flux& b) {
+    PSISuperCluster::Flux ret(a);
+    ret += b;
+    return ret;
+}
+
+inline
+const PSISuperCluster::Flux operator-(const PSISuperCluster::Flux& a,
+                                    const PSISuperCluster::Flux& b) {
+    PSISuperCluster::Flux ret(a);
+    ret -= b;
+    return ret;
+}
 
 }
 /* end namespace xolotlCore */

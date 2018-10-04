@@ -53,6 +53,50 @@ protected:
 	 */
 	const std::set<int> & getDissociationConnectivitySet() const;
 
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * other clusters dissociating into it.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to dissociation of other clusters
+	 */
+	void getDissociationFlux(const double* concs, int i,
+                            Reactant::Flux& flux) const override;
+
+	/**
+	 * This operation returns the total change in this cluster due its
+	 * own dissociation.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to its dissociation
+	 */
+	void getEmissionFlux(const double* concs, int i,
+                            Reactant::Flux& flux) const override;
+
+	/**
+	 * This operation param[out] fluxs the total change in this cluster due to
+	 * the production of this cluster by other clusters.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to this cluster being produced
+	 */
+	void getProductionFlux(const double* concs, int i,
+                            Reactant::Flux& flux) const override;
+
+	/**
+	 * This operation param[out] fluxs the total change in this cluster due to
+	 * the combination of this cluster with others.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to this cluster combining with other clusters
+	 */
+	void getCombinationFlux(const double* concs, int i,
+                            Reactant::Flux& flux) const override;
+
 public:
 
 	/**
@@ -314,6 +358,10 @@ public:
 		// without having to cast (I was thinking it would save time)
 		return concentration;
 	}
+    virtual double getConcentration(const double* concs, double distXe) const {
+		// TODO should this ever be called?  It ignores the argument.
+		return concs[id - 1];
+    }
 
 	/**
 	 * Obtain current concentration.
@@ -342,43 +390,11 @@ public:
 	 * @return The total change in flux for this cluster due to all
 	 * reactions
 	 */
-	virtual double getTotalFlux(int i) override;
-
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * other clusters dissociating into it.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to dissociation of other clusters
-	 */
-	virtual double getDissociationFlux(int i) const;
-
-	/**
-	 * This operation returns the total change in this cluster due its
-	 * own dissociation.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to its dissociation
-	 */
-	virtual double getEmissionFlux(int i) const;
-
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * the production of this cluster by other clusters.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to this cluster being produced
-	 */
-	virtual double getProductionFlux(int i) const;
-
-	/**
-	 * This operation returns the total change in this cluster due to
-	 * the combination of this cluster with others.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The flux due to this cluster combining with other clusters
-	 */
-	virtual double getCombinationFlux(int i) const;
+	double getTotalFlux(const double* concs, int i) override {
+        // Compute total flux.
+        auto flux = getTotalFluxHelper<Reactant::Flux>(concs, i);
+        return flux.flux;
+    }
 
 	/**
 	 * This operation returns the list of partial derivatives of this cluster

@@ -64,6 +64,32 @@ namespace xolotlCore {
  */
 class Reactant: public IReactant {
 
+public:
+    /**
+     * Basic flux that Reactants know how to compute.
+     * Must be public so we can define operator+/operator- for it.
+     * TODO is there another way?
+     */
+    struct Flux {
+        double flux;
+
+        Flux(void)
+          : flux(0)
+        { }
+
+        Flux(const Flux& other) = default;
+
+        Flux& operator+=(const Flux& other) {
+            flux += other.flux;
+            return *this;
+        }
+
+        Flux& operator-=(const Flux& other) {
+            flux -= other.flux;
+            return *this;
+        }
+    };
+
 protected:
 
 	/**
@@ -175,6 +201,77 @@ protected:
 	 */
 	void recomputeDiffusionCoefficient(double temp, int i);
 
+
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * other clusters dissociating into it.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to dissociation of other clusters
+	 */
+    virtual void getDissociationFlux(const double* concs, int i,
+                                        Reactant::Flux& flux) const = 0;
+
+	/**
+	 * This operation returns the total change in this cluster due its
+	 * own dissociation.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to its dissociation
+	 */
+    virtual void getEmissionFlux(const double* concs, int i,
+                                        Reactant::Flux& flux) const = 0;
+
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * the production of this cluster by other clusters.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to this cluster being produced
+	 */
+    virtual void getProductionFlux(const double* concs, int i,
+                                        Reactant::Flux& flux) const = 0;
+
+	/**
+	 * This operation returns the total change in this cluster due to
+	 * the combination of this cluster with others.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] flux The flux due to this cluster combining with other clusters
+	 */
+    virtual void getCombinationFlux(const double* concs, int i,
+                                        Reactant::Flux& flux) const = 0;
+
+    template<typename FluxType>
+    FluxType getTotalFluxHelper(const double* concs, int i) {
+
+        // Compute the individual fluxes.
+        //
+        // NOTE: We would much prefer to have the get*Flux() methods 
+        // return our type of flux, but our class hierarchy needs them to be 
+        // virtual and we have differing Flux types than our base class
+        // that we would use a return type.
+        FluxType prodFlux;
+        getProductionFlux(concs, i, prodFlux);
+
+        FluxType combFlux;
+        getCombinationFlux(concs, i, combFlux);
+
+        FluxType dissFlux;
+        getDissociationFlux(concs, i, dissFlux);
+
+        FluxType emitFlux;
+        getEmissionFlux(concs, i, emitFlux);
+
+        // Compute the total flux.
+        return prodFlux - combFlux + dissFlux - emitFlux;
+    }
+
+
 public:
 
 	/**
@@ -203,7 +300,7 @@ public:
 	 *
 	 * @param other The reactant to copy
 	 */
-	Reactant(Reactant &other) :
+	Reactant(const Reactant &other) :
 			concentration(other.concentration), name(other.name), type(
 					other.type), id(other.id), temperature(other.temperature), network(
 					other.network), handlerRegistry(other.handlerRegistry), size(
@@ -477,11 +574,13 @@ public:
 	 * This operation returns the total flux of this reactant in the
 	 * current network.
 	 *
+     * @param concs Solution array for desired grid point.
 	 * @param i The location on the grid in the depth direction
 	 * @return The total change in flux for this reactant due to all
 	 * reactions
 	 */
-	virtual double getTotalFlux(int i) override {
+	virtual double getTotalFlux(const double* concs, int i) override {
+        assert(false);  // should not be called.
 		return 0.0;
 	}
 
@@ -841,6 +940,28 @@ public:
 		// Nothing to do.
 	}
 };
+
+
+/**
+ * Add two Reactant::Fluxes.
+ */
+inline
+const Reactant::Flux operator+(const Reactant::Flux& a, const Reactant::Flux& b) {
+    Reactant::Flux ret(a);
+    ret += b;
+    return ret;
+}
+
+/**
+ * Subtract two Reactant::Fluxes.
+ */
+inline
+const Reactant::Flux operator-(const Reactant::Flux& a, const Reactant::Flux& b) {
+    Reactant::Flux ret(a);
+    ret -= b;
+    return ret;
+}
+
 
 } // end namespace xolotlCore
 

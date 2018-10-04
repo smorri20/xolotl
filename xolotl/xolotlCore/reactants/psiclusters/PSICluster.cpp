@@ -763,15 +763,16 @@ void PSICluster::updateFromNetwork() {
 	return;
 }
 
-double PSICluster::getDissociationFlux(int xi) const {
+void PSICluster::getDissociationFlux(const double* concs, int xi,
+                                    Reactant::Flux& flux) const {
 
 	// Sum dissociation flux over all our dissociating clusters.
-	double flux = std::accumulate(dissociatingPairs.begin(),
+    flux.flux = std::accumulate(dissociatingPairs.begin(),
 			dissociatingPairs.end(), 0.0,
-			[this,&xi](double running, const ClusterPair& currPair) {
+			[this,&concs,&xi](double running, const ClusterPair& currPair) {
 				auto const& dissCluster = currPair.first;
 				double lA[5] = {};
-				lA[0] = dissCluster.getConcentration();
+				lA[0] = dissCluster.getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
 					lA[i] = dissCluster.getMoment(indexList[i] - 1);
 				}
@@ -785,35 +786,33 @@ double PSICluster::getDissociationFlux(int xi) const {
 				return running +
 				(currPair.reaction.kConstant[xi] * sum);
 			});
-
-	// Return the flux
-	return flux;
 }
 
-double PSICluster::getEmissionFlux(int xi) const {
+
+void PSICluster::getEmissionFlux(const double* concs, int xi,
+                                    Reactant::Flux& flux) const {
 
 	// Sum rate constants from all emission pair reactions.
-	double flux =
+	flux.flux = 
 			std::accumulate(emissionPairs.begin(), emissionPairs.end(), 0.0,
 					[&xi](double running, const ClusterPair& currPair) {
 						return running + (currPair.reaction.kConstant[xi] * currPair.coefs[0][0]);
-					});
-
-	return flux * concentration;
+					}) * getConcentration(concs);
 }
 
-double PSICluster::getProductionFlux(int xi) const {
+void PSICluster::getProductionFlux(const double* concs, int xi,
+                                    Reactant::Flux& flux) const {
 
 	// Sum production flux over all reacting pairs.
-	double flux = std::accumulate(reactingPairs.begin(), reactingPairs.end(),
-			0.0, [this,&xi](double running, const ClusterPair& currPair) {
+	flux.flux = std::accumulate(reactingPairs.begin(), reactingPairs.end(),
+			0.0, [this,&concs,&xi](double running, const ClusterPair& currPair) {
 
 				// Get the two reacting clusters
 			auto const& firstReactant = currPair.first;
 			auto const& secondReactant = currPair.second;
 			double lA[5] = {}, lB[5] = {};
-			lA[0] = firstReactant.getConcentration();
-			lB[0] = secondReactant.getConcentration();
+			lA[0] = firstReactant.getConcentration(concs);
+			lB[0] = secondReactant.getConcentration(concs);
 			for (int i = 1; i < psDim; i++) {
 				lA[i] = firstReactant.getMoment(indexList[i] - 1);
 				lB[i] = secondReactant.getMoment(indexList[i] - 1);
@@ -829,22 +828,20 @@ double PSICluster::getProductionFlux(int xi) const {
 			return running + (currPair.reaction.kConstant[xi] *
 					sum);
 		});
-
-	// Return the production flux
-	return flux;
 }
 
-double PSICluster::getCombinationFlux(int xi) const {
+void PSICluster::getCombinationFlux(const double* concs, int xi,
+                                    Reactant::Flux& flux) const {
 
 	// Sum combination flux over all clusters that combine with us.
-	double flux = std::accumulate(combiningReactants.begin(),
+	flux.flux = std::accumulate(combiningReactants.begin(),
 			combiningReactants.end(), 0.0,
-			[this,&xi](double running, const CombiningCluster& cc) {
+			[this,&concs,&xi](double running, const CombiningCluster& cc) {
 
 				// Get the cluster that combines with this one
 				auto const& combiningCluster = cc.combining;
 				double lB[5] = {};
-				lB[0] = combiningCluster.getConcentration();
+				lB[0] = combiningCluster.getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
 					lB[i] = combiningCluster.getMoment(indexList[i] - 1);
 				}
@@ -857,9 +854,7 @@ double PSICluster::getCombinationFlux(int xi) const {
 				return running + (cc.reaction.kConstant[xi] *
 						sum);
 
-			});
-
-	return flux * concentration;
+			}) * getConcentration(concs);
 }
 
 std::vector<double> PSICluster::getPartialDerivatives(int i) const {

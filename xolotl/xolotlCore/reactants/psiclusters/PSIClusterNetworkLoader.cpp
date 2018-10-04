@@ -16,6 +16,7 @@
 #include <PSITCluster.h>
 #include <MathUtils.h>
 #include <cassert>
+#include "DummyReactant.h"
 
 using namespace xolotlCore;
 
@@ -137,7 +138,7 @@ void PSIClusterNetworkLoader::pushPSICluster(
 	// Check if we want dummy reactions
 	if (dummyReactions) {
 		// Create a dummy cluster (Reactant) from the existing cluster
-		auto dummyCluster = std::unique_ptr<Reactant>(new Reactant(*cluster));
+		auto dummyCluster = std::unique_ptr<Reactant>(new DummyReactant(*cluster));
 		// Save access to it so we can trigger updates after
 		// we add all to the network.
 		reactants.emplace_back(*dummyCluster);

@@ -213,7 +213,7 @@ void PetscSolver0DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 	fluxHandler->computeIncidentFlux(ftime, updatedConcOffset, 0, 0);
 
 	// ----- Compute the reaction fluxes over the locally owned part of the grid -----
-	network.computeAllFluxes(updatedConcOffset);
+	network.computeAllFluxes(concOffset, updatedConcOffset, 0);
 
 	/*
 	 Restore vectors

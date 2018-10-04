@@ -1724,14 +1724,14 @@ double PSIClusterReactionNetwork::getTotalIConcentration(
 	return iConc;
 }
 
-void PSIClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset,
-		int xi) {
+void PSIClusterReactionNetwork::computeAllFluxes(const double* concs,
+        double *updatedConcOffset, int xi) {
 
 	// ----- Compute all of the new fluxes -----
 	std::for_each(allReactants.begin(), allReactants.end(),
-			[&updatedConcOffset,&xi](IReactant& cluster) {
+			[&concs,&updatedConcOffset,&xi](IReactant& cluster) {
 				// Compute the flux
-				auto flux = cluster.getTotalFlux(xi);
+				auto flux = cluster.getTotalFlux(concs, xi);
 				// Update the concentration of the cluster
 				auto reactantIndex = cluster.getId() - 1;
 				updatedConcOffset[reactantIndex] += flux;
