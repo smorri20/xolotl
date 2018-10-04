@@ -602,14 +602,7 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 		}
 
 		void FeClusterReactionNetwork::updateConcentrationsFromArray(
-				double * concentrations) {
-
-			// Set the concentration on each reactant.
-			std::for_each(allReactants.begin(), allReactants.end(),
-					[&concentrations](IReactant& currReactant) {
-						auto id = currReactant.getId() - 1;
-						currReactant.setConcentration(concentrations[id]);
-					});
+				const double * concentrations) {
 
 			// Set the moments
 			auto const& superTypeMap = getAll(ReactantType::FeSuper);
@@ -732,7 +725,7 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 				double size = cluster.getSize();
 
 				// Add the concentration times the He content to the total helium concentration
-				heliumConc += cluster.getConcentration() * size;
+				heliumConc += cluster.getConcentration(concs) * size;
 			}
 
 			// Sum over all HeV clusters.
@@ -743,7 +736,7 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 				auto& comp = cluster.getComposition();
 
 				// Add the concentration times the He content to the total helium concentration
-				heliumConc += cluster.getConcentration()
+				heliumConc += cluster.getConcentration(concs)
 						* comp[toCompIdx(Species::He)];
 			}
 
@@ -755,7 +748,7 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 						static_cast<FeSuperCluster&>(*(currMapItem.second));
 
 				// Add its total helium concentration helium concentration
-				heliumConc += cluster.getTotalHeliumConcentration();
+				heliumConc += cluster.getTotalHeliumConcentration(concs);
 			}
 
 			return heliumConc;
@@ -775,7 +768,7 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 				auto& comp = cluster.getComposition();
 
 				// Add the concentration times the He content to the total helium concentration
-				heliumConc += cluster.getConcentration()
+				heliumConc += cluster.getConcentration(concs)
 						* comp[toCompIdx(Species::He)];
 			}
 
@@ -786,7 +779,7 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 						static_cast<FeSuperCluster&>(*(currMapItem.second));
 
 				// Add its total helium concentration
-				heliumConc += cluster.getTotalHeliumConcentration();
+				heliumConc += cluster.getTotalHeliumConcentration(concs);
 			}
 
 			return heliumConc;

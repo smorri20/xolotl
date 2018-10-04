@@ -103,10 +103,10 @@ public:
 	 * network.
 	 * @param i The location on the grid in the depth direction
 	 */
-	void getEmissionPartialDerivatives(std::vector<double> & partials,
-			int i) const override {
+	void getEmissionPartialDerivatives(const double* concs, int i,
+            std::vector<double> & partials) const override {
 		// Initial declarations
-		FeCluster::getEmissionPartialDerivatives(partials, i);
+		FeCluster::getEmissionPartialDerivatives(concs, i, partials);
 
 		// Compute the loss to dislocation sinks
 		if (size < 2) {

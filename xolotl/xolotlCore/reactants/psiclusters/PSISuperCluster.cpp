@@ -1327,8 +1327,8 @@ void PSISuperCluster::computeProductionPartialDerivatives(const double* concs,
 				auto const& firstReactant = currPair.first;
 				auto const& secondReactant = currPair.second;
 				double lA[5] = {}, lB[5] = {};
-				lA[0] = firstReactant.getConcentration();
-				lB[0] = secondReactant.getConcentration();
+				lA[0] = firstReactant.getConcentration(concs);
+				lB[0] = secondReactant.getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
 					lA[i] = firstReactant.getMoment(concs, indexList[i]-1);
 					lB[i] = secondReactant.getMoment(concs, indexList[i]-1);

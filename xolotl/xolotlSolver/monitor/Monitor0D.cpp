@@ -211,7 +211,7 @@ PetscErrorCode monitorScatter0D(TS ts, PetscInt timestep, PetscReal time,
 			// Create a Point with the concentration[i] as the value
 			// and add it to myPoints
 			xolotlViz::Point aPoint;
-			aPoint.value = cluster.getConcentration(dist);
+			aPoint.value = cluster.getConcentration(gridPointSolution, dist);
 			aPoint.t = time;
 			aPoint.x = (double) nXe + k;
 			myPoints->push_back(aPoint);
@@ -314,7 +314,7 @@ PetscErrorCode monitorBubble0D(TS ts, PetscInt timestep, PetscReal time,
 		// Get its diameter
 		double diam = 2.0 * superCluster.getReactionRadius();
 		// Get its concentration
-		double conc = superCluster.getConcentration(0.0, 0.0);
+		double conc = superCluster.getConcentration(gridPointSolution, 0.0, 0.0);
 
 		// For compatibility with previous versions, we output
 		// the value of a closed upper bound of the He and V intervals.

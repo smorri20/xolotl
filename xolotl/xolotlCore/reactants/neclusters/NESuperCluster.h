@@ -362,10 +362,11 @@ public:
 	/**
 	 * This operation returns the current concentration.
 	 *
+     * @param concs Current solution vector for desired grid point.
 	 * @param distXe The xenon distance in the group
 	 * @return The concentration of this reactant
 	 */
-	double getConcentration(double distXe) const override {
+	double getConcentration(const double* concs, double distXe) const override {
 		return l0 + (distXe * l1);
 	}
 
@@ -379,16 +380,18 @@ public:
 	/**
 	 * This operation returns the current total concentration of clusters in the group.
 
+     * @param concs Current solution vector for desired grid point.
 	 * @return The concentration
 	 */
-	double getTotalConcentration() const;
+	double getTotalConcentration(const double* concs) const;
 
 	/**
 	 * This operation returns the current total concentration of xenon in the group.
 
+     * @param concs Current solution vector for desired grid point.
 	 * @return The concentration
 	 */
-	double getTotalXenonConcentration() const;
+	double getTotalXenonConcentration(const double* concs) const;
 
 	/**
 	 * This operation returns the distance to the mean.
@@ -484,49 +487,61 @@ public:
 	 * This operation computes the partial derivatives due to production
 	 * reactions.
 	 *
-	 * @param partials The vector into which the partial derivatives should be
-	 * inserted. This vector should have a length equal to the size of the
-	 * network.
+     * @param concs Current solution vector for desired grid point.
 	 * @param i The location on the grid in the depth direction
+	 * @param[out] partials The vector that should be filled with the partial 
+     * derivatives for this reactant where index zero corresponds to the first 
+     * reactant in the list returned by the ReactionNetwork::getAll() 
+     * operation. The size of the vector should be equal to 
+     * ReactionNetwork::size().
 	 */
-	void getProductionPartialDerivatives(std::vector<double> & partials,
-			int i) const override;
+	void getProductionPartialDerivatives(const double* concs, int i,
+            std::vector<double> & partials) const override;
 
 	/**
 	 * This operation computes the partial derivatives due to combination
 	 * reactions.
 	 *
-	 * @param partials The vector into which the partial derivatives should be
-	 * inserted. This vector should have a length equal to the size of the
-	 * network.
+     * @param concs Current solution vector for desired grid point.
 	 * @param i The location on the grid in the depth direction
+	 * @param[out] partials The vector that should be filled with the partial 
+     * derivatives for this reactant where index zero corresponds to the first 
+     * reactant in the list returned by the ReactionNetwork::getAll() 
+     * operation. The size of the vector should be equal to 
+     * ReactionNetwork::size().
 	 */
-	void getCombinationPartialDerivatives(std::vector<double> & partials,
-			int i) const override;
+	void getCombinationPartialDerivatives(const double* concs, int i,
+            std::vector<double> & partials) const override;
 
 	/**
 	 * This operation computes the partial derivatives due to dissociation of
 	 * other clusters into this one.
 	 *
-	 * @param partials The vector into which the partial derivatives should be
-	 * inserted. This vector should have a length equal to the size of the
-	 * network.
+     * @param concs Current solution vector for desired grid point.
 	 * @param i The location on the grid in the depth direction
+	 * @param[out] partials The vector that should be filled with the partial 
+     * derivatives for this reactant where index zero corresponds to the first 
+     * reactant in the list returned by the ReactionNetwork::getAll() 
+     * operation. The size of the vector should be equal to 
+     * ReactionNetwork::size().
 	 */
-	void getDissociationPartialDerivatives(std::vector<double> & partials,
-			int i) const override;
+	void getDissociationPartialDerivatives(const double* concs, int i,
+            std::vector<double> & partials) const override;
 
 	/**
 	 * This operation computes the partial derivatives due to emission
 	 * reactions.
 	 *
-	 * @param partials The vector into which the partial derivatives should be
-	 * inserted. This vector should have a length equal to the size of the
-	 * network.
+     * @param concs Current solution vector for desired grid point.
 	 * @param i The location on the grid in the depth direction
+	 * @param[out] partials The vector that should be filled with the partial 
+     * derivatives for this reactant where index zero corresponds to the first 
+     * reactant in the list returned by the ReactionNetwork::getAll() 
+     * operation. The size of the vector should be equal to 
+     * ReactionNetwork::size().
 	 */
-	void getEmissionPartialDerivatives(std::vector<double> & partials,
-			int i) const override;
+	void getEmissionPartialDerivatives(const double* concs, int i,
+            std::vector<double> & partials) const override;
 
 	/**
 	 * This operation computes the partial derivatives for the xenon moment.

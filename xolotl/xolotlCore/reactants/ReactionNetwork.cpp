@@ -108,28 +108,6 @@ double ReactionNetwork::calculateReactionRateConstant(
 	return k_plus;
 }
 
-void ReactionNetwork::fillConcentrationsArray(double * concentrations) {
-
-	// Fill the array
-	std::for_each(allReactants.begin(), allReactants.end(),
-			[&concentrations](const IReactant& currReactant) {
-				auto id = currReactant.getId() - 1;
-				concentrations[id] = currReactant.getConcentration();
-			});
-
-	return;
-}
-
-void ReactionNetwork::updateConcentrationsFromArray(double * concentrations) {
-
-	std::for_each(allReactants.begin(), allReactants.end(),
-			[&concentrations](IReactant& currReactant) {
-				auto id = currReactant.getId() - 1;
-				currReactant.setConcentration(concentrations[id]);
-			});
-
-	return;
-}
 
 void ReactionNetwork::setTemperature(double temp, int i) {
 	// Set the temperature

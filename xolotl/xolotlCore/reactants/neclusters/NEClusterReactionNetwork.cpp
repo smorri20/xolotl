@@ -159,14 +159,7 @@ void NEClusterReactionNetwork::reinitializeConnectivities() {
 }
 
 void NEClusterReactionNetwork::updateConcentrationsFromArray(
-		double * concentrations) {
-
-	// Set the concentration on each reactant.
-	std::for_each(allReactants.begin(), allReactants.end(),
-			[&concentrations](IReactant& currReactant) {
-				auto id = currReactant.getId() - 1;
-				currReactant.setConcentration(concentrations[id]);
-			});
+		const double* concentrations) {
 
 	// Set the moments
 	auto const& superTypeMap = getAll(ReactantType::NESuper);

@@ -372,16 +372,16 @@ void NECluster::getPartialDerivatives(const double* concs, int i,
         std::vector<double> & partials) const {
 
 	// Get the partial derivatives for each reaction type
-	getProductionPartialDerivatives(partials, i);
-	getCombinationPartialDerivatives(partials, i);
-	getDissociationPartialDerivatives(partials, i);
-	getEmissionPartialDerivatives(partials, i);
+	getProductionPartialDerivatives(concs, i, partials);
+	getCombinationPartialDerivatives(concs, i, partials);
+	getDissociationPartialDerivatives(concs, i, partials);
+	getEmissionPartialDerivatives(concs, i, partials);
 
 	return;
 }
 
-void NECluster::getProductionPartialDerivatives(std::vector<double> & partials,
-		int xi) const {
+void NECluster::getProductionPartialDerivatives(const double* concs, int xi,
+        std::vector<double> & partials) const {
 
 	// Production
 	// A + B --> D, D being this cluster
@@ -391,13 +391,13 @@ void NECluster::getProductionPartialDerivatives(std::vector<double> & partials,
 	// dF(C_D)/dC_A = k+_(A,B)*C_B
 	// dF(C_D)/dC_B = k+_(A,B)*C_A
 	std::for_each(reactingPairs.begin(), reactingPairs.end(),
-			[&partials,&xi](ClusterPair const& currPair) {
+			[&concs,&partials,xi](ClusterPair const& currPair) {
 
 				Reaction const& currReaction = currPair.reaction;
 
 				// Compute the contribution from the first part of the reacting pair
 				auto value = currReaction.kConstant[xi]
-				* currPair.second->getConcentration(
+				* currPair.second->getConcentration(concs,
 						currPair.secondDistance);
 				auto index = currPair.first->id - 1;
 				partials[index] += value;
@@ -405,7 +405,7 @@ void NECluster::getProductionPartialDerivatives(std::vector<double> & partials,
 				partials[index] += value * currPair.firstDistance;
 				// Compute the contribution from the second part of the reacting pair
 				value = currReaction.kConstant[xi]
-				* currPair.first->getConcentration(
+				* currPair.first->getConcentration(concs,
 						currPair.firstDistance);
 				index = currPair.second->id - 1;
 				partials[index] += value;
@@ -416,8 +416,8 @@ void NECluster::getProductionPartialDerivatives(std::vector<double> & partials,
 	return;
 }
 
-void NECluster::getCombinationPartialDerivatives(std::vector<double> & partials,
-		int xi) const {
+void NECluster::getCombinationPartialDerivatives(const double* concs, int xi,
+        std::vector<double> & partials) const {
 
 	// Combination
 	// A + B --> D, A being this cluster
@@ -427,7 +427,7 @@ void NECluster::getCombinationPartialDerivatives(std::vector<double> & partials,
 	// dF(C_A)/dC_A = - k+_(A,B)*C_B
 	// dF(C_A)/dC_B = - k+_(A,B)*C_A
 	std::for_each(combiningReactants.begin(), combiningReactants.end(),
-			[this,&partials,&xi](const CombiningCluster& cc) {
+			[this,&concs,&partials,xi](const CombiningCluster& cc) {
 
 				NECluster const& cluster = *cc.combining;
 				Reaction const& currReaction = cc.reaction;
@@ -435,9 +435,9 @@ void NECluster::getCombinationPartialDerivatives(std::vector<double> & partials,
 				// Remember that the flux due to combinations is OUTGOING (-=)!
 				// Compute the contribution from this cluster
 				partials[id - 1] -= currReaction.kConstant[xi] *
-				cluster.getConcentration(cc.distance);
+				cluster.getConcentration(concs, cc.distance);
 				// Compute the contribution from the combining cluster
-				double value = currReaction.kConstant[xi] * concentration;
+				double value = currReaction.kConstant[xi] * getConcentration(concs);
 
 				partials[cluster.id - 1] -= value;
 				partials[cluster.momId[0] - 1] -= value * cc.distance;
@@ -446,8 +446,8 @@ void NECluster::getCombinationPartialDerivatives(std::vector<double> & partials,
 	return;
 }
 
-void NECluster::getDissociationPartialDerivatives(
-		std::vector<double> & partials, int xi) const {
+void NECluster::getDissociationPartialDerivatives(const double* concs, int xi,
+		std::vector<double> & partials) const {
 
 	// Dissociation
 	// A --> B + D, B being this cluster
@@ -456,7 +456,7 @@ void NECluster::getDissociationPartialDerivatives(
 	// Thus, the partial derivatives
 	// dF(C_B)/dC_A = k-_(B,D)
 	std::for_each(dissociatingPairs.begin(), dissociatingPairs.end(),
-			[&partials,&xi](const ClusterPair& currPair) {
+			[&concs,&partials,xi](const ClusterPair& currPair) {
 				// Get the dissociating cluster
 				NECluster* cluster = currPair.first;
 				Reaction const& currReaction = currPair.reaction;
@@ -468,8 +468,8 @@ void NECluster::getDissociationPartialDerivatives(
 	return;
 }
 
-void NECluster::getEmissionPartialDerivatives(std::vector<double> & partials,
-		int xi) const {
+void NECluster::getEmissionPartialDerivatives(const double* concs, int xi,
+        std::vector<double> & partials) const {
 
 	// Emission
 	// A --> B + D, A being this cluster
@@ -479,7 +479,7 @@ void NECluster::getEmissionPartialDerivatives(std::vector<double> & partials,
 	// dF(C_A)/dC_A = - k-_(B,D)
 	double emissionFlux = std::accumulate(emissionPairs.begin(),
 			emissionPairs.end(), 0.0,
-			[&xi](double running, const ClusterPair& currPair) {
+			[xi](double running, const ClusterPair& currPair) {
 				Reaction const& currReaction = currPair.reaction;
 				return running + currReaction.kConstant[xi];
 			});
@@ -490,23 +490,23 @@ void NECluster::getEmissionPartialDerivatives(std::vector<double> & partials,
 	return;
 }
 
-double NECluster::getLeftSideRate(int i) const {
+double NECluster::getLeftSideRate(const double* concs, int i) const {
 
 	// Sum reaction rate contributions over all combining clusters.
 	double combiningRateTotal = std::accumulate(combiningReactants.begin(),
 			combiningReactants.end(), 0.0,
-			[&i](double running, const CombiningCluster& currPair) {
+			[&concs,i](double running, const CombiningCluster& currPair) {
 				NECluster const& cluster = *currPair.combining;
 				Reaction const& currReaction = currPair.reaction;
 
 				return running + (currReaction.kConstant[i] *
-						cluster.concentration);
+						cluster.getConcentration(concs));
 			});
 
 	// Sum reaction rate constants over all emission pairs.
 	double emissionRateTotal = std::accumulate(emissionPairs.begin(),
 			emissionPairs.end(), 0.0,
-			[&i](double running, const ClusterPair& currPair) {
+			[i](double running, const ClusterPair& currPair) {
 				Reaction const& currReaction = currPair.reaction;
 				return running + currReaction.kConstant[i];
 			});

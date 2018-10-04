@@ -194,17 +194,6 @@ public:
 			std::unique_ptr<DissociationReaction> reaction) = 0;
 
 	/**
-	 * This operation fills an array of doubles with the concentrations of all
-	 * of the reactants in the network.
-	 *
-	 * @param concentrations The array that will be filled with the
-	 * concentrations. This operation does NOT create, destroy or resize the
-	 * array. If the array is too small to hold the concentrations, SIGSEGV will
-	 * be thrown.
-	 */
-	virtual void fillConcentrationsArray(double * concentrations) = 0;
-
-	/**
 	 * This operation updates the concentrations for all reactants in the
 	 * network from an array.
 	 *
@@ -213,7 +202,7 @@ public:
 	 * array. Properly aligning the array in memory so that this operation
 	 * does not overrun is up to the caller.
 	 */
-	virtual void updateConcentrationsFromArray(double * concentrations) = 0;
+	virtual void updateConcentrationsFromArray(const double* concentrations) = 0;
 
 	/**
 	 * Get the diagonal fill for the Jacobian, corresponding to the reactions.

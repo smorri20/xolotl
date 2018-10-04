@@ -943,7 +943,7 @@ void PSICluster::getCombinationPartialDerivatives(const double* concs, int xi,
 				partials[id - 1] -= cc.reaction.kConstant[xi]
 				* sum;
 				// Compute the contribution from the combining cluster
-				double value = cc.reaction.kConstant[xi] * concentration;
+				double value = cc.reaction.kConstant[xi] * getConcentration(concs);
 				partials[cluster.id - 1] -= value * cc.coefs[0];
 
 				for (int i = 1; i < psDim; i++) {
@@ -996,21 +996,21 @@ void PSICluster::getEmissionPartialDerivatives(std::vector<double> & partials,
 	return;
 }
 
-double PSICluster::getLeftSideRate(int i) const {
+double PSICluster::getLeftSideRate(const double* concs, int i) const {
 
 	// Sum rate constant-concentration product over combining reactants.
 	double combiningRateTotal =
 			std::accumulate(combiningReactants.begin(),
 					combiningReactants.end(), 0.0,
-					[&i](double running, const CombiningCluster& cc) {
+					[&concs,i](double running, const CombiningCluster& cc) {
 						return running +
-						(cc.reaction.kConstant[i] * cc.combining.concentration * cc.coefs[0]);
+						(cc.reaction.kConstant[i] * cc.combining.getConcentration(concs) * cc.coefs[0]);
 					});
 
 	// Sum rate constants over all emission pair reactions.
 	double emissionRateTotal =
 			std::accumulate(emissionPairs.begin(), emissionPairs.end(), 0.0,
-					[&i](double running, const ClusterPair& currPair) {
+					[i](double running, const ClusterPair& currPair) {
 						return running + (currPair.reaction.kConstant[i] * currPair.coefs[0][0]);
 					});
 

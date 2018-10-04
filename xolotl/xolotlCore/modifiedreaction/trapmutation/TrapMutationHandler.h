@@ -109,7 +109,7 @@ public:
 	 * \see ITrapMutationHandler.h
 	 */
 	void initialize(const IReactionNetwork& network, std::vector<double> grid,
-			int ny = 0, double hy = 0.0, int nz = 0, double hz = 0.0);
+			int ny = 0, double hy = 0.0, int nz = 0, double hz = 0.0) override;
 
 	/**
 	 * This method defines which trap-mutation is allowed at each grid point.
@@ -120,7 +120,7 @@ public:
 	 */
 	void initializeIndex1D(int surfacePos, const IReactionNetwork& network,
 			std::vector<IAdvectionHandler *> advectionHandlers,
-			std::vector<double> grid);
+			std::vector<double> grid) override;
 
 	/**
 	 * This method defines which trap-mutation is allowed at each grid point.
@@ -132,7 +132,7 @@ public:
 	void initializeIndex2D(std::vector<int> surfacePos,
 			const IReactionNetwork& network,
 			std::vector<IAdvectionHandler *> advectionHandlers,
-			std::vector<double> grid, int ny, double hy);
+			std::vector<double> grid, int ny, double hy) override;
 
 	/**
 	 * This method defines which trap-mutation is allowed at each grid point.
@@ -144,7 +144,7 @@ public:
 	void initializeIndex3D(std::vector<std::vector<int> > surfacePos,
 			const IReactionNetwork& network,
 			std::vector<IAdvectionHandler *> advectionHandlers,
-			std::vector<double> grid, int ny, double hy, int nz, double hz);
+			std::vector<double> grid, int ny, double hy, int nz, double hz) override;
 
 	/**
 	 * This method update the rate for the modified trap-mutation if the rates
@@ -153,14 +153,14 @@ public:
 	 *
 	 * @param network The network
 	 */
-	void updateTrapMutationRate(const IReactionNetwork& network);
+	void updateTrapMutationRate(const IReactionNetwork& network) override;
 
 	/**
 	 * This method set the boolean to remember if we want attenuation or not.
 	 *
 	 * @param isAttenuation True if we want attenuation
 	 */
-	void setAttenuation(bool isAttenuation);
+	void setAttenuation(bool isAttenuation) override;
 
 	/**
 	 * This method update the rate that makes the modified trap-mutation inefficient
@@ -168,7 +168,7 @@ public:
 	 *
 	 * @param conc The concentration of helium
 	 */
-	void updateDisappearingRate(double conc);
+	void updateDisappearingRate(double conc) override;
 
 	/**
 	 * Compute the flux due to the modified trap-mutation for all the cluster,
@@ -182,8 +182,8 @@ public:
 	 * \see ITrapMutationHandler.h
 	 */
 	void computeTrapMutation(const IReactionNetwork& network,
-			double *concOffset, double *updatedConcOffset, int xi, int xs,
-			int yj = 0, int zk = 0);
+			const double *concOffset, double *updatedConcOffset, int xi, int xs,
+			int yj = 0, int zk = 0) override;
 
 	/**
 	 * Compute the partials due to the modified trap-mutation for all the
@@ -199,14 +199,15 @@ public:
 	 * \see ITrapMutationHandler.h
 	 */
 	int computePartialsForTrapMutation(const IReactionNetwork& network,
-			double *val, int *indices, int xi, int xs, int yj = 0, int zk = 0);
+            const double* concOffset,
+			double *val, int *indices, int xi, int xs, int yj = 0, int zk = 0) override;
 
 	/**
 	 * Get the total number of clusters in the network that can undergo trap mutation.
 	 *
 	 * @return The number of clusters
 	 */
-	virtual int getNumberOfMutating() const {
+	int getNumberOfMutating() const override {
 		return sizeVec.size();
 	}
 

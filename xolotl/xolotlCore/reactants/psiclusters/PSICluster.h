@@ -650,10 +650,11 @@ public:
 	 * This is used to computed the desorption rate in the
 	 * modified trap-mutation handler.
 	 *
+     * @param concs Current solution vector for desired grid point.
 	 * @param i The position on the grid
 	 * @return The rate
 	 */
-	double getLeftSideRate(int i) const override;
+	double getLeftSideRate(const double* concs, int i) const override;
 
 	/**
 	 * This operation returns the vector of production reactions in which

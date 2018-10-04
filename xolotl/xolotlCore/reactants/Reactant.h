@@ -93,11 +93,6 @@ public:
 protected:
 
 	/**
-	 * The total concentration of this reactant.
-	 */
-	double concentration;
-
-	/**
 	 * The name of this reactant.
 	 */
 	std::string name;
@@ -301,7 +296,7 @@ public:
 	 * @param other The reactant to copy
 	 */
 	Reactant(const Reactant &other) :
-			concentration(other.concentration), name(other.name), type(
+			name(other.name), type(
 					other.type), id(other.id), temperature(other.temperature), network(
 					other.network), handlerRegistry(other.handlerRegistry), size(
 					other.size), composition(other.composition), formationEnergy(
@@ -549,26 +544,12 @@ public:
 	/**
 	 * This operation returns the current concentration.
 	 *
+     * @param concs Current solution vector of desired grid point.
 	 * @return The concentration of this reactant
 	 */
-	double getConcentration(void) const override {
-		return concentration;
-	}
-
     double getConcentration(const double* concs) const override {
-        assert(concs[id-1] == concentration);
         return concs[id-1];
     }
-
-	/**
-	 * This operation sets the concentration of the reactant to the
-	 * specified amount.
-	 *
-	 * @param conc The new concentation
-	 */
-	void setConcentration(double conc) override {
-		concentration = conc;
-	}
 
 	/**
 	 * This operation returns the total flux of this reactant in the
@@ -833,10 +814,11 @@ public:
 	 * This is used to computed the desorption rate in the
 	 * modified trap-mutation handler.
 	 *
+     * @param concs Current solution vector for desired grid point.
 	 * @param i The position on the grid
 	 * @return The rate
 	 */
-	virtual double getLeftSideRate(int i) const override {
+	virtual double getLeftSideRate(const double* concs, int i) const override {
 		return 0.0;
 	}
 

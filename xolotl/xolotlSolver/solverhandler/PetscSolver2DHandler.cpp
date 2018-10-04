@@ -844,7 +844,7 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
 
 			// Compute the partial derivative from modified trap-mutation at this grid point
 			int nMutating = mutationHandler->computePartialsForTrapMutation(
-					network, mutationVals, mutationIndices, xi, xs, yj);
+					network, concOffset, mutationVals, mutationIndices, xi, xs, yj);
 
 			// Loop on the number of helium undergoing trap-mutation to set the values
 			// in the Jacobian

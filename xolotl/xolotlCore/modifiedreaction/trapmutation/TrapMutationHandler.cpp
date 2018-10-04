@@ -471,7 +471,8 @@ void TrapMutationHandler::updateDisappearingRate(double conc) {
 }
 
 void TrapMutationHandler::computeTrapMutation(const IReactionNetwork& network,
-		double *concOffset, double *updatedConcOffset, int xi, int xs, int yj,
+		const double *concOffset,
+        double *updatedConcOffset, int xi, int xs, int yj,
 		int zk) {
 
 	// Initialize the rate of the reaction
@@ -504,7 +505,7 @@ void TrapMutationHandler::computeTrapMutation(const IReactionNetwork& network,
 		// Check the desorption
 		if (comp[toCompIdx(Species::He)] == desorp.size) {
 			// Get the left side rate (combination + emission)
-			double totalRate = heCluster->getLeftSideRate(xi - xs);
+			double totalRate = heCluster->getLeftSideRate(concOffset, xi - xs);
 			// Define the trap-mutation rate taking into account the desorption
 			rate = kDis * totalRate * (1.0 - desorp.portion) / desorp.portion;
 		} else {
@@ -521,7 +522,9 @@ void TrapMutationHandler::computeTrapMutation(const IReactionNetwork& network,
 }
 
 int TrapMutationHandler::computePartialsForTrapMutation(
-		const IReactionNetwork& network, double *val, int *indices, int xi,
+		const IReactionNetwork& network,
+        const double* concOffset,
+        double *val, int *indices, int xi,
 		int xs, int yj, int zk) {
 
 	// Initialize the rate of the reaction
@@ -554,7 +557,7 @@ int TrapMutationHandler::computePartialsForTrapMutation(
 		// Check the desorption
 		if (comp[toCompIdx(Species::He)] == desorp.size) {
 			// Get the left side rate (combination + emission)
-			double totalRate = heCluster->getLeftSideRate(xi - xs);
+			double totalRate = heCluster->getLeftSideRate(concOffset, xi - xs);
 			// Define the trap-mutation rate taking into account the desorption
 			rate = kDis * totalRate * (1.0 - desorp.portion) / desorp.portion;
 		} else {

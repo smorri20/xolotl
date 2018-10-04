@@ -127,7 +127,7 @@ public:
 	 * @param zk The index of the position on the grid in the Z direction
 	 */
 	virtual void computeTrapMutation(const IReactionNetwork& network,
-			double *concOffset, double *updatedConcOffset, int xi, int xs,
+			const double *concOffset, double *updatedConcOffset, int xi, int xs,
 			int yj = 0, int zk = 0) = 0;
 
 	/**
@@ -137,6 +137,8 @@ public:
 	 * This method is called by the RHSJacobian from the PetscSolver.
 	 *
 	 * @param network The network
+	 * @param concOffset The pointer to the array of concentration at the grid
+	 * point where the trap-mutation is computed
 	 * @param val The pointer to the array that will contain the values of
 	 * partials for the trap-mutation
 	 * @param indices The pointer to the array that will contain the indices
@@ -150,6 +152,7 @@ public:
 	 * at this grid point
 	 */
 	virtual int computePartialsForTrapMutation(const IReactionNetwork& network,
+            const double* concOffset,
 			double *val, int *indices, int xi, int xs, int yj = 0,
 			int zk = 0) = 0;
 

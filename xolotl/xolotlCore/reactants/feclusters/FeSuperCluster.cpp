@@ -1183,7 +1183,7 @@ void FeSuperCluster::setHeVVector(std::vector<std::pair<int, int> > vec) {
 	return;
 }
 
-double FeSuperCluster::getTotalConcentration() const {
+double FeSuperCluster::getTotalConcentration(const double* concs) const {
 	// Initial declarations
 	double heDistance = 0.0, vDistance = 0.0, conc = 0.0;
 
@@ -1195,14 +1195,14 @@ double FeSuperCluster::getTotalConcentration() const {
 			vDistance = getVDistance(j);
 
 			// Add the concentration of each cluster in the group times its number of helium
-			conc += getConcentration(heDistance, vDistance);
+			conc += getConcentration(concs, heDistance, vDistance);
 		}
 	}
 
 	return conc;
 }
 
-double FeSuperCluster::getTotalHeliumConcentration() const {
+double FeSuperCluster::getTotalHeliumConcentration(const double* concs) const {
 	// Initial declarations
 	double heDistance = 0.0, vDistance = 0.0, conc = 0.0;
 
@@ -1214,7 +1214,7 @@ double FeSuperCluster::getTotalHeliumConcentration() const {
 			vDistance = getVDistance(j);
 
 			// Add the concentration of each cluster in the group times its number of helium
-			conc += getConcentration(heDistance, vDistance) * (double) i;
+			conc += getConcentration(concs, heDistance, vDistance) * (double) i;
 		}
 	}
 
@@ -1437,16 +1437,16 @@ void FeSuperCluster::getPartialDerivatives(const double* concs, int i,
 	std::fill(feVMomentPartials.begin(), feVMomentPartials.end(), 0.0);
 
 	// Get the partial derivatives for each reaction type
-	getProductionPartialDerivatives(partials, i);
-	getCombinationPartialDerivatives(partials, i);
-	getDissociationPartialDerivatives(partials, i);
-	getEmissionPartialDerivatives(partials, i);
+	getProductionPartialDerivatives(concs, i, partials);
+	getCombinationPartialDerivatives(concs, i, partials);
+	getDissociationPartialDerivatives(concs, i, partials);
+	getEmissionPartialDerivatives(concs, i, partials);
 
 	return;
 }
 
-void FeSuperCluster::getProductionPartialDerivatives(
-		std::vector<double> & partials, int xi) const {
+void FeSuperCluster::getProductionPartialDerivatives(const double* concs,
+        int xi, std::vector<double> & partials) const {
 
 	// Production
 	// A + B --> D, D being this cluster
@@ -1458,15 +1458,15 @@ void FeSuperCluster::getProductionPartialDerivatives(
 
 	// Loop over all the reacting pairs
 	std::for_each(effReactingList.begin(), effReactingList.end(),
-			[this,&partials,&xi](ProductionPairMap::value_type const& currMapItem) {
+			[this,&concs,&partials,xi](ProductionPairMap::value_type const& currMapItem) {
 
 				auto const& currPair = currMapItem.second;
 
 				// Get the two reacting clusters
 				auto const& firstReactant = currPair.first;
 				auto const& secondReactant = currPair.second;
-				double l0A = firstReactant.getConcentration();
-				double l0B = secondReactant.getConcentration();
+				double l0A = firstReactant.getConcentration(concs);
+				double l0B = secondReactant.getConcentration(concs);
 				double lHeA = firstReactant.getHeMoment();
 				double lHeB = secondReactant.getHeMoment();
 				double lVA = firstReactant.getVMoment();
@@ -1522,8 +1522,8 @@ void FeSuperCluster::getProductionPartialDerivatives(
 	return;
 }
 
-void FeSuperCluster::getCombinationPartialDerivatives(
-		std::vector<double> & partials, int xi) const {
+void FeSuperCluster::getCombinationPartialDerivatives(const double* concs,
+        int xi, std::vector<double> & partials) const {
 
 	// Combination
 	// A + B --> D, A being this cluster
@@ -1535,11 +1535,11 @@ void FeSuperCluster::getCombinationPartialDerivatives(
 
 	// Visit all the combining clusters
 	std::for_each(effCombiningList.begin(), effCombiningList.end(),
-			[this,&partials,&xi](CombiningClusterMap::value_type const& currMapItem) {
+			[this,&concs,&partials,xi](CombiningClusterMap::value_type const& currMapItem) {
 				// Get the combining clusters
 				auto const& currComb = currMapItem.second;
 				auto const& cluster = currComb.first;
-				double l0B = cluster.getConcentration();
+				double l0B = cluster.getConcentration(concs);
 				double lHeB = cluster.getHeMoment();
 				double lVB = cluster.getVMoment();
 
@@ -1593,8 +1593,8 @@ void FeSuperCluster::getCombinationPartialDerivatives(
 	return;
 }
 
-void FeSuperCluster::getDissociationPartialDerivatives(
-		std::vector<double> & partials, int xi) const {
+void FeSuperCluster::getDissociationPartialDerivatives(const double* concs,
+		int xi, std::vector<double> & partials) const {
 
 	// Dissociation
 	// A --> B + D, B being this cluster
@@ -1629,8 +1629,8 @@ void FeSuperCluster::getDissociationPartialDerivatives(
 	return;
 }
 
-void FeSuperCluster::getEmissionPartialDerivatives(
-		std::vector<double> & partials, int xi) const {
+void FeSuperCluster::getEmissionPartialDerivatives(const double* concs,
+		int xi, std::vector<double> & partials) const {
 
 	// Emission
 	// A --> B + D, A being this cluster

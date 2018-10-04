@@ -239,18 +239,10 @@ public:
 	/**
 	 * This operation returns the current concentration.
 	 *
+     * @param concs Current solution vector of desired grid point.
 	 * @return The concentration of this reactant
 	 */
-	virtual double getConcentration(void) const = 0;
 	virtual double getConcentration(const double* concs) const = 0;
-
-	/**
-	 * This operation sets the concentration of the reactant to the
-	 * specified amount.
-	 *
-	 * @param conc The new concentation
-	 */
-	virtual void setConcentration(double conc) = 0;
 
 	/**
 	 * This operation returns the total flux of this reactant in the
@@ -487,10 +479,11 @@ public:
 	 * This is used to computed the desorption rate in the
 	 * modified trap-mutation handler.
 	 *
+     * @param concs Current solution vector for desired grid point.
 	 * @param i The position on the grid
 	 * @return The rate
 	 */
-	virtual double getLeftSideRate(int i) const = 0;
+	virtual double getLeftSideRate(const double* concs, int i) const = 0;
 
 	/**
 	 * This operation returns the vector of production reactions in which

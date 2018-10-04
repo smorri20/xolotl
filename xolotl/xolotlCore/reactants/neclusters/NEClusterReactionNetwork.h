@@ -128,7 +128,7 @@ public:
 	 * array. Properly aligning the array in memory so that this operation
 	 * does not overrun is up to the caller.
 	 */
-	void updateConcentrationsFromArray(double * concentrations) override;
+	void updateConcentrationsFromArray(const double * concentrations) override;
 
 	/**
 	 * This operation returns the number of super reactants in the network.

@@ -477,16 +477,11 @@ public:
 	/**
 	 * This operation returns the current concentration.
 	 *
+     * @param concs Current solution vector for desired grid point.
 	 * @param distHe The helium distance in the group
 	 * @param distV The vacancy distance in the group
 	 * @return The concentration of this reactant
 	 */
-	virtual double getConcentration(double distHe, double distV) const {
-        // TODO should this version ever be called?  It ignores
-        // its arguments.
-		return concentration;
-	}
-
 	virtual double getConcentration(const double* concs,
                                     double distHe, double distV) const {
         // TODO should this version ever be called?  It ignores
@@ -582,37 +577,40 @@ public:
 	 * This operation computes the partial derivatives due to production
 	 * reactions.
 	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
 	 * @param partials The vector into which the partial derivatives should be
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
-	 * @param i The location on the grid in the depth direction
 	 */
-	virtual void getProductionPartialDerivatives(std::vector<double> & partials,
-			int i) const;
+	virtual void getProductionPartialDerivatives(const double* concs, int i,
+            std::vector<double> & partials) const;
 
 	/**
 	 * This operation computes the partial derivatives due to combination
 	 * reactions.
 	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
 	 * @param partials The vector into which the partial derivatives should be
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
-	 * @param i The location on the grid in the depth direction
 	 */
-	virtual void getCombinationPartialDerivatives(
-			std::vector<double> & partials, int i) const;
+	virtual void getCombinationPartialDerivatives(const double* concs, int i,
+			std::vector<double> & partials) const;
 
 	/**
 	 * This operation computes the partial derivatives due to dissociation of
 	 * other clusters into this one.
 	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
 	 * @param partials The vector into which the partial derivatives should be
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
-	 * @param i The location on the grid in the depth direction
 	 */
-	virtual void getDissociationPartialDerivatives(
-			std::vector<double> & partials, int i) const;
+	virtual void getDissociationPartialDerivatives(const double* concs, int i,
+			std::vector<double> & partials) const;
 
 	/**
 	 * This operation computes the partial derivatives due to emission
@@ -623,8 +621,8 @@ public:
 	 * network.
 	 * @param i The location on the grid in the depth direction
 	 */
-	virtual void getEmissionPartialDerivatives(std::vector<double> & partials,
-			int i) const;
+	virtual void getEmissionPartialDerivatives(const double* concs, int i, 
+            std::vector<double> & partials) const;
 
 	/**
 	 * This operation reset the connectivity sets based on the information
@@ -639,10 +637,11 @@ public:
 	 * This is used to computed the desorption rate in the
 	 * modified trap-mutation handler.
 	 *
+     * @param concs Current solution vector for desired grid point.
 	 * @param i The position on the grid
 	 * @return The rate
 	 */
-	double getLeftSideRate(int i) const override;
+	double getLeftSideRate(const double* concs, int i) const override;
 
 	/**
 	 * This operation returns the vector of production reactions in which

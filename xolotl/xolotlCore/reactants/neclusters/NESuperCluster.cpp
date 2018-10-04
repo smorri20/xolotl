@@ -160,7 +160,7 @@ double NESuperCluster::getMoment() const {
 	return l1;
 }
 
-double NESuperCluster::getTotalConcentration() const {
+double NESuperCluster::getTotalConcentration(const double* concs) const {
 	// Initial declarations
 	int index = 0;
 	double distance = 0.0, conc = 0.0;
@@ -174,13 +174,13 @@ double NESuperCluster::getTotalConcentration() const {
 		distance = getDistance(index);
 
 		// Add the concentration of each cluster in the group
-		conc += getConcentration(distance);
+		conc += getConcentration(concs, distance);
 	}
 
 	return conc;
 }
 
-double NESuperCluster::getTotalXenonConcentration() const {
+double NESuperCluster::getTotalXenonConcentration(const double* concs) const {
 	// Initial declarations
 	int index = 0;
 	double distance = 0.0, conc = 0.0;
@@ -194,7 +194,7 @@ double NESuperCluster::getTotalXenonConcentration() const {
 		distance = getDistance(index);
 
 		// Add the concentration of each cluster in the group times the number of xenon atoms
-		conc += getConcentration(distance) * (double) index;
+		conc += getConcentration(concs, distance) * (double) index;
 	}
 
 	return conc;
@@ -721,16 +721,17 @@ void NESuperCluster::getPartialDerivatives(const double* concs, int i,
 	std::fill(momentPartials.begin(), momentPartials.end(), 0.0);
 
 	// Get the partial derivatives for each reaction type
-	getProductionPartialDerivatives(partials, i);
-	getCombinationPartialDerivatives(partials, i);
-	getDissociationPartialDerivatives(partials, i);
-	getEmissionPartialDerivatives(partials, i);
+	getProductionPartialDerivatives(concs, i, partials);
+	getCombinationPartialDerivatives(concs, i, partials);
+	getDissociationPartialDerivatives(concs, i, partials);
+	getEmissionPartialDerivatives(concs, i, partials);
 
 	return;
 }
 
 void NESuperCluster::getProductionPartialDerivatives(
-		std::vector<double> & partials, int xi) const {
+        const double* concs, int xi,
+		std::vector<double> & partials) const {
 	// Initial declarations
 	double value = 0.0;
 	int index = 0;
@@ -749,8 +750,8 @@ void NESuperCluster::getProductionPartialDerivatives(
 		// Get the two reacting clusters
 		firstReactant = (*it).first;
 		secondReactant = (*it).second;
-		double l0A = firstReactant->getConcentration();
-		double l0B = secondReactant->getConcentration();
+		double l0A = firstReactant->getConcentration(concs);
+		double l0B = secondReactant->getConcentration(concs);
 		double l1A = firstReactant->getMoment();
 		double l1B = secondReactant->getMoment();
 
@@ -775,7 +776,8 @@ void NESuperCluster::getProductionPartialDerivatives(
 }
 
 void NESuperCluster::getCombinationPartialDerivatives(
-		std::vector<double> & partials, int xi) const {
+        const double* concs, int xi,
+		std::vector<double> & partials) const {
 	// Initial declarations
 	int index = 0;
 	NECluster *cluster = nullptr;
@@ -794,7 +796,7 @@ void NESuperCluster::getCombinationPartialDerivatives(
 			++it) {
 		// Get the two reacting clusters
 		cluster = (*it).first;
-		double l0A = cluster->getConcentration();
+		double l0A = cluster->getConcentration(concs);
 		double l1A = cluster->getMoment();
 
 		// Compute the contribution from the combining cluster
@@ -818,7 +820,8 @@ void NESuperCluster::getCombinationPartialDerivatives(
 }
 
 void NESuperCluster::getDissociationPartialDerivatives(
-		std::vector<double> & partials, int xi) const {
+        const double* concs, int xi,
+		std::vector<double> & partials) const {
 	// Initial declarations
 	int index = 0;
 	NECluster *cluster = nullptr;
@@ -851,7 +854,8 @@ void NESuperCluster::getDissociationPartialDerivatives(
 }
 
 void NESuperCluster::getEmissionPartialDerivatives(
-		std::vector<double> & partials, int xi) const {
+        const double* concs, int xi,
+		std::vector<double> & partials) const {
 	// Initial declarations
 	int index = 0;
 	double value = 0.0;

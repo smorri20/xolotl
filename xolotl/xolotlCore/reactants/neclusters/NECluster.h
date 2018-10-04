@@ -349,15 +349,10 @@ public:
 	/**
 	 * This operation returns the current concentration.
 	 *
+     * @param concs Current solution vector for desired grid point.
 	 * @param distXe The xenon distance in the group
 	 * @return The concentration of this reactant
 	 */
-	virtual double getConcentration(double distXe) const {
-		// TODO should this ever be called?  It ignores the argument.
-		// It is in order to have the same method for normal and super clusters
-		// without having to cast (I was thinking it would save time)
-		return concentration;
-	}
     virtual double getConcentration(const double* concs, double distXe) const {
 		// TODO should this ever be called?  It ignores the argument.
 		return concs[id - 1];
@@ -419,49 +414,61 @@ public:
 	 * This operation computes the partial derivatives due to production
 	 * reactions.
 	 *
-	 * @param partials The vector into which the partial derivatives should be
-	 * inserted. This vector should have a length equal to the size of the
-	 * network.
+     * @param concs Current solution vector for desired grid point.
 	 * @param i The location on the grid in the depth direction
+	 * @param[out] partials The vector that should be filled with the partial 
+     * derivatives for this reactant where index zero corresponds to the 
+     * first reactant in the list returned by the ReactionNetwork::getAll()
+     * operation. The size of the vector should be equal to 
+     * ReactionNetwork::size().
 	 */
-	virtual void getProductionPartialDerivatives(std::vector<double> & partials,
-			int i) const;
+	virtual void getProductionPartialDerivatives(const double* concs, int i,
+            std::vector<double> & partials) const;
 
 	/**
 	 * This operation computes the partial derivatives due to combination
 	 * reactions.
 	 *
-	 * @param partials The vector into which the partial derivatives should be
-	 * inserted. This vector should have a length equal to the size of the
-	 * network.
+     * @param concs Current solution vector for desired grid point.
 	 * @param i The location on the grid in the depth direction
+	 * @param[out] partials The vector that should be filled with the partial 
+     * derivatives for this reactant where index zero corresponds to the 
+     * first reactant in the list returned by the ReactionNetwork::getAll()
+     * operation. The size of the vector should be equal to 
+     * ReactionNetwork::size().
 	 */
-	virtual void getCombinationPartialDerivatives(
-			std::vector<double> & partials, int i) const;
+	virtual void getCombinationPartialDerivatives(const double* concs, int i,
+			std::vector<double> & partials) const;
 
 	/**
 	 * This operation computes the partial derivatives due to dissociation of
 	 * other clusters into this one.
 	 *
-	 * @param partials The vector into which the partial derivatives should be
-	 * inserted. This vector should have a length equal to the size of the
-	 * network.
+     * @param concs Current solution vector for desired grid point.
 	 * @param i The location on the grid in the depth direction
+	 * @param[out] partials The vector that should be filled with the partial 
+     * derivatives for this reactant where index zero corresponds to the 
+     * first reactant in the list returned by the ReactionNetwork::getAll()
+     * operation. The size of the vector should be equal to 
+     * ReactionNetwork::size().
 	 */
-	virtual void getDissociationPartialDerivatives(
-			std::vector<double> & partials, int i) const;
+	virtual void getDissociationPartialDerivatives(const double* concs, int i,
+			std::vector<double> & partials) const;
 
 	/**
 	 * This operation computes the partial derivatives due to emission
 	 * reactions.
 	 *
-	 * @param partials The vector into which the partial derivatives should be
-	 * inserted. This vector should have a length equal to the size of the
-	 * network.
+     * @param concs Current solution vector for desired grid point.
 	 * @param i The location on the grid in the depth direction
+	 * @param[out] partials The vector that should be filled with the partial 
+     * derivatives for this reactant where index zero corresponds to the 
+     * first reactant in the list returned by the ReactionNetwork::getAll()
+     * operation. The size of the vector should be equal to 
+     * ReactionNetwork::size().
 	 */
-	virtual void getEmissionPartialDerivatives(std::vector<double> & partials,
-			int i) const;
+	virtual void getEmissionPartialDerivatives(const double* concs, int i,
+            std::vector<double> & partials) const;
 
 	/**
 	 * This operation reset the connectivity sets based on the information
@@ -476,10 +483,11 @@ public:
 	 * This is used to computed the desorption rate in the
 	 * modified trap-mutation handler.
 	 *
+     * @param concs Current solution vector for desired grid point.
 	 * @param i The position on the grid
 	 * @return The rate
 	 */
-	double getLeftSideRate(int i) const override;
+	double getLeftSideRate(const double* concs, int i) const override;
 
 	/**
 	 * This operation returns the vector of production reactions in which

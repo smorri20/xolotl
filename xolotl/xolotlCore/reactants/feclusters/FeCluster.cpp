@@ -832,16 +832,16 @@ void FeCluster::getPartialDerivatives(const double* concs, int i,
         std::vector<double> & partials) const {
 
 	// Get the partial derivatives for each reaction type
-	getProductionPartialDerivatives(partials, i);
-	getCombinationPartialDerivatives(partials, i);
-	getDissociationPartialDerivatives(partials, i);
-	getEmissionPartialDerivatives(partials, i);
+	getProductionPartialDerivatives(concs, i, partials);
+	getCombinationPartialDerivatives(concs, i, partials);
+	getDissociationPartialDerivatives(concs, i, partials);
+	getEmissionPartialDerivatives(concs, i, partials);
 
 	return;
 }
 
-void FeCluster::getProductionPartialDerivatives(std::vector<double> & partials,
-		int xi) const {
+void FeCluster::getProductionPartialDerivatives(const double* concs, int xi,
+        std::vector<double> & partials) const {
 
 	// Production
 	// A + B --> D, D being this cluster
@@ -851,12 +851,12 @@ void FeCluster::getProductionPartialDerivatives(std::vector<double> & partials,
 	// dF(C_D)/dC_A = k+_(A,B)*C_B
 	// dF(C_D)/dC_B = k+_(A,B)*C_A
 	std::for_each(reactingPairs.begin(), reactingPairs.end(),
-			[&partials,&xi](const ClusterPair& currPair) {
+			[&concs,xi,&partials](const ClusterPair& currPair) {
 				// Get the two reacting clusters
 				auto const& firstReactant = currPair.first;
 				auto const& secondReactant = currPair.second;
-				double l0A = firstReactant.getConcentration(0.0, 0.0);
-				double l0B = secondReactant.getConcentration(0.0, 0.0);
+				double l0A = firstReactant.getConcentration(concs, 0.0, 0.0);
+				double l0B = secondReactant.getConcentration(concs, 0.0, 0.0);
 				double lHeA = firstReactant.getHeMoment();
 				double lHeB = secondReactant.getHeMoment();
 				double lVA = firstReactant.getVMoment();
@@ -888,8 +888,8 @@ void FeCluster::getProductionPartialDerivatives(std::vector<double> & partials,
 	return;
 }
 
-void FeCluster::getCombinationPartialDerivatives(std::vector<double> & partials,
-		int xi) const {
+void FeCluster::getCombinationPartialDerivatives(const double* concs, int xi,
+        std::vector<double> & partials) const {
 
 	// Combination
 	// A + B --> D, A being this cluster
@@ -899,9 +899,9 @@ void FeCluster::getCombinationPartialDerivatives(std::vector<double> & partials,
 	// dF(C_A)/dC_A = - k+_(A,B)*C_B
 	// dF(C_A)/dC_B = - k+_(A,B)*C_A
 	std::for_each(combiningReactants.begin(), combiningReactants.end(),
-			[this,&partials,&xi](const CombiningCluster& cc) {
+			[this,&concs,&partials,xi](const CombiningCluster& cc) {
 				auto const& cluster = cc.combining;
-				double l0B = cluster.getConcentration(0.0, 0.0);
+				double l0B = cluster.getConcentration(concs, 0.0, 0.0);
 				double lHeB = cluster.getHeMoment();
 				double lVB = cluster.getVMoment();
 
@@ -910,7 +910,7 @@ void FeCluster::getCombinationPartialDerivatives(std::vector<double> & partials,
 				partials[id - 1] -= cc.reaction.kConstant[xi]
 				* (cc.a0 * l0B + cc.a1 * lHeB + cc.a2 * lVB);
 				// Compute the contribution from the combining cluster
-				double value = cc.reaction.kConstant[xi] * concentration;
+				double value = cc.reaction.kConstant[xi] * getConcentration(concs);
 				partials[cluster.id - 1] -= value * cc.a0;
 				partials[cluster.momId[0] - 1] -= value * cc.a1;
 				partials[cluster.momId[1] - 1] -= value * cc.a2;
@@ -919,8 +919,8 @@ void FeCluster::getCombinationPartialDerivatives(std::vector<double> & partials,
 	return;
 }
 
-void FeCluster::getDissociationPartialDerivatives(
-		std::vector<double> & partials, int xi) const {
+void FeCluster::getDissociationPartialDerivatives(const double* concs, int xi,
+		std::vector<double> & partials) const {
 
 	// Dissociation
 	// A --> B + D, B being this cluster
@@ -941,8 +941,8 @@ void FeCluster::getDissociationPartialDerivatives(
 	return;
 }
 
-void FeCluster::getEmissionPartialDerivatives(std::vector<double> & partials,
-		int xi) const {
+void FeCluster::getEmissionPartialDerivatives(const double* concs, int xi,
+        std::vector<double> & partials) const {
 
 	// Emission
 	// A --> B + D, A being this cluster
@@ -960,20 +960,20 @@ void FeCluster::getEmissionPartialDerivatives(std::vector<double> & partials,
 	return;
 }
 
-double FeCluster::getLeftSideRate(int i) const {
+double FeCluster::getLeftSideRate(const double* concs, int i) const {
 
 	// Sum rate constant-concentration product over combining reactants.
 	double combiningRateTotal = std::accumulate(combiningReactants.begin(),
 			combiningReactants.end(), 0.0,
-			[&i](double running, const CombiningCluster& cc) {
+			[&concs,i](double running, const CombiningCluster& cc) {
 				return running +
-				(cc.reaction.kConstant[i] * cc.combining.concentration);
+				(cc.reaction.kConstant[i] * cc.combining.getConcentration(concs));
 			});
 
 	// Sum rate constants over all emission pair reactions.
 	double emissionRateTotal = std::accumulate(emissionPairs.begin(),
 			emissionPairs.end(), 0.0,
-			[&i](double running, const ClusterPair& currPair) {
+			[i](double running, const ClusterPair& currPair) {
 				return running + currPair.reaction.kConstant[i] * currPair.a00;
 			});
 

@@ -776,9 +776,9 @@ PetscErrorCode computeXenonRetention1D(TS ts, PetscInt, PetscReal time,
 		for (auto const& superMapItem : network.getAll(ReactantType::NESuper)) {
 			auto const& cluster =
 					static_cast<NESuperCluster&>(*(superMapItem.second));
-			xeConcentration += cluster.getTotalXenonConcentration()
+			xeConcentration += cluster.getTotalXenonConcentration(gridPointSolution)
 					* (grid[xi + 1] - grid[xi]);
-            auto currTotalConc = cluster.getTotalConcentration();
+            auto currTotalConc = cluster.getTotalConcentration(gridPointSolution);
 			bubbleConcentration += currTotalConc * (grid[xi + 1] - grid[xi]);
 			radii += currTotalConc
 					* cluster.getReactionRadius() * (grid[xi + 1] - grid[xi]);
@@ -1184,7 +1184,7 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 			// Loop on the super clusters
 			auto& allReactants = network.getAll();
 			std::for_each(allReactants.begin(), allReactants.end(),
-					[&time,&myPoints](IReactant& currReactant) {
+					[&gridPointSolution,&time,&myPoints](IReactant& currReactant) {
 
 						if (currReactant.getType() == ReactantType::NESuper) {
 							auto& cluster = static_cast<NESuperCluster&>(currReactant);
@@ -1199,7 +1199,7 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 								// Create a Point with the concentration[i] as the value
 								// and add it to myPoints
 								xolotlViz::Point aPoint;
-								aPoint.value = cluster.getConcentration(dist);
+								aPoint.value = cluster.getConcentration(gridPointSolution, dist);
 								aPoint.t = time;
 								aPoint.x = (double) k;
 								myPoints->push_back(aPoint);
@@ -1294,7 +1294,7 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 			// Loop on the super clusters
 			auto& allReactants = network.getAll();
 			std::for_each(allReactants.begin(), allReactants.end(),
-					[](IReactant& currReactant) {
+					[&gridPointSolution](IReactant& currReactant) {
 
 						if (currReactant.getType() == ReactantType::NESuper) {
 							auto& cluster = static_cast<NESuperCluster&>(currReactant);
@@ -1305,7 +1305,7 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 							for (int k = nXe + 1.0 - (double) width / 2.0; k < nXe + (double) width / 2.0; k++) {
 								// Compute the distance
 								double dist = cluster.getDistance(k);
-								double conc = cluster.getConcentration(dist);
+								double conc = cluster.getConcentration(gridPointSolution, dist);
 								// Send the value of each concentration to the master process
 								MPI_Send(&conc, 1, MPI_DOUBLE, 0, 11, MPI_COMM_WORLD);
 							}
