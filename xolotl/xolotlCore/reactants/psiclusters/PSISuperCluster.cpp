@@ -11,7 +11,7 @@ PSISuperCluster::PSISuperCluster(double num[4], int _nTot, int width[4],
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		PSICluster(_network, registry,
 				buildName(num[0], num[1], num[2], num[3])),
-        nTot(_nTot), l0(0.0) {
+        nTot(_nTot) {
 
     momentFlux = {};
 
@@ -1193,9 +1193,9 @@ void PSISuperCluster::getEmissionFlux(const double* concs, int xi,
 	// Loop over all the emission pairs
 	// TODO consider using std::accumulate.
 	std::for_each(effEmissionList.begin(), effEmissionList.end(),
-			[this,&superFlux,&xi](DissociationPairList::value_type const& currPair) {
+			[this,&superFlux,&concs,xi](DissociationPairList::value_type const& currPair) {
 				double lA[5] = {};
-				lA[0] = l0;
+				lA[0] = concs[id-1];
 				for (int i = 1; i < psDim; i++) {
 					lA[i] = l1[indexList[i]-1];
 				}
@@ -1268,7 +1268,7 @@ void PSISuperCluster::getCombinationFlux(const double* concs, int xi,
 				// Get the combining cluster
 				auto const& combiningCluster = currComb.first;
 				double lA[5] = {}, lB[5] = {};
-				lA[0] = l0;
+				lA[0] = concs[id-1];
 				lB[0] = combiningCluster.getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
 					lA[i] = l1[indexList[i]-1];
@@ -1293,12 +1293,14 @@ void PSISuperCluster::getCombinationFlux(const double* concs, int xi,
 			});
 }
 
-void PSISuperCluster::computePartialDerivatives(double* partials[5],
+void PSISuperCluster::computePartialDerivatives(
+        const double* concs,
+        double* partials[5],
 		const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap, int i) const {
 
 	// Get the partial derivatives for each reaction type
 	computeProductionPartialDerivatives(partials, partialsIdxMap, i);
-	computeCombinationPartialDerivatives(partials, partialsIdxMap, i);
+	computeCombinationPartialDerivatives(concs, partials, partialsIdxMap, i);
 	computeDissociationPartialDerivatives(partials, partialsIdxMap, i);
 	computeEmissionPartialDerivatives(partials, partialsIdxMap, i);
 
@@ -1366,7 +1368,9 @@ void PSISuperCluster::computeProductionPartialDerivatives(double* partials[5],
 	return;
 }
 
-void PSISuperCluster::computeCombinationPartialDerivatives(double* partials[5],
+void PSISuperCluster::computeCombinationPartialDerivatives(
+        const double* concs,
+        double* partials[5],
 		const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap, int xi) const {
 
 	// Combination
@@ -1379,13 +1383,12 @@ void PSISuperCluster::computeCombinationPartialDerivatives(double* partials[5],
 
 	// Visit all the combining clusters
 	std::for_each(effCombiningList.begin(), effCombiningList.end(),
-			[this,
-			&partials, &partialsIdxMap,&xi](CombiningClusterList::value_type const& currComb) {
+			[this,&concs,&partials,&partialsIdxMap,xi](CombiningClusterList::value_type const& currComb) {
 				// Get the combining clusters
 				auto const& cluster = currComb.first;
 				double lA[5] = {}, lB[5] = {};
-				lA[0] = l0;
-				lB[0] = cluster.getConcentration();
+				lA[0] = concs[id-1];
+				lB[0] = cluster.getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
 					lA[i] = l1[indexList[i]-1];
 					lB[i] = cluster.getMoment(indexList[i]-1);

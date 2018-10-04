@@ -1451,7 +1451,6 @@ void PSIClusterReactionNetwork::updateConcentrationsFromArray(
 
 				auto& cluster = static_cast<PSISuperCluster&>(*(currMapItem.second));
 
-				cluster.setZerothMoment(concentrations[cluster.getId() - 1]);
 				// Loop on the used moments
 				for (int i = 1; i < psDim; i++) {
 					cluster.setMoment(concentrations[cluster.getMomentId(indexList[i] - 1) - 1], indexList[i] - 1);
@@ -1758,6 +1757,7 @@ void PSIClusterReactionNetwork::computeAllFluxes(const double* concs,
 }
 
 void PSIClusterReactionNetwork::computeAllPartials(
+        const double* concs,
 		const std::vector<size_t>& startingIdx, const std::vector<int>& indices,
 		std::vector<double>& vals, int xi) const {
 
@@ -1840,7 +1840,7 @@ void PSIClusterReactionNetwork::computeAllPartials(
 
 		// Have reactant compute its partial derivatives
 		// to its correct locations within the vals array.
-		reactant.computePartialDerivatives(partials, partialsIdxMap, xi);
+		reactant.computePartialDerivatives(concs, partials, partialsIdxMap, xi);
 	}
 
 	// Clear memory

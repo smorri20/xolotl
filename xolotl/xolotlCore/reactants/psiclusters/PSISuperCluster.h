@@ -364,9 +364,6 @@ private:
 	//! The dispersion in the group.
 	double dispersion[4] = { };
 
-	//! The 0th order moment (mean).
-	double l0;
-
 	//! The first order moment.
 	double l1[4] = { };
 
@@ -755,7 +752,6 @@ public:
                                     double distT,
 			                        double distV) const {
 
-        assert(concs[id - 1] == l0);
         for(auto i = 1; i < psDim; ++i) {
             auto currAxis = indexList[i] - 1;
             assert(concs[getMomentId(currAxis) - 1] == l1[currAxis]);
@@ -877,15 +873,6 @@ public:
 	}
 
 	/**
-	 * This operation sets the zeroth order moment.
-	 *
-	 * @param mom The moment
-	 */
-	void setZerothMoment(double mom) {
-		l0 = mom;
-	}
-
-	/**
 	 * This operation sets the first order moment.
 	 *
 	 * @param axis The axis we are intersted in
@@ -939,6 +926,7 @@ public:
 	 * memory allocations to just one if they are accessing the partial
 	 * derivatives many times.
 	 *
+     * @param concs Current solution vector for desired grid point.
 	 * @param the vector that should be filled with the partial derivatives
 	 * for this reactant where index zero corresponds to the first reactant in
 	 * the list returned by the ReactionNetwork::getAll() operation. The size of
@@ -946,7 +934,8 @@ public:
 	 * @param i The location on the grid in the depth direction
 	 *
 	 */
-	void computePartialDerivatives(double* partials[5],
+	void computePartialDerivatives(const double* concs,
+            double* partials[5],
 			const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
 			int i) const;
 	void getPartialDerivatives(std::vector<double> & partials, int i) const
@@ -977,12 +966,14 @@ public:
 	 * This operation computes the partial derivatives due to combination
 	 * reactions.
 	 *
+     * @param concs Current solution vector for desired grid point.
 	 * @param partials The vector into which the partial derivatives should be
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
 	 * @param i The location on the grid in the depth direction
 	 */
-	void computeCombinationPartialDerivatives(double* partials[5],
+	void computeCombinationPartialDerivatives(const double* concs,
+            double* partials[5],
 			const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
 			int i) const;
 	void getCombinationPartialDerivatives(std::vector<double> & partials,
