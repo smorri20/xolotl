@@ -459,21 +459,6 @@ public:
 			override;
 
 	/**
-	 * This operation updates the concentrations for all reactants in the
-	 * network from an array.
-	 *
-	 * @param concentrations The array of doubles that will be for the
-	 * concentrations. This operation does NOT create, destroy or resize the
-	 * array. Properly aligning the array in memory so that this operation
-	 * does not overrun is up to the caller.
-	 */
-	virtual void updateConcentrationsFromArray(const double* concentrations)
-			override {
-        // TODO delete - remove need for this in NE and Fe problems.
-
-    }
-
-	/**
 	 * Get the diagonal fill for the Jacobian, corresponding to the reactions.
 	 *
 	 * Do nothing here, this method need to be implemented in

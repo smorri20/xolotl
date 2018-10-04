@@ -474,21 +474,6 @@ public:
 	 */
 	virtual std::vector<int> getDissociationConnectivity() const;
 
-	/**
-	 * This operation returns the current concentration.
-	 *
-     * @param concs Current solution vector for desired grid point.
-	 * @param distHe The helium distance in the group
-	 * @param distV The vacancy distance in the group
-	 * @return The concentration of this reactant
-	 */
-	virtual double getConcentration(const double* concs,
-                                    double distHe, double distV) const {
-        // TODO should this version ever be called?  It ignores
-        // its arguments.
-        return concs[id - 1];
-	}
-
     /**
      * Obtain current concentration.
      *
@@ -502,11 +487,26 @@ public:
     using Reactant::getConcentration;
 
 	/**
+	 * This operation returns the current concentration.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param distHe The helium distance in the group
+	 * @param distV The vacancy distance in the group
+	 * @return The concentration of this reactant
+	 */
+	virtual double getConcentration(const double* concs,
+                                    double distHe, double distV) const {
+        // TODO should this version ever be called?  It ignores
+        // its distance arguments.
+        return getConcentration(concs);
+	}
+
+	/**
 	 * This operation returns the first helium moment.
 	 *
 	 * @return The moment
 	 */
-	virtual double getHeMoment() const {
+	virtual double getHeMoment(const double* concs) const {
 		return 0.0;
 	}
 
@@ -515,7 +515,7 @@ public:
 	 *
 	 * @return The moment
 	 */
-	virtual double getVMoment() const {
+	virtual double getVMoment(const double* concs) const {
 		return 0.0;
 	}
 	/**

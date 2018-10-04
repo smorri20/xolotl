@@ -310,11 +310,6 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 
 			// Check if we are on the right processor
 			if (xi >= xs && xi < xs + xm && yj >= ys && yj < ys + ym) {
-				// Get the concentrations at this grid point
-				concOffset = concs[yj][xi];
-				// Copy data into the PSIClusterReactionNetwork
-				network.updateConcentrationsFromArray(concOffset);
-
 				// Sum the total atom concentration
 				atomConc += network.getTotalTrappedAtomConcentration(concs[yj][xi], 0)
 						* (grid[xi + 1] - grid[xi]);
@@ -386,13 +381,6 @@ void PetscSolver2DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				mutationHandler->updateTrapMutationRate(network);
 				lastTemperature[xi - xs] = temperature;
 			}
-
-			// Copy data into the ReactionNetwork so that it can
-			// compute the fluxes properly. The network is only used to compute the
-			// fluxes and hold the state data from the last time step. I'm reusing
-			// it because it cuts down on memory significantly (about 400MB per
-			// grid point) at the expense of being a little tricky to comprehend.
-			network.updateConcentrationsFromArray(concOffset);
 
 			// ----- Account for flux of incoming particles -----
 			fluxHandler->computeIncidentFlux(ftime, updatedConcOffset, xi,
@@ -739,11 +727,6 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
 
 			// Check if we are on the right processor
 			if (xi >= xs && xi < xs + xm && yj >= ys && yj < ys + ym) {
-				// Get the concentrations at this grid point
-				concOffset = concs[yj][xi];
-				// Copy data into the PSIClusterReactionNetwork
-				network.updateConcentrationsFromArray(concOffset);
-
 				// Sum the total atom concentration
 				atomConc += network.getTotalTrappedAtomConcentration(concs[yj][xi], 0)
 						* (grid[xi + 1] - grid[xi]);
@@ -790,10 +773,6 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
 				mutationHandler->updateTrapMutationRate(network);
 				lastTemperature[xi - xs] = temperature;
 			}
-
-			// Copy data into the ReactionNetwork so that it can
-			// compute the new concentrations.
-			network.updateConcentrationsFromArray(concOffset);
 
 			// ----- Take care of the reactions for all the reactants -----
 

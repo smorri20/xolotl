@@ -20,7 +20,7 @@ FeSuperCluster::FeSuperCluster(double _numHe, double _numV, int _nTot,
 		int heWidth, int vWidth, IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		FeCluster(_network, registry, buildName(_numHe, _numV)), numHe(_numHe), numV(
-				_numV), nTot(_nTot), l0(0.0), l1He(0.0), l1V(0.0), dispersionHe(
+				_numV), nTot(_nTot), dispersionHe(
 				0.0), dispersionV(0.0), heMomentFlux(0.0), vMomentFlux(0.0) {
 	// Set the cluster size as the sum of
 	// the number of Helium and Vacancies
@@ -1310,8 +1310,8 @@ void FeSuperCluster::getDissociationFlux(const double* concs, int xi,
 				// Get the dissociating clusters
 				auto const& dissociatingCluster = currPair.first;
 				double l0A = dissociatingCluster.getConcentration(concs);
-				double lHeA = dissociatingCluster.getHeMoment();
-				double lVA = dissociatingCluster.getVMoment();
+				double lHeA = dissociatingCluster.getHeMoment(concs);
+				double lVA = dissociatingCluster.getVMoment(concs);
 				// Update the flux
 				auto value = currPair.reaction.kConstant[xi] / (double) nTot;
 				superFlux.flux += value * (currPair.a00 * l0A + currPair.a10 * lHeA + currPair.a20 * lVA);
@@ -1328,10 +1328,14 @@ void FeSuperCluster::getEmissionFlux(const double* concs, int xi,
 
 	auto& superFlux = static_cast<FeSuperCluster::Flux&>(flux);
 
+    auto l0 = getConcentration(concs);
+    auto l1He = getHeMoment(concs);
+    auto l1V = getVMoment(concs);
+
 	// Loop over all the emission pairs
 	// TODO consider using std::accumulate.
 	std::for_each(effEmissionList.begin(), effEmissionList.end(),
-			[this,&superFlux,&xi](DissociationPairMap::value_type const& currMapItem) {
+			[this,&superFlux,xi,l0,l1He,l1V](DissociationPairMap::value_type const& currMapItem) {
 				auto const& currPair = currMapItem.second;
 
 				// Update the flux
@@ -1362,10 +1366,10 @@ void FeSuperCluster::getProductionFlux(const double* concs, int xi,
 				auto const& secondReactant = currPair.second;
 				double l0A = firstReactant.getConcentration(concs);
 				double l0B = secondReactant.getConcentration(concs);
-				double lHeA = firstReactant.getHeMoment();
-				double lHeB = secondReactant.getHeMoment();
-				double lVA = firstReactant.getVMoment();
-				double lVB = secondReactant.getVMoment();
+				double lHeA = firstReactant.getHeMoment(concs);
+				double lHeB = secondReactant.getHeMoment(concs);
+				double lVA = firstReactant.getVMoment(concs);
+				double lVB = secondReactant.getVMoment(concs);
 				// Update the flux
 				auto value = currPair.reaction.kConstant[xi] / (double) nTot;
 				superFlux.flux += value
@@ -1395,16 +1399,20 @@ void FeSuperCluster::getCombinationFlux(const double* concs, int xi,
 
     auto& superFlux = static_cast<FeSuperCluster::Flux&>(flux);
 
+    auto l0 = getConcentration(concs);
+    auto l1He = getHeMoment(concs);
+    auto l1V = getVMoment(concs);
+
 	// Sum over all the combining clusters
 	// TODO consider using std::accumulate.
 	std::for_each(effCombiningList.begin(), effCombiningList.end(),
-			[this,&concs,&superFlux,&xi](CombiningClusterMap::value_type const& currMapItem) {
+			[this,&concs,&superFlux,xi,l0,l1He,l1V](CombiningClusterMap::value_type const& currMapItem) {
 				// Get the combining cluster
 				auto const& currComb = currMapItem.second;
 				auto const& combiningCluster = currComb.first;
 				double l0B = combiningCluster.getConcentration(concs);
-				double lHeB = combiningCluster.getHeMoment();
-				double lVB = combiningCluster.getVMoment();
+				double lHeB = combiningCluster.getHeMoment(concs);
+				double lVB = combiningCluster.getVMoment(concs);
 				// Update the flux
 				auto value = currComb.reaction.kConstant[xi] / (double) nTot;
 				superFlux.flux += value
@@ -1467,10 +1475,10 @@ void FeSuperCluster::getProductionPartialDerivatives(const double* concs,
 				auto const& secondReactant = currPair.second;
 				double l0A = firstReactant.getConcentration(concs);
 				double l0B = secondReactant.getConcentration(concs);
-				double lHeA = firstReactant.getHeMoment();
-				double lHeB = secondReactant.getHeMoment();
-				double lVA = firstReactant.getVMoment();
-				double lVB = secondReactant.getVMoment();
+				double lHeA = firstReactant.getHeMoment(concs);
+				double lHeB = secondReactant.getHeMoment(concs);
+				double lVA = firstReactant.getVMoment(concs);
+				double lVB = secondReactant.getVMoment(concs);
 
 				// Compute the contribution from the first part of the reacting pair
 				auto value = currPair.reaction.kConstant[xi] / (double) nTot;
@@ -1533,15 +1541,19 @@ void FeSuperCluster::getCombinationPartialDerivatives(const double* concs,
 	// dF(C_A)/dC_A = - k+_(A,B)*C_B
 	// dF(C_A)/dC_B = - k+_(A,B)*C_A
 
+    auto l0 = getConcentration(concs);
+    auto l1He = getHeMoment(concs);
+    auto l1V = getVMoment(concs);
+
 	// Visit all the combining clusters
 	std::for_each(effCombiningList.begin(), effCombiningList.end(),
-			[this,&concs,&partials,xi](CombiningClusterMap::value_type const& currMapItem) {
+			[this,&concs,&partials,xi,l0,l1He,l1V](CombiningClusterMap::value_type const& currMapItem) {
 				// Get the combining clusters
 				auto const& currComb = currMapItem.second;
 				auto const& cluster = currComb.first;
 				double l0B = cluster.getConcentration(concs);
-				double lHeB = cluster.getHeMoment();
-				double lVB = cluster.getVMoment();
+				double lHeB = cluster.getHeMoment(concs);
+				double lVB = cluster.getVMoment(concs);
 
 				// Compute the contribution from the combining cluster
 				auto value = currComb.reaction.kConstant[xi] / (double) nTot;

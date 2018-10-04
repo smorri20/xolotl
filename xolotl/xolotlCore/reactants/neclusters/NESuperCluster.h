@@ -161,12 +161,6 @@ private:
 	//! The width in the xenon direction.
 	int sectionWidth;
 
-	//! The 0th order moment (mean).
-	double l0;
-
-	//! The first order moment in the xenon direction.
-	double l1;
-
 	//! The dispersion in the group in the xenon direction.
 	double dispersion;
 
@@ -360,6 +354,28 @@ public:
 	}
 
 	/**
+	 * This operation returns the first xenon moment.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @return The moment
+	 */
+	double getMoment(const double* concs) const override {
+        return concs[getMomentId() - 1];
+    }
+
+	/**
+	 * Obtain current concentration.
+	 *
+	 * We hid the base class' getConcentration when
+	 * we defined the two-argument version here.  This tells the compiler
+	 * to allow us to use the base class' version also
+	 * without having to explicitly specify the class scope when calling it.
+	 *
+	 * @return The concentration of the reactant.
+	 */
+	using Reactant::getConcentration;
+
+	/**
 	 * This operation returns the current concentration.
 	 *
      * @param concs Current solution vector for desired grid point.
@@ -367,15 +383,8 @@ public:
 	 * @return The concentration of this reactant
 	 */
 	double getConcentration(const double* concs, double distXe) const override {
-		return l0 + (distXe * l1);
+		return getConcentration(concs) + (distXe * getMoment(concs));
 	}
-
-	/**
-	 * This operation returns the first xenon moment.
-	 *
-	 * @return The moment
-	 */
-	double getMoment() const override;
 
 	/**
 	 * This operation returns the current total concentration of clusters in the group.
@@ -411,24 +420,6 @@ public:
 	 */
 	double getDispersion() const {
 		return dispersion;
-	}
-
-	/**
-	 * This operation sets the zeroth order moment.
-	 *
-	 * @param mom The moment
-	 */
-	void setZerothMoment(double mom) {
-		l0 = mom;
-	}
-
-	/**
-	 * This operation sets the first order moment in the xenon direction.
-	 *
-	 * @param mom The moment
-	 */
-	void setMoment(double mom) {
-		l1 = mom;
 	}
 
 	/**

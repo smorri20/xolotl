@@ -202,13 +202,6 @@ void PetscSolver0DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 		lastTemperature[0] = temperature;
 	}
 
-	// Copy data into the ReactionNetwork so that it can
-	// compute the fluxes properly. The network is only used to compute the
-	// fluxes and hold the state data from the last time step. I'm reusing
-	// it because it cuts down on memory significantly (about 400MB per
-	// grid point) at the expense of being a little tricky to comprehend.
-	network.updateConcentrationsFromArray(concOffset);
-
 	// ----- Account for flux of incoming particles -----
 	fluxHandler->computeIncidentFlux(ftime, updatedConcOffset, 0, 0);
 
@@ -279,10 +272,6 @@ void PetscSolver0DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
 		network.setTemperature(temperature);
 		lastTemperature[0] = temperature;
 	}
-
-	// Copy data into the ReactionNetwork so that it can
-	// compute the new concentrations.
-	network.updateConcentrationsFromArray(concOffset);
 
 	// ----- Take care of the reactions for all the reactants -----
 

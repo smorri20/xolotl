@@ -601,24 +601,6 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 			return;
 		}
 
-		void FeClusterReactionNetwork::updateConcentrationsFromArray(
-				const double * concentrations) {
-
-			// Set the moments
-			auto const& superTypeMap = getAll(ReactantType::FeSuper);
-			std::for_each(superTypeMap.begin(), superTypeMap.end(),
-					[&concentrations](const ReactantMap::value_type& currMapItem) {
-
-						auto& cluster = static_cast<FeSuperCluster&>(*(currMapItem.second));
-
-						cluster.setZerothMoment(concentrations[cluster.getId() - 1]);
-						cluster.setHeMoment(concentrations[cluster.getMomentId(0) - 1]);
-						cluster.setVMoment(concentrations[cluster.getMomentId(1) - 1]);
-					});
-
-			return;
-		}
-
 		std::vector<std::vector<int> > FeClusterReactionNetwork::getCompositionList() const {
 			// Create the list that will be returned
 			std::vector<std::vector<int> > compList;

@@ -184,9 +184,6 @@ PetscErrorCode monitorScatter0D(TS ts, PetscInt timestep, PetscReal time,
 	// Get the pointer to the beginning of the solution data for this grid point
 	gridPointSolution = solutionArray[0];
 
-	// Update the concentration in the network
-	network.updateConcentrationsFromArray(gridPointSolution);
-
 	for (int i = 0; i < networkSize - superClusters.size(); i++) {
 		// Create a Point with the concentration[i] as the value
 		// and add it to myPoints
@@ -296,9 +293,6 @@ PetscErrorCode monitorBubble0D(TS ts, PetscInt timestep, PetscReal time,
 
 	// Get the pointer to the beginning of the solution data for this grid point
 	gridPointSolution = solutionArray[0];
-
-	// Update the concentration in the network
-	network.updateConcentrationsFromArray(gridPointSolution);
 
 	// Initialize the total helium and concentration before looping
 	double concTot = 0.0, heliumTot = 0.0;

@@ -299,9 +299,6 @@ void NECluster::updateFromNetwork() {
 	return;
 }
 
-double NECluster::getMoment() const {
-	return 0.0;
-}
 
 void NECluster::getDissociationFlux(const double* concs, int xi,
                                         Reactant::Flux& flux) const {

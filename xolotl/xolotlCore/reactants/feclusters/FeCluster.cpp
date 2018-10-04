@@ -760,8 +760,8 @@ void FeCluster::getDissociationFlux(const double* concs, int xi,
 			[&concs,&xi](double running, const ClusterPair& currPair) {
 				auto const& dissCluster = currPair.first;
 				double l0A = dissCluster.getConcentration(concs, 0.0, 0.0);
-				double lHeA = dissCluster.getHeMoment();
-				double lVA = dissCluster.getVMoment();
+				double lHeA = dissCluster.getHeMoment(concs);
+				double lVA = dissCluster.getVMoment(concs);
 
 				// Calculate the Dissociation flux
 				return running +
@@ -794,10 +794,10 @@ void FeCluster::getProductionFlux(const double* concs, int xi,
 			auto const& secondReactant = currPair.second;
 			double l0A = firstReactant.getConcentration(concs, 0.0, 0.0);
 			double l0B = secondReactant.getConcentration(concs, 0.0, 0.0);
-			double lHeA = firstReactant.getHeMoment();
-			double lHeB = secondReactant.getHeMoment();
-			double lVA = firstReactant.getVMoment();
-			double lVB = secondReactant.getVMoment();
+			double lHeA = firstReactant.getHeMoment(concs);
+			double lHeB = secondReactant.getHeMoment(concs);
+			double lVA = firstReactant.getVMoment(concs);
+			double lVB = secondReactant.getVMoment(concs);
 			// Update the flux
 			return running + currPair.reaction.kConstant[xi] *
 			(currPair.a00 * l0A * l0B + currPair.a01 * l0A * lHeB +
@@ -819,8 +819,8 @@ void FeCluster::getCombinationFlux(const double* concs, int xi,
 				// Get the cluster that combines with this one
 				auto const& combiningCluster = cc.combining;
 				double l0B = combiningCluster.getConcentration(concs, 0.0, 0.0);
-				double lHeB = combiningCluster.getHeMoment();
-				double lVB = combiningCluster.getVMoment();
+				double lHeB = combiningCluster.getHeMoment(concs);
+				double lVB = combiningCluster.getVMoment(concs);
 				// Calculate the combination flux
 				return running + (cc.reaction.kConstant[xi] *
 						(cc.a0 * l0B + cc.a1 * lHeB + cc.a2 * lVB));
@@ -857,10 +857,10 @@ void FeCluster::getProductionPartialDerivatives(const double* concs, int xi,
 				auto const& secondReactant = currPair.second;
 				double l0A = firstReactant.getConcentration(concs, 0.0, 0.0);
 				double l0B = secondReactant.getConcentration(concs, 0.0, 0.0);
-				double lHeA = firstReactant.getHeMoment();
-				double lHeB = secondReactant.getHeMoment();
-				double lVA = firstReactant.getVMoment();
-				double lVB = secondReactant.getVMoment();
+				double lHeA = firstReactant.getHeMoment(concs);
+				double lHeB = secondReactant.getHeMoment(concs);
+				double lVA = firstReactant.getVMoment(concs);
+				double lVB = secondReactant.getVMoment(concs);
 
 				// Compute contribution from the first part of the reacting pair
 				double value = currPair.reaction.kConstant[xi];
@@ -902,8 +902,8 @@ void FeCluster::getCombinationPartialDerivatives(const double* concs, int xi,
 			[this,&concs,&partials,xi](const CombiningCluster& cc) {
 				auto const& cluster = cc.combining;
 				double l0B = cluster.getConcentration(concs, 0.0, 0.0);
-				double lHeB = cluster.getHeMoment();
-				double lVB = cluster.getVMoment();
+				double lHeB = cluster.getHeMoment(concs);
+				double lVB = cluster.getVMoment(concs);
 
 				// Remember that the flux due to combinations is OUTGOING (-=)!
 				// Compute the contribution from this cluster

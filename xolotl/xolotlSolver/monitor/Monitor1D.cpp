@@ -298,9 +298,6 @@ PetscErrorCode computeTRIDYN1D(TS ts, PetscInt timestep, PetscReal time,
 			// Access the solution data for this grid point.
 			auto gridPointSolution = solutionArray[xi];
 
-			// Update the concentration in the network
-			network.updateConcentrationsFromArray(gridPointSolution);
-
 			// Get the total concentrations at this grid point
 			auto currIdx = xi - myFirstIdxToWrite;
 			myConcs[currIdx][0] = (x - (grid[surfacePos + 1] - grid[1]));
@@ -522,9 +519,6 @@ PetscErrorCode computeHeliumRetention1D(TS ts, PetscInt, PetscReal time,
 
 		// Get the pointer to the beginning of the solution data for this grid point
 		gridPointSolution = solutionArray[xi];
-
-		// Update the concentration in the network
-		network.updateConcentrationsFromArray(gridPointSolution);
 
 		// Get the total atoms concentration at this grid point
 		heConcentration += network.getTotalAtomConcentration(gridPointSolution, 0)
@@ -757,9 +751,6 @@ PetscErrorCode computeXenonRetention1D(TS ts, PetscInt, PetscReal time,
 		// Get the pointer to the beginning of the solution data for this grid point
 		gridPointSolution = solutionArray[xi];
 
-		// Update the concentration in the network
-		network.updateConcentrationsFromArray(gridPointSolution);
-
 		// Loop on all the indices
 		for (unsigned int i = 0; i < indices1D.size(); i++) {
 			// Add the current concentration times the number of xenon in the cluster
@@ -916,9 +907,6 @@ PetscErrorCode computeHeliumConc1D(TS ts, PetscInt timestep, PetscReal time,
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[xi];
 
-			// Update the concentration in the network
-			network.updateConcentrationsFromArray(gridPointSolution);
-
 			// Loop on all the indices
 			for (int l = 0; l < indices1D.size(); l++) {
 				// Add the current concentration
@@ -1064,9 +1052,6 @@ PetscErrorCode computeCumulativeHelium1D(TS ts, PetscInt timestep,
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[xi];
 
-			// Update the concentration in the network
-			network.updateConcentrationsFromArray(gridPointSolution);
-
 			// Get the total helium concentration at this grid point
 			heLocalConc += network.getTotalAtomConcentration(gridPointSolution, 0)
 					* (grid[xi + 1] - grid[xi]);
@@ -1167,9 +1152,6 @@ PetscErrorCode monitorScatter1D(TS ts, PetscInt timestep, PetscReal time,
 		if (ix >= xs && ix < xs + xm) {
 			// Get the pointer to the beginning of the solution data for this grid point
 			gridPointSolution = solutionArray[ix];
-
-			// Update the concentration in the network
-			network.updateConcentrationsFromArray(gridPointSolution);
 
 			for (int i = 0; i < networkSize - superClusters.size(); i++) {
 				// Create a Point with the concentration[i] as the value
@@ -2073,8 +2055,6 @@ PetscErrorCode eventFunction1D(TS ts, PetscReal time, Vec solution,
 
 				// Get the pointer to the beginning of the solution data for this grid point
 				gridPointSolution = solutionArray[xi];
-				// Update the concentration in the network
-				network.updateConcentrationsFromArray(gridPointSolution);
 
 				// Get the distance from the surface
 				double distance = grid[xi + 1] - grid[surfacePos + 1];
@@ -2193,8 +2173,6 @@ PetscErrorCode postEventFunction1D(TS ts, PetscInt nevents,
 	for (int i = 0; i < depthPositions1D.size(); i++) {
 		// Get the pointer to the beginning of the solution data for this grid point
 		gridPointSolution = solutionArray[depthPositions1D[i]];
-		// Update the concentration in the network
-		network.updateConcentrationsFromArray(gridPointSolution);
 
 		// Get the distance from the surface
 		double distance = grid[depthPositions1D[i] + 1] - grid[surfacePos + 1];

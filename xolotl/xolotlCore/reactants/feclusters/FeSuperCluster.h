@@ -358,15 +358,6 @@ private:
 	//! The width in the vacancy direction.
 	int sectionVWidth;
 
-	//! The 0th order moment (mean).
-	double l0;
-
-	//! The first order moment in the helium direction.
-	double l1He;
-
-	//! The first order moment in the vacancy direction.
-	double l1V;
-
 	//! The dispersion in the group in the helium direction.
 	double dispersionHe;
 
@@ -612,6 +603,19 @@ public:
 	 */
 	void setHeVVector(std::vector<std::pair<int, int> > vec);
 
+
+	/**
+	 * Obtain current concentration.
+	 *
+	 * We hid the base class' getConcentration when
+	 * we defined our version in this class.  This tells the compiler
+	 * to allow us to use the base class' version also
+	 * without having to explicitly specify the class scope when calling it.
+	 *
+	 * @return The concentration of the reactant.
+	 */
+	using Reactant::getConcentration;
+
 	/**
 	 * This operation returns the current concentration.
 	 *
@@ -623,9 +627,9 @@ public:
     double getConcentration(const double* concs,
                             double distHe, double distV) const override {
 
-        return concs[id - 1] + 
-                (distHe * concs[getMomentId(0) - 1]) + 
-                 (distV * concs[getMomentId(1) - 1]);
+        return getConcentration(concs) +
+                (distHe * getHeMoment(concs)) +
+                 (distV * getVMoment(concs));
     }
 
 	/**
@@ -633,8 +637,8 @@ public:
 	 *
 	 * @return The moment
 	 */
-	double getHeMoment() const override {
-		return l1He;
+	double getHeMoment(const double* concs) const override {
+        return concs[getMomentId(0) - 1];
 	}
 
 	/**
@@ -642,8 +646,8 @@ public:
 	 *
 	 * @return The moment
 	 */
-	double getVMoment() const override {
-		return l1V;
+	double getVMoment(const double* concs) const override {
+        return concs[getMomentId(1) - 1];
 	}
 
 	/**
@@ -690,33 +694,6 @@ public:
 	double getVDistance(int v) const override {
 		return (sectionVWidth == 1) ?
 				0.0 : 2.0 * (v - numV) / (sectionVWidth - 1.0);
-	}
-
-	/**
-	 * This operation sets the zeroth order moment.
-	 *
-	 * @param mom The moment
-	 */
-	void setZerothMoment(double mom) {
-		l0 = mom;
-	}
-
-	/**
-	 * This operation sets the first order moment in the helium direction.
-	 *
-	 * @param mom The moment
-	 */
-	void setHeMoment(double mom) {
-		l1He = mom;
-	}
-
-	/**
-	 * This operation sets the first order moment in the vacancy direction.
-	 *
-	 * @param mom The moment
-	 */
-	void setVMoment(double mom) {
-		l1V = mom;
 	}
 
 	/**

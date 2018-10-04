@@ -158,21 +158,6 @@ void NEClusterReactionNetwork::reinitializeConnectivities() {
 	return;
 }
 
-void NEClusterReactionNetwork::updateConcentrationsFromArray(
-		const double* concentrations) {
-
-	// Set the moments
-	auto const& superTypeMap = getAll(ReactantType::NESuper);
-	std::for_each(superTypeMap.begin(), superTypeMap.end(),
-			[&concentrations](const ReactantMap::value_type& currMapItem) {
-				auto& cluster = static_cast<NESuperCluster&>(*(currMapItem.second));
-				cluster.setZerothMoment(concentrations[cluster.getId() - 1]);
-				cluster.setMoment(concentrations[cluster.getMomentId() - 1]);
-			});
-
-	return;
-}
-
 std::vector<std::vector<int> > NEClusterReactionNetwork::getCompositionList() const {
 	// Create the list that will be returned
 	std::vector<std::vector<int> > compList;

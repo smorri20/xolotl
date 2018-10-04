@@ -375,7 +375,9 @@ public:
 	 *
 	 * @return The moment
 	 */
-	virtual double getMoment() const;
+	virtual double getMoment(const double* concs) const {
+        return 0.0;
+    }
 
 	/**
 	 * This operation returns the total flux of this cluster in the

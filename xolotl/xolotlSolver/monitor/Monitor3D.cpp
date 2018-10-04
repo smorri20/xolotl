@@ -287,9 +287,6 @@ PetscErrorCode computeHeliumRetention3D(TS ts, PetscInt, PetscReal time,
 				// this grid point
 				gridPointSolution = solutionArray[zk][yj][xi];
 
-				// Update the concentration in the network
-				network.updateConcentrationsFromArray(gridPointSolution);
-
 				// Get the total helium concentration at this grid point
 				heConcentration += network.getTotalAtomConcentration(gridPointSolution, 0)
 						* (grid[xi + 1] - grid[xi]) * hy * hz;
@@ -442,9 +439,6 @@ PetscErrorCode computeTRIDYN3D(TS ts, PetscInt timestep, PetscReal time,
 				if (xi >= xs && xi < xs + xm) {
 					// Get the pointer to the beginning of the solution data for this grid point
 					gridPointSolution = solutionArray[zk][yj][xi];
-
-					// Update the concentration in the network
-					network.updateConcentrationsFromArray(gridPointSolution);
 
 					// Get the total helium concentration at this grid point
 					heLocalConc += gridPointSolution[0];
@@ -961,9 +955,6 @@ PetscErrorCode eventFunction3D(TS ts, PetscReal time, Vec solution,
 
 						// Get the pointer to the beginning of the solution data for this grid point
 						gridPointSolution = solutionArray[zk][yj][xi];
-						// Update the concentration in the network
-						network.updateConcentrationsFromArray(
-								gridPointSolution);
 
 						// Get the distance from the surface
 						double distance = grid[xi + 1] - grid[surfacePos + 1];
@@ -1097,8 +1088,6 @@ PetscErrorCode postEventFunction3D(TS ts, PetscInt nevents,
 				depthPositions3D[i]), zk = std::get<0>(depthPositions3D[i]);
 		// Get the pointer to the beginning of the solution data for this grid point
 		gridPointSolution = solutionArray[zk][yj][xi];
-		// Update the concentration in the network
-		network.updateConcentrationsFromArray(gridPointSolution);
 
 		// Get the surface position
 		int surfacePos = solverHandler.getSurfacePosition(yj, zk);
