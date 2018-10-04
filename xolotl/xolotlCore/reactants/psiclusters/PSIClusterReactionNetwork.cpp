@@ -1438,27 +1438,6 @@ void PSIClusterReactionNetwork::reinitializeConnectivities() {
 	return;
 }
 
-void PSIClusterReactionNetwork::updateConcentrationsFromArray(
-		double * concentrations) {
-
-	// Set the concentration on each reactant.
-    ReactionNetwork::updateConcentrationsFromArray(concentrations);
-
-	// Set the moments
-	auto const& superTypeMap = getAll(ReactantType::PSISuper);
-	std::for_each(superTypeMap.begin(), superTypeMap.end(),
-			[&concentrations,this](const ReactantMap::value_type& currMapItem) {
-
-				auto& cluster = static_cast<PSISuperCluster&>(*(currMapItem.second));
-
-				// Loop on the used moments
-				for (int i = 1; i < psDim; i++) {
-					cluster.setMoment(concentrations[cluster.getMomentId(indexList[i] - 1) - 1], indexList[i] - 1);
-				}
-			});
-
-	return;
-}
 
 std::vector<std::vector<int> > PSIClusterReactionNetwork::getCompositionList() const {
 	// Create the list that will be returned
@@ -1791,7 +1770,7 @@ void PSIClusterReactionNetwork::computeAllPartials(
 			auto reactantIndex = reactant.getId() - 1;
 
 			// Get the partial derivatives
-			reactant.getPartialDerivatives(clusterPartials, xi);
+			reactant.getPartialDerivatives(concs, xi, clusterPartials);
 			// Get the list of column ids from the map
 			auto const& pdColIdsVector = dFillMap.at(reactantIndex);
 
@@ -1840,7 +1819,7 @@ void PSIClusterReactionNetwork::computeAllPartials(
 
 		// Have reactant compute its partial derivatives
 		// to its correct locations within the vals array.
-		reactant.computePartialDerivatives(concs, partials, partialsIdxMap, xi);
+		reactant.computePartialDerivatives(concs, xi, partialsIdxMap, partials);
 	}
 
 	// Clear memory

@@ -647,41 +647,6 @@ public:
 	virtual std::vector<int> getConnectivity() const override;
 
 	/**
-	 * This operation returns the list of partial derivatives of this reactant
-	 * with respect to all other reactants in the network. The combined lists
-	 * of partial derivatives from all of the reactants in the network can be
-	 * used to form, for example, a Jacobian.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return the partial derivatives for this reactant where index zero
-	 * corresponds to the first reactant in the list returned by the
-	 * ReactionNetwork::getAll() operation.
-	 */
-	virtual std::vector<double> getPartialDerivatives(int i) const override {
-		return std::vector<double>(network.getDOF(), 0.0);
-	}
-
-	/**
-	 * This operation works as getPartialDerivatives above, but instead of
-	 * returning a vector that it creates it fills a vector that is passed to
-	 * it by the caller. This allows the caller to optimize the amount of
-	 * memory allocations to just one if they are accessing the partial
-	 * derivatives many times.
-	 *
-	 * The base class (Reactant) implementation does nothing.
-	 *
-	 * @param partials The vector that should be filled with the partial derivatives
-	 * for this reactant where index zero corresponds to the first reactant in
-	 * the list returned by the ReactionNetwork::getAll() operation. The size of
-	 * the vector should be equal to ReactionNetwork::size().
-	 * @param i The location on the grid in the depth direction
-	 */
-	virtual void getPartialDerivatives(std::vector<double> & partials,
-			int i) const override {
-		// nothing to do.
-	}
-
-	/**
 	 * This operation returns the name of the reactant.
 	 *
 	 * @return The name

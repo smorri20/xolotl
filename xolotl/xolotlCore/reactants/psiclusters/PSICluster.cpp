@@ -774,7 +774,7 @@ void PSICluster::getDissociationFlux(const double* concs, int xi,
 				double lA[5] = {};
 				lA[0] = dissCluster.getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
-					lA[i] = dissCluster.getMoment(indexList[i] - 1);
+					lA[i] = dissCluster.getMoment(concs, indexList[i] - 1);
 				}
 
 				double sum = 0.0;
@@ -814,8 +814,8 @@ void PSICluster::getProductionFlux(const double* concs, int xi,
 			lA[0] = firstReactant.getConcentration(concs);
 			lB[0] = secondReactant.getConcentration(concs);
 			for (int i = 1; i < psDim; i++) {
-				lA[i] = firstReactant.getMoment(indexList[i] - 1);
-				lB[i] = secondReactant.getMoment(indexList[i] - 1);
+				lA[i] = firstReactant.getMoment(concs, indexList[i] - 1);
+				lB[i] = secondReactant.getMoment(concs, indexList[i] - 1);
 			}
 
 			double sum = 0.0;
@@ -843,7 +843,7 @@ void PSICluster::getCombinationFlux(const double* concs, int xi,
 				double lB[5] = {};
 				lB[0] = combiningCluster.getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
-					lB[i] = combiningCluster.getMoment(indexList[i] - 1);
+					lB[i] = combiningCluster.getMoment(concs, indexList[i] - 1);
 				}
 
 				double sum = 0.0;
@@ -857,32 +857,20 @@ void PSICluster::getCombinationFlux(const double* concs, int xi,
 			}) * getConcentration(concs);
 }
 
-std::vector<double> PSICluster::getPartialDerivatives(int i) const {
-	// Local Declarations
-	std::vector<double> partials(network.getDOF(), 0.0);
+void PSICluster::getPartialDerivatives(const double* concs, int i,
+        std::vector<double> & partials) const {
 
 	// Get the partial derivatives for each reaction type
-	getProductionPartialDerivatives(partials, i);
-	getCombinationPartialDerivatives(partials, i);
-	getDissociationPartialDerivatives(partials, i);
-	getEmissionPartialDerivatives(partials, i);
-
-	return partials;
-}
-
-void PSICluster::getPartialDerivatives(std::vector<double> & partials,
-		int i) const {
-	// Get the partial derivatives for each reaction type
-	getProductionPartialDerivatives(partials, i);
-	getCombinationPartialDerivatives(partials, i);
+	getProductionPartialDerivatives(concs, i, partials);
+	getCombinationPartialDerivatives(concs, i, partials);
 	getDissociationPartialDerivatives(partials, i);
 	getEmissionPartialDerivatives(partials, i);
 
 	return;
 }
 
-void PSICluster::getProductionPartialDerivatives(std::vector<double> & partials,
-		int xi) const {
+void PSICluster::getProductionPartialDerivatives(const double* concs, int xi,
+        std::vector<double> & partials) const {
 
 	// Production
 	// A + B --> D, D being this cluster
@@ -892,16 +880,16 @@ void PSICluster::getProductionPartialDerivatives(std::vector<double> & partials,
 	// dF(C_D)/dC_A = k+_(A,B)*C_B
 	// dF(C_D)/dC_B = k+_(A,B)*C_A
 	std::for_each(reactingPairs.begin(), reactingPairs.end(),
-			[&partials,this,&xi](const ClusterPair& currPair) {
+			[this,&concs,&partials,xi](const ClusterPair& currPair) {
 				// Get the two reacting clusters
 				auto const& firstReactant = currPair.first;
 				auto const& secondReactant = currPair.second;
 				double lA[5] = {}, lB[5] = {};
-				lA[0] = firstReactant.getConcentration();
-				lB[0] = secondReactant.getConcentration();
+				lA[0] = firstReactant.getConcentration(concs);
+				lB[0] = secondReactant.getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
-					lA[i] = firstReactant.getMoment(indexList[i] - 1);
-					lB[i] = secondReactant.getMoment(indexList[i] - 1);
+					lA[i] = firstReactant.getMoment(concs, indexList[i] - 1);
+					lB[i] = secondReactant.getMoment(concs, indexList[i] - 1);
 				}
 
 				// Compute contribution from the first part of the reacting pair
@@ -926,8 +914,8 @@ void PSICluster::getProductionPartialDerivatives(std::vector<double> & partials,
 	return;
 }
 
-void PSICluster::getCombinationPartialDerivatives(
-		std::vector<double> & partials, int xi) const {
+void PSICluster::getCombinationPartialDerivatives(const double* concs, int xi,
+		std::vector<double> & partials) const {
 
 	// Combination
 	// A + B --> D, A being this cluster
@@ -937,12 +925,12 @@ void PSICluster::getCombinationPartialDerivatives(
 	// dF(C_A)/dC_A = - k+_(A,B)*C_B
 	// dF(C_A)/dC_B = - k+_(A,B)*C_A
 	std::for_each(combiningReactants.begin(), combiningReactants.end(),
-			[this,&partials,&xi](const CombiningCluster& cc) {
+			[this,&concs,&partials,xi](const CombiningCluster& cc) {
 				auto const& cluster = cc.combining;
 				double lB[5] = {};
-				lB[0] = cluster.getConcentration();
+				lB[0] = cluster.getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
-					lB[i] = cluster.getMoment(indexList[i] - 1);
+					lB[i] = cluster.getMoment(concs, indexList[i] - 1);
 				}
 
 				double sum = 0.0;

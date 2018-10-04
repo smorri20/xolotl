@@ -368,21 +368,9 @@ void NECluster::getCombinationFlux(const double* concs, int xi,
 			}) * getConcentration(concs);
 }
 
-std::vector<double> NECluster::getPartialDerivatives(int i) const {
-	// Local Declarations
-	std::vector<double> partials(network.getDOF(), 0.0);
+void NECluster::getPartialDerivatives(const double* concs, int i,
+        std::vector<double> & partials) const {
 
-	// Get the partial derivatives for each reaction type
-	getProductionPartialDerivatives(partials, i);
-	getCombinationPartialDerivatives(partials, i);
-	getDissociationPartialDerivatives(partials, i);
-	getEmissionPartialDerivatives(partials, i);
-
-	return partials;
-}
-
-void NECluster::getPartialDerivatives(std::vector<double> & partials,
-		int i) const {
 	// Get the partial derivatives for each reaction type
 	getProductionPartialDerivatives(partials, i);
 	getCombinationPartialDerivatives(partials, i);

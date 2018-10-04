@@ -1166,7 +1166,7 @@ void PSISuperCluster::getDissociationFlux(const double* concs, int xi,
 				double lA[5] = {};
 				lA[0] = dissociatingCluster.getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
-					lA[i] = dissociatingCluster.getMoment(indexList[i]-1);
+					lA[i] = dissociatingCluster.getMoment(concs, indexList[i]-1);
 				}
 
 				double sum[5] = {};
@@ -1197,7 +1197,7 @@ void PSISuperCluster::getEmissionFlux(const double* concs, int xi,
 				double lA[5] = {};
 				lA[0] = concs[id-1];
 				for (int i = 1; i < psDim; i++) {
-					lA[i] = l1[indexList[i]-1];
+					lA[i] = getMoment(concs, indexList[i]-1);
 				}
 
 				double sum[5] = {};
@@ -1233,8 +1233,8 @@ void PSISuperCluster::getProductionFlux(const double* concs, int xi,
 				lA[0] = firstReactant.getConcentration(concs);
 				lB[0] = secondReactant.getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
-					lA[i] = firstReactant.getMoment(indexList[i]-1);
-					lB[i] = secondReactant.getMoment(indexList[i]-1);
+					lA[i] = firstReactant.getMoment(concs, indexList[i]-1);
+					lB[i] = secondReactant.getMoment(concs, indexList[i]-1);
 				}
 
 				double sum[5] = {};
@@ -1271,8 +1271,8 @@ void PSISuperCluster::getCombinationFlux(const double* concs, int xi,
 				lA[0] = concs[id-1];
 				lB[0] = combiningCluster.getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
-					lA[i] = l1[indexList[i]-1];
-					lB[i] = combiningCluster.getMoment(indexList[i]-1);
+					lA[i] = getMoment(concs, indexList[i]-1);
+					lB[i] = combiningCluster.getMoment(concs, indexList[i]-1);
 				}
 
 				double sum[5] = {};
@@ -1293,22 +1293,23 @@ void PSISuperCluster::getCombinationFlux(const double* concs, int xi,
 			});
 }
 
-void PSISuperCluster::computePartialDerivatives(
-        const double* concs,
-        double* partials[5],
-		const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap, int i) const {
+void PSISuperCluster::computePartialDerivatives(const double* concs, int i,
+		const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
+        double* partials[5]) const {
 
 	// Get the partial derivatives for each reaction type
-	computeProductionPartialDerivatives(partials, partialsIdxMap, i);
-	computeCombinationPartialDerivatives(concs, partials, partialsIdxMap, i);
-	computeDissociationPartialDerivatives(partials, partialsIdxMap, i);
-	computeEmissionPartialDerivatives(partials, partialsIdxMap, i);
+	computeProductionPartialDerivatives(concs, i, partialsIdxMap, partials);
+	computeCombinationPartialDerivatives(concs, i, partialsIdxMap, partials);
+	computeDissociationPartialDerivatives(concs, i, partialsIdxMap, partials);
+	computeEmissionPartialDerivatives(concs, i, partialsIdxMap, partials);
 
 	return;
 }
 
-void PSISuperCluster::computeProductionPartialDerivatives(double* partials[5],
-		const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap, int xi) const {
+void PSISuperCluster::computeProductionPartialDerivatives(const double* concs,
+        int xi,
+		const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
+        double* partials[5]) const {
 
 	// Production
 	// A + B --> D, D being this cluster
@@ -1320,8 +1321,7 @@ void PSISuperCluster::computeProductionPartialDerivatives(double* partials[5],
 
 	// Loop over all the reacting pairs
 	std::for_each(effReactingList.begin(), effReactingList.end(),
-			[this,
-			&partials, &partialsIdxMap,&xi](ProductionPairList::value_type const& currPair) {
+			[this,&concs,&partials,&partialsIdxMap,xi](ProductionPairList::value_type const& currPair) {
 
 				// Get the two reacting clusters
 				auto const& firstReactant = currPair.first;
@@ -1330,8 +1330,8 @@ void PSISuperCluster::computeProductionPartialDerivatives(double* partials[5],
 				lA[0] = firstReactant.getConcentration();
 				lB[0] = secondReactant.getConcentration();
 				for (int i = 1; i < psDim; i++) {
-					lA[i] = firstReactant.getMoment(indexList[i]-1);
-					lB[i] = secondReactant.getMoment(indexList[i]-1);
+					lA[i] = firstReactant.getMoment(concs, indexList[i]-1);
+					lB[i] = secondReactant.getMoment(concs, indexList[i]-1);
 				}
 
 				double sum[5][5][2] = {};
@@ -1368,10 +1368,10 @@ void PSISuperCluster::computeProductionPartialDerivatives(double* partials[5],
 	return;
 }
 
-void PSISuperCluster::computeCombinationPartialDerivatives(
-        const double* concs,
-        double* partials[5],
-		const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap, int xi) const {
+void PSISuperCluster::computeCombinationPartialDerivatives(const double* concs,
+        int xi,
+		const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
+        double* partials[5]) const {
 
 	// Combination
 	// A + B --> D, A being this cluster
@@ -1390,8 +1390,8 @@ void PSISuperCluster::computeCombinationPartialDerivatives(
 				lA[0] = concs[id-1];
 				lB[0] = cluster.getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
-					lA[i] = l1[indexList[i]-1];
-					lB[i] = cluster.getMoment(indexList[i]-1);
+					lA[i] = getMoment(concs, indexList[i]-1);
+					lB[i] = cluster.getMoment(concs, indexList[i]-1);
 				}
 
 				double sum[5][5][2] = {};
@@ -1428,8 +1428,10 @@ void PSISuperCluster::computeCombinationPartialDerivatives(
 	return;
 }
 
-void PSISuperCluster::computeDissociationPartialDerivatives(double* partials[5],
-		const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap, int xi) const {
+void PSISuperCluster::computeDissociationPartialDerivatives(
+        const double* concs, int xi,
+		const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
+        double* partials[5]) const {
 
 	// Dissociation
 	// A --> B + D, B being this cluster
@@ -1466,8 +1468,10 @@ void PSISuperCluster::computeDissociationPartialDerivatives(double* partials[5],
 	return;
 }
 
-void PSISuperCluster::computeEmissionPartialDerivatives(double* partials[5],
-		const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap, int xi) const {
+void PSISuperCluster::computeEmissionPartialDerivatives(const double* concs,
+        int xi,
+		const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
+        double* partials[5]) const {
 
 	// Emission
 	// A --> B + D, A being this cluster

@@ -91,6 +91,23 @@ public:
 	 */
 	virtual ~DummyReactant() {
 	}
+
+	/**
+	 * This operation returns the list of partial derivatives of this reactant
+	 * with respect to all other reactants in the network. The combined lists
+	 * of partial derivatives from all of the reactants in the network can be
+	 * used to form, for example, a Jacobian.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] partials The partial derivatives for this reactant where
+     *  index zero corresponds to the first reactant in the list returned
+     *  by the ReactionNetwork::getAll() operation.
+     */
+	void getPartialDerivatives(const double* concs, int i,
+            std::vector<double> & partials) const override {
+    }
+
 };
 
 } // namespace xolotlCore

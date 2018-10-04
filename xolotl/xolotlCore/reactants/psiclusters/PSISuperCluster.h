@@ -364,9 +364,6 @@ private:
 	//! The dispersion in the group.
 	double dispersion[4] = { };
 
-	//! The first order moment.
-	double l1[4] = { };
-
 	//! To know if the cluster has a regular shape
 	bool full;
 
@@ -737,6 +734,17 @@ public:
 	void setHeVVector(const HeVListType& vec);
 
 	/**
+	 * This operation returns the first moment of the given axis.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param axis The axis we are intersted in
+	 * @return The moment
+	 */
+	double getMoment(const double* concs, int axis) const override {
+		return concs[getMomentId(axis) - 1];
+	}
+
+	/**
 	 * This operation returns the current concentration.
 	 *
      * @param concs Concentrations for desired grid point.
@@ -752,29 +760,14 @@ public:
                                     double distT,
 			                        double distV) const {
 
-        for(auto i = 1; i < psDim; ++i) {
-            auto currAxis = indexList[i] - 1;
-            assert(concs[getMomentId(currAxis) - 1] == l1[currAxis]);
-        }
-
         std::array<double, 5> dists { 0, distHe, distD, distT, distV };
 
         double ret = concs[id - 1];
         for(auto i = 1; i < psDim; ++i) {
             auto currAxis = indexList[i] - 1;
-            ret += (dists[i] * concs[getMomentId(currAxis) - 1]);
+            ret += (dists[i] * getMoment(concs, currAxis));
         }
         return ret;
-	}
-
-	/**
-	 * This operation returns the first moment of the given axis.
-	 *
-	 * @param axis The axis we are intersted in
-	 * @return The moment
-	 */
-	double getMoment(int axis) const override {
-		return l1[axis];
 	}
 
 	/**
@@ -873,16 +866,6 @@ public:
 	}
 
 	/**
-	 * This operation sets the first order moment.
-	 *
-	 * @param axis The axis we are intersted in
-	 * @param mom The moment
-	 */
-	void setMoment(double mom, int axis) {
-		l1[axis] = mom;
-	}
-
-	/**
 	 * This operation reset the connectivity sets based on the information
 	 * in the production and dissociation vectors.
 	 */
@@ -934,11 +917,11 @@ public:
 	 * @param i The location on the grid in the depth direction
 	 *
 	 */
-	void computePartialDerivatives(const double* concs,
-            double* partials[5],
+	void computePartialDerivatives(const double* concs, int i,
 			const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
-			int i) const;
-	void getPartialDerivatives(std::vector<double> & partials, int i) const
+            double* partials[5]) const;
+	void getPartialDerivatives(const double* concs, int i,
+            std::vector<double> & partials) const
 			override
 			{
 		assert(false);
@@ -948,16 +931,17 @@ public:
 	 * This operation computes the partial derivatives due to production
 	 * reactions.
 	 *
+     * @param concs Current solution vector for desired grid point.
 	 * @param partials The vector into which the partial derivatives should be
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
 	 * @param i The location on the grid in the depth direction
 	 */
-	void computeProductionPartialDerivatives(double* partials[5],
+	void computeProductionPartialDerivatives(const double* concs, int i,
 			const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
-			int i) const;
-	void getProductionPartialDerivatives(std::vector<double> & partials,
-			int i) const override
+            double* partials[5]) const;
+	void getProductionPartialDerivatives(const double* concs, int i,
+            std::vector<double> & partials) const override
 			{
 		assert(false);
 	}
@@ -972,12 +956,11 @@ public:
 	 * network.
 	 * @param i The location on the grid in the depth direction
 	 */
-	void computeCombinationPartialDerivatives(const double* concs,
-            double* partials[5],
+	void computeCombinationPartialDerivatives(const double* concs, int i,
 			const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
-			int i) const;
-	void getCombinationPartialDerivatives(std::vector<double> & partials,
-			int i) const override
+            double* partials[5]) const;
+	void getCombinationPartialDerivatives(const double* concs, int i,
+            std::vector<double> & partials) const override
 			{
 		assert(false);
 	}
@@ -986,14 +969,15 @@ public:
 	 * This operation computes the partial derivatives due to dissociation of
 	 * other clusters into this one.
 	 *
+     * @param concs Current solution vector for desired grid point.
 	 * @param partials The vector into which the partial derivatives should be
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
 	 * @param i The location on the grid in the depth direction
 	 */
-	void computeDissociationPartialDerivatives(double* partials[5],
+	void computeDissociationPartialDerivatives(const double* concs, int i,
 			const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
-			int i) const;
+            double* partials[5]) const;
 	void getDissociationPartialDerivatives(std::vector<double> & partials,
 			int i) const override
 			{
@@ -1004,14 +988,15 @@ public:
 	 * This operation computes the partial derivatives due to emission
 	 * reactions.
 	 *
+     * @param concs Current solution vector for desired grid point.
 	 * @param partials The vector into which the partial derivatives should be
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
 	 * @param i The location on the grid in the depth direction
 	 */
-	void computeEmissionPartialDerivatives(double* partials[5],
+	void computeEmissionPartialDerivatives(const double* concs, int i,
 			const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
-			int i) const;
+            double* partials[5]) const;
 	void getEmissionPartialDerivatives(std::vector<double> & partials,
 			int i) const override
 			{

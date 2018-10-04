@@ -714,8 +714,9 @@ void NESuperCluster::getCombinationFlux(const double* concs, int xi,
         });
 }
 
-void NESuperCluster::getPartialDerivatives(std::vector<double> & partials,
-		int i) const {
+void NESuperCluster::getPartialDerivatives(const double* concs, int i,
+        std::vector<double> & partials) const {
+
 	// Reinitialize the moment partial derivatives vector
 	std::fill(momentPartials.begin(), momentPartials.end(), 0.0);
 

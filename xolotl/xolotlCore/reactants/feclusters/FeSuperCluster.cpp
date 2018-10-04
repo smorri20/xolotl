@@ -1429,8 +1429,9 @@ void FeSuperCluster::getCombinationFlux(const double* concs, int xi,
 			});
 }
 
-void FeSuperCluster::getPartialDerivatives(std::vector<double> & partials,
-		int i) const {
+void FeSuperCluster::getPartialDerivatives(const double* concs, int i,
+        std::vector<double> & partials) const {
+
 	// Reinitialize the moment partial derivatives vector
 	std::fill(feHeMomentPartials.begin(), feHeMomentPartials.end(), 0.0);
 	std::fill(feVMomentPartials.begin(), feVMomentPartials.end(), 0.0);

@@ -321,30 +321,14 @@ public:
 	 * of partial derivatives from all of the reactants in the network can be
 	 * used to form, for example, a Jacobian.
 	 *
+     * @param concs Current solution vector for desired grid point.
 	 * @param i The location on the grid in the depth direction
-	 * @return the partial derivatives for this reactant where index zero
-	 * corresponds to the first reactant in the list returned by the
-	 * ReactionNetwork::getAll() operation.
+	 * @param[out] partials The partial derivatives for this reactant 
+     * where index zero corresponds to the first reactant in the list 
+     * returned by the ReactionNetwork::getAll() operation.
 	 */
-	virtual std::vector<double> getPartialDerivatives(int i) const = 0;
-
-	/**
-	 * This operation works as getPartialDerivatives above, but instead of
-	 * returning a vector that it creates it fills a vector that is passed to
-	 * it by the caller. This allows the caller to optimize the amount of
-	 * memory allocations to just one if they are accessing the partial
-	 * derivatives many times.
-	 *
-	 * The base class (Reactant) implementation does nothing.
-	 *
-	 * @param partials The vector that should be filled with the partial derivatives
-	 * for this reactant where index zero corresponds to the first reactant in
-	 * the list returned by the ReactionNetwork::getAll() operation. The size of
-	 * the vector should be equal to ReactionNetwork::size().
-	 * @param i The location on the grid in the depth direction
-	 */
-	virtual void getPartialDerivatives(std::vector<double> & partials,
-			int i) const = 0;
+	virtual void getPartialDerivatives(const double* concs, int i,
+            std::vector<double> & partials) const = 0;
 
 	/**
 	 * This operation returns the name of the reactant.

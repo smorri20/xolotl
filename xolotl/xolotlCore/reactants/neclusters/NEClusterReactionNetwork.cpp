@@ -332,7 +332,7 @@ void NEClusterReactionNetwork::computeAllPartials(
 		auto reactantIndex = reactant.getId() - 1;
 
 		// Get the partial derivatives
-		reactant.getPartialDerivatives(clusterPartials, i);
+		reactant.getPartialDerivatives(concs, i, clusterPartials);
 		// Get the list of column ids from the map
 		auto const& pdColIdsVector = dFillMap.at(reactantIndex);
 
@@ -360,7 +360,7 @@ void NEClusterReactionNetwork::computeAllPartials(
 		auto reactantIndex = reactant.getId() - 1;
 
 		// Get the partial derivatives
-		reactant.getPartialDerivatives(clusterPartials, i);
+		reactant.getPartialDerivatives(concs, i, clusterPartials);
 
 		{
 			// Get the list of column ids from the map

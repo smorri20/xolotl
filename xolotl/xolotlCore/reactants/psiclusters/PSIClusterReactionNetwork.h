@@ -396,16 +396,6 @@ public:
 	 */
 	void reinitializeConnectivities() override;
 
-	/**
-	 * This operation updates the concentrations for all reactants in the
-	 * network from an array.
-	 *
-	 * @param concentrations The array of doubles that will be for the
-	 * concentrations. This operation does NOT create, destroy or resize the
-	 * array. Properly aligning the array in memory so that this operation
-	 * does not overrun is up to the caller.
-	 */
-	void updateConcentrationsFromArray(double * concentrations) override;
 
 	/**
 	 * This operation returns the number of super reactants in the network.

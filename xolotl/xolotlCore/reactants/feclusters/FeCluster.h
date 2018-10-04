@@ -561,34 +561,22 @@ public:
     }
 
 	/**
-	 * This operation returns the list of partial derivatives of this cluster
-	 * with respect to all other clusters in the network. The combined lists
-	 * of partial derivatives from all of the clusters in the network can be
-	 * used to form, for example, a Jacobian.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The partial derivatives for this cluster where index zero
-	 * corresponds to the first cluster in the list returned by the
-	 * ReactionNetwork::getAll() operation.
-	 */
-	virtual std::vector<double> getPartialDerivatives(int i) const override;
-
-	/**
 	 * This operation works as getPartialDerivatives above, but instead of
 	 * returning a vector that it creates it fills a vector that is passed to
 	 * it by the caller. This allows the caller to optimize the amount of
 	 * memory allocations to just one if they are accessing the partial
 	 * derivatives many times.
 	 *
-	 * @param the vector that should be filled with the partial derivatives
+     * @param concs Current solution vector for desired grid point.
+	 * @param i The location on the grid in the depth direction
+	 * @param[out] vector that should be filled with the partial derivatives
 	 * for this reactant where index zero corresponds to the first reactant in
 	 * the list returned by the ReactionNetwork::getAll() operation. The size of
 	 * the vector should be equal to ReactionNetwork::size().
-	 * @param i The location on the grid in the depth direction
 	 *
 	 */
-	virtual void getPartialDerivatives(std::vector<double> & partials,
-			int i) const override;
+	virtual void getPartialDerivatives(const double* concs, int i,
+            std::vector<double> & partials) const override;
 
 	/**
 	 * This operation computes the partial derivatives due to production
