@@ -1702,39 +1702,6 @@ double PSIClusterReactionNetwork::getTotalIConcentration(
 	return iConc;
 }
 
-void PSIClusterReactionNetwork::computeAllFluxes(const double* concs,
-        double *updatedConcOffset, int xi) {
-
-	// ----- Compute all of the new fluxes -----
-	std::for_each(allReactants.begin(), allReactants.end(),
-			[&concs,&updatedConcOffset,&xi](IReactant& cluster) {
-				// Compute the flux
-				auto flux = cluster.getTotalFlux(concs, xi);
-				// Update the concentration of the cluster
-				auto reactantIndex = cluster.getId() - 1;
-				updatedConcOffset[reactantIndex] += flux;
-			});
-
-	// ---- Moments ----
-	for (auto const& currMapItem : getAll(ReactantType::PSISuper)) {
-
-		auto const& superCluster =
-				static_cast<PSISuperCluster&>(*(currMapItem.second));
-
-		// Loop on the axis
-		for (int i = 1; i < psDim; i++) {
-
-			// Compute the moment flux
-			auto flux = superCluster.getMomentFlux(indexList[i] - 1);
-			// Update the concentration of the cluster
-			auto reactantIndex = superCluster.getMomentId(indexList[i] - 1) - 1;
-			updatedConcOffset[reactantIndex] += flux;
-		}
-	}
-
-	return;
-}
-
 void PSIClusterReactionNetwork::computeAllPartials(
         const double* concs,
 		const std::vector<size_t>& startingIdx, const std::vector<int>& indices,

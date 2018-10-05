@@ -13,8 +13,6 @@ PSISuperCluster::PSISuperCluster(double num[4], int _nTot, int width[4],
 				buildName(num[0], num[1], num[2], num[3])),
         nTot(_nTot) {
 
-    momentFlux = {};
-
 	// Loop on the axis
 	for (int i = 0; i < 4; i++) {
 		// Set the cluster size as the sum of

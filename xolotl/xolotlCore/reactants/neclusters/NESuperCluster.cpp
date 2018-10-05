@@ -15,7 +15,7 @@ NESuperCluster::NESuperCluster(double num, int nTot, int width, double radius,
 		double energy, IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		NECluster(_network, registry, buildName(num)), numXe(num), nTot(nTot),
-        dispersion(0.0), momentFlux(0.0) {
+        dispersion(0.0) {
 	// Set the cluster size
 	size = (int) numXe;
 
@@ -638,7 +638,7 @@ void NESuperCluster::getDissociationFlux(const double* concs, int xi,
             auto value = currPair.reaction.kConstant[xi] / nTot;
             superFlux.flux += value * (currPair.a00 * l0A + currPair.a10 * l1A);
             // Compute the moment fluxes
-            superFlux.momentFlux += value * (currPair.a01 * l0A + currPair.a11 * l1A);
+            superFlux.xeMomentFlux += value * (currPair.a01 * l0A + currPair.a11 * l1A);
         });
 }
 
@@ -657,7 +657,7 @@ void NESuperCluster::getEmissionFlux(const double* concs, int xi,
             auto value = currPair.reaction.kConstant[xi] / (double) nTot;
             superFlux.flux += value * (currPair.a00 * l0 + currPair.a10 * l1);
             // Compute the moment fluxes
-            superFlux.momentFlux -= value * (currPair.a01 * l0 + currPair.a11 * l1);
+            superFlux.xeMomentFlux -= value * (currPair.a01 * l0 + currPair.a11 * l1);
         });
 }
 
@@ -683,7 +683,7 @@ void NESuperCluster::getProductionFlux(const double* concs, int xi,
                     * (currPair.a000 * l0A * l0B + currPair.a010 * l0A * l1B
                             + currPair.a100 * l1A * l0B + currPair.a110 * l1A);
             // Compute the moment flux
-            superFlux.momentFlux += value
+            superFlux.xeMomentFlux += value
                     * (currPair.a001 * l0A * l0B + currPair.a011 * l0A * l1B
                             + currPair.a101 * l1A * l0B + currPair.a111 * l1A);
         });
@@ -712,7 +712,7 @@ void NESuperCluster::getCombinationFlux(const double* concs, int xi,
                     * (currPair.a000 * l0A * l0 + currPair.a100 * l0A * l1
                             + currPair.a010 * l1A * l0 + currPair.a110 * l1A * l1);
             // Compute the moment flux
-            superFlux.momentFlux -= value
+            superFlux.xeMomentFlux -= value
                     * (currPair.a001 * l0A * l0 + currPair.a101 * l0A * l1
                             + currPair.a011 * l1A * l0 + currPair.a111 * l1A * l1);
         });

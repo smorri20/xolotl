@@ -245,15 +245,15 @@ public:
 	virtual double getConcentration(const double* concs) const = 0;
 
 	/**
-	 * This operation returns the total flux of this reactant in the
-	 * current network.
+     * Compute total flux(es) of this reactant using current concentrations
+     * into their respective locations in the output concentrations.
 	 *
-     * @param concs Solution array for desired grid point.
-	 * @param i The location on the grid in the depth direction
-	 * @return The total change in flux for this reactant due to all
-	 * reactions
+     * @param concs Current concentrations for desired grid point.
+	 * @param xi The location on the grid in the depth direction
+     * @param updatedConcs Updated concentrations for desired grid point.
 	 */
-	virtual double getTotalFlux(const double* concs, int i) = 0;
+    virtual void computeTotalFluxes(const double* __restrict concs, int xi,
+                                    double* __restrict updatedConcs) const = 0;
 
 	/**
 	 * Update reactant using other reactants in its network.

@@ -343,6 +343,20 @@ void ReactionNetwork::initPartialsIndices(const std::vector<int>& size,
 	}
 }
 
+void ReactionNetwork::computeAllFluxes(const double* __restrict concs,
+            int xi,
+            double* __restrict updatedConcs) const {
+
+	// ----- Compute all of the new fluxes -----
+	std::for_each(allReactants.begin(), allReactants.end(),
+        [concs,xi,updatedConcs](IReactant& cluster) {
+
+            // Have current reactant update its flux(es).
+            cluster.computeTotalFluxes(concs, xi, updatedConcs);    
+        });
+
+}
+
 void ReactionNetwork::dumpTo(std::ostream& os) const {
 	// Dump flat view of reactants.
 	os << size() << " reactants:\n";

@@ -397,11 +397,6 @@ private:
 	DissociationPairListMap effEmissionListMap;
 
 	/**
-	 * The first moment flux.
-	 */
-    std::array<double, 4> momentFlux;
-
-	/**
 	 * Output coefficients for a given reaction to the given output stream.
 	 *
 	 * @param os The output stream on which to write the coefficients.
@@ -524,6 +519,19 @@ private:
 	 */
 	void getCombinationFlux(const double* concs, int i,
                                 Reactant::Flux& flux) const override;
+
+    /**
+     * Add an amount to the value in the given concentration array
+     * that represents our moment flux for a given 'axis.'
+     *
+     * @param concs Concentration array for desired grid point.
+	 * @param axis The axis we are intersted in
+     * @param amount to add to concentration value associated with moment
+     * flux for given 'axis.'
+     */
+	void addToMoment(double* concs, int axis, double amount) const {
+        concs[getMomentId(axis) - 1] += amount;
+	}
 
 public:
 
@@ -872,35 +880,27 @@ public:
 	void resetConnectivities() override;
 
 	/**
-	 * This operation returns the total flux of this cluster in the
-	 * current network.
+     * Compute total flux(es) of this reactant using current concentrations
+     * into their respective locations in the output concentrations.
 	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The total change in flux for this cluster due to all
-	 * reactions
+     * @param concs Current concentrations for desired grid point.
+	 * @param xi The location on the grid in the depth direction
+     * @param updatedConcs Updated concentrations for desired grid point.
 	 */
-	double getTotalFlux(const double* concs, int i) override {
+    void computeTotalFluxes(const double* __restrict concs, int xi,
+                            double* __restrict updatedConcs) const override {
 
-        // Compute the total flux.
-        auto flux = getTotalFluxHelper<PSISuperCluster::Flux>(concs, i);
+        // Compute total flux based on reactions we participate in.
+        auto flux = getTotalFluxHelper<PSISuperCluster::Flux>(concs, xi);
 
-        // Update our moment fluxes.
-        // TODO remove this side effect.
-        std::copy(flux.momentFlux.begin(), flux.momentFlux.end(),   // src begin/end
-                    momentFlux.begin());                            // dest begin
+        // Update our concentration in the output concentration array.
+        addToConcentration(updatedConcs, flux.flux);
 
-        return flux.flux;
+        // Update our moments in the output concentration array.
+        for(auto i = 1; i < psDim; ++i) {
+            addToMoment(updatedConcs, indexList[i] - 1, flux.momentFlux[i]);
+        }
     }
-
-	/**
-	 * This operation returns the total change for its first moment.
-	 *
-	 * @param axis The direction we are interested in
-	 * @return The moment flux
-	 */
-	double getMomentFlux(int axis) const {
-		return momentFlux[axis];
-	}
 
 	/**
 	 * This operation works as getPartialDerivatives above, but instead of

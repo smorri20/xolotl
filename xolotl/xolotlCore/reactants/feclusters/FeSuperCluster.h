@@ -377,16 +377,6 @@ private:
 	DissociationPairMap effEmissionList;
 
 	/**
-	 * The helium moment flux.
-	 */
-	double heMomentFlux;
-
-	/**
-	 * The vacancy moment flux.
-	 */
-	double vMomentFlux;
-
-	/**
 	 * Output coefficients for a given reaction to the given output stream.
 	 *
 	 * @param os The output stream on which to write the coefficients.
@@ -396,6 +386,31 @@ private:
 			ProductionCoefficientBase const& curr) const;
 	void dumpCoefficients(std::ostream& os,
 			SuperClusterDissociationPair const& curr) const;
+
+
+    /**
+     * Add an amount to the value in the given concentration array
+     * that represents our He moment flux.
+     *
+     * @param concs Concentration array for desired grid point.
+     * @param amount Amount to add to concentration value associated
+     * with our He moment flux.
+     */
+    void addToHeMoment(double* concs, double amount) const {
+        concs[getMomentId(0) - 1] += amount;
+    }
+
+    /**
+     * Add an amount to the value in the given concentration array
+     * that represents our V moment flux.
+     *
+     * @param concs Concentration array for desired grid point.
+     * @param amount Amount to add to concentration value associated
+     * with our V moment flux.
+     */
+    void addToVMoment(double* concs, double amount) const {
+        concs[getMomentId(1) - 1] += amount;
+    }
 
 public:
 
@@ -617,22 +632,6 @@ public:
 	using Reactant::getConcentration;
 
 	/**
-	 * This operation returns the current concentration.
-	 *
-     * @param concs Current solution vector for desired grid point.
-	 * @param distHe The helium distance in the group
-	 * @param distV The vacancy distance in the group
-	 * @return The concentration of this reactant
-	 */
-    double getConcentration(const double* concs,
-                            double distHe, double distV) const override {
-
-        return getConcentration(concs) +
-                (distHe * getHeMoment(concs)) +
-                 (distV * getVMoment(concs));
-    }
-
-	/**
 	 * This operation returns the first helium moment.
 	 *
 	 * @return The moment
@@ -649,6 +648,22 @@ public:
 	double getVMoment(const double* concs) const override {
         return concs[getMomentId(1) - 1];
 	}
+
+	/**
+	 * This operation returns the current concentration.
+	 *
+     * @param concs Current solution vector for desired grid point.
+	 * @param distHe The helium distance in the group
+	 * @param distV The vacancy distance in the group
+	 * @return The concentration of this reactant
+	 */
+    double getConcentration(const double* concs,
+                            double distHe, double distV) const override {
+
+        return getConcentration(concs) +
+                (distHe * getHeMoment(concs)) +
+                 (distV * getVMoment(concs));
+    }
 
 	/**
 	 * This operation returns the current total concentration of clusters in the group.
@@ -703,44 +718,27 @@ public:
 	void resetConnectivities() override;
 
 	/**
-	 * This operation returns the total flux of this cluster in the
-	 * current network.
+     * Compute total flux(es) of this reactant using current concentrations
+     * into their respective locations in the output concentrations.
 	 *
-     * @param concs Current grid point solution for desired grid point.
-	 * @param i The location on the grid in the depth direction
-	 * @return The total change in flux for this cluster due to all
-	 * reactions
+     * @param concs Current concentrations for desired grid point.
+	 * @param xi The location on the grid in the depth direction
+     * @param updatedConcs Updated concentrations for desired grid point.
 	 */
-	double getTotalFlux(const double* concs, int i) override {
+    void computeTotalFluxes(const double* __restrict concs, int xi,
+                            double* __restrict updatedConcs) const override {
 
-        // Compute the total flux.
-        auto flux = getTotalFluxHelper<FeSuperCluster::Flux>(concs, i);
+        // Compute total flux based on reactions we participate in.
+        auto flux = getTotalFluxHelper<FeSuperCluster::Flux>(concs, xi);
 
-        // Update our moment fluxes.
-        heMomentFlux = flux.heMomentFlux;
-        vMomentFlux = flux.vMomentFlux;
+        // Update our concentration in the output concentration array.
+        addToConcentration(updatedConcs, flux.flux);
 
-        return flux.flux;
+        // Update our moments int he output concentration array.
+        addToHeMoment(updatedConcs, flux.heMomentFlux);
+        addToVMoment(updatedConcs, flux.vMomentFlux);
     }
 
-
-	/**
-	 * This operation returns the total change for its helium moment.
-	 *
-	 * @return The moment flux
-	 */
-	double getHeMomentFlux() const {
-		return heMomentFlux;
-	}
-
-	/**
-	 * This operation returns the total change for its vacancy moment.
-	 *
-	 * @return The moment flux
-	 */
-	double getVMomentFlux() const {
-		return vMomentFlux;
-	}
 
 	/**
 	 * This operation works as getPartialDerivatives above, but instead of

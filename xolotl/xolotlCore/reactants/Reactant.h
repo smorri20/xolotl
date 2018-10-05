@@ -242,7 +242,7 @@ protected:
                                         Reactant::Flux& flux) const = 0;
 
     template<typename FluxType>
-    FluxType getTotalFluxHelper(const double* concs, int i) {
+    FluxType getTotalFluxHelper(const double* concs, int i) const {
 
         // Compute the individual fluxes.
         //
@@ -264,6 +264,19 @@ protected:
 
         // Compute the total flux.
         return prodFlux - combFlux + dissFlux - emitFlux;
+    }
+
+
+    /**
+     * Add an amount to the value in the given concentration array
+     * that is associated with our reactant.
+     *
+     * @param concs Concentration array to be updated.
+     * @param amount The amount to add to this reactant's concentration
+     * in the 'concs' array.
+     */
+    void addToConcentration(double* concs, double amount) const {
+        concs[id-1] += amount;
     }
 
 
@@ -552,18 +565,21 @@ public:
     }
 
 	/**
-	 * This operation returns the total flux of this reactant in the
-	 * current network.
+     * Compute total flux(es) of this reactant using current concentrations
+     * into their respective locations in the output concentrations.
 	 *
-     * @param concs Solution array for desired grid point.
-	 * @param i The location on the grid in the depth direction
-	 * @return The total change in flux for this reactant due to all
-	 * reactions
+     * @param concs Current concentrations for desired grid point.
+	 * @param xi The location on the grid in the depth direction
+     * @param updatedConcs Updated concentrations for desired grid point.
 	 */
-	virtual double getTotalFlux(const double* concs, int i) override {
-        assert(false);  // should not be called.
-		return 0.0;
-	}
+    void computeTotalFluxes(const double* __restrict concs, int xi,
+                            double* __restrict updatedConcs) const override {
+        // Compute the total fluxes for reactions we participate in.
+        auto flux = getTotalFluxHelper<Reactant::Flux>(concs, xi);
+
+        // Update our concentration in the output concentration array.
+        addToConcentration(updatedConcs, flux.flux);
+    }
 
 	/**
 	 * Update reactant using other reactants in its network.

@@ -21,7 +21,7 @@ FeSuperCluster::FeSuperCluster(double _numHe, double _numV, int _nTot,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		FeCluster(_network, registry, buildName(_numHe, _numV)), numHe(_numHe), numV(
 				_numV), nTot(_nTot), dispersionHe(
-				0.0), dispersionV(0.0), heMomentFlux(0.0), vMomentFlux(0.0) {
+				0.0), dispersionV(0.0) {
 	// Set the cluster size as the sum of
 	// the number of Helium and Vacancies
 	size = (int) (numHe + numV);

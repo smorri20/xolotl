@@ -380,7 +380,7 @@ void PetscSolver1DHandler::updateConcentration(TS &ts, Vec &localC, Vec &F,
 				updatedConcOffset, xi, xs);
 
 		// ----- Compute the reaction fluxes over the locally owned part of the grid -----
-		network.computeAllFluxes(concOffset, updatedConcOffset, xi - xs);
+        network.computeAllFluxes(concOffset, xi - xs, updatedConcOffset);
 	}
 
 	/*

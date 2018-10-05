@@ -264,35 +264,6 @@ void NEClusterReactionNetwork::getDiagonalFill(SparseFillMap& fillMap) {
 	return;
 }
 
-void NEClusterReactionNetwork::computeAllFluxes(const double* concs,
-                                            double *updatedConcOffset, int i) {
-
-	// ----- Compute all of the new fluxes -----
-	std::for_each(allReactants.begin(), allReactants.end(),
-			[&concs,&updatedConcOffset,i](IReactant& cluster) {
-
-				// Compute the flux
-				auto flux = cluster.getTotalFlux(concs, i);
-				// Update the concentration of the cluster
-				auto reactantIndex = cluster.getId() - 1;
-				updatedConcOffset[reactantIndex] += flux;
-			});
-
-	// ---- Moments ----
-	for (auto const& currMapItem : getAll(ReactantType::NESuper)) {
-
-		auto& superCluster = static_cast<NESuperCluster&>(*(currMapItem.second));
-
-		// Compute the xenon moment flux
-		auto flux = superCluster.getMomentFlux();
-		// Update the concentration of the cluster
-		auto reactantIndex = superCluster.getMomentId() - 1;
-		updatedConcOffset[reactantIndex] += flux;
-	}
-
-	return;
-}
-
 void NEClusterReactionNetwork::computeAllPartials(
         const double* concs,
 		const std::vector<size_t>& startingIdx, const std::vector<int>& indices,

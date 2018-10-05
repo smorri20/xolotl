@@ -380,20 +380,6 @@ public:
     }
 
 	/**
-	 * This operation returns the total flux of this cluster in the
-	 * current network.
-	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The total change in flux for this cluster due to all
-	 * reactions
-	 */
-	double getTotalFlux(const double* concs, int i) override {
-        // Compute total flux.
-        auto flux = getTotalFluxHelper<Reactant::Flux>(concs, i);
-        return flux.flux;
-    }
-
-	/**
 	 * This operation works as getPartialDerivatives above, but instead of
 	 * returning a vector that it creates it fills a vector that is passed to
 	 * it by the caller. This allows the caller to optimize the amount of

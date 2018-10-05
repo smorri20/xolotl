@@ -18,15 +18,15 @@ public:
     // Must be public so we can define operator+/operator-. (?)
     struct Flux : public Reactant::Flux {
 
-        double momentFlux;
+        double xeMomentFlux;
 
         Flux(void)
-          : momentFlux(0)
+          : xeMomentFlux(0)
         { }
 
         Flux(const Flux& other)
           : Reactant::Flux(other) {
-            momentFlux = other.momentFlux;
+            xeMomentFlux = other.xeMomentFlux;
         }
 
         Flux& operator+=(const Flux& other) {
@@ -34,7 +34,7 @@ public:
             Reactant::Flux::operator+=(other);
 
             // Update our members.
-            momentFlux += other.momentFlux;
+            xeMomentFlux += other.xeMomentFlux;
 
             return *this;
         }
@@ -44,7 +44,7 @@ public:
             Reactant::Flux::operator-=(other);
 
             // Update our members.
-            momentFlux -= other.momentFlux;
+            xeMomentFlux -= other.xeMomentFlux;
 
             return *this;
         }
@@ -188,11 +188,6 @@ private:
 	//! The list of optimized effective emission pairs.
     DissociationPairList effEmissionList;
 
-	/**
-	 * The xenon moment flux.
-	 */
-	double momentFlux;
-
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -241,6 +236,19 @@ private:
 	 */
 	void getCombinationFlux(const double* concs, int i,
                                 Reactant::Flux& flux) const override;
+
+
+    /**
+     * Add an amount to the value in the given concentration array
+     * that represents our moment flux.
+     *
+     * @param concs Concentration array for desired grid point.
+     * @param amount Amount to add to concentration value associated
+     * with our moment flux.
+     */
+    void addToXeMoment(double* concs, double amount) const {
+        concs[getMomentId() - 1] += amount;
+    }
 
 public:
 
@@ -429,32 +437,25 @@ public:
 	void resetConnectivities() override;
 
 	/**
-	 * This operation returns the total flux of this cluster in the
-	 * current network.
+     * Compute total flux(es) of this reactant using current concentrations
+     * into their respective locations in the output concentrations.
 	 *
-	 * @param i The location on the grid in the depth direction
-	 * @return The total change in flux for this cluster due to all
-	 * reactions
+     * @param concs Current concentrations for desired grid point.
+	 * @param xi The location on the grid in the depth direction
+     * @param updatedConcs Updated concentrations for desired grid point.
 	 */
-	double getTotalFlux(const double* concs, int i) override {
+    void computeTotalFluxes(const double* __restrict concs, int xi,
+                            double* __restrict updatedConcs) const override {
 
-        // Compute the total flux.
-        auto flux = getTotalFluxHelper<NESuperCluster::Flux>(concs, i);
+        // Compute total flux based on reactions we particiate in.
+        auto flux = getTotalFluxHelper<NESuperCluster::Flux>(concs, xi);
 
-        // update our moment flux.
-        momentFlux = flux.momentFlux;
+        // Update our concentration in the output concentration array.
+        addToConcentration(updatedConcs, flux.flux);
 
-        return flux.flux;
+        // Update our moment in the output concentration array.
+        addToXeMoment(updatedConcs, flux.xeMomentFlux);
     }
-
-	/**
-	 * This operation returns the total change for its moment.
-	 *
-	 * @return The moment flux
-	 */
-	double getMomentFlux() {
-		return momentFlux;
-	}
 
 	/**
 	 * This operation works as getPartialDerivatives above, but instead of
