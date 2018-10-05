@@ -49,7 +49,7 @@ public:
 	 * @param registry The performance handler registry
 	 */
 	PSIHeInterstitialCluster(int numHelium, int numInterstitial,
-			IReactionNetwork& _network,
+			PSIClusterReactionNetwork& _network,
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 			PSICluster(_network, registry,
 					buildName(numHelium, numInterstitial)), numHe(numHelium), numI(

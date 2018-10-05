@@ -30,7 +30,7 @@ public:
 	 * @param nT the number of tritium atoms in the cluster
 	 * @param registry The performance handler registry
 	 */
-	PSITCluster(int nT, IReactionNetwork& _network,
+	PSITCluster(int nT, PSIClusterReactionNetwork& _network,
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 			PSICluster(_network, registry, buildName(nT)) {
 		// Set the size

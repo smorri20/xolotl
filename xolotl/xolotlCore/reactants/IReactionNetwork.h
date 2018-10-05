@@ -323,14 +323,6 @@ public:
 	virtual IReactant::SizeType getMaxClusterSize(ReactantType rtype) const = 0;
 
 	/**
-	 * This operation returns the phase space list needed to set up the grouping
-	 * correctly in PSI.
-	 *
-	 * @return The phase space list
-	 */
-	virtual Array<int, 5> getPhaseSpaceList() const = 0;
-
-	/**
 	 * Dump a representation of the network to the given output stream.
 	 *
 	 * @param os Output stream on which to write network description.

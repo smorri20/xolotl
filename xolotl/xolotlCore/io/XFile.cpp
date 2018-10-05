@@ -6,6 +6,7 @@
 #include "mpi.h"
 #include "xolotlCore/io/XFile.h"
 #include <PSISuperCluster.h>
+#include <PSIClusterReactionNetwork.h>
 #include <FeSuperCluster.h>
 #include <NESuperCluster.h>
 
@@ -251,7 +252,18 @@ XFile::NetworkGroup::NetworkGroup(const XFile& file, IReactionNetwork& network) 
 	superSizeAttr.setTo(superSize);
 
 	// Add the phase space attribute
-	auto list = network.getPhaseSpaceList();
+    PSICluster::IndexList list;
+    try {
+        // Assume the network is a PSI network and get its phase space list.
+        PSIClusterReactionNetwork& psiNetwork = dynamic_cast<PSIClusterReactionNetwork&>(network);
+        list = psiNetwork.getPhaseSpaceList();
+    }
+    catch(const std::bad_cast& e) {
+        // The network was not a PSI network.
+        // Until the other network types support a phase space index list,
+        // just write a default value.
+        list.Init(0);
+    }
 	std::array<hsize_t, 1> dim { 5 };
 	XFile::SimpleDataSpace<1> phaseDSpace(dim);
 	hid_t attrId = H5Acreate2(getId(), phaseSpaceAttrName.c_str(),

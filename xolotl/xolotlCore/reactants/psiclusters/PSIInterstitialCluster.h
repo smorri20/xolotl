@@ -34,7 +34,7 @@ public:
 	 * @param nI The number of interstitial defect in this cluster
 	 * @param registry The performance handler registry
 	 */
-	PSIInterstitialCluster(int nI, IReactionNetwork& _network,
+	PSIInterstitialCluster(int nI, PSIClusterReactionNetwork& _network,
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 			PSICluster(_network, registry, buildName(nI)) {
 		// Set the size

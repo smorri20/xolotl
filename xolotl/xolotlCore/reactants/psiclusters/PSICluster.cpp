@@ -5,8 +5,19 @@
 #include <xolotlPerf.h>
 #include <Constants.h>
 #include <MathUtils.h>
+#include "PSIClusterReactionNetwork.h"
 
 using namespace xolotlCore;
+
+PSICluster::PSICluster(PSIClusterReactionNetwork& _network,
+        std::shared_ptr<xolotlPerf::IHandlerRegistry> registry,
+        const std::string& _name) : 
+
+        Reactant(_network, registry, _name),
+        indexList(_network.getPhaseSpaceList()),
+        psDim(_network.getNumPhaseSpaceDims()) {
+}
+
 
 void PSICluster::resultFrom(ProductionReaction& reaction, int a[4], int b[4]) {
 

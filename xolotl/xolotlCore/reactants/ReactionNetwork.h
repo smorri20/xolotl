@@ -556,18 +556,6 @@ public:
 	}
 
 	/**
-	 * This operation returns the phase space list needed to set up the grouping
-	 * correctly in PSI.
-	 *
-	 * @return The phase space list
-	 */
-	virtual Array<int, 5> getPhaseSpaceList() const override {
-		Array<int, 5> list;
-		list.Init(0);
-		return list;
-	}
-
-	/**
 	 * Enable dissociations.
 	 */
 	void enableDissociations() {

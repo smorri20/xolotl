@@ -7,7 +7,7 @@
 using namespace xolotlCore;
 
 PSISuperCluster::PSISuperCluster(double num[4], int _nTot, int width[4],
-		int lower[4], int higher[4], IReactionNetwork& _network,
+		int lower[4], int higher[4], PSIClusterReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 		PSICluster(_network, registry,
 				buildName(num[0], num[1], num[2], num[3])),

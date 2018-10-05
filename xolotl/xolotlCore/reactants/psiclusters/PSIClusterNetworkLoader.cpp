@@ -35,7 +35,7 @@ static inline double convertStrToDouble(const std::string& inString) {
 
 std::unique_ptr<PSICluster> PSIClusterNetworkLoader::createPSISuperCluster(
 		std::set<std::tuple<int, int, int, int> > &list,
-		IReactionNetwork& network) const {
+		PSIClusterReactionNetwork& network) const {
 
 	// Local Declarations
 	PSISuperCluster* cluster = nullptr;
@@ -93,7 +93,7 @@ std::unique_ptr<PSICluster> PSIClusterNetworkLoader::createPSISuperCluster(
 
 std::unique_ptr<PSICluster> PSIClusterNetworkLoader::createPSICluster(int numHe,
 		int numD, int numT, int numV, int numI,
-		IReactionNetwork& network) const {
+		PSIClusterReactionNetwork& network) const {
 
 	// Local Declarations
 	PSICluster* cluster = nullptr;

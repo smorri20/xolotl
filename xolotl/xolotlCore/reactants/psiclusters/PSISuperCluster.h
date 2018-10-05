@@ -553,7 +553,8 @@ public:
 	 * @param registry The performance handler registry
 	 */
 	PSISuperCluster(double num[4], int nTot, int width[4], int lower[4],
-			int higher[4], IReactionNetwork& _network,
+			int higher[4],
+            PSIClusterReactionNetwork& _network,
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry);
 
 	/**

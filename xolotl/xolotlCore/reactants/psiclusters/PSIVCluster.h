@@ -33,7 +33,7 @@ public:
 	 * @param nV the number of atomic vacancies in the cluster
 	 * @param registry The performance handler registry
 	 */
-	PSIVCluster(int nV, IReactionNetwork& _network,
+	PSIVCluster(int nV, PSIClusterReactionNetwork& _network,
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 			PSICluster(_network, registry, buildName(nV)) {
 		// Set the size

@@ -30,7 +30,7 @@ public:
 	 * @param nD the number of deuterium atoms in the cluster
 	 * @param registry The performance handler registry
 	 */
-	PSIDCluster(int nD, IReactionNetwork& _network,
+	PSIDCluster(int nD, PSIClusterReactionNetwork& _network,
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 			PSICluster(_network, registry, buildName(nD)) {
 		// Set the size

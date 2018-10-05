@@ -58,7 +58,7 @@ private:
 	int psDim = 0;
 
 	//! The indexList.
-	Array<int, 5> indexList;
+    PSICluster::IndexList indexList;
 
 	/**
 	 * Calculate the dissociation constant of the first cluster with respect to
@@ -492,32 +492,32 @@ public:
 	 * @param dim The total dimension of the phase space
 	 * @param list The list of indices that constitute the phase space
 	 */
-	void setPhaseSpace(int dim, Array<int, 5> list) {
-		// Set the dimension
+	void setPhaseSpace(int dim, const PSICluster::IndexList& list) {
+		// Save the number of valid dimensions.
 		psDim = dim;
 
-		// Loop on the dimension to set the list
-		for (int i = 0; i < 5; i++) {
-			indexList[i] = list[i];
-		}
-
-		// Set the phase space in each reactant
-		std::for_each(allReactants.begin(), allReactants.end(),
-				[&dim,&list](IReactant& currReactant) {
-					auto& currCluster = static_cast<PSICluster&>(currReactant);
-					currCluster.setPhaseSpace(dim, list);
-				});
+        // Save the phase space mapping.
+        indexList = list;
 	}
 
 	/**
-	 * This operation returns the phase space list needed to set up the grouping
+     * Access the phase space list needed to set up the grouping
 	 * correctly in PSI.
 	 *
 	 * @return The phase space list
 	 */
-	virtual Array<int, 5> getPhaseSpaceList() const override {
-		return indexList;
-	}
+    const PSICluster::IndexList& getPhaseSpaceList() const {
+        return indexList;
+    }
+
+	/**
+     * Determine the number of valid dimensions within the phase space list.
+	 *
+	 * @return The phase space list
+	 */
+    const int& getNumPhaseSpaceDims() const {
+        return psDim;
+    }
 };
 
 } // namespace xolotlCore

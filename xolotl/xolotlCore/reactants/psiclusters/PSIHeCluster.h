@@ -34,7 +34,7 @@ public:
 	 * @param nHe the number of helium atoms in the cluster
 	 * @param registry The performance handler registry
 	 */
-	PSIHeCluster(int nHe, IReactionNetwork& _network,
+	PSIHeCluster(int nHe, PSIClusterReactionNetwork& _network,
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 			PSICluster(_network, registry, buildName(nHe)) {
 		// Set the size

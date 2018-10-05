@@ -124,7 +124,7 @@ protected:
 	 * @return The new cluster
 	 */
 	std::unique_ptr<PSICluster> createPSISuperCluster(std::set<std::tuple<int, int, int, int> > &list,
-			IReactionNetwork& network) const;
+			PSIClusterReactionNetwork& network) const;
 
 	/**
 	 * This operation creates a cluster.
@@ -137,7 +137,7 @@ protected:
 	 * @return The new cluster
 	 */
 	std::unique_ptr<PSICluster> createPSICluster(int numHe, int numD, int numT, int numV, int numI,
-			IReactionNetwork& network) const;
+			PSIClusterReactionNetwork& network) const;
 
 	/**
 	 * This operation will add the given cluster to the network and reactants vector

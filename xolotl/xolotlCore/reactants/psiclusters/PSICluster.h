@@ -11,6 +11,8 @@ class ITimer;
 
 namespace xolotlCore {
 
+class PSIClusterReactionNetwork;
+
 /**
  * The PSICluster class is a Reactant that is specialized to work for
  * simulations of plasma-surface interactions. It provides special routines
@@ -30,6 +32,10 @@ namespace xolotlCore {
  * order to change these values the "set" functions must still be used.
  */
 class PSICluster: public Reactant {
+
+public:
+    // Concise name for type used for the PSI index list.
+    using IndexList = Array<int, 5>;
 
 protected:
 
@@ -193,10 +199,10 @@ protected:
 					IReactant::SizeType>(0, 0) };
 
 	//! The dimension of the phase space
-	int psDim = 0;
+	const int& psDim;
 
 	//! The indexList.
-	Array<int, 5> indexList;
+    const IndexList& indexList;
 
 	/**
 	 * This operation returns a set that contains only the entries of the
@@ -317,17 +323,17 @@ public:
 	 *
 	 * @param registry The performance handler registry
 	 */
-	PSICluster(IReactionNetwork& _network,
+	PSICluster(PSIClusterReactionNetwork& _network,
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry,
-			const std::string& _name = "PSICluster") :
-			Reactant(_network, registry, _name) {
-	}
+			const std::string& _name = "PSICluster");
 
 	/**
-	 * Copy constructor, deleted to prevent use.
+	 * Copy constructor.
 	 */
 	PSICluster(PSICluster &other) :
-			Reactant(other) {
+			Reactant(other),
+            indexList(other.indexList),
+            psDim(other.psDim) {
 	}
 
 	/**
@@ -692,22 +698,6 @@ public:
 	 * that it does not.
 	 */
 	std::vector<int> getConnectivity() const override;
-
-	/**
-	 * Set the phase space to save time and memory
-	 *
-	 * @param dim The total dimension of the phase space
-	 * @param list The list of indices that constitute the phase space
-	 */
-	void setPhaseSpace(int dim, Array<int, 5> list) {
-		// Set the dimension
-		psDim = dim;
-
-		// Loop on the dimension to set the list
-		for (int i = 0; i < psDim; i++) {
-			indexList[i] = list[i];
-		}
-	}
 
 	/**
 	 * Access bounds on number of given atoms represented by this cluster.

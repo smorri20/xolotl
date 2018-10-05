@@ -57,7 +57,7 @@ public:
 	 * @param _network The network the cluster will belong to.
 	 * @param registry The performance handler registry
 	 */
-	PSIMixedCluster(int numHe, int numD, int numT, int numV, IReactionNetwork& _network,
+	PSIMixedCluster(int numHe, int numD, int numT, int numV, PSIClusterReactionNetwork& _network,
 			std::shared_ptr<xolotlPerf::IHandlerRegistry> registry) :
 			PSICluster(_network, registry, buildName(numHe, numD, numT, numV)), numHe(
 					numHe), numD(numD), numT(numT), numV(numV) {
