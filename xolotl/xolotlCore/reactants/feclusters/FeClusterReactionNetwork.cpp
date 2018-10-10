@@ -827,7 +827,7 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 		void FeClusterReactionNetwork::computeAllPartials(
                 const double* concs,
 				const std::vector<size_t>& startingIdx,
-				const std::vector<int>& indices, std::vector<double>& vals,
+				std::vector<double>& vals,
 				int i) const {
 			// Initial declarations
 			const int dof = getDOF();

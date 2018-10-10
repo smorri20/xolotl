@@ -1704,7 +1704,7 @@ double PSIClusterReactionNetwork::getTotalIConcentration(
 
 void PSIClusterReactionNetwork::computeAllPartials(
         const double* concs,
-		const std::vector<size_t>& startingIdx, const std::vector<int>& indices,
+		const std::vector<size_t>& startingIdx,
 		std::vector<double>& vals, int xi) const {
 
 	// Because we accumulate partials and we don't know which
@@ -1712,7 +1712,7 @@ void PSIClusterReactionNetwork::computeAllPartials(
 	// all partials values at zero.
 	std::fill(vals.begin(), vals.end(), 0.0);
 
-	// Initial declarations
+	// Get temporary space for building partials.
 	std::vector<double> clusterPartials(getDOF(), 0.0);
 
 	// Make a vector of types for the non super clusters
@@ -1738,6 +1738,7 @@ void PSIClusterReactionNetwork::computeAllPartials(
 
 			// Get the partial derivatives
 			reactant.getPartialDerivatives(concs, xi, clusterPartials);
+
 			// Get the list of column ids from the map
 			auto const& pdColIdsVector = dFillMap.at(reactantIndex);
 
@@ -1756,7 +1757,7 @@ void PSIClusterReactionNetwork::computeAllPartials(
 
 	// Update the column in the Jacobian that represents the moment for the super clusters
 	// Create the partials container that is going to be used
-	double** partials = new double*[5];
+    std::array<double* __restrict, 5> partials;
 	auto const& superClusters = getAll(ReactantType::PSISuper);
 	for (auto const& currMapItem : superClusters) {
 
@@ -1788,9 +1789,6 @@ void PSIClusterReactionNetwork::computeAllPartials(
 		// to its correct locations within the vals array.
 		reactant.computePartialDerivatives(concs, xi, partialsIdxMap, partials);
 	}
-
-	// Clear memory
-	delete[] partials;
 
 	return;
 }

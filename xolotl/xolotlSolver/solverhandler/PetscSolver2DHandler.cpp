@@ -778,7 +778,7 @@ void PetscSolver2DHandler::computeDiagonalJacobian(TS &ts, Vec &localC, Mat &J,
 
 			// Compute all the partial derivatives for the reactions
 			network.computeAllPartials(concOffset,
-                    reactionStartingIdx, reactionIndices,
+                    reactionStartingIdx,
 					reactionVals, xi - xs);
 
 			// Update the column in the Jacobian that represents each DOF

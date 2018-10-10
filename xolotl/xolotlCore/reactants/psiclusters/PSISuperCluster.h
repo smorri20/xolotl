@@ -779,6 +779,11 @@ public:
         return ret;
 	}
 
+    // Declaring our own getConcentration method hides
+    // the base class's version.  This allows us to
+    // call it without having to specify the base class's scope.
+    using Reactant::getConcentration;
+
 	/**
 	 * This operation returns the current total concentration of clusters in the group.
 
@@ -915,18 +920,21 @@ public:
 	 * for this reactant where index zero corresponds to the first reactant in
 	 * the list returned by the ReactionNetwork::getAll() operation. The size of
 	 * the vector should be equal to ReactionNetwork::size().
-	 * @param i The location on the grid in the depth direction
+	 * @param xi The location on the grid in the depth direction
 	 *
 	 */
-	void computePartialDerivatives(const double* concs, int i,
+	void computePartialDerivatives(const double* __restrict concs,
+            int xi,
 			const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
-            double* partials[5]) const;
+            std::array<double* __restrict, 5>& partials) const;
+
 	void getPartialDerivatives(const double* concs, int i,
             std::vector<double> & partials) const
 			override
 			{
 		assert(false);
 	}
+
 
 	/**
 	 * This operation computes the partial derivatives due to production
@@ -936,11 +944,12 @@ public:
 	 * @param partials The vector into which the partial derivatives should be
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
-	 * @param i The location on the grid in the depth direction
+	 * @param xi The location on the grid in the depth direction
 	 */
-	void computeProductionPartialDerivatives(const double* concs, int i,
+	void computeProductionPartialDerivatives(const double* __restrict concs,
+            int xi,
 			const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
-            double* partials[5]) const;
+            std::array<double* __restrict, 5>& partials) const;
 	void getProductionPartialDerivatives(const double* concs, int i,
             std::vector<double> & partials) const override
 			{
@@ -955,16 +964,18 @@ public:
 	 * @param partials The vector into which the partial derivatives should be
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
-	 * @param i The location on the grid in the depth direction
+	 * @param xi The location on the grid in the depth direction
 	 */
-	void computeCombinationPartialDerivatives(const double* concs, int i,
+	void computeCombinationPartialDerivatives(const double* __restrict concs,
+            int xi,
 			const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
-            double* partials[5]) const;
+            std::array<double* __restrict, 5>& partials) const;
 	void getCombinationPartialDerivatives(const double* concs, int i,
             std::vector<double> & partials) const override
 			{
 		assert(false);
 	}
+
 
 	/**
 	 * This operation computes the partial derivatives due to dissociation of
@@ -974,16 +985,18 @@ public:
 	 * @param partials The vector into which the partial derivatives should be
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
-	 * @param i The location on the grid in the depth direction
+	 * @param xi The location on the grid in the depth direction
 	 */
-	void computeDissociationPartialDerivatives(const double* concs, int i,
+	void computeDissociationPartialDerivatives(const double* __restrict concs,
+            int xi,
 			const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
-            double* partials[5]) const;
+            std::array<double* __restrict, 5>& partials) const;
 	void getDissociationPartialDerivatives(std::vector<double> & partials,
 			int i) const override
 			{
 		assert(false);
 	}
+
 
 	/**
 	 * This operation computes the partial derivatives due to emission
@@ -993,16 +1006,18 @@ public:
 	 * @param partials The vector into which the partial derivatives should be
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
-	 * @param i The location on the grid in the depth direction
+	 * @param xi The location on the grid in the depth direction
 	 */
-	void computeEmissionPartialDerivatives(const double* concs, int i,
+	void computeEmissionPartialDerivatives(const double* __restrict concs,
+            int xi,
 			const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
-            double* partials[5]) const;
+            std::array<double* __restrict, 5>& partials) const;
 	void getEmissionPartialDerivatives(std::vector<double> & partials,
 			int i) const override
 			{
 		assert(false);
 	}
+
 
 	/**
 	 * This operation computes the partial derivatives for the given moment.

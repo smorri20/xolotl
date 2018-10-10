@@ -290,14 +290,12 @@ public:
      * @param concs Current solution vector for desired grid point.
 	 * @param startingIdx Starting index of items owned by each reactant
 	 *      within the partials values array and the indices array.
-	 * @param indices The indices of the clusters for the partial derivatives.
 	 * @param i The location on the grid in the depth direction
 	 * @param vals The values of partials for the reactions
 	 */
 	virtual void computeAllPartials(const double* concs,
             const std::vector<size_t>& startingIdx,
-			const std::vector<int>& indices,
-			std::vector<double>& vals, int i = 0) const = 0;
+			std::vector<double>& vals, int i) const = 0;
 
 	/**
 	 * This operation returns the biggest production rate in the network.

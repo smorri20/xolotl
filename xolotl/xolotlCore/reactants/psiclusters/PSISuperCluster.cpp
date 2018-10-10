@@ -1291,23 +1291,25 @@ void PSISuperCluster::getCombinationFlux(const double* concs, int xi,
 			});
 }
 
-void PSISuperCluster::computePartialDerivatives(const double* concs, int i,
+void PSISuperCluster::computePartialDerivatives(const double* __restrict concs,
+        int xi,
 		const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
-        double* partials[5]) const {
+        std::array<double* __restrict, 5>& partials) const {
 
 	// Get the partial derivatives for each reaction type
-	computeProductionPartialDerivatives(concs, i, partialsIdxMap, partials);
-	computeCombinationPartialDerivatives(concs, i, partialsIdxMap, partials);
-	computeDissociationPartialDerivatives(concs, i, partialsIdxMap, partials);
-	computeEmissionPartialDerivatives(concs, i, partialsIdxMap, partials);
+	computeProductionPartialDerivatives(concs, xi, partialsIdxMap, partials);
+	computeCombinationPartialDerivatives(concs, xi, partialsIdxMap, partials);
+	computeDissociationPartialDerivatives(concs, xi, partialsIdxMap, partials);
+	computeEmissionPartialDerivatives(concs, xi, partialsIdxMap, partials);
 
 	return;
 }
 
-void PSISuperCluster::computeProductionPartialDerivatives(const double* concs,
+void PSISuperCluster::computeProductionPartialDerivatives(
+        const double* __restrict concs,
         int xi,
 		const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
-        double* partials[5]) const {
+        std::array<double* __restrict, 5>& partials) const {
 
 	// Production
 	// A + B --> D, D being this cluster
@@ -1319,7 +1321,7 @@ void PSISuperCluster::computeProductionPartialDerivatives(const double* concs,
 
 	// Loop over all the reacting pairs
 	std::for_each(effReactingList.begin(), effReactingList.end(),
-			[this,&concs,&partials,&partialsIdxMap,xi](ProductionPairList::value_type const& currPair) {
+			[this,concs,partials,&partialsIdxMap,xi](ProductionPairList::value_type const& currPair) {
 
 				// Get the two reacting clusters
 				auto const& firstReactant = currPair.first;
@@ -1366,10 +1368,11 @@ void PSISuperCluster::computeProductionPartialDerivatives(const double* concs,
 	return;
 }
 
-void PSISuperCluster::computeCombinationPartialDerivatives(const double* concs,
+void PSISuperCluster::computeCombinationPartialDerivatives(
+        const double* __restrict concs,
         int xi,
 		const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
-        double* partials[5]) const {
+        std::array<double* __restrict, 5>& partials) const {
 
 	// Combination
 	// A + B --> D, A being this cluster
@@ -1381,9 +1384,10 @@ void PSISuperCluster::computeCombinationPartialDerivatives(const double* concs,
 
 	// Visit all the combining clusters
 	std::for_each(effCombiningList.begin(), effCombiningList.end(),
-			[this,&concs,&partials,&partialsIdxMap,xi](CombiningClusterList::value_type const& currComb) {
+			[this,concs,partials,&partialsIdxMap,xi](CombiningClusterList::value_type const& currComb) {
 				// Get the combining clusters
 				auto const& cluster = currComb.first;
+
 				double lA[5] = {}, lB[5] = {};
 				lA[0] = concs[id-1];
 				lB[0] = cluster.getConcentration(concs);
@@ -1427,9 +1431,9 @@ void PSISuperCluster::computeCombinationPartialDerivatives(const double* concs,
 }
 
 void PSISuperCluster::computeDissociationPartialDerivatives(
-        const double* concs, int xi,
+        const double* __restrict concs, int xi,
 		const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
-        double* partials[5]) const {
+        std::array<double* __restrict, 5>& partials) const {
 
 	// Dissociation
 	// A --> B + D, B being this cluster
@@ -1440,8 +1444,7 @@ void PSISuperCluster::computeDissociationPartialDerivatives(
 
 	// Visit all the dissociating pairs
 	std::for_each(effDissociatingList.begin(), effDissociatingList.end(),
-			[this,
-			&partials, &partialsIdxMap,&xi](DissociationPairList::value_type const& currPair) {
+			[this,partials,&partialsIdxMap,xi](DissociationPairList::value_type const& currPair) {
 
 				// Get the dissociating clusters
 				auto const& cluster = currPair.first;
@@ -1466,10 +1469,11 @@ void PSISuperCluster::computeDissociationPartialDerivatives(
 	return;
 }
 
-void PSISuperCluster::computeEmissionPartialDerivatives(const double* concs,
+void PSISuperCluster::computeEmissionPartialDerivatives(
+        const double* __restrict concs,
         int xi,
 		const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
-        double* partials[5]) const {
+        std::array<double* __restrict, 5>& partials) const {
 
 	// Emission
 	// A --> B + D, A being this cluster
@@ -1480,8 +1484,7 @@ void PSISuperCluster::computeEmissionPartialDerivatives(const double* concs,
 
 	// Visit all the emission pairs
 	std::for_each(effEmissionList.begin(), effEmissionList.end(),
-			[this,
-			&partials, &partialsIdxMap,&xi](DissociationPairList::value_type const& currPair) {
+			[this,partials,&partialsIdxMap,xi](DissociationPairList::value_type const& currPair) {
 
 				// Compute the contribution from the dissociating cluster
 				auto value = currPair.reaction.kConstant[xi] / (double) nTot;
@@ -1504,6 +1507,9 @@ void PSISuperCluster::computeEmissionPartialDerivatives(const double* concs,
 }
 
 std::vector<std::vector<double> > PSISuperCluster::getProdVector() const {
+
+    assert(false);
+
 	// Initial declarations
 	std::vector<std::vector<double> > toReturn;
 
@@ -1530,6 +1536,8 @@ std::vector<std::vector<double> > PSISuperCluster::getProdVector() const {
 }
 
 std::vector<std::vector<double> > PSISuperCluster::getCombVector() const {
+
+    assert(false);
 	// Initial declarations
 	std::vector<std::vector<double> > toReturn;
 
@@ -1555,6 +1563,9 @@ std::vector<std::vector<double> > PSISuperCluster::getCombVector() const {
 }
 
 std::vector<std::vector<double> > PSISuperCluster::getDissoVector() const {
+
+    assert(false);
+
 	// Initial declarations
 	std::vector<std::vector<double> > toReturn;
 
@@ -1580,6 +1591,9 @@ std::vector<std::vector<double> > PSISuperCluster::getDissoVector() const {
 }
 
 std::vector<std::vector<double> > PSISuperCluster::getEmitVector() const {
+
+    assert(false);
+
 	// Initial declarations
 	std::vector<std::vector<double> > toReturn;
 
