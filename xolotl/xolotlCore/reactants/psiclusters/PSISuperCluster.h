@@ -935,6 +935,10 @@ public:
 		assert(false);
 	}
 
+    void computePartialDerivatives2(const double* __restrict concs,
+            int xi,
+            std::array<std::vector<double>, 5>& partials) const;
+
 
 	/**
 	 * This operation computes the partial derivatives due to production
@@ -956,6 +960,10 @@ public:
 		assert(false);
 	}
 
+    void computeProdPartials2(const double* __restrict concs,
+            int xi,
+            std::array<std::vector<double>, 5>& partials) const;
+
 	/**
 	 * This operation computes the partial derivatives due to combination
 	 * reactions.
@@ -975,6 +983,10 @@ public:
 			{
 		assert(false);
 	}
+
+    void computeCombPartials2(const double* __restrict concs,
+            int xi,
+            std::array<std::vector<double>, 5>& partials) const;
 
 
 	/**
@@ -997,6 +1009,10 @@ public:
 		assert(false);
 	}
 
+    void computeDissPartials2(const double* __restrict concs,
+            int xi,
+            std::array<std::vector<double>, 5>& partials) const;
+
 
 	/**
 	 * This operation computes the partial derivatives due to emission
@@ -1017,6 +1033,11 @@ public:
 			{
 		assert(false);
 	}
+
+    void computeEmitPartials2(const double* __restrict concs,
+            int xi,
+            std::array<std::vector<double>, 5>& partials) const;
+
 
 
 	/**

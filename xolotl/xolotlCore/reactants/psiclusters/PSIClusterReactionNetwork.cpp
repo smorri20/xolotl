@@ -1756,38 +1756,41 @@ void PSIClusterReactionNetwork::computeAllPartials(
 	}
 
 	// Update the column in the Jacobian that represents the moment for the super clusters
-	// Create the partials container that is going to be used
-    std::array<double* __restrict, 5> partials;
+	// Get space to compute partials into.
+    std::array<std::vector<double>, 5> partials;
+    for(auto i = 0; i < psDim; ++i) {
+        partials[i].resize(getDOF(), 0.0);
+    }
 	auto const& superClusters = getAll(ReactantType::PSISuper);
 	for (auto const& currMapItem : superClusters) {
 
 		auto const& reactant =
 				static_cast<PSISuperCluster&>(*(currMapItem.second));
 
-		// Determine cluster's index into the size/indices/vals arrays.
-		int reactantIndices[5] = { };
-		reactantIndices[0] = reactant.getId() - 1;
-		// Loop on the axis for the moments
-		for (int i = 1; i < psDim; i++) {
-			// Get the moment index
-			reactantIndices[i] = reactant.getMomentId(indexList[i] - 1) - 1;
-		}
+		// Have reactant compute its partial derivatives.
+        reactant.computePartialDerivatives2(concs, xi, partials);
 
-		// Get the inverse mappings from dense DOF space to
-		// the indices/vals arrays.
-        // We use a pointer to the maps to avoid copying them into
-        // our array.
-        // TODO can we use references here, without having to
-        // change PartialsIdxMap type from unordered_map?
-        std::array<const PartialsIdxMap*, 5> partialsIdxMap;
-		for (int i = 0; i < psDim; i++) {
-			partialsIdxMap[i] = &(dFillInvMap.at(reactantIndices[i]));
-			partials[i] = &(vals[startingIdx[reactantIndices[i]]]);
-		}
 
-		// Have reactant compute its partial derivatives
-		// to its correct locations within the vals array.
-		reactant.computePartialDerivatives(concs, xi, partialsIdxMap, partials);
+        // Copy the computed partials from the dense DOF-space
+        // into their location within the vals array.
+        auto currClusterIdx = reactant.getId() - 1;
+        for(auto i = 0; i < psDim; ++i) {
+
+			// Get the list of column ids from the map
+			auto const& pdColIdsVector = dFillMap.at(currClusterIdx);
+
+			// Loop over the list of column ids
+            auto currStartingIdx = startingIdx[currClusterIdx];
+			for (int j = 0; j < pdColIdsVector.size(); ++j) {
+				// Get the partial derivative from the array of all of the partials
+                vals[currStartingIdx + j] = partials[i][pdColIdsVector[j]];
+
+                // Reset the value we just copied.  Selectively resetting 
+                // individual values is much faster than zeroing the entire
+                // vector.
+                partials[i][pdColIdsVector[j]] = 0.0;
+			}
+        }
 	}
 
 	return;

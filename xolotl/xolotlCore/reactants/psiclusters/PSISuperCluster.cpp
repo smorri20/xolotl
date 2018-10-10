@@ -1305,6 +1305,19 @@ void PSISuperCluster::computePartialDerivatives(const double* __restrict concs,
 	return;
 }
 
+void PSISuperCluster::computePartialDerivatives2(const double* __restrict concs,
+        int xi,
+        std::array<std::vector<double>, 5>& partials) const {
+
+	// Get the partial derivatives for each reaction type
+	computeProdPartials2(concs, xi, partials);
+	computeCombPartials2(concs, xi, partials);
+	computeDissPartials2(concs, xi, partials);
+	computeEmitPartials2(concs, xi, partials);
+
+	return;
+}
+
 void PSISuperCluster::computeProductionPartialDerivatives(
         const double* __restrict concs,
         int xi,
@@ -1362,6 +1375,85 @@ void PSISuperCluster::computeProductionPartialDerivatives(
 						partials[i][partialsIdxA] += value * sum[i][j][0];
 						partials[i][partialsIdxB] += value * sum[i][j][1];
 					}
+				}
+			});
+
+	return;
+}
+
+void PSISuperCluster::computeProdPartials2(
+        const double* __restrict concs,
+        int xi,
+        std::array<std::vector<double>, 5>& partials) const {
+
+	// Production
+	// A + B --> D, D being this cluster
+	// The flux for D is
+	// F(C_D) = k+_(A,B)*C_A*C_B
+	// Thus, the partial derivatives
+	// dF(C_D)/dC_A = k+_(A,B)*C_B
+	// dF(C_D)/dC_B = k+_(A,B)*C_A
+
+	// Loop over all the reacting pairs
+	std::for_each(effReactingList.begin(), effReactingList.end(),
+			[this,concs,&partials,xi](ProductionPairList::value_type const& currPair) {
+
+				// Get the two reacting clusters
+				auto const& firstReactant = currPair.first;
+				auto const& secondReactant = currPair.second;
+#ifndef READY
+				double lA[5] = {}, lB[5] = {};
+				lA[0] = firstReactant.getConcentration(concs);
+				lB[0] = secondReactant.getConcentration(concs);
+				for (int i = 1; i < psDim; i++) {
+					lA[i] = firstReactant.getMoment(concs, indexList[i]-1);
+					lB[i] = secondReactant.getMoment(concs, indexList[i]-1);
+				}
+#else
+                double lA = firstReactant.getConcentration(concs);
+                double lB = secondReactant.getConcentration(concs); 
+#endif // READY
+
+#ifndef READY
+				double sum[5][5][2] = {};
+				for (int k = 0; k < psDim; k++) {
+					for (int j = 0; j < psDim; j++) {
+						for (int i = 0; i < psDim; i++) {
+                            assert(sum[k][j][0] == 0);
+                            assert(sum[k][j][1] == 0);
+							sum[k][j][0] += currPair.coefs[j][i][k] * lB[i];
+							sum[k][j][1] += currPair.coefs[i][j][k] * lA[i];
+						}
+					}
+				}
+#else
+                double sum0 = currPair.coefs[0][0][0] * lB;
+                double sum1 = currPair.coefs[0][0][0] * lA;
+#endif // READY
+
+				// Compute the contribution from the first and second part of the reacting pair
+				auto value = currPair.reaction.kConstant[xi] / nTot;
+				for (int j = 0; j < psDim; j++) {
+                    int indexA;
+                    int indexB;
+                    if(j==0) {
+                        indexA = firstReactant.getId() - 1;
+                        indexB = secondReactant.getId() - 1;
+                    }
+                    else {
+                        indexA = firstReactant.getMomentId(indexList[j] - 1);
+                        indexB = secondReactant.getMomentId(indexList[j] - 1);
+                    }
+
+                    for(auto i = 0; i < psDim; ++i) {
+#ifndef READY
+                        partials[i][indexA] += value * sum[i][j][0];
+                        partials[i][indexB] += value * sum[i][j][1];
+#else
+                        partials[i][indexA] += value * sum0;
+                        partials[i][indexB] += value * sum1;
+#endif // READY
+                    }
 				}
 			});
 
@@ -1430,6 +1522,75 @@ void PSISuperCluster::computeCombinationPartialDerivatives(
 	return;
 }
 
+void PSISuperCluster::computeCombPartials2(
+        const double* __restrict concs,
+        int xi,
+        std::array<std::vector<double>, 5>& partials) const {
+
+	// Combination
+	// A + B --> D, A being this cluster
+	// The flux for A is outgoing
+	// F(C_A) = - k+_(A,B)*C_A*C_B
+	// Thus, the partial derivatives
+	// dF(C_A)/dC_A = - k+_(A,B)*C_B
+	// dF(C_A)/dC_B = - k+_(A,B)*C_A
+
+	// Visit all the combining clusters
+	std::for_each(effCombiningList.begin(), effCombiningList.end(),
+			[this,concs,xi,&partials](CombiningClusterList::value_type const& currComb) {
+				// Get the combining clusters
+				auto const& cluster = currComb.first;
+#ifndef READY
+				double lA[5] = {}, lB[5] = {};
+				lA[0] = concs[id-1];
+				lB[0] = cluster.getConcentration(concs);
+				for (int i = 1; i < psDim; i++) {
+					lA[i] = getMoment(concs, indexList[i]-1);
+					lB[i] = cluster.getMoment(concs, indexList[i]-1);
+				}
+#else
+                double lA = getConcentration(concs);
+                double lB = cluster.getConcentration(concs);
+#endif // READY
+
+#ifndef READY
+				double sum[5][5][2] = {};
+				for (int k = 0; k < psDim; k++) {
+					for (int j = 0; j < psDim; j++) {
+						for (int i = 0; i < psDim; i++) {
+							sum[k][j][0] += currComb.coefs[i][j][k] * lA[i];
+							sum[k][j][1] += currComb.coefs[j][i][k] * lB[i];
+						}
+					}
+				}
+#else
+                double sum0 = currComb.coefs[0][0][0] * lA;
+                double sum1 = currComb.coefs[0][0][0] * lB;
+#endif // READY
+
+				// Compute the contribution from the both clusters
+				auto value = currComb.reaction.kConstant[xi] / nTot;
+				for (int j = 0; j < psDim; j++) {
+					auto indexA = (j == 0) ? cluster.getId() -1
+                                    : cluster.getMomentId(indexList[j] - 1) - 1;
+                    auto indexB = (j == 0) ? getId() - 1
+                                    : getMomentId(indexList[j] - 1) - 1;
+
+					for (int i = 0; i < psDim; i++) {
+#ifndef READY
+						partials[i][indexA] -= value * sum[i][j][0];
+						partials[i][indexB] -= value * sum[i][j][1];
+#else
+						partials[i][indexA] -= value * sum0;
+						partials[i][indexB] -= value * sum1;
+#endif // READY
+					}
+				}
+			});
+
+	return;
+}
+
 void PSISuperCluster::computeDissociationPartialDerivatives(
         const double* __restrict concs, int xi,
 		const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
@@ -1469,6 +1630,39 @@ void PSISuperCluster::computeDissociationPartialDerivatives(
 	return;
 }
 
+void PSISuperCluster::computeDissPartials2(
+        const double* __restrict concs, 
+        int xi,
+        std::array<std::vector<double>, 5>& partials) const {
+
+	// Dissociation
+	// A --> B + D, B being this cluster
+	// The flux for B is
+	// F(C_B) = k-_(B,D)*C_A
+	// Thus, the partial derivatives
+	// dF(C_B)/dC_A = k-_(B,D)
+
+	// Visit all the dissociating pairs
+	std::for_each(effDissociatingList.begin(), effDissociatingList.end(),
+			[this,xi,&partials](DissociationPairList::value_type const& currPair) {
+
+				// Get the dissociating clusters
+				auto const& cluster = currPair.first;
+				// Compute the contribution from the dissociating cluster
+				auto value = currPair.reaction.kConstant[xi] / nTot;
+
+				for (int j = 0; j < psDim; j++) {
+					int index = (j == 0) ? cluster.getId() - 1
+                            : cluster.getMomentId(indexList[j]-1) - 1;
+					for (int i = 0; i < psDim; i++) {
+                        partials[i][index] += value * currPair.coefs[j][i];
+					}
+				}
+			});
+
+	return;
+}
+
 void PSISuperCluster::computeEmissionPartialDerivatives(
         const double* __restrict concs,
         int xi,
@@ -1499,6 +1693,37 @@ void PSISuperCluster::computeEmissionPartialDerivatives(
 					auto partialsIdx = partialsIdxMap[j]->at(index);
 					for (int i = 0; i < psDim; i++) {
 						partials[i][partialsIdx] -= value * currPair.coefs[j][i];
+					}
+				}
+			});
+
+	return;
+}
+
+void PSISuperCluster::computeEmitPartials2(
+        const double* __restrict concs,
+        int xi,
+        std::array<std::vector<double>, 5>& partials) const {
+
+	// Emission
+	// A --> B + D, A being this cluster
+	// The flux for A is
+	// F(C_A) = - k-_(B,D)*C_A
+	// Thus, the partial derivatives
+	// dF(C_A)/dC_A = - k-_(B,D)
+
+	// Visit all the emission pairs
+	std::for_each(effEmissionList.begin(), effEmissionList.end(),
+			[this,xi,&partials](DissociationPairList::value_type const& currPair) {
+
+				// Compute the contribution from the dissociating cluster
+				auto value = currPair.reaction.kConstant[xi] / nTot;
+				for (int j = 0; j < psDim; j++) {
+					int index = (j == 0) ? getId() - 1
+                                : getMomentId(indexList[j]-1) - 1;
+
+					for (int i = 0; i < psDim; i++) {
+						partials[i][index] -= value * currPair.coefs[j][i];
 					}
 				}
 			});
