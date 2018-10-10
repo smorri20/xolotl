@@ -1096,11 +1096,11 @@ void PSISuperCluster::resetConnectivities() {
 	dissociationConnectivitySet.clear();
 
 	// Connect this cluster to itself since any reaction will affect it
-	setReactionConnectivity(id);
-	setDissociationConnectivity(id);
+	setReactionConnectivity(getId());
+	setDissociationConnectivity(getId());
 	for (int i = 0; i < 4; i++) {
-		setReactionConnectivity(momId[i]);
-		setDissociationConnectivity(momId[i]);
+		setReactionConnectivity(getMomentId(i));
+		setDissociationConnectivity(getMomentId(i));
 	}
 	// Visit all the reacting pairs
 	std::for_each(effReactingList.begin(), effReactingList.end(),
@@ -1193,7 +1193,7 @@ void PSISuperCluster::getEmissionFlux(const double* concs, int xi,
 	std::for_each(effEmissionList.begin(), effEmissionList.end(),
 			[this,&superFlux,&concs,xi](DissociationPairList::value_type const& currPair) {
 				double lA[5] = {};
-				lA[0] = concs[id-1];
+				lA[0] = concs[getId()-1];
 				for (int i = 1; i < psDim; i++) {
 					lA[i] = getMoment(concs, indexList[i]-1);
 				}
@@ -1266,7 +1266,7 @@ void PSISuperCluster::getCombinationFlux(const double* concs, int xi,
 				// Get the combining cluster
 				auto const& combiningCluster = currComb.first;
 				double lA[5] = {}, lB[5] = {};
-				lA[0] = concs[id-1];
+				lA[0] = concs[getId()-1];
 				lB[0] = combiningCluster.getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
 					lA[i] = getMoment(concs, indexList[i]-1);
@@ -1481,7 +1481,7 @@ void PSISuperCluster::computeCombinationPartialDerivatives(
 				auto const& cluster = currComb.first;
 
 				double lA[5] = {}, lB[5] = {};
-				lA[0] = concs[id-1];
+				lA[0] = concs[getId()-1];
 				lB[0] = cluster.getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
 					lA[i] = getMoment(concs, indexList[i]-1);
@@ -1504,11 +1504,11 @@ void PSISuperCluster::computeCombinationPartialDerivatives(
 					int indexA = 0, indexB = 0;
 					if (j == 0) {
 						indexA = cluster.getId() - 1;
-						indexB = id - 1;
+						indexB = getId() - 1;
 					}
 					else {
 						indexA = cluster.getMomentId(indexList[j]-1) - 1;
-						indexB = momId[indexList[j]-1] - 1;
+						indexB = getMomentId(indexList[j]-1) - 1;
 					}
 					auto partialsIdxA = partialsIdxMap[j]->at(indexA);
 					auto partialsIdxB = partialsIdxMap[j]->at(indexB);
@@ -1542,7 +1542,7 @@ void PSISuperCluster::computeCombPartials2(
 				auto const& cluster = currComb.first;
 #ifndef READY
 				double lA[5] = {}, lB[5] = {};
-				lA[0] = concs[id-1];
+				lA[0] = concs[getId()-1];
 				lB[0] = cluster.getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
 					lA[i] = getMoment(concs, indexList[i]-1);
@@ -1685,10 +1685,10 @@ void PSISuperCluster::computeEmissionPartialDerivatives(
 				for (int j = 0; j < psDim; j++) {
 					int index = 0;
 					if (j == 0) {
-						index = id - 1;
+						index = getId() - 1;
 					}
 					else {
-						index = momId[indexList[j]-1] - 1;
+						index = getMomentId(indexList[j]-1) - 1;
 					}
 					auto partialsIdx = partialsIdxMap[j]->at(index);
 					for (int i = 0; i < psDim; i++) {

@@ -391,10 +391,10 @@ void FeSuperCluster::resultFrom(ProductionReaction& reaction, double *coef) {
 
 void FeSuperCluster::participateIn(ProductionReaction& reaction, int a[4]) {
 
-	setReactionConnectivity(id);
+	setReactionConnectivity(getId());
 	// Look for the other cluster
 	auto& otherCluster = static_cast<FeCluster&>(
-			(reaction.first.getId() == id) ? reaction.second : reaction.first);
+			(reaction.first.getId() == getId()) ? reaction.second : reaction.first);
 
 	// Check if we already know about the reaction.
 	auto rkey = &otherCluster;
@@ -437,10 +437,10 @@ void FeSuperCluster::participateIn(ProductionReaction& reaction, int a[4]) {
 void FeSuperCluster::participateIn(ProductionReaction& reaction,
 		const std::vector<PendingProductionReactionInfo>& pendingPRInfos) {
 
-	setReactionConnectivity(id);
+	setReactionConnectivity(getId());
 	// Look for the other cluster
 	auto& otherCluster = static_cast<FeCluster&>(
-			(reaction.first.getId() == id) ? reaction.second : reaction.first);
+			(reaction.first.getId() == getId()) ? reaction.second : reaction.first);
 
 	// Check if we already know about the reaction.
 	auto rkey = &otherCluster;
@@ -491,10 +491,10 @@ void FeSuperCluster::participateIn(ProductionReaction& reaction,
 void FeSuperCluster::participateIn(ProductionReaction& reaction,
 		IReactant& prod) {
 
-	setReactionConnectivity(id);
+	setReactionConnectivity(getId());
 	// Look for the other cluster
 	auto& otherCluster = static_cast<FeCluster&>(
-			(reaction.first.getId() == id) ? reaction.second : reaction.first);
+			(reaction.first.getId() == getId()) ? reaction.second : reaction.first);
 
 	// Check if we already know about the reaction.
 	auto rkey = &otherCluster;
@@ -593,10 +593,10 @@ void FeSuperCluster::participateIn(ProductionReaction& reaction,
 
 void FeSuperCluster::participateIn(ProductionReaction& reaction, double *coef) {
 
-	setReactionConnectivity(id);
+	setReactionConnectivity(getId());
 	// Look for the other cluster
 	auto& otherCluster = static_cast<FeCluster&>(
-			(reaction.first.getId() == id) ? reaction.second : reaction.first);
+			(reaction.first.getId() == getId()) ? reaction.second : reaction.first);
 
 	// Check if we already know about the reaction.
 	auto rkey = &otherCluster;
@@ -636,7 +636,7 @@ void FeSuperCluster::participateIn(DissociationReaction& reaction, int a[4],
 
 	// Determine which is the other cluster.
 	auto& emittedCluster = static_cast<FeCluster&>(
-			(reaction.first.getId() == id) ? reaction.second : reaction.first);
+			(reaction.first.getId() == getId()) ? reaction.second : reaction.first);
 
 	// Check if we already know about the reaction.
 	auto rkey = std::make_pair(&(reaction.dissociating), &emittedCluster);
@@ -688,7 +688,7 @@ void FeSuperCluster::participateIn(DissociationReaction& reaction,
 
 	// Determine which is the other cluster.
 	auto& emittedCluster = static_cast<FeCluster&>(
-			(reaction.first.getId() == id) ? reaction.second : reaction.first);
+			(reaction.first.getId() == getId()) ? reaction.second : reaction.first);
 
 	// Check if we already know about the reaction.
 	auto rkey = std::make_pair(&(reaction.dissociating), &emittedCluster);
@@ -750,7 +750,7 @@ void FeSuperCluster::participateIn(DissociationReaction& reaction,
 
 	// Determine which is the other cluster.
 	auto& emittedCluster = static_cast<FeCluster&>(
-			(reaction.first.getId() == id) ? reaction.second : reaction.first);
+			(reaction.first.getId() == getId()) ? reaction.second : reaction.first);
 
 	// Check if we already know about the reaction.
 	auto rkey = std::make_pair(&(reaction.dissociating), &emittedCluster);
@@ -863,7 +863,7 @@ void FeSuperCluster::participateIn(DissociationReaction& reaction,
 
 	// Determine which is the other cluster.
 	auto& emittedCluster = static_cast<FeCluster&>(
-			(reaction.first.getId() == id) ? reaction.second : reaction.first);
+			(reaction.first.getId() == getId()) ? reaction.second : reaction.first);
 
 	// Check if we already know about the reaction.
 	auto rkey = std::make_pair(&(reaction.dissociating), &emittedCluster);
@@ -1246,12 +1246,12 @@ void FeSuperCluster::resetConnectivities() {
 	dissociationConnectivitySet.clear();
 
 	// Connect this cluster to itself since any reaction will affect it
-	setReactionConnectivity(id);
-	setDissociationConnectivity(id);
-	setReactionConnectivity(momId[0]);
-	setDissociationConnectivity(momId[0]);
-	setReactionConnectivity(momId[1]);
-	setDissociationConnectivity(momId[1]);
+	setReactionConnectivity(getId());
+	setDissociationConnectivity(getId());
+	setReactionConnectivity(getMomentId(0));
+	setDissociationConnectivity(getMomentId(0));
+	setReactionConnectivity(getMomentId(1));
+	setDissociationConnectivity(getMomentId(1));
 
 	// Visit all the reacting pairs
 	std::for_each(effReactingList.begin(), effReactingList.end(),
@@ -1579,21 +1579,21 @@ void FeSuperCluster::getCombinationPartialDerivatives(const double* concs,
 				feVMomentPartials[index] -= value
 				* (currComb.a022 * l0 + currComb.a122 * l1He + currComb.a222 * l1V);
 				// Compute the contribution from this cluster
-				index = id - 1;
+				index = getId() - 1;
 				partials[index] -= value
 				* (currComb.a000 * l0B + currComb.a010 * lHeB + currComb.a020 * lVB);
 				feHeMomentPartials[index] -= value
 				* (currComb.a001 * l0B + currComb.a011 * lHeB + currComb.a021 * lVB);
 				feVMomentPartials[index] -= value
 				* (currComb.a002 * l0B + currComb.a012 * lHeB + currComb.a022 * lVB);
-				index = momId[0] - 1;
+				index = getMomentId(0) - 1;
 				partials[index] -= value
 				* (currComb.a100 * l0B + currComb.a110 * lHeB + currComb.a120 * lVB);
 				feHeMomentPartials[index] -= value
 				* (currComb.a101 * l0B + currComb.a111 * lHeB + currComb.a121 * lVB);
 				feVMomentPartials[index] -= value
 				* (currComb.a102 * l0B + currComb.a112 * lHeB + currComb.a122 * lVB);
-				index = momId[1] - 1;
+				index = getMomentId(1) - 1;
 				partials[index] -= value
 				* (currComb.a200 * l0B + currComb.a210 * lHeB + currComb.a220 * lVB);
 				feHeMomentPartials[index] -= value
@@ -1658,15 +1658,15 @@ void FeSuperCluster::getEmissionPartialDerivatives(const double* concs,
 
 				// Compute the contribution from the dissociating cluster
 				auto value = currPair.reaction.kConstant[xi] / (double) nTot;
-				auto index = id - 1;
+				auto index = getId() - 1;
 				partials[index] -= value * (currPair.a00);
 				feHeMomentPartials[index] -= value * (currPair.a01);
 				feVMomentPartials[index] -= value * (currPair.a02);
-				index = momId[0] - 1;
+				index = getMomentId(0) - 1;
 				partials[index] -= value * (currPair.a10);
 				feHeMomentPartials[index] -= value * (currPair.a11);
 				feVMomentPartials[index] -= value * (currPair.a12);
-				index = momId[1] - 1;
+				index = getMomentId(1) - 1;
 				partials[index] -= value * (currPair.a20);
 				feHeMomentPartials[index] -= value * (currPair.a21);
 				feVMomentPartials[index] -= value * (currPair.a22);
@@ -1856,7 +1856,7 @@ void FeSuperCluster::dumpCoefficients(std::ostream& os,
 
 void FeSuperCluster::outputCoefficientsTo(std::ostream& os) const {
 
-	os << "id: " << id << '\n';
+	os << "id: " << getId() << '\n';
 	os << "reacting: " << effReactingList.size() << '\n';
 	std::for_each(effReactingList.begin(), effReactingList.end(),
 			[this,&os](ProductionPairMap::value_type const& currMapItem) {

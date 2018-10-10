@@ -18,6 +18,7 @@ Reactant::Reactant(IReactionNetwork& _network,
 				0.0), diffusionFactor(0.0), migrationEnergy(0.0), name(_name), reactionRadius(
 				0.0) {
 
+    momId.Init(0);
 }
 
 void Reactant::recomputeDiffusionCoefficient(double temp, int i) {

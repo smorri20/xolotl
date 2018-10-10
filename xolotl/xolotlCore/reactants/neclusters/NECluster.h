@@ -355,7 +355,7 @@ public:
 	 */
     virtual double getConcentration(const double* concs, double distXe) const {
 		// TODO should this ever be called?  It ignores the argument.
-		return concs[id - 1];
+		return concs[getId() - 1];
     }
 
 	/**

@@ -108,7 +108,7 @@ public:
 		// Compute the loss to dislocation sinks
 		if (size < 5) {
 			// k^2 * D * C
-			partials[id - 1] -= xolotlCore::sinkStrength * diffusionCoefficient[i];
+			partials[getId() - 1] -= xolotlCore::sinkStrength * diffusionCoefficient[i];
 		}
 
 		return;

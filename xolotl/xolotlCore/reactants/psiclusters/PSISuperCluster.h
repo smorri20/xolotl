@@ -416,7 +416,7 @@ private:
 	 */
 	PSICluster& findOtherCluster(Reaction& reaction) const {
 		auto& otherCluster = static_cast<PSICluster&>(
-				(reaction.first.getId() == id) ?
+				(reaction.first.getId() == getId()) ?
 						reaction.second : reaction.first);
 		return otherCluster;
 	}
@@ -771,7 +771,7 @@ public:
 
         std::array<double, 5> dists { 0, distHe, distD, distT, distV };
 
-        double ret = concs[id - 1];
+        double ret = concs[getId() - 1];
         for(auto i = 1; i < psDim; ++i) {
             auto currAxis = indexList[i] - 1;
             ret += (dists[i] * getMoment(concs, currAxis));

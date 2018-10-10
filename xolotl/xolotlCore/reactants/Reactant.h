@@ -90,6 +90,17 @@ public:
         }
     };
 
+private:
+	/**
+	 * An integer identification number for this reactant.
+	 */
+	int id;
+
+	/**
+	 * An integer identification number for the first moments.
+	 */
+    Array<int, 4> momId;
+
 protected:
 
 	/**
@@ -101,16 +112,6 @@ protected:
 	 * The type name of the reactant.
 	 */
 	ReactantType type;
-
-	/**
-	 * An integer identification number for this reactant.
-	 */
-	int id;
-
-	/**
-	 * An integer identification number for the first moments.
-	 */
-	int momId[4] = { };
 
 	/**
 	 * The temperature at which the cluster currently exists. The diffusion
@@ -310,7 +311,7 @@ public:
 	 */
 	Reactant(const Reactant &other) :
 			name(other.name), type(
-					other.type), id(other.id), temperature(other.temperature), network(
+					other.type), id(other.id), momId(other.momId), temperature(other.temperature), network(
 					other.network), handlerRegistry(other.handlerRegistry), size(
 					other.size), composition(other.composition), formationEnergy(
 					other.formationEnergy), diffusionFactor(
