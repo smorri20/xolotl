@@ -1419,8 +1419,6 @@ void PSISuperCluster::computeProdPartials2(
 				for (int k = 0; k < psDim; k++) {
 					for (int j = 0; j < psDim; j++) {
 						for (int i = 0; i < psDim; i++) {
-                            assert(sum[k][j][0] == 0);
-                            assert(sum[k][j][1] == 0);
 							sum[k][j][0] += currPair.coefs[j][i][k] * lB[i];
 							sum[k][j][1] += currPair.coefs[i][j][k] * lA[i];
 						}
