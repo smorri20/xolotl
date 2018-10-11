@@ -103,16 +103,6 @@ protected:
 	ReactantType type;
 
 	/**
-	 * An integer identification number for this reactant.
-	 */
-	int id;
-
-	/**
-	 * An integer identification number for the first moments.
-	 */
-	int momId[4] = { };
-
-	/**
 	 * The temperature at which the cluster currently exists. The diffusion
 	 * coefficient is recomputed each time the temperature is changed.
 	 */
@@ -276,7 +266,7 @@ protected:
      * in the 'concs' array.
      */
     void addToConcentration(double* concs, double amount) const {
-        concs[id-1] += amount;
+        concs[getId()-1] += amount;
     }
 
 
@@ -310,7 +300,7 @@ public:
 	 */
 	Reactant(const Reactant &other) :
 			name(other.name), type(
-					other.type), id(other.id), temperature(other.temperature), network(
+					other.type), temperature(other.temperature), network(
 					other.network), handlerRegistry(other.handlerRegistry), size(
 					other.size), composition(other.composition), formationEnergy(
 					other.formationEnergy), diffusionFactor(
@@ -561,7 +551,7 @@ public:
 	 * @return The concentration of this reactant
 	 */
     double getConcentration(const double* concs) const override {
-        return concs[id-1];
+        return concs[getId()-1];
     }
 
 	/**
@@ -671,46 +661,6 @@ public:
 	 */
 	virtual const IReactant::Composition & getComposition() const override {
 		return composition;
-	}
-
-	/**
-	 * This operation sets the id of the reactant, The id is zero by default
-	 * and clients, most likely the ReactionNetwork, are expected to set the
-	 * id as needed.
-	 *
-	 * @param nId The new id for this reactant
-	 */
-	void setId(int nId) override {
-		id = nId;
-	}
-
-	/**
-	 * This operation returns the id for this reactant.
-	 *
-	 * @return The id
-	 */
-	int getId() const override {
-		return id;
-	}
-
-	/**
-	 * This operation sets the id of the first moment of the reactant.
-	 *
-	 * @param nId The new id for this moment
-	 * @param axis The direction
-	 */
-	void setMomentId(int nId, int axis = 0) override {
-		momId[axis] = nId;
-	}
-
-	/**
-	 * This operation returns the id for this reactant first moment.
-	 *
-	 * @param axis The direction
-	 * @return The id
-	 */
-	int getMomentId(int axis = 0) const override {
-		return momId[axis];
 	}
 
 	/**

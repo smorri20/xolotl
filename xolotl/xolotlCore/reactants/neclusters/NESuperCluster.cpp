@@ -63,7 +63,7 @@ void NESuperCluster::resultFrom(ProductionReaction& reaction, double *coef) {
 void NESuperCluster::participateIn(ProductionReaction& reaction, double *coef) {
 	// Look for the other cluster
 	auto& otherCluster = static_cast<NECluster&>(
-			(reaction.first.getId() == id) ? reaction.second : reaction.first);
+			(reaction.first.getId() == getId()) ? reaction.second : reaction.first);
 
 	// Create a new SuperClusterProductionPair with NULL as the second cluster because
 	// we do not need it
@@ -87,7 +87,7 @@ void NESuperCluster::participateIn(DissociationReaction& reaction,
 		double *coef) {
 	// Look for the other cluster
 	auto& emittedCluster = static_cast<NECluster&>(
-			(reaction.first.getId() == id) ? reaction.second : reaction.first);
+			(reaction.first.getId() == getId()) ? reaction.second : reaction.first);
 
 	// Create a new SuperClusterDissociationPair
 	effDissociatingList.emplace_back(
@@ -582,10 +582,10 @@ void NESuperCluster::resetConnectivities() {
 	dissociationConnectivitySet.clear();
 
 	// Connect this cluster to itself since any reaction will affect it
-	setReactionConnectivity(id);
-	setDissociationConnectivity(id);
-	setReactionConnectivity(momId[0]);
-	setDissociationConnectivity(momId[0]);
+	setReactionConnectivity(getId());
+	setDissociationConnectivity(getId());
+	setReactionConnectivity(getMomentId(0));
+	setDissociationConnectivity(getMomentId(0));
 
 	// Loop over all the reacting pairs
 	for (auto it = effReactingList.begin(); it != effReactingList.end(); ++it) {
@@ -814,10 +814,10 @@ void NESuperCluster::getCombinationPartialDerivatives(
 		partials[index] -= value * ((*it).a010 * l0 + (*it).a110 * l1);
 		momentPartials[index] -= value * ((*it).a011 * l0 + (*it).a111 * l1);
 		// Compute the contribution from this cluster
-		index = id - 1;
+		index = getId() - 1;
 		partials[index] -= value * ((*it).a000 * l0A + (*it).a010 * l1A);
 		momentPartials[index] -= value * ((*it).a001 * l0A + (*it).a011 * l1A);
-		index = momId[0] - 1;
+		index = getMomentId(0) - 1;
 		partials[index] -= value * ((*it).a100 * l0A + (*it).a110 * l1A);
 		momentPartials[index] -= value * ((*it).a101 * l0A + (*it).a111 * l1A);
 	}
@@ -877,10 +877,10 @@ void NESuperCluster::getEmissionPartialDerivatives(
 	for (auto it = effEmissionList.begin(); it != effEmissionList.end(); ++it) {
 		// Compute the contribution from the dissociating cluster
 		value = (*it).reaction.kConstant[xi] / (double) nTot;
-		index = id - 1;
+		index = getId() - 1;
 		partials[index] -= value * ((*it).a00);
 		momentPartials[index] -= value * ((*it).a01);
-		index = momId[0] - 1;
+		index = getMomentId(0) - 1;
 		partials[index] -= value * ((*it).a10);
 		momentPartials[index] -= value * ((*it).a11);
 	}

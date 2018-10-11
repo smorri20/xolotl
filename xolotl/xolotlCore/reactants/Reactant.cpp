@@ -13,7 +13,7 @@ namespace xolotlCore {
 Reactant::Reactant(IReactionNetwork& _network,
 		std::shared_ptr<xolotlPerf::IHandlerRegistry> registry,
 		const std::string& _name) :
-		id(0), type(ReactantType::Invalid), network(
+		type(ReactantType::Invalid), network(
 				_network), handlerRegistry(registry), size(0), formationEnergy(
 				0.0), diffusionFactor(0.0), migrationEnergy(0.0), name(_name), reactionRadius(
 				0.0) {
@@ -58,7 +58,7 @@ std::vector<int> Reactant::getConnectivity() const {
 	std::vector<int> connectivity = std::vector<int>(connectivityLength, 0);
 
 	// This reactant should be connected to itself
-	connectivity[id - 1] = 1;
+	connectivity[getId() - 1] = 1;
 
 	return connectivity;
 }

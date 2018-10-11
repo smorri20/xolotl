@@ -12,6 +12,8 @@
 #include "Species.h"
 #include "ReactantType.h"
 #include "PendingProductionReactionInfo.h"
+#include "NDArray.h"
+
 
 namespace xolotlCore {
 
@@ -36,6 +38,17 @@ static int defaultInit[4] = { 0, 0, 0, 0 };
  * functionality for calculate fluxes and computing connectivity.
  */
 class IReactant {
+
+private:
+	/**
+	 * An integer identification number for this reactant.
+	 */
+	int id;
+
+	/**
+	 * An integer identification number for the first moments.
+	 */
+    Array<int, 4> momId;
 
 public:
 	/**
@@ -63,6 +76,19 @@ public:
 	 */
 	using RefVector = std::vector<std::reference_wrapper<IReactant> >;
 	using ConstRefVector = std::vector<std::reference_wrapper<const IReactant> >;
+
+
+    IReactant(void)
+      : id(0)
+    {
+        momId.Init(0);
+    }
+
+    IReactant(const IReactant& other)
+      : id(other.id),
+        momId(other.momId)
+    { }
+
 
 	/**
 	 * The destructor
@@ -353,30 +379,39 @@ public:
 	 *
 	 * @param nId The new id for this reactant
 	 */
-	virtual void setId(int nId) = 0;
+	void setId(int nId) {
+		id = nId;
+	}
 
 	/**
 	 * This operation returns the id for this reactant.
 	 *
 	 * @return The id
 	 */
-	virtual int getId() const = 0;
+	int getId() const {
+		return id;
+	}
 
 	/**
-	 * This operation sets the id of the first moment of the reactant at the axis of interest.
+	 * This operation sets the id of the first moment of the reactant.
 	 *
 	 * @param nId The new id for this moment
 	 * @param axis The direction
 	 */
-	virtual void setMomentId(int nId, int axis = 0) = 0;
+	void setMomentId(int nId, int axis = 0) {
+		momId[axis] = nId;
+	}
 
 	/**
-	 * This operation returns the id for the first moment.
+	 * This operation returns the id for this reactant first moment.
 	 *
 	 * @param axis The direction
 	 * @return The id
 	 */
-	virtual int getMomentId(int axis = 0) const = 0;
+	int getMomentId(int axis = 0) const {
+		return momId[axis];
+	}
+
 
 	/**
 	 * This operation sets the temperature at which the reactant currently

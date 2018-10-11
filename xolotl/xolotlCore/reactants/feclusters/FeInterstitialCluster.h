@@ -111,7 +111,7 @@ public:
 		// Compute the loss to dislocation sinks
 		if (size < 2) {
 			// bias * k^2 * D * C
-			partials[id - 1] -= sinkBias * sinkStrength * diffusionCoefficient[i];
+			partials[getId() - 1] -= sinkBias * sinkStrength * diffusionCoefficient[i];
 		}
 
 		return;
