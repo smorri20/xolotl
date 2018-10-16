@@ -140,7 +140,7 @@ protected:
 		 * 3 -> T
 		 * 4 -> V
 		 */
-		double ***coefs;
+        Array<double, 5, 5, 5> coefs;
 		const int dim;
 
 		//! The constructor, disallowed
@@ -150,47 +150,19 @@ protected:
 		ProductionCoefficientBase(const int _dim) :
 				dim(_dim) {
 
-			// Create the array of the right dimension
-			coefs = new double**[dim];
-			for (int i = 0; i < dim; i++) {
-				coefs[i] = new double*[dim];
-				for (int j = 0; j < dim; j++) {
-					coefs[i][j] = new double[dim];
-					for (int k = 0; k < dim; k++) {
-						coefs[i][j][k] = 0.0;
-					}
-				}
-			}
+            coefs.Init(0);
 		}
 
 		/**
 		 * Copy constructor.
 		 */
 		ProductionCoefficientBase(const ProductionCoefficientBase& other) :
-				dim(other.dim) {
+				coefs(other.coefs), dim(other.dim) {
 
-			// Create a deep copy of other's coeffs array.
-			coefs = new double**[dim];
-			for (int i = 0; i < dim; i++) {
-				coefs[i] = new double*[dim];
-				for (int j = 0; j < dim; j++) {
-					coefs[i][j] = new double[dim];
-					for (int k = 0; k < dim; k++) {
-						coefs[i][j][k] = other.coefs[i][j][k];
-					}
-				}
-			}
 		}
 
 		//! The destructor
 		~ProductionCoefficientBase() {
-			for (int i = 0; i < dim; i++) {
-				for (int j = 0; j < dim; j++) {
-					delete[] coefs[i][j];
-				}
-				delete[] coefs[i];
-			}
-			delete[] coefs;
 		}
 	};
 
@@ -296,21 +268,15 @@ protected:
 		 * 3 -> T
 		 * 4 -> V
 		 */
-		double **coefs;
+        Array<double, 5, 5> coefs;
 		const int dim;
 
 		//! The constructor
 		SuperClusterDissociationPair(Reaction& _reaction, PSICluster& _first,
 				PSICluster& _second, int _dim) :
 				ReactingPairBase(_reaction, _first, _second), dim(_dim) {
-			// Create the array of the right dimension
-			coefs = new double*[dim];
-			for (int i = 0; i < dim; i++) {
-				coefs[i] = new double[dim];
-				for (int j = 0; j < dim; j++) {
-					coefs[i][j] = 0.0;
-				}
-			}
+
+            coefs.Init(0);
 		}
 
 		/**
@@ -322,24 +288,12 @@ protected:
 		 * Copy constructor, needed to be element in a std::vector.
 		 */
 		SuperClusterDissociationPair(const SuperClusterDissociationPair& other) :
-				ReactingPairBase(other), dim(other.dim) {
-
-			// Create the array of the right dimension
-			coefs = new double*[dim];
-			for (int i = 0; i < dim; i++) {
-				coefs[i] = new double[dim];
-				for (int j = 0; j < dim; j++) {
-					coefs[i][j] = other.coefs[i][j];
-				}
-			}
+				ReactingPairBase(other),
+                coefs(other.coefs), dim(other.dim) {
 		}
 
 		//! The destructor
 		~SuperClusterDissociationPair() {
-			for (int i = 0; i < dim; i++) {
-				delete[] coefs[i];
-			}
-			delete[] coefs;
 		}
 	};
 
