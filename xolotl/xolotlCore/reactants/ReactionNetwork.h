@@ -478,7 +478,7 @@ public:
 	 * @param i Index to switch between the different types of atoms
 	 * @return The total concentration
 	 */
-	double getTotalAtomConcentration(const double* concs, int i) override {
+	double getTotalAtomConcentration(const double* __restrict concs, int i) override {
         assert(false);  // should never be called.
 		return 0.0;
 	}
@@ -491,7 +491,7 @@ public:
 	 * @param i Index to switch between the different types of atoms
 	 * @return The total concentration
 	 */
-	double getTotalTrappedAtomConcentration(const double* concs, int i) const override {
+	double getTotalTrappedAtomConcentration(const double* __restrict concs, int i) const override {
         assert(false);  // should never be called.
 		return 0.0;
 	}
@@ -503,7 +503,7 @@ public:
 	 *
 	 * @return The total concentration
 	 */
-	double getTotalVConcentration(const double* concs) override {
+	double getTotalVConcentration(const double* __restrict concs) override {
         assert(false);  // should never be called.
 		return 0.0;
 	}
@@ -515,7 +515,7 @@ public:
 	 *
 	 * @return The total concentration
 	 */
-	double getTotalIConcentration(const double* concs) override {
+	double getTotalIConcentration(const double* __restrict concs) override {
         assert(false);  // should never be called
 		return 0.0;
 	}

@@ -206,7 +206,7 @@ public:
 	 * @param i Index to switch between the different types of atoms
 	 * @return The total concentration
 	 */
-	virtual double getTotalAtomConcentration(const double* concs, int i) = 0;
+	virtual double getTotalAtomConcentration(const double* __restrict concs, int i) = 0;
 
 	/**
 	 * Get the total concentration of atoms contained in bubbles in the network.
@@ -214,21 +214,21 @@ public:
 	 * @param i Index to switch between the different types of atoms
 	 * @return The total concentration
 	 */
-	virtual double getTotalTrappedAtomConcentration(const double* concs, int i) const = 0;
+	virtual double getTotalTrappedAtomConcentration(const double* __restrict concs, int i) const = 0;
 
 	/**
 	 * Get the total concentration of vacancies in the network.
 	 *
 	 * @return The total concentration
 	 */
-	virtual double getTotalVConcentration(const double* concs) = 0;
+	virtual double getTotalVConcentration(const double* __restrict concs) = 0;
 
 	/**
 	 * Get the total concentration of material interstitials in the network.
 	 *
 	 * @return The total concentration
 	 */
-	virtual double getTotalIConcentration(const double* concs) = 0;
+	virtual double getTotalIConcentration(const double* __restrict concs) = 0;
 
 	/**
 	 * Calculate all the rate constants for the reactions and dissociations of the network.
@@ -293,7 +293,7 @@ public:
 	 * @param i The location on the grid in the depth direction
 	 * @param vals The values of partials for the reactions
 	 */
-	virtual void computeAllPartials(const double* concs,
+	virtual void computeAllPartials(const double* __restrict concs,
             const std::vector<size_t>& startingIdx,
 			std::vector<double>& vals, int i) const = 0;
 

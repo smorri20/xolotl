@@ -72,7 +72,7 @@ private:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to dissociation of other clusters
 	 */
-    void getDissociationFlux(const double* concs, int i,
+    void getDissociationFlux(const double* __restrict concs, int i,
                             Reactant::Flux& flux) const override;
 
 	/**
@@ -84,7 +84,7 @@ private:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to its dissociation
 	 */
-    void getEmissionFlux(const double* concs, int i,
+    void getEmissionFlux(const double* __restrict concs, int i,
                             Reactant::Flux& flux) const override;
 
 	/**
@@ -96,7 +96,7 @@ private:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to this cluster being produced
 	 */
-    void getProductionFlux(const double* concs, int i,
+    void getProductionFlux(const double* __restrict concs, int i,
                             Reactant::Flux& flux) const override;
 
 	/**
@@ -109,7 +109,7 @@ private:
 	 * @param[out] flux The flux due to this cluster combining with 
      *      other clusters
 	 */
-    void getCombinationFlux(const double* concs, int i,
+    void getCombinationFlux(const double* __restrict concs, int i,
                             Reactant::Flux& flux) const override;
 
 protected:
@@ -396,7 +396,7 @@ private:
      * @param amount Amount to add to concentration value associated
      * with our He moment flux.
      */
-    void addToHeMoment(double* concs, double amount) const {
+    void addToHeMoment(double* __restrict concs, double amount) const {
         concs[getMomentId(0) - 1] += amount;
     }
 
@@ -408,7 +408,7 @@ private:
      * @param amount Amount to add to concentration value associated
      * with our V moment flux.
      */
-    void addToVMoment(double* concs, double amount) const {
+    void addToVMoment(double* __restrict concs, double amount) const {
         concs[getMomentId(1) - 1] += amount;
     }
 
@@ -636,7 +636,7 @@ public:
 	 *
 	 * @return The moment
 	 */
-	double getHeMoment(const double* concs) const override {
+	double getHeMoment(const double* __restrict concs) const override {
         return concs[getMomentId(0) - 1];
 	}
 
@@ -645,7 +645,7 @@ public:
 	 *
 	 * @return The moment
 	 */
-	double getVMoment(const double* concs) const override {
+	double getVMoment(const double* __restrict concs) const override {
         return concs[getMomentId(1) - 1];
 	}
 
@@ -657,7 +657,7 @@ public:
 	 * @param distV The vacancy distance in the group
 	 * @return The concentration of this reactant
 	 */
-    double getConcentration(const double* concs,
+    double getConcentration(const double* __restrict concs,
                             double distHe, double distV) const override {
 
         return getConcentration(concs) +
@@ -671,7 +671,7 @@ public:
      * @param concs Current solution vector for desired grid point.
 	 * @return The concentration
 	 */
-	double getTotalConcentration(const double* concs) const;
+	double getTotalConcentration(const double* __restrict concs) const;
 
 	/**
 	 * This operation returns the current total concentration of helium in the group.
@@ -679,7 +679,7 @@ public:
      * @param concs Current solution vector for desired grid point.
 	 * @return The concentration
 	 */
-	double getTotalHeliumConcentration(const double* concs) const;
+	double getTotalHeliumConcentration(const double* __restrict concs) const;
 
 	/**
 	 * This operation returns the current total concentration of vacancies in the group.
@@ -687,7 +687,7 @@ public:
      * @param concs Current solution vector for desired grid point.
 	 * @return The concentration
 	 */
-	double getTotalVacancyConcentration(const double* concs) const;
+	double getTotalVacancyConcentration(const double* __restrict concs) const;
 
 	/**
 	 * This operation returns the distance to the mean.
@@ -755,7 +755,7 @@ public:
 	 * the vector should be equal to ReactionNetwork::size().
 	 *
 	 */
-	void getPartialDerivatives(const double* concs, int i,
+	void getPartialDerivatives(const double* __restrict concs, int i,
             std::vector<double> & partials) const override;
 
 	/**
@@ -769,7 +769,7 @@ public:
 	 * the list returned by the ReactionNetwork::getAll() operation. The size of
 	 * the vector should be equal to ReactionNetwork::size().
 	 */
-	void getProductionPartialDerivatives(const double* concs, int i,
+	void getProductionPartialDerivatives(const double* __restrict concs, int i,
             std::vector<double> & partials) const override;
 
 	/**
@@ -783,7 +783,7 @@ public:
 	 * the list returned by the ReactionNetwork::getAll() operation. The size of
 	 * the vector should be equal to ReactionNetwork::size().
 	 */
-	void getCombinationPartialDerivatives(const double* concs, int i,
+	void getCombinationPartialDerivatives(const double* __restrict concs, int i,
             std::vector<double> & partials) const override;
 
 	/**
@@ -797,7 +797,7 @@ public:
 	 * the list returned by the ReactionNetwork::getAll() operation. The size of
 	 * the vector should be equal to ReactionNetwork::size().
 	 */
-	void getDissociationPartialDerivatives(const double* concs, int i,
+	void getDissociationPartialDerivatives(const double* __restrict concs, int i,
             std::vector<double> & partials) const override;
 
 	/**
@@ -811,7 +811,7 @@ public:
 	 * the list returned by the ReactionNetwork::getAll() operation. The size of
 	 * the vector should be equal to ReactionNetwork::size().
 	 */
-	void getEmissionPartialDerivatives(const double* concs, int i,
+	void getEmissionPartialDerivatives(const double* __restrict concs, int i,
             std::vector<double> & partials) const override;
 
 	/**

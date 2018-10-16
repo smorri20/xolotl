@@ -695,7 +695,7 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 
         // TODO make getConcentration use concs array.
 		double FeClusterReactionNetwork::getTotalAtomConcentration(
-                                        const double* concs, const int i) {
+                                        const double* __restrict concs, const int i) {
 			// Initial declarations
 			double heliumConc = 0.0;
 
@@ -738,7 +738,7 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 
         // TODO make getConcentration use concs array.
 		double FeClusterReactionNetwork::getTotalTrappedAtomConcentration(
-                const double* concs, int i) const {
+                const double* __restrict concs, int i) const {
 
 			// Initial declarations
 			double heliumConc = 0.0;
@@ -768,7 +768,7 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 		}
 
 		double FeClusterReactionNetwork::getTotalVConcentration(
-                                        const double* concs) {
+                                        const double* __restrict concs) {
 			// Initial declarations
 			double vConc = 0.0;
 
@@ -807,7 +807,7 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 		}
 
 		double FeClusterReactionNetwork::getTotalIConcentration(
-                                        const double* concs) {
+                                        const double* __restrict concs) {
 			// Initial declarations
 			double iConc = 0.0;
 
@@ -825,7 +825,7 @@ void FeClusterReactionNetwork::reinitializeNetwork() {
 		}
 
 		void FeClusterReactionNetwork::computeAllPartials(
-                const double* concs,
+                const double* __restrict concs,
 				const std::vector<size_t>& startingIdx,
 				std::vector<double>& vals,
 				int i) const {

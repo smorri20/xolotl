@@ -1183,7 +1183,7 @@ void FeSuperCluster::setHeVVector(std::vector<std::pair<int, int> > vec) {
 	return;
 }
 
-double FeSuperCluster::getTotalConcentration(const double* concs) const {
+double FeSuperCluster::getTotalConcentration(const double* __restrict concs) const {
 	// Initial declarations
 	double heDistance = 0.0, vDistance = 0.0, conc = 0.0;
 
@@ -1202,7 +1202,7 @@ double FeSuperCluster::getTotalConcentration(const double* concs) const {
 	return conc;
 }
 
-double FeSuperCluster::getTotalHeliumConcentration(const double* concs) const {
+double FeSuperCluster::getTotalHeliumConcentration(const double* __restrict concs) const {
 	// Initial declarations
 	double heDistance = 0.0, vDistance = 0.0, conc = 0.0;
 
@@ -1221,7 +1221,7 @@ double FeSuperCluster::getTotalHeliumConcentration(const double* concs) const {
 	return conc;
 }
 
-double FeSuperCluster::getTotalVacancyConcentration(const double* concs) const {
+double FeSuperCluster::getTotalVacancyConcentration(const double* __restrict concs) const {
 	// Initial declarations
 	double heDistance = 0.0, vDistance = 0.0, conc = 0.0;
 
@@ -1297,7 +1297,7 @@ void FeSuperCluster::resetConnectivities() {
 	return;
 }
 
-void FeSuperCluster::getDissociationFlux(const double* concs, int xi,
+void FeSuperCluster::getDissociationFlux(const double* __restrict concs, int xi,
                                         Reactant::Flux& flux) const {
     auto& superFlux = static_cast<FeSuperCluster::Flux&>(flux);
 
@@ -1323,7 +1323,7 @@ void FeSuperCluster::getDissociationFlux(const double* concs, int xi,
 			});
 }
 
-void FeSuperCluster::getEmissionFlux(const double* concs, int xi,
+void FeSuperCluster::getEmissionFlux(const double* __restrict concs, int xi,
                                         Reactant::Flux& flux) const {
 
 	auto& superFlux = static_cast<FeSuperCluster::Flux&>(flux);
@@ -1349,7 +1349,7 @@ void FeSuperCluster::getEmissionFlux(const double* concs, int xi,
 			});
 }
 
-void FeSuperCluster::getProductionFlux(const double* concs, int xi,
+void FeSuperCluster::getProductionFlux(const double* __restrict concs, int xi,
                                         Reactant::Flux& flux) const {
 
     auto& superFlux = static_cast<FeSuperCluster::Flux&>(flux);
@@ -1394,7 +1394,7 @@ void FeSuperCluster::getProductionFlux(const double* concs, int xi,
 			});
 }
 
-void FeSuperCluster::getCombinationFlux(const double* concs, int xi,
+void FeSuperCluster::getCombinationFlux(const double* __restrict concs, int xi,
                                         Reactant::Flux& flux) const {
 
     auto& superFlux = static_cast<FeSuperCluster::Flux&>(flux);
@@ -1437,7 +1437,7 @@ void FeSuperCluster::getCombinationFlux(const double* concs, int xi,
 			});
 }
 
-void FeSuperCluster::getPartialDerivatives(const double* concs, int i,
+void FeSuperCluster::getPartialDerivatives(const double* __restrict concs, int i,
         std::vector<double> & partials) const {
 
 	// Reinitialize the moment partial derivatives vector
@@ -1453,7 +1453,7 @@ void FeSuperCluster::getPartialDerivatives(const double* concs, int i,
 	return;
 }
 
-void FeSuperCluster::getProductionPartialDerivatives(const double* concs,
+void FeSuperCluster::getProductionPartialDerivatives(const double* __restrict concs,
         int xi, std::vector<double> & partials) const {
 
 	// Production
@@ -1530,7 +1530,7 @@ void FeSuperCluster::getProductionPartialDerivatives(const double* concs,
 	return;
 }
 
-void FeSuperCluster::getCombinationPartialDerivatives(const double* concs,
+void FeSuperCluster::getCombinationPartialDerivatives(const double* __restrict concs,
         int xi, std::vector<double> & partials) const {
 
 	// Combination
@@ -1605,7 +1605,7 @@ void FeSuperCluster::getCombinationPartialDerivatives(const double* concs,
 	return;
 }
 
-void FeSuperCluster::getDissociationPartialDerivatives(const double* concs,
+void FeSuperCluster::getDissociationPartialDerivatives(const double* __restrict concs,
 		int xi, std::vector<double> & partials) const {
 
 	// Dissociation
@@ -1641,7 +1641,7 @@ void FeSuperCluster::getDissociationPartialDerivatives(const double* concs,
 	return;
 }
 
-void FeSuperCluster::getEmissionPartialDerivatives(const double* concs,
+void FeSuperCluster::getEmissionPartialDerivatives(const double* __restrict concs,
 		int xi, std::vector<double> & partials) const {
 
 	// Emission

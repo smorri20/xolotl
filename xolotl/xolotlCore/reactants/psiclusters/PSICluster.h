@@ -240,7 +240,7 @@ protected:
 	 * @param i The location on the grid in the depth direction
      * @param[out] flux The flux due to dissociation of other clusters.
 	 */
-    void getDissociationFlux(const double* concs, int i,
+    void getDissociationFlux(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
 
 	/**
@@ -251,7 +251,7 @@ protected:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to its dissociation
 	 */
-    void getEmissionFlux(const double* concs, int i,
+    void getEmissionFlux(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
 
 	/**
@@ -262,7 +262,7 @@ protected:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux flux The flux due to this cluster being produced
 	 */
-    void getProductionFlux(const double* concs, int i,
+    void getProductionFlux(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
 
 	/**
@@ -273,7 +273,7 @@ protected:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to this cluster combining with other clusters
 	 */
-    void getCombinationFlux(const double* concs, int i,
+    void getCombinationFlux(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
 
 public:
@@ -535,7 +535,7 @@ public:
 	 * @param axis The axis we are intersted in
 	 * @return The moment
 	 */
-	virtual double getMoment(const double* concs, int axis) const {
+	virtual double getMoment(const double* __restrict concs, int axis) const {
 		return 0.0;
 	}
 
@@ -576,7 +576,7 @@ public:
      * operation. The size of the vector should be equal to 
      * ReactionNetwork::size().
 	 */
-	virtual void getPartialDerivatives(const double* concs, int i,
+	virtual void getPartialDerivatives(const double* __restrict concs, int i,
             std::vector<double> & partials) const override;
 
 	/**
@@ -589,7 +589,7 @@ public:
      * size of the network.
 	 * @param i The location on the grid in the depth direction
 	 */
-	virtual void getProductionPartialDerivatives(const double* concs, int i,
+	virtual void getProductionPartialDerivatives(const double* __restrict concs, int i,
 			std::vector<double> & partials) const;
 
 	/**
@@ -602,7 +602,7 @@ public:
      * size of the network.
 	 * @param i The location on the grid in the depth direction
 	 */
-	virtual void getCombinationPartialDerivatives(const double* concs, int i,
+	virtual void getCombinationPartialDerivatives(const double* __restrict concs, int i,
 			std::vector<double> & partials) const;
 
 	/**
@@ -646,7 +646,7 @@ public:
 	 * @param i The position on the grid
 	 * @return The rate
 	 */
-	double getLeftSideRate(const double* concs, int i) const override;
+	double getLeftSideRate(const double* __restrict concs, int i) const override;
 
 	/**
 	 * This operation returns the vector of production reactions in which

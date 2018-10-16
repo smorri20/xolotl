@@ -78,7 +78,7 @@ public:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to its dissociation
 	 */
-	void getEmissionFlux(const double* concs, int i,
+	void getEmissionFlux(const double* __restrict concs, int i,
                             Reactant::Flux& flux) const override {
 
         FeCluster::getEmissionFlux(concs, i, flux);
@@ -100,7 +100,7 @@ public:
 	 * network.
 	 * @param i The location on the grid in the depth direction
 	 */
-	void getEmissionPartialDerivatives(const double* concs, int i,
+	void getEmissionPartialDerivatives(const double* __restrict concs, int i,
             std::vector<double> & partials) const override {
 		// Initial declarations
 		FeCluster::getEmissionPartialDerivatives(concs, i, partials);

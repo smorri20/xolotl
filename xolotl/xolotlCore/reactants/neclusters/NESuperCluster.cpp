@@ -157,7 +157,7 @@ void NESuperCluster::updateFromNetwork() {
 }
 
 
-double NESuperCluster::getTotalConcentration(const double* concs) const {
+double NESuperCluster::getTotalConcentration(const double* __restrict concs) const {
 	// Initial declarations
 	int index = 0;
 	double distance = 0.0, conc = 0.0;
@@ -177,7 +177,7 @@ double NESuperCluster::getTotalConcentration(const double* concs) const {
 	return conc;
 }
 
-double NESuperCluster::getTotalXenonConcentration(const double* concs) const {
+double NESuperCluster::getTotalXenonConcentration(const double* __restrict concs) const {
 	// Initial declarations
 	int index = 0;
 	double distance = 0.0, conc = 0.0;
@@ -622,7 +622,7 @@ void NESuperCluster::resetConnectivities() {
 	return;
 }
 
-void NESuperCluster::getDissociationFlux(const double* concs, int xi,
+void NESuperCluster::getDissociationFlux(const double* __restrict concs, int xi,
                                             Reactant::Flux& flux) const {
 
     auto& superFlux = static_cast<NESuperCluster::Flux&>(flux);
@@ -642,7 +642,7 @@ void NESuperCluster::getDissociationFlux(const double* concs, int xi,
         });
 }
 
-void NESuperCluster::getEmissionFlux(const double* concs, int xi,
+void NESuperCluster::getEmissionFlux(const double* __restrict concs, int xi,
                                         Reactant::Flux& flux) const {
 
     auto& superFlux = static_cast<NESuperCluster::Flux&>(flux);
@@ -661,7 +661,7 @@ void NESuperCluster::getEmissionFlux(const double* concs, int xi,
         });
 }
 
-void NESuperCluster::getProductionFlux(const double* concs, int xi,
+void NESuperCluster::getProductionFlux(const double* __restrict concs, int xi,
                                         Reactant::Flux& flux) const {
 
     auto& superFlux = static_cast<NESuperCluster::Flux&>(flux);
@@ -689,7 +689,7 @@ void NESuperCluster::getProductionFlux(const double* concs, int xi,
         });
 }
 
-void NESuperCluster::getCombinationFlux(const double* concs, int xi,
+void NESuperCluster::getCombinationFlux(const double* __restrict concs, int xi,
                                         Reactant::Flux& flux) const {
 
     auto& superFlux = static_cast<NESuperCluster::Flux&>(flux);
@@ -718,7 +718,7 @@ void NESuperCluster::getCombinationFlux(const double* concs, int xi,
         });
 }
 
-void NESuperCluster::getPartialDerivatives(const double* concs, int i,
+void NESuperCluster::getPartialDerivatives(const double* __restrict concs, int i,
         std::vector<double> & partials) const {
 
 	// Reinitialize the moment partial derivatives vector
@@ -734,7 +734,7 @@ void NESuperCluster::getPartialDerivatives(const double* concs, int i,
 }
 
 void NESuperCluster::getProductionPartialDerivatives(
-        const double* concs, int xi,
+        const double* __restrict concs, int xi,
 		std::vector<double> & partials) const {
 	// Initial declarations
 	double value = 0.0;
@@ -780,7 +780,7 @@ void NESuperCluster::getProductionPartialDerivatives(
 }
 
 void NESuperCluster::getCombinationPartialDerivatives(
-        const double* concs, int xi,
+        const double* __restrict concs, int xi,
 		std::vector<double> & partials) const {
 	// Initial declarations
 	int index = 0;
@@ -826,7 +826,7 @@ void NESuperCluster::getCombinationPartialDerivatives(
 }
 
 void NESuperCluster::getDissociationPartialDerivatives(
-        const double* concs, int xi,
+        const double* __restrict concs, int xi,
 		std::vector<double> & partials) const {
 	// Initial declarations
 	int index = 0;
@@ -860,7 +860,7 @@ void NESuperCluster::getDissociationPartialDerivatives(
 }
 
 void NESuperCluster::getEmissionPartialDerivatives(
-        const double* concs, int xi,
+        const double* __restrict concs, int xi,
 		std::vector<double> & partials) const {
 	// Initial declarations
 	int index = 0;

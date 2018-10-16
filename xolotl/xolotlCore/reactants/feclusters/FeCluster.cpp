@@ -751,7 +751,7 @@ void FeCluster::updateFromNetwork() {
 	return;
 }
 
-void FeCluster::getDissociationFlux(const double* concs, int xi,
+void FeCluster::getDissociationFlux(const double* __restrict concs, int xi,
                                     Reactant::Flux& flux) const {
 
 	// Sum dissociation flux over all our dissociating clusters.
@@ -772,7 +772,7 @@ void FeCluster::getDissociationFlux(const double* concs, int xi,
 			});
 }
 
-void FeCluster::getEmissionFlux(const double* concs, int xi,
+void FeCluster::getEmissionFlux(const double* __restrict concs, int xi,
                                 Reactant::Flux& flux) const {
 
 	// Sum rate constants from all emission pair reactions.
@@ -782,7 +782,7 @@ void FeCluster::getEmissionFlux(const double* concs, int xi,
 			}) * getConcentration(concs);
 }
 
-void FeCluster::getProductionFlux(const double* concs, int xi,
+void FeCluster::getProductionFlux(const double* __restrict concs, int xi,
                                 Reactant::Flux& flux) const {
 
 	// Sum production flux over all reacting pairs.
@@ -808,7 +808,7 @@ void FeCluster::getProductionFlux(const double* concs, int xi,
 		});
 }
 
-void FeCluster::getCombinationFlux(const double* concs, int xi,
+void FeCluster::getCombinationFlux(const double* __restrict concs, int xi,
                                 Reactant::Flux& flux) const {
 
 	// Sum combination flux over all clusters that combine with us.
@@ -828,7 +828,7 @@ void FeCluster::getCombinationFlux(const double* concs, int xi,
 			}) * getConcentration(concs);
 }
 
-void FeCluster::getPartialDerivatives(const double* concs, int i,
+void FeCluster::getPartialDerivatives(const double* __restrict concs, int i,
         std::vector<double> & partials) const {
 
 	// Get the partial derivatives for each reaction type
@@ -840,7 +840,7 @@ void FeCluster::getPartialDerivatives(const double* concs, int i,
 	return;
 }
 
-void FeCluster::getProductionPartialDerivatives(const double* concs, int xi,
+void FeCluster::getProductionPartialDerivatives(const double* __restrict concs, int xi,
         std::vector<double> & partials) const {
 
 	// Production
@@ -888,7 +888,7 @@ void FeCluster::getProductionPartialDerivatives(const double* concs, int xi,
 	return;
 }
 
-void FeCluster::getCombinationPartialDerivatives(const double* concs, int xi,
+void FeCluster::getCombinationPartialDerivatives(const double* __restrict concs, int xi,
         std::vector<double> & partials) const {
 
 	// Combination
@@ -919,7 +919,7 @@ void FeCluster::getCombinationPartialDerivatives(const double* concs, int xi,
 	return;
 }
 
-void FeCluster::getDissociationPartialDerivatives(const double* concs, int xi,
+void FeCluster::getDissociationPartialDerivatives(const double* __restrict concs, int xi,
 		std::vector<double> & partials) const {
 
 	// Dissociation
@@ -941,7 +941,7 @@ void FeCluster::getDissociationPartialDerivatives(const double* concs, int xi,
 	return;
 }
 
-void FeCluster::getEmissionPartialDerivatives(const double* concs, int xi,
+void FeCluster::getEmissionPartialDerivatives(const double* __restrict concs, int xi,
         std::vector<double> & partials) const {
 
 	// Emission
@@ -960,7 +960,7 @@ void FeCluster::getEmissionPartialDerivatives(const double* concs, int xi,
 	return;
 }
 
-double FeCluster::getLeftSideRate(const double* concs, int i) const {
+double FeCluster::getLeftSideRate(const double* __restrict concs, int i) const {
 
 	// Sum rate constant-concentration product over combining reactants.
 	double combiningRateTotal = std::accumulate(combiningReactants.begin(),

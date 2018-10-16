@@ -993,7 +993,7 @@ void PSISuperCluster::setHeVVector(const HeVListType& vec) {
 	return;
 }
 
-double PSISuperCluster::getTotalConcentration(const double* concs) const {
+double PSISuperCluster::getTotalConcentration(const double* __restrict concs) const {
 	// Initial declarations
 	double heDistance = 0.0, dDistance = 0.0, tDistance = 0.0, vDistance = 0.0,
 			conc = 0.0;
@@ -1016,7 +1016,7 @@ double PSISuperCluster::getTotalConcentration(const double* concs) const {
 
 
 template<uint32_t Axis>
-double PSISuperCluster::getTotalAtomConcHelper(const double* concs) const {
+double PSISuperCluster::getTotalAtomConcHelper(const double* __restrict concs) const {
 
     double conc = 0;
     for (auto const& pair : heVList) {
@@ -1035,7 +1035,7 @@ double PSISuperCluster::getTotalAtomConcHelper(const double* concs) const {
 
 
 
-double PSISuperCluster::getTotalAtomConcentration(const double* concs,
+double PSISuperCluster::getTotalAtomConcentration(const double* __restrict concs,
                                                     int axis) const {
 
     assert(axis <= 2);
@@ -1058,13 +1058,13 @@ double PSISuperCluster::getTotalAtomConcentration(const double* concs,
 }
 
 
-double PSISuperCluster::getTotalVacancyConcentration(const double* concs) const {
+double PSISuperCluster::getTotalVacancyConcentration(const double* __restrict concs) const {
 
     return getTotalAtomConcHelper<3>(concs);
 }
 
 
-double PSISuperCluster::getIntegratedVConcentration(const double* concs,
+double PSISuperCluster::getIntegratedVConcentration(const double* __restrict concs,
                                                     int v) const {
 	// Initial declarations
 	double heDistance = 0.0, dDistance = 0.0, tDistance = 0.0, vDistance = 0.0,
@@ -1149,7 +1149,7 @@ void PSISuperCluster::resetConnectivities() {
 	return;
 }
 
-void PSISuperCluster::getDissociationFlux(const double* concs, int xi,
+void PSISuperCluster::getDissociationFlux(const double* __restrict concs, int xi,
                                             Reactant::Flux& flux) const {
 
     auto& superFlux = static_cast<PSISuperCluster::Flux&>(flux);
@@ -1183,7 +1183,7 @@ void PSISuperCluster::getDissociationFlux(const double* concs, int xi,
 			});
 }
 
-void PSISuperCluster::getEmissionFlux(const double* concs, int xi,
+void PSISuperCluster::getEmissionFlux(const double* __restrict concs, int xi,
                                             Reactant::Flux& flux) const {
 
     auto& superFlux = static_cast<PSISuperCluster::Flux&>(flux);
@@ -1214,7 +1214,7 @@ void PSISuperCluster::getEmissionFlux(const double* concs, int xi,
 			});
 }
 
-void PSISuperCluster::getProductionFlux(const double* concs, int xi,
+void PSISuperCluster::getProductionFlux(const double* __restrict concs, int xi,
                                             Reactant::Flux& flux) const {
 
     auto& superFlux = static_cast<PSISuperCluster::Flux&>(flux);
@@ -1254,7 +1254,7 @@ void PSISuperCluster::getProductionFlux(const double* concs, int xi,
 			});
 }
 
-void PSISuperCluster::getCombinationFlux(const double* concs, int xi,
+void PSISuperCluster::getCombinationFlux(const double* __restrict concs, int xi,
                                             Reactant::Flux& flux) const {
 
     auto& superFlux = static_cast<PSISuperCluster::Flux&>(flux);

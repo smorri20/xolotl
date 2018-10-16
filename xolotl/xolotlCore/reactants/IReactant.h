@@ -268,7 +268,7 @@ public:
      * @param concs Current solution vector of desired grid point.
 	 * @return The concentration of this reactant
 	 */
-	virtual double getConcentration(const double* concs) const = 0;
+	virtual double getConcentration(const double* __restrict concs) const = 0;
 
 	/**
      * Compute total flux(es) of this reactant using current concentrations
@@ -345,7 +345,7 @@ public:
      * where index zero corresponds to the first reactant in the list 
      * returned by the ReactionNetwork::getAll() operation.
 	 */
-	virtual void getPartialDerivatives(const double* concs, int i,
+	virtual void getPartialDerivatives(const double* __restrict concs, int i,
             std::vector<double> & partials) const = 0;
 
 	/**
@@ -518,7 +518,7 @@ public:
 	 * @param i The position on the grid
 	 * @return The rate
 	 */
-	virtual double getLeftSideRate(const double* concs, int i) const = 0;
+	virtual double getLeftSideRate(const double* __restrict concs, int i) const = 0;
 
 	/**
 	 * This operation returns the vector of production reactions in which

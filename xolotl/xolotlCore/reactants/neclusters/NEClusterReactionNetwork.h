@@ -176,7 +176,7 @@ public:
 	 * @param vals The values of partials for the reactions
 	 * @param i The location on the grid in the depth direction
 	 */
-	void computeAllPartials(const double* concs,
+	void computeAllPartials(const double* __restrict concs,
             const std::vector<size_t>& startingIdx,
 			std::vector<double>& vals,
 			int i) const override;

@@ -300,7 +300,7 @@ void NECluster::updateFromNetwork() {
 }
 
 
-void NECluster::getDissociationFlux(const double* concs, int xi,
+void NECluster::getDissociationFlux(const double* __restrict concs, int xi,
                                         Reactant::Flux& flux) const {
 
 	// Sum dissociation flux over all pairs that dissociate to form this one.
@@ -317,7 +317,7 @@ void NECluster::getDissociationFlux(const double* concs, int xi,
 				});
 }
 
-void NECluster::getEmissionFlux(const double* concs, int xi,
+void NECluster::getEmissionFlux(const double* __restrict concs, int xi,
                                         Reactant::Flux& flux) const { 
 
 	// Sum reaction rate constants over all emission pair reactions.
@@ -329,7 +329,7 @@ void NECluster::getEmissionFlux(const double* concs, int xi,
 			}) * getConcentration(concs);
 }
 
-void NECluster::getProductionFlux(const double* concs, int xi,
+void NECluster::getProductionFlux(const double* __restrict concs, int xi,
                                         Reactant::Flux& flux) const {
 
 	// Sum over all the reacting pairs
@@ -346,7 +346,7 @@ void NECluster::getProductionFlux(const double* concs, int xi,
 			});
 }
 
-void NECluster::getCombinationFlux(const double* concs, int xi,
+void NECluster::getCombinationFlux(const double* __restrict concs, int xi,
                                         Reactant::Flux& flux) const {
 
 	flux.flux = std::accumulate(combiningReactants.begin(),
@@ -365,7 +365,7 @@ void NECluster::getCombinationFlux(const double* concs, int xi,
 			}) * getConcentration(concs);
 }
 
-void NECluster::getPartialDerivatives(const double* concs, int i,
+void NECluster::getPartialDerivatives(const double* __restrict concs, int i,
         std::vector<double> & partials) const {
 
 	// Get the partial derivatives for each reaction type
@@ -377,7 +377,7 @@ void NECluster::getPartialDerivatives(const double* concs, int i,
 	return;
 }
 
-void NECluster::getProductionPartialDerivatives(const double* concs, int xi,
+void NECluster::getProductionPartialDerivatives(const double* __restrict concs, int xi,
         std::vector<double> & partials) const {
 
 	// Production
@@ -413,7 +413,7 @@ void NECluster::getProductionPartialDerivatives(const double* concs, int xi,
 	return;
 }
 
-void NECluster::getCombinationPartialDerivatives(const double* concs, int xi,
+void NECluster::getCombinationPartialDerivatives(const double* __restrict concs, int xi,
         std::vector<double> & partials) const {
 
 	// Combination
@@ -443,7 +443,7 @@ void NECluster::getCombinationPartialDerivatives(const double* concs, int xi,
 	return;
 }
 
-void NECluster::getDissociationPartialDerivatives(const double* concs, int xi,
+void NECluster::getDissociationPartialDerivatives(const double* __restrict concs, int xi,
 		std::vector<double> & partials) const {
 
 	// Dissociation
@@ -465,7 +465,7 @@ void NECluster::getDissociationPartialDerivatives(const double* concs, int xi,
 	return;
 }
 
-void NECluster::getEmissionPartialDerivatives(const double* concs, int xi,
+void NECluster::getEmissionPartialDerivatives(const double* __restrict concs, int xi,
         std::vector<double> & partials) const {
 
 	// Emission
@@ -487,7 +487,7 @@ void NECluster::getEmissionPartialDerivatives(const double* concs, int xi,
 	return;
 }
 
-double NECluster::getLeftSideRate(const double* concs, int i) const {
+double NECluster::getLeftSideRate(const double* __restrict concs, int i) const {
 
 	// Sum reaction rate contributions over all combining clusters.
 	double combiningRateTotal = std::accumulate(combiningReactants.begin(),

@@ -1538,7 +1538,7 @@ void PSIClusterReactionNetwork::getDiagonalFill(SparseFillMap& fillMap) {
 }
 
 double PSIClusterReactionNetwork::getTotalAtomConcentration(
-                                    const double* concs, int i) {
+                                    const double* __restrict concs, int i) {
 	// Initial declarations
 	double atomConc = 0.0;
 	ReactantType type;
@@ -1597,7 +1597,7 @@ double PSIClusterReactionNetwork::getTotalAtomConcentration(
 }
 
 
-double PSIClusterReactionNetwork::getTotalTrappedAtomConcentration(const double* concs, int i) const {
+double PSIClusterReactionNetwork::getTotalTrappedAtomConcentration(const double* __restrict concs, int i) const {
 
 	// Initial declarations
 	double atomConc = 0.0;
@@ -1647,7 +1647,7 @@ double PSIClusterReactionNetwork::getTotalTrappedAtomConcentration(const double*
 
 
 double PSIClusterReactionNetwork::getTotalVConcentration(
-                                    const double* concs) {
+                                    const double* __restrict concs) {
 	// Initial declarations
 	double vConc = 0.0;
 
@@ -1685,7 +1685,7 @@ double PSIClusterReactionNetwork::getTotalVConcentration(
 }
 
 double PSIClusterReactionNetwork::getTotalIConcentration(
-                                    const double* concs) {
+                                    const double* __restrict concs) {
 	// Initial declarations
 	double iConc = 0.0;
 
@@ -1703,7 +1703,7 @@ double PSIClusterReactionNetwork::getTotalIConcentration(
 }
 
 void PSIClusterReactionNetwork::computeAllPartials(
-        const double* concs,
+        const double* __restrict concs,
 		const std::vector<size_t>& startingIdx,
 		std::vector<double>& vals, int xi) const {
 

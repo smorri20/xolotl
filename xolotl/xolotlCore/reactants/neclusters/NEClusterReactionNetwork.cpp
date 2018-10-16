@@ -265,7 +265,7 @@ void NEClusterReactionNetwork::getDiagonalFill(SparseFillMap& fillMap) {
 }
 
 void NEClusterReactionNetwork::computeAllPartials(
-        const double* concs,
+        const double* __restrict concs,
 		const std::vector<size_t>& startingIdx,
 		std::vector<double>& vals, int i) const {
 

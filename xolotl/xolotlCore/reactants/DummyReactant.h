@@ -16,7 +16,7 @@ protected:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to dissociation of other clusters
 	 */
-    void getDissociationFlux(const double* concs, int i,
+    void getDissociationFlux(const double* __restrict concs, int i,
                                         Reactant::Flux& flux) const override {
     }
 
@@ -28,7 +28,7 @@ protected:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to its dissociation
 	 */
-    void getEmissionFlux(const double* concs, int i,
+    void getEmissionFlux(const double* __restrict concs, int i,
                                         Reactant::Flux& flux) const override {
     }
 
@@ -40,7 +40,7 @@ protected:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to this cluster being produced
 	 */
-    void getProductionFlux(const double* concs, int i,
+    void getProductionFlux(const double* __restrict concs, int i,
                                         Reactant::Flux& flux) const override {
     }
 
@@ -52,7 +52,7 @@ protected:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to this cluster combining with other clusters
 	 */
-    void getCombinationFlux(const double* concs, int i,
+    void getCombinationFlux(const double* __restrict concs, int i,
                                         Reactant::Flux& flux) const override {
     }
 
@@ -104,7 +104,7 @@ public:
      *  index zero corresponds to the first reactant in the list returned
      *  by the ReactionNetwork::getAll() operation.
      */
-	void getPartialDerivatives(const double* concs, int i,
+	void getPartialDerivatives(const double* __restrict concs, int i,
             std::vector<double> & partials) const override {
     }
 

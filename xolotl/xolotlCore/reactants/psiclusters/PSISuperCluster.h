@@ -470,7 +470,7 @@ private:
      * template parameter.
      */
     template<uint32_t Axis>
-    double getTotalAtomConcHelper(const double* concs) const;
+    double getTotalAtomConcHelper(const double* __restrict concs) const;
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -481,7 +481,7 @@ private:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to dissociation of other clusters
 	 */
-	void getDissociationFlux(const double* concs, int i,
+	void getDissociationFlux(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
 
 	/**
@@ -493,7 +493,7 @@ private:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to its dissociation
 	 */
-	void getEmissionFlux(const double* concs, int i,
+	void getEmissionFlux(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
 
 	/**
@@ -505,7 +505,7 @@ private:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to this cluster being produced
 	 */
-	void getProductionFlux(const double* concs, int i,
+	void getProductionFlux(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
 
 	/**
@@ -517,7 +517,7 @@ private:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to this cluster combining with other clusters
 	 */
-	void getCombinationFlux(const double* concs, int i,
+	void getCombinationFlux(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
 
     /**
@@ -529,7 +529,7 @@ private:
      * @param amount to add to concentration value associated with moment
      * flux for given 'axis.'
      */
-	void addToMoment(double* concs, int axis, double amount) const {
+	void addToMoment(double* __restrict concs, int axis, double amount) const {
         concs[getMomentId(axis) - 1] += amount;
 	}
 
@@ -749,7 +749,7 @@ public:
 	 * @param axis The axis we are intersted in
 	 * @return The moment
 	 */
-	double getMoment(const double* concs, int axis) const override {
+	double getMoment(const double* __restrict concs, int axis) const override {
 		return concs[getMomentId(axis) - 1];
 	}
 
@@ -763,7 +763,7 @@ public:
 	 * @param distV The vacancy distance in the group
 	 * @return The concentration of this reactant
 	 */
-	virtual double getConcentration(const double* concs,
+	virtual double getConcentration(const double* __restrict concs,
                                     double distHe,
                                     double distD,
                                     double distT,
@@ -789,7 +789,7 @@ public:
 
 	 * @return The concentration
 	 */
-	double getTotalConcentration(const double* concs) const;
+	double getTotalConcentration(const double* __restrict concs) const;
 
 	/**
 	 * This operation returns the current total concentration of given atom in the group.
@@ -797,14 +797,14 @@ public:
 	 * @param axis The given atom
 	 * @return The concentration
 	 */
-	double getTotalAtomConcentration(const double* concs, int axis) const;
+	double getTotalAtomConcentration(const double* __restrict concs, int axis) const;
 
 	/**
 	 * This operation returns the current total concentration of vacancies in the group.
 
 	 * @return The concentration
 	 */
-	double getTotalVacancyConcentration(const double* concs) const;
+	double getTotalVacancyConcentration(const double* __restrict concs) const;
 
 	/**
 	 * This operation returns the current concentration for a vacancy number.
@@ -813,7 +813,7 @@ public:
 	 * @param v The vacancy number
 	 * @return The concentration
 	 */
-	double getIntegratedVConcentration(const double* concs, int v) const;
+	double getIntegratedVConcentration(const double* __restrict concs, int v) const;
 
 	/**
 	 * This operation returns the vector of production reactions in which
@@ -928,7 +928,7 @@ public:
 			const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
             std::array<double* __restrict, 5>& partials) const;
 
-	void getPartialDerivatives(const double* concs, int i,
+	void getPartialDerivatives(const double* __restrict concs, int i,
             std::vector<double> & partials) const
 			override
 			{
@@ -954,7 +954,7 @@ public:
             int xi,
 			const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
             std::array<double* __restrict, 5>& partials) const;
-	void getProductionPartialDerivatives(const double* concs, int i,
+	void getProductionPartialDerivatives(const double* __restrict concs, int i,
             std::vector<double> & partials) const override
 			{
 		assert(false);
@@ -978,7 +978,7 @@ public:
             int xi,
 			const std::array<const ReactionNetwork::PartialsIdxMap*, 5>& partialsIdxMap,
             std::array<double* __restrict, 5>& partials) const;
-	void getCombinationPartialDerivatives(const double* concs, int i,
+	void getCombinationPartialDerivatives(const double* __restrict concs, int i,
             std::vector<double> & partials) const override
 			{
 		assert(false);

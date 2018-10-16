@@ -774,7 +774,7 @@ void PSICluster::updateFromNetwork() {
 	return;
 }
 
-void PSICluster::getDissociationFlux(const double* concs, int xi,
+void PSICluster::getDissociationFlux(const double* __restrict concs, int xi,
                                     Reactant::Flux& flux) const {
 
 	// Sum dissociation flux over all our dissociating clusters.
@@ -800,7 +800,7 @@ void PSICluster::getDissociationFlux(const double* concs, int xi,
 }
 
 
-void PSICluster::getEmissionFlux(const double* concs, int xi,
+void PSICluster::getEmissionFlux(const double* __restrict concs, int xi,
                                     Reactant::Flux& flux) const {
 
 	// Sum rate constants from all emission pair reactions.
@@ -811,7 +811,7 @@ void PSICluster::getEmissionFlux(const double* concs, int xi,
 					}) * getConcentration(concs);
 }
 
-void PSICluster::getProductionFlux(const double* concs, int xi,
+void PSICluster::getProductionFlux(const double* __restrict concs, int xi,
                                     Reactant::Flux& flux) const {
 
 	// Sum production flux over all reacting pairs.
@@ -841,7 +841,7 @@ void PSICluster::getProductionFlux(const double* concs, int xi,
 		});
 }
 
-void PSICluster::getCombinationFlux(const double* concs, int xi,
+void PSICluster::getCombinationFlux(const double* __restrict concs, int xi,
                                     Reactant::Flux& flux) const {
 
 	// Sum combination flux over all clusters that combine with us.
@@ -868,7 +868,7 @@ void PSICluster::getCombinationFlux(const double* concs, int xi,
 			}) * getConcentration(concs);
 }
 
-void PSICluster::getPartialDerivatives(const double* concs, int i,
+void PSICluster::getPartialDerivatives(const double* __restrict concs, int i,
         std::vector<double> & partials) const {
 
 	// Get the partial derivatives for each reaction type
@@ -880,7 +880,7 @@ void PSICluster::getPartialDerivatives(const double* concs, int i,
 	return;
 }
 
-void PSICluster::getProductionPartialDerivatives(const double* concs, int xi,
+void PSICluster::getProductionPartialDerivatives(const double* __restrict concs, int xi,
         std::vector<double> & partials) const {
 
 	// Production
@@ -925,7 +925,7 @@ void PSICluster::getProductionPartialDerivatives(const double* concs, int xi,
 	return;
 }
 
-void PSICluster::getCombinationPartialDerivatives(const double* concs, int xi,
+void PSICluster::getCombinationPartialDerivatives(const double* __restrict concs, int xi,
 		std::vector<double> & partials) const {
 
 	// Combination
@@ -1007,7 +1007,7 @@ void PSICluster::getEmissionPartialDerivatives(std::vector<double> & partials,
 	return;
 }
 
-double PSICluster::getLeftSideRate(const double* concs, int i) const {
+double PSICluster::getLeftSideRate(const double* __restrict concs, int i) const {
 
 	// Sum rate constant-concentration product over combining reactants.
 	double combiningRateTotal =

@@ -190,7 +190,7 @@ protected:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to dissociation of other clusters
 	 */
-    void getDissociationFlux(const double* concs, int i,
+    void getDissociationFlux(const double* __restrict concs, int i,
                                         Reactant::Flux& flux) const override;
 
 	/**
@@ -201,7 +201,7 @@ protected:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to its dissociation
 	 */
-    void getEmissionFlux(const double* concs, int i,
+    void getEmissionFlux(const double* __restrict concs, int i,
                                         Reactant::Flux& flux) const override;
 
 	/**
@@ -212,7 +212,7 @@ protected:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to this cluster being produced
 	 */
-    void getProductionFlux(const double* concs, int i,
+    void getProductionFlux(const double* __restrict concs, int i,
                                         Reactant::Flux& flux) const override;
 
 	/**
@@ -223,7 +223,7 @@ protected:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to this cluster combining with other clusters
 	 */
-    void getCombinationFlux(const double* concs, int i,
+    void getCombinationFlux(const double* __restrict concs, int i,
                                         Reactant::Flux& flux) const override;
 
 public:
@@ -494,7 +494,7 @@ public:
 	 * @param distV The vacancy distance in the group
 	 * @return The concentration of this reactant
 	 */
-	virtual double getConcentration(const double* concs,
+	virtual double getConcentration(const double* __restrict concs,
                                     double distHe, double distV) const {
         // TODO should this version ever be called?  It ignores
         // its distance arguments.
@@ -506,7 +506,7 @@ public:
 	 *
 	 * @return The moment
 	 */
-	virtual double getHeMoment(const double* concs) const {
+	virtual double getHeMoment(const double* __restrict concs) const {
 		return 0.0;
 	}
 
@@ -515,7 +515,7 @@ public:
 	 *
 	 * @return The moment
 	 */
-	virtual double getVMoment(const double* concs) const {
+	virtual double getVMoment(const double* __restrict concs) const {
 		return 0.0;
 	}
 	/**
@@ -553,7 +553,7 @@ public:
 	 * the vector should be equal to ReactionNetwork::size().
 	 *
 	 */
-	virtual void getPartialDerivatives(const double* concs, int i,
+	virtual void getPartialDerivatives(const double* __restrict concs, int i,
             std::vector<double> & partials) const override;
 
 	/**
@@ -566,7 +566,7 @@ public:
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
 	 */
-	virtual void getProductionPartialDerivatives(const double* concs, int i,
+	virtual void getProductionPartialDerivatives(const double* __restrict concs, int i,
             std::vector<double> & partials) const;
 
 	/**
@@ -579,7 +579,7 @@ public:
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
 	 */
-	virtual void getCombinationPartialDerivatives(const double* concs, int i,
+	virtual void getCombinationPartialDerivatives(const double* __restrict concs, int i,
 			std::vector<double> & partials) const;
 
 	/**
@@ -592,7 +592,7 @@ public:
 	 * inserted. This vector should have a length equal to the size of the
 	 * network.
 	 */
-	virtual void getDissociationPartialDerivatives(const double* concs, int i,
+	virtual void getDissociationPartialDerivatives(const double* __restrict concs, int i,
 			std::vector<double> & partials) const;
 
 	/**
@@ -604,7 +604,7 @@ public:
 	 * network.
 	 * @param i The location on the grid in the depth direction
 	 */
-	virtual void getEmissionPartialDerivatives(const double* concs, int i, 
+	virtual void getEmissionPartialDerivatives(const double* __restrict concs, int i, 
             std::vector<double> & partials) const;
 
 	/**
@@ -624,7 +624,7 @@ public:
 	 * @param i The position on the grid
 	 * @return The rate
 	 */
-	double getLeftSideRate(const double* concs, int i) const override;
+	double getLeftSideRate(const double* __restrict concs, int i) const override;
 
 	/**
 	 * This operation returns the vector of production reactions in which

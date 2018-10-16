@@ -61,7 +61,7 @@ protected:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to dissociation of other clusters
 	 */
-	void getDissociationFlux(const double* concs, int i,
+	void getDissociationFlux(const double* __restrict concs, int i,
                             Reactant::Flux& flux) const override;
 
 	/**
@@ -72,7 +72,7 @@ protected:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to its dissociation
 	 */
-	void getEmissionFlux(const double* concs, int i,
+	void getEmissionFlux(const double* __restrict concs, int i,
                             Reactant::Flux& flux) const override;
 
 	/**
@@ -83,7 +83,7 @@ protected:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to this cluster being produced
 	 */
-	void getProductionFlux(const double* concs, int i,
+	void getProductionFlux(const double* __restrict concs, int i,
                             Reactant::Flux& flux) const override;
 
 	/**
@@ -94,7 +94,7 @@ protected:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to this cluster combining with other clusters
 	 */
-	void getCombinationFlux(const double* concs, int i,
+	void getCombinationFlux(const double* __restrict concs, int i,
                             Reactant::Flux& flux) const override;
 
 public:
@@ -353,7 +353,7 @@ public:
 	 * @param distXe The xenon distance in the group
 	 * @return The concentration of this reactant
 	 */
-    virtual double getConcentration(const double* concs, double distXe) const {
+    virtual double getConcentration(const double* __restrict concs, double distXe) const {
 		// TODO should this ever be called?  It ignores the argument.
 		return concs[getId() - 1];
     }
@@ -375,7 +375,7 @@ public:
 	 *
 	 * @return The moment
 	 */
-	virtual double getMoment(const double* concs) const {
+	virtual double getMoment(const double* __restrict concs) const {
         return 0.0;
     }
 
@@ -395,7 +395,7 @@ public:
      * ReactionNetwork::size().
 	 *
 	 */
-	virtual void getPartialDerivatives(const double* concs, int i,
+	virtual void getPartialDerivatives(const double* __restrict concs, int i,
             std::vector<double> & partials) const override;
 
 	/**
@@ -410,7 +410,7 @@ public:
      * operation. The size of the vector should be equal to 
      * ReactionNetwork::size().
 	 */
-	virtual void getProductionPartialDerivatives(const double* concs, int i,
+	virtual void getProductionPartialDerivatives(const double* __restrict concs, int i,
             std::vector<double> & partials) const;
 
 	/**
@@ -425,7 +425,7 @@ public:
      * operation. The size of the vector should be equal to 
      * ReactionNetwork::size().
 	 */
-	virtual void getCombinationPartialDerivatives(const double* concs, int i,
+	virtual void getCombinationPartialDerivatives(const double* __restrict concs, int i,
 			std::vector<double> & partials) const;
 
 	/**
@@ -440,7 +440,7 @@ public:
      * operation. The size of the vector should be equal to 
      * ReactionNetwork::size().
 	 */
-	virtual void getDissociationPartialDerivatives(const double* concs, int i,
+	virtual void getDissociationPartialDerivatives(const double* __restrict concs, int i,
 			std::vector<double> & partials) const;
 
 	/**
@@ -455,7 +455,7 @@ public:
      * operation. The size of the vector should be equal to 
      * ReactionNetwork::size().
 	 */
-	virtual void getEmissionPartialDerivatives(const double* concs, int i,
+	virtual void getEmissionPartialDerivatives(const double* __restrict concs, int i,
             std::vector<double> & partials) const;
 
 	/**
@@ -475,7 +475,7 @@ public:
 	 * @param i The position on the grid
 	 * @return The rate
 	 */
-	double getLeftSideRate(const double* concs, int i) const override;
+	double getLeftSideRate(const double* __restrict concs, int i) const override;
 
 	/**
 	 * This operation returns the vector of production reactions in which

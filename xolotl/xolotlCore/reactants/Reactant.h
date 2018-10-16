@@ -195,7 +195,7 @@ protected:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to dissociation of other clusters
 	 */
-    virtual void getDissociationFlux(const double* concs, int i,
+    virtual void getDissociationFlux(const double* __restrict concs, int i,
                                         Reactant::Flux& flux) const = 0;
 
 	/**
@@ -206,7 +206,7 @@ protected:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to its dissociation
 	 */
-    virtual void getEmissionFlux(const double* concs, int i,
+    virtual void getEmissionFlux(const double* __restrict concs, int i,
                                         Reactant::Flux& flux) const = 0;
 
 	/**
@@ -217,7 +217,7 @@ protected:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to this cluster being produced
 	 */
-    virtual void getProductionFlux(const double* concs, int i,
+    virtual void getProductionFlux(const double* __restrict concs, int i,
                                         Reactant::Flux& flux) const = 0;
 
 	/**
@@ -228,11 +228,11 @@ protected:
 	 * @param i The location on the grid in the depth direction
 	 * @param[out] flux The flux due to this cluster combining with other clusters
 	 */
-    virtual void getCombinationFlux(const double* concs, int i,
+    virtual void getCombinationFlux(const double* __restrict concs, int i,
                                         Reactant::Flux& flux) const = 0;
 
     template<typename FluxType>
-    FluxType getTotalFluxHelper(const double* concs, int i) const {
+    FluxType getTotalFluxHelper(const double* __restrict concs, int i) const {
 
         // Compute the individual fluxes.
         //
@@ -265,7 +265,7 @@ protected:
      * @param amount The amount to add to this reactant's concentration
      * in the 'concs' array.
      */
-    void addToConcentration(double* concs, double amount) const {
+    void addToConcentration(double* __restrict concs, double amount) const {
         concs[getId()-1] += amount;
     }
 
@@ -550,7 +550,7 @@ public:
      * @param concs Current solution vector of desired grid point.
 	 * @return The concentration of this reactant
 	 */
-    double getConcentration(const double* concs) const override {
+    double getConcentration(const double* __restrict concs) const override {
         return concs[getId()-1];
     }
 
@@ -784,7 +784,7 @@ public:
 	 * @param i The position on the grid
 	 * @return The rate
 	 */
-	virtual double getLeftSideRate(const double* concs, int i) const override {
+	virtual double getLeftSideRate(const double* __restrict concs, int i) const override {
 		return 0.0;
 	}
 
