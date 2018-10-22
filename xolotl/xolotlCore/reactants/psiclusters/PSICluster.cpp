@@ -7,7 +7,7 @@
 #include <MathUtils.h>
 #include "PSIClusterReactionNetwork.h"
 
-using namespace xolotlCore;
+namespace xolotlCore {
 
 PSICluster::PSICluster(PSIClusterReactionNetwork& _network,
         std::shared_ptr<xolotlPerf::IHandlerRegistry> registry,
@@ -24,7 +24,7 @@ void PSICluster::resultFrom(ProductionReaction& reaction, int a[4], int b[4]) {
 	// Add a cluster pair for the given reaction.
 	reactingPairs.emplace_back(reaction,
 			static_cast<PSICluster&>(reaction.first),
-			static_cast<PSICluster&>(reaction.second), psDim);
+			static_cast<PSICluster&>(reaction.second));
 	auto& newPair = reactingPairs.back();
 
 	// NB: newPair's reactants are same as reaction's.
@@ -63,7 +63,7 @@ void PSICluster::resultFrom(ProductionReaction& reaction,
 	// Add a cluster pair for the given reaction.
 	reactingPairs.emplace_back(reaction,
 			static_cast<PSICluster&>(reaction.first),
-			static_cast<PSICluster&>(reaction.second), psDim);
+			static_cast<PSICluster&>(reaction.second));
 	auto& newPair = reactingPairs.back();
 
 	// NB: newPair's reactants are same as reaction's.
@@ -102,7 +102,7 @@ void PSICluster::resultFrom(ProductionReaction& reaction, IReactant& product) {
 	// Add a cluster pair for the given reaction.
 	reactingPairs.emplace_back(reaction,
 			static_cast<PSICluster&>(reaction.first),
-			static_cast<PSICluster&>(reaction.second), psDim);
+			static_cast<PSICluster&>(reaction.second));
 	auto& newPair = reactingPairs.back();
 
 	auto const& superR1 = static_cast<PSICluster const&>(newPair.first);
@@ -176,7 +176,7 @@ void PSICluster::resultFrom(ProductionReaction& reaction, double *coef) {
 	// Add a cluster pair for the given reaction.
 	reactingPairs.emplace_back(reaction,
 			static_cast<PSICluster&>(reaction.first),
-			static_cast<PSICluster&>(reaction.second), psDim);
+			static_cast<PSICluster&>(reaction.second));
 	auto& newPair = reactingPairs.back();
 
 	// NB: newPair's reactants are same as reaction's.
@@ -211,7 +211,7 @@ void PSICluster::participateIn(ProductionReaction& reaction, int a[4]) {
 	if (it == combiningReactants.rend()) {
 		// We did not already know about this combination.
 		// Note that we combine with the other cluster in this reaction.
-		combiningReactants.emplace_back(reaction, otherCluster, psDim);
+		combiningReactants.emplace_back(reaction, otherCluster);
 		it = combiningReactants.rbegin();
 	}
 
@@ -244,7 +244,7 @@ void PSICluster::participateIn(ProductionReaction& reaction,
 	if (it == combiningReactants.rend()) {
 		// We did not already know about this combination.
 		// Note that we combine with the other cluster in this reaction.
-		combiningReactants.emplace_back(reaction, otherCluster, psDim);
+		combiningReactants.emplace_back(reaction, otherCluster);
 		it = combiningReactants.rbegin();
 	}
 	assert(it != combiningReactants.rend());
@@ -282,7 +282,7 @@ void PSICluster::participateIn(ProductionReaction& reaction,
 	if (it == combiningReactants.rend()) {
 		// We did not already know about this combination.
 		// Note that we combine with the other cluster in this reaction.
-		combiningReactants.emplace_back(reaction, otherCluster, psDim);
+		combiningReactants.emplace_back(reaction, otherCluster);
 		it = combiningReactants.rbegin();
 	}
 
@@ -352,7 +352,7 @@ void PSICluster::participateIn(ProductionReaction& reaction, double *coef) {
 	if (it == combiningReactants.rend()) {
 		// We did not already know about this combination.
 		// Note that we combine with the other cluster in this reaction.
-		combiningReactants.emplace_back(reaction, otherCluster, psDim);
+		combiningReactants.emplace_back(reaction, otherCluster);
 		it = combiningReactants.rbegin();
 	}
 
@@ -387,7 +387,7 @@ void PSICluster::participateIn(DissociationReaction& reaction, int a[4],
 		// dissociating cluster is the first one
 		dissociatingPairs.emplace_back(reaction,
 				static_cast<PSICluster&>(reaction.dissociating),
-				static_cast<PSICluster&>(emittedCluster), psDim);
+				static_cast<PSICluster&>(emittedCluster));
 		it = dissociatingPairs.rbegin();
 	}
 
@@ -425,7 +425,7 @@ void PSICluster::participateIn(DissociationReaction& reaction,
 		// dissociating cluster is the first one
 		dissociatingPairs.emplace_back(reaction,
 				static_cast<PSICluster&>(reaction.dissociating),
-				static_cast<PSICluster&>(emittedCluster), psDim);
+				static_cast<PSICluster&>(emittedCluster));
 		it = dissociatingPairs.rbegin();
 	}
 	assert(it != dissociatingPairs.rend());
@@ -468,7 +468,7 @@ void PSICluster::participateIn(DissociationReaction& reaction,
 		// dissociating cluster is the first one
 		dissociatingPairs.emplace_back(reaction,
 				static_cast<PSICluster&>(reaction.dissociating),
-				static_cast<PSICluster&>(emittedCluster), psDim);
+				static_cast<PSICluster&>(emittedCluster));
 		it = dissociatingPairs.rbegin();
 	}
 
@@ -542,7 +542,7 @@ void PSICluster::participateIn(DissociationReaction& reaction, double *coef) {
 		// dissociating cluster is the first one
 		dissociatingPairs.emplace_back(reaction,
 				static_cast<PSICluster&>(reaction.dissociating),
-				static_cast<PSICluster&>(emittedCluster), psDim);
+				static_cast<PSICluster&>(emittedCluster));
 		it = dissociatingPairs.rbegin();
 	}
 
@@ -566,7 +566,7 @@ void PSICluster::emitFrom(DissociationReaction& reaction, int a[4]) {
 	// this reaction?
 	emissionPairs.emplace_back(reaction,
 			static_cast<PSICluster&>(reaction.first),
-			static_cast<PSICluster&>(reaction.second), psDim);
+			static_cast<PSICluster&>(reaction.second));
 	auto& dissPair = emissionPairs.back();
 
 	// Count the number of reactions
@@ -584,7 +584,7 @@ void PSICluster::emitFrom(DissociationReaction& reaction,
 	// this reaction?
 	emissionPairs.emplace_back(reaction,
 			static_cast<PSICluster&>(reaction.first),
-			static_cast<PSICluster&>(reaction.second), psDim);
+			static_cast<PSICluster&>(reaction.second));
 	auto& dissPair = emissionPairs.back();
 
 	// Update the coefficients
@@ -605,7 +605,7 @@ void PSICluster::emitFrom(DissociationReaction& reaction, IReactant& disso) {
 	// this reaction?
 	emissionPairs.emplace_back(reaction,
 			static_cast<PSICluster&>(reaction.first),
-			static_cast<PSICluster&>(reaction.second), psDim);
+			static_cast<PSICluster&>(reaction.second));
 	auto& dissPair = emissionPairs.back();
 
 	auto const& superR1 = static_cast<PSICluster const&>(dissPair.first);
@@ -669,7 +669,7 @@ void PSICluster::emitFrom(DissociationReaction& reaction, double *coef) {
 	// this reaction?
 	emissionPairs.emplace_back(reaction,
 			static_cast<PSICluster&>(reaction.first),
-			static_cast<PSICluster&>(reaction.second), psDim);
+			static_cast<PSICluster&>(reaction.second));
 	auto& dissPair = emissionPairs.back();
 
 	// Count the number of reactions
@@ -774,6 +774,25 @@ void PSICluster::updateFromNetwork() {
 	return;
 }
 
+void PSICluster::computeDissFlux0(const double* __restrict concs, int xi,
+                                    Reactant::Flux& flux) const {
+
+	// Sum dissociation flux over all our dissociating clusters.
+    flux.flux = std::accumulate(dissociatingPairs.begin(),
+			dissociatingPairs.end(), 0.0,
+			[this,concs,xi](double running, const ClusterPair& currPair) {
+
+				auto const& dissCluster = currPair.first;
+				auto lA = dissCluster.getConcentration(concs);
+
+                auto sum = currPair.coeff0 * lA;
+
+				// Calculate the Dissociation flux
+				return running + (currPair.reaction.kConstant[xi] * sum);
+			});
+}
+
+
 void PSICluster::getDissociationFlux(const double* __restrict concs, int xi,
                                     Reactant::Flux& flux) const {
 
@@ -800,6 +819,17 @@ void PSICluster::getDissociationFlux(const double* __restrict concs, int xi,
 }
 
 
+void PSICluster::computeEmitFlux0(const double* __restrict concs, int xi,
+                                    Reactant::Flux& flux) const {
+
+	// Sum rate constants from all emission pair reactions.
+	flux.flux = 
+        std::accumulate(emissionPairs.begin(), emissionPairs.end(), 0.0,
+            [xi](double running, const ClusterPair& currPair) {
+                return running + (currPair.reaction.kConstant[xi] * currPair.coeff0);
+            }) * getConcentration(concs);
+}
+
 void PSICluster::getEmissionFlux(const double* __restrict concs, int xi,
                                     Reactant::Flux& flux) const {
 
@@ -809,6 +839,26 @@ void PSICluster::getEmissionFlux(const double* __restrict concs, int xi,
 					[&xi](double running, const ClusterPair& currPair) {
 						return running + (currPair.reaction.kConstant[xi] * currPair.coefs[0][0]);
 					}) * getConcentration(concs);
+}
+
+void PSICluster::computeProdFlux0(const double* __restrict concs, int xi,
+                                    Reactant::Flux& flux) const {
+
+	// Sum production flux over all reacting pairs.
+	flux.flux = std::accumulate(reactingPairs.begin(), reactingPairs.end(),
+			0.0, [this,concs,xi](double running, const ClusterPair& currPair) {
+
+				// Get the two reacting clusters
+			auto const& firstReactant = currPair.first;
+			auto const& secondReactant = currPair.second;
+			auto lA = firstReactant.getConcentration(concs);
+			auto lB = secondReactant.getConcentration(concs);
+
+            auto sum = currPair.coeff0 * lA * lB;
+
+			// Update the flux
+			return running + (currPair.reaction.kConstant[xi] * sum);
+		});
 }
 
 void PSICluster::getProductionFlux(const double* __restrict concs, int xi,
@@ -839,6 +889,26 @@ void PSICluster::getProductionFlux(const double* __restrict concs, int xi,
 			return running + (currPair.reaction.kConstant[xi] *
 					sum);
 		});
+}
+
+void PSICluster::computeCombFlux0(const double* __restrict concs, int xi,
+                                    Reactant::Flux& flux) const {
+
+	// Sum combination flux over all clusters that combine with us.
+	flux.flux = std::accumulate(combiningReactants.begin(),
+			combiningReactants.end(), 0.0,
+			[this,concs,xi](double running, const CombiningCluster& cc) {
+
+				// Get the cluster that combines with this one
+				auto const& combiningCluster = cc.combining;
+				auto lB = combiningCluster.getConcentration(concs);
+
+                auto sum = cc.coeff0 * lB;
+
+				// Calculate the combination flux
+				return running + (cc.reaction.kConstant[xi] * sum);
+
+			}) * getConcentration(concs);
 }
 
 void PSICluster::getCombinationFlux(const double* __restrict concs, int xi,
@@ -1209,4 +1279,29 @@ void PSICluster::outputCoefficientsTo(std::ostream& os) const {
 				os << '\n';
 			});
 }
+
+void PSICluster::useZerothMomentSpecializations() {
+
+	std::for_each(reactingPairs.begin(), reactingPairs.end(),
+			[this](ClusterPair& currPair) {
+                currPair.coeff0 = currPair.coefs[0][0];
+			});
+
+	std::for_each(combiningReactants.begin(), combiningReactants.end(),
+			[this](CombiningCluster& currCluster) {
+                currCluster.coeff0 = currCluster.coefs[0];
+			});
+
+	std::for_each(dissociatingPairs.begin(), dissociatingPairs.end(),
+			[this](ClusterPair& currPair) {
+                currPair.coeff0 = currPair.coefs[0][0];
+			});
+
+	std::for_each(emissionPairs.begin(), emissionPairs.end(),
+			[this](ClusterPair& currPair) {
+                currPair.coeff0 = currPair.coefs[0][0];
+			});
+}
+
+} // namespace xolotlCore
 

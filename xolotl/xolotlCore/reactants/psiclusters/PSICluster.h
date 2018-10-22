@@ -48,8 +48,7 @@ protected:
 	 * reaction or dissociation for faster computation because they only change
 	 * when the temperature change. k is computed when setTemperature() is called.
 	 */
-	class ClusterPair {
-	public:
+	struct ClusterPairBase {
 
 		/**
 		 * The first cluster in the pair
@@ -66,6 +65,27 @@ protected:
 		 */
 		Reaction& reaction;
 
+		//! The constructor
+		ClusterPairBase(Reaction& _reaction,
+                PSICluster& _first, PSICluster& _second) :
+				first(_first), second(_second), reaction(_reaction) {
+		}
+
+		/**
+		 * Default constructor, disallowed.
+		 */
+		ClusterPairBase() = delete;
+
+		// NB: if PSICluster keeps these in a std::vector,
+		// copy ctor is needed.
+		ClusterPairBase(const ClusterPairBase& other) :
+                first(other.first), second(other.second),
+                reaction(other.reaction) {
+		}
+	};
+
+	struct ClusterPair : ClusterPairBase {
+
 		/**
 		 * All the coefficient needed to compute each element
 		 * The first number represent the moment of A, the second of B
@@ -79,13 +99,17 @@ protected:
 		 */
         Array<double, 5, 5> coefs;
 
-		//! The dimension, needed to be able to use the copy constructor
-		int dim = 0;
+        /**
+         * Scalar version of coefs[0][0] supporting
+         * faster reads for zeroth-moment-only flux/partials computations.
+         */
+        double coeff0;
 
 		//! The constructor
-		ClusterPair(Reaction& _reaction, PSICluster& _first,
-				PSICluster& _second, const int _dim) :
-				first(_first), second(_second), reaction(_reaction), dim(_dim) {
+		ClusterPair(Reaction& _reaction,
+                PSICluster& _first, PSICluster& _second) :
+            ClusterPairBase(_reaction, _first, _second),
+            coeff0(0) {
 
             coefs.Init(0);
 		}
@@ -98,13 +122,8 @@ protected:
 		// NB: if PSICluster keeps these in a std::vector,
 		// copy ctor is needed.
 		ClusterPair(const ClusterPair& other) :
-				coefs(other.coefs), dim(other.dim),
-                first(other.first), second(other.second),
-                reaction(other.reaction) {
-		}
-
-		//! The destructor
-		~ClusterPair() {
+            ClusterPairBase(other),
+            coefs(other.coefs) {
 		}
 	};
 
@@ -116,7 +135,7 @@ protected:
 	 * for faster computation because they only change when the temperature change.
 	 * k+ is computed when setTemperature() is called.
 	 */
-	struct CombiningCluster {
+	struct CombiningClusterBase {
 
 		/**
 		 * The combining cluster
@@ -127,6 +146,26 @@ protected:
 		 * The reaction pointer to the list
 		 */
 		Reaction& reaction;
+
+		//! The constructor
+		CombiningClusterBase(Reaction& _reaction, PSICluster& _comb) :
+				combining(_comb), reaction(_reaction) {
+
+		}
+
+		/**
+		 * Default constructor, disallowed to prohibit building without args.
+		 */
+		CombiningClusterBase() = delete;
+
+		// NB: if PSICluster keeps these in a std::vector,
+		// copy ctor is needed.
+		CombiningClusterBase(const CombiningClusterBase& other) :
+                combining(other.combining), reaction(other.reaction) {
+		}
+	};
+
+	struct CombiningCluster : public CombiningClusterBase {
 
 		/**
 		 * All the coefficient needed to compute each element
@@ -141,12 +180,16 @@ protected:
 		 */
         Array<double, 5> coefs;
 
-		//! The dimension, needed to be able to use the copy constructor
-		int dim = 0;
+        /**
+         * Scalar version of coefs[0] supporting
+         * faster reads for zeroth-moment-only flux/partials computations.
+         */
+        double coeff0;
 
 		//! The constructor
-		CombiningCluster(Reaction& _reaction, PSICluster& _comb, const int _dim) :
-				combining(_comb), reaction(_reaction), dim(_dim) {
+		CombiningCluster(Reaction& _reaction, PSICluster& _comb) :
+            CombiningClusterBase(_reaction, _comb),
+            coeff0(0) {
 
             coefs.Init(0);
 		}
@@ -159,12 +202,9 @@ protected:
 		// NB: if PSICluster keeps these in a std::vector,
 		// copy ctor is needed.
 		CombiningCluster(const CombiningCluster& other) :
-				coefs(other.coefs), dim(other.dim),
-                combining(other.combining), reaction(other.reaction) {
-		}
-
-		//! The destructor
-		~CombiningCluster() {
+            CombiningClusterBase(other),
+			coefs(other.coefs),
+            coeff0(other.coeff0) {
 		}
 	};
 
@@ -220,6 +260,8 @@ protected:
 	 */
     void getDissociationFlux(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
+    void computeDissFlux0(const double* __restrict concs, int xi,
+                                Reactant::Flux& flux) const;
 
 	/**
 	 * This operation returns the total change in this cluster due its
@@ -231,6 +273,8 @@ protected:
 	 */
     void getEmissionFlux(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
+    void computeEmitFlux0(const double* __restrict concs, int xi,
+                                Reactant::Flux& flux) const;
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -242,6 +286,8 @@ protected:
 	 */
     void getProductionFlux(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
+    void computeProdFlux0(const double* __restrict concs,
+                                int xi, Reactant::Flux& flux) const;
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -253,6 +299,34 @@ protected:
 	 */
     void getCombinationFlux(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
+    void computeCombFlux0(const double* __restrict concs, int xi,
+                                Reactant::Flux& flux) const;
+
+
+    template<typename FluxType>
+    FluxType getTotalFluxHelper0(const double* __restrict concs, int xi) const {
+
+        // Compute the individual fluxes.
+        //
+        // NOTE: We would much prefer to have the get*Flux() methods 
+        // return our type of flux, but our class hierarchy needs them to be 
+        // virtual and we have differing Flux types than our base class
+        // that we would use a return type.
+        FluxType prodFlux;
+        computeProdFlux0(concs, xi, prodFlux);
+
+        FluxType combFlux;
+        computeCombFlux0(concs, xi, combFlux);
+
+        FluxType dissFlux;
+        computeDissFlux0(concs, xi, dissFlux);
+
+        FluxType emitFlux;
+        computeEmitFlux0(concs, xi, emitFlux);
+
+        // Compute the total flux.
+        return prodFlux - combFlux + dissFlux - emitFlux;
+    }
 
 public:
 
@@ -694,6 +768,28 @@ public:
 	 * @param os Output stream on which to output coefficients.
 	 */
 	virtual void outputCoefficientsTo(std::ostream& os) const override;
+
+
+	/**
+     * Compute total flux(es) of this reactant using current concentrations
+     * into their respective locations in the output concentrations.
+	 *
+     * @param concs Current concentrations for desired grid point.
+	 * @param xi The location on the grid in the depth direction
+     * @param updatedConcs Updated concentrations for desired grid point.
+	 */
+    void computeTotalFluxes(const double* __restrict concs, int xi,
+                            double* __restrict updatedConcs) const override {
+        // Compute the total fluxes for reactions we participate in.
+        auto flux = (psDim == 1) ?
+            getTotalFluxHelper0<Reactant::Flux>(concs, xi) :
+            getTotalFluxHelper<Reactant::Flux>(concs, xi);
+
+        // Update our concentration in the output concentration array.
+        addToConcentration(updatedConcs, flux.flux);
+    }
+
+    virtual void useZerothMomentSpecializations();
 };
 
 } /* end namespace xolotlCore */

@@ -1435,6 +1435,20 @@ void PSIClusterReactionNetwork::reinitializeConnectivities() {
 				currReactant.resetConnectivities();
 			});
 
+    // We've now defined all reactions.
+    // If we're doing a zeroth-moment-only calculation,
+    // copy the [0][0]...[0] coefficient to a scalar for
+    // faster reads in the zeroth-moment-only specializations
+    // for computing partials and flux.
+    if(psDim == 1) {
+        std::for_each(allReactants.begin(), allReactants.end(),
+            [](IReactant& currReactant) {
+
+                auto& currCluster = static_cast<PSICluster&>(currReactant);
+                currCluster.useZerothMomentSpecializations();
+            });
+    }
+
 	return;
 }
 
