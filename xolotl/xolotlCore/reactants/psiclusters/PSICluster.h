@@ -84,7 +84,7 @@ protected:
 		}
 	};
 
-	struct ClusterPair : ClusterPairBase {
+	struct ClusterPair : public ClusterPairBase {
 
 		/**
 		 * All the coefficient needed to compute each element
@@ -99,17 +99,10 @@ protected:
 		 */
         Array<double, 5, 5> coefs;
 
-        /**
-         * Scalar version of coefs[0][0] supporting
-         * faster reads for zeroth-moment-only flux/partials computations.
-         */
-        double coeff0;
-
 		//! The constructor
 		ClusterPair(Reaction& _reaction,
                 PSICluster& _first, PSICluster& _second) :
-            ClusterPairBase(_reaction, _first, _second),
-            coeff0(0) {
+            ClusterPairBase(_reaction, _first, _second) {
 
             coefs.Init(0);
 		}
@@ -125,6 +118,43 @@ protected:
             ClusterPairBase(other),
             coefs(other.coefs) {
 		}
+	};
+
+	struct ClusterPair0 : public ClusterPairBase {
+
+        /**
+         * Scalar version of coefs[0][0] supporting
+         * faster reads for zeroth-moment-only flux/partials computations.
+         */
+        double coeff0;
+
+		//! The constructor
+		ClusterPair0(Reaction& _reaction,
+                PSICluster& _first, PSICluster& _second) :
+            ClusterPairBase(_reaction, _first, _second),
+            coeff0(0) {
+		}
+
+		/**
+		 * Default constructor, disallowed.
+		 */
+		ClusterPair0() = delete;
+
+        /**
+         * Construct as copy of given cluster.
+         */
+		ClusterPair0(const ClusterPair0& other) :
+            ClusterPairBase(other),
+            coeff0(other.coeff0) {
+		}
+
+        /**
+         * Construct as copy of given cluster with full set of coefficients.
+         */
+        ClusterPair0(const ClusterPair& other) :
+            ClusterPairBase(other),
+            coeff0(other.coefs[0][0]) {
+        }
 	};
 
 	/**
@@ -180,16 +210,9 @@ protected:
 		 */
         Array<double, 5> coefs;
 
-        /**
-         * Scalar version of coefs[0] supporting
-         * faster reads for zeroth-moment-only flux/partials computations.
-         */
-        double coeff0;
-
 		//! The constructor
 		CombiningCluster(Reaction& _reaction, PSICluster& _comb) :
-            CombiningClusterBase(_reaction, _comb),
-            coeff0(0) {
+            CombiningClusterBase(_reaction, _comb) {
 
             coefs.Init(0);
 		}
@@ -203,8 +226,39 @@ protected:
 		// copy ctor is needed.
 		CombiningCluster(const CombiningCluster& other) :
             CombiningClusterBase(other),
-			coefs(other.coefs),
+			coefs(other.coefs) {
+		}
+	};
+
+	struct CombiningCluster0 : public CombiningClusterBase {
+
+        /**
+         * Scalar version of coefs[0] supporting
+         * faster reads for zeroth-moment-only flux/partials computations.
+         */
+        double coeff0;
+
+		//! The constructor
+		CombiningCluster0(Reaction& _reaction, PSICluster& _comb) :
+            CombiningClusterBase(_reaction, _comb),
+            coeff0(0) {
+		}
+
+		/**
+		 * Default constructor, disallowed to prohibit building without args.
+		 */
+		CombiningCluster0() = delete;
+
+		// NB: if PSICluster keeps these in a std::vector,
+		// copy ctor is needed.
+		CombiningCluster0(const CombiningCluster0& other) :
+            CombiningClusterBase(other),
             coeff0(other.coeff0) {
+		}
+
+		CombiningCluster0(const CombiningCluster& other) :
+            CombiningClusterBase(other),
+            coeff0(other.coefs[0]) {
 		}
 	};
 
@@ -337,6 +391,7 @@ public:
 	 * this vector is filled in createReactionConnectivity.
 	 */
 	std::vector<ClusterPair> reactingPairs;
+	std::vector<ClusterPair0> reactingPairs0;
 
 	/**
 	 * A vector of clusters that combine with this cluster to produce other
@@ -345,6 +400,7 @@ public:
 	 * filled in createReactionConnectivity.
 	 */
 	std::vector<CombiningCluster> combiningReactants;
+	std::vector<CombiningCluster0> combiningReactants0;
 
 	/**
 	 * A vector of pairs of clusters: the first one is the one dissociation into
@@ -355,6 +411,7 @@ public:
 	 * createDissociationConnectivity.
 	 */
 	std::vector<ClusterPair> dissociatingPairs;
+	std::vector<ClusterPair0> dissociatingPairs0;
 
 	/**
 	 * A vector of ClusterPairs that represent pairs of clusters that are emitted
@@ -364,6 +421,7 @@ public:
 	 * createDissociationConnectivity.
 	 */
 	std::vector<ClusterPair> emissionPairs;
+	std::vector<ClusterPair0> emissionPairs0;
 
 	/**
 	 * Default constructor, deleted because we require info to construct.

@@ -778,9 +778,9 @@ void PSICluster::computeDissFlux0(const double* __restrict concs, int xi,
                                     Reactant::Flux& flux) const {
 
 	// Sum dissociation flux over all our dissociating clusters.
-    flux.flux = std::accumulate(dissociatingPairs.begin(),
-			dissociatingPairs.end(), 0.0,
-			[this,concs,xi](double running, const ClusterPair& currPair) {
+    flux.flux = std::accumulate(dissociatingPairs0.begin(),
+			dissociatingPairs0.end(), 0.0,
+			[this,concs,xi](double running, const ClusterPair0& currPair) {
 
 				auto const& dissCluster = currPair.first;
 				auto lA = dissCluster.getConcentration(concs);
@@ -824,8 +824,8 @@ void PSICluster::computeEmitFlux0(const double* __restrict concs, int xi,
 
 	// Sum rate constants from all emission pair reactions.
 	flux.flux = 
-        std::accumulate(emissionPairs.begin(), emissionPairs.end(), 0.0,
-            [xi](double running, const ClusterPair& currPair) {
+        std::accumulate(emissionPairs0.begin(), emissionPairs0.end(), 0.0,
+            [xi](double running, const ClusterPair0& currPair) {
                 return running + (currPair.reaction.kConstant[xi] * currPair.coeff0);
             }) * getConcentration(concs);
 }
@@ -845,8 +845,8 @@ void PSICluster::computeProdFlux0(const double* __restrict concs, int xi,
                                     Reactant::Flux& flux) const {
 
 	// Sum production flux over all reacting pairs.
-	flux.flux = std::accumulate(reactingPairs.begin(), reactingPairs.end(),
-			0.0, [this,concs,xi](double running, const ClusterPair& currPair) {
+	flux.flux = std::accumulate(reactingPairs0.begin(), reactingPairs0.end(),
+			0.0, [this,concs,xi](double running, const ClusterPair0& currPair) {
 
 				// Get the two reacting clusters
 			auto const& firstReactant = currPair.first;
@@ -895,9 +895,9 @@ void PSICluster::computeCombFlux0(const double* __restrict concs, int xi,
                                     Reactant::Flux& flux) const {
 
 	// Sum combination flux over all clusters that combine with us.
-	flux.flux = std::accumulate(combiningReactants.begin(),
-			combiningReactants.end(), 0.0,
-			[this,concs,xi](double running, const CombiningCluster& cc) {
+	flux.flux = std::accumulate(combiningReactants0.begin(),
+			combiningReactants0.end(), 0.0,
+			[this,concs,xi](double running, const CombiningCluster0& cc) {
 
 				// Get the cluster that combines with this one
 				auto const& combiningCluster = cc.combining;
@@ -1284,23 +1284,35 @@ void PSICluster::useZerothMomentSpecializations() {
 
 	std::for_each(reactingPairs.begin(), reactingPairs.end(),
 			[this](ClusterPair& currPair) {
-                currPair.coeff0 = currPair.coefs[0][0];
+                reactingPairs0.emplace_back(currPair);
 			});
+#if READY
+    reactingPairs.clear();
+#endif // READY
 
 	std::for_each(combiningReactants.begin(), combiningReactants.end(),
 			[this](CombiningCluster& currCluster) {
-                currCluster.coeff0 = currCluster.coefs[0];
+                combiningReactants0.emplace_back(currCluster);
 			});
+#if READY
+    combiningReactants.clear();
+#endif // READY
 
 	std::for_each(dissociatingPairs.begin(), dissociatingPairs.end(),
 			[this](ClusterPair& currPair) {
-                currPair.coeff0 = currPair.coefs[0][0];
+                dissociatingPairs0.emplace_back(currPair);
 			});
+#if READY
+    dissociatingPairs.clear();
+#endif // READY
 
 	std::for_each(emissionPairs.begin(), emissionPairs.end(),
 			[this](ClusterPair& currPair) {
-                currPair.coeff0 = currPair.coefs[0][0];
+                emissionPairs0.emplace_back(currPair);
 			});
+#if READY
+    emissionPairs.clear();
+#endif // READY
 }
 
 } // namespace xolotlCore
