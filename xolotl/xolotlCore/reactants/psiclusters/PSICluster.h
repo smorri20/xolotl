@@ -118,6 +118,8 @@ protected:
             ClusterPairBase(other),
             coefs(other.coefs) {
 		}
+
+        double getCoeff0() const    { return coefs[0][0]; }
 	};
 
 	struct ClusterPair0 : public ClusterPairBase {
@@ -155,6 +157,8 @@ protected:
             ClusterPairBase(other),
             coeff0(other.coefs[0][0]) {
         }
+
+        double getCoeff0() const    { return coeff0; }
 	};
 
 	/**
@@ -228,6 +232,8 @@ protected:
             CombiningClusterBase(other),
 			coefs(other.coefs) {
 		}
+
+        double getCoeff0() const    { return coefs[0]; }
 	};
 
 	struct CombiningCluster0 : public CombiningClusterBase {
@@ -260,6 +266,8 @@ protected:
             CombiningClusterBase(other),
             coeff0(other.coefs[0]) {
 		}
+
+        double getCoeff0() const    { return coeff0; }
 	};
 
 	/**
@@ -403,6 +411,31 @@ protected:
 	virtual void computeAllEmitPartials0(int xi,
             std::vector<double>& partials) const;
 
+
+    template<typename ClusterInfoType, typename CombiningInfoType>
+    double getLeftSideRateHelper(const double* __restrict concs, int xi,
+            const std::vector<CombiningInfoType>& combList,
+            const std::vector<ClusterInfoType>& emitList) const {
+
+        // Sum rate constant-concentration product over combining reactants.
+        double combiningRateTotal =
+                std::accumulate(combList.begin(), combList.end(),
+                    0.0,
+                    [concs,xi](double running, const CombiningInfoType& cc) {
+                        return running +
+                        (cc.reaction.kConstant[xi] * cc.combining.getConcentration(concs) * cc.getCoeff0());
+                    });
+
+        // Sum rate constants over all emission pair reactions.
+        double emissionRateTotal =
+                std::accumulate(emitList.begin(), emitList.end(),
+                    0.0,
+                    [xi](double running, const ClusterInfoType& currPair) {
+                        return running + (currPair.reaction.kConstant[xi] * currPair.getCoeff0());
+                    });
+
+        return combiningRateTotal + emissionRateTotal;
+    }
 
 
 public:
@@ -790,7 +823,17 @@ public:
 	 * @param i The position on the grid
 	 * @return The rate
 	 */
-	double getLeftSideRate(const double* __restrict concs, int i) const override;
+    double getLeftSideRate(const double* __restrict concs,
+                            int xi) const override {
+
+        return (psDim == 1) ?
+            getLeftSideRateHelper<ClusterPair0, CombiningCluster0>(concs, xi,
+                    combiningReactants0, emissionPairs0) :
+            getLeftSideRateHelper<ClusterPair, CombiningCluster>(concs, xi,
+                    combiningReactants, emissionPairs);
+    }
+
+
 
 	/**
 	 * This operation returns the vector of production reactions in which

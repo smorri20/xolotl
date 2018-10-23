@@ -1200,27 +1200,6 @@ void PSICluster::computeAllEmitPartials0(int xi,
 	partials[getId() - 1] -= outgoingFlux;
 }
 
-double PSICluster::getLeftSideRate(const double* __restrict concs, int i) const {
-
-	// Sum rate constant-concentration product over combining reactants.
-	double combiningRateTotal =
-			std::accumulate(combiningReactants.begin(),
-					combiningReactants.end(), 0.0,
-					[&concs,i](double running, const CombiningCluster& cc) {
-						return running +
-						(cc.reaction.kConstant[i] * cc.combining.getConcentration(concs) * cc.coefs[0]);
-					});
-
-	// Sum rate constants over all emission pair reactions.
-	double emissionRateTotal =
-			std::accumulate(emissionPairs.begin(), emissionPairs.end(), 0.0,
-					[i](double running, const ClusterPair& currPair) {
-						return running + (currPair.reaction.kConstant[i] * currPair.coefs[0][0]);
-					});
-
-	return combiningRateTotal + emissionRateTotal;
-}
-
 std::vector<std::vector<double> > PSICluster::getProdVector() const {
 	// Initial declarations
 	std::vector<std::vector<double> > toReturn;
@@ -1410,6 +1389,7 @@ void PSICluster::useZerothMomentSpecializations() {
                 reactingPairs0.emplace_back(currPair);
 			});
 #if READY
+#else
     reactingPairs.clear();
 #endif // READY
 
@@ -1418,6 +1398,7 @@ void PSICluster::useZerothMomentSpecializations() {
                 combiningReactants0.emplace_back(currCluster);
 			});
 #if READY
+#else
     combiningReactants.clear();
 #endif // READY
 
@@ -1426,6 +1407,7 @@ void PSICluster::useZerothMomentSpecializations() {
                 dissociatingPairs0.emplace_back(currPair);
 			});
 #if READY
+#else
     dissociatingPairs.clear();
 #endif // READY
 
@@ -1434,6 +1416,7 @@ void PSICluster::useZerothMomentSpecializations() {
                 emissionPairs0.emplace_back(currPair);
 			});
 #if READY
+#else
     emissionPairs.clear();
 #endif // READY
 }
