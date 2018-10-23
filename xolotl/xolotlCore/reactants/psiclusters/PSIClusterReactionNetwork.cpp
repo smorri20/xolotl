@@ -1751,7 +1751,12 @@ void PSIClusterReactionNetwork::computeAllPartials(
 			auto reactantIndex = reactant.getId() - 1;
 
 			// Get the partial derivatives
-			reactant.getPartialDerivatives(concs, xi, clusterPartials);
+            if(psDim == 1) {
+                reactant.computePartials0(concs, xi, clusterPartials);
+            }
+            else {
+			    reactant.getPartialDerivatives(concs, xi, clusterPartials);
+            }
 
 			// Get the list of column ids from the map
 			auto const& pdColIdsVector = dFillMap.at(reactantIndex);

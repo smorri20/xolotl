@@ -382,6 +382,29 @@ protected:
         return prodFlux - combFlux + dissFlux - emitFlux;
     }
 
+	virtual void computeAllProdPartials0(const double* __restrict concs,
+            int xi, std::vector<double> & partials) const;
+	void computeOneProdPartials0(const double* __restrict concs,
+            int xi, std::vector<double>& partials,
+            const ClusterPair0& currPair) const;
+
+	virtual void computeAllCombPartials0(const double* __restrict concs,
+            int xi, std::vector<double> & partials) const;
+	void computeOneCombPartials0(const double* __restrict concs,
+            int xi, std::vector<double>& partials,
+            const CombiningCluster0& currCluster) const;
+
+	virtual void computeAllDissPartials0(int xi, 
+            std::vector<double> & partials) const;
+	void computeOneDissPartials0(int xi, 
+            std::vector<double>& partials,
+            const ClusterPair0& currPair) const;
+
+	virtual void computeAllEmitPartials0(int xi,
+            std::vector<double>& partials) const;
+
+
+
 public:
 
 	/**
@@ -688,6 +711,17 @@ public:
 	 */
 	virtual void getPartialDerivatives(const double* __restrict concs, int i,
             std::vector<double> & partials) const override;
+
+    virtual void computePartials0(const double* __restrict concs, int xi,
+            std::vector<double>& partials) const {
+
+        // Get the partial derivatives for each reaction type
+        computeAllProdPartials0(concs, xi, partials);
+        computeAllCombPartials0(concs, xi, partials);
+        computeAllDissPartials0(xi, partials);
+        computeAllEmitPartials0(xi, partials);
+    }
+
 
 	/**
 	 * This operation computes the partial derivatives due to production

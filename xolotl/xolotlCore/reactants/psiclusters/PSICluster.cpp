@@ -995,6 +995,46 @@ void PSICluster::getProductionPartialDerivatives(const double* __restrict concs,
 	return;
 }
 
+void PSICluster::computeOneProdPartials0(const double* __restrict concs, 
+        int xi,
+        std::vector<double> & partials,
+        const ClusterPair0& currPair) const {
+
+	// Production
+	// A + B --> D, D being this cluster
+	// The flux for D is
+	// F(C_D) = k+_(A,B)*C_A*C_B
+	// Thus, the partial derivatives
+	// dF(C_D)/dC_A = k+_(A,B)*C_B
+	// dF(C_D)/dC_B = k+_(A,B)*C_A
+
+    // Get the two reacting clusters
+    auto const& firstReactant = currPair.first;
+    auto const& secondReactant = currPair.second;
+    auto lA = firstReactant.getConcentration(concs);
+    auto lB = secondReactant.getConcentration(concs);
+
+    // Compute contribution from the first part of the reacting pair
+    double value = currPair.reaction.kConstant[xi];
+
+    auto sum0 = currPair.coeff0 * lB;
+    auto sum1 = currPair.coeff0 * lA;
+
+    partials[firstReactant.getId() - 1] += value * sum0;
+    partials[secondReactant.getId() - 1] += value * sum1;
+}
+
+void PSICluster::computeAllProdPartials0(const double* __restrict concs, 
+        int xi,
+        std::vector<double> & partials) const {
+
+    // Compute partials contribution from all production reactions.
+	std::for_each(reactingPairs0.begin(), reactingPairs0.end(),
+			[this,concs,&partials,xi](const ClusterPair0& currPair) {
+                computeOneProdPartials0(concs, xi, partials, currPair);
+			});
+}
+
 void PSICluster::getCombinationPartialDerivatives(const double* __restrict concs, int xi,
 		std::vector<double> & partials) const {
 
@@ -1035,6 +1075,43 @@ void PSICluster::getCombinationPartialDerivatives(const double* __restrict concs
 	return;
 }
 
+void PSICluster::computeOneCombPartials0(const double* __restrict concs,
+        int xi,
+		std::vector<double>& partials,
+        const CombiningCluster0& cc) const {
+
+	// Combination
+	// A + B --> D, A being this cluster
+	// The flux for A is outgoing
+	// F(C_A) = - k+_(A,B)*C_A*C_B
+	// Thus, the partial derivatives
+	// dF(C_A)/dC_A = - k+_(A,B)*C_B
+	// dF(C_A)/dC_B = - k+_(A,B)*C_A
+    auto const& cluster = cc.combining;
+    auto lB = cluster.getConcentration(concs);
+
+    auto sum = cc.coeff0 * lB;
+
+    // Remember that the flux due to combinations is OUTGOING (-=)!
+    // Compute the contribution from this cluster
+    partials[getId() - 1] -= cc.reaction.kConstant[xi] * sum;
+
+    // Compute the contribution from the combining cluster
+    double value = cc.reaction.kConstant[xi] * getConcentration(concs);
+    partials[cluster.getId() - 1] -= value * cc.coeff0;
+}
+
+void PSICluster::computeAllCombPartials0(const double* __restrict concs,
+        int xi,
+		std::vector<double> & partials) const {
+
+    // Compute partials contribution from all combining reactions.
+	std::for_each(combiningReactants0.begin(), combiningReactants0.end(),
+        [this,concs,&partials,xi](const CombiningCluster0& cc) {
+            computeOneCombPartials0(concs, xi, partials, cc);
+        });
+}
+
 void PSICluster::getDissociationPartialDerivatives(
 		std::vector<double> & partials, int xi) const {
 
@@ -1058,6 +1135,33 @@ void PSICluster::getDissociationPartialDerivatives(
 	return;
 }
 
+void PSICluster::computeOneDissPartials0(int xi,
+        std::vector<double>& partials,
+        const ClusterPair0& currPair) const {
+
+	// Dissociation
+	// A --> B + D, B being this cluster
+	// The flux for B is
+	// F(C_B) = k-_(B,D)*C_A
+	// Thus, the partial derivatives
+	// dF(C_B)/dC_A = k-_(B,D)
+
+    // Get the dissociating cluster
+    auto const& cluster = currPair.first;
+    double value = currPair.reaction.kConstant[xi];
+    partials[cluster.getId() - 1] += value * currPair.coeff0;
+}
+
+void PSICluster::computeAllDissPartials0(int xi,
+        std::vector<double>& partials) const {
+
+    // Compute partials contribution for all dissociation reactions.
+	std::for_each(dissociatingPairs0.begin(), dissociatingPairs0.end(),
+        [&partials,this,xi](const ClusterPair0& currPair) {
+            computeOneDissPartials0(xi, partials, currPair);
+        });
+}
+
 void PSICluster::getEmissionPartialDerivatives(std::vector<double> & partials,
 		int xi) const {
 
@@ -1075,6 +1179,25 @@ void PSICluster::getEmissionPartialDerivatives(std::vector<double> & partials,
 	partials[getId() - 1] -= outgoingFlux;
 
 	return;
+}
+
+
+void PSICluster::computeAllEmitPartials0(int xi,
+        std::vector<double>& partials) const {
+
+	// Emission
+	// A --> B + D, A being this cluster
+	// The flux for A is
+	// F(C_A) = - k-_(B,D)*C_A
+	// Thus, the partial derivatives
+	// dF(C_A)/dC_A = - k-_(B,D)
+	double outgoingFlux =
+			std::accumulate(emissionPairs0.begin(), emissionPairs0.end(),
+                    0.0,
+					[xi](double running, const ClusterPair0& currPair) {
+						return running + (currPair.reaction.kConstant[xi] * currPair.coeff0);
+					});
+	partials[getId() - 1] -= outgoingFlux;
 }
 
 double PSICluster::getLeftSideRate(const double* __restrict concs, int i) const {
