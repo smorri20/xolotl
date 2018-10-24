@@ -1787,8 +1787,12 @@ void PSIClusterReactionNetwork::computeAllPartials(
 				static_cast<PSISuperCluster&>(*(currMapItem.second));
 
 		// Have reactant compute its partial derivatives.
-        reactant.computePartialDerivatives2(concs, xi, partials);
-
+        if(psDim == 1) {
+            reactant.computePartials0(concs, xi, partials[0]);
+        }
+        else {
+            reactant.computePartialDerivatives2(concs, xi, partials);
+        }
 
         // Copy the computed partials from the dense DOF-space
         // into their location within the vals array.

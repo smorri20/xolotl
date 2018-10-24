@@ -680,6 +680,20 @@ private:
         concs[getMomentId(axis) - 1] += amount;
 	}
 
+
+    void computeProdPartials0(const double* __restrict concs,
+            int xi,
+            std::vector<double>& partials) const;
+    void computeCombPartials0(const double* __restrict concs,
+            int xi,
+            std::vector<double>& partials) const;
+    void computeDissPartials0(const double* __restrict concs,
+            int xi,
+            std::vector<double>& partials) const;
+    void computeEmitPartials0(const double* __restrict concs,
+            int xi,
+            std::vector<double>& partials) const;
+
 public:
 
 	/**
@@ -1087,6 +1101,17 @@ public:
     void computePartialDerivatives2(const double* __restrict concs,
             int xi,
             std::array<std::vector<double>, 5>& partials) const;
+
+    void computePartials0(const double* __restrict concs,
+            int xi,
+            std::vector<double>& partials) const {
+
+        // Compute the partial derivatives for each reaction type
+        computeProdPartials0(concs, xi, partials);
+        computeCombPartials0(concs, xi, partials);
+        computeDissPartials0(concs, xi, partials);
+        computeEmitPartials0(concs, xi, partials);
+    }
 
 
 	/**
