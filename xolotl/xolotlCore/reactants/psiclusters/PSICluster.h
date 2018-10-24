@@ -322,7 +322,7 @@ protected:
 	 */
     void getDissociationFlux(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
-    void computeDissFlux0(const double* __restrict concs, int xi,
+    virtual void computeDissFlux0(const double* __restrict concs, int xi,
                                 Reactant::Flux& flux) const;
 
 	/**
@@ -335,7 +335,7 @@ protected:
 	 */
     void getEmissionFlux(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
-    void computeEmitFlux0(const double* __restrict concs, int xi,
+    virtual void computeEmitFlux0(const double* __restrict concs, int xi,
                                 Reactant::Flux& flux) const;
 
 	/**
@@ -348,7 +348,7 @@ protected:
 	 */
     void getProductionFlux(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
-    void computeProdFlux0(const double* __restrict concs,
+    virtual void computeProdFlux0(const double* __restrict concs,
                                 int xi, Reactant::Flux& flux) const;
 
 	/**
@@ -361,7 +361,7 @@ protected:
 	 */
     void getCombinationFlux(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
-    void computeCombFlux0(const double* __restrict concs, int xi,
+    virtual void computeCombFlux0(const double* __restrict concs, int xi,
                                 Reactant::Flux& flux) const;
 
 

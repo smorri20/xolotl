@@ -141,14 +141,9 @@ protected:
 		 * 4 -> V
 		 */
         Array<double, 5, 5, 5> coefs;
-		const int dim;
 
-		//! The constructor, disallowed
-		ProductionCoefficientBase() = delete;
-
-		//! The constructor to use
-		ProductionCoefficientBase(const int _dim) :
-				dim(_dim) {
+		//! Default constructor.
+		ProductionCoefficientBase() {
 
             coefs.Init(0);
 		}
@@ -157,12 +152,37 @@ protected:
 		 * Copy constructor.
 		 */
 		ProductionCoefficientBase(const ProductionCoefficientBase& other) :
-				coefs(other.coefs), dim(other.dim) {
+				coefs(other.coefs) {
 
 		}
+	};
 
-		//! The destructor
-		~ProductionCoefficientBase() {
+	struct ProductionCoefficientBase0 {
+
+        /**
+         * Scalar version of coefs[0][0][0].  Faster to read
+         * for zeroth-moment-only flux and partials calculations.
+         */
+        double coeff0;
+
+		//! Default constructor.
+		ProductionCoefficientBase0() :
+            coeff0(0) {
+		}
+
+		/**
+		 * Construct as a copy of another object.
+		 */
+		ProductionCoefficientBase0(const ProductionCoefficientBase0& other) :
+            coeff0(other.coeff0) {
+		}
+
+		/**
+		 * Construct as a copy of another object with full set of
+         * coefficients.
+		 */
+		ProductionCoefficientBase0(const ProductionCoefficientBase& other) :
+            coeff0(other.coefs[0][0][0]) {
 		}
 	};
 
@@ -174,8 +194,7 @@ protected:
 	 * reaction or dissociation for faster computation because they only change
 	 * when the temperature change. k is computed when setTemperature() is called.
 	 */
-	struct SuperClusterProductionPair: public ReactingPairBase,
-			public ProductionCoefficientBase {
+    struct SuperProductionPairBase : public ReactingPairBase {
 
 		/**
 		 * Nice name for key type in map of key to production pair.
@@ -183,33 +202,71 @@ protected:
 		using KeyType = ReactantAddrPair;
 
 		//! The constructor
-		SuperClusterProductionPair(Reaction& _reaction, PSICluster& _first,
-				PSICluster& _second, int dim) :
-				ReactingPairBase(_reaction, _first, _second), ProductionCoefficientBase(
-						dim) {
-
+		SuperProductionPairBase(Reaction& _reaction,
+                PSICluster& _first, PSICluster& _second) :
+				ReactingPairBase(_reaction, _first, _second) {
 		}
 
 		/**
 		 * Default and copy constructors, deleted to enforce constructing
 		 * using reactants.
 		 */
-		SuperClusterProductionPair() = delete;
-		SuperClusterProductionPair(const SuperClusterProductionPair& other) = default;
+		SuperProductionPairBase() = delete;
+		SuperProductionPairBase(const SuperProductionPairBase& other) = default;
+    };
+
+	struct SuperProductionPair : public SuperProductionPairBase,
+			public ProductionCoefficientBase {
+
+		//! The constructor
+		SuperProductionPair(Reaction& _reaction, PSICluster& _first,
+				PSICluster& _second) :
+            SuperProductionPairBase(_reaction, _first, _second) {
+		}
+
+		/**
+		 * Default and copy constructors, deleted to enforce constructing
+		 * using reactants.
+		 */
+		SuperProductionPair() = delete;
+		SuperProductionPair(const SuperProductionPair& other) = default;
 	};
 
+	struct SuperProductionPair0 : public SuperProductionPairBase,
+			public ProductionCoefficientBase0 {
+
+		//! The constructor
+		SuperProductionPair0(Reaction& _reaction, PSICluster& _first,
+				PSICluster& _second) :
+            SuperProductionPairBase(_reaction, _first, _second) {
+		}
+
+		/**
+		 * Default and copy constructors, deleted to enforce constructing
+		 * using reactants.
+		 */
+		SuperProductionPair0() = delete;
+		SuperProductionPair0(const SuperProductionPair0& other) = default;
+
+		SuperProductionPair0(const SuperProductionPair& other) :
+            SuperProductionPairBase(other),
+            ProductionCoefficientBase0(other) {
+        }
+	};
+
+
 	/**
-	 * Concise name for type of collection of SuperClusterProductionPairs,
+	 * Concise name for type of collection of SuperProductionPairs,
 	 * and map into that list for quick lookup.
 	 */
-	using ProductionPairList = std::vector<SuperClusterProductionPair>;
-	using ProductionPairListMap = std::unordered_map<SuperClusterProductionPair::KeyType, ProductionPairList::iterator>;
+	using ProductionPairList = std::vector<SuperProductionPair>;
+	using ProductionPairListMap = std::unordered_map<SuperProductionPair::KeyType, ProductionPairList::iterator>;
+	using ProductionPairList0 = std::vector<SuperProductionPair0>;
 
 	/**
 	 * Info about a cluster we combine with.
 	 */
-	struct SuperClusterCombiningCluster: public ReactingInfoBase,
-			public ProductionCoefficientBase {
+	struct SuperCombiningClusterBase : public ReactingInfoBase {
 
 		/**
 		 * Concise name for type of keys in map of keys to
@@ -218,27 +275,62 @@ protected:
 		using KeyType = IReactant*;
 
 		//! The constructor
-		SuperClusterCombiningCluster(Reaction& _reaction, PSICluster& _first,
-				int dim) :
-				ReactingInfoBase(_reaction, _first), ProductionCoefficientBase(
-						dim) {
-
+		SuperCombiningClusterBase(Reaction& _reaction, PSICluster& _first) :
+				ReactingInfoBase(_reaction, _first) {
 		}
 
 		/**
 		 * Default and copy construtors, deleted to enforce constructing
 		 * using reactants.
 		 */
-		SuperClusterCombiningCluster() = delete;
-		SuperClusterCombiningCluster(const SuperClusterCombiningCluster& other) = default;
+		SuperCombiningClusterBase() = delete;
+		SuperCombiningClusterBase(const SuperCombiningClusterBase& other) = default;
+	};
+
+	struct SuperCombiningCluster : public SuperCombiningClusterBase,
+			public ProductionCoefficientBase {
+
+		//! The constructor
+		SuperCombiningCluster(Reaction& _reaction, PSICluster& _first) :
+				SuperCombiningClusterBase(_reaction, _first) {
+		}
+
+		/**
+		 * Default and copy construtors, deleted to enforce constructing
+		 * using reactants.
+		 */
+		SuperCombiningCluster() = delete;
+		SuperCombiningCluster(const SuperCombiningCluster& other) = default;
+	};
+
+	struct SuperCombiningCluster0 : public SuperCombiningClusterBase,
+			public ProductionCoefficientBase0 {
+
+		//! The constructor
+		SuperCombiningCluster0(Reaction& _reaction, PSICluster& _first) :
+				SuperCombiningClusterBase(_reaction, _first) {
+		}
+
+		/**
+		 * Default and copy construtors, deleted to enforce constructing
+		 * using reactants.
+		 */
+		SuperCombiningCluster0() = delete;
+		SuperCombiningCluster0(const SuperCombiningCluster0& other) = default;
+
+        SuperCombiningCluster0(const SuperCombiningCluster& other) :
+            SuperCombiningClusterBase(other),
+            ProductionCoefficientBase0(other) {
+        }
 	};
 
 	/**
-	 * Concise name for type of collection of SuperClusterCombiningClusters,
+	 * Concise name for type of collection of SuperCombiningClusters,
 	 * and map into that list for quick lookup.
 	 */
-	using CombiningClusterList = std::vector<SuperClusterCombiningCluster>;
-	using CombiningClusterListMap = std::unordered_map<SuperClusterCombiningCluster::KeyType, CombiningClusterList::iterator>;
+	using CombiningClusterList = std::vector<SuperCombiningCluster>;
+	using CombiningClusterListMap = std::unordered_map<SuperCombiningCluster::KeyType, CombiningClusterList::iterator>;
+	using CombiningClusterList0 = std::vector<SuperCombiningCluster0>;
 
 	/**
 	 * This is a protected class that is used to implement the flux calculations
@@ -248,13 +340,7 @@ protected:
 	 * reaction or dissociation for faster computation because they only change
 	 * when the temperature change. k is computed when setTemperature() is called.
 	 */
-	struct SuperClusterDissociationPair: public ReactingPairBase {
-
-		/**
-		 * Concise name for type of key into map of dissociation pairs.
-		 */
-		using KeyType = ReactantAddrPair;
-
+    struct DissociationCoefficientBase {
 		/**
 		 * All the coefficient needed to compute each element
 		 * The first number represent the moment of A
@@ -269,40 +355,135 @@ protected:
 		 * 4 -> V
 		 */
         Array<double, 5, 5> coefs;
-		const int dim;
 
-		//! The constructor
-		SuperClusterDissociationPair(Reaction& _reaction, PSICluster& _first,
-				PSICluster& _second, int _dim) :
-				ReactingPairBase(_reaction, _first, _second), dim(_dim) {
 
+		//! Default constructor.
+		DissociationCoefficientBase() {
             coefs.Init(0);
+		}
+
+		/**
+		 * Construct as copy of another object.
+		 */
+		DissociationCoefficientBase(const DissociationCoefficientBase& other) :
+                coefs(other.coefs) {
+		}
+    };
+
+    struct DissociationCoefficientBase0 {
+        /**
+         * Scalar coefficient supporting fast lookup in
+         * zeroth-moment-only flux and partials calculations.
+         */
+        double coeff0;
+
+        //! Default constructor.
+        DissociationCoefficientBase0() :
+          coeff0(0) {
+        }
+
+        /**
+         * Construct as copy of another object.
+         */
+        DissociationCoefficientBase0(const DissociationCoefficientBase0& other) :
+            coeff0(other.coeff0) {
+        }
+
+        /**
+         * Construct as copy of another object that has full
+         * set of coefficients.
+         */
+        DissociationCoefficientBase0(const DissociationCoefficientBase& other) :
+            coeff0(other.coefs[0][0]) {
+        }
+    };
+
+    struct SuperDissociationPairBase : public ReactingPairBase {
+		/**
+		 * Concise name for type of key into map of dissociation pairs.
+		 */
+		using KeyType = ReactantAddrPair;
+
+		//! Default constructor.
+		SuperDissociationPairBase(Reaction& _reaction,
+                PSICluster& _first, PSICluster& _second) :
+            ReactingPairBase(_reaction, _first, _second) {
 		}
 
 		/**
 		 * Default constructor, disallowed.
 		 */
-		SuperClusterDissociationPair() = delete;
+		SuperDissociationPairBase() = delete;
 
 		/**
-		 * Copy constructor, needed to be element in a std::vector.
+		 * Construct as copy of another object.
 		 */
-		SuperClusterDissociationPair(const SuperClusterDissociationPair& other) :
-				ReactingPairBase(other),
-                coefs(other.coefs), dim(other.dim) {
+		SuperDissociationPairBase(const SuperDissociationPairBase& other) = default;
+    };
+
+
+	struct SuperDissociationPair : public SuperDissociationPairBase,
+                                    public DissociationCoefficientBase {
+
+		//! The constructor
+		SuperDissociationPair(Reaction& _reaction,
+                PSICluster& _first, PSICluster& _second) :
+				SuperDissociationPairBase(_reaction, _first, _second) {
 		}
 
-		//! The destructor
-		~SuperClusterDissociationPair() {
+		/**
+		 * Default constructor, disallowed.
+		 */
+		SuperDissociationPair() = delete;
+
+		/**
+		 * Construct as a copy of another object.
+		 */
+		SuperDissociationPair(const SuperDissociationPair& other) :
+				SuperDissociationPairBase(other),
+                DissociationCoefficientBase(other) {
+		}
+	};
+
+	struct SuperDissociationPair0 : public SuperDissociationPairBase,
+                                    public DissociationCoefficientBase0 {
+
+		//! The constructor
+		SuperDissociationPair0(Reaction& _reaction,
+                PSICluster& _first, PSICluster& _second) :
+				SuperDissociationPairBase(_reaction, _first, _second) {
+		}
+
+		/**
+		 * Default constructor, disallowed.
+		 */
+		SuperDissociationPair0() = delete;
+
+		/**
+		 * Construct as a copy of another object.
+		 */
+		SuperDissociationPair0(const SuperDissociationPair0& other) :
+				SuperDissociationPairBase(other),
+                DissociationCoefficientBase0(other) {
+		}
+
+		/**
+		 * Construct as a copy of another object
+         * that has a full set of coefficients.
+		 */
+		SuperDissociationPair0(const SuperDissociationPair& other) :
+				SuperDissociationPairBase(other),
+                DissociationCoefficientBase0(other) {
 		}
 	};
 
 	/**
-	 * Concise name for type of collection of SuperClusterDissociationPairs,
+	 * Concise name for type of collection of SuperDissociationPairs,
 	 * and map into that list for quick lookup.
 	 */
-	using DissociationPairList = std::vector<SuperClusterDissociationPair>;
-	using DissociationPairListMap = std::unordered_map<SuperClusterDissociationPair::KeyType, DissociationPairList::iterator>;
+	using DissociationPairList = std::vector<SuperDissociationPair>;
+	using DissociationPairListMap = std::unordered_map<SuperDissociationPair::KeyType, DissociationPairList::iterator>;
+	using DissociationPairList0 = std::vector<SuperDissociationPair0>;
 
 private:
 
@@ -328,24 +509,28 @@ private:
 
 	//! The list of optimized effective reacting pairs.
 	ProductionPairList effReactingList;
+    ProductionPairList0 effReactingList0;
 
 	//! Map into effective reacting pair list, used to speed construction.
 	ProductionPairListMap effReactingListMap;
 
 	//! The list of optimized effective combining pairs.
 	CombiningClusterList effCombiningList;
+	CombiningClusterList0 effCombiningList0;
 
 	//! Map into effective combining pairs, used to speed constrution.
 	CombiningClusterListMap effCombiningListMap;
 
 	//! The list of optimized effective dissociating pairs.
 	DissociationPairList effDissociatingList;
+	DissociationPairList0 effDissociatingList0;
 
 	//! Map into effective dissociating pairs list, used to speed construction.
 	DissociationPairListMap effDissociatingListMap;
 
 	//! The list of optimized effective emission pairs.
 	DissociationPairList effEmissionList;
+	DissociationPairList0 effEmissionList0;
 
 	//! Map into effective dissociating pairs list, used to speed construction.
 	DissociationPairListMap effEmissionListMap;
@@ -359,7 +544,7 @@ private:
 	void dumpCoefficients(std::ostream& os,
 			ProductionCoefficientBase const& curr) const;
 	void dumpCoefficients(std::ostream& os,
-			SuperClusterDissociationPair const& curr) const;
+			SuperDissociationPair const& curr) const;
 
 	/**
 	 * Determine which is the "other" reactant in a reaction that
@@ -437,6 +622,8 @@ private:
 	 */
 	void getDissociationFlux(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
+	void computeDissFlux0(const double* __restrict concs, int i,
+                                Reactant::Flux& flux) const override;
 
 	/**
 	 * This operation returns the total change in this cluster due its
@@ -448,6 +635,8 @@ private:
 	 * @param[out] flux The flux due to its dissociation
 	 */
 	void getEmissionFlux(const double* __restrict concs, int i,
+                                Reactant::Flux& flux) const override;
+	void computeEmitFlux0(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
 
 	/**
@@ -461,6 +650,8 @@ private:
 	 */
 	void getProductionFlux(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
+	void computeProdFlux0(const double* __restrict concs, int i,
+                                Reactant::Flux& flux) const override;
 
 	/**
 	 * This operation returns the total change in this cluster due to
@@ -472,6 +663,8 @@ private:
 	 * @param[out] flux The flux due to this cluster combining with other clusters
 	 */
 	void getCombinationFlux(const double* __restrict concs, int i,
+                                Reactant::Flux& flux) const override;
+	void computeCombFlux0(const double* __restrict concs, int i,
                                 Reactant::Flux& flux) const override;
 
     /**
@@ -851,7 +1044,9 @@ public:
                             double* __restrict updatedConcs) const override {
 
         // Compute total flux based on reactions we participate in.
-        auto flux = getTotalFluxHelper<PSISuperCluster::Flux>(concs, xi);
+        auto flux = (psDim == 1) ? 
+            getTotalFluxHelper0<PSISuperCluster::Flux>(concs, xi) :
+            getTotalFluxHelper<PSISuperCluster::Flux>(concs, xi);
 
         // Update our concentration in the output concentration array.
         addToConcentration(updatedConcs, flux.flux);
@@ -1074,6 +1269,9 @@ public:
 	 * @param os Output stream on which to output coefficients.
 	 */
 	virtual void outputCoefficientsTo(std::ostream& os) const override;
+
+
+    void useZerothMomentSpecializations() override;
 };
 //end class PSISuperCluster
 

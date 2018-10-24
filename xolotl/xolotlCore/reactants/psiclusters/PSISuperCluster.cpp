@@ -4,7 +4,7 @@
 #include "PSIClusterReactionNetwork.h"
 #include <xolotlPerf.h>
 
-using namespace xolotlCore;
+namespace xolotlCore {
 
 PSISuperCluster::PSISuperCluster(double num[4], int _nTot, int width[4],
 		int lower[4], int higher[4], PSIClusterReactionNetwork& _network,
@@ -68,7 +68,7 @@ auto PSISuperCluster::addToEffReactingList(ProductionReaction& reaction)
         // Add info about reaction to our list.
         effReactingList.emplace_back(reaction,
 						static_cast<PSICluster&>(reaction.first),
-						static_cast<PSICluster&>(reaction.second), psDim);
+						static_cast<PSICluster&>(reaction.second));
         listit = effReactingList.end();
         --listit;
     }
@@ -94,7 +94,7 @@ auto PSISuperCluster::addToEffCombiningList(ProductionReaction& reaction)
 		// We did not already know about the reaction.
 		// Add info about reaction to our list.
         effCombiningList.emplace_back(reaction,
-						static_cast<PSICluster&>(otherCluster), psDim);
+						static_cast<PSICluster&>(otherCluster));
         listit = effCombiningList.end();
         --listit;
 	}
@@ -123,7 +123,7 @@ auto PSISuperCluster::addToEffDissociatingList(DissociationReaction& reaction)
 		// Add info about reaction to our list.
         effDissociatingList.emplace_back(reaction,
 						static_cast<PSICluster&>(reaction.dissociating),
-						static_cast<PSICluster&>(emittedCluster), psDim);
+						static_cast<PSICluster&>(emittedCluster));
         listit = effDissociatingList.end();
         --listit;
 	}
@@ -150,7 +150,7 @@ auto PSISuperCluster::addToEffEmissionList(DissociationReaction& reaction)
 		// reaction.
         effEmissionList.emplace_back(reaction,
 						static_cast<PSICluster&>(reaction.first),
-						static_cast<PSICluster&>(reaction.second), psDim);
+						static_cast<PSICluster&>(reaction.second));
         listit = effEmissionList.end();
         --listit;
 	}
@@ -1183,6 +1183,28 @@ void PSISuperCluster::getDissociationFlux(const double* __restrict concs, int xi
 			});
 }
 
+void PSISuperCluster::computeDissFlux0(const double* __restrict concs, int xi,
+                                            Reactant::Flux& flux) const {
+
+    auto& superFlux = static_cast<PSISuperCluster::Flux&>(flux);
+
+	// Sum over all the dissociating pairs
+	// TODO consider using std::accumulate.
+	std::for_each(effDissociatingList0.begin(), effDissociatingList0.end(),
+			[this,concs,&superFlux,xi](DissociationPairList0::value_type const& currPair) {
+
+				// Get the dissociating clusters
+				auto const& dissociatingCluster = currPair.first;
+				auto lA = dissociatingCluster.getConcentration(concs);
+
+                auto sum = currPair.coeff0 * lA;
+
+				// Update the flux
+				auto value = currPair.reaction.kConstant[xi] / nTot;
+				superFlux.flux += value * sum;
+			});
+}
+
 void PSISuperCluster::getEmissionFlux(const double* __restrict concs, int xi,
                                             Reactant::Flux& flux) const {
 
@@ -1193,7 +1215,7 @@ void PSISuperCluster::getEmissionFlux(const double* __restrict concs, int xi,
 	std::for_each(effEmissionList.begin(), effEmissionList.end(),
 			[this,&superFlux,&concs,xi](DissociationPairList::value_type const& currPair) {
 				double lA[5] = {};
-				lA[0] = concs[getId()-1];
+				lA[0] = getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
 					lA[i] = getMoment(concs, indexList[i]-1);
 				}
@@ -1211,6 +1233,25 @@ void PSISuperCluster::getEmissionFlux(const double* __restrict concs, int xi,
 				for (int i = 1; i < psDim; i++) {
 					superFlux.momentFlux[indexList[i]-1] -= value * sum[i];
 				}
+			});
+}
+
+void PSISuperCluster::computeEmitFlux0(const double* __restrict concs, int xi,
+                                            Reactant::Flux& flux) const {
+
+    auto& superFlux = static_cast<PSISuperCluster::Flux&>(flux);
+
+	// Loop over all the emission pairs
+	// TODO consider using std::accumulate.
+	std::for_each(effEmissionList0.begin(), effEmissionList0.end(),
+			[this,&superFlux,concs,xi](DissociationPairList0::value_type const& currPair) {
+                auto lA = getConcentration(concs);
+
+                auto sum = currPair.coeff0 * lA;
+
+				// Update the flux
+				auto value = currPair.reaction.kConstant[xi] / nTot;
+				superFlux.flux += value * sum;
 			});
 }
 
@@ -1254,6 +1295,30 @@ void PSISuperCluster::getProductionFlux(const double* __restrict concs, int xi,
 			});
 }
 
+void PSISuperCluster::computeProdFlux0(const double* __restrict concs, int xi,
+                                            Reactant::Flux& flux) const {
+
+    auto& superFlux = static_cast<PSISuperCluster::Flux&>(flux);
+
+	// Sum over all the reacting pairs
+	// TODO consider using std::accumulate.
+	std::for_each(effReactingList0.begin(), effReactingList0.end(),
+			[this,&superFlux,concs,xi](ProductionPairList0::value_type const& currPair) {
+
+				// Get the two reacting clusters
+				auto const& firstReactant = currPair.first;
+				auto const& secondReactant = currPair.second;
+				auto lA = firstReactant.getConcentration(concs);
+				auto lB = secondReactant.getConcentration(concs);
+
+                auto sum = currPair.coeff0 * lA * lB;
+
+				// Update the flux
+				auto value = currPair.reaction.kConstant[xi] / nTot;
+				superFlux.flux += value * sum;
+			});
+}
+
 void PSISuperCluster::getCombinationFlux(const double* __restrict concs, int xi,
                                             Reactant::Flux& flux) const {
 
@@ -1266,7 +1331,7 @@ void PSISuperCluster::getCombinationFlux(const double* __restrict concs, int xi,
 				// Get the combining cluster
 				auto const& combiningCluster = currComb.first;
 				double lA[5] = {}, lB[5] = {};
-				lA[0] = concs[getId()-1];
+				lA[0] = getConcentration(concs);
 				lB[0] = combiningCluster.getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
 					lA[i] = getMoment(concs, indexList[i]-1);
@@ -1288,6 +1353,28 @@ void PSISuperCluster::getCombinationFlux(const double* __restrict concs, int xi,
 				for (int i = 1; i < psDim; i++) {
 					superFlux.momentFlux[indexList[i]-1] -= value * sum[i];
 				}
+			});
+}
+
+void PSISuperCluster::computeCombFlux0(const double* __restrict concs, int xi,
+                                            Reactant::Flux& flux) const {
+
+    auto& superFlux = static_cast<PSISuperCluster::Flux&>(flux);
+
+	// Sum over all the combining clusters
+	// TODO consider using std::accumulate.
+	std::for_each(effCombiningList0.begin(), effCombiningList0.end(),
+			[this,&superFlux,concs,xi](CombiningClusterList0::value_type const& currComb) {
+				// Get the combining cluster
+				auto const& combiningCluster = currComb.first;
+				auto lA = getConcentration(concs);
+				auto lB = combiningCluster.getConcentration(concs);
+
+                auto sum = currComb.coeff0 * lA * lB;
+
+				// Update the flux
+				auto value = currComb.reaction.kConstant[xi] / nTot;
+				superFlux.flux += value * sum;
 			});
 }
 
@@ -1479,7 +1566,7 @@ void PSISuperCluster::computeCombinationPartialDerivatives(
 				auto const& cluster = currComb.first;
 
 				double lA[5] = {}, lB[5] = {};
-				lA[0] = concs[getId()-1];
+				lA[0] = getConcentration(concs);
 				lB[0] = cluster.getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
 					lA[i] = getMoment(concs, indexList[i]-1);
@@ -1540,7 +1627,7 @@ void PSISuperCluster::computeCombPartials2(
 				auto const& cluster = currComb.first;
 #ifndef READY
 				double lA[5] = {}, lB[5] = {};
-				lA[0] = concs[getId()-1];
+				lA[0] = getConcentration(concs);
 				lB[0] = cluster.getConcentration(concs);
 				for (int i = 1; i < psDim; i++) {
 					lA[i] = getMoment(concs, indexList[i]-1);
@@ -1855,7 +1942,7 @@ void PSISuperCluster::dumpCoefficients(std::ostream& os,
 }
 
 void PSISuperCluster::dumpCoefficients(std::ostream& os,
-		PSISuperCluster::SuperClusterDissociationPair const& currPair) const {
+		PSISuperCluster::SuperDissociationPair const& currPair) const {
 
 	os << "a[0-4][0-4]: ";
 	for (int j = 0; j < psDim; j++) {
@@ -1906,3 +1993,39 @@ void PSISuperCluster::outputCoefficientsTo(std::ostream& os) const {
 			});
 }
 
+void PSISuperCluster::useZerothMomentSpecializations() {
+
+	std::for_each(effReactingList.begin(), effReactingList.end(),
+			[this](const ProductionPairList::value_type& currPair) {
+                effReactingList0.emplace_back(currPair);
+			});
+#if READY
+    reactingPairs.clear();
+#endif // READY
+
+	std::for_each(effCombiningList.begin(), effCombiningList.end(),
+			[this](const CombiningClusterList::value_type& currCluster) {
+                effCombiningList0.emplace_back(currCluster);
+			});
+#if READY
+    combiningReactants.clear();
+#endif // READY
+
+	std::for_each(effDissociatingList.begin(), effDissociatingList.end(),
+			[this](const DissociationPairList::value_type& currPair) {
+                effDissociatingList0.emplace_back(currPair);
+			});
+#if READY
+    dissociatingPairs.clear();
+#endif // READY
+
+	std::for_each(effEmissionList.begin(), effEmissionList.end(),
+			[this](const DissociationPairList::value_type& currPair) {
+                effEmissionList0.emplace_back(currPair);
+			});
+#if READY
+    emissionPairs.clear();
+#endif // READY
+}
+
+} // namespace xolotlCore
