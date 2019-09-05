@@ -36,7 +36,7 @@ constexpr double uraniumDioxydeLatticeConstant = 0.57400000000000000;
 constexpr double ironLatticeConstant = 0.28700000000000000;
 
 //! Core radius. Given in units here of nm.
-static const double alloyCoreRadius = 0.36000000000000000;
+static const double alloyCoreRadius = 0.37000000000000000;
 
 // Tungsten heat coefficient = lambda / (rho * C) in nm2 s-1
 constexpr double tungstenHeatCoefficient = 6.835e13;
@@ -61,6 +61,12 @@ constexpr double feHeatConductivity = 0.0;
 
 // Alloy heat conductivity = lambda in W K-1 m-1
 static const double alloyHeatConductivity = 0.0;
+	
+// Burgers vector magnitudes for loops in Alloy case
+// In lattice parameter units
+constexpr double perfectBurgers = 0.5;
+constexpr double faultedBurgers = 0.333;
+constexpr double frankBurgers = 0.333;
 
 //! Parameters for biased sink in the iron case
 static const double reactionRadius = ironLatticeConstant
