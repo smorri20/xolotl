@@ -257,7 +257,7 @@ std::unique_ptr<IReactionNetwork> AlloyClusterNetworkLoader::generate(
 	}
 
 	// Generate the Perfect clusters
-	for (int i = maxI + 1; i <= min(sizeMin - 1, sizeMax); ++i) {
+	for (int i = maxI; i <= 45; ++i) {
 		// Set the composition
 		numPerfect = i;
 		// Create the cluster
@@ -284,7 +284,7 @@ void AlloyClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 
 	// Decide here which types will undergo grouping
 	std::vector<ReactantType> typeVec { ReactantType::Void,
-			ReactantType::Faulted, ReactantType::Frank, ReactantType::Perfect };
+			ReactantType::Faulted, ReactantType::Frank };
 
 	// Loop on them
 	for (auto tvIter = typeVec.begin(); tvIter != typeVec.end(); ++tvIter) {
@@ -325,7 +325,7 @@ void AlloyClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 			superCount++;
 //			width = std::max((int) (std::pow((double) superCount, 1.0) / 1.0),
 //					sectionWidth);
-//			width -= width % sectionWidth;
+			width += 1;
 		}
 
 		if (sizeMin < sizeMax) {

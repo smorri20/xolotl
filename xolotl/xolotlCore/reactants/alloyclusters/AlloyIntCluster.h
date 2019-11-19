@@ -43,7 +43,7 @@ public:
 		// Define the diffusion pre-factor
 		{
 			double jumpDistance = xolotlCore::alloyLatticeConstant / sqrt(2.0);
-			double phononFrequency = 1.0e13;
+			double phononFrequency = 9.6e12;
 			double jumpsPerPhonon = 1.0;
 			double prefactorExponent = -1.0;
 			diffusionFactor = phononFrequency * jumpsPerPhonon * jumpDistance
@@ -69,8 +69,47 @@ public:
 	~AlloyIntCluster() {
 	}
 
+	// Int clusters are considered spheres so set isSphere to true
+	bool isSphere() const override {
+		return true;
+	}
+
+	double getEmissionFlux(int i) const {
+		// Initial declarations
+		double flux = AlloyCluster::getEmissionFlux(i);
+
+		// Compute the loss to dislocation sinks
+		// Including 20% interstitial bias
+		flux += 1.2 * xolotlCore::alloysinkStrength * diffusionCoefficient[i]
+			* concentration;
+
+		return flux;
+	}
+
+	/**
+	* This operation computes the partial derivatives due to emission
+	* reactions.
+	*
+	* @param partials The vector into which the partial derivatives should be
+	* inserted. This vector should have a length equal to the size of the
+	* network.
+	* @param i The location on the grid in the depth direction
+	*/
+	void getEmissionPartialDerivatives(std::vector<double> & partials,
+			int i) const {
+		// Initial declarations
+		AlloyCluster::getEmissionPartialDerivatives(partials, i);
+
+		// Compute the loss to dislocation sinks
+		// k^2 * D * C, including 20% interstitial bias
+		partials[id - 1] -= 1.2 * xolotlCore::alloysinkStrength * diffusionCoefficient[i];
+
+		return;
+	}
+
 };
 //end class AlloyIntCluster
 
 } /* namespace xolotlCore */
 #endif
+

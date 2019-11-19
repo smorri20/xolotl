@@ -28,10 +28,10 @@ private:
 	}
 
 	std::vector<double> AlloyDamageFunction(const double x) {
-		std::vector<double> damage = { 0.0, 0.0, 0.0, 0.0 };
+		std::vector<double> damage;
 		auto srimDamage = srim.getDamage();
 		for (int it = 0; it < srimDamage.size(); ++it) {
-			damage[it] = srimDamage[it][0];
+			damage.push_back(srimDamage[it][0]);
 			for (int it2 = 1; it2 < srimDamage[it].size(); ++it2) {
 				damage[it] += srimDamage[it][it2] * pow(x, double(it2));
 			}
@@ -263,11 +263,16 @@ public:
 	 */
 	void computeIncidentFlux(double currentTime, double *updatedConcOffset,
 			int xi, int surfacePos) {
+		
+		// Attenuation factor to model reduced production of new point defects
+		// with increasing dose (or time).
+		double tau = 1.0e7;
+		double attenuation = 1.0 - exp((-1.0 * tau) / currentTime);
 
 		// Update the concentration array
 		for (int it = 0; it < ionDamage.fluxIndex.size(); ++it) {
 			updatedConcOffset[ionDamage.fluxIndex[it]] +=
-					ionDamage.damageRate[it][xi - surfacePos];
+					attenuation * ionDamage.damageRate[it][xi - surfacePos];
 		}
 
 		return;

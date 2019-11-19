@@ -55,7 +55,7 @@ public:
 		formationEnergy = _network.getFormationEnergy(type, size);
 
 		// Define the migration energy
-		migrationEnergy = 1.2;
+		migrationEnergy = 1.3;
 
 		// Define the reaction radius
 		reactionRadius = _network.getReactionRadius(type, size);
@@ -67,6 +67,11 @@ public:
 	 * Destructor
 	 */
 	~AlloyVoidCluster() {
+	}
+
+	// Voids are considered spheres so set isSphere to true
+	bool isSphere() const override {
+		return true;
 	}
 
 };
