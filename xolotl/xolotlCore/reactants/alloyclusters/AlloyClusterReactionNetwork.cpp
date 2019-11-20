@@ -12,8 +12,8 @@ AlloyClusterReactionNetwork::AlloyClusterReactionNetwork(
 		ReactionNetwork( { ReactantType::V, ReactantType::I,
 				ReactantType::Frank, ReactantType::Void, ReactantType::Perfect,
 				ReactantType::Faulted, ReactantType::VoidSuper,
-				ReactantType::FaultedSuper,
-				ReactantType::FrankSuper }, registry) {
+				ReactantType::FaultedSuper, ReactantType::FrankSuper },
+				registry) {
 
 	// Initialize default properties
 	dissociationsEnabled = true;
@@ -30,54 +30,76 @@ double AlloyClusterReactionNetwork::calculateReactionRateConstant(
 	// Get the diffusion coefficients
 	double firstDiffusion = reaction.first.getDiffusionCoefficient(i);
 	double secondDiffusion = reaction.second.getDiffusionCoefficient(i);
-	
+
 	// Initialize rate constant and parameters to calculate k+ for loop/sphere case
 	double k_plus, zl, intBias, p = 0.0;
-	double zs = 4.0 * xolotlCore::pi * 
-		(r_first + r_second + xolotlCore::alloyCoreRadius);
+	double zs = 4.0 * xolotlCore::pi
+			* (r_first + r_second + xolotlCore::alloyCoreRadius);
 
 	// Calculate and return
 	// Formula for reaction rate constant depends on type of reactants
-	
+
 	// k+ for reaction between two spheres
 	if (reaction.first.isSphere() && reaction.second.isSphere()) {
 		k_plus = 4.0 * xolotlCore::pi
-			* (r_first + r_second + xolotlCore::alloyCoreRadius)
-			* (firstDiffusion + secondDiffusion);
+				* (r_first + r_second + xolotlCore::alloyCoreRadius)
+				* (firstDiffusion + secondDiffusion);
 	}
 
-        // k+ for reaction between loop and sphere or between two loops
-        else {
-                if (r_first >= r_second) {
-                        p = 1.0 / (1.0 + pow(r_first /
-				(3.0 * (r_second + xolotlCore::alloyCoreRadius)), 2.0));
-                        zl = 4.0 * pow(xolotlCore::pi, 2.0) * r_first
-                               / log(1.0 + 8.0 * r_first
-                               / (r_second + xolotlCore::alloyCoreRadius));
-                        }
-                else {
-                        p = 1.0 / (1.0 + pow(r_second /
-                               (3.0 * (r_first + xolotlCore::alloyCoreRadius)), 2.0));
-                        zl = 4.0 * pow(xolotlCore::pi, 2.0) * r_second
-                                / log(1.0 + 8.0 * r_second
-                                / (r_first + xolotlCore::alloyCoreRadius));
-                        }
-                k_plus = (firstDiffusion + secondDiffusion) * (p * zs
-                                + (1.0 - p) * zl);
-        }
-	
+	// k+ for reaction between loop and sphere or between two loops
+	else {
+		if (r_first >= r_second) {
+			p =
+					1.0
+							/ (1.0
+									+ pow(
+											r_first
+													/ (3.0
+															* (r_second
+																	+ xolotlCore::alloyCoreRadius)),
+											2.0));
+			zl =
+					4.0 * pow(xolotlCore::pi, 2.0) * r_first
+							/ log(
+									1.0
+											+ 8.0 * r_first
+													/ (r_second
+															+ xolotlCore::alloyCoreRadius));
+		} else {
+			p =
+					1.0
+							/ (1.0
+									+ pow(
+											r_second
+													/ (3.0
+															* (r_first
+																	+ xolotlCore::alloyCoreRadius)),
+											2.0));
+			zl =
+					4.0 * pow(xolotlCore::pi, 2.0) * r_second
+							/ log(
+									1.0
+											+ 8.0 * r_second
+													/ (r_first
+															+ xolotlCore::alloyCoreRadius));
+		}
+		k_plus = (firstDiffusion + secondDiffusion) * (p * zs + (1.0 - p) * zl);
+	}
+
 	// Interstitial bias for interactions with loops
-	if ((reaction.first.getType() == ReactantType::I and not reaction.second.isSphere())
-           || (reaction.second.getType() == ReactantType::I and not reaction.first.isSphere())) {
+	if ((reaction.first.getType() == ReactantType::I
+			and not reaction.second.isSphere())
+			|| (reaction.second.getType() == ReactantType::I
+					and not reaction.first.isSphere())) {
 		intBias = 1.2;
 	}
-	
+
 	else {
 		intBias = 1.0;
 	}
-	
+
 	k_plus *= intBias;
-	
+
 	return k_plus;
 }
 
@@ -124,68 +146,51 @@ double AlloyClusterReactionNetwork::calculateDissociationConstant(
 
 double AlloyClusterReactionNetwork::computeBindingEnergy(
 		const DissociationReaction& reaction) const {
-//	double firstEnergy = reaction.first.getFormationEnergy(), secondEnergy =
-//			reaction.second.getFormationEnergy(), dissoEnergy =
-//			reaction.dissociating.getFormationEnergy();
-//
-//	auto& dissoCluster = static_cast<AlloyCluster&>(reaction.dissociating);
-//	if (dissoCluster.isSuper()) {
-//		dissoEnergy = getFormationEnergy(dissoCluster.getType(),
-//				dissoCluster.getSize());
-//		if (reaction.first.getSize() == 1)
-//			secondEnergy = getFormationEnergy(dissoCluster.getType(),
-//					dissoCluster.getSize() - 1);
-//		else
-//			firstEnergy = getFormationEnergy(dissoCluster.getType(),
-//					dissoCluster.getSize() - 1);
-//	}
-//
 	double bindingEnergy = 0.0;
 
 	if (reaction.dissociating.getType() == ReactantType::Void
-		|| reaction.dissociating.getType() == ReactantType::VoidSuper) {
-			if (reaction.first.getType() == ReactantType::I
-					|| reaction.second.getType() == ReactantType::I) {
-				double n = reaction.dissociating.getSize();
-				bindingEnergy = std::max(0.1, 3.5
-						- 3.45 * (pow(n + 1.0, 2.0 / 3.0) - pow(n, 2.0 / 3.0)));
-			} else if (reaction.first.getType() == ReactantType::V
-					|| reaction.second.getType() == ReactantType::V) {
-				double n = reaction.dissociating.getSize();
-				bindingEnergy = std::max(0.1, 1.9
-						- 3.1 * (pow(n, 2.0 / 3.0) - pow(n - 1.0, 2.0 / 3.0)));
-			}
-		} else if (reaction.dissociating.getType() == ReactantType::Faulted
-				|| reaction.dissociating.getType()
-						== ReactantType::FaultedSuper) {
-			if (reaction.first.getType() == ReactantType::V
-					|| reaction.second.getType() == ReactantType::V) {
-				double n = reaction.dissociating.getSize();
-				bindingEnergy = std::max(0.1, 1.9
-						- 3.2 * (pow(n, 2.0 / 3.0) - pow(n - 1.0, 2.0 / 3.0)));
-			}
-		} else if (reaction.dissociating.getType() == ReactantType::V) {
-			if (reaction.first.getType() == ReactantType::V 
-					|| reaction.second.getType() == ReactantType::V) {
-				double n = reaction.dissociating.getSize();
-				bindingEnergy = std::max(0.1, 1.9 
-						- 3.1 * (pow(n, 2.0 / 3.0) - pow(n - 1.0, 2.0 / 3.0)));
-			}
-		} else if (reaction.dissociating.getType() == ReactantType::I) {
-			if (reaction.first.getType() == ReactantType::I
-					|| reaction.second.getType() == ReactantType::I) {
-				double n = reaction.dissociating.getSize();
-				bindingEnergy = std::max(0.1, 3.5
-						- 2.5 * (pow(n, 2.0 / 3.0) - pow(n - 1.0, 2.0 / 3.0)));
-			}
+			|| reaction.dissociating.getType() == ReactantType::VoidSuper) {
+		if (reaction.first.getType() == ReactantType::I
+				|| reaction.second.getType() == ReactantType::I) {
+			double n = reaction.dissociating.getSize();
+			bindingEnergy = 3.5
+					- 3.45 * (pow(n + 1.0, 2.0 / 3.0) - pow(n, 2.0 / 3.0));
+		} else if (reaction.first.getType() == ReactantType::V
+				|| reaction.second.getType() == ReactantType::V) {
+			double n = reaction.dissociating.getSize();
+			bindingEnergy = 1.9
+					- 3.1 * (pow(n, 2.0 / 3.0) - pow(n - 1.0, 2.0 / 3.0));
 		}
+	} else if (reaction.dissociating.getType() == ReactantType::Faulted
+			|| reaction.dissociating.getType() == ReactantType::FaultedSuper) {
+		if (reaction.first.getType() == ReactantType::V
+				|| reaction.second.getType() == ReactantType::V) {
+			double n = reaction.dissociating.getSize();
+			bindingEnergy = 1.9
+					- 3.2 * (pow(n, 2.0 / 3.0) - pow(n - 1.0, 2.0 / 3.0));
+		}
+	} else if (reaction.dissociating.getType() == ReactantType::V) {
+		if (reaction.first.getType() == ReactantType::V
+				|| reaction.second.getType() == ReactantType::V) {
+			double n = reaction.dissociating.getSize();
+			bindingEnergy = 1.9
+					- 3.1 * (pow(n, 2.0 / 3.0) - pow(n - 1.0, 2.0 / 3.0));
+		}
+	} else if (reaction.dissociating.getType() == ReactantType::I) {
+		if (reaction.first.getType() == ReactantType::I
+				|| reaction.second.getType() == ReactantType::I) {
+			double n = reaction.dissociating.getSize();
+			bindingEnergy = 3.5
+					- 2.5 * (pow(n, 2.0 / 3.0) - pow(n - 1.0, 2.0 / 3.0));
+		}
+	}
 
 //	std::cout << reaction.dissociating.getName() << " -> "
 //			<< reaction.first.getName() << " + " << reaction.second.getName()
 //			<< " : " << bindingEnergy << " " << dissoEnergy << " "
 //			<< firstEnergy << " " << secondEnergy << std::endl;
 //
-	return bindingEnergy;
+	return std::max(0.1, bindingEnergy);
 }
 
 int AlloyClusterReactionNetwork::typeSwitch(ReactantType const typeName) const {
@@ -201,26 +206,35 @@ int AlloyClusterReactionNetwork::typeSwitch(ReactantType const typeName) const {
 double AlloyClusterReactionNetwork::getReactionRadius(
 		ReactantType const typeName, int size) const {
 	if (typeName == ReactantType::Perfect)
-		return sqrt((double(size) * 0.25 * xolotlCore::alloyLatticeConstant 
-			* xolotlCore::alloyLatticeConstant * xolotlCore::alloyLatticeConstant) 
-			/ (xolotlCore::pi * xolotlCore::alloyLatticeConstant
-			  * xolotlCore::perfectBurgers));
-	if (typeName == ReactantType::Faulted || typeName == ReactantType::FaultedSuper)
-		return sqrt((double(size) * 0.25 * xolotlCore::alloyLatticeConstant 
-			* xolotlCore::alloyLatticeConstant * xolotlCore::alloyLatticeConstant) 
-			/ (xolotlCore::pi * xolotlCore::alloyLatticeConstant
-			  * xolotlCore::faultedBurgers));
+		return sqrt(
+				(double(size) * 0.25 * xolotlCore::alloyLatticeConstant
+						* xolotlCore::alloyLatticeConstant
+						* xolotlCore::alloyLatticeConstant)
+						/ (xolotlCore::pi * xolotlCore::alloyLatticeConstant
+								* xolotlCore::perfectBurgers));
+	if (typeName == ReactantType::Faulted
+			|| typeName == ReactantType::FaultedSuper)
+		return sqrt(
+				(double(size) * 0.25 * xolotlCore::alloyLatticeConstant
+						* xolotlCore::alloyLatticeConstant
+						* xolotlCore::alloyLatticeConstant)
+						/ (xolotlCore::pi * xolotlCore::alloyLatticeConstant
+								* xolotlCore::faultedBurgers));
 	if (typeName == ReactantType::Frank || typeName == ReactantType::FrankSuper)
-		return sqrt((double(size) * 0.25 * xolotlCore::alloyLatticeConstant 
-			* xolotlCore::alloyLatticeConstant * xolotlCore::alloyLatticeConstant) 
-			/ (xolotlCore::pi * xolotlCore::alloyLatticeConstant
-			  * xolotlCore::frankBurgers));
+		return sqrt(
+				(double(size) * 0.25 * xolotlCore::alloyLatticeConstant
+						* xolotlCore::alloyLatticeConstant
+						* xolotlCore::alloyLatticeConstant)
+						/ (xolotlCore::pi * xolotlCore::alloyLatticeConstant
+								* xolotlCore::frankBurgers));
 	if (typeName == ReactantType::V || typeName == ReactantType::Void
 			|| typeName == ReactantType::I
 			|| typeName == ReactantType::VoidSuper)
-		return pow((0.75 * 0.25 * xolotlCore::alloyLatticeConstant * 
-			xolotlCore::alloyLatticeConstant * xolotlCore::alloyLatticeConstant 
-			* double(size)) / xolotlCore::pi, 1.0 / 3.0);
+		return pow(
+				(0.75 * 0.25 * xolotlCore::alloyLatticeConstant
+						* xolotlCore::alloyLatticeConstant
+						* xolotlCore::alloyLatticeConstant * double(size))
+						/ xolotlCore::pi, 1.0 / 3.0);
 
 	return 0.0;
 }
@@ -504,9 +518,8 @@ void AlloyClusterReactionNetwork::getDiagonalFill(SparseFillMap& fillMap) {
 
 	// Get the connectivity for each moment
 	// Make a vector of types for the super clusters
-	std::vector<ReactantType> typeVec { 
-			ReactantType::FaultedSuper, ReactantType::FrankSuper,
-			ReactantType::VoidSuper };
+	std::vector<ReactantType> typeVec { ReactantType::FaultedSuper,
+			ReactantType::FrankSuper, ReactantType::VoidSuper };
 	// Loop on it
 	for (auto tvIter = typeVec.begin(); tvIter != typeVec.end(); ++tvIter) {
 
@@ -561,9 +574,8 @@ void AlloyClusterReactionNetwork::computeAllFluxes(double *updatedConcOffset,
 
 	// ---- Moments ----
 	// Make a vector of types for the super clusters
-	std::vector<ReactantType> typeVec { 
-			ReactantType::FaultedSuper, ReactantType::FrankSuper,
-			ReactantType::VoidSuper };
+	std::vector<ReactantType> typeVec { ReactantType::FaultedSuper,
+			ReactantType::FrankSuper, ReactantType::VoidSuper };
 	// Loop on it
 	for (auto tvIter = typeVec.begin(); tvIter != typeVec.end(); ++tvIter) {
 
@@ -638,9 +650,8 @@ void AlloyClusterReactionNetwork::computeAllPartials(
 
 	// Update the column in the Jacobian that represents the moment for the super clusters
 	// Make a vector of types for the super clusters
-	std::vector<ReactantType> superTypeVec { 
-			ReactantType::FaultedSuper, ReactantType::FrankSuper,
-			ReactantType::VoidSuper };
+	std::vector<ReactantType> superTypeVec { ReactantType::FaultedSuper,
+			ReactantType::FrankSuper, ReactantType::VoidSuper };
 	// Loop on it
 	for (auto tvIter = superTypeVec.begin(); tvIter != superTypeVec.end();
 			++tvIter) {

@@ -191,7 +191,8 @@ public:
 	 * @param reaction The reaction creating this cluster.
 	 * @param coef Number that can be used by daughter classes.
 	 */
-	virtual void participateIn(DissociationReaction& reaction, double *coef) = 0;
+	virtual void participateIn(DissociationReaction& reaction,
+			double *coef) = 0;
 
 	/**
 	 * Note that we emit from the given reaction.
@@ -551,9 +552,7 @@ public:
 	/**
 	 * This operation returns true if the cluster is a sphere, false otherwise.
 	 */
-	virtual bool isSphere() const {
-		return false;
-	}
+	virtual bool isSphere() const = 0;
 
 	/**
 	 * Tell reactant to output a representation of its reaction coefficients

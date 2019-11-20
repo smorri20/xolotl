@@ -74,35 +74,36 @@ public:
 		return true;
 	}
 
-	double getEmissionFlux(int i) const {
+	double getEmissionFlux(int i) const override {
 		// Initial declarations
 		double flux = AlloyCluster::getEmissionFlux(i);
 
 		// Compute the loss to dislocation sinks
 		// Including 20% interstitial bias
 		flux += 1.2 * xolotlCore::alloysinkStrength * diffusionCoefficient[i]
-			* concentration;
+				* concentration;
 
 		return flux;
 	}
 
 	/**
-	* This operation computes the partial derivatives due to emission
-	* reactions.
-	*
-	* @param partials The vector into which the partial derivatives should be
-	* inserted. This vector should have a length equal to the size of the
-	* network.
-	* @param i The location on the grid in the depth direction
-	*/
+	 * This operation computes the partial derivatives due to emission
+	 * reactions.
+	 *
+	 * @param partials The vector into which the partial derivatives should be
+	 * inserted. This vector should have a length equal to the size of the
+	 * network.
+	 * @param i The location on the grid in the depth direction
+	 */
 	void getEmissionPartialDerivatives(std::vector<double> & partials,
-			int i) const {
+			int i) const override {
 		// Initial declarations
 		AlloyCluster::getEmissionPartialDerivatives(partials, i);
 
 		// Compute the loss to dislocation sinks
 		// k^2 * D * C, including 20% interstitial bias
-		partials[id - 1] -= 1.2 * xolotlCore::alloysinkStrength * diffusionCoefficient[i];
+		partials[id - 1] -= 1.2 * xolotlCore::alloysinkStrength
+				* diffusionCoefficient[i];
 
 		return;
 	}

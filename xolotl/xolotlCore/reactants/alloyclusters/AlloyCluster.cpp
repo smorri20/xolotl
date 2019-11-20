@@ -167,7 +167,6 @@ void AlloyCluster::participateIn(ProductionReaction& reaction, int[4]) {
 	auto& otherCluster = static_cast<AlloyCluster&>(
 			(reaction.first.getId() == id) ? reaction.second : reaction.first);
 
-
 	// Create the pair
 	CombiningCluster pair(reaction, &otherCluster);
 	// Compute the coefficients
@@ -522,7 +521,7 @@ double AlloyCluster::getProductionFlux(int xi) const {
 				// Update the flux
 				// The double moment term is not possible because 2 super can't react together
 				flux += currPair.reaction.kConstant[xi] *
-						(currPair.a0 * l0A * l0B + currPair.a1 * l0B * l1A + currPair.a2 * l0A * l1B);
+				(currPair.a0 * l0A * l0B + currPair.a1 * l0B * l1A + currPair.a2 * l0A * l1B);
 			});
 
 	// Return the production flux

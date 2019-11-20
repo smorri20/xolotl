@@ -487,25 +487,24 @@ public:
 	 *
 	 * @return The average number of clusters
 	 */
-	 double getAverage() const {
-		 return numAtom;
-	 }
-	
+	double getAverage() const {
+		return numAtom;
+	}
+
 	/**
 	 * This operation returns true if the cluster is a super cluster.
 	 *
 	 * @return True
 	 */
-	bool isSuper() const override{
+	bool isSuper() const override {
 		return true;
 	}
-	
+
 	// Voids are considered spheres so set isSphere to true
 	bool isSphere() const override {
 		if (type == ReactantType::VoidSuper) {
 			return true;
-		}
-		else {
+		} else {
 			return false;
 		}
 	}

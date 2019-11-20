@@ -8,6 +8,7 @@
 #include <AlloyVoidCluster.h>
 #include <xolotlPerf.h>
 #include "xolotlCore/io/XFile.h"
+#include <algorithm>
 
 using namespace xolotlCore;
 
@@ -282,18 +283,36 @@ std::unique_ptr<IReactionNetwork> AlloyClusterNetworkLoader::generate(
 
 void AlloyClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 
+	// Skip if the minimum size is larger than the maximum size
+	if (sizeMin > sizeMax) return;
+
 	// Decide here which types will undergo grouping
 	std::vector<ReactantType> typeVec { ReactantType::Void,
 			ReactantType::Faulted, ReactantType::Frank };
+
+	// Initialize variables for the loop
+	std::unique_ptr<AlloySuperCluster> superCluster;
+	int count = 0, nBin = sectionWidth;
+	int size = 0;
+	std::vector<int> bins;
+	bins.push_back(sizeMin);
+	std::cout << bins[0] << std::endl;
+	int width = sizeMax - sizeMin;
+	for (int i = 1; i <= nBin + 1; i++) {
+		bins.push_back(
+				sizeMin
+						+ max(2 * i,
+								(int) pow(
+										cbrt(width) * (double) i
+												/ (double) (nBin + 1), 3.0)));
+		std::cout << bins[i] << std::endl;
+	}
 
 	// Loop on them
 	for (auto tvIter = typeVec.begin(); tvIter != typeVec.end(); ++tvIter) {
 		auto currType = *tvIter;
 
-		// Initialize variables for the loop
-		std::unique_ptr<AlloySuperCluster> superCluster;
-		int count = 0, superCount = 0, width = sectionWidth;
-		int size = 0;
+		int iBin = 0;
 
 		// Loop on the xenon groups
 		for (int k = sizeMin; k < sizeMax; k++) {
@@ -305,14 +324,14 @@ void AlloyClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 			size = k;
 
 			// Continue if we are not at the wanted width yet
-			if (count < width && k < sizeMax - 1)
+			if (k < bins[iBin + 1] - 1 && k < sizeMax)
 				continue;
 
 			// Create the cluster
 			auto rawSuperCluster = new AlloySuperCluster(size, count, currType,
 					network, handlerRegistry);
 
-//			std::cout << superCount << " " << count << " "
+//			std::cout << iBin << " " << bins[iBin + 1] - 1 << " " << count << " "
 //					<< rawSuperCluster->getName() << std::endl;
 
 			superCluster = std::unique_ptr<AlloySuperCluster>(rawSuperCluster);
@@ -322,24 +341,21 @@ void AlloyClusterNetworkLoader::applyGrouping(IReactionNetwork& network) const {
 			// Reinitialize everything
 			size = 0;
 			count = 0;
-			superCount++;
-//			width = std::max((int) (std::pow((double) superCount, 1.0) / 1.0),
-//					sectionWidth);
-			width += 1;
+			iBin++;
 		}
 
-		if (sizeMin < sizeMax) {
-			// Group the last one alone
-			auto rawSuperCluster = new AlloySuperCluster(sizeMax, 1, currType,
-					network, handlerRegistry);
-
-//		std::cout << superCount << " last " << rawSuperCluster->getName()
-//				<< std::endl;
-
-			superCluster = std::unique_ptr<AlloySuperCluster>(rawSuperCluster);
-			// Give the cluster to the network.
-			network.add(std::move(superCluster));
-		}
+//		if (sizeMin < sizeMax) {
+//			// Group the last one alone
+//			auto rawSuperCluster = new AlloySuperCluster(sizeMax, 1, currType,
+//					network, handlerRegistry);
+//
+////		std::cout << superCount << " last " << rawSuperCluster->getName()
+////				<< std::endl;
+//
+//			superCluster = std::unique_ptr<AlloySuperCluster>(rawSuperCluster);
+//			// Give the cluster to the network.
+//			network.add(std::move(superCluster));
+//		}
 	}
 
 	// Recompute Ids and network size

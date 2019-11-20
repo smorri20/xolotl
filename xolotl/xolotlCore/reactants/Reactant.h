@@ -824,6 +824,13 @@ public:
 	}
 
 	/**
+	 * This operation returns true if the cluster is a sphere, false otherwise.
+	 */
+	virtual bool isSphere() const override {
+		return false;
+	}
+
+	/**
 	 * Tell reactant to output a representation of its reaction coefficients
 	 * to the given output stream.
 	 *
