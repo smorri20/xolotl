@@ -320,6 +320,11 @@ protected:
 	 */
 	double fissionYield;
 
+	/**
+	 * Flux attenuation parameter
+	 */
+	double tauFlux;
+
 public:
 
 	/**
@@ -865,6 +870,14 @@ public:
 	 */
 	virtual double getFissionYield() const override {
 		return fissionYield;
+	}
+
+	/**
+	 * Obtain the value of the flux attenuation.
+	 * \see IOptions.h
+	 */
+	virtual double getFluxAttenuation() const override {
+		return tauFlux;
 	}
 
 };

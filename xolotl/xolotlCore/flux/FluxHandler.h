@@ -167,6 +167,14 @@ public:
 		return;
 	}
 
+	/**
+	 * This operation sets the attenuation parameter.
+	 * \see IFluxHandler.h
+	 */
+	virtual void setTauFlux(double tau) {
+		return;
+	}
+
 };
 //end class FluxHandler
 

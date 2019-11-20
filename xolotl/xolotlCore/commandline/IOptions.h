@@ -488,6 +488,13 @@ public:
 	 */
 	virtual double getFissionYield() const = 0;
 
+	/**
+	 * Obtain the value of the flux attenuation.
+	 *
+	 * @return The tau parameter
+	 */
+	virtual double getFluxAttenuation() const = 0;
+
 };
 //end class IOptions
 

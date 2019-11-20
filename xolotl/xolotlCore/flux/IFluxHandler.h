@@ -98,6 +98,13 @@ public:
 	 */
 	virtual void setProportion(double a) = 0;
 
+	/**
+	 * This operation sets the attenuation parameter.
+	 *
+	 * @param tau The typical time for the attenuation
+	 */
+	virtual void setTauFlux(double tau) = 0;
+
 };
 //end class IFluxHandler
 

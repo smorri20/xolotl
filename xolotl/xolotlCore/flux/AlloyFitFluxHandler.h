@@ -17,6 +17,9 @@ namespace xolotlCore {
 class AlloyFitFluxHandler: public FluxHandler {
 private:
 
+	//! The time parameter for attenuation
+	double tauFlux;
+
 	/**
 	 * Function that calculate the flux at a given position x (in nm).
 	 *
@@ -117,7 +120,8 @@ public:
 	/**
 	 * The constructor
 	 */
-	AlloyFitFluxHandler() {
+	AlloyFitFluxHandler() :
+			tauFlux(0.0) {
 	}
 
 	/**
@@ -137,8 +141,7 @@ public:
 		if (false) {
 			srim.setInSitu();
 			cascade.setBulk();
-		}
-		else if (true) {
+		} else if (true) {
 			srim.setBulk();
 			cascade.setBulk();
 		}
@@ -263,18 +266,28 @@ public:
 	 */
 	void computeIncidentFlux(double currentTime, double *updatedConcOffset,
 			int xi, int surfacePos) {
-		
+
 		// Attenuation factor to model reduced production of new point defects
 		// with increasing dose (or time).
-		double tau = 1.0e7;
-		double attenuation = 1.0 - exp((-1.0 * tau) / currentTime);
+		double attenuation = 1.0;
+		if (tauFlux > 0.0 && currentTime > 0.0)
+			attenuation = 1.0 - exp((-1.0 * tauFlux) / currentTime);
 
 		// Update the concentration array
 		for (int it = 0; it < ionDamage.fluxIndex.size(); ++it) {
-			updatedConcOffset[ionDamage.fluxIndex[it]] +=
-					attenuation * ionDamage.damageRate[it][xi - surfacePos];
+			updatedConcOffset[ionDamage.fluxIndex[it]] += attenuation
+					* ionDamage.damageRate[it][xi - surfacePos];
 		}
 
+		return;
+	}
+
+	/**
+	 * This operation sets the attenuation parameter.
+	 * \see IFluxHandler.h
+	 */
+	void setTauFlux(double tau) {
+		tauFlux = tau;
 		return;
 	}
 

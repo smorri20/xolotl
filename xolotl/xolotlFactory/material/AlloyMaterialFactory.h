@@ -74,6 +74,21 @@ public:
 	 */
 	~AlloyMaterialFactory() {
 	}
+
+	/**
+	 * Initialize the material conditions with the different given options.
+	 * \see IMaterialFactory.h
+	 */
+	void initializeMaterial(const xolotlCore::Options &options) {
+		// Call the mother method
+		MaterialFactory::initializeMaterial(options);
+
+		// Set the attenuation parameter
+		theFluxHandler->setTauFlux(
+				options.getFluxAttenuation());
+
+		return;
+	}
 };
 
 } // end namespace xolotlFactory
