@@ -18,12 +18,12 @@ using namespace std;
 using namespace xolotlCore;
 
 // Initialize MPI before running any tests; finalize it running all tests.
-BOOST_GLOBAL_FIXTURE(MPIFixture);
+BOOST_GLOBAL_FIXTURE (MPIFixture);
 
 /**
  * This suite is responsible for testing the AlloyClusterNetworkLoader.
  */
-BOOST_AUTO_TEST_SUITE(AlloyClusterNetworkLoader_testSuite)
+BOOST_AUTO_TEST_SUITE (AlloyClusterNetworkLoader_testSuite)
 
 /**
  * Method checking the loading of the network from the HDF5 file.
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(checkGenerate) {
 	// Get the size of the network
 	int networkSize = network->size();
 	// Check the value
-	BOOST_REQUIRE_EQUAL(networkSize, 391);
+	BOOST_REQUIRE_EQUAL(networkSize, 337);
 
 	// Check the properties
 	auto alloyNetwork = (AlloyClusterReactionNetwork*) network.get();
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(checkGenerate) {
 	BOOST_REQUIRE_EQUAL(alloyNetwork->getMaxClusterSize(ReactantType::Void), 100);
 	BOOST_REQUIRE_EQUAL(alloyNetwork->getMaxClusterSize(ReactantType::Frank), 100);
 	BOOST_REQUIRE_EQUAL(alloyNetwork->getMaxClusterSize(ReactantType::Faulted), 100);
-	BOOST_REQUIRE_EQUAL(alloyNetwork->getMaxClusterSize(ReactantType::Perfect), 100);
+	BOOST_REQUIRE_EQUAL(alloyNetwork->getMaxClusterSize(ReactantType::Perfect), 45);
 
 	// Remove the created file
 	std::string tempFile = "param.txt";

@@ -121,6 +121,8 @@ BOOST_AUTO_TEST_CASE(checkNames) {
 			++marker;
 		else if (name == ReactantType::FrankSuper)
 			++marker;
+		else if (name == ReactantType::PerfectSuper)
+			++marker;
 	}
 	BOOST_REQUIRE_EQUAL(10U, marker);
 	BOOST_REQUIRE_EQUAL(marker, names.size());

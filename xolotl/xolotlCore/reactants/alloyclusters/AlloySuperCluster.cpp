@@ -56,6 +56,8 @@ AlloySuperCluster::AlloySuperCluster(int numMax, int nTot,
 		type = ReactantType::FrankSuper;
 	else if (typeName == ReactantType::Faulted)
 		type = ReactantType::FaultedSuper;
+	else if (typeName == ReactantType::Perfect)
+		type = ReactantType::PerfectSuper;
 
 	// Set the reactant name appropriately
 	std::stringstream nameStream;

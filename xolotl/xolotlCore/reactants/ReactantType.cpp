@@ -18,9 +18,9 @@ std::string toString(ReactantType rtype) {
 			ReactantType::PSIMixed, "PSIMixed" }, { ReactantType::PSISuper,
 			"PSISuper" }, { ReactantType::NESuper, "NESuper" }, {
 			ReactantType::FeSuper, "FeSuper" }, { ReactantType::VoidSuper,
-			"VoidSuper" }, {
-			ReactantType::FaultedSuper, "FaultedSuper" }, {
-			ReactantType::FrankSuper, "FrankSuper" } };
+			"VoidSuper" }, { ReactantType::FaultedSuper, "FaultedSuper" }, {
+			ReactantType::FrankSuper, "FrankSuper" }, {
+			ReactantType::PerfectSuper, "PerfectSuper" } };
 
 	auto iter = smap.find(rtype);
 	return (iter != smap.end()) ? iter->second : "[unrecognized reactant type]";

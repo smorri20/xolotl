@@ -12,8 +12,8 @@ AlloyClusterReactionNetwork::AlloyClusterReactionNetwork(
 		ReactionNetwork( { ReactantType::V, ReactantType::I,
 				ReactantType::Frank, ReactantType::Void, ReactantType::Perfect,
 				ReactantType::Faulted, ReactantType::VoidSuper,
-				ReactantType::FaultedSuper, ReactantType::FrankSuper },
-				registry) {
+				ReactantType::FaultedSuper, ReactantType::FrankSuper,
+				ReactantType::PerfectSuper }, registry) {
 
 	// Initialize default properties
 	dissociationsEnabled = true;
@@ -389,7 +389,8 @@ void AlloyClusterReactionNetwork::reinitializeNetwork() {
 
 				if (currReactant.getType() == ReactantType::VoidSuper
 						|| currReactant.getType() == ReactantType::FaultedSuper
-						|| currReactant.getType() == ReactantType::FrankSuper) {
+						|| currReactant.getType() == ReactantType::FrankSuper
+						|| currReactant.getType() == ReactantType::PerfectSuper) {
 					auto& currCluster = static_cast<AlloySuperCluster&>(currReactant);
 					id++;
 					currCluster.setMomentId(id);
@@ -404,6 +405,10 @@ void AlloyClusterReactionNetwork::reinitializeNetwork() {
 					if (currReactant.getType() == ReactantType::FaultedSuper
 							&& clusterSize > maxClusterSizeMap[ReactantType::Faulted]) {
 						maxClusterSizeMap[ReactantType::Faulted] = clusterSize;
+					}
+					if (currReactant.getType() == ReactantType::PerfectSuper
+							&& clusterSize > maxClusterSizeMap[ReactantType::Perfect]) {
+						maxClusterSizeMap[ReactantType::Perfect] = clusterSize;
 					}
 					if (currReactant.getType() == ReactantType::FrankSuper
 							&& clusterSize > maxClusterSizeMap[ReactantType::Frank]) {

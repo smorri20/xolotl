@@ -62,7 +62,8 @@ enum class ReactantType {
 	// Reactant types for alloy networks
 	VoidSuper,
 	FrankSuper,
-	FaultedSuper
+	FaultedSuper,
+	PerfectSuper
 };
 
 std::string toString(ReactantType rtype);

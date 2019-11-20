@@ -255,7 +255,7 @@ SimpleAlloyReactionNetwork::SimpleAlloyReactionNetwork(const int maxClusterSize,
 	}
 
 	// Add perfect clusters
-	for (int numI = 5; numI <= 45; numI++) {
+	for (int numI = 5; numI <= maxClusterSize; numI++) {
 		// Create a perfect cluster with cluster size numI
 		auto cluster = new AlloyPerfectCluster(numI, *this, registry);
 		// Add it to the network
@@ -329,16 +329,16 @@ shared_ptr<xolotlCore::NEClusterReactionNetwork> testUtils::getSimpleNEReactionN
 	// Redefine the connectivities
 	network->reinitializeConnectivities();
 
-	// ----- TEMPORARY DEBUG OUTPUT!!!!! -----
-	// Print the reaction connectivity matrix
-	for (IReactant& currCluster : reactants) {
-		vector<int> conn = currCluster.getConnectivity();
-
-		for (auto connIt = conn.begin(); connIt != conn.end(); connIt++) {
-			printf("%s", *connIt ? "* " : "' ");
-		}
-		printf("\n");
-	}
+//	// ----- TEMPORARY DEBUG OUTPUT!!!!! -----
+//	// Print the reaction connectivity matrix
+//	for (IReactant& currCluster : reactants) {
+//		vector<int> conn = currCluster.getConnectivity();
+//
+//		for (auto connIt = conn.begin(); connIt != conn.end(); connIt++) {
+//			printf("%s", *connIt ? "* " : "' ");
+//		}
+//		printf("\n");
+//	}
 
 	return network;
 }
@@ -365,16 +365,16 @@ shared_ptr<xolotlCore::FeClusterReactionNetwork> testUtils::getSimpleFeReactionN
 	// Redefine the connectivities
 	network->reinitializeConnectivities();
 
-	// ----- TEMPORARY DEBUG OUTPUT!!!!! -----
-	// Print the reaction connectivity matrix
-	for (IReactant& currCluster : reactants) {
-		vector<int> conn = currCluster.getConnectivity();
-
-		for (auto connIt = conn.begin(); connIt != conn.end(); connIt++) {
-			printf("%s", *connIt ? "* " : "' ");
-		}
-		printf("\n");
-	}
+//	// ----- TEMPORARY DEBUG OUTPUT!!!!! -----
+//	// Print the reaction connectivity matrix
+//	for (IReactant& currCluster : reactants) {
+//		vector<int> conn = currCluster.getConnectivity();
+//
+//		for (auto connIt = conn.begin(); connIt != conn.end(); connIt++) {
+//			printf("%s", *connIt ? "* " : "' ");
+//		}
+//		printf("\n");
+//	}
 
 	return network;
 }
@@ -401,16 +401,16 @@ shared_ptr<xolotlCore::AlloyClusterReactionNetwork> testUtils::getSimpleAlloyRea
 	// Redefine the connectivities
 	network->reinitializeConnectivities();
 
-	// ----- TEMPORARY DEBUG OUTPUT!!!!! -----
-	// Print the reaction connectivity matrix
-	for (IReactant& currCluster : reactants) {
-		vector<int> conn = currCluster.getConnectivity();
-
-		for (auto connIt = conn.begin(); connIt != conn.end(); connIt++) {
-			printf("%s", *connIt ? "* " : "' ");
-		}
-		printf("\n");
-	}
+//	// ----- TEMPORARY DEBUG OUTPUT!!!!! -----
+//	// Print the reaction connectivity matrix
+//	for (IReactant& currCluster : reactants) {
+//		vector<int> conn = currCluster.getConnectivity();
+//
+//		for (auto connIt = conn.begin(); connIt != conn.end(); connIt++) {
+//			printf("%s", *connIt ? "* " : "' ");
+//		}
+//		printf("\n");
+//	}
 
 	return network;
 }

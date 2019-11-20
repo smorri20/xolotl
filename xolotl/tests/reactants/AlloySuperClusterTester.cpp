@@ -18,7 +18,7 @@ using namespace xolotlCore;
 /**
  * This suite is responsible for testing the AlloySuperCluster.
  */
-BOOST_AUTO_TEST_SUITE(AlloySuperCluster_testSuite)
+BOOST_AUTO_TEST_SUITE (AlloySuperCluster_testSuite)
 
 /**
  * This operation checks the ability of the AlloySuperCluster to describe
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 	AlloyClusterNetworkLoader loader = AlloyClusterNetworkLoader(
 			std::make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Set grouping parameters
-	loader.setMin(101);
+	loader.setMin(51);
 	loader.setWidth(5);
 
 	// Generate the network from the options
@@ -74,25 +74,11 @@ BOOST_AUTO_TEST_CASE(checkConnectivity) {
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0 };
 
 	for (unsigned int i = 0; i < reactionConnectivity.size(); i++) {
 		BOOST_REQUIRE_EQUAL(reactionConnectivity[i], connectivityExpected[i]);
@@ -133,7 +119,7 @@ BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 	AlloyClusterNetworkLoader loader = AlloyClusterNetworkLoader(
 			std::make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Set grouping parameters
-	loader.setMin(101);
+	loader.setMin(51);
 	loader.setWidth(5);
 
 	// Generate the network from the options
@@ -155,7 +141,7 @@ BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 
 	// The flux can pretty much be anything except "not a number" (nan).
 	double flux = cluster->getTotalFlux(0);
-	BOOST_REQUIRE_CLOSE(319615.775775, flux, 0.000001);
+	BOOST_REQUIRE_CLOSE(115720.767655, flux, 0.000001);
 
 	// Remove the created file
 	std::string tempFile = "param.txt";
@@ -170,32 +156,22 @@ BOOST_AUTO_TEST_CASE(checkFluxCalculations) {
 BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	// Local Declarations
 	// The vector of partial derivatives to compare with
-	double knownPartials[] = { 638938, 246271, 111533, 42445.7, 0, 2.15429e+09,
-			8.30345e+08, 3.76053e+08, 1.43113e+08, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			-73.0464, 71.181, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 73.0464,
-			-71.181, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+	double knownPartials[] = {231441, 117091, 78270.5, 58598.9, 46665.2, 2.49036e+09,
+		1.25993e+09, 8.42211e+08, 6.30539e+08, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		6.24138e+07, 5.03899e+07, 4.22269e+07, 3.62979e+07, 3.17813e+07, 2.82163e+07,
+		2.53239e+07, 2.29252e+07, 2.09001e+07, 1.91648e+07, 1.7659e+07, 1.63382e+07,
+		1.51689e+07, 1.41252e+07, 1.3187e+07, 1.23381e+07, 1.15657e+07, 1.08593e+07,
+		1.02103e+07, 9.61142e+06, 9.05672e+06, 8.54113e+06, 8.06034e+06, 7.61065e+06,
+		7.1889e+06, 6.79233e+06, 6.41462e+06, 6.05753e+06, 5.71984e+06, 5.39987e+06,
+		5.09613e+06, 4.80731e+06, 4.53222e+06, 4.26981e+06, 4.01913e+06, 3.77934e+06,
+		3.54965e+06, 3.32938e+06, 3.11789e+06, 2.9146e+06, 2.71899e+06, 2.53058e+06,
+		0, 0, 0, 0, 3.79335e-06, -0.0122539, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 3.79335e-06, 0.0122539, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 	// Create the parameter file
 	std::ofstream paramFile("param.txt");
@@ -221,7 +197,7 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	AlloyClusterNetworkLoader loader = AlloyClusterNetworkLoader(
 			std::make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Set grouping parameters
-	loader.setMin(101);
+	loader.setMin(51);
 	loader.setWidth(5);
 
 	// Generate the network from the options
@@ -244,7 +220,7 @@ BOOST_AUTO_TEST_CASE(checkPartialDerivatives) {
 	auto partials = cluster->getPartialDerivatives(0);
 
 	// Check the size of the partials
-	BOOST_REQUIRE_EQUAL(partials.size(), 560U);
+	BOOST_REQUIRE_EQUAL(partials.size(), 224U);
 
 	// Check all the values
 	for (unsigned int i = 0; i < partials.size(); i++) {
@@ -286,7 +262,7 @@ BOOST_AUTO_TEST_CASE(checkReactionRadius) {
 	AlloyClusterNetworkLoader loader = AlloyClusterNetworkLoader(
 			std::make_shared<xolotlPerf::DummyHandlerRegistry>());
 	// Set grouping parameters
-	loader.setMin(101);
+	loader.setMin(51);
 	loader.setWidth(5);
 
 	// Generate the network from the options
@@ -294,7 +270,7 @@ BOOST_AUTO_TEST_CASE(checkReactionRadius) {
 
 	// Check the reaction radius of the super cluster
 	auto& cluster = network->getAll(ReactantType::VoidSuper).begin()->second;
-	BOOST_REQUIRE_CLOSE(0.813023, cluster->getReactionRadius(), 0.001);
+	BOOST_REQUIRE_CLOSE(0.775269, cluster->getReactionRadius(), 0.001);
 
 	// Remove the created file
 	std::string tempFile = "param.txt";
