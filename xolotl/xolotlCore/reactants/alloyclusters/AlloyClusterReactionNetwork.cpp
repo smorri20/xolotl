@@ -111,9 +111,7 @@ double AlloyClusterReactionNetwork::calculateDissociationConstant(
 		return 0.0;
 
 	// Compute the atomic volume (included the fact that there are 4 atoms per cell)
-	double atomicVolume = 0.25 * xolotlCore::alloyLatticeConstant
-			* xolotlCore::alloyLatticeConstant
-			* xolotlCore::alloyLatticeConstant;
+	double atomicVolume = 0.25 * pow(latticeParameter, 3);
 
 	// Get the rate constant from the reverse reaction
 	double kPlus = reaction.reverseReaction->kConstant[i];
@@ -205,36 +203,20 @@ int AlloyClusterReactionNetwork::typeSwitch(ReactantType const typeName) const {
 
 double AlloyClusterReactionNetwork::getReactionRadius(
 		ReactantType const typeName, int size) const {
+	double prefactor = 0.25 * getLatticeParameter() * getLatticeParameter()
+			/ xolotlCore::pi;
 	if (typeName == ReactantType::Perfect)
-		return sqrt(
-				(double(size) * 0.25 * xolotlCore::alloyLatticeConstant
-						* xolotlCore::alloyLatticeConstant
-						* xolotlCore::alloyLatticeConstant)
-						/ (xolotlCore::pi * xolotlCore::alloyLatticeConstant
-								* xolotlCore::perfectBurgers));
+		return sqrt((double(size) * prefactor) / xolotlCore::perfectBurgers);
 	if (typeName == ReactantType::Faulted
 			|| typeName == ReactantType::FaultedSuper)
-		return sqrt(
-				(double(size) * 0.25 * xolotlCore::alloyLatticeConstant
-						* xolotlCore::alloyLatticeConstant
-						* xolotlCore::alloyLatticeConstant)
-						/ (xolotlCore::pi * xolotlCore::alloyLatticeConstant
-								* xolotlCore::faultedBurgers));
+		return sqrt((double(size) * prefactor) / xolotlCore::faultedBurgers);
 	if (typeName == ReactantType::Frank || typeName == ReactantType::FrankSuper)
-		return sqrt(
-				(double(size) * 0.25 * xolotlCore::alloyLatticeConstant
-						* xolotlCore::alloyLatticeConstant
-						* xolotlCore::alloyLatticeConstant)
-						/ (xolotlCore::pi * xolotlCore::alloyLatticeConstant
-								* xolotlCore::frankBurgers));
+		return sqrt((double(size) * prefactor) / xolotlCore::frankBurgers);
 	if (typeName == ReactantType::V || typeName == ReactantType::Void
 			|| typeName == ReactantType::I
 			|| typeName == ReactantType::VoidSuper)
-		return pow(
-				(0.75 * 0.25 * xolotlCore::alloyLatticeConstant
-						* xolotlCore::alloyLatticeConstant
-						* xolotlCore::alloyLatticeConstant * double(size))
-						/ xolotlCore::pi, 1.0 / 3.0);
+		return pow(0.75 * prefactor * getLatticeParameter() * double(size),
+				1.0 / 3.0);
 
 	return 0.0;
 }

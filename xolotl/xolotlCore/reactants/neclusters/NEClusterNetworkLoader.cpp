@@ -31,8 +31,7 @@ std::unique_ptr<NECluster> NEClusterNetworkLoader::createNECluster(int numXe,
 }
 
 std::unique_ptr<NECluster> NEClusterNetworkLoader::createNESuperCluster(
-		int nTot, int maxXe,
-		IReactionNetwork& network) const {
+		int nTot, int maxXe, IReactionNetwork& network) const {
 	// Create the cluster
 	auto superCluster = new NESuperCluster(maxXe, nTot, network,
 			handlerRegistry);
@@ -114,9 +113,20 @@ std::unique_ptr<IReactionNetwork> NEClusterNetworkLoader::load(
 	std::unique_ptr<NEClusterReactionNetwork> network(
 			new NEClusterReactionNetwork(handlerRegistry));
 
+	// Set the lattice parameter in the network
+	double latticeParam = options.getLatticeParameter();
+	if (!(latticeParam > 0.0))
+		latticeParam = uraniumDioxydeLatticeConstant;
+	network->setLatticeParameter(latticeParam);
+
+	// Set the xenon radius in the network
+	double radius = options.getImpurityRadius();
+	if (!(radius > 0.0))
+		radius = xenonRadius;
+	network->setImpurityRadius(radius);
+
 	// Set the density in a bubble
 	network->setDensity(options.getDensity());
-
 
 	// Loop on the clusters
 	for (int i = 0; i < normalSize + superSize; i++) {
@@ -139,6 +149,15 @@ std::unique_ptr<IReactionNetwork> NEClusterNetworkLoader::load(
 			nextCluster->setMigrationEnergy(migrationEnergy);
 			nextCluster->setDiffusionFactor(diffusionFactor);
 
+			if (numXe == 1) {
+				// If the diffusivity is given
+				if (options.getXenonDiffusivity() > 0.0) {
+					nextCluster->setDiffusionFactor(
+							options.getXenonDiffusivity());
+					nextCluster->setMigrationEnergy(-1.0);
+				}
+			}
+
 			// Save it in the network
 			pushNECluster(network, reactants, nextCluster);
 		} else {
@@ -147,8 +166,7 @@ std::unique_ptr<IReactionNetwork> NEClusterNetworkLoader::load(
 			clusterGroup.readNESuperCluster(nTot, maxXe);
 
 			// Create the cluster
-			auto nextCluster = createNESuperCluster(nTot, maxXe,
-					*network);
+			auto nextCluster = createNESuperCluster(nTot, maxXe, *network);
 
 			// Save it in the network
 			pushNECluster(network, reactants, nextCluster);
@@ -185,6 +203,18 @@ std::unique_ptr<IReactionNetwork> NEClusterNetworkLoader::generate(
 			new NEClusterReactionNetwork(handlerRegistry));
 	std::vector<std::reference_wrapper<Reactant> > reactants;
 
+	// Set the lattice parameter in the network
+	double latticeParam = options.getLatticeParameter();
+	if (!(latticeParam > 0.0))
+		latticeParam = uraniumDioxydeLatticeConstant;
+	network->setLatticeParameter(latticeParam);
+
+	// Set the xenon radius in the network
+	double radius = options.getImpurityRadius();
+	if (!(radius > 0.0))
+		radius = xenonRadius;
+	network->setImpurityRadius(radius);
+
 	// Set the density in a bubble
 	network->setDensity(options.getDensity());
 
@@ -220,6 +250,11 @@ std::unique_ptr<IReactionNetwork> NEClusterNetworkLoader::generate(
 		if (i <= 1) {
 			nextCluster->setDiffusionFactor(xeOneDiffusion);
 			nextCluster->setMigrationEnergy(xeOneMigration);
+			// If the diffusivity is given
+			if (options.getXenonDiffusivity() > 0.0) {
+				nextCluster->setDiffusionFactor(options.getXenonDiffusivity());
+				nextCluster->setMigrationEnergy(-1.0);
+			}
 		} else {
 			nextCluster->setDiffusionFactor(0.0);
 			nextCluster->setMigrationEnergy(

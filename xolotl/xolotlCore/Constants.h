@@ -38,6 +38,12 @@ constexpr double ironLatticeConstant = 0.28700000000000000;
 //! Core radius. Given in units here of nm.
 static const double alloyCoreRadius = 0.37000000000000000;
 
+//! Single helium radius. Given in units here of nm.
+static const double heliumRadius = 0.30000000000000000;
+
+//! Single xenon radius. Given in units here of nm.
+static const double xenonRadius = 0.30000000000000000;
+
 // Tungsten heat coefficient = lambda / (rho * C) in nm2 s-1
 constexpr double tungstenHeatCoefficient = 6.835e13;
 
@@ -70,15 +76,6 @@ constexpr double frankBurgers = 0.333;
 	
 // Sink strength for Alloy case in nm^-2
 constexpr double alloysinkStrength = 1.0e-5;
-
-//! Parameters for biased sink in the iron case
-static const double reactionRadius = ironLatticeConstant
-		* cbrt(3.0 / pi) * 0.5;
-static const double r0 = ironLatticeConstant * 0.75 * sqrt(3.0);
-constexpr double rho = 0.0003;
-static const double sinkStrength = -4.0 * pi * rho
-		/ log(pi * rho * (reactionRadius + r0)*(reactionRadius + r0));
-constexpr double sinkBias = 1.05;
 
 } /* end namespace xolotlCore */
 #endif /* CONSTANTS_H_ */

@@ -23,11 +23,6 @@ BOOST_AUTO_TEST_SUITE(ReSolutionHandler_testSuite)
  * Method checking the initialization and the compute re-solution methods.
  */
 BOOST_AUTO_TEST_CASE(checkReSolution) {
-	// Initialize MPI for HDF5
-	int argc = 0;
-	char **argv;
-	MPI_Init(&argc, &argv);
-
 	// Create the option to create a network
 	xolotlCore::Options opts;
 	// Create a good parameter file
@@ -36,12 +31,18 @@ BOOST_AUTO_TEST_CASE(checkReSolution) {
 	paramFile.close();
 
 	// Create a fake command line to read the options
-	argv = new char*[2];
+	int argc = 2;
+	char **argv = new char*[3];
+	std::string appName = "fakeXolotlAppNameForTests";
+	argv[0] = new char[appName.length() + 1];
+	strcpy(argv[0], appName.c_str());
 	std::string parameterFile = "param.txt";
-	argv[0] = new char[parameterFile.length() + 1];
-	strcpy(argv[0], parameterFile.c_str());
-	argv[1] = 0; // null-terminate the array
-	opts.readParams(argv);
+	argv[1] = new char[parameterFile.length() + 1];
+	strcpy(argv[1], parameterFile.c_str());
+	argv[2] = 0; // null-terminate the array
+	// Initialize MPI for HDF5
+	MPI_Init(&argc, &argv);
+	opts.readParams(argc, argv);
 
 	// Create the network loader
 	NEClusterNetworkLoader loader = NEClusterNetworkLoader(
@@ -67,9 +68,9 @@ BOOST_AUTO_TEST_CASE(checkReSolution) {
 	// Create the re-solution handler
 	ReSolutionHandler reSolutionHandler;
 
-
 	// Initialize it
 	reSolutionHandler.initialize(*network, 0.73);
+	reSolutionHandler.setFissionYield(0.25);
 	reSolutionHandler.updateReSolutionRate(1.0);
 
 	// The arrays of concentration
@@ -107,11 +108,11 @@ BOOST_AUTO_TEST_CASE(checkReSolution) {
 	int nXenon = reSolutionHandler.getNumberOfReSoluting();
 	int indices[10 * nXenon];
 	double val[10 * nXenon];
-	// Get the pointer on them for the compute modified trap-mutation method
+	// Get the pointer on them for the compute re-solution method
 	int *indicesPointer = &indices[0];
 	double *valPointer = &val[0];
 
-	// Compute the partial derivatives for the modified trap-mutation at the grid point 8
+	// Compute the partial derivatives for the re-solution at the grid point 8
 	int nReSo = reSolutionHandler.computePartialsForReSolution(*network,
 			valPointer, indicesPointer, 1, 0);
 
@@ -154,12 +155,16 @@ BOOST_AUTO_TEST_CASE(checkMinimumSize) {
 	paramFile.close();
 
 	// Create a fake command line to read the options
-	char **argv = new char*[2];
+	int argc = 2;
+	char **argv = new char*[3];
+	std::string appName = "fakeXolotlAppNameForTests";
+	argv[0] = new char[appName.length() + 1];
+	strcpy(argv[0], appName.c_str());
 	std::string parameterFile = "param.txt";
-	argv[0] = new char[parameterFile.length() + 1];
-	strcpy(argv[0], parameterFile.c_str());
-	argv[1] = 0; // null-terminate the array
-	opts.readParams(argv);
+	argv[1] = new char[parameterFile.length() + 1];
+	strcpy(argv[1], parameterFile.c_str());
+	argv[2] = 0; // null-terminate the array
+	opts.readParams(argc, argv);
 
 	// Create the network loader
 	NEClusterNetworkLoader loader = NEClusterNetworkLoader(
@@ -187,6 +192,7 @@ BOOST_AUTO_TEST_CASE(checkMinimumSize) {
 
 	// Initialize it
 	reSolutionHandler.initialize(*network, 0.73);
+	reSolutionHandler.setFissionYield(0.25);
 	reSolutionHandler.updateReSolutionRate(1.0);
 	reSolutionHandler.setMinSize(10);
 
@@ -225,11 +231,11 @@ BOOST_AUTO_TEST_CASE(checkMinimumSize) {
 	int nXenon = reSolutionHandler.getNumberOfReSoluting();
 	int indices[10 * nXenon];
 	double val[10 * nXenon];
-	// Get the pointer on them for the compute modified trap-mutation method
+	// Get the pointer on them for the compute re-solution method
 	int *indicesPointer = &indices[0];
 	double *valPointer = &val[0];
 
-	// Compute the partial derivatives for the modified trap-mutation at the grid point 8
+	// Compute the partial derivatives for the re-solution at the grid point 8
 	int nReSo = reSolutionHandler.computePartialsForReSolution(*network,
 			valPointer, indicesPointer, 1, 0);
 
@@ -264,12 +270,16 @@ BOOST_AUTO_TEST_CASE(checkDifferentFit) {
 	paramFile.close();
 
 	// Create a fake command line to read the options
-	char **argv = new char*[2];
+	int argc = 2;
+	char **argv = new char*[3];
+	std::string appName = "fakeXolotlAppNameForTests";
+	argv[0] = new char[appName.length() + 1];
+	strcpy(argv[0], appName.c_str());
 	std::string parameterFile = "param.txt";
-	argv[0] = new char[parameterFile.length() + 1];
-	strcpy(argv[0], parameterFile.c_str());
-	argv[1] = 0; // null-terminate the array
-	opts.readParams(argv);
+	argv[1] = new char[parameterFile.length() + 1];
+	strcpy(argv[1], parameterFile.c_str());
+	argv[2] = 0; // null-terminate the array
+	opts.readParams(argc, argv);
 
 	// Create the network loader
 	NEClusterNetworkLoader loader = NEClusterNetworkLoader(
@@ -297,6 +307,7 @@ BOOST_AUTO_TEST_CASE(checkDifferentFit) {
 
 	// Initialize it
 	reSolutionHandler.initialize(*network, 1.0);
+	reSolutionHandler.setFissionYield(0.25);
 	reSolutionHandler.updateReSolutionRate(1.0);
 
 	// The arrays of concentration
@@ -334,11 +345,11 @@ BOOST_AUTO_TEST_CASE(checkDifferentFit) {
 	int nXenon = reSolutionHandler.getNumberOfReSoluting();
 	int indices[10 * nXenon];
 	double val[10 * nXenon];
-	// Get the pointer on them for the compute modified trap-mutation method
+	// Get the pointer on them for the compute re-solution method
 	int *indicesPointer = &indices[0];
 	double *valPointer = &val[0];
 
-	// Compute the partial derivatives for the modified trap-mutation at the grid point 8
+	// Compute the partial derivatives for the re-solution at the grid point 8
 	int nReSo = reSolutionHandler.computePartialsForReSolution(*network,
 			valPointer, indicesPointer, 1, 0);
 
