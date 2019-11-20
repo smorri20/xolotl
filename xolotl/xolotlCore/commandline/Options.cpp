@@ -15,11 +15,11 @@ Options::Options() :
 				false), tempProfileFilename(""), heatFlag(false), bulkTemperature(
 				0.0), fluxFlag(false), fluxAmplitude(0.0), fluxProfileFlag(
 				false), perfRegistryType(xolotlPerf::IHandlerRegistry::std), vizStandardHandlersFlag(
-				false), materialName(""), initialVConcentration(0.0), voidPortion(
-				50.0), dimensionNumber(1), useRegularGridFlag(true), useChebyshevGridFlag(
-				false), readInGridFlag(false), gridFilename(""), gbList(""), groupingMin(
-				std::numeric_limits<int>::max()), groupingWidthA(1), groupingWidthB(
-				0), sputteringYield(0.0), useHDF5Flag(true), usePhaseCutFlag(
+				false), materialName(""), initialVConcentration(0.0), initialIConcentration(
+				0.0), voidPortion(50.0), dimensionNumber(1), useRegularGridFlag(
+				true), useChebyshevGridFlag(false), readInGridFlag(false), gridFilename(
+				""), gbList(""), groupingMin(std::numeric_limits<int>::max()), groupingWidthA(
+				1), groupingWidthB(0), sputteringYield(0.0), useHDF5Flag(true), usePhaseCutFlag(
 				false), maxImpurity(8), maxD(0), maxT(0), maxV(20), maxI(6), nX(
 				10), nY(0), nZ(0), xStepSize(0.5), yStepSize(0.0), zStepSize(
 				0.0), leftBoundary(1), rightBoundary(1), bottomBoundary(1), topBoundary(
@@ -94,6 +94,8 @@ void Options::readParams(int argc, char* argv[]) {
 					"the numbers correspond to the surface orientation.")(
 			"initialV", bpo::value<double>(&initialVConcentration),
 			"The value of the initial concentration of vacancies in the material.")(
+			"initialI", bpo::value<double>(&initialIConcentration),
+			"The value of the initial concentration of interstitials in the material.")(
 			"zeta", bpo::value<double>(&zeta)->default_value(0.73),
 			"The value of the electronic stopping power in the material (0.73 by default).")(
 			"voidPortion", bpo::value<double>(&voidPortion),

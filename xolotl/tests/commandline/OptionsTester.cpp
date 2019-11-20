@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(goodParamFile) {
 	"-ts_max_steps 3" << std::endl << "networkFile=tungsten.txt"
 	<< std::endl << "startTemp=900" << std::endl << "perfHandler=std"
 	<< std::endl << "flux=1.5" << std::endl << "material=W100"
-	<< std::endl << "initialV=0.05" << std::endl << "dimensions=1"
+	<< std::endl << "initialV=0.05" << std::endl << "initialI=0.1" << std::endl << "dimensions=1"
 	<< std::endl << "voidPortion=60.0" << std::endl << "regularGrid=no"
 	<< std::endl << "process=diff" << std::endl << "grouping=11 2 4"
 	<< std::endl << "sputtering=0.5" << std::endl << "boundary=1 1"
@@ -160,6 +160,9 @@ BOOST_AUTO_TEST_CASE(goodParamFile) {
 
 	// Check the initial vacancy concentration option
 	BOOST_REQUIRE_EQUAL(opts.getInitialVConcentration(), 0.05);
+
+	// Check the initial interstitial concentration option
+	BOOST_REQUIRE_EQUAL(opts.getInitialIConcentration(), 0.1);
 
 	// Check the number of dimensions option
 	BOOST_REQUIRE_EQUAL(opts.getDimensionNumber(), 1);

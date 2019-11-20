@@ -137,31 +137,14 @@ void PetscSolver0DHandler::initializeConcentration(DM &da, Vec &C) {
 		hasConcentrations = (concGroup and concGroup->hasTimesteps());
 	}
 
-	// Initialize the interstitial density to thermal equilibrium
-	double iDensity = exp(
-			-1.0 * singleIntCluster->getFormationEnergy()
-					/ (xolotlCore::kBoltzmann * temperature))
-			/ (0.25 * network.getLatticeParameter()
-					* network.getLatticeParameter()
-					* network.getLatticeParameter());
-
-	// Initialize the vacancy density to thermal equilibrium
-	double vDensity = exp(
-			-1.0 * singleVacancyCluster->getFormationEnergy()
-					/ (xolotlCore::kBoltzmann * temperature))
-			/ (0.25 * network.getLatticeParameter()
-					* network.getLatticeParameter()
-					* network.getLatticeParameter());
-
 	// Initialize the interstitial concentration
-	if (singleIntCluster and not hasConcentrations and singleIntCluster) {
-		concOffset[intIndex] = iDensity;
+	if (singleIntCluster and not hasConcentrations) {
+		concOffset[intIndex] = initialIConc;
 	}
 
 	// Initialize the vacancy concentration
-	if (singleVacancyCluster and not hasConcentrations
-			and singleVacancyCluster) {
-		concOffset[vacancyIndex] = vDensity;
+	if (singleVacancyCluster and not hasConcentrations) {
+		concOffset[vacancyIndex] = initialVConc;
 	}
 
 	// If the concentration must be set from the HDF5 file

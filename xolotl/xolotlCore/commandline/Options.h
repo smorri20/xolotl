@@ -104,6 +104,11 @@ protected:
 	double initialVConcentration;
 
 	/**
+	 * Value of the initial interstitial concentration.
+	 */
+	double initialIConcentration;
+
+	/**
 	 * Value of the electronic stopping power.
 	 */
 	double zeta;
@@ -495,6 +500,14 @@ public:
 	 */
 	double getInitialVConcentration() const override {
 		return initialVConcentration;
+	}
+
+	/**
+	 * Obtain the value of the concentration for the interstitials.
+	 * \see IOptions.h
+	 */
+	double getInitialIConcentration() const override {
+		return initialIConcentration;
 	}
 
 	/**

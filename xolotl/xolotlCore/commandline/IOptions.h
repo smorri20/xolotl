@@ -185,6 +185,13 @@ public:
 	virtual double getInitialVConcentration() const = 0;
 
 	/**
+	 * Obtain the value of the concentration for the interstitials.
+	 *
+	 * @return The concentration value
+	 */
+	virtual double getInitialIConcentration() const = 0;
+
+	/**
 	 * Obtain the value of the electronic stopping power.
 	 *
 	 * @return Zeta
